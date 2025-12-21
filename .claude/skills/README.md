@@ -72,7 +72,7 @@ When you're working on a task, the agent:
 ## Directory Structure
 
 ```
-.speck/skills/
+.claude/skills/
 ├── README.md                           # This file
 ├── external-services/                  # Third-party SaaS integrations
 │   ├── stripe/SKILL.md
@@ -116,7 +116,7 @@ When a user picks a recipe like `nextjs-supabase`, the agent automatically has a
 ### 1. Create the Directory
 
 ```bash
-mkdir -p .speck/skills/external-services/my-service
+mkdir -p .claude/skills/external-services/my-service
 ```
 
 ### 2. Create SKILL.md

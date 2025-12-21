@@ -21,7 +21,7 @@ if [[ -z "$FILE_PATH" || "$FILE_PATH" == "null" ]]; then
 fi
 
 # Skip if file is in exempt directories
-if [[ "$FILE_PATH" == *"/.cursor/"* ]] || [[ "$FILE_PATH" == *"/.speck/"* ]]; then
+if [[ "$FILE_PATH" == *"/.cursor/"* ]] || [[ "$FILE_PATH" == *"/.speck/"* ]] || [[ "$FILE_PATH" == *"/.claude/"* ]]; then
     exit 0
 fi
 
@@ -46,7 +46,7 @@ file_path = data.get("file_path") or ""
 if not file_path:
     sys.exit(0)
 
-if "/.cursor/" in file_path or "/.speck/" in file_path:
+if "/.cursor/" in file_path or "/.speck/" in file_path or "/.claude/" in file_path:
     sys.exit(0)
 
 file_dir = os.path.dirname(file_path)

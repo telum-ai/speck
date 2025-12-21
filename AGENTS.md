@@ -375,7 +375,7 @@ If Context7 has no docs after **2-3 attempts** (try variants), use `web_search` 
 
 Skills are **agent-decided** expertise packages - automatically loaded when relevant to the current task.
 
-**Location**: `.speck/skills/`
+**Location**: `.claude/skills/`
 
 | Category | Examples | When Loaded |
 |----------|----------|-------------|
@@ -388,7 +388,7 @@ Skills are **agent-decided** expertise packages - automatically loaded when rele
 
 **Enabling Skills**: Cursor Settings → Rules → Import Settings → Toggle "Agent Skills" on.
 
-See `.speck/skills/README.md` for details.
+See `.claude/skills/README.md` for details.
 
 ## 🔄 Guide Users Through the Process
 

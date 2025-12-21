@@ -517,7 +517,7 @@ Skills are **domain-specific expertise packages** that AI agents load automatica
 
 ### Available Skills
 
-**External Services** (`.speck/skills/external-services/`):
+**External Services** (`.claude/skills/external-services/`):
 - `stripe/` - Payments, subscriptions, webhooks
 - `supabase/` - Database, auth, real-time, RLS
 - `clerk/` - Authentication for Next.js/React
@@ -528,20 +528,20 @@ Skills are **domain-specific expertise packages** that AI agents load automatica
 - `posthog/` - Product analytics, feature flags
 - `revenuecat/` - In-app purchases, subscriptions
 
-**Technologies** (`.speck/skills/technologies/`):
+**Technologies** (`.claude/skills/technologies/`):
 - `pwa/` - Progressive Web App patterns
 - `react-query/` - Server state with TanStack Query
 - `websockets/` - Real-time communication
 - `docker/` - Containerization patterns
 - `github-actions/` - CI/CD pipelines
 
-**Domains** (`.speck/skills/domains/`):
+**Domains** (`.claude/skills/domains/`):
 - `saas-billing/` - Subscription state machines, dunning
 - `multi-tenancy/` - Tenant isolation, RBAC
 - `oauth-implementation/` - OAuth 2.0, PKCE flows
 - `gdpr-compliance/` - Consent, data rights
 
-**Architectures** (`.speck/skills/architectures/`):
+**Architectures** (`.claude/skills/architectures/`):
 - `serverless/` - FaaS patterns, cold starts
 - `offline-first/` - Sync, conflict resolution
 
@@ -555,7 +555,7 @@ When a recipe recommends Stripe for payments, the Stripe skill provides:
 - Common gotchas (idempotency, signature verification)
 - Code patterns for checkout, subscriptions
 
-**See `.speck/skills/README.md` for complete details.**
+**See `.claude/skills/README.md` for complete details.**
 
 ---
 

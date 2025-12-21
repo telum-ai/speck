@@ -24,7 +24,7 @@ Defaults:
   --out   ./_speck-template-repo
 
 Notes:
-  - This does not touch Splang app code.
+  - This does not touch any product application code.
   - This excludes `.cursor/rules/**` so each product repo can define its own rules.
   - The exported folder includes a fresh README.md, .gitignore, and empty specs/ scaffold.
 EOF
@@ -79,6 +79,12 @@ copy_dir "$REPO_ROOT/.cursor/hooks" "$OUT_DIR/.cursor/hooks"
 copy_file "$REPO_ROOT/.cursor/MCP-SETUP.md" "$OUT_DIR/.cursor/MCP-SETUP.md"
 copy_file "$REPO_ROOT/.cursor/mcp.json.example" "$OUT_DIR/.cursor/mcp.json.example"
 copy_file "$REPO_ROOT/.cursor/mcp.project.json.example" "$OUT_DIR/.cursor/mcp.project.json.example"
+
+# Cursor Agent Skills (Cursor reads these from `.claude/skills`)
+if [[ -d "$REPO_ROOT/.claude/skills" ]]; then
+  mkdir -p "$OUT_DIR/.claude"
+  copy_dir "$REPO_ROOT/.claude/skills" "$OUT_DIR/.claude/skills"
+fi
 
 # Workflows (methodology-only)
 mkdir -p "$OUT_DIR/.github/workflows"

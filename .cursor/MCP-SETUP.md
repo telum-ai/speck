@@ -57,7 +57,7 @@ When using external services, install their MCP servers for AI-assisted developm
 | **Firebase** | `firebase-mcp-server` | 🔧 Community |
 | **Cloudflare** | `https://*.mcp.cloudflare.com/mcp` | ✅ Official |
 
-See `.speck/skills/external-services/*/SKILL.md` for detailed setup instructions.
+See `.claude/skills/external-services/*/SKILL.md` for detailed setup instructions.
 
 ## More Info
 
