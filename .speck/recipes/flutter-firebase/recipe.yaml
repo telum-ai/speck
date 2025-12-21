@@ -1,0 +1,79 @@
+name: Flutter Firebase Mobile App
+description: A cross-platform mobile application using Flutter with Firebase for backend services. Single codebase for iOS, Android, and web with Google's comprehensive backend platform.
+keywords:
+  - mobile
+  - cross-platform
+  - flutter
+  - dart
+  - firebase
+  - ios
+  - android
+  - web
+  - google
+stack:
+  frontend:
+    name: Flutter
+    language: Dart
+    framework: Flutter
+    styling: Material Design / Cupertino
+  backend:
+    name: Firebase (Auth, Firestore, Cloud Functions)
+    language: Dart (client) / TypeScript (Cloud Functions)
+    framework: Firebase SDK
+    orm: Firestore
+  database:
+    name: Cloud Firestore
+    version: N/A (managed)
+suggested_epics:
+  - name: Firebase Authentication
+    description: Implement user authentication with email, Google, Apple Sign-In, and anonymous auth.
+    stories_estimate: 6-9
+  - name: Firestore Data Layer
+    description: Design Firestore schema, implement real-time listeners, and offline persistence.
+    stories_estimate: 8-12
+  - name: Flutter UI Components
+    description: Build responsive, adaptive UI with Material and Cupertino widgets.
+    stories_estimate: 10-15
+  - name: Push Notifications & Analytics
+    description: Integrate Firebase Cloud Messaging and Analytics for engagement.
+    stories_estimate: 4-6
+pre_configured_patterns:
+  - name: Provider / Riverpod State Management
+    description: Recommended state management patterns for Flutter.
+  - name: Firebase Security Rules
+    description: Secure data access with Firestore security rules.
+  - name: Real-Time Sync
+    description: Automatic offline-first data synchronization.
+
+# External services to consider (Buy vs Build)
+external_services:
+  auth:
+    recommended: firebase-auth
+    reason: "Built-in, excellent Flutter integration"
+  payments:
+    recommended: revenuecat
+    alternatives: [stripe]
+    reason: "IAP simplified for iOS/Android"
+  push_notifications:
+    recommended: firebase-fcm
+    reason: "Free, built into Firebase"
+  analytics:
+    recommended: firebase-analytics
+    alternatives: [mixpanel, amplitude]
+    reason: "Free, automatic event tracking"
+  crash_reporting:
+    recommended: firebase-crashlytics
+    alternatives: [sentry]
+    reason: "Free, excellent Flutter support"
+  remote_config:
+    recommended: firebase-remote-config
+    reason: "Free, A/B testing included"
+  file_storage:
+    recommended: firebase-storage
+    alternatives: [cloudinary]
+    reason: "Built-in, security rules"
+  maps:
+    recommended: google-maps
+    alternatives: [mapbox]
+    reason: "Best Flutter widget support"
+

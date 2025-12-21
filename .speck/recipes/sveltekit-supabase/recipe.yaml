@@ -1,0 +1,44 @@
+name: SvelteKit Supabase Full-Stack App
+description: A modern, performant full-stack web application using SvelteKit for the frontend/API and Supabase for backend services. Excellent developer experience with fast builds and minimal boilerplate.
+keywords:
+  - web
+  - full-stack
+  - svelte
+  - sveltekit
+  - supabase
+  - postgresql
+  - javascript
+  - typescript
+  - serverless
+stack:
+  frontend:
+    name: SvelteKit
+    language: TypeScript
+    framework: Svelte
+    styling: Tailwind CSS / Skeleton UI
+  backend:
+    name: SvelteKit API Routes + Supabase
+    language: TypeScript / PostgreSQL
+    framework: SvelteKit
+    orm: Supabase Client
+  database:
+    name: PostgreSQL (via Supabase)
+    version: "15"
+suggested_epics:
+  - name: Authentication & User Management
+    description: Implement user registration, login, social auth, and profile management using Supabase Auth.
+    stories_estimate: 6-9
+  - name: Core Data Management
+    description: Build CRUD operations for primary data models with real-time subscriptions.
+    stories_estimate: 8-12
+  - name: Server-Side Rendering & SEO
+    description: Optimize for search engines with SSR, meta tags, and structured data.
+    stories_estimate: 4-6
+pre_configured_patterns:
+  - name: SvelteKit Form Actions
+    description: Server-side form handling with progressive enhancement.
+  - name: Supabase Row Level Security
+    description: Database-level authorization using RLS policies.
+  - name: SvelteKit Load Functions
+    description: Efficient data loading with parallel requests and caching.
+

@@ -1,0 +1,207 @@
+# Expo + FastAPI Recipe
+# Cross-platform mobile app with Python backend
+
+name: expo-fastapi
+display_name: "Expo + FastAPI"
+description: "Cross-platform mobile app with Expo/React Native and FastAPI backend"
+version: "1.0.0"
+
+# Keywords for /speck detection
+keywords:
+  - mobile app
+  - expo
+  - react native
+  - ios
+  - android
+  - cross-platform
+  - mobile
+  - app store
+  - play store
+  - native app
+
+# Stack specification
+stack:
+  mobile:
+    framework: expo
+    version: "50+"
+    navigation: expo-router
+    language: typescript
+    styling: nativewind  # Tailwind for React Native
+    state_management:
+      - zustand
+      - tanstack-query
+    testing: jest
+    
+  backend:
+    framework: fastapi
+    version: "0.100+"
+    language: python
+    python_version: "3.11+"
+    orm: sqlalchemy
+    validation: pydantic-v2
+    testing: pytest
+    
+  database:
+    type: postgresql
+    version: "15+"
+    migrations: alembic
+    
+  auth:
+    recommended: stytch
+    token_storage: expo-secure-store
+    alternatives:
+      - auth0
+      - custom-jwt
+      
+  deployment:
+    mobile: eas-build
+    backend: railway
+    alternatives:
+      - render
+      - docker
+
+# Complexity assessment
+complexity:
+  level_range: "2-3"
+  typical_team_size: "2-5"
+  typical_timeline: "3-6 months"
+  
+# What this recipe is good for
+ideal_for:
+  - "Consumer mobile applications"
+  - "Apps needing iOS and Android"
+  - "Apps with push notifications"
+  - "Offline-capable applications"
+  - "Location-based services"
+  - "Apps with camera/media features"
+
+# What this recipe is NOT good for
+not_ideal_for:
+  - "Web-only applications (use react-fastapi-postgres)"
+  - "Simple content apps (consider Flutter)"
+  - "Games or heavy graphics"
+  - "Apps needing native modules not in Expo"
+
+# Common epics for this stack
+suggested_epics:
+  - id: app-shell
+    name: "Mobile App Shell"
+    priority: 1
+    phase: mvp
+    stories_estimate: 4-6
+    description: "Navigation, app structure, splash screen, theming"
+    
+  - id: auth
+    name: "Authentication"
+    priority: 1
+    phase: mvp
+    stories_estimate: 5-8
+    description: "Login, registration, secure token storage, session refresh"
+    
+  - id: api-layer
+    name: "API Integration"
+    priority: 1
+    phase: mvp
+    stories_estimate: 3-5
+    description: "API client, error handling, offline queue"
+    
+  - id: core-features
+    name: "Core Mobile Features"
+    priority: 1
+    phase: mvp
+    stories_estimate: 8-15
+    description: "[CUSTOMIZE] Main app screens and functionality"
+    
+  - id: push-notifications
+    name: "Push Notifications"
+    priority: 2
+    phase: enhancement
+    stories_estimate: 3-5
+    description: "Expo Notifications, token registration, handling"
+    optional: true
+    
+  - id: offline
+    name: "Offline Support"
+    priority: 2
+    phase: enhancement
+    stories_estimate: 4-6
+    description: "Local storage, sync queue, conflict resolution"
+    optional: true
+    
+  - id: app-store
+    name: "App Store Preparation"
+    priority: 1
+    phase: launch
+    stories_estimate: 3-5
+    description: "Screenshots, descriptions, review prep, TestFlight/internal testing"
+
+# External services to consider (Buy vs Build)
+external_services:
+  auth:
+    recommended: clerk
+    alternatives: [stytch]
+    reason: "Mobile SDKs, biometric support"
+  push_notifications:
+    recommended: expo-push
+    reason: "Free, built into Expo"
+  payments:
+    recommended: revenuecat
+    alternatives: [stripe]
+    reason: "IAP made easy"
+  analytics:
+    recommended: mixpanel
+    alternatives: [posthog]
+    reason: "Mobile event tracking"
+  error_tracking:
+    recommended: sentry
+    reason: "React Native SDK"
+  file_storage:
+    recommended: cloudinary
+    alternatives: [uploadcare]
+    reason: "Image optimization for mobile"
+  maps:
+    recommended: mapbox
+    alternatives: [google-maps]
+    reason: "Better RN support"
+
+# Pre-configured patterns
+patterns:
+  mobile:
+    - "Expo Router file-based navigation"
+    - "Secure token storage with expo-secure-store"
+    - "NativeWind for consistent styling"
+    - "Platform-specific components when needed"
+    
+  api:
+    - "JWT with refresh token rotation"
+    - "Offline request queue"
+    - "Optimistic updates"
+    
+  testing:
+    - "Jest for unit tests"
+    - "Detox for E2E (optional)"
+    - "Device testing via EAS"
+
+# Architecture decisions pre-made
+architecture:
+  pattern: "Client-Server"
+  mobile_first: true
+  api_style: "REST with JWT"
+  offline_approach: "Queue + sync on reconnect"
+  
+# Context pre-filled
+context:
+  technical:
+    - "Node.js 18+ required"
+    - "Python 3.11+ for backend"
+    - "Expo CLI installed globally"
+    - "EAS account for builds"
+  development:
+    - "Expo Go for development"
+    - "EAS Build for production"
+    - "Physical device testing recommended"
+  quality:
+    - "Test on both iOS and Android"
+    - "Handle all permission states"
+    - "Graceful offline behavior"
+

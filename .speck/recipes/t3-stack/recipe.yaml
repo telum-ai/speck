@@ -1,0 +1,72 @@
+name: T3 Stack Full-Stack App
+description: The "T3 Stack" - a type-safe, end-to-end full-stack application using Next.js, tRPC, Prisma, and Tailwind CSS. Optimized for type safety and developer productivity.
+keywords:
+  - web
+  - full-stack
+  - nextjs
+  - react
+  - trpc
+  - prisma
+  - typescript
+  - tailwind
+  - t3
+stack:
+  frontend:
+    name: Next.js with React
+    language: TypeScript
+    framework: React
+    styling: Tailwind CSS
+  backend:
+    name: Next.js API Routes + tRPC
+    language: TypeScript
+    framework: tRPC
+    orm: Prisma
+  database:
+    name: PostgreSQL / MySQL / SQLite
+    version: Flexible
+suggested_epics:
+  - name: Authentication with NextAuth.js
+    description: Implement secure authentication using NextAuth.js with multiple providers (Google, GitHub, email).
+    stories_estimate: 5-8
+  - name: Type-Safe API Layer
+    description: Build tRPC routers with end-to-end type safety, input validation with Zod.
+    stories_estimate: 7-10
+  - name: Database Schema & Migrations
+    description: Design Prisma schema, implement migrations, and set up database seeding.
+    stories_estimate: 5-7
+  - name: UI Component Library
+    description: Build reusable UI components with Tailwind CSS and headless UI patterns.
+    stories_estimate: 8-12
+pre_configured_patterns:
+  - name: End-to-End Type Safety
+    description: Automatic type inference from database to frontend with Prisma + tRPC.
+  - name: React Query Integration
+    description: Built-in data fetching, caching, and optimistic updates via tRPC.
+  - name: Zod Validation
+    description: Runtime validation with compile-time type inference.
+
+# External services to consider (Buy vs Build)
+external_services:
+  auth:
+    recommended: clerk
+    alternatives: [nextauth, lucia]
+    reason: "Best Next.js integration, 10k MAU free"
+  database:
+    recommended: planetscale
+    alternatives: [neon, supabase]
+    reason: "MySQL with Prisma, branching included"
+  payments:
+    recommended: stripe
+    reason: "Best API, type-safe with trpc"
+  email:
+    recommended: resend
+    alternatives: [postmark]
+    reason: "React email templates"
+  analytics:
+    recommended: vercel-analytics
+    alternatives: [posthog]
+    reason: "Zero-config with Next.js"
+  error_tracking:
+    recommended: sentry
+    reason: "Next.js + tRPC support"
+

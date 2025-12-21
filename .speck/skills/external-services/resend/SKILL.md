@@ -1,0 +1,298 @@
+---
+name: resend-integration
+description: Integrate Resend for transactional email with React Email templates. Use when implementing email sending, webhook handling, domain verification, or batch email operations.
+---
+
+# Integrating Resend
+
+Provides patterns for transactional email with Resend API and React Email templates. Covers template creation, webhook handling, retry patterns, domain verification, and batch sending.
+
+## 🔌 MCP Server (Recommended)
+
+Install the official Resend MCP server via Docker:
+
+**Where to put this config (Speck template repos):**
+- Add the snippet to `.cursor/mcp.project.json.example` (create if missing; committed, no secrets)
+- Then run: `bash .speck/scripts/bash/merge-mcp-config.sh` to generate `.cursor/mcp.json` (local)
+
+```json
+{
+  "mcpServers": {
+    "resend": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "RESEND_API_KEY", "-e", "SENDER_EMAIL_ADDRESS", "mcp/resend"],
+      "env": {
+        "RESEND_API_KEY": "YOUR_RESEND_API_KEY",
+        "SENDER_EMAIL_ADDRESS": "you@yourdomain.com"
+      }
+    }
+  }
+}
+```
+
+**Tools available**: `send-email` with support for HTML, text, CC, BCC, scheduled sending.
+
+---
+
+## When to Use
+
+Apply when implementing transactional email, marketing email, or any email sending with Resend.
+
+---
+
+## React Email Templates
+
+### Template Component
+
+```typescript
+// emails/order-confirmation.tsx
+import { Html, Container, Heading, Text, Button } from '@react-email/components';
+
+interface OrderProps {
+  orderNumber: string;
+  customerName: string;
+  totalAmount: number;
+}
+
+export function OrderConfirmationEmail({ orderNumber, customerName, totalAmount }: OrderProps) {
+  return (
+    <Html lang="en">
+      <Container style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <Heading>Thank you, {customerName}!</Heading>
+        <Text>Order #{orderNumber} confirmed.</Text>
+        <Text style={{ fontWeight: 'bold' }}>Total: ${totalAmount.toFixed(2)}</Text>
+        <Button href={`https://yourapp.com/orders/${orderNumber}`}>
+          View Order
+        </Button>
+      </Container>
+    </Html>
+  );
+}
+```
+
+### Sending with React Component
+
+```typescript
+import { Resend } from 'resend';
+import { OrderConfirmationEmail } from './emails/order-confirmation';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+await resend.emails.send({
+  from: 'orders@yourdomain.com',
+  to: customerEmail,
+  subject: `Order Confirmation: #${orderNumber}`,
+  react: <OrderConfirmationEmail {...props} />,
+});
+```
+
+---
+
+## Webhook Handling
+
+### Next.js Webhook Endpoint
+
+```typescript
+// app/api/webhooks/resend/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
+
+export async function POST(request: NextRequest) {
+  const signature = request.headers.get('x-resend-signature');
+  const rawBody = await request.text();
+  
+  // Validate signature
+  if (!validateSignature(rawBody, signature!, process.env.RESEND_WEBHOOK_SECRET!)) {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+  }
+  
+  const payload = JSON.parse(rawBody);
+  
+  switch (payload.type) {
+    case 'email.delivered':
+      await handleDelivered(payload.data);
+      break;
+    case 'email.bounced':
+      await handleBounce(payload.data); // Remove from mailing list
+      break;
+    case 'email.complained':
+      await handleComplaint(payload.data); // Unsubscribe user
+      break;
+  }
+  
+  return NextResponse.json({ success: true });
+}
+
+function validateSignature(payload: string, signature: string, secret: string): boolean {
+  const hash = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
+}
+```
+
+### Webhook Event Types
+
+| Event | When | Action |
+|-------|------|--------|
+| `email.sent` | API request successful | Log attempt |
+| `email.delivered` | Reached recipient server | Mark delivered |
+| `email.bounced` | Delivery failed | Remove from list |
+| `email.complained` | Marked as spam | Unsubscribe |
+| `email.delivery_delayed` | Temporary issue | Monitor |
+
+---
+
+## Error Handling & Retries
+
+### Retry with Exponential Backoff
+
+```typescript
+async function sendEmailWithRetry(params: EmailParams, maxAttempts = 5) {
+  let delay = 500;
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await resend.emails.send(params);
+    } catch (error) {
+      if (attempt === maxAttempts) throw error;
+      
+      // Don't retry auth/validation errors
+      if (isNonRetriable(error)) throw error;
+      
+      const jitter = Math.random() * delay * 0.1;
+      await sleep(delay + jitter);
+      delay = Math.min(delay * 2, 30000);
+    }
+  }
+}
+```
+
+### Idempotency Keys (Prevent Duplicates)
+
+```typescript
+// Use deterministic key based on event + entity
+const idempotencyKey = `order-confirmation/${orderId}`;
+
+await resend.emails.send(
+  { from, to, subject, react: <Template /> },
+  { idempotencyKey }
+);
+
+// Same key + same payload = no duplicate send
+// Same key + different payload = error (intentional)
+```
+
+---
+
+## Domain Verification
+
+### Required DNS Records
+
+| Record | Type | Name | Value |
+|--------|------|------|-------|
+| SPF | TXT | send | `v=spf1 include:amazonses.com ~all` |
+| DKIM | TXT | resend._domainkey | `v=DKIM1; h=sha256; p=...` |
+| MX | MX | inbound | `inbound-smtp.us-east-1.amazonaws.com` |
+
+### Best Practice: Use Subdomains
+
+```typescript
+// Use notifications.yourdomain.com instead of yourdomain.com
+// - Isolates sending reputation
+// - Makes intent clear to recipients
+// - Reduces impact of deliverability issues
+```
+
+### Disable Tracking for Transactional Emails
+
+Open/click tracking can trigger spam filters. Disable for critical emails:
+
+```typescript
+await resend.domains.create({
+  name: 'notifications.yourdomain.com',
+  // Disable tracking for better deliverability
+  openTracking: false,
+  clickTracking: false,
+});
+```
+
+---
+
+## Batch Sending
+
+### Send Up to 100 Emails Per Request
+
+```typescript
+const emails = recipients.map(recipient => ({
+  from: 'marketing@yourdomain.com',
+  to: recipient.email,
+  subject: 'Newsletter',
+  html: generateHTML(recipient.name),
+}));
+
+// Batch send (100 max per call)
+const response = await resend.batch.send(emails);
+```
+
+### Rate Limiting
+
+Default: **2 requests/second**. Check headers:
+
+```typescript
+// Response headers
+'ratelimit-limit': 2
+'ratelimit-remaining': 1
+'ratelimit-reset': 5
+'retry-after': 5  // When rate limited
+```
+
+---
+
+## Common Gotchas
+
+### Webhook Duplicates
+Resend uses "at least once" delivery. Implement idempotency:
+
+```typescript
+const processed = await db.findEvent(webhookId);
+if (processed) return; // Skip duplicate
+await processWebhook(payload);
+await db.markProcessed(webhookId);
+```
+
+### 60-Second Webhook Timeout
+Return 200 immediately, process async:
+
+```typescript
+await jobQueue.enqueue('processEmail', payload);
+return NextResponse.json({ success: true }); // Return fast
+```
+
+### Domain Not Verified
+- DNS propagation takes up to 24 hours
+- Use exact record values from Resend dashboard
+- Check for typos in record names
+
+### Emails Going to Spam
+- Enable SPF + DKIM (both required)
+- Disable tracking for transactional emails
+- Use consistent "from" address
+- Warm up new domains gradually
+
+---
+
+## Quick Reference
+
+| Task | Pattern |
+|------|---------|
+| Send with React template | `react: <Component />` |
+| Prevent duplicates | `{ idempotencyKey }` option |
+| Batch send | `resend.batch.send(emails)` |
+| Validate webhooks | Check `x-resend-signature` header |
+| Handle bounces | Webhook → remove from list |
+
+## References
+
+- [Resend API Docs](https://resend.com/docs)
+- [React Email Components](https://react.email/docs)
+- [Webhook Events](https://resend.com/docs/dashboard/webhooks/event-types)
+

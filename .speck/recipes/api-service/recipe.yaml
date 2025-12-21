@@ -1,0 +1,186 @@
+# API Service Recipe
+# Pure backend API without frontend
+
+name: api-service
+display_name: "API Service"
+description: "Pure API backend service for microservices or API-first products"
+version: "1.0.0"
+
+# Keywords for /speck detection
+keywords:
+  - api
+  - backend
+  - microservice
+  - rest api
+  - graphql
+  - service
+  - headless
+  - api-first
+
+# Stack specification
+stack:
+  backend:
+    framework: fastapi
+    version: "0.100+"
+    language: python
+    python_version: "3.11+"
+    orm: sqlalchemy
+    validation: pydantic-v2
+    testing: pytest
+    
+  database:
+    type: postgresql
+    version: "15+"
+    migrations: alembic
+    
+  documentation:
+    openapi: auto-generated
+    redoc: included
+    swagger: included
+    
+  deployment:
+    recommended: docker
+    platforms:
+      - railway
+      - render
+      - aws-ecs
+      - kubernetes
+
+# Complexity assessment
+complexity:
+  level_range: "2"
+  typical_team_size: "1-3"
+  typical_timeline: "1-3 months"
+  
+# What this recipe is good for
+ideal_for:
+  - "Microservices architecture"
+  - "API-first products"
+  - "Backend for multiple frontends"
+  - "Third-party API providers"
+  - "Data processing services"
+  - "Integration layers"
+
+# What this recipe is NOT good for
+not_ideal_for:
+  - "Apps needing frontend (use react-fastapi-postgres)"
+  - "Serverless functions (use nextjs-supabase edge functions)"
+  - "Simple CRUD (may be overkill)"
+
+# Common epics for this stack
+suggested_epics:
+  - id: foundation
+    name: "API Foundation"
+    priority: 1
+    phase: mvp
+    stories_estimate: 4-6
+    description: "Error handling, logging, health checks, auth middleware"
+    
+  - id: core-endpoints
+    name: "Core Endpoints"
+    priority: 1
+    phase: mvp
+    stories_estimate: 6-12
+    description: "[CUSTOMIZE] Main API endpoints for your domain"
+    
+  - id: data-layer
+    name: "Data Layer"
+    priority: 1
+    phase: mvp
+    stories_estimate: 4-6
+    description: "Database models, migrations, repository pattern"
+    
+  - id: integrations
+    name: "External Integrations"
+    priority: 2
+    phase: enhancement
+    stories_estimate: 3-6
+    description: "Third-party API integrations"
+    optional: true
+    
+  - id: observability
+    name: "Observability"
+    priority: 2
+    phase: enhancement
+    stories_estimate: 3-5
+    description: "Structured logging, metrics, tracing"
+    optional: true
+
+# External services to consider (Buy vs Build)
+external_services:
+  auth:
+    recommended: auth0
+    alternatives: [stytch]
+    reason: "M2M + API keys"
+  database:
+    recommended: neon
+    alternatives: [supabase, planetscale]
+    reason: "Serverless Postgres, branching"
+  caching:
+    recommended: upstash-redis
+    alternatives: [elasticache]
+    reason: "Serverless, pay-per-request"
+  queue:
+    recommended: upstash-qstash
+    alternatives: [sqs, rabbitmq]
+    reason: "Serverless message queue"
+  monitoring:
+    recommended: sentry
+    alternatives: [signoz, datadog]
+    reason: "Python SDK + error tracking"
+  email:
+    recommended: postmark
+    alternatives: [resend, ses]
+    reason: "Best deliverability"
+  sms:
+    recommended: twilio
+    alternatives: [plivo]
+    reason: "Reliable, global reach"
+
+# Pre-configured patterns
+patterns:
+  api:
+    - "RESTful design with OpenAPI spec"
+    - "Consistent error response format"
+    - "Request ID tracking"
+    - "API versioning (/v1/)"
+    - "Rate limiting"
+    
+  authentication:
+    - "JWT or API key authentication"
+    - "Role-based access control"
+    - "Auth middleware pattern"
+    
+  data:
+    - "Repository pattern for data access"
+    - "Pydantic schemas for validation"
+    - "Alembic migrations (idempotent)"
+    
+  operations:
+    - "Health check endpoints (/health, /ready)"
+    - "Structured JSON logging"
+    - "Graceful shutdown"
+    - "Docker containerization"
+
+# Architecture decisions pre-made
+architecture:
+  pattern: "Layered (router → service → repository)"
+  api_style: "REST"
+  documentation: "OpenAPI 3.0"
+  containerized: true
+  
+# Context pre-filled
+context:
+  technical:
+    - "Python 3.11+ required"
+    - "PostgreSQL 15+ required"
+    - "Docker for deployment"
+  development:
+    - "OpenAPI-first design"
+    - "Contract testing"
+    - "Local Docker development"
+  quality:
+    - "95%+ test coverage"
+    - "API contract tests"
+    - "Performance benchmarks"
+

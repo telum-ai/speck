@@ -1,0 +1,173 @@
+# Static Site Recipe
+# Marketing sites, documentation, blogs
+
+name: static-site
+display_name: "Static Site"
+description: "Marketing site, documentation, or blog with static generation"
+version: "1.0.0"
+
+# Keywords for /speck detection
+keywords:
+  - static site
+  - marketing site
+  - landing page
+  - documentation
+  - docs
+  - blog
+  - portfolio
+  - content site
+  - jamstack
+
+# Stack specification
+stack:
+  framework_options:
+    astro:
+      version: "4+"
+      content: mdx
+      styling: tailwind
+      deployment: vercel
+      
+    nextjs-static:
+      version: "14+"
+      export: static
+      content: mdx
+      styling: tailwind
+      deployment: vercel
+
+# Complexity assessment
+complexity:
+  level_range: "1"
+  typical_team_size: "1-2"
+  typical_timeline: "1-4 weeks"
+  
+# What this recipe is good for
+ideal_for:
+  - "Company marketing sites"
+  - "Product landing pages"
+  - "Developer documentation"
+  - "Personal portfolios"
+  - "Blogs and content sites"
+  - "Open source project sites"
+
+# What this recipe is NOT good for
+not_ideal_for:
+  - "Dynamic web apps (use react-fastapi-postgres)"
+  - "User authentication flows"
+  - "Complex data interactions"
+  - "Real-time features"
+
+# Common epics for this stack
+suggested_epics:
+  - id: structure
+    name: "Site Structure"
+    priority: 1
+    phase: mvp
+    stories_estimate: 2-4
+    description: "Navigation, layout, header/footer, routing"
+    
+  - id: pages
+    name: "Content Pages"
+    priority: 1
+    phase: mvp
+    stories_estimate: 4-8
+    description: "[CUSTOMIZE] Main site pages (home, about, features, etc.)"
+    
+  - id: blog
+    name: "Blog/News"
+    priority: 2
+    phase: enhancement
+    stories_estimate: 3-5
+    description: "Blog posts, categories, RSS feed"
+    optional: true
+    
+  - id: forms
+    name: "Contact & Forms"
+    priority: 2
+    phase: mvp
+    stories_estimate: 2-3
+    description: "Contact forms, newsletter signup, form handling"
+    optional: true
+    
+  - id: seo
+    name: "SEO & Analytics"
+    priority: 1
+    phase: mvp
+    stories_estimate: 2-3
+    description: "Meta tags, sitemap, analytics integration"
+
+# External services to consider (Buy vs Build)
+external_services:
+  cms:
+    recommended: sanity
+    alternatives: [contentful, storyblok]
+    reason: "Headless, great DX, generous free tier"
+  forms:
+    recommended: formspree
+    alternatives: [basin, netlify-forms]
+    reason: "No backend needed"
+  analytics:
+    recommended: plausible
+    alternatives: [fathom, umami]
+    reason: "Privacy-first, simple, GDPR-friendly"
+  search:
+    recommended: algolia-docsearch
+    alternatives: [pagefind]
+    reason: "Free for docs/OSS"
+  newsletter:
+    recommended: buttondown
+    alternatives: [convertkit, mailchimp]
+    reason: "Simple, markdown-first"
+  comments:
+    recommended: giscus
+    alternatives: [disqus, utterances]
+    reason: "GitHub-based, free, no tracking"
+  images:
+    recommended: cloudinary
+    alternatives: [imgix]
+    reason: "Auto-optimization, free tier"
+
+# Pre-configured patterns
+patterns:
+  content:
+    - "MDX for rich content"
+    - "Frontmatter for metadata"
+    - "Content collections"
+    - "Image optimization"
+    
+  seo:
+    - "Meta tags per page"
+    - "Open Graph images"
+    - "Sitemap generation"
+    - "Robots.txt"
+    
+  performance:
+    - "Static generation"
+    - "Image optimization"
+    - "Minimal JavaScript"
+    - "Edge CDN deployment"
+    
+  forms:
+    - "Formspree or similar service"
+    - "Email notifications"
+    - "Spam protection"
+
+# Architecture decisions pre-made
+architecture:
+  pattern: "Static Site Generation (SSG)"
+  content_source: "MDX files or headless CMS"
+  forms: "Third-party form service"
+  hosting: "Edge CDN"
+  
+# Context pre-filled
+context:
+  technical:
+    - "Node.js 18+ required"
+    - "Content in MDX or CMS"
+  development:
+    - "Preview deployments on PR"
+    - "Content preview locally"
+  quality:
+    - "Core Web Vitals optimized"
+    - "Accessibility (WCAG 2.1 AA)"
+    - "Mobile-first responsive"
+

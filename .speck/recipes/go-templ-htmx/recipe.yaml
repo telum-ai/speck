@@ -1,0 +1,47 @@
+name: Go Templ HTMX Full-Stack App
+description: A high-performance, minimalist full-stack web application using Go with Templ templates and HTMX. Excellent for building fast, lightweight applications with minimal dependencies.
+keywords:
+  - web
+  - full-stack
+  - go
+  - golang
+  - templ
+  - htmx
+  - postgresql
+  - server-rendered
+  - performance
+stack:
+  frontend:
+    name: Templ + HTMX
+    language: Go (Templ) / HTML
+    framework: HTMX + Alpine.js (optional)
+    styling: Tailwind CSS
+  backend:
+    name: Go Standard Library / Echo / Chi
+    language: Go
+    framework: Echo / Chi / std lib
+    orm: sqlc / GORM
+  database:
+    name: PostgreSQL / SQLite
+    version: "15"
+suggested_epics:
+  - name: HTTP Server & Routing
+    description: Set up Go HTTP server with middleware, routing, and error handling.
+    stories_estimate: 4-6
+  - name: Templ Component System
+    description: Build type-safe Templ templates with reusable components and layouts.
+    stories_estimate: 6-9
+  - name: Database Layer with sqlc
+    description: Implement type-safe database queries using sqlc for compile-time SQL validation.
+    stories_estimate: 5-8
+  - name: Authentication & Sessions
+    description: Implement session-based auth with secure cookies and CSRF protection.
+    stories_estimate: 5-7
+pre_configured_patterns:
+  - name: Compile-Time Type Safety
+    description: Templ templates are compiled to Go, catching errors at build time.
+  - name: Single Binary Deployment
+    description: Deploy as a single binary with embedded assets.
+  - name: HTMX Progressive Enhancement
+    description: Works without JavaScript, enhanced with HTMX.
+

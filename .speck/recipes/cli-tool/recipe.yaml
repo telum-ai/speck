@@ -1,0 +1,139 @@
+# CLI Tool Recipe
+# Command-line utility or developer tool
+
+name: cli-tool
+display_name: "CLI Tool"
+description: "Command-line utility for developers or automation"
+version: "1.0.0"
+
+# Keywords for /speck detection
+keywords:
+  - cli
+  - command line
+  - terminal
+  - developer tool
+  - automation
+  - script
+  - utility
+  - devtool
+
+# Stack specification
+stack:
+  language_options:
+    python:
+      framework: typer  # or click
+      version: "3.11+"
+      ui: rich
+      testing: pytest
+      packaging: pip
+      
+    nodejs:
+      framework: commander
+      version: "18+"
+      prompts: inquirer
+      ui: chalk
+      testing: vitest
+      packaging: npm
+
+# Complexity assessment
+complexity:
+  level_range: "1-2"
+  typical_team_size: "1-2"
+  typical_timeline: "2-8 weeks"
+  
+# What this recipe is good for
+ideal_for:
+  - "Developer productivity tools"
+  - "Build and deployment scripts"
+  - "Data processing utilities"
+  - "Code generators"
+  - "System administration tools"
+  - "API clients"
+
+# What this recipe is NOT good for
+not_ideal_for:
+  - "GUI applications"
+  - "Web services (use api-service)"
+  - "Long-running daemons (consider different architecture)"
+
+# Common epics for this stack
+suggested_epics:
+  - id: framework
+    name: "CLI Framework"
+    priority: 1
+    phase: mvp
+    stories_estimate: 3-5
+    description: "Argument parsing, help text, version info, global options"
+    
+  - id: commands
+    name: "Core Commands"
+    priority: 1
+    phase: mvp
+    stories_estimate: 4-8
+    description: "[CUSTOMIZE] Main CLI commands and subcommands"
+    
+  - id: config
+    name: "Configuration"
+    priority: 1
+    phase: mvp
+    stories_estimate: 2-4
+    description: "Config file support, environment variables, defaults"
+    
+  - id: output
+    name: "Output & Formatting"
+    priority: 2
+    phase: mvp
+    stories_estimate: 2-4
+    description: "Progress bars, tables, colors, JSON output"
+    
+  - id: distribution
+    name: "Distribution"
+    priority: 1
+    phase: launch
+    stories_estimate: 2-3
+    description: "Package publishing, installation docs, versioning"
+
+# Pre-configured patterns
+patterns:
+  cli:
+    - "Subcommand structure (tool <command> <args>)"
+    - "Global options (--verbose, --quiet, --config)"
+    - "Help text with examples"
+    - "Exit codes for scripting"
+    
+  config:
+    - "TOML/YAML config file"
+    - "Environment variable overrides"
+    - "Default config generation"
+    
+  output:
+    - "Structured output (JSON for scripts)"
+    - "Human-friendly output (tables, colors)"
+    - "Progress indicators for long operations"
+    - "Verbosity levels"
+    
+  error_handling:
+    - "User-friendly error messages"
+    - "Debug mode with stack traces"
+    - "Graceful Ctrl+C handling"
+
+# Architecture decisions pre-made
+architecture:
+  pattern: "Command pattern"
+  structure: "Subcommand hierarchy"
+  config_format: "TOML or YAML"
+  output_modes: "human + json"
+  
+# Context pre-filled
+context:
+  technical:
+    - "Python 3.11+ OR Node.js 18+"
+    - "Cross-platform support (macOS, Linux, Windows)"
+  development:
+    - "Semantic versioning"
+    - "Changelog maintenance"
+  quality:
+    - "100% command coverage in tests"
+    - "Help text for all commands"
+    - "Examples in README"
+

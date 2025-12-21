@@ -1,0 +1,297 @@
+---
+description: Validate implementation against specification, execute acceptance tests, verify constitution compliance, and generate validation report.
+---
+
+The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
+
+User input:
+
+$ARGUMENTS
+
+Goal: Comprehensively validate that the implementation fulfills the specification, meets non-functional requirements, adheres to constitutional principles, and is ready for review/deployment.
+
+Execution steps:
+
+1. Locate the active story directory (STORY_DIR):
+   - Preferred: user is already in the story directory (or a subfolder like `contracts/`)
+   - Determine STORY_DIR by walking up from current directory until you find `spec.md`
+   - If no `spec.md` found: instruct user to `cd` into the story directory or run `/speck` to route
+   - Require:
+     - `{STORY_DIR}/spec.md`
+     - `{STORY_DIR}/plan.md`
+     - `{STORY_DIR}/tasks.md`
+   - If any missing: ERROR "Run /story-specify, /story-plan, and /story-tasks first"
+
+2. Load artifacts and extract validation criteria:
+   - **spec.md**: Functional requirements (FR-XXX), acceptance scenarios, user stories, non-functional requirements, performance targets, key entities
+   - **plan.md**: Technical context, constitution check gates, complexity tracking, project structure
+   - **tasks.md**: All task IDs and their completion status
+   - **Constitution chain** (if exists): Project-specific principles and quality gates
+     - Project: `specs/projects/<PROJECT_ID>/constitution.md` (optional)
+     - Epic: `{EPIC_DIR}/constitution.md` (optional)
+   - **quickstart.md** (if exists): Integration test scenarios
+   - **contracts/** (if exists): API specifications to verify
+
+3. Task completion verification:
+   - Parse tasks.md for all task checkboxes
+   - Report completion percentage (e.g., "28/32 tasks complete (87.5%)")
+   - If any tasks incomplete: WARN with list of incomplete task IDs
+   - User can override with `--allow-incomplete` flag if iterating
+
+4. Functional requirements traceability:
+   - For each FR-XXX in spec.md, determine verification method:
+     * If contract test exists → check test passes
+     * If integration test exists → check test passes
+     * If mentioned in quickstart.md → mark for scenario execution
+     * If no test coverage → FLAG as "Untested requirement"
+   - Generate requirements traceability matrix (RTM)
+
+5. Execute quickstart scenarios (if quickstart.md exists):
+   - Parse quickstart.md for step-by-step test scenarios
+   - Attempt to execute each scenario programmatically:
+     * API scenarios: send HTTP requests, validate responses
+     * CLI scenarios: execute commands, validate output
+     * Integration scenarios: run test files, capture results
+   - For manual scenarios: provide checklist for user validation
+   - Capture pass/fail status for each scenario
+
+6. Run test suite validation:
+   - Detect project type and test commands from plan.md:
+     * Python: `pytest` (or as specified in Technical Context)
+     * JavaScript/TypeScript: `npm test` or `npm run test:ci`
+     * Rust: `cargo test`
+     * Go: `go test ./...`
+     * (Add others based on Language/Version in plan.md)
+   - Run tests and capture output
+   - Parse test results: total, passed, failed, skipped
+   - If any failures: HALT with detailed error report (unless `--force` flag)
+
+7. Performance validation (if targets specified in spec.md):
+   - Extract performance targets from spec.md Non-Functional Requirements
+   - Look for performance test files (tests/performance/, tests/load/, etc.)
+   - Run performance tests and compare against targets
+   - Report: Target vs Actual for each metric
+   - Flag any violations as PERFORMANCE_GAP
+
+8. Constitution compliance verification:
+   - Re-evaluate Constitution Check section from plan.md against actual code
+   - For each principle gate:
+     * Verify claimed compliance is implemented (e.g., if "feature flags" claimed, check they exist)
+     * Check Complexity Tracking justifications are valid
+     * Scan codebase for anti-patterns (if constitution defines them)
+   - If violations found that weren't in Complexity Tracking: FLAG as "Undocumented deviation"
+
+9. Cursor rules compliance check:
+   - Check if `.cursor/rules/` directory exists
+   - If exists, scan for all `*.mdc` or `*.md` rule files
+   - For each rule file found:
+     * Read the rule to understand its trigger conditions and requirements
+     * Determine if rule applies to this story based on:
+       - File types changed (e.g., `.tsx` files → frontend rules apply)
+       - Feature areas mentioned in spec.md (e.g., "migration" → migration rules apply)
+       - Technologies used in plan.md (e.g., "React" → React rules apply)
+     * If rule applies, validate implementation against rule requirements:
+       - Check for required patterns mentioned in rule
+       - Check for prohibited patterns mentioned in rule
+       - Verify best practices described in rule are followed
+     * Document compliance status for each applicable rule
+   - Generate rules compliance section:
+     ```
+     ## Cursor Rules Compliance
+     
+     Rules Evaluated: [X total, Y applicable to this story]
+     
+     | Rule | Applicability | Status | Findings |
+     |------|---------------|--------|----------|
+     | design-system-enforcement.mdc | ✅ Applies (frontend files changed) | ✅ PASS | All components use design system |
+     | migrations-safety.mdc | ❌ Not applicable (no migrations) | N/A | - |
+     | testing.mdc | ✅ Applies (all stories) | ⚠️ WARN | 2 tests marked .skip() |
+     ```
+   - If no `.cursor/rules/` directory: Note "No project-specific rules found"
+   - If any rule violations found: Include detailed explanation and remediation steps
+
+10. Code quality gates (run from repository root):
+   - **Linting**: Run linters specified in plan.md
+     * Python: flake8, mypy, black --check
+     * JavaScript/TypeScript: eslint, prettier --check
+     * Rust: cargo clippy
+     * Go: golangci-lint
+   - **Type checking** (if applicable):
+     * TypeScript: tsc --noEmit
+     * Python: mypy
+   - **Security scanning** (optional, if tools available):
+     * Python: bandit, safety
+     * JavaScript: npm audit
+   - Capture all violations and warnings
+
+11. Documentation completeness check:
+    - If new entities in data-model.md: Check models have docstrings/comments
+    - If new API endpoints in contracts/: Check OpenAPI/GraphQL schema exists
+    - If new CLI commands: Check --help text exists
+    - If breaking changes: Check migration guide exists
+    - Agent context files updated: Verify recent changes include this feature
+
+12. Generate validation report in `{STORY_DIR}/validation-report.md`:
+    ```markdown
+    # Validation Report: [STORY]
+    
+    **Date**: YYYY-MM-DD HH:MM
+    **Branch**: [branch-name]
+    **Status**: [PASS / CONDITIONAL_PASS / FAIL]
+    
+    ## Executive Summary
+    - **Task Completion**: X/Y tasks complete (Z%)
+    - **Test Results**: X/Y tests passing (Z%)
+    - **Requirements Coverage**: X/Y requirements verified (Z%)
+    - **Performance**: [PASS / FAIL] (X/Y targets met)
+    - **Constitution Compliance**: [PASS / CONDITIONAL / FAIL]
+    - **Code Quality**: [PASS / FAIL]
+    
+    ## Requirements Traceability Matrix
+    | Req ID | Description | Verification Method | Status | Notes |
+    |--------|-------------|---------------------|--------|-------|
+    | FR-001 | [desc] | Contract test | ✅ PASS | test_x.py passes |
+    | FR-002 | [desc] | Integration test | ❌ FAIL | Expected X, got Y |
+    | FR-003 | [desc] | Manual (quickstart) | ⚠️ PENDING | Needs user validation |
+    | FR-004 | [desc] | - | ❌ UNTESTED | No test coverage |
+    
+    ## Test Suite Results
+    - **Contract Tests**: X passed, Y failed
+    - **Integration Tests**: X passed, Y failed
+    - **Unit Tests**: X passed, Y failed
+    - **Performance Tests**: X passed, Y failed
+    - **Total Coverage**: Z%
+    
+    [Detailed test output or link to test report]
+    
+    ## Quickstart Scenario Execution
+    | Scenario | Steps | Status | Details |
+    |----------|-------|--------|---------|
+    | User Registration | 5 | ✅ PASS | All steps successful |
+    | Data Import | 3 | ❌ FAIL | Step 2 failed: timeout |
+    
+   ## Performance Validation
+   | Metric | Target | Actual | Status | Gap |
+   |--------|--------|--------|--------|-----|
+   | API latency (p95) | <200ms | 145ms | ✅ PASS | -55ms |
+   | Throughput | >1000 req/s | 850 req/s | ❌ FAIL | -150 req/s |
+   
+   ## Cursor Rules Compliance
+   
+   **Rules Directory**: `.cursor/rules/` [exists/not found]
+   **Total Rules**: [X]
+   **Applicable to Story**: [Y]
+   
+   | Rule File | Applies? | Status | Findings |
+   |-----------|----------|--------|----------|
+   | [rule-name.mdc] | ✅ Yes ([reason]) | ✅ PASS | [what was checked] |
+   | [rule-name.mdc] | ✅ Yes ([reason]) | ⚠️ WARN | [violations found] |
+   | [rule-name.mdc] | ❌ No | N/A | - |
+   
+   **Summary**: [X of Y applicable rules passed, Z warnings, A failures]
+   
+   **Detailed Findings**:
+   - [Rule name]: [Specific compliance check details, violations, or confirmations]
+   
+   ## Constitution Compliance
+    | Principle/Gate | Required | Implemented | Status | Notes |
+    |----------------|----------|-------------|--------|-------|
+    | [Principle Name] | [requirement] | [Yes/No/Partial] | [✅/⚠️/❌] | [details] |
+    
+    **Complexity Deviations**: [List any from plan.md and verify justifications]
+    
+    ## Code Quality Gates
+    - **Linting**: [PASS / FAIL] ([X violations])
+    - **Type Checking**: [PASS / FAIL] ([X errors])
+    - **Security**: [PASS / WARN / FAIL] ([X issues])
+    
+    [Detailed violations if any]
+    
+    ## Documentation Status
+    - [ ] API documentation complete
+    - [ ] Model/entity documentation complete
+    - [ ] CLI help text complete
+    - [ ] Migration guide (if breaking changes)
+    - [ ] Agent context files updated
+    
+    ## Blockers & Issues
+    [List any critical issues that must be resolved before merge/deploy]
+    
+    ## Recommendations
+    1. [Action item 1]
+    2. [Action item 2]
+    3. [Action item 3]
+    
+    ## Next Steps
+    - [If PASS]: Ready for code review and merge
+    - [If CONDITIONAL_PASS]: Address warnings, then merge
+    - [If FAIL]: Fix blockers, then re-run /story-validate
+    ```
+
+12. **Project Truth Update Prompt** (if PASS):
+    
+    After successful validation, prompt user to update project-level docs:
+    
+    ```
+    ✅ Validation PASSED! 
+    
+    Before completing this story, consider updating project-level truth:
+    
+    Project-level docs that MAY need updates based on this story:
+    - [ ] `project.md` → If scope/vision expanded
+    - [ ] `PRD.md` → If new features delivered or requirements changed
+    - [ ] `architecture.md` → If new patterns introduced
+    - [ ] `context.md` → If new constraints discovered
+    - [ ] `design-system.md` → If new UI patterns added
+    - [ ] `ux-strategy.md` → If UX principles validated/changed
+    
+    To update:
+    1. Review validation-report.md for actual changes
+    2. Update relevant project docs with "(Added in Story [ID])"
+    3. Commit updates with "docs: update project truth after [story-id]"
+    
+    Skip with: --skip-truth-update
+    ```
+    
+    **Include in validation-report.md**:
+    ```markdown
+    ## Project Truth Update Checklist
+    
+    This story delivered features that may require project-level documentation updates:
+    
+    - [ ] `project.md` → [Relevant? Y/N] - [What changed]
+    - [ ] `PRD.md` → [Relevant? Y/N] - [What changed]
+    - [ ] `architecture.md` → [Relevant? Y/N] - [What changed]
+    - [ ] `context.md` → [Relevant? Y/N] - [What changed]
+    - [ ] `design-system.md` → [Relevant? Y/N] - [What changed]
+    - [ ] `ux-strategy.md` → [Relevant? Y/N] - [What changed]
+    
+    **Note**: Project-level docs are the source of truth for "what exists now".
+    Stories are proposals; after validation, project docs must reflect new reality.
+    ```
+
+13. Report completion to user:
+    - Path to validation-report.md
+    - Overall status (PASS / CONDITIONAL_PASS / FAIL)
+    - If FAIL: List top 3 blockers to fix
+    - If PASS: Suggest "Ready for PR - see validation-report.md for details"
+    - If PASS: Remind about project truth updates
+    - Command to re-run: `/story-validate` (after fixes)
+
+Behavior rules:
+- NEVER skip test execution - if tests fail, validation fails (unless `--force`)
+- NEVER mark requirements as "verified" without evidence (test or scenario)
+- If quickstart.md missing, WARN but continue (use test suite as primary validation)
+- Performance validation is optional (only if targets specified in spec.md)
+- Constitution check MUST run - it's non-negotiable for Speck workflow
+- Include timestamps in validation report for audit trail
+- Allow flags: `--allow-incomplete`, `--force`, `--skip-perf`, `--skip-quickstart`
+
+Error handling:
+- If test suite fails: Capture errors, include in report, mark as FAIL
+- If performance tests not found but targets exist: WARN, skip performance section
+- If quickstart.md malformed: WARN, mark scenarios as "Unable to parse"
+- If linting fails: Include in report but don't block (CONDITIONAL_PASS)
+
+Context: $ARGUMENTS
+

@@ -1,0 +1,195 @@
+# Next.js + Supabase Recipe
+# JAMstack/Serverless application
+
+name: nextjs-supabase
+display_name: "Next.js + Supabase"
+description: "Modern JAMstack application with Next.js App Router and Supabase BaaS"
+version: "1.0.0"
+
+# Keywords for /speck detection
+keywords:
+  - nextjs
+  - next.js
+  - supabase
+  - jamstack
+  - serverless
+  - vercel
+  - edge
+  - real-time
+  - baas
+  - backend as a service
+
+# Stack specification
+stack:
+  frontend:
+    framework: nextjs
+    version: "14+"
+    router: app-router
+    language: typescript
+    styling: tailwind
+    components: shadcn-ui
+    testing: vitest
+    
+  backend:
+    type: baas
+    provider: supabase
+    features:
+      - postgresql
+      - auth
+      - realtime
+      - storage
+      - edge-functions
+      
+  database:
+    type: postgresql
+    provider: supabase
+    version: "15+"
+    
+  auth:
+    provider: supabase-auth
+    methods:
+      - email-password
+      - magic-link
+      - oauth
+      
+  deployment:
+    frontend: vercel
+    backend: supabase-cloud
+
+# Complexity assessment
+complexity:
+  level_range: "1-2"
+  typical_team_size: "1-3"
+  typical_timeline: "1-3 months"
+  
+# What this recipe is good for
+ideal_for:
+  - "Rapid prototypes and MVPs"
+  - "Solo developers or small teams"
+  - "Real-time applications"
+  - "Content-heavy applications"
+  - "Applications with file uploads"
+  - "Projects needing quick auth setup"
+
+# What this recipe is NOT good for
+not_ideal_for:
+  - "Complex business logic needing custom backend"
+  - "Heavy data processing"
+  - "Applications needing fine-grained backend control"
+  - "Projects with strict data residency requirements"
+
+# Common epics for this stack
+suggested_epics:
+  - id: auth
+    name: "Authentication Setup"
+    priority: 1
+    phase: mvp
+    stories_estimate: 3-5
+    description: "Supabase Auth integration with protected routes"
+    
+  - id: data-model
+    name: "Data Models & RLS"
+    priority: 1
+    phase: mvp
+    stories_estimate: 4-6
+    description: "Database schema, Row-Level Security policies, type generation"
+    
+  - id: core-features
+    name: "Core Features"
+    priority: 1
+    phase: mvp
+    stories_estimate: 6-12
+    description: "[CUSTOMIZE] Main application features"
+    
+  - id: realtime
+    name: "Real-time Features"
+    priority: 2
+    phase: mvp
+    stories_estimate: 2-4
+    description: "Supabase Realtime subscriptions"
+    optional: true
+    
+  - id: storage
+    name: "File Storage"
+    priority: 2
+    phase: enhancement
+    stories_estimate: 3-5
+    description: "Supabase Storage for file uploads"
+    optional: true
+    
+  - id: edge-functions
+    name: "Edge Functions"
+    priority: 3
+    phase: enhancement
+    stories_estimate: 2-4
+    description: "Custom backend logic via Edge Functions"
+    optional: true
+
+# External services to consider (Buy vs Build)
+external_services:
+  auth:
+    recommended: supabase-auth
+    reason: "Built-in, free tier generous"
+  payments:
+    recommended: stripe
+    alternatives: [lemonsqueezy]
+    reason: "Best integration with Supabase"
+  email:
+    recommended: resend
+    alternatives: [postmark]
+    reason: "Pairs well with Vercel"
+  search:
+    recommended: meilisearch
+    alternatives: [algolia]
+    reason: "$30/mo, easy setup"
+  analytics:
+    recommended: vercel-analytics
+    alternatives: [posthog, plausible]
+    reason: "Zero-config with Next.js"
+  error_tracking:
+    recommended: sentry
+    reason: "Next.js plugin available"
+
+# Pre-configured patterns
+patterns:
+  database:
+    - "Row-Level Security (RLS) for all tables"
+    - "Automatic type generation from schema"
+    - "Migrations via Supabase CLI"
+    
+  auth:
+    - "Server-side auth with cookies"
+    - "Protected routes with middleware"
+    - "Social OAuth providers"
+    
+  frontend:
+    - "App Router with server components"
+    - "Server actions for mutations"
+    - "Optimistic updates with revalidation"
+    
+  realtime:
+    - "Postgres Changes for subscriptions"
+    - "Presence for online status"
+    - "Broadcast for ephemeral messages"
+
+# Architecture decisions pre-made
+architecture:
+  pattern: "Serverless/Edge"
+  rendering: "Hybrid (SSR + SSG + CSR)"
+  api_style: "Supabase client + Edge Functions"
+  realtime_approach: "Supabase Realtime (built-in)"
+  
+# Context pre-filled
+context:
+  technical:
+    - "Node.js 18+ required"
+    - "Supabase account required"
+    - "Vercel account recommended"
+  development:
+    - "GitHub for version control"
+    - "Supabase CLI for local development"
+    - "Type generation on schema changes"
+  quality:
+    - "TypeScript strict mode"
+    - "RLS policies tested locally"
+

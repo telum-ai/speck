@@ -1,0 +1,211 @@
+# React + FastAPI + PostgreSQL Recipe
+# Full-stack web application with Python backend
+
+name: react-fastapi-postgres
+display_name: "React + FastAPI + PostgreSQL"
+description: "Full-stack web application with React frontend, FastAPI backend, and PostgreSQL database"
+version: "1.0.0"
+
+# Keywords for /speck detection
+keywords:
+  - react
+  - fastapi
+  - python backend
+  - full stack web
+  - postgresql
+  - spa
+  - web app
+  - crud app
+  - dashboard
+  - admin panel
+
+# Stack specification
+stack:
+  frontend:
+    framework: react
+    version: "18+"
+    build_tool: vite
+    language: typescript
+    styling: tailwind
+    state_management: 
+      - zustand  # Simple cases
+      - tanstack-query  # Server state
+    testing: vitest
+    
+  backend:
+    framework: fastapi
+    version: "0.100+"
+    language: python
+    python_version: "3.11+"
+    orm: sqlalchemy
+    validation: pydantic-v2
+    testing: pytest
+    
+  database:
+    type: postgresql
+    version: "15+"
+    migrations: alembic
+    
+  auth:
+    recommended: clerk
+    alternatives:
+      - stytch
+      - auth0
+      - custom-jwt
+      
+  deployment:
+    recommended: railway
+    alternatives:
+      - render
+      - docker-compose
+      - aws-ecs
+
+# Complexity assessment
+complexity:
+  level_range: "2-3"
+  typical_team_size: "1-5"
+  typical_timeline: "2-6 months"
+  
+# What this recipe is good for
+ideal_for:
+  - "B2B SaaS applications"
+  - "Internal business tools"
+  - "Data-driven dashboards"
+  - "CRUD-heavy applications"
+  - "Applications needing real-time features"
+  - "Projects with complex business logic"
+
+# What this recipe is NOT good for
+not_ideal_for:
+  - "Simple landing pages (use static-site)"
+  - "Mobile-first apps (use expo-fastapi)"
+  - "Serverless-first projects (use nextjs-supabase)"
+  - "CLI tools (use cli-tool)"
+
+# Common epics for this stack
+suggested_epics:
+  - id: auth
+    name: "Authentication & Authorization"
+    priority: 1
+    phase: mvp
+    stories_estimate: 5-8
+    description: "User login, registration, session management, role-based access"
+    
+  - id: user-management
+    name: "User Management"
+    priority: 1
+    phase: mvp
+    stories_estimate: 4-6
+    description: "User profiles, settings, account management"
+    
+  - id: core-domain
+    name: "Core Domain Features"
+    priority: 1
+    phase: mvp
+    stories_estimate: 8-15
+    description: "[CUSTOMIZE] Main business logic and features"
+    
+  - id: admin
+    name: "Admin Dashboard"
+    priority: 2
+    phase: enhancement
+    stories_estimate: 5-10
+    description: "Administrative interface for managing users and data"
+    optional: true
+    
+  - id: realtime
+    name: "Real-time Features"
+    priority: 2
+    phase: enhancement
+    stories_estimate: 4-8
+    description: "WebSocket-based live updates, notifications"
+    optional: true
+    
+  - id: integrations
+    name: "External Integrations"
+    priority: 3
+    phase: future
+    stories_estimate: 3-6
+    description: "Third-party API integrations"
+    optional: true
+
+# External services to consider (Buy vs Build)
+external_services:
+  auth:
+    recommended: clerk
+    alternatives: [stytch, auth0]
+    reason: "Fastest path to production auth for React; hosted sessions, good DX, and backend JWT verification patterns"
+  payments:
+    recommended: stripe
+    alternatives: [paddle]
+    reason: "Best API, 2.9% + $0.30"
+  email:
+    recommended: resend
+    alternatives: [postmark, sendgrid]
+    reason: "Modern DX, 3k emails free"
+  file_storage:
+    recommended: uploadcare
+    alternatives: [cloudinary, s3]
+    reason: "Upload widget, CDN included"
+  error_tracking:
+    recommended: sentry
+    reason: "Python + React SDKs"
+  analytics:
+    recommended: posthog
+    alternatives: [mixpanel]
+    reason: "Open-source, self-hostable"
+  search:
+    recommended: meilisearch
+    alternatives: [algolia, typesense]
+    reason: "$30/mo, easy setup"
+
+# Pre-configured patterns
+patterns:
+  api:
+    - "RESTful with OpenAPI documentation"
+    - "Request/response validation with Pydantic"
+    - "Consistent error response format"
+    - "API versioning (/v1/)"
+    
+  database:
+    - "Alembic migrations with idempotent patterns"
+    - "SQLAlchemy models as source of truth"
+    - "Repository pattern for data access"
+    
+  frontend:
+    - "Feature-based folder structure"
+    - "TanStack Query for server state"
+    - "React Hook Form for forms"
+    - "Design system with Tailwind"
+    
+  testing:
+    - "pytest for backend (unit + contract + integration)"
+    - "Vitest for frontend (unit + component)"
+    - "TDD workflow with skip markers"
+    
+  deployment:
+    - "Environment-based configuration"
+    - "Database migrations in pre-deploy"
+    - "Health check endpoints"
+
+# Architecture decisions pre-made
+architecture:
+  pattern: "Modular monolith"
+  frontend_backend_split: true
+  api_style: "REST"
+  realtime_approach: "WebSocket (if needed)"
+  
+# Context pre-filled
+context:
+  technical:
+    - "Python 3.11+ required"
+    - "Node.js 18+ for frontend"
+    - "PostgreSQL 15+ required"
+  development:
+    - "Git Flow or GitHub Flow"
+    - "Conventional commits"
+    - "Pre-commit hooks for linting"
+  quality:
+    - "95%+ test coverage for critical paths"
+    - "Type safety (TypeScript + Pydantic)"
+

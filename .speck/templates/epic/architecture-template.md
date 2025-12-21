@@ -1,0 +1,199 @@
+# Epic Architecture
+
+## Overview
+
+**Epic**: [Epic Name]  
+**Architecture Pattern**: [Pattern that best fits this epic]  
+**Integration Points**: [How this epic connects to the system]
+
+## Research Informing This Architecture
+
+**Web Search Findings**:
+- [Topic]: [Finding with source URL]
+- [Topic]: [Finding with source URL]
+
+**Deep Research Reports** (if any):
+- [Report filename]: [Key insights that influenced architecture decisions]
+
+**Research Impact on Architecture Decisions**:
+- [Architectural Decision]: Chosen based on [research finding]
+- [Integration Pattern]: Informed by [source/report]
+
+## Component Design
+
+### Epic Components
+```
+[Component diagram showing epic-specific architecture]
+```
+
+### Component Responsibilities
+
+| Component | Purpose | Interfaces | Dependencies |
+|-----------|---------|------------|--------------|
+| [Name] | [What it does] | [APIs/Events] | [What it needs] |
+
+## Data Architecture
+
+### Data Models
+```
+[Entity relationship diagram for epic-specific data]
+```
+
+### Data Flow
+1. [How data enters the epic]
+2. [How data is processed]
+3. [How data exits the epic]
+4. [State management approach]
+
+## API Design
+
+### External APIs (Epic Exposes)
+
+| Endpoint | Method | Purpose | Request/Response |
+|----------|--------|---------|------------------|
+| /api/epic/[resource] | GET/POST/etc | | |
+
+### Internal APIs (Epic Consumes)
+
+| Service | Endpoint | Purpose | Error Handling |
+|---------|----------|---------|----------------|
+| [Service name] | | | |
+
+### Event Contracts
+
+| Event Type | Producer | Consumers | Schema |
+|------------|----------|-----------|--------|
+| [epic.event.name] | | | |
+
+## Technical Decisions
+
+### Technology Choices
+
+| Decision | Choice | Rationale | Alternatives Considered |
+|----------|--------|-----------|------------------------|
+| [State Management] | | | |
+| [Data Storage] | | | |
+| [Caching] | | | |
+| [Background Jobs] | | | |
+
+### Design Patterns
+
+| Pattern | Where Used | Why |
+|---------|------------|-----|
+| [Pattern name] | [Component/Flow] | [Benefit] |
+
+## Integration Architecture
+
+### Upstream Dependencies
+- **[System/Epic]**: [What this epic needs from it]
+- **[System/Epic]**: [What this epic needs from it]
+
+### Downstream Consumers
+- **[System/Epic]**: [What consumes this epic's output]
+- **[System/Epic]**: [What consumes this epic's output]
+
+### Boundary Context
+```
+[Diagram showing epic boundaries and integration points]
+```
+
+## Performance Considerations
+
+### Performance Targets
+- **Response Time**: [Target for key operations]
+- **Throughput**: [Requests/second]
+- **Data Volume**: [Expected scale]
+
+### Optimization Strategies
+- [Caching approach]
+- [Query optimization]
+- [Async processing]
+- [Resource pooling]
+
+## Security Architecture
+
+### Security Requirements
+- **Authentication**: [How users are authenticated]
+- **Authorization**: [Permission model for epic]
+- **Data Protection**: [Sensitive data handling]
+- **Audit**: [What gets logged]
+
+### Threat Model
+| Threat | Impact | Mitigation |
+|--------|--------|------------|
+| [Threat description] | High/Med/Low | [How addressed] |
+
+## Deployment Architecture
+
+### Deployment Model
+- **Deployment Unit**: [How epic is packaged]
+- **Scaling Strategy**: [Horizontal/Vertical]
+- **Resource Requirements**: [CPU, Memory, Storage]
+
+### Configuration
+| Config Item | Environment Variable | Default | Description |
+|-------------|---------------------|---------|-------------|
+| [Setting] | EPIC_SETTING_NAME | | |
+
+## Testing Strategy
+
+### Test Architecture
+- **Unit Tests**: [Approach and coverage target]
+- **Integration Tests**: [Key integration points]
+- **Contract Tests**: [API contract validation]
+- **Performance Tests**: [Load testing approach]
+
+### Test Data Strategy
+- [How test data is managed]
+- [Test environment isolation]
+
+## Monitoring & Observability
+
+### Key Metrics
+| Metric | Target | Alert Threshold |
+|--------|--------|-----------------|
+| [Response time] | | |
+| [Error rate] | | |
+| [Business metric] | | |
+
+### Logging Strategy
+- **What to Log**: [Key events and data]
+- **Log Levels**: [When to use each level]
+- **Correlation**: [How to trace requests]
+
+## Migration & Evolution
+
+### Migration Path
+- **From Current State**: [If replacing existing functionality]
+- **Data Migration**: [Strategy if needed]
+- **Rollback Plan**: [How to revert if issues]
+
+### Future Enhancements
+- [Planned improvements]
+- [Extension points built in]
+- [Technical debt to address]
+
+## Constraints & Assumptions
+
+### Constraints
+- [Technical limitations]
+- [Business rules that impact architecture]
+- [External system limitations]
+
+### Assumptions
+- [What we assume about load]
+- [What we assume about users]
+- [What we assume about data]
+
+## Decision Log
+
+### Key Decisions
+1. **[Decision Title]**: [What was decided and why]
+2. **[Decision Title]**: [What was decided and why]
+
+### Deferred Decisions
+- **[Topic]**: [Why deferred and when to revisit]
+
+---
+*Generated by /epic-architecture command*
+*Epic Architecture Version: 1.0.0*

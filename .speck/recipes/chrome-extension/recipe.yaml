@@ -1,0 +1,67 @@
+name: Chrome Extension with React
+description: A browser extension for Chrome/Edge using React and TypeScript. Extend browser functionality with popup UIs, content scripts, and background service workers.
+keywords:
+  - browser-extension
+  - chrome
+  - edge
+  - react
+  - typescript
+  - manifest-v3
+  - web
+stack:
+  frontend:
+    name: React with Plasmo/CRXJS
+    language: TypeScript
+    framework: React
+    styling: Tailwind CSS
+  backend:
+    name: Service Worker (Background)
+    language: TypeScript
+    framework: Chrome Extension APIs
+    orm: chrome.storage
+  database:
+    name: chrome.storage.sync / chrome.storage.local
+    version: N/A
+suggested_epics:
+  - name: Extension Architecture
+    description: Set up Manifest V3 extension with popup, content scripts, and service worker.
+    stories_estimate: 4-6
+  - name: Content Script Features
+    description: Build content scripts that interact with web pages, inject UI, and modify DOM.
+    stories_estimate: 7-10
+  - name: Popup & Options UI
+    description: Create React-based popup and options page interfaces.
+    stories_estimate: 5-8
+  - name: Chrome Web Store Publishing
+    description: Prepare assets, privacy policy, and submission for Chrome Web Store.
+    stories_estimate: 3-4
+pre_configured_patterns:
+  - name: Manifest V3 Compliance
+    description: Modern extension architecture with service workers.
+  - name: Message Passing
+    description: Communication between popup, content scripts, and background.
+  - name: Plasmo Framework
+    description: Modern tooling for extension development with HMR and TypeScript.
+
+# External services to consider (Buy vs Build)
+external_services:
+  auth:
+    recommended: clerk
+    alternatives: [supabase-auth]
+    reason: "Web-based auth flows for extensions"
+  backend_api:
+    recommended: supabase
+    alternatives: [firebase]
+    reason: "Edge functions + database for extension backend"
+  analytics:
+    recommended: mixpanel
+    alternatives: [amplitude]
+    reason: "Extension-friendly, privacy-compliant"
+  payments:
+    recommended: stripe
+    alternatives: [gumroad]
+    reason: "License key validation for premium features"
+  error_tracking:
+    recommended: sentry
+    reason: "Browser extension support"
+

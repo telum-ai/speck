@@ -1,0 +1,49 @@
+name: Tauri React Desktop App
+description: A lightweight, secure desktop application using Tauri with React. Much smaller bundles than Electron with Rust-based backend for native performance.
+keywords:
+  - desktop
+  - cross-platform
+  - tauri
+  - rust
+  - react
+  - typescript
+  - native
+  - windows
+  - macos
+  - linux
+  - lightweight
+stack:
+  frontend:
+    name: React with Tauri Webview
+    language: TypeScript
+    framework: React
+    styling: Tailwind CSS
+  backend:
+    name: Tauri Rust Core
+    language: Rust
+    framework: Tauri
+    orm: SQLite (rusqlite) / sled
+  database:
+    name: SQLite (embedded)
+    version: "3"
+suggested_epics:
+  - name: Tauri Setup & Commands
+    description: Configure Tauri project, Rust commands, and frontend-backend communication.
+    stories_estimate: 5-8
+  - name: Core Application Features
+    description: Implement primary application functionality with React frontend.
+    stories_estimate: 10-15
+  - name: Native Rust Features
+    description: Build high-performance features in Rust: file processing, crypto, system APIs.
+    stories_estimate: 7-10
+  - name: Build & Distribution
+    description: Configure Tauri for multi-platform builds, code signing, and updates.
+    stories_estimate: 4-6
+pre_configured_patterns:
+  - name: Tauri Commands
+    description: Type-safe async commands from frontend to Rust backend.
+  - name: Minimal Bundle Size
+    description: ~5MB app bundles vs ~100MB+ for Electron.
+  - name: Enhanced Security
+    description: Rust backend with memory safety and permission-based API access.
+

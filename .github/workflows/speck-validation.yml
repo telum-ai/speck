@@ -1,0 +1,446 @@
+name: Speck Validation
+
+on:
+  pull_request:
+    paths:
+      - 'specs/**'
+      - '.speck/**'
+      - '.cursor/**'
+      - 'AGENTS.md'
+      - '.github/workflows/**'
+  push:
+    branches: [main]
+    paths:
+      - 'specs/**'
+      - '.speck/**'
+      - '.cursor/**'
+      - 'AGENTS.md'
+      - '.github/workflows/**'
+
+jobs:
+  validate-specs:
+    name: Validate Speck Artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # For commit history in retrospectives
+
+      - name: Make validators executable
+        run: chmod +x .cursor/hooks/hooks/validators/*.sh
+
+      - name: Determine changed spec files
+        id: changed_specs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -d "specs" ]; then
+            echo "changed_specs=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Determine diff range depending on event type.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base_sha="${{ github.event.pull_request.base.sha }}"
+            head_sha="${{ github.event.pull_request.head.sha }}"
+          else
+            base_sha="${{ github.event.before }}"
+            head_sha="${{ github.sha }}"
+          fi
+
+          # Safety: on first commit, base may be empty/zeros.
+          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+            base_sha="$(git rev-parse HEAD~1 2>/dev/null || true)"
+          fi
+
+          if [ -z "$base_sha" ]; then
+            echo "changed_specs=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed="$(git diff --name-only "$base_sha" "$head_sha" | tr '\n' ' ')"
+          echo "changed_specs=$changed" >> "$GITHUB_OUTPUT"
+
+      # Validate all story specs
+      - name: Validate Story Specs
+        run: |
+          echo "📋 Validating story specifications..."
+          failed=0
+          for spec in ${{ steps.changed_specs.outputs.changed_specs }}; do
+            case "$spec" in
+              specs/**/spec.md) ;;
+              *) continue ;;
+            esac
+            echo "  Checking: $spec"
+            if ! .cursor/hooks/hooks/validators/validate-story-spec.sh --strict "$spec"; then
+              failed=1
+            fi
+          done
+          if [ $failed -eq 1 ]; then
+            echo "❌ Some story specs have validation errors"
+            exit 1
+          fi
+          echo "✅ All story specs validated"
+
+      # Validate all epic specs
+      - name: Validate Epic Specs
+        run: |
+          echo "📋 Validating epic specifications..."
+          failed=0
+          for spec in ${{ steps.changed_specs.outputs.changed_specs }}; do
+            case "$spec" in
+              specs/**/epic.md) ;;
+              *) continue ;;
+            esac
+            echo "  Checking: $spec"
+            if ! .cursor/hooks/hooks/validators/validate-epic-spec.sh --strict "$spec"; then
+              failed=1
+            fi
+          done
+          if [ $failed -eq 1 ]; then
+            echo "❌ Some epic specs have validation errors"
+            exit 1
+          fi
+          echo "✅ All epic specs validated"
+
+      # Validate story plans
+      - name: Validate Story Plans
+        run: |
+          echo "📋 Validating story plans..."
+          failed=0
+          for plan in ${{ steps.changed_specs.outputs.changed_specs }}; do
+            case "$plan" in
+              specs/**/plan.md) ;;
+              *) continue ;;
+            esac
+            echo "  Checking: $plan"
+            if ! .cursor/hooks/hooks/validators/validate-story-plan.sh --strict "$plan"; then
+              failed=1
+            fi
+          done
+          if [ $failed -eq 1 ]; then
+            echo "❌ Some story plans have validation errors"
+            exit 1
+          fi
+          echo "✅ All story plans validated"
+
+      # Validate story tasks
+      - name: Validate Story Tasks
+        run: |
+          echo "📋 Validating story tasks..."
+          failed=0
+          for tasks in ${{ steps.changed_specs.outputs.changed_specs }}; do
+            case "$tasks" in
+              specs/**/tasks.md) ;;
+              *) continue ;;
+            esac
+            echo "  Checking: $tasks"
+            if ! .cursor/hooks/hooks/validators/validate-story-tasks.sh --strict "$tasks"; then
+              failed=1
+            fi
+          done
+          if [ $failed -eq 1 ]; then
+            echo "❌ Some story tasks have validation errors"
+            exit 1
+          fi
+          echo "✅ All story tasks validated"
+
+      # Validate epic tech specs
+      - name: Validate Epic Tech Specs
+        run: |
+          echo "📋 Validating epic tech specs..."
+          failed=0
+          for spec in ${{ steps.changed_specs.outputs.changed_specs }}; do
+            case "$spec" in
+              specs/**/epic-tech-spec.md) ;;
+              *) continue ;;
+            esac
+            echo "  Checking: $spec"
+            if ! .cursor/hooks/hooks/validators/validate-epic-tech-spec.sh --strict "$spec"; then
+              failed=1
+            fi
+          done
+          if [ $failed -eq 1 ]; then
+            echo "❌ Some epic tech specs have validation errors"
+            exit 1
+          fi
+          echo "✅ All epic tech specs validated"
+
+      # Check for unresolved clarification markers
+      - name: Check for Unresolved Clarifications
+        run: |
+          echo "🔍 Checking for unresolved [NEEDS CLARIFICATION] markers..."
+          markers=$(grep -r "\[NEEDS CLARIFICATION" specs/ --include="*.md" 2>/dev/null || true)
+          if [ -n "$markers" ]; then
+            echo "⚠️  Found unresolved clarification markers:"
+            echo "$markers"
+            echo ""
+            echo "Run /story-clarify or /epic-clarify to resolve these before merging."
+            # Warning only, don't fail
+          else
+            echo "✅ No unresolved clarification markers"
+          fi
+
+  check-retrospectives:
+    name: Check Retrospective Completion
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for Retrospective Files
+        run: |
+          echo "📊 Checking retrospective completion..."
+          if [ ! -d "specs" ]; then
+            echo "ℹ️  No specs/ directory found. Skipping retrospective checks."
+            exit 0
+          fi
+
+          # Find completed stories (have validation-report.md but no story-retro.md)
+          missing_retros=""
+          for validation in $(find specs -name "validation-report.md" -type f 2>/dev/null || true); do
+            story_dir=$(dirname "$validation")
+            if [ ! -f "$story_dir/story-retro.md" ]; then
+              missing_retros="$missing_retros\n  - $story_dir"
+            fi
+          done
+
+          if [ -n "$missing_retros" ]; then
+            echo "⚠️  Stories validated but missing retrospectives:"
+            echo -e "$missing_retros"
+            echo ""
+            echo "Consider running /story-retrospective for these stories."
+            # Warning only, don't fail
+          else
+            echo "✅ All validated stories have retrospectives"
+          fi
+
+  validate-structure:
+    name: Validate Speck Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Required Speck Files
+        run: |
+          echo "🏗️  Checking Speck methodology files..."
+
+          required_files=(
+            ".speck/README.md"
+            ".speck/patterns/just-in-time-research-pattern.md"
+            ".speck/recipes/README.md"
+            ".speck/skills/README.md"
+            ".speck/TEMPLATE-SYNC.md"
+            ".speck/TEMPLATE-FEEDBACK.md"
+            ".speck/scripts/bash/analyze-scale.sh"
+            ".speck/scripts/bash/create-new-project.sh"
+            ".speck/scripts/bash/export-template-repo.sh"
+            ".speck/scripts/bash/get-context.sh"
+            ".speck/scripts/bash/merge-mcp-config.sh"
+            ".speck/scripts/bash/validate-artifact-docs.sh"
+            ".cursor/MCP-SETUP.md"
+            ".cursor/mcp.json.example"
+            ".cursor/commands/speck.md"
+            ".cursor/hooks/hooks.json"
+            ".cursor/hooks/VALIDATION.md"
+            ".cursor/hooks/hooks/after-file-edit.sh"
+            ".cursor/hooks/hooks/log-file-edit.sh"
+            ".cursor/hooks/hooks/validate-template.sh"
+            ".cursor/hooks/hooks/validators/validate-story-spec.sh"
+            ".cursor/hooks/hooks/validators/validate-epic-spec.sh"
+            ".cursor/hooks/hooks/validators/validate-story-plan.sh"
+            ".cursor/hooks/hooks/validators/validate-story-tasks.sh"
+            ".cursor/hooks/hooks/validators/validate-epic-tech-spec.sh"
+            "AGENTS.md"
+            ".github/workflows/template-sync.yml"
+            ".github/workflows/speck-template-feedback.yml"
+            ".templatesyncignore"
+          )
+
+          missing=""
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              missing="$missing\n  - $file"
+            fi
+          done
+
+          if [ -n "$missing" ]; then
+            echo "❌ Missing required Speck files:"
+            echo -e "$missing"
+            exit 1
+          fi
+
+          echo "✅ All required Speck methodology files present"
+
+      - name: Validate command-referenced templates and scripts exist
+        run: |
+          set -euo pipefail
+          echo "🔍 Validating that command-referenced templates and scripts exist..."
+
+          missing=""
+
+          # Templates referenced by commands
+          template_paths="$(grep -RhoE '\.speck/templates/[A-Za-z0-9_./-]+\.md' .cursor/commands | sort -u || true)"
+          for p in $template_paths; do
+            if [ ! -f "$p" ]; then
+              missing="$missing\n  - $p"
+            fi
+          done
+
+          # Scripts referenced by commands
+          script_paths="$(grep -RhoE '\.speck/scripts/bash/[A-Za-z0-9_./-]+\.sh' .cursor/commands | sort -u || true)"
+          for p in $script_paths; do
+            if [ ! -f "$p" ]; then
+              missing="$missing\n  - $p"
+            fi
+          done
+
+          if [ -n "$missing" ]; then
+            echo "❌ Missing files referenced by commands:"
+            echo -e "$missing"
+            exit 1
+          fi
+
+          echo "✅ All command references resolve"
+
+      - name: Guard against deprecated artifact names (methodology drift)
+        run: |
+          set -euo pipefail
+          echo "🧯 Checking for deprecated artifact names in methodology files..."
+
+          # We intentionally do NOT scan specs/** because product repos (and this repo)
+          # may contain legacy content. This guard is for the template methodology only.
+          targets=(AGENTS.md .cursor/commands .speck)
+
+          # Add patterns here when renaming artifacts. Keep this list tight.
+          banned_patterns=(
+            "project-codebase-scan"
+            "story-codebase-scan"
+            "epic-constitution.md"
+            "roadmap.md (USES: epics)"
+            "sdd-validation"
+            "/sdd"
+          )
+
+          failed=0
+          for pat in "${banned_patterns[@]}"; do
+            if grep -RIn --exclude-dir="specs" --exclude-dir=".git" "$pat" "${targets[@]}" >/dev/null 2>&1; then
+              echo "❌ Found deprecated pattern: $pat"
+              grep -RIn --exclude-dir="specs" --exclude-dir=".git" "$pat" "${targets[@]}" | head -n 20 || true
+              failed=1
+            fi
+          done
+
+          if [ "$failed" -eq 1 ]; then
+            echo ""
+            echo "Fix the references above to keep the Speck template consistent."
+            exit 1
+          fi
+
+          echo "✅ No deprecated artifact names found"
+
+      - name: Validate artifact docs coverage (AGENTS.md + .speck/README.md)
+        run: |
+          chmod +x .speck/scripts/bash/validate-artifact-docs.sh
+          bash .speck/scripts/bash/validate-artifact-docs.sh
+
+      - name: Validate Speck Recipes
+        run: |
+          echo "🍳 Validating Speck recipes..."
+          if [ ! -d ".speck/recipes" ]; then
+            echo "❌ Missing .speck/recipes directory"
+            exit 1
+          fi
+
+          shopt -s nullglob
+          recipes=(.speck/recipes/*/recipe.yaml)
+          if [ ${#recipes[@]} -eq 0 ]; then
+            echo "⚠️  No recipes found under .speck/recipes/*/recipe.yaml"
+            echo "    This is allowed, but recipe detection will have nothing to match."
+            exit 0
+          fi
+
+          failed=0
+          required_keys=("name:" "display_name:" "description:" "version:" "keywords:" "stack:")
+
+          for recipe in "${recipes[@]}"; do
+            echo "  Checking: $recipe"
+            dir_name=$(basename "$(dirname "$recipe")")
+
+            for key in "${required_keys[@]}"; do
+              if ! grep -q "^${key}" "$recipe"; then
+                echo "❌ Missing '${key}' in $recipe"
+                failed=1
+              fi
+            done
+
+            # Ensure name matches directory name (simple consistency rule)
+            recipe_name=$(grep -E "^name:" "$recipe" | head -1 | awk '{print $2}' | tr -d '"' | tr -d "'")
+            if [ -n "$recipe_name" ] && [ "$recipe_name" != "$dir_name" ]; then
+              echo "❌ Recipe name mismatch: directory='$dir_name' but name='$recipe_name' in $recipe"
+              failed=1
+            fi
+
+            # Ensure keywords list is non-empty (at least one keyword item)
+            if ! grep -Eq "^keywords:[[:space:]]*$" "$recipe"; then
+              echo "❌ keywords: must exist as a top-level YAML key in $recipe"
+              failed=1
+            else
+              if ! awk '
+                BEGIN{in=0; ok=0}
+                /^keywords:[[:space:]]*$/ {in=1; next}
+                in==1 && /^[^[:space:]]/ {in=0}
+                in==1 && /^[[:space:]]*-[[:space:]]+/ {ok=1}
+                END{exit ok?0:1}
+              ' "$recipe"; then
+                echo "❌ keywords list is empty in $recipe (add at least one '- keyword')"
+                failed=1
+              fi
+            fi
+          done
+
+          if [ $failed -eq 1 ]; then
+            echo "❌ Recipe validation failed"
+            exit 1
+          fi
+
+          echo "✅ Recipes look structurally valid"
+
+      - name: Validate Project Structure
+        run: |
+          echo "📁 Checking project structure..."
+
+          # Check if any projects exist
+          if [ -d "specs/projects" ]; then
+            for project in specs/projects/*/; do
+              if [ -d "$project" ]; then
+                project_name=$(basename "$project")
+                echo "  Checking project: $project_name"
+
+                # Check for required project files
+                if [ ! -f "${project}project.md" ]; then
+                  echo "    ⚠️  Missing project.md"
+                fi
+
+                # Check epic structure
+                if [ -d "${project}epics" ]; then
+                  for epic in ${project}epics/*/; do
+                    if [ -d "$epic" ]; then
+                      epic_name=$(basename "$epic")
+                      if [ ! -f "${epic}epic.md" ]; then
+                        echo "    ⚠️  Epic $epic_name missing epic.md"
+                      fi
+                    fi
+                  done
+                fi
+              fi
+            done
+          fi
+
+          echo "✅ Project structure check complete"
+
+

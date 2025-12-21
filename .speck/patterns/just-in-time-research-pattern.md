@@ -1,0 +1,446 @@
+# Just-In-Time Research Pattern
+
+**Purpose**: Standardized approach for commands to identify knowledge gaps and conduct research exactly when needed.
+
+**When to Use**: Any command that needs to make decisions requiring external knowledge (standards, best practices, market data, technical evaluation).
+
+---
+
+## 🔧 Research Tools (Priority Order)
+
+Speck recommends using **Perplexity MCP** as the primary research tool when available:
+
+### 1. Perplexity MCP (Preferred)
+
+When the Perplexity MCP server is configured, use these tools in order of complexity:
+
+| Tool | Model | Use Case |
+|------|-------|----------|
+| `perplexity_search` | Perplexity Search API | Quick facts, specific queries, ranked web results |
+| `perplexity_ask` | sonar-pro | Conversational queries with web context |
+| `perplexity_research` | sonar-deep-research | Comprehensive analysis, detailed reports |
+| `perplexity_reason` | sonar-reasoning-pro | Complex logic, decision analysis, problem-solving |
+
+**Setup**: See `.cursor/mcp.json.example` for configuration.
+
+### 2. Built-in web_search (Fallback)
+
+When Perplexity MCP is not available, use the built-in `web_search` tool.
+
+### 3. Manual Research Prompts (Deep Fallback)
+
+When automated tools are insufficient, generate research prompts for the user to run in external tools.
+
+---
+
+## Research Integration Steps
+
+### Step 0: Check for Existing Research (ALWAYS DO FIRST!)
+
+**Before any research, check for existing reports:**
+
+```bash
+# Check project-level research
+ls specs/projects/[project-id]/*-research-report-*.md
+
+# Check epic-level research  
+ls specs/projects/[project-id]/epics/[epic-id]/*-research-report-*.md
+
+# Check if upstream artifacts already contain relevant research
+# (architecture.md, context.md, ux-strategy.md all have "Research Informing" sections)
+```
+
+**If relevant research exists:**
+1. Load the existing report(s)
+2. Extract relevant findings
+3. Reference in your research trail as "Reused Research"
+4. Only conduct new research if gaps remain
+
+**Why this matters:**
+- Avoids duplicate research effort
+- Maintains consistency across commands
+- Preserves context from earlier decisions
+- Reduces user burden
+
+### Step 1: Identify Knowledge Gaps
+
+Before making each key decision, ask:
+- **Did Step 0 provide the answer?** (Check existing research first!)
+- Do we have enough information from loaded artifacts?
+- Can this be decided from well-known best practices?
+- Do we need current/external information to decide wisely?
+
+### Step 2: Automated Research (Fast Research)
+
+**Topics suited for automated research:**
+- Standards and specifications (WCAG, RFC, ISO)
+- Framework/library documentation and best practices
+- Recent industry standards (within last 2 years)
+- Market data and statistics
+- Regulatory/compliance requirements
+- Performance benchmarks and comparisons
+- Security best practices
+
+**Option A: Perplexity MCP (Preferred)**
+
+If Perplexity MCP is configured:
+
+```python
+# Quick factual search
+perplexity_search(query="WCAG 2.1 AA color contrast requirements", max_results=5)
+
+# Conversational query with web context
+perplexity_ask(messages=[
+    {"role": "user", "content": "What are the current best practices for PostgreSQL full-text search in 2024-2025?"}
+])
+```
+
+**Option B: Built-in web_search (Fallback)**
+
+If Perplexity MCP is not available:
+
+```python
+# Search for factual information
+web_search("WCAG 2.1 AA color contrast requirements")
+web_search("PostgreSQL full-text search best practices 2024")
+web_search("React Server Components performance comparison")
+```
+
+**Synthesize findings:**
+- Extract key facts and recommendations
+- Note source URLs for traceability
+- Cross-reference multiple sources if conflicting
+- Document search date (information currency matters)
+
+**Document in artifact:**
+```markdown
+## Research Informing This [Decision/Section]
+
+### Automated Research Findings
+- **[Topic]**: [Key finding] (Source: [URL], Searched: [Date], Tool: [perplexity_search/web_search])
+- **[Topic]**: [Key finding] (Source: [URL], Searched: [Date], Tool: [perplexity_search/web_search])
+```
+
+### Step 3: Deep Research (Complex Questions)
+
+**When quick research is insufficient:**
+- Questions requiring nuanced analysis
+- Business model validation
+- Competitive landscape assessment
+- User behavior deep-dives
+- Technical architecture case studies
+- Market sizing and opportunity analysis
+- Complex regulatory interpretation
+
+**Option A: Perplexity Deep Research (Preferred)**
+
+If Perplexity MCP is configured, use `perplexity_research` for comprehensive analysis:
+
+```python
+perplexity_research(
+    messages=[
+        {"role": "user", "content": """
+        Provide a comprehensive analysis of [topic] for [project context].
+        
+        Specifically:
+        1. [Focused question 1]
+        2. [Focused question 2]
+        3. [Focused question 3]
+        
+        Include current best practices, real-world examples, and trade-offs.
+        """}
+    ],
+    strip_thinking=True  # Remove thinking tokens to save context
+)
+```
+
+For complex logical analysis, use `perplexity_reason`:
+
+```python
+perplexity_reason(
+    messages=[
+        {"role": "user", "content": """
+        Analyze the trade-offs between [option A] and [option B] for [context].
+        Consider: [constraints], [requirements], [priorities].
+        Recommend the best approach with clear reasoning.
+        """}
+    ],
+    strip_thinking=False  # Keep reasoning visible for transparency
+)
+```
+
+**Option B: Manual Research Prompts (Fallback)**
+
+If Perplexity MCP is not available, generate a research prompt for the user:
+
+1. Create prompt file: `[command-name]-research-prompt-[topic].md`
+   ```markdown
+   # Deep Research Prompt: [Topic]
+   
+   **Project Context**: [Brief project description]
+   **Research Need**: [Why this research is needed for current decision]
+   
+   ## Specific Questions
+   1. [Focused question 1]
+   2. [Focused question 2]
+   3. [Focused question 3]
+   
+   ## Deliverables Needed
+   - [What insights are required]
+   - [What format (data, analysis, recommendations)]
+   - [Success criteria for research]
+   
+   ## Context for Analysis
+   - [Project constraints that should inform research]
+   - [User segment characteristics]
+   - [Technical or business context]
+   ```
+
+2. Instruct user:
+   ```
+   🔬 **Deep Research Needed**: [Topic]
+   
+   Quick search provided [insufficient/conflicting/no] information about [specific aspect].
+   
+   I've generated a research prompt: `[filename]`
+   
+   Please:
+   1. Review the research prompt
+   2. Run it in Perplexity/Claude/Gemini/Grok (your choice)
+   3. Save results as `[command-name]-research-report-[topic].md`
+   4. Either:
+      a) Paste the findings here, OR
+      b) Re-run this command (I'll detect and load the report)
+   
+   I'll pause here until research is provided.
+   
+   💡 **Tip**: Configure Perplexity MCP for automated deep research!
+   See: `.cursor/mcp.json.example`
+   ```
+
+3. PAUSE execution, wait for user input
+
+**Document findings:**
+
+```markdown
+## Research Informing This [Decision/Section]
+
+### Deep Research
+- **[Topic]**: [Key findings from report]
+  - Tool: [perplexity_research / manual]
+  - Date: [Date]
+  - Key Insight: [How this influenced decision]
+```
+
+### Step 4: Document Research Trail
+
+**In every generated artifact, add:**
+
+```markdown
+## Research Informing This [Document Type]
+
+This [document type] was informed by the following research:
+
+### Automated Research (Web Search)
+- **[Topic 1]**: [Finding]
+  - Source: [URL]
+  - Searched: [Date]
+  - Applied to: [Which decision/section]
+
+- **[Topic 2]**: [Finding]
+  - Source: [URL]
+  - Searched: [Date]
+  - Applied to: [Which decision/section]
+
+### Deep Research (External)
+- **[Topic]**: [Key findings]
+  - Report: [filename]
+  - Date: [Date]
+  - Key Insight: [How this influenced design]
+  - Applied to: [Which decision/section]
+
+### Best Practices (No Research Needed)
+- **[Decision]**: Based on industry-standard [practice/pattern]
+  - Rationale: [Why this is accepted best practice]
+
+---
+
+[Rest of document continues with research-informed decisions...]
+```
+
+---
+
+## Decision Without Research
+
+If user doesn't provide deep research when requested:
+
+```markdown
+⚠️ **Decision Made Without Research**
+
+The following decision was made without requested research:
+- **Decision**: [What was decided]
+- **Research Needed**: [What research was requested]
+- **Assumption Made**: [What assumption was used instead]
+- **Risk**: [What could go wrong without research]
+- **Re-evaluation**: [When/how this should be revisited]
+
+To get research-backed decision:
+1. Provide research report: [filename]
+2. Re-run this command
+```
+
+---
+
+## Reusing Existing Research
+
+Before generating new research prompts:
+
+1. Check project directory for existing research:
+   ```
+   specs/projects/[project-id]/*-research-report-*.md
+   specs/projects/[project-id]/epics/[epic-id]/*-research-report-*.md
+   ```
+
+2. If relevant research found:
+   - Load and extract relevant findings
+   - Reference in research trail
+   - Only generate new prompt if gaps remain
+
+3. Document reuse:
+   ```markdown
+   ### Reused Research
+   - **[Topic]**: [Findings from existing report]
+     - Report: [filename]
+     - Original Command: [which command generated it]
+     - Relevance: [How it applies to current decision]
+   ```
+
+---
+
+## Research Quality Guidelines
+
+**For Web Search:**
+- Prefer official documentation over blog posts
+- Use recent sources (within 2 years for standards, 6 months for market data)
+- Cross-reference multiple sources for critical decisions
+- Note when information may be outdated
+
+**For Deep Research:**
+- Be specific in questions (avoid "tell me about X")
+- Provide project context (helps AI focus research)
+- Ask for sources and citations
+- Request actionable insights, not just information
+
+**For Both:**
+- Document what influenced what (traceability)
+- Note assumptions when research unavailable
+- Mark uncertain information for follow-up
+
+---
+
+## Example Integration
+
+**In a command (with Perplexity MCP):**
+
+```python
+### Step 4: Define [Something That Needs Research]
+
+# Decision Point: What [technology/pattern/approach] should we use?
+
+# 1. Try Perplexity MCP first (preferred)
+if perplexity_available:
+    # Quick search for factual info
+    results = perplexity_search("[technology] best practices 2024")
+    
+    # If more depth needed
+    if needs_deeper_analysis:
+        results = perplexity_research("Comprehensive analysis of [technology]...")
+        
+    # If reasoning needed
+    if needs_trade_off_analysis:
+        results = perplexity_reason("Compare [A] vs [B] for [context]...")
+
+# 2. Fallback to web_search
+elif web_search_available:
+    results = web_search("[technology] best practices 2024")
+    
+    # If insufficient, generate manual research prompt
+    if findings_insufficient:
+        generate_research_prompt(topic="[technology]-evaluation", ...)
+        pause_for_user_research()
+
+# 3. Apply findings to artifact
+synthesize_and_document(results)
+```
+
+**Document in artifact:**
+
+```markdown
+## [Section Name]
+
+[Decision content informed by research above...]
+
+### Research Trail
+- **Perplexity Search**: [Finding] (Tool: perplexity_search)
+- **Deep Research**: [Finding] (Tool: perplexity_research)
+- **Reasoning Analysis**: [Finding] (Tool: perplexity_reason)
+```
+
+---
+
+## Benefits of This Pattern
+
+✅ **Just-in-Time**: Research happens exactly when needed
+✅ **Traceable**: Clear path from research → decision
+✅ **Efficient**: Automated for simple queries, deep for complex
+✅ **Integrated**: Research embedded in decisions, not separate phase
+✅ **Reusable**: Check for existing research before creating new
+✅ **Quality**: Standards for both quick and deep research
+✅ **Graceful Degradation**: Works with or without Perplexity MCP
+✅ **Perplexity-Powered**: When configured, fully automated research
+
+---
+
+## Anti-Patterns to Avoid
+
+❌ **Don't**: Create research files "just in case" (only when needed)
+❌ **Don't**: Generate research prompts without clear questions
+❌ **Don't**: Proceed with important decisions without attempting research
+❌ **Don't**: Ignore existing research reports (always check first)
+❌ **Don't**: Use outdated research (note freshness requirements)
+❌ **Don't**: Separate research from decisions (integrate immediately)
+
+---
+
+## Commands That Should Use This Pattern
+
+**Project Level:**
+- `/project-ux` - User research, UX patterns, accessibility
+- `/project-context` - Standards, compliance, tech constraints
+- `/project-constitution` - Best practices, security patterns
+- `/project-architecture` - Tech evaluation, architecture patterns
+- `/project-design-system` - Design tokens, component patterns
+- `/project-plan` - Market sizing, business model, competition
+
+**Epic Level:**
+- `/epic-architecture` - Implementation patterns, integration
+- `/epic-plan` - Technical feasibility, performance benchmarks
+
+**Story Level:**
+- `/story-plan` - API usage, implementation patterns, edge cases
+
+---
+
+**Reference this pattern in commands with:**
+```markdown
+Follow the just-in-time research pattern (see `.speck/patterns/just-in-time-research-pattern.md`)
+```
+
+---
+
+## 🔧 MCP Setup
+
+For setup instructions, see `.cursor/MCP-SETUP.md`.
+
+**The pattern works with or without MCP servers** - they're optional but recommended.
+

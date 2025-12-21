@@ -1,0 +1,47 @@
+name: Electron React Desktop App
+description: A cross-platform desktop application using Electron with React. Build native-like desktop apps using web technologies with access to OS-level APIs.
+keywords:
+  - desktop
+  - cross-platform
+  - electron
+  - react
+  - typescript
+  - native
+  - windows
+  - macos
+  - linux
+stack:
+  frontend:
+    name: React with Electron Renderer
+    language: TypeScript
+    framework: React
+    styling: Tailwind CSS / Styled Components
+  backend:
+    name: Electron Main Process
+    language: TypeScript
+    framework: Electron
+    orm: SQLite (better-sqlite3) / Local Storage
+  database:
+    name: SQLite (embedded)
+    version: "3"
+suggested_epics:
+  - name: Electron Setup & IPC
+    description: Configure Electron main/renderer process communication, preload scripts, and security settings.
+    stories_estimate: 5-7
+  - name: Core Application Features
+    description: Implement primary application functionality with React components.
+    stories_estimate: 10-15
+  - name: Native OS Integration
+    description: Integrate with OS features: system tray, notifications, file system, auto-updates.
+    stories_estimate: 6-9
+  - name: Build & Distribution
+    description: Set up electron-builder for multi-platform builds, code signing, and auto-updates.
+    stories_estimate: 4-6
+pre_configured_patterns:
+  - name: Context Isolation
+    description: Secure IPC with context isolation and preload scripts.
+  - name: Electron Forge / Builder
+    description: Automated builds for Windows, macOS, and Linux.
+  - name: Auto-Update with electron-updater
+    description: Seamless application updates from GitHub Releases or custom server.
+

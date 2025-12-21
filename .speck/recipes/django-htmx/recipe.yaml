@@ -1,0 +1,46 @@
+name: Django HTMX Full-Stack App
+description: A Python-based full-stack web application using Django with HTMX for modern, interactive UIs without heavy JavaScript frameworks. Excellent for rapid development and content-heavy applications.
+keywords:
+  - web
+  - full-stack
+  - django
+  - python
+  - htmx
+  - postgresql
+  - server-rendered
+  - hypermedia
+stack:
+  frontend:
+    name: Django Templates + HTMX
+    language: HTML / Python (templates)
+    framework: HTMX + Alpine.js
+    styling: Tailwind CSS / Bootstrap
+  backend:
+    name: Django
+    language: Python
+    framework: Django
+    orm: Django ORM
+  database:
+    name: PostgreSQL
+    version: "15"
+suggested_epics:
+  - name: User Authentication & Authorization
+    description: Implement Django's built-in auth with custom user model, permissions, and groups.
+    stories_estimate: 5-8
+  - name: HTMX Interactive Features
+    description: Build dynamic UI components using HTMX for partial page updates, infinite scroll, and real-time validation.
+    stories_estimate: 8-12
+  - name: Django Admin Customization
+    description: Configure and extend Django Admin for content management and internal tools.
+    stories_estimate: 4-6
+  - name: API Layer (Optional DRF)
+    description: Add Django REST Framework for mobile app support or third-party integrations.
+    stories_estimate: 6-9
+pre_configured_patterns:
+  - name: Class-Based Views
+    description: Leverage Django's powerful CBVs for CRUD operations.
+  - name: HTMX Patterns
+    description: hx-get, hx-post, hx-swap for seamless interactivity.
+  - name: Django Signals
+    description: Event-driven architecture for decoupled logic.
+
