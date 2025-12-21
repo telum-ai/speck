@@ -1,5 +1,7 @@
-name: Django HTMX Full-Stack App
+name: django-htmx
+display_name: "Django + HTMX"
 description: A Python-based full-stack web application using Django with HTMX for modern, interactive UIs without heavy JavaScript frameworks. Excellent for rapid development and content-heavy applications.
+version: "1.0.0"
 keywords:
   - web
   - full-stack
