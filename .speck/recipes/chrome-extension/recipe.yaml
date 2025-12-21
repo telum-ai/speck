@@ -1,5 +1,7 @@
-name: Chrome Extension with React
+name: chrome-extension
+display_name: "Chrome Extension with React"
 description: A browser extension for Chrome/Edge using React and TypeScript. Extend browser functionality with popup UIs, content scripts, and background service workers.
+version: "1.0.0"
 keywords:
   - browser-extension
   - chrome

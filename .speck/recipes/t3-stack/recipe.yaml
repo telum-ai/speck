@@ -1,5 +1,7 @@
-name: T3 Stack Full-Stack App
+name: t3-stack
+display_name: "T3 Stack"
 description: The "T3 Stack" - a type-safe, end-to-end full-stack application using Next.js, tRPC, Prisma, and Tailwind CSS. Optimized for type safety and developer productivity.
+version: "1.0.0"
 keywords:
   - web
   - full-stack

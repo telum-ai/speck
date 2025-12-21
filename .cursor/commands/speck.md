@@ -37,7 +37,7 @@ If user's request matches a known recipe, offer it:
 - Allow user to accept, customize, or skip
 - If a recipe is selected:
   - Load `.speck/recipes/<recipe>/recipe.yaml` and use it to pre-fill /project-* artifacts
-  - Load relevant skills from `.speck/skills/` (e.g., Clerk/Stripe/Supabase) and apply their patterns/gotchas during planning and implementation
+  - Load relevant skills from `.claude/skills/` (e.g., Clerk/Stripe/Supabase) and apply their patterns/gotchas during planning and implementation
 
 ```
 User: /speck Build a React app with Python backend

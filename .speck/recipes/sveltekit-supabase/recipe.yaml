@@ -1,5 +1,7 @@
-name: SvelteKit Supabase Full-Stack App
+name: sveltekit-supabase
+display_name: "SvelteKit + Supabase"
 description: A modern, performant full-stack web application using SvelteKit for the frontend/API and Supabase for backend services. Excellent developer experience with fast builds and minimal boilerplate.
+version: "1.0.0"
 keywords:
   - web
   - full-stack

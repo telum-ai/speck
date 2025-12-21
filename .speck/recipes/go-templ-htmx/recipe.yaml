@@ -1,5 +1,7 @@
-name: Go Templ HTMX Full-Stack App
+name: go-templ-htmx
+display_name: "Go + Templ + HTMX"
 description: A high-performance, minimalist full-stack web application using Go with Templ templates and HTMX. Excellent for building fast, lightweight applications with minimal dependencies.
+version: "1.0.0"
 keywords:
   - web
   - full-stack

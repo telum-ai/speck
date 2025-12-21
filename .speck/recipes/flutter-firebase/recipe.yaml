@@ -1,5 +1,7 @@
-name: Flutter Firebase Mobile App
+name: flutter-firebase
+display_name: "Flutter + Firebase"
 description: A cross-platform mobile application using Flutter with Firebase for backend services. Single codebase for iOS, Android, and web with Google's comprehensive backend platform.
+version: "1.0.0"
 keywords:
   - mobile
   - cross-platform

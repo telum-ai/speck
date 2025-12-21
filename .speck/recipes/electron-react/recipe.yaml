@@ -1,5 +1,7 @@
-name: Electron React Desktop App
+name: electron-react
+display_name: "Electron + React"
 description: A cross-platform desktop application using Electron with React. Build native-like desktop apps using web technologies with access to OS-level APIs.
+version: "1.0.0"
 keywords:
   - desktop
   - cross-platform

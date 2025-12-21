@@ -1,5 +1,7 @@
-name: Tauri React Desktop App
+name: tauri-react
+display_name: "Tauri + React"
 description: A lightweight, secure desktop application using Tauri with React. Much smaller bundles than Electron with Rust-based backend for native performance.
+version: "1.0.0"
 keywords:
   - desktop
   - cross-platform
