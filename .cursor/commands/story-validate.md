@@ -124,14 +124,52 @@ Execution steps:
      * JavaScript: npm audit
    - Capture all violations and warnings
 
-11. Documentation completeness check:
+11. Code audit (manual, REQUIRED — “meets requirements” is not enough):
+   - Identify the change surface:
+     * List changed files (prefer: `git diff --name-only` and `git diff` for the story’s branch)
+     * Identify entrypoints touched: API routes, background jobs, UI pages/routes, migrations, cron, etc.
+     * For critical code paths: find 1–3 call sites and trace end-to-end flow
+   - Audit checklist (record concrete findings + file references):
+     * **Correctness & edge cases**:
+       - Untrusted inputs validated/sanitized? Boundaries handled (null/empty/invalid)?
+       - Error handling: failure paths are explicit and safe (no silent partial writes)
+       - Time: timezones, clock skew, ordering, idempotency, retries, timeouts
+       - Concurrency: race conditions, transactions, locking, background task reentrancy
+     * **Maintainability**:
+       - Clear naming, small functions, single-responsibility boundaries
+       - Avoids unnecessary abstractions (Simplicity-First). Complexity justified in plan.md
+       - No duplicated logic that should be extracted (or extraction justified)
+       - No “mystery meat” config/magic values; TODO/FIXME/HACK clearly tracked or removed
+     * **Security & privacy**:
+       - AuthN/AuthZ checks correct and consistent (no missing permission gates)
+       - No secrets/keys/PII in logs, errors, or client responses
+       - Injection risks addressed (SQL/NoSQL/command/template), unsafe deserialization avoided
+       - Rate limits / abuse considerations noted for public endpoints (if applicable)
+     * **Performance**:
+       - Avoids N+1 queries, unbounded loops, unpaged lists, large payloads
+       - Hot paths are reasonably efficient; perf targets in spec.md are plausibly met
+     * **Operability / observability**:
+       - Logs/errors are actionable; failures have context (request IDs, user IDs where safe)
+       - Metrics/tracing hooks added when warranted by plan/context
+     * **Frontend UX/a11y** (if applicable):
+       - Uses existing design system; no arbitrary styling
+       - Loading/error/empty states exist; keyboard navigation & ARIA are reasonable
+     * **Test quality**:
+       - Tests cover critical success + failure cases; assertions are meaningful
+       - Avoids flakiness (timing, randomness), avoids over-mocking core behavior
+   - Determine audit outcome (this feeds overall validation status):
+     * **FAIL** if any high-severity issue exists (security vulnerability, data-loss risk, broken authz, major unhandled edge case, pathological perf risk, missing critical tests)
+     * **CONDITIONAL_PASS** if implementation works but needs cleanup/refactor/docs/tests before merge (list required follow-ups)
+     * **PASS** if maintainable, safe, and consistent with plan/constitution
+
+12. Documentation completeness check:
     - If new entities in data-model.md: Check models have docstrings/comments
     - If new API endpoints in contracts/: Check OpenAPI/GraphQL schema exists
     - If new CLI commands: Check --help text exists
     - If breaking changes: Check migration guide exists
     - Agent context files updated: Verify recent changes include this feature
 
-12. Generate validation report in `{STORY_DIR}/validation-report.md`:
+13. Generate validation report in `{STORY_DIR}/validation-report.md`:
     ```markdown
     # Validation Report: [STORY]
     
@@ -145,7 +183,8 @@ Execution steps:
     - **Requirements Coverage**: X/Y requirements verified (Z%)
     - **Performance**: [PASS / FAIL] (X/Y targets met)
     - **Constitution Compliance**: [PASS / CONDITIONAL / FAIL]
-    - **Code Quality**: [PASS / FAIL]
+    - **Code Audit (Manual)**: [PASS / CONDITIONAL / FAIL]
+    - **Automated Quality Gates**: [PASS / CONDITIONAL / FAIL]
     
     ## Requirements Traceability Matrix
     | Req ID | Description | Verification Method | Status | Notes |
@@ -199,6 +238,20 @@ Execution steps:
     | [Principle Name] | [requirement] | [Yes/No/Partial] | [✅/⚠️/❌] | [details] |
     
     **Complexity Deviations**: [List any from plan.md and verify justifications]
+
+   ## Code Audit (Manual Review)
+
+   **Result**: [PASS / CONDITIONAL_PASS / FAIL]
+
+   | Area | Status | Findings | Evidence |
+   |------|--------|----------|----------|
+   | Correctness & edge cases | ✅/⚠️/❌ | [findings] | [files/tests] |
+   | Maintainability | ✅/⚠️/❌ | [findings] | [files] |
+   | Security & privacy | ✅/⚠️/❌ | [findings] | [files] |
+   | Performance | ✅/⚠️/❌ | [findings] | [files/benchmarks] |
+   | Operability / observability | ✅/⚠️/❌ | [findings] | [logs/metrics] |
+   | Frontend UX/a11y (if applicable) | ✅/⚠️/❌ | [findings] | [pages/components] |
+   | Test quality | ✅/⚠️/❌ | [findings] | [tests] |
     
     ## Code Quality Gates
     - **Linting**: [PASS / FAIL] ([X violations])
@@ -228,7 +281,7 @@ Execution steps:
     - [If FAIL]: Fix blockers, then re-run /story-validate
     ```
 
-12. **Project Truth Update Prompt** (if PASS):
+14. **Project Truth Update Prompt** (if PASS):
     
     After successful validation, prompt user to update project-level docs:
     
@@ -270,7 +323,7 @@ Execution steps:
     Stories are proposals; after validation, project docs must reflect new reality.
     ```
 
-13. Report completion to user:
+15. Report completion to user:
     - Path to validation-report.md
     - Overall status (PASS / CONDITIONAL_PASS / FAIL)
     - If FAIL: List top 3 blockers to fix
@@ -284,6 +337,7 @@ Behavior rules:
 - If quickstart.md missing, WARN but continue (use test suite as primary validation)
 - Performance validation is optional (only if targets specified in spec.md)
 - Constitution check MUST run - it's non-negotiable for Speck workflow
+- Code audit MUST run - if audit finds high-severity issues, validation MUST be FAIL even if requirements/tests pass
 - Include timestamps in validation report for audit trail
 - Allow flags: `--allow-incomplete`, `--force`, `--skip-perf`, `--skip-quickstart`
 
@@ -291,7 +345,7 @@ Error handling:
 - If test suite fails: Capture errors, include in report, mark as FAIL
 - If performance tests not found but targets exist: WARN, skip performance section
 - If quickstart.md malformed: WARN, mark scenarios as "Unable to parse"
-- If linting fails: Include in report but don't block (CONDITIONAL_PASS)
+- If linting fails: Include in report; treat as CONDITIONAL_PASS unless it indicates correctness/safety (then FAIL)
 
 Context: $ARGUMENTS
 
