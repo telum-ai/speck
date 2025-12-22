@@ -25,6 +25,12 @@ stack:
     name: chrome.storage.sync / chrome.storage.local
     version: N/A
 suggested_epics:
+  - name: Developer Infrastructure
+    description: Testing (Vitest), CI/CD pipeline (GitHub Actions), linting (ESLint), error tracking, extension reload dev workflow
+    stories_estimate: 2-4
+    priority: 0
+    phase: foundation
+    
   - name: Extension Architecture
     description: Set up Manifest V3 extension with popup, content scripts, and service worker.
     stories_estimate: 4-6

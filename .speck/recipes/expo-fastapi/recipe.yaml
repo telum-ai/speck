@@ -84,6 +84,13 @@ not_ideal_for:
 
 # Common epics for this stack
 suggested_epics:
+  - id: infrastructure
+    name: "Developer Infrastructure"
+    priority: 0
+    phase: foundation
+    stories_estimate: 3-5
+    description: "Testing (pytest + Jest), CI/CD pipeline (EAS Build + GitHub Actions), linting, error tracking (Sentry)"
+    
   - id: app-shell
     name: "Mobile App Shell"
     priority: 1

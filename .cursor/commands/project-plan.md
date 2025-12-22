@@ -97,6 +97,38 @@ Generate a Product Requirements Document (PRD) and identify epics based on proje
    - Prioritize for MVP vs post-MVP based on:
      * User value + Business value + Technical dependency
      * Highest business ROI + foundational capabilities first
+   
+   **Phase 2.5: Foundation Check (IMPORTANT)**
+   
+   Before finalizing epics, check if a Developer Infrastructure epic is needed:
+   
+   **Ask the user**:
+   ```
+   🏗️ Foundation Check
+   
+   Should I include "E000: Developer Infrastructure" epic as the first epic?
+   
+   This epic sets up:
+   - Testing framework (unit, integration tests)
+   - CI/CD pipeline (lint, test, build, deploy)
+   - Linting & formatting (consistent code style)
+   - Error tracking (Sentry or equivalent)
+   - Environment configuration (.env patterns)
+   
+   Recommended: YES for any production-bound project
+   Skip only if: Existing infrastructure or throwaway prototype
+   
+   Include Developer Infrastructure epic? [Y/n]
+   ```
+   
+   **If YES (default)**:
+   - Add E000 epic before all other epics
+   - Use tech stack from architecture.md to specify testing framework
+   - Reference recipe (if used) for tech-specific tooling recommendations
+   
+   **If NO**:
+   - Document skip reason in epics.md
+   - Note: User accepts responsibility for infrastructure setup
 
    **Phase 3: Epic Documentation**
    - Create epics.md using `.speck/templates/project/epics-list-template.md`

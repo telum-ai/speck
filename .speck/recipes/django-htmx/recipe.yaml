@@ -26,6 +26,12 @@ stack:
     name: PostgreSQL
     version: "15"
 suggested_epics:
+  - name: Developer Infrastructure
+    description: Testing (pytest-django), CI/CD pipeline, linting (Ruff), error tracking (Sentry), environment config
+    stories_estimate: 3-5
+    priority: 0
+    phase: foundation
+    
   - name: User Authentication & Authorization
     description: Implement Django's built-in auth with custom user model, permissions, and groups.
     stories_estimate: 5-8

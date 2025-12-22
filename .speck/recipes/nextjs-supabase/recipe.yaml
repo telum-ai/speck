@@ -80,6 +80,13 @@ not_ideal_for:
 
 # Common epics for this stack
 suggested_epics:
+  - id: infrastructure
+    name: "Developer Infrastructure"
+    priority: 0
+    phase: foundation
+    stories_estimate: 3-5
+    description: "Testing (Vitest), CI/CD pipeline (GitHub Actions + Vercel), linting (ESLint + Prettier), error tracking (Sentry), environment config"
+    
   - id: auth
     name: "Authentication Setup"
     priority: 1

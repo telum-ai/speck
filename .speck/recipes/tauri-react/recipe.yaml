@@ -29,6 +29,12 @@ stack:
     name: SQLite (embedded)
     version: "3"
 suggested_epics:
+  - name: Developer Infrastructure
+    description: Testing (Vitest + Rust tests), CI/CD pipeline (GitHub Actions), linting (ESLint + Clippy), error tracking, release workflow
+    stories_estimate: 3-5
+    priority: 0
+    phase: foundation
+    
   - name: Tauri Setup & Commands
     description: Configure Tauri project, Rust commands, and frontend-backend communication.
     stories_estimate: 5-8

@@ -58,6 +58,13 @@ not_ideal_for:
 
 # Common epics for this stack
 suggested_epics:
+  - id: infrastructure
+    name: "Developer Infrastructure"
+    priority: 0
+    phase: foundation
+    stories_estimate: 2-4
+    description: "Testing (pytest/Vitest), CI/CD pipeline, linting (Ruff/ESLint), pre-commit hooks, package publishing setup"
+    
   - id: framework
     name: "CLI Framework"
     priority: 1

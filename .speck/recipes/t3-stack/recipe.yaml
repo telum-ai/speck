@@ -27,6 +27,12 @@ stack:
     name: PostgreSQL / MySQL / SQLite
     version: Flexible
 suggested_epics:
+  - name: Developer Infrastructure
+    description: Testing (Vitest + Playwright), CI/CD pipeline (GitHub Actions + Vercel), linting (ESLint), error tracking (Sentry), Prisma migrations
+    stories_estimate: 3-5
+    priority: 0
+    phase: foundation
+    
   - name: Authentication with NextAuth.js
     description: Implement secure authentication using NextAuth.js with multiple providers (Google, GitHub, email).
     stories_estimate: 5-8
