@@ -10,8 +10,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  # Note: Modifying workflow files requires a PAT with 'workflow' scope, not a permission here.
-  # The template-sync.yml is excluded via .templatesyncignore to avoid this issue.
 
 jobs:
   repo-sync:
@@ -33,7 +31,6 @@ jobs:
       - name: actions-template-sync
         uses: AndreasAugustin/actions-template-sync@v2.5.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           source_repo_path: ${{ secrets.TEMPLATE_SYNC_SOURCE_REPO }}
           upstream_branch: ${{ secrets.TEMPLATE_SYNC_UPSTREAM_BRANCH || 'main' }}
           pr_labels: template_sync,speck
