@@ -3,7 +3,8 @@
 **Project ID**: [PROJECT_NUM]  
 **Created**: [DATE]  
 **Status**: Planning  
-**Scale**: [To be determined: Level 0-4]
+**Scale**: [To be determined: Level 0-4]  
+**Recipe**: [None / recipe-name if using a recipe]
 
 ---
 
@@ -12,6 +13,9 @@
 **Traceability**: This project specification was created from the following sources:
 
 - **Greenfield**: User input + interactive Q&A
+- **Recipe** (if applicable):
+  - `_active_recipe: [recipe-name]` → Pre-configured stack, patterns, and suggested epics
+  - See `.speck/recipes/[recipe-name]/recipe.yaml` for details
 - **Brownfield** (if applicable):
   - `project-import.md` → Non-code aspects (vision, stakeholders, constraints)
   - `project-landscape-overview.md` → Code aspects (tech stack, features, architecture)

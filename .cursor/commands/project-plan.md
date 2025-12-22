@@ -29,6 +29,16 @@ Generate a Product Requirements Document (PRD) and identify epics based on proje
    - If project.md missing: ERROR "Run /project-specify first"
    - If architecture.md missing: ERROR "Run /project-architecture first - design decisions must inform planning!"
    
+   **Check for Active Recipe**:
+   - Look for `_active_recipe:` in project.md metadata
+   - If found, load `.speck/recipes/[recipe-name]/recipe.yaml`
+   - Recipe provides:
+     * `suggested_epics:` → Pre-defined epic structure for this project type
+     * `external_services:` → Recommended services to consider
+     * `patterns:` → Implementation patterns to reference
+   - Use recipe's suggested_epics as starting point in Phase 2 (Epic Identification)
+   - Customize epic list based on project-specific requirements
+   
    **Note**: UX-strategy.md and context.md are strongly recommended. Design-system.md is optional but valuable for UI-heavy projects.
 
 2. Determine project scale (Level 0-4):
@@ -81,7 +91,18 @@ Generate a Product Requirements Document (PRD) and identify epics based on proje
    - Mark sections as "[To be defined]" only if critical inputs genuinely missing
 
    **Phase 2: Epic Identification**
+   
+   **If Active Recipe exists**:
+   - Start with recipe's `suggested_epics:` as base structure
+   - E000 (Infrastructure) is already in recipe → use as first epic
+   - Customize epics marked with `[CUSTOMIZE]` for project-specific features
+   - Add/remove epics based on project.md scope
+   - Skip optional epics (`optional: true`) unless project needs them
+   
+   **If No Recipe**:
    - Based on PRD scope, identify logical epic boundaries
+   
+   **For all epics**:
    - Each epic should:
      * Deliver standalone value
      * Be independently deployable
