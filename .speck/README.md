@@ -201,21 +201,22 @@ graph TD
     storySpecify --> storyClarify
     storyClarify --> storyPlan
     
+    storyClarify -.-> storyScan
+    storyScan -.-> storyPlan
+    
     storyClarify -.-> storyUISpec
     storyUISpec --> storyPlan
     
     storyPlan --> storyTasks
     
-    storyPlan -.-> storyConstitution
-    storyConstitution --> storyTasks
+    storyTasks -.-> storyAnalyze
+    storyAnalyze -.-> storyImplement
     
     storyTasks --> storyImplement
     storyImplement --> storyValidate
     
-    storyTasks -.-> storyAnalyze
-    storyAnalyze --> storyImplement
-    
-    storyValidate --> |PASS| done["Story Complete"]
+    storyValidate --> |PASS| storyRetro
+    storyRetro --> done["Story Complete"]
     storyValidate --> |FAIL| storyImplement
     
     storySpecify["/story-specify"]
@@ -228,6 +229,7 @@ graph TD
     storyImplement["/story-implement"]
     storyAnalyze["/story-analyze"]
     storyValidate["/story-validate"]
+    storyRetro["/story-retrospective"]
     
     style storySpecify fill:#e1f5e1
     style storyClarify fill:#e1f5e1
@@ -235,6 +237,7 @@ graph TD
     style storyTasks fill:#e1f5e1
     style storyImplement fill:#e1f5e1
     style storyValidate fill:#ffe1e1
+    style storyRetro fill:#e1e1ff
     style done fill:#e1e1ff
 ```
 
@@ -428,6 +431,42 @@ Next Epic/Project
 - **Velocity Improvement**: Learn and adjust estimations
 - **Process Refinement**: Speck itself gets better with each project
 
+### Commit Checkpoints
+
+The agent should **automatically suggest or create commits** at natural completion points to ensure learnings are captured properly. Without regular commits, retrospectives miss valuable patterns and decisions.
+
+**Project Level Commit Points:**
+| After Command | Commit Message Pattern | Files to Commit |
+|---------------|----------------------|-----------------|
+| `/project-specify` | `docs(project): define project vision and goals` | `project.md` |
+| `/project-context` | `docs(project): document technical context and constraints` | `context.md` |
+| `/project-architecture` | `docs(project): design system architecture` | `architecture.md` |
+| `/project-plan` | `docs(project): create PRD and epic breakdown` | `PRD.md`, `epics.md`, `epics/*/epic.md` |
+
+**Epic Level Commit Points:**
+| After Command | Commit Message Pattern | Files to Commit |
+|---------------|----------------------|-----------------|
+| `/epic-specify` | `docs(epic): define [epic-name] scope and goals` | `epic.md` |
+| `/epic-architecture` | `docs(epic): design [epic-name] architecture` | `epic-architecture.md` |
+| `/epic-plan` | `docs(epic): create [epic-name] tech spec` | `epic-tech-spec.md` |
+| `/epic-breakdown` | `docs(epic): break down [epic-name] into stories` | `epic-breakdown.md`, `stories/*/spec.md` |
+
+**Story Level Commit Points:**
+| After Command | Commit Message Pattern | Files to Commit |
+|---------------|----------------------|-----------------|
+| `/story-specify` | `docs(story): define [story-name] requirements` | `spec.md` |
+| `/story-plan` | `docs(story): design [story-name] implementation` | `plan.md`, `data-model.md`, `contracts/` |
+| `/story-tasks` | `docs(story): create [story-name] task checklist` | `tasks.md` |
+| `/story-implement` | `feat([scope]): implement [story-name]` | Implementation files |
+| `/story-validate` | `docs(story): validate [story-name] completion` | `validation-report.md` |
+| `/story-retrospective` | `docs(story): capture [story-name] learnings` | `story-retro.md` |
+
+**Agent Behavior:**
+- After completing each command, the agent SHOULD suggest: "Ready to commit these changes?"
+- Include learning tags (PATTERN:, GOTCHA:, etc.) in implementation commits
+- Batch related spec file changes into single commits
+- Never leave uncommitted spec changes when switching contexts
+
 ---
 
 ## 🔬 Just-In-Time Research Pattern
@@ -556,6 +595,127 @@ When a recipe recommends Stripe for payments, the Stripe skill provides:
 - Code patterns for checkout, subscriptions
 
 **See `.claude/skills/README.md` for complete details.**
+
+---
+
+## 🎯 Jobs-to-Be-Done (JTBD) Framework
+
+Speck integrates Jobs-to-Be-Done theory (Tony Ulwick, Clayton Christensen) and Outcome-Driven Innovation (ODI) to ensure specifications focus on **what users are trying to accomplish**, not just features they request.
+
+### Core Concepts
+
+**The Job**: The fundamental task a user is trying to accomplish, independent of any solution.
+- Users don't buy products—they "hire" them to get jobs done
+- Jobs are stable over time; solutions change
+- Focus on the job reveals true unmet needs
+
+**Job Types**:
+- **Core Functional Job**: The primary task (e.g., "manage my project tasks efficiently")
+- **Related Jobs**: Adjacent tasks that arise (e.g., "communicate progress to stakeholders")
+- **Emotional Jobs**: How users want to feel (e.g., "feel in control of deadlines")
+- **Social Jobs**: How users want to be perceived (e.g., "appear organized to my team")
+
+### Job Statement Format
+
+Use this format to capture jobs clearly:
+
+```
+[Action verb] + [object of action] + [contextual clarifier]
+```
+
+**Examples**:
+- ✅ "Manage project deadlines across distributed teams"
+- ✅ "Track time spent on client work for accurate billing"
+- ✅ "Share progress updates with stakeholders without manual effort"
+- ❌ "Use a Gantt chart" (this is a solution, not a job)
+- ❌ "Have a dashboard" (solution, not job)
+
+### Outcome Statement Format (ODI)
+
+Outcomes are the metrics users use to measure success. Use Ulwick's format:
+
+```
+[Direction] + [unit of measure] + [object of control] + [contextual clarifier]
+```
+
+**Directions**: Minimize, Maximize, Increase, Reduce, Optimize
+
+**Examples**:
+- ✅ "Minimize the time it takes to identify which tasks are at risk"
+- ✅ "Minimize the likelihood of missing a deadline due to hidden dependencies"
+- ✅ "Increase the accuracy of time estimates for similar future tasks"
+- ❌ "Show overdue tasks in red" (solution, not outcome)
+
+### Applying JTBD in Speck
+
+**At Project Level** (`project.md`):
+```markdown
+## Jobs This Product Addresses
+
+### Core Functional Job
+[Job statement for the primary user goal]
+
+### Related Jobs
+- [Related job 1]
+- [Related job 2]
+
+### Emotional/Social Jobs
+- [Emotional: How users want to feel]
+- [Social: How users want to be perceived]
+```
+
+**At Epic Level** (`epic.md`):
+```markdown
+## Job Context
+
+### Job Being Addressed
+[Which project-level job does this epic help complete?]
+
+### Desired Outcomes (Priority Order)
+1. [Outcome statement - most important]
+2. [Outcome statement]
+3. [Outcome statement]
+
+### Current Pain Points
+- [How users currently struggle with this job]
+```
+
+**At Story Level** (`spec.md`):
+```markdown
+## User Story (JTBD Enhanced)
+
+**Job Context**: When [situation/trigger], I'm trying to [core job]...
+
+**User Story**: As a [user type], I want to [action] so that I can [outcome statement].
+
+**Success Metrics** (Outcome-Driven):
+- [ ] Minimizes time to [specific activity] by [target]
+- [ ] Reduces likelihood of [negative outcome]
+- [ ] Increases [positive metric]
+```
+
+### Job Map (For Complex Epics)
+
+For complex epics, map the full job lifecycle:
+
+| Stage | What Happens | Potential Pain Points |
+|-------|--------------|----------------------|
+| **1. Define** | What must be defined before starting? | Unclear requirements, missing info |
+| **2. Locate** | What inputs must be found/gathered? | Hard to find, scattered data |
+| **3. Prepare** | What setup is needed? | Complex configuration, dependencies |
+| **4. Confirm** | How to verify ready to proceed? | No clear checklist, uncertainty |
+| **5. Execute** | The core job execution | Friction, errors, slow performance |
+| **6. Monitor** | How to track progress? | No visibility, delayed feedback |
+| **7. Modify** | What adjustments during execution? | Hard to change, no undo |
+| **8. Conclude** | How to finish and hand off? | No clear completion, loose ends |
+
+### Benefits of JTBD in Speccing
+
+✅ **Avoids feature bloat** - Only build what serves the job
+✅ **Better prioritization** - Rank by unmet outcome importance
+✅ **Clearer success criteria** - Measurable outcomes, not vague requirements
+✅ **Innovation opportunities** - Identify underserved job steps
+✅ **Stable foundation** - Jobs don't change even as solutions evolve
 
 ---
 

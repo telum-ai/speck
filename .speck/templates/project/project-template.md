@@ -120,14 +120,14 @@ project-clarify → context → architecture → design-system → plan
 **[User Type 1 Name]**
 - Who they are: [Demographics, role, context]
 - Current pain points: [What frustrates them today]
-- Jobs to be done: [What they're trying to accomplish]
-- Success criteria: [What would delight them]
+- Primary job: [Core functional job they're hiring this product for]
+- Success criteria: [What would delight them / key outcomes they value]
 
 **[User Type 2 Name]**
 - Who they are: [Demographics, role, context]
 - Current pain points: [What frustrates them today]
-- Jobs to be done: [What they're trying to accomplish]
-- Success criteria: [What would delight them]
+- Primary job: [Core functional job they're hiring this product for]
+- Success criteria: [What would delight them / key outcomes they value]
 
 ### User Problems We're Solving
 [Top 3-5 problems in priority order]
@@ -138,6 +138,86 @@ project-clarify → context → architecture → design-system → plan
 2. **[Problem Name]**: [Description of the problem and its impact]
    - Current workarounds: [How users cope today]
    - Cost of inaction: [What happens if we don't solve this]
+
+---
+
+## 🎯 Jobs-to-Be-Done (JTBD)
+
+*Apply JTBD theory (Ulwick/Christensen) to focus on what users are trying to accomplish, not just features.*
+
+### Core Functional Job
+
+**Primary Job Statement**:
+[Action verb] + [object of action] + [contextual clarifier]
+
+*Example: "Manage project deadlines across distributed teams"*
+
+**Job Context**:
+- **When**: [Situation or trigger that creates the need]
+- **With**: [People, tools, or resources involved]
+- **Goal**: [What success looks like]
+
+### Related Jobs
+
+*Adjacent jobs that arise before, during, or after the core job:*
+
+1. **[Related Job]**: [Job statement]
+   - Relationship: [Before/During/After core job]
+
+2. **[Related Job]**: [Job statement]
+   - Relationship: [Before/During/After core job]
+
+### Emotional & Social Jobs
+
+**Emotional Jobs** (How users want to feel):
+- Feel [confident/in control/relieved/etc.] that [outcome]
+- Avoid feeling [stressed/anxious/overwhelmed/etc.] about [situation]
+
+**Social Jobs** (How users want to be perceived):
+- Appear [organized/professional/competent/etc.] to [audience]
+- Avoid appearing [unprepared/disorganized/etc.] to [audience]
+
+### Key Desired Outcomes (Ranked)
+
+*Users measure job success by these outcomes. Rank by importance to users:*
+
+| Priority | Outcome Statement | Current Pain Level |
+|----------|-------------------|-------------------|
+| 1 | [Direction] the [measure] of [object] [context] | High/Med/Low |
+| 2 | [Direction] the [measure] of [object] [context] | High/Med/Low |
+| 3 | [Direction] the [measure] of [object] [context] | High/Med/Low |
+| 4 | [Direction] the [measure] of [object] [context] | High/Med/Low |
+| 5 | [Direction] the [measure] of [object] [context] | High/Med/Low |
+
+*Directions: Minimize, Maximize, Increase, Reduce, Optimize*
+
+*Examples:*
+- *Minimize the time it takes to identify at-risk project tasks*
+- *Minimize the likelihood of missing deadlines due to hidden dependencies*
+- *Increase the accuracy of time estimates for similar future tasks*
+
+### Competitive Job Executors
+
+*How do users currently "hire" solutions to get this job done?*
+
+| Current Solution | Strengths | Weaknesses (Opportunities) |
+|------------------|-----------|---------------------------|
+| [Competitor/Workaround 1] | [What it does well] | [Where it falls short] |
+| [Competitor/Workaround 2] | [What it does well] | [Where it falls short] |
+| [Manual process] | [What it does well] | [Where it falls short] |
+
+### JTBD-Driven Prioritization
+
+*Use this framework to prioritize features:*
+
+**Prioritization Formula**: Importance + (Importance - Satisfaction) = Opportunity Score
+
+Focus on outcomes with:
+- HIGH importance to users
+- LOW satisfaction with current solutions
+- = HIGH opportunity score
+
+---
 
 ## 📊 Success Metrics
 

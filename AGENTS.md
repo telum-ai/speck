@@ -637,18 +637,81 @@ Check project Cursor rules for testing rules (if present):
 - Story retros mine your commits to extract patterns
 - Without tags, valuable learnings are lost!
 
-## 📝 Spec Format Conventions
+### Commit Checkpoints (Suggest Commits at Natural Points!)
 
-### User Stories
-```markdown
-As a [user type], I want to [action] so that [benefit]
+The agent SHOULD suggest commits at these natural completion points:
+
+**After Spec Commands** (project-specify, epic-specify, story-specify):
+```
+docs([level]): define [name] specification
 ```
 
-### Acceptance Criteria
+**After Plan Commands** (project-plan, epic-plan, story-plan):
+```
+docs([level]): design [name] [architecture/tech-spec/implementation]
+```
+
+**After Implementation** (story-implement):
+```
+feat([scope]): implement [story-name]
+
+[Description]
+
+PATTERN: [if applicable]
+GOTCHA: [if applicable]
+```
+
+**After Validation** (story-validate):
+```
+docs(story): validate [story-name] completion
+```
+
+**Agent Behavior**:
+- After completing each command that creates/updates spec files, suggest: "Ready to commit these changes?"
+- Batch related spec file changes into single commits
+- Never leave uncommitted spec changes when switching contexts
+- Include learning tags in implementation commits when patterns discovered
+
+## 🎯 Jobs-to-Be-Done (JTBD) Framework
+
+Integrate JTBD theory (Ulwick/Christensen) into specs to focus on **what users are trying to accomplish**.
+
+### Job Statement Format
+```
+[Action verb] + [object of action] + [contextual clarifier]
+```
+Example: "Manage project deadlines across distributed teams"
+
+### Outcome Statement Format (ODI)
+```
+[Direction] + [unit of measure] + [object of control] + [contextual clarifier]
+```
+Directions: Minimize, Maximize, Increase, Reduce
+Example: "Minimize the time it takes to identify which tasks are at risk"
+
+### Apply JTBD at Each Level
+- **Project**: Document core functional job, related jobs, emotional/social jobs
+- **Epic**: Identify which project job this addresses, list desired outcomes
+- **Story**: Include job context in user story, define outcome-based success metrics
+
+## 📝 Spec Format Conventions
+
+### User Stories (JTBD Enhanced)
+```markdown
+**Job Context**: When [situation/trigger], I'm trying to [core job]...
+
+**User Story**: As a [user type], I want to [action] so that I can [outcome statement].
+
+**Success Metrics** (Outcome-Driven):
+- [ ] Minimizes time to [specific activity] by [target]
+- [ ] Reduces likelihood of [negative outcome]
+```
+
+### Acceptance Criteria (Gherkin + Outcomes)
 ```markdown
 Given [context]
 When [action]
-Then [outcome]
+Then [outcome - phrased as measurable result]
 ```
 
 ### Requirements (Adopt OpenSpec-style)

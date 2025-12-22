@@ -108,8 +108,33 @@ When creating this spec from a user prompt:
 
 ## User Scenarios & Testing *(mandatory)*
 
-### Primary User Story
-As a [user type], I want to [action] so that [benefit].
+### Job Context (JTBD)
+
+**Core Job Being Addressed**:
+When [situation/trigger], I'm trying to [job statement: action verb + object + context].
+
+*Example: "When reviewing project status, I'm trying to identify at-risk tasks before they become blockers."*
+
+### Primary User Story (JTBD Enhanced)
+
+As a [user type], I want to [action] so that I can [outcome statement: direction + measure + object].
+
+*Traditional format is acceptable, but prefer outcome-focused "so that" clauses:*
+- ❌ "so that I have a dashboard" (solution-focused)
+- ✅ "so that I can minimize the time it takes to identify at-risk tasks" (outcome-focused)
+
+### Success Metrics (Outcome-Driven)
+
+Define how we'll measure if this story achieves the desired outcome:
+
+- [ ] **[Metric 1]**: [Direction] the [measure] of [object] by [target/baseline]
+- [ ] **[Metric 2]**: [Direction] the likelihood of [outcome]
+- [ ] **[Metric 3]**: [Qualitative outcome if not measurable]
+
+*Examples:*
+- *Minimize the time to complete checkout by 30% vs current flow*
+- *Reduce the likelihood of abandoned carts due to payment errors*
+- *Users report feeling confident about their purchase (qualitative)*
 
 ### Acceptance Scenarios
 
