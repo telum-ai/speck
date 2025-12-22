@@ -22,9 +22,16 @@ Sync behavior is controlled by `.templatesyncignore` (ignore patterns).
 ## Setup in a product repo
 
 1. **Enable the workflow** (it is already included via the template).
-2. Add repository secret:
-   - **`TEMPLATE_SYNC_SOURCE_REPO`**: `<owner>/<template-repo>`
-3. Optional secret:
+
+2. **Enable PR creation permission** (required):
+   - Go to **Settings → Actions → General → Workflow permissions**
+   - Check ✅ **"Allow GitHub Actions to create and approve pull requests"**
+   - Without this, the sync will fail with: `GitHub Actions is not permitted to create or approve pull requests`
+
+3. Add repository secret:
+   - **`TEMPLATE_SYNC_SOURCE_REPO`**: `<owner>/<template-repo>` (e.g., `telum-ai/speck`)
+
+4. Optional secret:
    - **`TEMPLATE_SYNC_UPSTREAM_BRANCH`**: defaults to `main`
 
 Then either wait for the schedule or run the workflow manually via **Actions → Template Sync (Speck)**.
@@ -53,5 +60,19 @@ If you need to change a template-managed file:
 - **Preferred**: make the change in the template repo and let it sync everywhere.
 - **Escape hatch**: add that file path to `.templatesyncignore` in the product repo.
   - Trade-off: you stop receiving template updates for that file.
+
+## Troubleshooting
+
+### "GitHub Actions is not permitted to create or approve pull requests"
+
+The workflow ran but failed to create a PR. Fix:
+1. Go to **Settings → Actions → General → Workflow permissions**
+2. Check ✅ **"Allow GitHub Actions to create and approve pull requests"**
+
+### "TEMPLATE_SYNC_SOURCE_REPO not set. Skipping template sync."
+
+This is expected if you haven't configured the secret yet. Add it:
+1. Go to **Settings → Secrets and variables → Actions**
+2. Add secret: `TEMPLATE_SYNC_SOURCE_REPO` = `<owner>/<template-repo>`
 
 
