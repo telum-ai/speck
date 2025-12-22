@@ -18,6 +18,7 @@ This command requires:
 - Recommended: Existing research reports (check project dir for *-research-report-*.md)
 - Optional: project-landscape-overview.md (brownfield architecture extraction)
 - Optional: project-import.md (brownfield non-code aspects)
+- **Optional**: Recipe selection (if project.md has `_active_recipe:` metadata)
 
 **Position in Flow**: Runs AFTER context/constitution, BEFORE planning (architecture decisions inform planning!)
 
@@ -35,6 +36,17 @@ This command requires:
    - Load project-import.md if exists (brownfield non-code)
    - Check for existing architecture.md
    
+   **Check for Active Recipe** (greenfield only):
+   - Look for `_active_recipe:` in project.md metadata
+   - If found, load `.speck/recipes/[recipe-name]/recipe.yaml`
+   - Recipe provides pre-made architecture decisions:
+     * `stack:` → Framework, language, database choices
+     * `architecture:` → Pattern, API style, rendering approach
+     * `patterns:` → Pre-configured implementation patterns
+     * `external_services:` → Recommended services (auth, payments, etc.)
+   - Use recipe as starting point, customize based on project specifics
+   - Skip questions about areas the recipe already addresses
+   
    **Determine Architecture Mode**:
    - **BROWNFIELD MODE** (if project-landscape-overview.md exists):
      * Extract existing architecture from landscape overview
@@ -44,7 +56,8 @@ This command requires:
    
    - **GREENFIELD MODE** (if no landscape overview):
      * Design architecture from scratch
-     * Ask architecture questions interactively
+     * **If recipe active**: Pre-fill from recipe, ask only for customizations
+     * **If no recipe**: Ask architecture questions interactively
      * Make technology choices based on context constraints
      * **Use just-in-time research for technology evaluation**
    

@@ -100,9 +100,17 @@ User triggers commands, you follow instructions inside each command.
 
 **Note**: Research is performed just-in-time by each command as needed, not as separate steps.
 
-**Recipe Support**: For common project types, recipes in `.speck/recipes/` provide pre-configured starting points.
+**Recipe Support**: For common project types, recipes in `.speck/recipes/` provide pre-configured starting points. Recipes are detected at multiple entry points:
 
-**Note**: Research is performed just-in-time by each command as needed, not as separate steps.
+| Command | Recipe Integration |
+|---------|-------------------|
+| `/speck` | Detects recipe match, offers to use it |
+| `/project-specify` | Detects recipe match, pre-fills project.md |
+| `/project-context` | Uses recipe's `context:` section |
+| `/project-architecture` | Uses recipe's `stack:` and `architecture:` sections |
+| `/project-plan` | Uses recipe's `suggested_epics:` for epic structure |
+
+**Recipe Metadata**: When a recipe is selected, `_active_recipe: [name]` is stored in project.md for downstream commands to use.
 
 ### Command Files Reference
 Commands are markdown files in `.cursor/commands/`:

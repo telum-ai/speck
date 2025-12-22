@@ -23,6 +23,39 @@ Check for brownfield indicators in the active project directory:
 
 ---
 
+### Step 0.5: Recipe Detection (Greenfield Only)
+
+**For greenfield projects**, check if the user's description matches a known recipe:
+
+1. **Scan recipe keywords**: Read `.speck/recipes/*/recipe.yaml` files and match `keywords:` against user input
+2. **If match found**, offer the recipe:
+   ```
+   🍳 I found a matching recipe: "[recipe display_name]"
+   
+   This recipe provides:
+   - Stack: [frontend + backend + database from recipe]
+   - Pre-configured patterns for [key patterns]
+   - Suggested epics: [list epic names from suggested_epics]
+   
+   Options:
+   1. Use this recipe (pre-fills architecture, context, and epic suggestions)
+   2. Start from scratch (full custom specification)
+   3. See other recipes
+   
+   Your choice [1]:
+   ```
+
+3. **If user selects recipe**:
+   - Store recipe selection: `_active_recipe: [recipe-name]` in project.md metadata
+   - Pre-fill relevant sections from recipe's `stack:`, `ideal_for:`, `patterns:`
+   - Recipe will also inform `/project-architecture`, `/project-context`, and `/project-plan`
+
+4. **If no match or user declines**: Continue with standard greenfield flow
+
+**Recipe Reference**: See `.speck/recipes/README.md` for available recipes and their use cases.
+
+---
+
 ### GREENFIELD MODE: Create from Scratch
 
 ### Step 1: Parse and Validate Input

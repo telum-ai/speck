@@ -26,6 +26,15 @@ Load existing project context if it exists:
 - If exists: **BROWNFIELD mode** (extract from scan)
 - If not: **GREENFIELD mode** (interactive creation)
 
+**Check for Active Recipe** (greenfield only):
+- Look for `_active_recipe:` in project.md metadata
+- If found, load `.speck/recipes/[recipe-name]/recipe.yaml`
+- Recipe provides pre-filled context from its `context:` section:
+  * `technical:` → Technical requirements (Python version, Node version, etc.)
+  * `development:` → Development practices (branching strategy, commits)
+  * `quality:` → Quality standards (test coverage, type safety)
+- Use recipe context as starting point, ask only for non-covered areas
+
 ## Just-In-Time Research
 
 **Reference**: Follow the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
