@@ -10,6 +10,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # Note: Modifying workflow files requires a PAT with 'workflow' scope, not a permission here.
+  # The template-sync.yml is excluded via .templatesyncignore to avoid this issue.
 
 jobs:
   repo-sync:
