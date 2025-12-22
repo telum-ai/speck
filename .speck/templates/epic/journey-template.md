@@ -7,6 +7,19 @@
 
 ---
 
+## 📊 Design Context Sources
+
+**This user journey uses principles from**:
+
+| Document | Path | Key Sections Used |
+|----------|------|-------------------|
+| UX Strategy | `specs/projects/[PROJECT_ID]/ux-strategy.md` | [Personas, Principles, Emotional Goals] |
+| Design System | `specs/projects/[PROJECT_ID]/design-system.md` | [Interaction Patterns, Feedback] |
+
+**If documents missing**: Run `/project-ux` and `/project-design-system` for consistent journey design.
+
+---
+
 ## 📋 Journey Overview
 
 **Persona**: [Primary user type for this journey]  

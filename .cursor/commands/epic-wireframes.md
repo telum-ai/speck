@@ -23,11 +23,20 @@ Ask: "Which project and epic should I create wireframes for?"
 
 ### Step 1: Load Context
 
-Gather necessary information:
-- User journey map (for touchpoints)
-- Design system (for components)
-- Epic specification (for requirements)
-- Project UX strategy (for principles)
+**Determine PROJECT_ID** from epic path (e.g., `specs/projects/001-myproject/epics/...`).
+
+**Load required design context**:
+- `specs/projects/[PROJECT_ID]/design-system.md` → Design tokens, components, patterns
+  - Extract: Color tokens, typography scale, spacing system, component library, grid specifications
+  - If missing: WARN "No design system found. Run `/project-design-system` for consistent wireframes."
+
+- `specs/projects/[PROJECT_ID]/ux-strategy.md` → UX principles, voice/tone
+  - Extract: Design principles, voice attributes, accessibility standards, content guidelines
+  - If missing: WARN "No UX strategy found. Run `/project-ux` for UX guidelines."
+
+**Load epic context**:
+- User journey map (for touchpoints) - `[EPIC_DIR]/user-journey.md`
+- Epic specification (for requirements) - `[EPIC_DIR]/epic.md`
 
 ### Step 2: Screen Discovery
 

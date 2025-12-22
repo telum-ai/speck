@@ -509,16 +509,23 @@ Follow design system rules (if project has them):
 - Check accessibility requirements (WCAG standards if specified)
 - Check project Cursor rules for design system enforcement (if present)
 
-### Design Context Loading (CRITICAL for UI Stories!)
-Before planning or implementing UI stories, ALWAYS load project design context:
+### Design Context Loading (CRITICAL for UI Work!)
 
-**Required Documents** (for UI/UX stories):
+Before planning or implementing UI work at ANY level, ALWAYS load project design context:
+
+**Required Documents**:
 ```
 specs/projects/[PROJECT_ID]/design-system.md  → Tokens, components, patterns
 specs/projects/[PROJECT_ID]/ux-strategy.md    → UX principles, voice/tone
 ```
 
-**Loading Checklist**:
+**Epic-Level Loading** (for `/epic-journey`, `/epic-wireframes`):
+- [ ] Load ux-strategy.md for personas, emotional goals, accessibility standards
+- [ ] Load design-system.md for components, tokens, interaction patterns
+- [ ] Apply voice/tone from ux-strategy.md to journey touchpoints and wireframe content
+- [ ] Use design tokens in wireframe specifications
+
+**Story-Level Loading** (for `/story-plan`, `/story-ui-spec`):
 - [ ] Extract design tokens (colors, typography, spacing) from design-system.md
 - [ ] Note available components before creating new ones
 - [ ] Apply voice/tone from ux-strategy.md to copy/microcopy
@@ -530,6 +537,8 @@ specs/projects/[PROJECT_ID]/ux-strategy.md    → UX principles, voice/tone
 - ❌ Creating custom button when Button exists in design-system.md
 - ❌ Using `color: #3B82F6` instead of `color: var(--primary-500)`
 - ❌ Writing generic "Loading..." when ux-strategy.md specifies friendly voice
+- ❌ Designing wireframes without referencing design-system.md grid/spacing
+- ❌ Creating journey maps without ux-strategy.md emotional goals
 
 ## 📊 Learning Capture System (CRITICAL for Retrospectives!)
 
