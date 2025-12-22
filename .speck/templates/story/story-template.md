@@ -18,6 +18,10 @@
 - **Recommended Inputs**:
   - `epic-tech-spec.md` → Technical implementation approach
   - `project.md` → Project vision and constraints (inherited)
+- **Design Context** (for UI/UX stories):
+  - `ux-strategy.md` → UX principles, voice/tone, emotional goals
+  - `design-system.md` → Design tokens, components, patterns
+  - If missing: Mark as [NEEDS DESIGN CONTEXT] and suggest `/project-ux` or `/project-design-system`
 - **Brownfield** (if applicable):
   - `codebase-scan-*.md` → Existing code analysis
   - Approach: Refactor/enhance existing code when overlap detected
