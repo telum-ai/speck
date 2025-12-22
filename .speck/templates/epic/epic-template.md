@@ -95,6 +95,66 @@ Update state checkboxes as epic progresses through workflow.
 - Project Goal 1: [How this epic contributes]
 - Project Goal 2: [How this epic contributes]
 
+---
+
+## 🎯 Job Context (JTBD)
+
+### Job Being Addressed
+
+**Core Functional Job**: 
+[Which project-level job does this epic help complete?]
+Format: [Action verb] + [object] + [contextual clarifier]
+
+*Example: "Manage project deadlines across distributed teams"*
+
+**Related Jobs** (if applicable):
+- [Adjacent job that arises during/after the core job]
+- [Another related job]
+
+**Emotional/Social Jobs** (if applicable):
+- [How users want to feel: "Feel confident that..."]
+- [How users want to be perceived: "Appear organized to..."]
+
+### Desired Outcomes (Priority Order)
+
+Rank the outcomes users care most about for this job:
+
+1. **[Outcome 1]**: [Direction] the [measure] of [object] [context]
+   - Current Pain: [How users currently struggle]
+   - Target: [Measurable improvement]
+
+2. **[Outcome 2]**: [Direction] the [measure] of [object] [context]
+   - Current Pain: [How users currently struggle]
+   - Target: [Measurable improvement]
+
+3. **[Outcome 3]**: [Direction] the [measure] of [object] [context]
+   - Current Pain: [How users currently struggle]
+   - Target: [Measurable improvement]
+
+*Example outcomes:*
+- *Minimize the time it takes to identify which tasks are at risk*
+- *Minimize the likelihood of missing a deadline due to hidden dependencies*
+- *Increase the accuracy of time estimates for similar future tasks*
+
+### Job Map (For Complex Epics)
+
+*Map the full job lifecycle to identify where this epic provides value:*
+
+| Stage | User Activity | Pain Points Addressed by Epic |
+|-------|---------------|------------------------------|
+| **Define** | [What user defines before starting] | [Epic addresses...] |
+| **Locate** | [Inputs user must find/gather] | [Epic addresses...] |
+| **Prepare** | [Setup user performs] | [Epic addresses...] |
+| **Confirm** | [How user verifies ready] | [Epic addresses...] |
+| **Execute** | [Core job execution] | [Epic addresses...] |
+| **Monitor** | [How user tracks progress] | [Epic addresses...] |
+| **Modify** | [Adjustments during execution] | [Epic addresses...] |
+| **Conclude** | [How job finishes] | [Epic addresses...] |
+
+*Note: Not all stages need addressing. Focus on where this epic adds value.*
+
+---
+
 ## 👥 User Stories
 
 ### Story Group 1: [Capability Area]
