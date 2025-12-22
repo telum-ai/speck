@@ -31,11 +31,21 @@ Load context:
 
 ### Step 1: Understand Component Context
 
-Load relevant information:
+**Determine PROJECT_ID** from story path (e.g., `specs/projects/001-myproject/epics/...`).
+
+**Load required design context**:
+- `specs/projects/[PROJECT_ID]/design-system.md` → Design tokens, components, patterns
+  - Extract: Color tokens, typography scale, spacing system, component library
+  - If missing: WARN "No design system found. Run `/project-design-system` for consistent UI."
+  
+- `specs/projects/[PROJECT_ID]/ux-strategy.md` → UX principles, voice/tone
+  - Extract: Design principles, voice attributes, accessibility standards
+  - If missing: WARN "No UX strategy found. Run `/project-ux` for UX guidelines."
+
+**Load story context**:
 - Story specification (what needs to be built)
-- Epic wireframes (where it fits)
-- Design system (available tokens and patterns)
-- Project UX principles
+- Epic wireframes (where it fits) - `epic/wireframes.md` if exists
+- Epic user journey (user flow context) - `epic/user-journey.md` if exists
 
 ### Step 2: Component Discovery
 

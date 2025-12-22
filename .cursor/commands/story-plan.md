@@ -103,7 +103,29 @@ Given the implementation details provided as an argument, do this:
 
 5. Read the project constitution at `specs/projects/[PROJECT_ID]/constitution.md` if it exists to understand constitutional requirements.
 
-6. Just-In-Time Research (before executing plan template):
+6. **Load Project Design Context** (CRITICAL for UI/UX stories):
+   
+   Determine PROJECT_ID from the story path (e.g., `specs/projects/001-myproject/epics/...`).
+   
+   **Check for and load design documents**:
+   - `specs/projects/[PROJECT_ID]/ux-strategy.md` → UX principles, voice/tone, design vision
+   - `specs/projects/[PROJECT_ID]/design-system.md` → Design tokens, components, patterns
+   
+   **IF ux-strategy.md exists**:
+   - Extract UX principles for Constitution Check
+   - Note voice/tone guidelines for Brand Voice Copy Bank
+   - Apply accessibility standards from the document
+   
+   **IF design-system.md exists**:
+   - Extract design tokens (colors, typography, spacing)
+   - Note available components for Design System Component Registry
+   - Use token values in any UI-related contract specifications
+   
+   **IF neither exists AND story has UI requirements**:
+   - WARN: "No project design documents found. Consider running `/project-ux` and `/project-design-system` first for UI consistency."
+   - Proceed but note in plan.md that design decisions may need alignment later
+
+8. Just-In-Time Research (before executing plan template):
    
    **Reference**: Follow the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
    
@@ -157,7 +179,7 @@ Given the implementation details provided as an argument, do this:
    4. Re-run this command to continue
    ```
 
-7. Execute the implementation plan template:
+9. Execute the implementation plan template:
    - Load `.speck/templates/story/plan-template.md`
    - Write output to PLAN_PATH
    - Run the Execution Flow (main) function steps 1-9
@@ -185,12 +207,12 @@ Given the implementation details provided as an argument, do this:
    
    **Note**: Research is embedded directly in plan.md (follow the just-in-time research pattern).
 
-8. Verify execution completed:
+10. Verify execution completed:
    - Check Progress Tracking shows all phases complete
    - Ensure all required artifacts were generated
    - Confirm no ERROR states in execution
 
-9. Report results with branch name, file paths, and generated artifacts:
+11. Report results with branch name, file paths, and generated artifacts:
    ```
    ✅ Story Technical Plan Complete!
    

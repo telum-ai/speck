@@ -8,11 +8,25 @@
 
 ---
 
+## 📊 Design Context Sources
+
+**This UI specification uses tokens and patterns from**:
+
+| Document | Path | Key Sections Used |
+|----------|------|-------------------|
+| Design System | `specs/projects/[PROJECT_ID]/design-system.md` | [Tokens, Components] |
+| UX Strategy | `specs/projects/[PROJECT_ID]/ux-strategy.md` | [Principles, Voice/Tone] |
+| Epic Wireframes | `[EPIC_PATH]/wireframes.md` | [Relevant screens] |
+
+**If documents missing**: Run `/project-design-system` and `/project-ux` for consistency.
+
+---
+
 ## 📦 Component Overview
 
 **Component Name**: [Name]  
 **Type**: [New Component/Modified Component/Composite]  
-**Design System Reference**: [Link/Version]  
+**Design System Reference**: `design-system.md` version [X.X]  
 **Affects**: [List of screens/features affected]
 
 ---

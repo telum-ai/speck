@@ -509,6 +509,28 @@ Follow design system rules (if project has them):
 - Check accessibility requirements (WCAG standards if specified)
 - Check project Cursor rules for design system enforcement (if present)
 
+### Design Context Loading (CRITICAL for UI Stories!)
+Before planning or implementing UI stories, ALWAYS load project design context:
+
+**Required Documents** (for UI/UX stories):
+```
+specs/projects/[PROJECT_ID]/design-system.md  → Tokens, components, patterns
+specs/projects/[PROJECT_ID]/ux-strategy.md    → UX principles, voice/tone
+```
+
+**Loading Checklist**:
+- [ ] Extract design tokens (colors, typography, spacing) from design-system.md
+- [ ] Note available components before creating new ones
+- [ ] Apply voice/tone from ux-strategy.md to copy/microcopy
+- [ ] Reference accessibility standards from ux-strategy.md
+
+**If Missing**: Warn user and suggest running `/project-design-system` or `/project-ux` first.
+
+**Anti-Patterns to Avoid**:
+- ❌ Creating custom button when Button exists in design-system.md
+- ❌ Using `color: #3B82F6` instead of `color: var(--primary-500)`
+- ❌ Writing generic "Loading..." when ux-strategy.md specifies friendly voice
+
 ## 📊 Learning Capture System (CRITICAL for Retrospectives!)
 
 ### Why This Matters

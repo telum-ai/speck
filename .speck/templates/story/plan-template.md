@@ -292,30 +292,57 @@ directories captured above]
 
 ### Design System Component Registry
 
-**From codebase-scan-design-system.md** (specify which components to use):
+**Source Priority** (check in order):
+1. `specs/projects/[PROJECT_ID]/design-system.md` → Project design system (tokens, components)
+2. `codebase-scan-design-system.md` → Existing component patterns from code
 
-| Component | Use For | Must Use Props | Example | Tasks |
+**From design-system.md** (project-level tokens - MUST USE):
+
+| Token Category | Token Name | Value | Usage in This Story |
+|----------------|------------|-------|---------------------|
+| Color | [e.g., `primary-500`] | [value] | [where used] |
+| Typography | [e.g., `text-lg`] | [value] | [where used] |
+| Spacing | [e.g., `space-4`] | [value] | [where used] |
+| Radius | [e.g., `radius-md`] | [value] | [where used] |
+
+**Components to Use** (from design-system.md or codebase-scan):
+
+| Component | Use For | Required Props | Example | Tasks |
 |-----------|---------|----------------|---------|-------|
-| Button | All CTAs | `intent="primary"`, `haptic={true}` | "Send Request" | T018, T023, T031 |
-| PhoneInput | Phone entry | `countryCode`, auto-formatting | Verification | T019 |
-| Dialog | Modals | `title`, `description` | Inline verify | T019, T020 |
-| InfoBox | Progress | `variant="accent"` | "Finding..." | T019, T023 |
+| [Component] | [Purpose] | [Props] | [Example usage] | [Task IDs] |
 
-**Note for /story-tasks**: Specify component names in task descriptions, not "create button component"
+**⚠️ CRITICAL**: Do NOT create custom components if design-system.md has equivalents.
+- ❌ Wrong: "Create a styled button"
+- ✅ Right: "Use Button from design-system with `variant='primary'`"
+
+**Note for /story-tasks**: Specify component names and token values in task descriptions
 
 ### Brand Voice Copy Bank
 
-**From design-system.md or codebase-scan-design-system.md content-guidelines**:
+**Source Priority** (check in order):
+1. `specs/projects/[PROJECT_ID]/ux-strategy.md` → Voice & Tone section
+2. `specs/projects/[PROJECT_ID]/design-system.md` → Content Guidelines section
+3. `codebase-scan-design-system.md` → Existing copy patterns from code
 
-**Pattern**: [CUSTOMIZE: Reference project voice/tone from design-system.md]
+**Voice Attributes** (from ux-strategy.md):
+- Voice: [Extract from ux-strategy.md Voice section, e.g., "Friendly but not casual"]
+- Tone adjustments: [How tone changes by context - success/error/onboarding]
 
-**Examples for This Feature**:
-- Empty state: [CUSTOMIZE: "No items yet—get started!" style guidance]
-- Loading: [CUSTOMIZE: "Finding your..." vs "Loading..." guidance]
-- Actions: [CUSTOMIZE: Friendly action labels vs technical terms]
-- Success: [CUSTOMIZE: Celebratory vs formal success messages]
+**Copy Patterns for This Feature**:
 
-**Note for /story-tasks**: Include copy examples in UI task descriptions
+| Context | Pattern | Example | Source |
+|---------|---------|---------|--------|
+| Empty state | [Pattern] | [Example copy] | [ux-strategy.md / design-system.md] |
+| Loading | [Pattern] | [Example copy] | [Source] |
+| Success | [Pattern] | [Example copy] | [Source] |
+| Error | [Pattern] | [Example copy] | [Source] |
+| Actions | [Pattern] | [Example copy] | [Source] |
+
+**⚠️ CRITICAL**: Match existing voice/tone from project documents.
+- ❌ Wrong: Generic "Loading..." if project uses friendly voice
+- ✅ Right: "Finding your matches..." per ux-strategy.md tone
+
+**Note for /story-tasks**: Include exact copy in UI task descriptions, not "add loading message"
 
 ### Constitution Compliance Gates
 
