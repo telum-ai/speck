@@ -27,6 +27,12 @@ stack:
     name: PostgreSQL (via Supabase)
     version: "15"
 suggested_epics:
+  - name: Developer Infrastructure
+    description: Testing (Vitest + Playwright), CI/CD pipeline (GitHub Actions + Vercel), linting (ESLint + Prettier), error tracking (Sentry)
+    stories_estimate: 3-5
+    priority: 0
+    phase: foundation
+    
   - name: Authentication & User Management
     description: Implement user registration, login, social auth, and profile management using Supabase Auth.
     stories_estimate: 6-9

@@ -27,6 +27,12 @@ stack:
     name: SQLite (embedded)
     version: "3"
 suggested_epics:
+  - name: Developer Infrastructure
+    description: Testing (Vitest + Playwright), CI/CD pipeline (GitHub Actions), linting (ESLint), error tracking (Sentry), auto-update setup
+    stories_estimate: 3-5
+    priority: 0
+    phase: foundation
+    
   - name: Electron Setup & IPC
     description: Configure Electron main/renderer process communication, preload scripts, and security settings.
     stories_estimate: 5-7

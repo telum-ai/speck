@@ -69,6 +69,13 @@ not_ideal_for:
 
 # Common epics for this stack
 suggested_epics:
+  - id: infrastructure
+    name: "Developer Infrastructure"
+    priority: 0
+    phase: foundation
+    stories_estimate: 3-5
+    description: "Testing (pytest), CI/CD pipeline, linting (Ruff), error tracking (Sentry), OpenAPI docs setup"
+    
   - id: foundation
     name: "API Foundation"
     priority: 1

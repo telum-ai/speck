@@ -58,6 +58,14 @@ not_ideal_for:
 
 # Common epics for this stack
 suggested_epics:
+  - id: infrastructure
+    name: "Developer Infrastructure"
+    priority: 0
+    phase: foundation
+    stories_estimate: 2-3
+    description: "CI/CD pipeline (Vercel/Netlify preview deploys), linting (ESLint + Prettier), accessibility testing setup"
+    optional_for_simple_sites: true
+    
   - id: structure
     name: "Site Structure"
     priority: 1

@@ -34,6 +34,43 @@ E004 ────────────────────┘
 
 ## Epic Definitions
 
+### E000: Developer Infrastructure (RECOMMENDED FIRST)
+
+**Value Statement**: This epic establishes the technical foundation that enables all future development to be reliable, maintainable, and deployable.
+
+**Scope Summary**: 
+Set up testing framework, CI/CD pipeline, linting/formatting, error tracking, and environment configuration. This is infrastructure that every production project needs - do it once, benefit forever.
+
+**Success Criteria**:
+- [ ] Tests can be written and run locally with a single command
+- [ ] CI pipeline runs on every PR (lint, test, build)
+- [ ] Error tracking captures production issues with context
+- [ ] Deployment to staging/production is automated
+
+**User Stories Summary**:
+- Testing framework configuration (unit, integration patterns)
+- CI/CD pipeline setup (lint, test, build, deploy stages)
+- Linting and formatting configuration (auto-fix on save)
+- Error tracking integration (Sentry or equivalent)
+- Environment configuration (.env patterns, secrets management)
+- Pre-commit hooks (optional but recommended)
+
+**Dependencies**:
+- **Depends On**: None (truly foundational - do first!)
+- **Enables**: All other epics (E001+)
+
+**Estimated Stories**: [3-6]
+**Priority**: P0 - Foundation (before any feature work)
+**Target Phase**: Phase 0 (before Phase 1)
+
+**⚠️ Skip Criteria**: Only skip if ALL of these are true:
+- [ ] Existing project with testing already configured
+- [ ] CI/CD pipeline already running
+- [ ] Error tracking already integrated
+- [ ] This is a throwaway prototype (not production-bound)
+
+---
+
 ### E001: [Epic Name]
 
 **Value Statement**: This epic enables [users] to [capability] resulting in [benefit]
@@ -53,7 +90,7 @@ E004 ────────────────────┘
 [High-level story groups, not detailed list]
 
 **Dependencies**:
-- **Depends On**: None (foundational)
+- **Depends On**: E000 (infrastructure foundation)
 - **Enables**: E003, E004
 
 **Estimated Stories**: [8-12]
@@ -172,7 +209,19 @@ E004 ────────────────────┘
 
 ## Epic Execution Strategy
 
-### Phase 1: Foundation (Weeks 1-4)
+### Phase 0: Developer Infrastructure (Week 1)
+**Goal**: Establish technical foundation for reliable development
+
+**Epics**:
+- E000: Developer Infrastructure (Required before feature work)
+
+**Success Gate**: CI pipeline runs, tests work, errors are tracked
+
+**Skip Criteria**: Only skip if this is brownfield with existing infrastructure
+
+---
+
+### Phase 1: Foundation (Weeks 2-5)
 **Goal**: Establish core infrastructure and user management
 
 **Epics**:

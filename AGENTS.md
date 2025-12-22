@@ -91,9 +91,12 @@ User triggers commands, you follow instructions inside each command.
 3. **Foundation**: [ux (+ research)] → context (+ research) → [constitution (+ research)]
 4. **Technical Design**: architecture (+ research) → [design-system (+ research)]
 5. **Planning**: plan (+ research) → [roadmap]
-6. **Epic Work**: specify → clarify → [architecture (+ research)] → plan (+ research) → breakdown
-7. **Story Work**: specify → clarify → plan (+ research) → tasks → implement → validate
-8. **Learning**: story-retrospective → epic-retrospective → project-retrospective
+6. **Infrastructure Epic** (E000): Developer Infrastructure (testing, CI/CD, linting, error tracking)
+7. **Epic Work**: specify → clarify → [architecture (+ research)] → plan (+ research) → breakdown
+8. **Story Work**: specify → clarify → plan (+ research) → tasks → implement → validate
+9. **Learning**: story-retrospective → epic-retrospective → project-retrospective
+
+**Foundation Epic**: After planning, always consider E000: Developer Infrastructure before feature epics. This sets up testing, CI/CD, linting, and error tracking - foundational concerns that every production project needs.
 
 **Note**: Research is performed just-in-time by each command as needed, not as separate steps.
 
@@ -480,6 +483,26 @@ Before running `/project-plan`, ensure these artifacts exist:
 **CRITICAL**: Never run `/project-plan` before `architecture.md` - design decisions must inform planning!
 
 ## 🔧 Follow These Development Standards
+
+### Foundation Epic (E000: Developer Infrastructure)
+
+**Before starting feature epics**, ensure Developer Infrastructure is set up:
+
+| Concern | What It Includes | Why It Matters |
+|---------|------------------|----------------|
+| **Testing** | Framework setup, test patterns, CI test runs | Catch bugs early, enable TDD |
+| **CI/CD** | Lint, test, build, deploy pipeline | Automated quality gates |
+| **Linting** | Code style enforcement, auto-fix | Consistent codebase |
+| **Error Tracking** | Sentry or equivalent integration | Production visibility |
+| **Environment Config** | .env patterns, secrets management | Secure, reproducible deploys |
+
+**When to Include E000**:
+- ✅ Any production-bound project (default: YES)
+- ✅ Projects using recipes (recipe specifies tech-specific tooling)
+- ❌ Throwaway prototypes
+- ❌ Brownfield with existing infrastructure
+
+**`/project-plan` asks**: "Should I include Developer Infrastructure epic?" (default: yes)
 
 ### Git Workflow
 Follow these practices:

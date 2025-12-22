@@ -27,6 +27,12 @@ stack:
     name: Cloud Firestore
     version: N/A (managed)
 suggested_epics:
+  - name: Developer Infrastructure
+    description: Testing (flutter_test + integration_test), CI/CD pipeline (GitHub Actions + Fastlane), linting (dart analyze), Firebase Crashlytics
+    stories_estimate: 3-5
+    priority: 0
+    phase: foundation
+    
   - name: Firebase Authentication
     description: Implement user authentication with email, Google, Apple Sign-In, and anonymous auth.
     stories_estimate: 6-9

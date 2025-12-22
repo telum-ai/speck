@@ -27,6 +27,12 @@ stack:
     name: PostgreSQL / SQLite
     version: "15"
 suggested_epics:
+  - name: Developer Infrastructure
+    description: Testing (go test), CI/CD pipeline (GitHub Actions), linting (golangci-lint), error tracking, environment config
+    stories_estimate: 3-5
+    priority: 0
+    phase: foundation
+    
   - name: HTTP Server & Routing
     description: Set up Go HTTP server with middleware, routing, and error handling.
     stories_estimate: 4-6
