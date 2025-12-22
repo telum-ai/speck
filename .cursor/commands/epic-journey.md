@@ -23,10 +23,20 @@ If missing: "Which project and epic should I map the user journey for?"
 
 ### Step 1: Understand Journey Context
 
-Load epic and project information:
+**Determine PROJECT_ID** from epic path (e.g., `specs/projects/001-myproject/epics/...`).
+
+**Load required design context**:
+- `specs/projects/[PROJECT_ID]/ux-strategy.md` → UX principles, voice/tone, emotional design goals
+  - Extract: Design principles, user personas, emotional journey targets, accessibility standards
+  - If missing: WARN "No UX strategy found. Run `/project-ux` for UX guidelines that inform journey mapping."
+
+- `specs/projects/[PROJECT_ID]/design-system.md` → Design tokens, interaction patterns
+  - Extract: Interaction patterns, feedback mechanisms, animation guidelines
+  - If missing: Note that touchpoint design will need alignment later
+
+**Load epic context**:
 - Epic specification for scope
-- Project UX strategy for principles
-- User personas from project spec
+- User personas from project spec (referenced in ux-strategy.md)
 
 ### Step 2: Journey Discovery
 

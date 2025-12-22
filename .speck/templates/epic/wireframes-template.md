@@ -7,6 +7,20 @@
 
 ---
 
+## 📊 Design Context Sources
+
+**These wireframes use tokens and patterns from**:
+
+| Document | Path | Key Sections Used |
+|----------|------|-------------------|
+| Design System | `specs/projects/[PROJECT_ID]/design-system.md` | [Tokens, Components, Grid] |
+| UX Strategy | `specs/projects/[PROJECT_ID]/ux-strategy.md` | [Principles, Voice/Tone, Accessibility] |
+| User Journey | `[EPIC_DIR]/user-journey.md` | [Touchpoints, Emotional Arc] |
+
+**If documents missing**: Run `/project-design-system` and `/project-ux` for consistency.
+
+---
+
 ## 📱 Screen Inventory
 
 Based on the user journey, this epic requires the following screens:
@@ -24,16 +38,26 @@ Based on the user journey, this epic requires the following screens:
 
 ## 🎨 Design System Application
 
-**Components Used**:
+**Source**: Reference `specs/projects/[PROJECT_ID]/design-system.md`
+
+**Components Used** (from design-system.md component library):
 - Navigation: [Component names from design system]
 - Forms: [Component names]
 - Data Display: [Component names]
 - Feedback: [Component names]
 - Layout: [Component names]
 
+**Design Tokens Applied**:
+- Colors: [Token names used, e.g., `primary-500`, `surface-100`]
+- Typography: [Token names, e.g., `heading-lg`, `body-md`]
+- Spacing: [Token names, e.g., `space-4`, `space-8`]
+- Radius: [Token names, e.g., `radius-md`, `radius-lg`]
+
 **Custom Components Needed**:
+- [Component]: [Why it's unique to this epic - will be added to design-system.md after validation]
 - [Component]: [Why it's unique to this epic]
-- [Component]: [Why it's unique to this epic]
+
+**⚠️ CRITICAL**: Use existing components from design-system.md before creating custom ones.
 
 ---
 
@@ -211,8 +235,12 @@ Legend:
 ## 📝 Content Guidelines
 
 ### Tone & Voice
-- [How content should sound in this epic]
-- [Specific terminology to use/avoid]
+
+**Source**: Reference `specs/projects/[PROJECT_ID]/ux-strategy.md` Voice & Tone section
+
+- Voice: [Extract from ux-strategy.md, e.g., "Friendly but not casual"]
+- Tone adjustments: [How tone changes by context - align with ux-strategy.md]
+- Terminology: [Specific terms to use/avoid - per ux-strategy.md content guidelines]
 
 ### Microcopy
 - **Empty States**: "[Message when no data]"
