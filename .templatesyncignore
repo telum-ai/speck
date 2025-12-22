@@ -6,6 +6,10 @@
 #
 # Customize this file in the target repository as needed.
 
+# Project-specific root files (each project has its own)
+README.md
+.gitignore
+
 # Project-specific specs and work logs
 specs/**
 **/.learning.log

@@ -43,13 +43,15 @@ Treat these as **template-managed** (synced):
 - `.cursor/**` (except project-managed paths listed below)
 - `AGENTS.md`
 - `.github/workflows/speck-validation.yml`
-- `.github/workflows/template-sync.yml`
 - `.templatesyncignore`
 
 Treat these as **product-managed** (ignored from sync by default):
+- `README.md` (project's own readme)
+- `.gitignore` (project's own ignore patterns)
 - `specs/**` (project artifacts)
 - common code directories like `backend/**`, `frontend/**`, `apps/**`, `src/**`
 - product CI workflows (`.github/workflows/ci.yml`, `.github/workflows/ui.yml`)
+- `.github/workflows/template-sync.yml` (each repo has own schedule/secrets)
 - project Cursor rules (`.cursor/rules/**`)
 - project hook extensions (`.cursor/hooks/hooks/hooks.d/**`)
 - team-shared MCP overlay (`.cursor/mcp.project.json.example`)
