@@ -1,0 +1,46 @@
+name: "🤖 Speck Story"
+description: "Create a Speck story for Copilot Agent"
+title: "🤖 [Speck] "
+labels: ["speck:story", "automated", "speck:queued"]
+body:
+  - type: input
+    id: story_path
+    attributes:
+      label: Story Path
+      description: "Path to the story directory"
+      placeholder: "specs/projects/my-app/epics/auth/stories/login"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: start_command
+    attributes:
+      label: Starting Command
+      description: "Which command to start from"
+      options:
+        - "story-specify"
+        - "story-clarify"
+        - "story-plan"
+        - "story-tasks"
+        - "story-implement"
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies (optional)
+      description: "Story IDs this depends on (will be marked blocked)"
+      placeholder: "story-001, story-003"
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        
+        **Copilot will**: Read `AGENTS.md` → Execute commands → Create PR
+        
+        **Workflow handoffs**:
+        - Orchestrator: up to `story-implement` (creates PR)
+        - `speck-validate-pr.yml`: runs `story-validate`
+        - `speck-retrospective.yml`: runs `story-retrospective`

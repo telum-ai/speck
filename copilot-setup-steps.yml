@@ -1,0 +1,99 @@
+# Copilot Setup Steps
+# This workflow runs before GitHub Copilot Coding Agent starts working.
+# It pre-configures the development environment for faster, more reliable execution.
+#
+# Customize this file based on your project's tech stack.
+# See: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/customize-the-agent-environment
+
+name: Copilot Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ============================================================
+      # NODE.JS / JAVASCRIPT / TYPESCRIPT PROJECTS
+      # Uncomment if using Node.js
+      # ============================================================
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: '20'
+      #     cache: 'npm'
+      #
+      # - name: Install dependencies
+      #   run: npm ci
+
+      # ============================================================
+      # PYTHON PROJECTS
+      # Uncomment if using Python
+      # ============================================================
+      # - name: Setup Python
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version: '3.12'
+      #     cache: 'pip'
+      #
+      # - name: Install dependencies
+      #   run: |
+      #     pip install -r requirements.txt
+      #     pip install -r requirements-dev.txt || true
+
+      # ============================================================
+      # RUST PROJECTS
+      # Uncomment if using Rust
+      # ============================================================
+      # - name: Setup Rust
+      #   uses: dtolnay/rust-toolchain@stable
+      #
+      # - name: Cache Cargo
+      #   uses: Swatinem/rust-cache@v2
+
+      # ============================================================
+      # GO PROJECTS
+      # Uncomment if using Go
+      # ============================================================
+      # - name: Setup Go
+      #   uses: actions/setup-go@v5
+      #   with:
+      #     go-version: '1.22'
+      #
+      # - name: Install dependencies
+      #   run: go mod download
+
+      # ============================================================
+      # DATABASE SETUP
+      # Uncomment if tests need a database
+      # ============================================================
+      # - name: Start PostgreSQL
+      #   uses: ikalnytskyi/action-setup-postgres@v6
+      #   with:
+      #     database: test_db
+
+      # ============================================================
+      # ENVIRONMENT VARIABLES
+      # Add any environment variables Copilot needs
+      # ============================================================
+      # - name: Set environment variables
+      #   run: |
+      #     echo "DATABASE_URL=postgresql://localhost/test_db" >> $GITHUB_ENV
+      #     echo "NODE_ENV=test" >> $GITHUB_ENV
+
+      # ============================================================
+      # PRE-BUILD STEPS
+      # Any build steps that should run before Copilot starts
+      # ============================================================
+      # - name: Generate types/schemas
+      #   run: npm run generate
+
+      # - name: Run migrations
+      #   run: npm run db:migrate
+
+      - name: Verify setup complete
+        run: echo "✅ Copilot environment setup complete"

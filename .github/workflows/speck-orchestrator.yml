@@ -1,0 +1,205 @@
+# Speck Orchestrator
+#
+# Creates issues for stories and assigns to Copilot (respecting rate limits).
+# Manages dependencies between stories.
+#
+# SCOPE: Commands up to story-implement (creates PR)
+# HANDOFF: speck-validate-pr.yml handles validation, speck-retrospective.yml handles retro
+
+name: Speck Orchestrator
+
+on:
+  push:
+    paths:
+      - 'specs/**/epic-breakdown.md'
+      - 'specs/**/stories/**'
+    branches:
+      - main
+      - develop
+  
+  workflow_dispatch:
+    inputs:
+      epic_path:
+        description: 'Epic path (or leave empty to scan all)'
+        required: false
+        type: string
+  
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+env:
+  MAX_CONCURRENT_COPILOT: 3
+
+jobs:
+  ensure-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Speck labels if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create "speck:story" --color "0E8A16" --description "Speck story" --force 2>/dev/null || true
+          gh label create "speck:blocked" --color "B60205" --description "Blocked by dependencies" --force 2>/dev/null || true
+          gh label create "speck:queued" --color "C5DEF5" --description "Queued for Copilot" --force 2>/dev/null || true
+          gh label create "speck:in-progress" --color "FBCA04" --description "Copilot working" --force 2>/dev/null || true
+          gh label create "automated" --color "BFD4F2" --description "Created by automation" --force 2>/dev/null || true
+
+  orchestrate:
+    needs: ensure-labels
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Find stories and create issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EPIC_PATH: ${{ inputs.epic_path || '' }}
+        run: |
+          if [ -n "$EPIC_PATH" ]; then
+            EPICS="$EPIC_PATH"
+          else
+            # Sort epics by numeric ID (E000, E001, E002...)
+            EPICS=$(find specs -name "epic-breakdown.md" -exec dirname {} \; 2>/dev/null | sort -t/ -k6 -V || true)
+          fi
+          
+          MERGED_PRS=$(gh pr list --state merged --limit 100 --json title --jq '.[].title' 2>/dev/null || true)
+          
+          for EPIC_DIR in $EPICS; do
+            echo "Processing epic: $EPIC_DIR"
+            STORIES_DIR="$EPIC_DIR/stories"
+            [ -d "$STORIES_DIR" ] || continue
+            
+            # Sort stories by numeric ID (story-001, story-002...)
+            for STORY_DIR in $(ls -d "$STORIES_DIR"/*/ 2>/dev/null | sort -V); do
+              [ -d "$STORY_DIR" ] || continue
+              STORY_NAME=$(basename "$STORY_DIR")
+              
+              EXISTING=$(gh issue list --label "speck:story" --search "in:title $STORY_NAME" --state open --json number --jq 'length' 2>/dev/null || echo "0")
+              [ "$EXISTING" -gt "0" ] && continue
+              
+              echo "$MERGED_PRS" | grep -q "$STORY_NAME" && continue
+              
+              BLOCKED=false
+              BLOCKING=""
+              if [ -f "$STORY_DIR/tasks.md" ]; then
+                DEPS=$(sed -n '/^---$/,/^---$/p' "$STORY_DIR/tasks.md" | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
+                for DEP in $DEPS; do
+                  DEP=$(echo "$DEP" | tr -d ' "')
+                  [ -z "$DEP" ] && continue
+                  if ! echo "$MERGED_PRS" | grep -q "$DEP"; then
+                    BLOCKED=true
+                    BLOCKING="$BLOCKING $DEP"
+                  fi
+                done
+              fi
+              
+              if [ -f "$STORY_DIR/tasks.md" ]; then
+                START_CMD="story-implement"
+              elif [ -f "$STORY_DIR/plan.md" ]; then
+                START_CMD="story-tasks"
+              elif [ -f "$STORY_DIR/spec.md" ]; then
+                START_CMD="story-clarify"
+              else
+                START_CMD="story-specify"
+              fi
+              
+              TITLE=$(grep -m1 "^# " "$STORY_DIR/spec.md" 2>/dev/null | sed 's/^# //' || echo "$STORY_NAME")
+              
+              {
+                echo "## Speck Story: $TITLE"
+                echo ""
+                echo "**Path**: \`$STORY_DIR\`"
+                echo "**Start At**: \`$START_CMD\`"
+                echo ""
+                echo "@copilot Complete this story:"
+                echo ""
+                echo "1. Read \`AGENTS.md\` for the Speck methodology"
+                echo "2. Navigate to \`$STORY_DIR\`"
+                echo "3. Execute commands from \`.cursor/commands/\` starting at \`$START_CMD\`"
+                echo "4. Create PR when implementation complete"
+                echo ""
+                echo "**Note**: Validation and retrospective are handled by separate workflows after PR creation."
+                
+                if [ "$BLOCKED" = true ]; then
+                  echo ""
+                  echo "---"
+                  echo "⚠️ **BLOCKED** - Waiting for:$BLOCKING"
+                fi
+              } > /tmp/issue_body.md
+              
+              if [ "$BLOCKED" = true ]; then
+                LABEL="speck:story,automated,speck:blocked"
+              else
+                LABEL="speck:story,automated,speck:queued"
+              fi
+              
+              gh issue create \
+                --title "🤖 [Speck] $STORY_NAME" \
+                --body-file /tmp/issue_body.md \
+                --label "$LABEL"
+              
+              echo "  Created: $STORY_NAME ($([ "$BLOCKED" = true ] && echo 'BLOCKED' || echo 'QUEUED'))"
+            done
+          done
+
+  unblock-dependents:
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Unblock dependent stories
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          STORY_NAME=$(echo "$PR_TITLE" | sed 's/.*\[Speck\] //' | head -1)
+          echo "Story merged: $STORY_NAME"
+          
+          BLOCKED_ISSUES=$(gh issue list --label "speck:blocked" --json number,body --jq '.[] | @base64' 2>/dev/null || true)
+          
+          for ISSUE_B64 in $BLOCKED_ISSUES; do
+            ISSUE=$(echo "$ISSUE_B64" | base64 -d)
+            ISSUE_NUM=$(echo "$ISSUE" | jq -r '.number')
+            ISSUE_BODY=$(echo "$ISSUE" | jq -r '.body')
+            
+            if echo "$ISSUE_BODY" | grep -q "$STORY_NAME"; then
+              echo "Unblocking issue #$ISSUE_NUM"
+              gh issue edit "$ISSUE_NUM" --remove-label "speck:blocked" --add-label "speck:queued"
+              gh issue comment "$ISSUE_NUM" --body "✅ Dependency **$STORY_NAME** merged! This story is now queued."
+            fi
+          done
+
+  assign-copilot:
+    needs: [ensure-labels, orchestrate]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Assign queued stories (rate limited)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAX_CONCURRENT: ${{ env.MAX_CONCURRENT_COPILOT }}
+        run: |
+          IN_PROGRESS=$(gh issue list --label "speck:in-progress" --json number --jq 'length' 2>/dev/null || echo "0")
+          echo "In progress: $IN_PROGRESS / $MAX_CONCURRENT"
+          
+          AVAILABLE=$((MAX_CONCURRENT - IN_PROGRESS))
+          [ "$AVAILABLE" -le 0 ] && { echo "Rate limit reached"; exit 0; }
+          
+          QUEUED=$(gh issue list --label "speck:queued" --json number --jq '.[].number' | head -n "$AVAILABLE")
+          
+          for ISSUE_NUM in $QUEUED; do
+            echo "Assigning #$ISSUE_NUM"
+            gh issue edit "$ISSUE_NUM" --remove-label "speck:queued" --add-label "speck:in-progress"
+            gh issue comment "$ISSUE_NUM" --body "@copilot Start now. Read AGENTS.md and follow the story command flow."
+          done

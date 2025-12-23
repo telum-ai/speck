@@ -1,3 +1,10 @@
+---
+# Story dependency declaration for autonomous orchestration
+# The orchestrator reads this to determine execution order
+depends_on: []  # e.g., [story-001, story-003] - stories that must merge first
+blocks: []      # e.g., [story-005] - stories waiting on this one (informational)
+---
+
 # Tasks: [STORY NAME]
 
 **Input**: Design documents from `{STORY_DIR}/`
