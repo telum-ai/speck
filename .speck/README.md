@@ -1118,33 +1118,42 @@ Wednesday: Fix Issue
 - Just describe what you want
 - Follow the suggestions
 
-### 2. Work Top-Down
+### 2. Use the Right Model for the Task
+Different LLMs excel at different tasks. Switch models strategically:
+- **Complex reasoning** (architecture, domain, constitution): Use Opus 4.5
+- **Standard development** (most commands): Use Sonnet 4.5
+- **Speed/iteration** (quick fixes, prototyping): Use Gemini 3 Flash or GPT-5.2
+- **Cross-validation**: Always use a different model to review critical decisions
+
+See `.speck/patterns/model-selection-pattern.md` for detailed guidance.
+
+### 3. Work Top-Down
 - Start with project vision
 - Break into epics
 - Detail into stories
 
-### 3. Follow the Natural Flow
+### 4. Follow the Natural Flow
 - Discovery: specify → clarify → [research]
 - Foundation: [domain] → ux → context → [constitution]
 - Design: architecture → [design-system]
 - Planning: plan → [roadmap]
 - Validation: analyze → validate
 
-### 4. Architecture When Appropriate
+### 5. Architecture When Appropriate
 - For Level 3-4 projects: Run full flow including architecture
 - For complex epics: Use `/epic-architecture`
 - For simple projects: Skip optional commands
 
-### 5. Maintain Context
+### 6. Maintain Context
 - Keep specifications updated
 - Document decisions
 - Track implementation status
 
-### 6. Use Validation
+### 7. Use Validation
 - Fix issues early
 - Maintain quality
 
-### 7. Iterate and Refine
+### 8. Iterate and Refine
 - Specs aren't set in stone
 - Update as you learn
 - Keep aligned with reality

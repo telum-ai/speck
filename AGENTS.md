@@ -923,11 +923,81 @@ Use verb-led prefixes for clear intent:
 - Epic: `/epic-validate` (all stories complete, integration verified)
 - Project: `/project-validate` (comprehensive go/no-go decision)
 
+## 🤖 Model Selection (IMPORTANT!)
+
+Different LLMs excel at different tasks. Use the right model for the job.
+
+**Reference**: `.speck/patterns/model-selection-pattern.md` for full details.
+
+### Quick Model Selection Guide
+
+| Task Type | Recommended Model | Why |
+|-----------|------------------|-----|
+| Complex architecture/domain | **Opus 4.5** | Deep reasoning, multi-system understanding |
+| Critical code review | **Opus 4.5** | Highest accuracy |
+| Standard development | **Sonnet 4.5** | Best balance (0% edit error rate) |
+| Interactive/quick fixes | **Gemini 3 Flash** | Speed for flow state |
+| Mathematical/algorithmic | **GPT-5.2 Extra High** | Superior reasoning |
+| Budget-constrained | **Gemini 3 Flash** | Best price/performance |
+| Validation | **Different model** | Cross-validation catches blind spots |
+
+### Command-Specific Recommendations
+
+**Use Opus 4.5 for**:
+- `/project-domain` - Deep domain understanding
+- `/project-architecture` - Complex system design
+- `/project-constitution` - Principle extraction
+- Critical validation tasks
+
+**Use Sonnet 4.5 for** (default):
+- Most `/project-*` commands
+- Most `/epic-*` commands
+- `/story-plan`, `/story-implement`
+
+**Use Gemini 3 Flash for**:
+- `/story-tasks` - Fast, structured output
+- Rapid prototyping and iteration
+- High-volume, budget-sensitive work
+
+### When to Suggest Model Switches
+
+**Suggest upgrading to Opus 4.5** when:
+- Task involves complex architectural reasoning
+- Multiple systems need to be understood together
+- Mission-critical code review is needed
+- User is struggling with a complex problem
+
+**Suggest Gemini 3 Flash / GPT-5.2** when:
+- User needs fast responses for interactive work
+- Simple fixes or quick iterations
+- Budget is a concern
+
+**Always suggest cross-validation** when:
+- Architecture decisions are finalized
+- Security-sensitive code is written
+- Production deployment is imminent
+
+### Cross-Validation Pattern
+
+For critical artifacts, recommend review by a different model:
+
+```
+💡 This architecture was designed with Sonnet 4.5. For additional 
+   confidence, consider having Opus 4.5 review it before proceeding.
+```
+
+### ⚠️ Avoid Gemini 3 Pro
+
+Current reliability issues (code deletion, context loss) make it unsuitable for production code without constant oversight.
+
 ## 📚 Key Reference Files
 
 **Methodology**:
 - @.speck/README.md - Complete Speck guide
 - @.speck/spec-driven-development.md - Core philosophy
+
+**Patterns**:
+- `.speck/patterns/model-selection-pattern.md` - LLM selection guide
 
 **Commands**:
 - `.cursor/commands/` - Project-level commands
