@@ -42,12 +42,30 @@
 - **Best for**: Architecture decisions, complex debugging, mission-critical code review, SEO analysis, business analysis
 - **Avoid for**: Quick iterations, high-volume tasks, budget-constrained work
 
-#### GPT-5.2 Extra High (Reasoning)
-- **Strengths**: 80% SWE-bench, 100% AIME 2025, exceptional long-context (77% at 256K), fast (187 tok/s)
-- **Code Quality**: **Best security** - only 22 control flow mistakes/MLOC, **16 blocker vulns/MLOC** (lowest!)
-- **Weaknesses**: Requires reasoning mode for best results, 38% on SimpleQA (factual accuracy)
-- **Best for**: Mathematical problems, security-sensitive code, long-document analysis, complex tool orchestration
-- **Avoid for**: Simple tasks where reasoning overhead unnecessary
+#### GPT-5.2 (Instant / Thinking / Pro)
+
+GPT-5.2 comes in three variants with configurable reasoning effort (medium, extra high):
+
+| Variant | Use Case | Pricing ($/M) |
+|---------|----------|---------------|
+| **Instant** | Fast routine tasks, info seeking | Low |
+| **Thinking** | Balanced for coding, analysis | $1.75 / $14 |
+| **Pro** | Peak quality, frontier challenges | $21 / $168 |
+
+- **Strengths**: 
+  - 80% SWE-bench Verified, 55.6% SWE-bench Pro
+  - 100% AIME 2025, 70.9% beats experts (GDPval)
+  - Exceptional long-context (77% at 256K)
+  - 98.7% tool-calling accuracy (Tau2-bench)
+  - 30% fewer hallucinations than GPT-5.1
+- **Code Quality**: **Best security** - 22 control flow mistakes/MLOC, **16 blocker vulns/MLOC** (lowest!)
+- **Weaknesses**: 
+  - Can be **slow** (minutes for complex tasks, hours reported by some users)
+  - Requires reasoning mode for best results
+  - 38% on SimpleQA (factual accuracy)
+  - Users note "robotic personality" and over-safety
+- **Best for**: Security-sensitive code, mathematical problems, long-document analysis, professional knowledge work
+- **Avoid for**: Interactive work where latency matters, simple tasks
 
 ### Tier 2: Production Workhorses (Daily Development)
 
@@ -83,10 +101,34 @@
 ### Tier 4: Specialized
 
 #### GPT-5.1 Codex Max / Codex
-- **Strengths**: Context compaction for long sessions, optimized for multi-week projects, 88% on Aider Polyglot
-- **Code Quality**: ~80% pass rate, 98 control flow mistakes/MLOC
-- **Weaknesses**: Less versatile for quick queries, may falter in visual polish
-- **Best for**: Large refactoring, migrations, long autonomous coding sessions, GitHub Copilot integration
+
+Specialized for agentic, long-horizon coding workflows (released November 2025).
+
+- **Benchmarks**: 77.9% SWE-bench Verified, 58.1% Terminal-Bench 2.0, 88% Aider Polyglot
+- **Strengths**: 
+  - **Compaction**: Manages millions of tokens efficiently for extended sessions
+  - Optimized for multi-hour refactors, debugging, test generation
+  - Strong Windows support and multimodal (interprets diagrams → code)
+  - Medium and extra high reasoning modes
+- **Pricing**: $1.25 / $10 per M tokens (cost-effective)
+- **Weaknesses**: 
+  - Generalization issues reported (benchmark-focused vs real-world)
+  - Occasional over-engineering
+  - Less versatile for quick queries
+- **Best for**: Large refactoring, migrations, 24-hour autonomous sessions, GitHub Copilot integration
+
+#### GPT-5.2 Codex (December 17, 2025)
+
+Merges GPT-5.2 reasoning with Codex optimizations.
+
+- **Benchmarks**: 56.4% SWE-bench Pro, 64.0% Terminal-Bench (better than Codex Max)
+- **Strengths**:
+  - Native compaction for persistent million-token sessions
+  - **Cybersecurity features**: Vulnerability detection (React disclosures, etc.)
+  - Dependency-aware changes across large repos
+  - Visual → prototype translation
+- **Weaknesses**: Premium pricing, restricted access for cyber features
+- **Best for**: Large repo refactoring with dependencies, security auditing, long-running agents
 
 #### Composer 1 (Cursor)
 
@@ -399,31 +441,40 @@ confidence, consider having [Model B] review it with fresh perspective.
 
 ### Coding Performance
 
-| Model | SWE-Bench Verified | Terminal-Bench | Pass Rate | Control Flow Errors/MLOC | Blocker Vulns/MLOC |
-|-------|-------------------|----------------|-----------|--------------------------|-------------------|
-| Opus 4.5 | 80.9% | 59.3% | 83.62% | 55 | 44 |
-| GPT-5.2 Extra High | 80.0% | 47.6% | 80.66% | **22** | **16** |
-| Gemini 3 Flash | 78.0% | N/A | N/A | N/A | N/A |
-| Sonnet 4.5 | 77.2% | 50.0% | ~80% | 152 | ~198 |
-| Gemini 3 Pro | 76.8% | 42.1% | 81.72% | 200 | N/A |
-| Grok Code | 70.8% | N/A | N/A | N/A | N/A |
-| Codex Max | ~80% | N/A | 80% | 98 | N/A |
+| Model | SWE-Bench Verified | SWE-Bench Pro | Terminal-Bench | Control Flow/MLOC | Vulns/MLOC |
+|-------|-------------------|---------------|----------------|-------------------|------------|
+| Opus 4.5 | 80.9% | - | 59.3% | 55 | 44 |
+| GPT-5.2 (Pro/Thinking) | 80.0% | 55.6% | 62.2% | **22** | **16** |
+| Gemini 3 Flash | 78.0% | - | - | - | - |
+| GPT-5.1 Codex Max | 77.9% | 50.8% | 58.1% | 98 | - |
+| Sonnet 4.5 | 77.2% | - | 50.0% | 152 | ~198 |
+| Gemini 3 Pro | 76.8% | - | 42.1% | 200 | - |
+| Grok Code | 70.8% | - | - | - | - |
+| GPT-5.2 Codex | - | 56.4% | 64.0% | - | - |
 
-**Key Insight**: GPT-5.2 Extra High has the **best security profile** with lowest vulnerability rates.
+**Key Insights**: 
+- GPT-5.2 has the **best security profile** (lowest vulnerability rates)
+- GPT-5.2 Codex leads on Terminal-Bench (64.0%) for CLI automation
+- Gemini 3 Pro has highest control flow errors (200/MLOC)
 
 ### Speed and Pricing
 
-| Model | Input/Output ($/M) | Tokens/Second | 10M Token Project Cost |
-|-------|-------------------|---------------|------------------------|
-| Grok Code | $0.20 / $1.50 | **455** | ~$10 |
-| Gemini 3 Flash | $0.50 / $3 | 218 | ~$30 |
-| Gemini 3 Pro | $2 / $12 | 95-128 | ~$140 |
-| GPT-5.2 | $1.75 / $14 | 187 | ~$158 |
-| Composer 1 | N/A (economical) | 250 | Low |
-| Sonnet 4.5 | $3 / $15 | Moderate | ~$180 |
-| Opus 4.5 | $5 / $25 | 49-70 | ~$300 |
+| Model | Input/Output ($/M) | Speed | Notes |
+|-------|-------------------|-------|-------|
+| Grok Code | $0.20 / $1.50 | **455 tok/s** | Fastest, cheapest |
+| Gemini 3 Flash | $0.50 / $3 | 218 tok/s | Best price/performance |
+| GPT-5.1 Codex Max | $1.25 / $10 | Fast | Cost-effective for coding |
+| Composer 1 | $1.25 / $10 | 250 tok/s | Native Cursor integration |
+| GPT-5.2 Thinking | $1.75 / $14 | 187 tok/s | Can be slow for complex |
+| Gemini 3 Pro | $2 / $12 | 95-128 tok/s | Reliability issues |
+| Sonnet 4.5 | $3 / $15 | Moderate | Best balance |
+| Opus 4.5 | $5 / $25 | 49-70 tok/s | Premium quality |
+| GPT-5.2 Pro | $21 / $168 | Variable | Peak quality, very slow |
 
-**Key Insight**: Grok Code is 30x cheaper than Opus 4.5 for high-volume work.
+**Key Insights**: 
+- Grok Code is 30x cheaper than Opus 4.5
+- GPT-5.2 Pro is premium tier ($21/M input) but can take minutes/hours
+- Composer 1 matches Codex Max pricing with native Cursor integration
 
 ---
 
