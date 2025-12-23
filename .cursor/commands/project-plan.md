@@ -24,6 +24,7 @@ Generate a Product Requirements Document (PRD) and identify epics based on proje
      * ux-strategy.md (from /project-ux) - for UX principles and user journeys
      * context.md (from /project-context) - for constraints and requirements
    - **Load OPTIONAL foundation artifacts**:
+     * domain-model.md (from /project-domain) - for domain terminology, rules, and principles
      * design-system.md (from /project-design-system) - for UI requirements
      * constitution.md (from /project-constitution) - for technical principles
    - If project.md missing: ERROR "Run /project-specify first"
@@ -85,6 +86,11 @@ Generate a Product Requirements Document (PRD) and identify epics based on proje
      * Accessibility standards
    - **Incorporate technical principles** (if exists):
      * Constitution-mandated approaches from constitution.md
+   - **Incorporate domain expertise** (if exists):
+     * Use domain-model.md glossary terms in PRD consistently
+     * Reference domain entities when defining features
+     * Ensure domain rules/invariants are respected in requirements
+     * Align feature scope with domain principles
    - Incorporate research findings if available
    - Include landscape-overview insights if brownfield
    - Ensure alignment with project.md vision
@@ -109,6 +115,10 @@ Generate a Product Requirements Document (PRD) and identify epics based on proje
      * Have clear success criteria
      * Support 3-15 stories typically
    - Consider dependencies between epics
+   - **If domain-model.md exists**:
+     * Consider organizing epics around domain concepts
+     * Use domain terminology in epic names and descriptions
+     * Ensure each epic respects domain invariants
    - **Consider business value for prioritization**:
      * Revenue impact (enables monetization, unlocks paid tier)
      * Customer acquisition (improves funnel, reduces CAC)

@@ -74,7 +74,14 @@ graph TD
     specify --> clarify
     clarify["/project-clarify<br/>(Resolve ambiguities)"]
     
-    clarify --> uxCheck{UX-Heavy<br/>Product?}
+    clarify --> domainCheck{Specialized<br/>Domain?}
+    
+    domainCheck --> |Yes| domain
+    domainCheck --> |No| uxCheck
+    domain["/project-domain<br/>(Capture domain expertise + research)"]
+    
+    domain --> uxCheck
+    uxCheck{UX-Heavy<br/>Product?}
     
     uxCheck --> |Yes| ux
     uxCheck --> |No| context
@@ -121,6 +128,7 @@ graph TD
     style specify fill:#e1f5e1
     style clarify fill:#e1f5e1
     style ux fill:#e1f5e1
+    style domain fill:#e1f5e1
     style context fill:#e1f5e1
     style importCmd fill:#fff4e1
     style scan fill:#fff4e1
@@ -272,7 +280,7 @@ Code → Extract → Document → Enhance
 **Unified Flow**:
 Both greenfield and brownfield follow the **same command sequence** after initial setup:
 ```
-specify → clarify → [research] → [ux] → context → [constitution] → architecture → [design-system] → plan → [roadmap] → analyze → validate
+specify → clarify → [research] → [domain] → [ux] → context → [constitution] → architecture → [design-system] → plan → [roadmap] → analyze → validate
 ```
 
 **Key Differences**:
@@ -301,6 +309,7 @@ specs/
         ├── project-landscape-overview.md  # [Brownfield] Code aspects extraction
         ├── context.md              # TRUTH: Technical context
         ├── constitution.md         # TRUTH: Optional technical principles
+        ├── domain-model.md         # TRUTH: Domain terminology, entities, rules (optional)
         ├── architecture.md         # TRUTH: System architecture
         ├── PRD.md                  # TRUTH: Product requirements
         ├── epics.md                # TRUTH: Epic index (generated/updated by project-plan)
@@ -439,6 +448,7 @@ The agent should **automatically suggest or create commits** at natural completi
 | After Command | Commit Message Pattern | Files to Commit |
 |---------------|----------------------|-----------------|
 | `/project-specify` | `docs(project): define project vision and goals` | `project.md` |
+| `/project-domain` | `docs(project): capture domain expertise and terminology` | `domain-model.md` |
 | `/project-context` | `docs(project): document technical context and constraints` | `context.md` |
 | `/project-architecture` | `docs(project): design system architecture` | `architecture.md` |
 | `/project-plan` | `docs(project): create PRD and epic breakdown` | `PRD.md`, `epics.md`, `epics/*/epic.md` |
@@ -733,7 +743,8 @@ Speck: I'll help you create a new project! Let me analyze the scope...
      [Creates project structure, asks clarifying questions, generates spec]
      
      Next steps:
-     - Define UX strategy with /project-ux (optional)
+     - Capture domain expertise with /project-domain (for specialized domains)
+     - Define UX strategy with /project-ux (uses domain terminology)
      - Define constraints with /project-context
      - Design/document architecture with /project-architecture
      - Create PRD and identify epics with /project-plan
@@ -857,7 +868,8 @@ Speck: I found the authentication epic in project 001-my-project.
 - `/project-scan` - **Comprehensive**: Deep codebase analysis after import (~30-60 min)
 
 #### Phase 2: Foundation (Define Constraints & Principles)
-- `/project-ux` - Define user experience strategy and design principles
+- `/project-domain` - Capture domain expertise (terminology, entities, rules, principles) for specialized domains
+- `/project-ux` - Define user experience strategy and design principles (uses domain terminology)
 - `/project-context` - Document constraints and requirements that guide decisions
 - `/project-constitution` - Establish project principles and team agreements
 
@@ -940,8 +952,12 @@ Day 1: Project Discovery & Foundation
 → Resolves any ambiguities
 → Fills gaps in specification
 
+/project-domain (for specialized domains like healthcare, fitness, finance)
+→ Capture domain terminology and glossary
+→ Document domain rules and principles
+
 /project-ux
-→ Define design principles
+→ Define design principles (using domain terminology)
 → Set experience goals
 
 /project-context
@@ -1109,7 +1125,7 @@ Wednesday: Fix Issue
 
 ### 3. Follow the Natural Flow
 - Discovery: specify → clarify → [research]
-- Foundation: ux → context → [constitution]
+- Foundation: [domain] → ux → context → [constitution]
 - Design: architecture → [design-system]
 - Planning: plan → [roadmap]
 - Validation: analyze → validate

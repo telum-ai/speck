@@ -60,7 +60,22 @@ Before creating the story, check:
 
 **Note**: Only check specs/docs for duplication, not implementation code.
 
-### Step 3: Story Validation
+### Step 3: Load Context Documents
+
+Load project-level documents for consistency:
+```
+LOAD (if exists):
+- specs/projects/[PROJECT_ID]/domain-model.md → Domain terminology and rules
+- specs/projects/[PROJECT_ID]/ux-strategy.md → UX principles and voice
+- specs/projects/[PROJECT_ID]/design-system.md → UI components and tokens
+```
+
+**Domain Model Usage**:
+- Use glossary terms from domain-model.md in story descriptions
+- Respect domain invariants in acceptance criteria
+- Reference domain entities for data requirements
+
+### Step 4: Story Validation
 
 Validate story fits epic scope:
 - Load epic spec: `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/epic.md`
@@ -72,7 +87,7 @@ If mismatch: "This story seems outside the epic scope. Would you like to:
 2. Expand the current epic scope?
 3. Create a new epic for this?"
 
-### Step 4: Interactive Story Development
+### Step 5: Interactive Story Development
 
 If minimal description, gather details:
 
@@ -91,7 +106,7 @@ If minimal description, gather details:
 8. "Any API changes needed?"
 9. "Database impacts?"
 
-### Step 5: Create Story Structure
+### Step 6: Create Story Structure
 
 Create directly in the **current hierarchical structure**:
 ```bash
@@ -102,7 +117,7 @@ mkdir -p specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-[story-n
 Note: Speck stories live in the hierarchical structure under:
 `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-[story-name]/`
 
-### Step 6: Story Specification
+### Step 7: Story Specification
 
 Load template and create spec.md with:
 - Story context (from epic)
@@ -113,7 +128,7 @@ Load template and create spec.md with:
 - Test scenarios
 - Dependencies
 
-### Step 7: Apply 10-Minute Understandability Rule
+### Step 8: Apply 10-Minute Understandability Rule
 
 Before finalizing, validate story scope:
 
@@ -135,11 +150,11 @@ Before finalizing, validate story scope:
 
 If story seems too complex, suggest splitting and ask user approval.
 
-### Step 8: Update Epic Tracking
+### Step 9: Update Epic Tracking
 
 Add story to epic's story list with status "specified"
 
-### Step 9: Guide Next Steps
+### Step 10: Guide Next Steps
 
 ```
 ✅ Story Specification Created!

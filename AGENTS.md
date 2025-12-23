@@ -28,6 +28,7 @@ specs/projects/[project-id]/
 ├── project.md              # TRUTH: Current project vision/goals
 ├── context.md              # TRUTH: Current constraints
 ├── constitution.md         # TRUTH: Optional technical principles
+├── domain-model.md         # TRUTH: Domain terminology, entities, rules, principles (optional)
 ├── architecture.md         # TRUTH: Current system design
 ├── PRD.md                  # TRUTH: Current requirements/features
 ├── epics.md                # TRUTH: Epic index (generated/updated by project-plan)
@@ -88,13 +89,15 @@ User triggers commands, you follow instructions inside each command.
 ### Phase Flow
 1. **Ideation** (optional): brainstorm → loose ideas crystallized into project concepts
 2. **Discovery**: specify → clarify
-3. **Foundation**: [ux (+ research)] → context (+ research) → [constitution (+ research)]
+3. **Foundation**: [domain (+ research)] → [ux (+ research)] → context (+ research) → [constitution (+ research)]
 4. **Technical Design**: architecture (+ research) → [design-system (+ research)]
 5. **Planning**: plan (+ research) → [roadmap]
 6. **Infrastructure Epic** (E000): Developer Infrastructure (testing, CI/CD, linting, error tracking)
 7. **Epic Work**: specify → clarify → [architecture (+ research)] → plan (+ research) → breakdown
 8. **Story Work**: specify → clarify → plan (+ research) → tasks → implement → validate
 9. **Learning**: story-retrospective → epic-retrospective → project-retrospective
+
+**Domain Expertise**: For specialized domains (healthcare, fitness, finance, etc.), `/project-domain` captures subject matter expertise (terminology, entities, rules, principles) that informs all downstream decisions.
 
 **Foundation Epic**: After planning, always consider E000: Developer Infrastructure before feature epics. This sets up testing, CI/CD, linting, and error tracking - foundational concerns that every production project needs.
 
@@ -151,9 +154,15 @@ Each command file contains step-by-step instructions for you to execute when use
    - Greenfield: Clarifies all aspects
    - Brownfield: Focuses on non-discoverable aspects (strategy, goals)
 
-3. [OPTIONAL: project-ux.md] → Creates ux-strategy.md (with embedded research)
+3. [OPTIONAL: project-domain.md] → Creates domain-model.md (with embedded research)
+   - For specialized domains (healthcare, fitness, finance, legal, etc.)
+   - Captures terminology, entities, rules, principles
+   - Informs UX and all downstream decisions
+
+3.5. [OPTIONAL: project-ux.md] → Creates ux-strategy.md (with embedded research)
    - Greenfield: Defines UX principles, conducts UX research just-in-time
    - Brownfield: Extracts from existing UI patterns
+   - Uses domain-model.md terminology if available
 
 4. project-context.md → Creates context.md (input for architecture & PRD, with embedded research)
    - Greenfield: Interactive definition, conducts standards/compliance research just-in-time
@@ -406,7 +415,7 @@ See `.claude/skills/README.md` for details.
 ### Unified Flow (Both Greenfield and Brownfield)
 Typical flow: 
 ```
-specify → clarify → [ux (+ research)] → context (+ research) → [constitution (+ research)] → architecture (+ research) → [design-system (+ research)] → plan (+ research) → [roadmap] → analyze → validate
+specify → clarify → [domain (+ research)] → [ux (+ research)] → context (+ research) → [constitution (+ research)] → architecture (+ research) → [design-system (+ research)] → plan (+ research) → [roadmap] → analyze → validate
 ```
 
 ### For Greenfield (New Projects)
@@ -444,7 +453,7 @@ When unsure, guide user to use `/speck [description]` first - it auto-detects an
 
 At project level, follow this order strictly:
 ```
-Run: [ux] → context → [constitution] → architecture → [design-system] → plan
+Run: [domain] → [ux] → context → [constitution] → architecture → [design-system] → plan
 Why: plan USES these as inputs, and architecture decisions inform planning
 ```
 
@@ -999,7 +1008,7 @@ Commands contain detailed execution steps - follow them closely.
 - Extract from code rather than create from scratch
 
 **Greenfield** (new project):
-- Flow: specify → clarify → [ux] → context → [constitution] → architecture → [design-system] → plan → [roadmap]
+- Flow: specify → clarify → [domain] → [ux] → context → [constitution] → architecture → [design-system] → plan → [roadmap]
 - Create from vision rather than extract from code
 
 ## 🚀 Follow These Key Principles

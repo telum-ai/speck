@@ -18,6 +18,10 @@
 - **Recommended Inputs**:
   - `epic-tech-spec.md` → Technical implementation approach
   - `project.md` → Project vision and constraints (inherited)
+- **Domain Context** (for specialized domains):
+  - `domain-model.md` → Domain terminology, entities, rules, and principles
+  - Use glossary terms consistently in story descriptions
+  - Validate against domain invariants
 - **Design Context** (for UI/UX stories):
   - `ux-strategy.md` → UX principles, voice/tone, emotional goals
   - `design-system.md` → Design tokens, components, patterns

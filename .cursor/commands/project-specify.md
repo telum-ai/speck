@@ -81,6 +81,25 @@ The project template needs specific information. If any of these are missing fro
 **If scale ambiguous:**
 - "Is this a small enhancement, a new feature set, or a full platform?"
 
+### Step 2.5: Domain Expertise Check
+
+Determine if this project requires specialized domain knowledge:
+
+**Ask if domain is specialized:**
+- "Does this product operate in a specialized domain that requires subject matter expertise?"
+- Examples: Healthcare, Finance, Fitness/Exercise Science, Legal, Agriculture, Education
+
+**If YES (specialized domain):**
+- Note in project.md: `**Domain Expertise Required**: Yes - [domain name]`
+- Capture any initial domain knowledge the user provides
+- Flag for `/project-domain` command after clarification
+
+**If NO (generic/technical domain):**
+- Note in project.md: `**Domain Expertise Required**: No`
+- Skip `/project-domain` in the recommended flow
+
+**Why this matters**: Projects with specialized domains need a domain model to capture terminology, rules, and principles that inform all downstream decisions.
+
 ### Step 3: Create Project Structure
 
 Once we have enough information:
@@ -102,9 +121,10 @@ Show what was created:
 
 Guide to next steps:
 - Recommended: `/project-clarify` (resolve ambiguities & identify research needs)
-- If already clear → `/project-ux` or `/project-context`
+- If domain expertise required: `/project-domain` (capture subject matter knowledge)
+- Then: `/project-ux` or `/project-context`
 
-**Note**: `/project-clarify` is strongly recommended to ensure specification completeness before planning.
+**Note**: `/project-clarify` is strongly recommended to ensure specification completeness before planning. For specialized domains (healthcare, fitness, finance, etc.), `/project-domain` captures critical subject matter expertise.
 
 ---
 
@@ -171,9 +191,10 @@ Show what was created:
 
 Guide to next steps:
 - Recommended: `/project-clarify` (focus on non-discoverable aspects)
+- If domain expertise required: `/project-domain` (capture/document domain knowledge)
 - Then: `/project-context` (pre-fills tech from scan, asks for team constraints)
 
-**Note**: Even in brownfield mode, `/project-clarify` helps focus on strategy and future direction, not just documenting what exists.
+**Note**: Even in brownfield mode, `/project-clarify` helps focus on strategy and future direction, not just documenting what exists. For specialized domains, `/project-domain` captures the subject matter expertise that may be implicit in the existing codebase.
 
 ---
 

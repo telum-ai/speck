@@ -103,13 +103,20 @@ Given the implementation details provided as an argument, do this:
 
 5. Read the project constitution at `specs/projects/[PROJECT_ID]/constitution.md` if it exists to understand constitutional requirements.
 
-6. **Load Project Design Context** (CRITICAL for UI/UX stories):
+6. **Load Project Context Documents** (CRITICAL for consistency):
    
    Determine PROJECT_ID from the story path (e.g., `specs/projects/001-myproject/epics/...`).
    
-   **Check for and load design documents**:
+   **Check for and load project documents**:
+   - `specs/projects/[PROJECT_ID]/domain-model.md` → Domain terminology, rules, and principles
    - `specs/projects/[PROJECT_ID]/ux-strategy.md` → UX principles, voice/tone, design vision
    - `specs/projects/[PROJECT_ID]/design-system.md` → Design tokens, components, patterns
+   
+   **IF domain-model.md exists**:
+   - Use glossary terms consistently in data model and contracts
+   - Validate data model against domain entities
+   - Ensure domain invariants are respected in validation rules
+   - Reference domain principles in architectural decisions
    
    **IF ux-strategy.md exists**:
    - Extract UX principles for Constitution Check

@@ -19,6 +19,7 @@ First, determine which project we're working on:
 
 Load project context:
 - Project specification (project.md)
+- Domain model (domain-model.md) if available - use for terminology and domain-specific UX considerations
 - Check for [INFERRED FROM CODE] markers (indicates brownfield import)
 - Check for project-landscape-overview.md (from /project-scan)
 - Target users and goals
@@ -143,7 +144,11 @@ Mark extraction source:
 ### Step 1: Understand Design Context
 
 Load project information:
-- Project specification
+- Project specification (project.md)
+- Domain model (domain-model.md) if available - provides:
+  - **Ubiquitous Language**: Use domain terminology in UX copy/voice
+  - **Domain Rules**: Constraints that affect UX flows (e.g., "can't book same slot twice")
+  - **Domain Principles**: Concepts to visualize (e.g., "progressive overload" in fitness)
 - Target users and goals
 - Success metrics
 

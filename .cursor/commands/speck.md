@@ -445,13 +445,14 @@ Based on context, provide helpful hints:
 - After recipe selection → "Recipe applied! Customizing for your specific needs..."
 
 **Project Level**:
-- After specify/clarify → "Run /project-ux for UX-heavy products, or /project-context to define constraints"
+- After specify/clarify → "Run /project-domain for specialized domains, /project-ux for UX-heavy products, or /project-context to define constraints"
+- After domain → "Run /project-ux for UX strategy (uses domain terminology), or /project-context to define technical constraints"
 - After UX → "Run /project-context to define technical constraints"
 - After context → "Optional: /project-constitution → then /project-architecture"
 - After architecture → "Optional: /project-design-system → then /project-plan"
 - After plan → "Optional: /project-roadmap → then /project-analyze → /project-validate"
-- Level 3-4 project → "Full flow: ux → context → constitution → architecture → design-system → plan → roadmap"
-- Brownfield import → "Flow: import → scan → specify/clarify → context → architecture → plan"
+- Level 3-4 project → "Full flow: domain → ux → context → constitution → architecture → design-system → plan → roadmap"
+- Brownfield import → "Flow: import → scan → specify/clarify → domain → ux → context → architecture → plan"
 
 **Epic Level**:
 - Complex epic after clarify → "Run /epic-architecture before tech spec"
