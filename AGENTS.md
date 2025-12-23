@@ -414,7 +414,7 @@ See `.claude/skills/README.md` for details.
 ### Unified Flow (Both Greenfield and Brownfield)
 Typical flow: 
 ```
-specify → clarify → [ux (+ research)] → context (+ research) → [constitution (+ research)] → architecture (+ research) → [design-system (+ research)] → plan (+ research) → [roadmap] → analyze → validate
+specify → clarify → [ux (+ research)] → [domain (+ research)] → context (+ research) → [constitution (+ research)] → architecture (+ research) → [design-system (+ research)] → plan (+ research) → [roadmap] → analyze → validate
 ```
 
 ### For Greenfield (New Projects)
@@ -452,7 +452,7 @@ When unsure, guide user to use `/speck [description]` first - it auto-detects an
 
 At project level, follow this order strictly:
 ```
-Run: [ux] → context → [constitution] → architecture → [design-system] → plan
+Run: [ux] → [domain] → context → [constitution] → architecture → [design-system] → plan
 Why: plan USES these as inputs, and architecture decisions inform planning
 ```
 
@@ -1007,7 +1007,7 @@ Commands contain detailed execution steps - follow them closely.
 - Extract from code rather than create from scratch
 
 **Greenfield** (new project):
-- Flow: specify → clarify → [ux] → context → [constitution] → architecture → [design-system] → plan → [roadmap]
+- Flow: specify → clarify → [ux] → [domain] → context → [constitution] → architecture → [design-system] → plan → [roadmap]
 - Create from vision rather than extract from code
 
 ## 🚀 Follow These Key Principles

@@ -77,10 +77,17 @@ graph TD
     clarify --> uxCheck{UX-Heavy<br/>Product?}
     
     uxCheck --> |Yes| ux
-    uxCheck --> |No| context
+    uxCheck --> |No| domainCheck
     ux["/project-ux<br/>(Define/extract UX principles + research)"]
     
-    ux --> context
+    ux --> domainCheck
+    domainCheck{Specialized<br/>Domain?}
+    
+    domainCheck --> |Yes| domain
+    domainCheck --> |No| context
+    domain["/project-domain<br/>(Capture domain expertise + research)"]
+    
+    domain --> context
     context["/project-context<br/>(Define/extract constraints + research)"]
     context --> constitutionCheck{Complex/<br/>Regulated?}
     
@@ -121,6 +128,7 @@ graph TD
     style specify fill:#e1f5e1
     style clarify fill:#e1f5e1
     style ux fill:#e1f5e1
+    style domain fill:#e1f5e1
     style context fill:#e1f5e1
     style importCmd fill:#fff4e1
     style scan fill:#fff4e1
@@ -272,7 +280,7 @@ Code → Extract → Document → Enhance
 **Unified Flow**:
 Both greenfield and brownfield follow the **same command sequence** after initial setup:
 ```
-specify → clarify → [research] → [ux] → context → [constitution] → architecture → [design-system] → plan → [roadmap] → analyze → validate
+specify → clarify → [research] → [ux] → [domain] → context → [constitution] → architecture → [design-system] → plan → [roadmap] → analyze → validate
 ```
 
 **Key Differences**:
@@ -440,6 +448,7 @@ The agent should **automatically suggest or create commits** at natural completi
 | After Command | Commit Message Pattern | Files to Commit |
 |---------------|----------------------|-----------------|
 | `/project-specify` | `docs(project): define project vision and goals` | `project.md` |
+| `/project-domain` | `docs(project): capture domain expertise and terminology` | `domain-model.md` |
 | `/project-context` | `docs(project): document technical context and constraints` | `context.md` |
 | `/project-architecture` | `docs(project): design system architecture` | `architecture.md` |
 | `/project-plan` | `docs(project): create PRD and epic breakdown` | `PRD.md`, `epics.md`, `epics/*/epic.md` |
@@ -735,6 +744,7 @@ Speck: I'll help you create a new project! Let me analyze the scope...
      
      Next steps:
      - Define UX strategy with /project-ux (optional)
+     - Capture domain expertise with /project-domain (for specialized domains)
      - Define constraints with /project-context
      - Design/document architecture with /project-architecture
      - Create PRD and identify epics with /project-plan
@@ -945,6 +955,10 @@ Day 1: Project Discovery & Foundation
 /project-ux
 → Define design principles
 → Set experience goals
+
+/project-domain (for specialized domains like healthcare, fitness, finance)
+→ Capture domain terminology and glossary
+→ Document domain rules and principles
 
 /project-context
 → Set technical constraints and standards
