@@ -68,7 +68,23 @@ $ARGUMENTS
 
    Note: Not all projects have all documents, but spec.md and plan.md are REQUIRED.
 
-3. Generate tasks following the template:
+   **Extract story dependencies from epic-breakdown.md**:
+   - Read `{EPIC_DIR}/epic-breakdown.md` if exists
+   - Find this story's entry and extract "Depends on:" field
+   - Use these as `depends_on` in tasks.md front matter
+   - Also check for stories that depend on THIS story (for `blocks` field)
+
+3. Generate tasks with front matter:
+   - Include YAML front matter with dependency declarations:
+     ```yaml
+     ---
+     depends_on: [story-001, story-003]  # From epic-breakdown.md
+     blocks: [story-005]                  # Stories waiting on this one
+     ---
+     ```
+   - The orchestrator uses this to manage execution order
+
+   Generate tasks following the template:
    - Use `.speck/templates/story/tasks-template.md` as the base
    - Replace example tasks with actual tasks based on:
      * **Setup tasks**: Project init, dependencies, linting
@@ -77,7 +93,7 @@ $ARGUMENTS
      * **Integration tasks**: DB connections, middleware, logging
      * **Polish tasks [P]**: Unit tests, performance, docs
 
-4. Task generation rules:
+5. Task generation rules:
    - Each contract file → contract test task marked [P]
    - Each entity in data-model → model creation task marked [P]
    - Each endpoint → implementation task (not parallel if shared files)
@@ -85,7 +101,7 @@ $ARGUMENTS
    - Different files = can be parallel [P]
    - Same file = sequential (no [P])
 
-5. Order tasks by dependencies:
+6. Order tasks by dependencies:
    - Setup before everything
    - Tests before implementation (TDD)
    - Models before services
@@ -93,11 +109,11 @@ $ARGUMENTS
    - Core before integration
    - Everything before polish
 
-6. Include parallel execution examples:
+7. Include parallel execution examples:
    - Group [P] tasks that can run together
    - Show actual Task agent commands
 
-7. Create `{STORY_DIR}/tasks.md` with **ENHANCED FORMAT** including:
+8. Create `{STORY_DIR}/tasks.md` with **ENHANCED FORMAT** including:
    
    **Header Section**:
    - Feature name and input documents

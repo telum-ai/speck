@@ -30,6 +30,9 @@ packages/**
 # Each product repo keeps its own version (with its own secrets/schedule)
 .github/workflows/template-sync.yml
 
+# Copilot setup is project-specific (each project has its own tech stack)
+copilot-setup-steps.yml
+
 # Local configuration / secrets (should never be synced)
 .env
 .env.*

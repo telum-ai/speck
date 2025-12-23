@@ -1271,6 +1271,41 @@ After every file edit in `specs/`, automated validation runs:
 
 See `.cursor/hooks/VALIDATION.md` for details.
 
+### Autonomous Development: Cursor + GitHub Copilot
+
+Speck supports **autonomous development** through both **Cursor Background Agents** and **GitHub Copilot Coding Agent**.
+
+**Core Principle**: All runtimes execute the **same commands** from `.cursor/commands/`. 
+
+**When executing commands autonomously**:
+1. Read this file (`AGENTS.md`) for methodology
+2. Navigate to the story directory
+3. Follow the Story-Level Command Flow
+4. Execute each command from `.cursor/commands/story-*.md` step-by-step
+
+**Dependency Management**:
+
+Stories declare dependencies in `tasks.md` YAML front matter:
+
+```yaml
+---
+depends_on: [story-001, story-003]  # Stories that must merge first
+blocks: [story-005]                  # Stories waiting on this one (informational)
+---
+```
+
+- The `/story-tasks` command extracts dependencies from `epic-breakdown.md`
+- The orchestrator checks dependencies before assigning to Copilot
+- Blocked stories get `speck:blocked` label
+- When dependencies merge, blocked stories auto-unblock
+
+**Execution Order**: 
+- Epics are processed in numeric order (E000, E001, E002...)
+- Stories are processed in numeric order within each epic
+- Dependencies override numeric order (blocked stories wait)
+
+**Validation**: Run `/story-validate` as the final step. Use validators in `.cursor/hooks/hooks/validators/`
+
 ## 📖 Where to Find Information
 
 **Speck Methodology**: @.speck/README.md (complete guide)  
