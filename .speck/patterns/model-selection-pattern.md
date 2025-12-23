@@ -86,11 +86,24 @@ GPT-5.2 comes in three variants with configurable reasoning effort (medium, extr
 ### Tier 3: Speed/Cost Optimized (High Volume)
 
 #### Gemini 3 Flash
-- **Strengths**: 78% SWE-bench (beats Pro!), very fast (218 tok/s), cheapest ($0.50/$3), most reliable of Gemini family
-- **Special Strength**: Excels at "vibe coding" and frontend/visual interfaces
-- **Weaknesses**: Less sophisticated reasoning on very complex tasks
-- **Best for**: Interactive development, UI/frontend work, high-volume tasks, budget-conscious teams
-- **Note**: Outperforms Gemini 3 Pro on coding while being faster and cheaper
+
+Released December 17, 2025. Often **outperforms Pro in agentic coding** while being faster and cheaper.
+
+- **Benchmarks**: 
+  - 78% SWE-bench Verified (beats Pro's 76.2%!)
+  - 49.4% Toolathlon (long-horizon agentic tasks)
+  - 90.4% GPQA Diamond, 81.2% MMMU-Pro
+- **Strengths**: 
+  - Very fast (218 tok/s, 3x faster than 2.5 Pro)
+  - Cheapest quality option ($0.50/$3)
+  - 30% more token-efficient than prior models
+  - Excels at "vibe coding" and intention-first development
+  - Reads files minimally, makes targeted changes
+  - Great for real-time apps, A/B testing, rapid iterations
+- **Modes**: Flash Thinking (Elo 2316 competitive coding)
+- **Weaknesses**: Less depth for very complex reasoning
+- **Best for**: Interactive development, UI/frontend, high-volume, scaling production
+- **User Feedback**: "Game changer" for prototypes, bridges non-coders to engineering
 
 #### Grok Code
 - **Strengths**: **Fastest** (455 tok/s!), extreme cost efficiency ($0.20/$1.50), 90%+ cache hit rates
@@ -157,13 +170,31 @@ Cursor's proprietary LLM, purpose-built for agentic coding workflows.
 
 **User Feedback (X/Twitter)**: "Total game changer" - eliminates wait times, enables step-by-step control. Users report building full apps in minutes. Works well in stacks with Gemini 3 Flash for rapid MVP building (~$1.42/MVP reported).
 
-### ⚠️ Caution
+### ⚠️ Use With Caution
 
 #### Gemini 3 Pro
-- **Known Issues**: Aggressive code deletion, context loss, memory leaks (137GB reported)
-- **Code Quality**: 200 control flow mistakes/MLOC (highest error rate!)
-- **Recommendation**: Avoid for production code without constant human oversight
-- **Use case**: Only for multimodal research/analysis where reliability issues are acceptable
+
+Released November 18, 2025. Strong in multimodal reasoning but has reliability concerns.
+
+- **Benchmarks**: 
+  - 76.2% SWE-bench Verified (lower than Flash!)
+  - 54.2% Terminal-Bench
+  - 91.9% GPQA Diamond (highest!), 81.0% MMMU-Pro
+- **Strengths**:
+  - Excellent "vibe coding" - transforms abstract ideas into prototypes
+  - Deep multimodal reasoning (text, images, video, audio, code)
+  - 1M token context window
+  - Deep Think mode for PhD-level reasoning
+  - 35-50% improvement over Gemini 2.5 in coding accuracy
+- **Pricing**: $2/$12 (scales to $4/$18 for >200k tokens)
+- **Speed**: ~70 tok/s (slower than Flash)
+- **Known Issues**: 
+  - Aggressive code deletion reported
+  - Context loss, memory leaks (137GB reported)
+  - 200 control flow mistakes/MLOC (highest error rate!)
+  - May ignore complex instructions
+- **Recommendation**: Use for multimodal/visual work, but verify outputs carefully
+- **Better Alternative**: Gemini 3 Flash for most coding tasks
 
 ---
 
@@ -441,21 +472,22 @@ confidence, consider having [Model B] review it with fresh perspective.
 
 ### Coding Performance
 
-| Model | SWE-Bench Verified | SWE-Bench Pro | Terminal-Bench | Control Flow/MLOC | Vulns/MLOC |
-|-------|-------------------|---------------|----------------|-------------------|------------|
-| Opus 4.5 | 80.9% | - | 59.3% | 55 | 44 |
-| GPT-5.2 (Pro/Thinking) | 80.0% | 55.6% | 62.2% | **22** | **16** |
-| Gemini 3 Flash | 78.0% | - | - | - | - |
-| GPT-5.1 Codex Max | 77.9% | 50.8% | 58.1% | 98 | - |
-| Sonnet 4.5 | 77.2% | - | 50.0% | 152 | ~198 |
-| Gemini 3 Pro | 76.8% | - | 42.1% | 200 | - |
+| Model | SWE-Bench | Terminal-Bench | GPQA Diamond | Control Flow/MLOC | Vulns/MLOC |
+|-------|-----------|----------------|--------------|-------------------|------------|
+| Opus 4.5 | 80.9% | 59.3% | 87.0% | 55 | 44 |
+| GPT-5.2 | 80.0% | 62.2% | - | **22** | **16** |
+| Gemini 3 Flash | 78.0% | 47.6% | 90.4% | - | - |
+| GPT-5.1 Codex Max | 77.9% | 58.1% | - | 98 | - |
+| Sonnet 4.5 | 77.2% | 50.0% | 83.4% | 152 | ~198 |
+| Gemini 3 Pro | 76.2% | 54.2% | **91.9%** | 200 | - |
 | Grok Code | 70.8% | - | - | - | - |
-| GPT-5.2 Codex | - | 56.4% | 64.0% | - | - |
+| GPT-5.2 Codex | - | **64.0%** | - | - | - |
 
 **Key Insights**: 
 - GPT-5.2 has the **best security profile** (lowest vulnerability rates)
 - GPT-5.2 Codex leads on Terminal-Bench (64.0%) for CLI automation
-- Gemini 3 Pro has highest control flow errors (200/MLOC)
+- **Gemini 3 Flash beats Pro** on SWE-bench (78% vs 76.2%)!
+- Gemini 3 Pro leads GPQA Diamond (91.9%) but has highest code errors
 
 ### Speed and Pricing
 
@@ -466,7 +498,7 @@ confidence, consider having [Model B] review it with fresh perspective.
 | GPT-5.1 Codex Max | $1.25 / $10 | Fast | Cost-effective for coding |
 | Composer 1 | $1.25 / $10 | 250 tok/s | Native Cursor integration |
 | GPT-5.2 Thinking | $1.75 / $14 | 187 tok/s | Can be slow for complex |
-| Gemini 3 Pro | $2 / $12 | 95-128 tok/s | Reliability issues |
+| Gemini 3 Pro | $2 / $12 ($4/$18 >200k) | ~70 tok/s | Multimodal, reliability issues |
 | Sonnet 4.5 | $3 / $15 | Moderate | Best balance |
 | Opus 4.5 | $5 / $25 | 49-70 tok/s | Premium quality |
 | GPT-5.2 Pro | $21 / $168 | Variable | Peak quality, very slow |
