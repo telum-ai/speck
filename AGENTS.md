@@ -935,10 +935,13 @@ Different LLMs excel at different tasks. Use the right model for the job.
 |-----------|------------------|-----|
 | Complex architecture/domain | **Opus 4.5** | Deep reasoning, multi-system understanding |
 | Critical code review | **Opus 4.5** | Highest accuracy |
+| Security-sensitive code | **GPT-5.2 Extra High** | Lowest vulnerability rate (16/MLOC) |
 | Standard development | **Sonnet 4.5** | Best balance (0% edit error rate) |
+| UI/Frontend work | **Gemini 3 Flash** | Excels at "vibe coding" and visual polish |
 | Interactive/quick fixes | **Gemini 3 Flash** | Speed for flow state |
-| Mathematical/algorithmic | **GPT-5.2 Extra High** | Superior reasoning |
-| Budget-constrained | **Gemini 3 Flash** | Best price/performance |
+| Real-time agentic pipelines | **Grok Code** | Fastest (455 tok/s), cheapest |
+| Mathematical/algorithmic | **GPT-5.2 Extra High** | 100% AIME 2025, superior reasoning |
+| Budget-constrained | **Gemini 3 Flash** | Best price/performance ($0.50/M) |
 | Validation | **Different model** | Cross-validation catches blind spots |
 
 ### Command-Specific Recommendations
