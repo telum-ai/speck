@@ -74,20 +74,20 @@ graph TD
     specify --> clarify
     clarify["/project-clarify<br/>(Resolve ambiguities)"]
     
-    clarify --> uxCheck{UX-Heavy<br/>Product?}
-    
-    uxCheck --> |Yes| ux
-    uxCheck --> |No| domainCheck
-    ux["/project-ux<br/>(Define/extract UX principles + research)"]
-    
-    ux --> domainCheck
-    domainCheck{Specialized<br/>Domain?}
+    clarify --> domainCheck{Specialized<br/>Domain?}
     
     domainCheck --> |Yes| domain
-    domainCheck --> |No| context
+    domainCheck --> |No| uxCheck
     domain["/project-domain<br/>(Capture domain expertise + research)"]
     
-    domain --> context
+    domain --> uxCheck
+    uxCheck{UX-Heavy<br/>Product?}
+    
+    uxCheck --> |Yes| ux
+    uxCheck --> |No| context
+    ux["/project-ux<br/>(Define/extract UX principles + research)"]
+    
+    ux --> context
     context["/project-context<br/>(Define/extract constraints + research)"]
     context --> constitutionCheck{Complex/<br/>Regulated?}
     
@@ -280,7 +280,7 @@ Code → Extract → Document → Enhance
 **Unified Flow**:
 Both greenfield and brownfield follow the **same command sequence** after initial setup:
 ```
-specify → clarify → [research] → [ux] → [domain] → context → [constitution] → architecture → [design-system] → plan → [roadmap] → analyze → validate
+specify → clarify → [research] → [domain] → [ux] → context → [constitution] → architecture → [design-system] → plan → [roadmap] → analyze → validate
 ```
 
 **Key Differences**:
@@ -743,8 +743,8 @@ Speck: I'll help you create a new project! Let me analyze the scope...
      [Creates project structure, asks clarifying questions, generates spec]
      
      Next steps:
-     - Define UX strategy with /project-ux (optional)
      - Capture domain expertise with /project-domain (for specialized domains)
+     - Define UX strategy with /project-ux (uses domain terminology)
      - Define constraints with /project-context
      - Design/document architecture with /project-architecture
      - Create PRD and identify epics with /project-plan
@@ -868,8 +868,8 @@ Speck: I found the authentication epic in project 001-my-project.
 - `/project-scan` - **Comprehensive**: Deep codebase analysis after import (~30-60 min)
 
 #### Phase 2: Foundation (Define Constraints & Principles)
-- `/project-ux` - Define user experience strategy and design principles
 - `/project-domain` - Capture domain expertise (terminology, entities, rules, principles) for specialized domains
+- `/project-ux` - Define user experience strategy and design principles (uses domain terminology)
 - `/project-context` - Document constraints and requirements that guide decisions
 - `/project-constitution` - Establish project principles and team agreements
 
@@ -952,13 +952,13 @@ Day 1: Project Discovery & Foundation
 → Resolves any ambiguities
 → Fills gaps in specification
 
-/project-ux
-→ Define design principles
-→ Set experience goals
-
 /project-domain (for specialized domains like healthcare, fitness, finance)
 → Capture domain terminology and glossary
 → Document domain rules and principles
+
+/project-ux
+→ Define design principles (using domain terminology)
+→ Set experience goals
 
 /project-context
 → Set technical constraints and standards
@@ -1125,7 +1125,7 @@ Wednesday: Fix Issue
 
 ### 3. Follow the Natural Flow
 - Discovery: specify → clarify → [research]
-- Foundation: ux → [domain] → context → [constitution]
+- Foundation: [domain] → ux → context → [constitution]
 - Design: architecture → [design-system]
 - Planning: plan → [roadmap]
 - Validation: analyze → validate
