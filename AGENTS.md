@@ -925,7 +925,7 @@ Use verb-led prefixes for clear intent:
 
 ## 🤖 Model Selection (IMPORTANT!)
 
-Different LLMs excel at different tasks. Use the right model for the job.
+Different LLMs excel at different tasks. Always instruct the user to switch to the right model for the job.
 
 **Reference**: `.speck/patterns/model-selection-pattern.md` for full details.
 
