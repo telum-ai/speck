@@ -301,6 +301,7 @@ specs/
         ├── project-landscape-overview.md  # [Brownfield] Code aspects extraction
         ├── context.md              # TRUTH: Technical context
         ├── constitution.md         # TRUTH: Optional technical principles
+        ├── domain-model.md         # TRUTH: Domain terminology, entities, rules (optional)
         ├── architecture.md         # TRUTH: System architecture
         ├── PRD.md                  # TRUTH: Product requirements
         ├── epics.md                # TRUTH: Epic index (generated/updated by project-plan)
@@ -858,6 +859,7 @@ Speck: I found the authentication epic in project 001-my-project.
 
 #### Phase 2: Foundation (Define Constraints & Principles)
 - `/project-ux` - Define user experience strategy and design principles
+- `/project-domain` - Capture domain expertise (terminology, entities, rules, principles) for specialized domains
 - `/project-context` - Document constraints and requirements that guide decisions
 - `/project-constitution` - Establish project principles and team agreements
 
@@ -1109,7 +1111,7 @@ Wednesday: Fix Issue
 
 ### 3. Follow the Natural Flow
 - Discovery: specify → clarify → [research]
-- Foundation: ux → context → [constitution]
+- Foundation: ux → [domain] → context → [constitution]
 - Design: architecture → [design-system]
 - Planning: plan → [roadmap]
 - Validation: analyze → validate
