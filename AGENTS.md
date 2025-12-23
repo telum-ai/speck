@@ -937,7 +937,7 @@ Different LLMs excel at different tasks. Use the right model for the job.
 | Critical code review | **Opus 4.5** | Highest accuracy |
 | Security-sensitive code | **GPT-5.2 Extra High** | Lowest vulnerability rate (16/MLOC) |
 | Standard development | **Sonnet 4.5** | Best balance (0% edit error rate) |
-| **Speck story implementation** | **Composer 1** ⭐ | 4x faster, native Cursor integration |
+| **Story implementation (Cursor)** | **Composer 1** | 4x faster, native Cursor integration |
 | Multi-file editing (Cursor) | **Composer 1** | Parallel tool execution |
 | UI/Frontend work | **Gemini 3 Flash** | Excels at "vibe coding" and visual polish |
 | Interactive/quick fixes | **Gemini 3 Flash** | Speed for flow state |
@@ -960,12 +960,12 @@ Different LLMs excel at different tasks. Use the right model for the job.
 - `/story-plan` (reasoning needed)
 - Tasks with vague/ambiguous requirements
 
-**Use Composer 1 for** (Speck default for execution!):
+**Use Composer 1 for** (when using Cursor):
 - `/story-implement` - 4x faster, native Cursor integration
 - `/story-tasks` - Fast, structured output
 - Multi-file editing and refactoring
 - Zero-to-one project building
-- Rapid prototyping in Cursor
+- Rapid prototyping
 
 **Use Gemini 3 Flash for**:
 - UI/frontend "vibe coding"

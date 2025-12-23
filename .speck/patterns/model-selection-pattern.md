@@ -23,9 +23,9 @@
 | **Mathematical/algorithmic problems** | GPT-5.2 Extra High | 100% AIME 2025, superior reasoning |
 | **Budget-constrained high volume** | Gemini 3 Flash / Grok Code | $0.20-$0.50/M input tokens |
 | **Real-time agentic pipelines** | Grok Code / Composer 1 | 250-455 tok/s speed |
-| **Speck story implementation** | **Composer 1** | 4x faster, native Cursor integration |
-| **Multi-file editing in Cursor** | **Composer 1** | Parallel tool execution |
-| **Zero-to-one project building** | **Composer 1** | Built for this use case |
+| **Story implementation (Cursor)** | **Composer 1** | 4x faster, native Cursor integration |
+| **Multi-file editing (Cursor)** | **Composer 1** | Parallel tool execution |
+| **Zero-to-one project building** | **Composer 1** | Optimized for this use case |
 | **Cross-model validation** | Different model than author | Fresh perspective, catches blind spots |
 | **LLM-as-Judge evaluation** | Opus 4.5 / GPT-5.2 Extra High | Stronger judges catch more issues |
 
@@ -88,9 +88,9 @@
 - **Weaknesses**: Less versatile for quick queries, may falter in visual polish
 - **Best for**: Large refactoring, migrations, long autonomous coding sessions, GitHub Copilot integration
 
-#### Composer 1 (Cursor) ⭐ RECOMMENDED FOR SPECK
+#### Composer 1 (Cursor)
 
-Cursor's first proprietary LLM, purpose-built for coding. **Since Speck is a Cursor-centric methodology, Composer should be your default for most tasks.**
+Cursor's proprietary LLM, purpose-built for agentic coding workflows.
 
 - **Architecture**: Mixture-of-Experts (MoE), trained via reinforcement learning on real software engineering challenges
 - **Strengths**: 
@@ -202,11 +202,11 @@ Evaluate this code against the following criteria:
 
 ---
 
-## 🎯 Cursor-Centric Strategy (IMPORTANT for Speck Users!)
+## 🎯 Multi-Agent Strategy with Composer
 
-Since Speck is designed for Cursor, leverage Composer as your primary execution model.
+When using Cursor, leverage Composer for execution tasks.
 
-### The Speck + Cursor Multi-Agent Pattern
+### The Multi-Agent Pattern
 
 ```
 Heavy Reasoning Model (Opus 4.5 / GPT-5.2)
@@ -227,11 +227,11 @@ Validation Model (Different from implementer)
 
 | Scenario | Use Composer? | Alternative |
 |----------|---------------|-------------|
-| `/story-implement` | ✅ **Yes** (default) | Opus 4.5 for security-critical |
-| `/story-tasks` | ✅ **Yes** (fast structured output) | Gemini 3 Flash |
-| Multi-file refactoring | ✅ **Yes** (parallel tool use) | Sonnet 4.5 |
-| Rapid prototyping | ✅ **Yes** (speed matters) | - |
-| Zero-to-one project | ✅ **Yes** (built for this) | - |
+| Story implementation | ✅ Yes | Opus 4.5 for security-critical |
+| Structured task output | ✅ Yes | Gemini 3 Flash |
+| Multi-file refactoring | ✅ Yes (parallel tool use) | Sonnet 4.5 |
+| Rapid prototyping | ✅ Yes (speed matters) | Grok Code |
+| Zero-to-one project | ✅ Yes | - |
 | Complex architecture design | ❌ No | Opus 4.5 |
 | Vague/ambiguous prompts | ❌ No | Sonnet 4.5 |
 | Security-critical code | ❌ No | GPT-5.2 Extra High |
@@ -282,9 +282,9 @@ Validation Model (Different from implementer)
 | `/story-implement` | **Composer 1** (default) | 4x faster, native Cursor integration |
 | `/story-validate` | **Different model than implementer** | Catch implementer's blind spots |
 
-**Note**: Since Speck is Cursor-centric, Composer 1 should be your default for story-level execution.
+**Note**: When using Cursor, Composer 1 is optimal for story-level execution due to native integration.
 
-### Implementation Task Selection (Cursor/Speck Users)
+### Implementation Task Selection
 
 ```
 Story Implementation
@@ -305,7 +305,7 @@ Story Implementation
 └─────────────────────────────────────────┘
      ↓ No
 ┌─────────────────────────────────────────┐
-│ Using Cursor IDE? (Speck default)       │
+│ Using Cursor IDE?                       │
 │ → Composer 1 (4x faster, native tools) │
 └─────────────────────────────────────────┘
      ↓ Not using Cursor
@@ -319,8 +319,6 @@ Story Implementation
 │ → Sonnet 4.5 (reliable default)        │
 └─────────────────────────────────────────┘
 ```
-
-**For Cursor/Speck users**: Composer 1 should be your default unless the task requires special handling (security, complex math, ambiguous requirements).
 
 ---
 
