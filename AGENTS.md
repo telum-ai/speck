@@ -946,6 +946,26 @@ Different LLMs excel at different tasks. Use the right model for the job.
 | Budget-constrained | **Gemini 3 Flash** | Best price/performance ($0.50/M) |
 | Validation | **Different model** | Cross-validation catches blind spots |
 
+### MAX Mode (Cursor) - Use Deliberately!
+
+MAX mode unlocks extended context (up to 1M tokens for Gemini) and 200 tool calls, but at **significant cost**.
+
+**USE MAX mode for**:
+- Project-wide refactoring
+- Large codebase navigation
+- Multi-file coordinated changes requiring >25 tool calls
+- Background agents on complex tasks
+
+**AVOID MAX mode for**:
+- Single-file edits (explicitly include relevant files instead)
+- Small feature implementations
+- Bug fixes in specific modules
+- Most normal development tasks
+
+**Cost reality**: Single MAX requests can cost $5-$60+. Background agents can exhaust $20/month budget in one session.
+
+**Default to normal mode** + explicit context management. See `model-selection-pattern.md` for decision framework.
+
 ### Command-Specific Recommendations
 
 **Use Opus 4.5 for**:

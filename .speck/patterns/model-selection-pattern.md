@@ -275,6 +275,111 @@ Evaluate this code against the following criteria:
 
 ---
 
+## ⚡ Cursor MAX Mode: When to Use It
+
+MAX mode unlocks extended context windows and more tool calls, but at significant cost. Use deliberately.
+
+### What MAX Mode Actually Does
+
+| Feature | Normal Mode | MAX Mode |
+|---------|-------------|----------|
+| Context window | 200K tokens (~16K lines) | Model's max (varies) |
+| Tool calls per request | 25 | **200** |
+| File read per operation | Limited | 750 lines |
+| Pricing | Request-based | **Token-based** (API + 20%) |
+| Speed | Faster | **Slower** (more context to process) |
+
+**Context expansion varies by model:**
+- Claude models: Stays at 200K (no increase!)
+- Gemini 2.5 Pro: Expands to **1M tokens** (5x increase)
+
+### ✅ When to Use MAX Mode
+
+| Scenario | Why MAX Helps |
+|----------|---------------|
+| **Project-wide refactoring** | AI sees full impact across codebase |
+| **Large codebase navigation** | Understand architectural patterns |
+| **Multi-file coordinated changes** | 200 tool calls for autonomous operation |
+| **Background agents (complex tasks)** | Complete without user intervention |
+| **Understanding new large codebase** | Reference actual implementations everywhere |
+
+### ❌ When to AVOID MAX Mode
+
+| Scenario | Why Normal Mode Suffices |
+|----------|--------------------------|
+| **Single-file edits** | Explicitly include relevant files |
+| **Small feature implementation** | Reference 1-2 pattern files manually |
+| **Bug fixes in specific modules** | Error messages pinpoint the area |
+| **Documentation tasks** | Only needs current component context |
+| **Terminal commands, debugging** | General knowledge, not codebase-specific |
+
+### 💸 Cost Reality Check
+
+**MAX mode uses token-based pricing** - costs depend entirely on context consumed.
+
+| Example | Estimated Cost |
+|---------|----------------|
+| Single moderate MAX request | $0.50 - $1.00 |
+| Single complex MAX request (Claude Opus) | **$5 - $10+** |
+| Background agent complex task | **$20 - $60+** |
+| $20/month Pro plan exhausted after | ~40 moderate MAX requests |
+
+**User reports from forums:**
+- "Claude 4.5 Sonnet 1 message alone easily costs you $5+"
+- "174 gemini requests + 1269 tool calls = $79 in a single day"
+- Background agents can burn monthly budget in one session
+
+### Practical Limitations
+
+⚠️ **Advertised vs. actual context:**
+- Claude MAX advertises 200K tokens but practical limit is **~70K tokens**
+- Cursor auto-truncates to manage costs even in MAX mode
+- "It feels like ordering a 12-inch pizza and receiving a 5-inch one"
+
+⚠️ **Latency increases:**
+- More context = more processing time
+- MAX mode is **slower**, not faster
+
+### Decision Framework
+
+```
+Before enabling MAX mode, ask:
+     ↓
+┌─────────────────────────────────────────┐
+│ Does this task span multiple unrelated  │
+│ modules/components?                     │
+│ → No: Use normal mode                   │
+└─────────────────────────────────────────┘
+     ↓ Yes
+┌─────────────────────────────────────────┐
+│ Can I explicitly include relevant       │
+│ context files manually?                 │
+│ → Yes: Use normal mode + explicit files │
+└─────────────────────────────────────────┘
+     ↓ No
+┌─────────────────────────────────────────┐
+│ Will I need >25 tool calls for this     │
+│ agent task?                             │
+│ → No: Normal mode probably fine         │
+└─────────────────────────────────────────┘
+     ↓ Yes
+┌─────────────────────────────────────────┐
+│ Am I prepared for $5-$60+ cost?         │
+│ → Yes: Enable MAX mode                  │
+│ → No: Break task into smaller pieces    │
+└─────────────────────────────────────────┘
+```
+
+### Best Practices
+
+1. **Default to normal mode** - Most tasks don't need MAX
+2. **Use Auto model** - Unlimited usage, intelligent model selection
+3. **Explicitly manage context** - Open relevant files, select in chat
+4. **Monitor background agents** - They default to MAX mode!
+5. **Break large tasks** - Smaller pieces in normal mode often works better
+
+---
+
 ## 🎯 Multi-Agent Strategy with Composer
 
 When using Cursor, leverage Composer for execution tasks.
