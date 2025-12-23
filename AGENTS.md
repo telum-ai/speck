@@ -937,6 +937,8 @@ Different LLMs excel at different tasks. Use the right model for the job.
 | Critical code review | **Opus 4.5** | Highest accuracy |
 | Security-sensitive code | **GPT-5.2 Extra High** | Lowest vulnerability rate (16/MLOC) |
 | Standard development | **Sonnet 4.5** | Best balance (0% edit error rate) |
+| **Speck story implementation** | **Composer 1** ⭐ | 4x faster, native Cursor integration |
+| Multi-file editing (Cursor) | **Composer 1** | Parallel tool execution |
 | UI/Frontend work | **Gemini 3 Flash** | Excels at "vibe coding" and visual polish |
 | Interactive/quick fixes | **Gemini 3 Flash** | Speed for flow state |
 | Real-time agentic pipelines | **Grok Code** | Fastest (455 tok/s), cheapest |
@@ -952,15 +954,23 @@ Different LLMs excel at different tasks. Use the right model for the job.
 - `/project-constitution` - Principle extraction
 - Critical validation tasks
 
-**Use Sonnet 4.5 for** (default):
+**Use Sonnet 4.5 for**:
 - Most `/project-*` commands
 - Most `/epic-*` commands
-- `/story-plan`, `/story-implement`
+- `/story-plan` (reasoning needed)
+- Tasks with vague/ambiguous requirements
+
+**Use Composer 1 for** (Speck default for execution!):
+- `/story-implement` - 4x faster, native Cursor integration
+- `/story-tasks` - Fast, structured output
+- Multi-file editing and refactoring
+- Zero-to-one project building
+- Rapid prototyping in Cursor
 
 **Use Gemini 3 Flash for**:
-- `/story-tasks` - Fast, structured output
-- Rapid prototyping and iteration
+- UI/frontend "vibe coding"
 - High-volume, budget-sensitive work
+- When not using Cursor IDE
 
 ### When to Suggest Model Switches
 

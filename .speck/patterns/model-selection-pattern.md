@@ -23,6 +23,9 @@
 | **Mathematical/algorithmic problems** | GPT-5.2 Extra High | 100% AIME 2025, superior reasoning |
 | **Budget-constrained high volume** | Gemini 3 Flash / Grok Code | $0.20-$0.50/M input tokens |
 | **Real-time agentic pipelines** | Grok Code / Composer 1 | 250-455 tok/s speed |
+| **Speck story implementation** | **Composer 1** | 4x faster, native Cursor integration |
+| **Multi-file editing in Cursor** | **Composer 1** | Parallel tool execution |
+| **Zero-to-one project building** | **Composer 1** | Built for this use case |
 | **Cross-model validation** | Different model than author | Fresh perspective, catches blind spots |
 | **LLM-as-Judge evaluation** | Opus 4.5 / GPT-5.2 Extra High | Stronger judges catch more issues |
 
@@ -85,10 +88,32 @@
 - **Weaknesses**: Less versatile for quick queries, may falter in visual polish
 - **Best for**: Large refactoring, migrations, long autonomous coding sessions, GitHub Copilot integration
 
-#### Composer 1 (Cursor)
-- **Strengths**: Native Cursor integration, very fast (250 tok/s), frontier-level on Cursor Bench, parallel tool execution
-- **Weaknesses**: Optimized for Cursor only, may lag in demanding quality benchmarks
-- **Best for**: Cursor users who want seamless integration, zero-to-one project building
+#### Composer 1 (Cursor) ⭐ RECOMMENDED FOR SPECK
+
+Cursor's first proprietary LLM, purpose-built for coding. **Since Speck is a Cursor-centric methodology, Composer should be your default for most tasks.**
+
+- **Architecture**: Mixture-of-Experts (MoE), trained via reinforcement learning on real software engineering challenges
+- **Strengths**: 
+  - **4x faster** than Sonnet 4.5/GPT-5.2 (250 tok/s)
+  - Native Cursor integration (semantic search, file editing, terminal commands)
+  - Parallel tool execution (reads multiple files simultaneously)
+  - Frontier-level on Cursor Bench for agentic tasks
+  - Completes tasks in <30 seconds
+  - Excellent at fixing linter errors, writing tests autonomously
+- **Pricing**: $1.25/$10 per M tokens (competitive with GPT-5.2)
+- **Weaknesses**: 
+  - Slightly less "smart" for vague prompts (give explicit instructions!)
+  - May overcomplicate simple tasks
+  - Less depth in complex reasoning vs Opus 4.5
+- **Best for**: 
+  - All Speck story implementation (`/story-implement`)
+  - Rapid prototyping and MVPs
+  - Multi-file editing and refactoring
+  - Zero-to-one project building
+  - Iterative development where speed matters
+- **Multi-Agent Pattern**: Use heavier models (Opus/GPT-5.2) for planning, Composer for execution
+
+**User Feedback (X/Twitter)**: "Total game changer" - eliminates wait times, enables step-by-step control. Users report building full apps in minutes. Works well in stacks with Gemini 3 Flash for rapid MVP building (~$1.42/MVP reported).
 
 ### ⚠️ Caution
 
@@ -175,6 +200,53 @@ Evaluate this code against the following criteria:
 
 ---
 
+---
+
+## 🎯 Cursor-Centric Strategy (IMPORTANT for Speck Users!)
+
+Since Speck is designed for Cursor, leverage Composer as your primary execution model.
+
+### The Speck + Cursor Multi-Agent Pattern
+
+```
+Heavy Reasoning Model (Opus 4.5 / GPT-5.2)
+    ↓ Plans architecture, makes decisions
+    ↓ Creates specs, designs systems
+    
+Composer 1 (Default for Execution)
+    ↓ Implements the plan 4x faster
+    ↓ Handles multi-file edits, refactoring
+    ↓ Fixes linter errors, writes tests
+    
+Validation Model (Different from implementer)
+    ↓ Reviews Composer's output
+    ↓ Catches blind spots
+```
+
+### When to Use Composer vs. Other Models
+
+| Scenario | Use Composer? | Alternative |
+|----------|---------------|-------------|
+| `/story-implement` | ✅ **Yes** (default) | Opus 4.5 for security-critical |
+| `/story-tasks` | ✅ **Yes** (fast structured output) | Gemini 3 Flash |
+| Multi-file refactoring | ✅ **Yes** (parallel tool use) | Sonnet 4.5 |
+| Rapid prototyping | ✅ **Yes** (speed matters) | - |
+| Zero-to-one project | ✅ **Yes** (built for this) | - |
+| Complex architecture design | ❌ No | Opus 4.5 |
+| Vague/ambiguous prompts | ❌ No | Sonnet 4.5 |
+| Security-critical code | ❌ No | GPT-5.2 Extra High |
+| Deep reasoning tasks | ❌ No | Opus 4.5 |
+
+### Composer Best Practices
+
+1. **Be explicit**: Composer excels with clear instructions, may overcomplicate vague prompts
+2. **Use for execution, not planning**: Pair with heavier models for the "thinking" phase
+3. **Leverage parallel tool use**: Let it read/edit multiple files simultaneously
+4. **Trust its linting**: It fixes linter errors autonomously
+5. **Iterate fast**: Its speed enables rapid feedback loops
+
+---
+
 ## 📋 Model Selection by Speck Command
 
 ### Project Level
@@ -204,30 +276,42 @@ Evaluate this code against the following criteria:
 
 | Command | Recommended Model | Reasoning |
 |---------|------------------|-----------|
-| `/story-specify` | Sonnet 4.5 / Gemini 3 Flash | Quick, reliable |
-| `/story-plan` | Sonnet 4.5 | Technical design |
-| `/story-tasks` | Gemini 3 Flash | Fast, structured output |
-| `/story-implement` | **Varies by task** | See implementation guide below |
+| `/story-specify` | Sonnet 4.5 / Composer 1 | Quick, reliable |
+| `/story-plan` | Sonnet 4.5 | Technical design, reasoning needed |
+| `/story-tasks` | **Composer 1** / Gemini 3 Flash | Fast, structured output |
+| `/story-implement` | **Composer 1** (default) | 4x faster, native Cursor integration |
 | `/story-validate` | **Different model than implementer** | Catch implementer's blind spots |
 
-### Implementation Task Selection
+**Note**: Since Speck is Cursor-centric, Composer 1 should be your default for story-level execution.
+
+### Implementation Task Selection (Cursor/Speck Users)
 
 ```
 Story Implementation
      ↓
 ┌─────────────────────────────────────────┐
-│ Complex algorithm / data structure?     │
-│ → GPT-5.2 Extra High (math reasoning)  │
+│ Security-critical code?                 │
+│ → GPT-5.2 Extra High (lowest vulns)    │
 └─────────────────────────────────────────┘
      ↓ No
 ┌─────────────────────────────────────────┐
-│ Large multi-file refactoring?           │
-│ → Sonnet 4.5 (0% edit error rate)      │
+│ Complex algorithm / math problem?       │
+│ → GPT-5.2 Extra High (100% AIME 2025)  │
 └─────────────────────────────────────────┘
      ↓ No
 ┌─────────────────────────────────────────┐
-│ UI/frontend with rapid iteration?       │
-│ → Gemini 3 Flash (speed for flow)      │
+│ Vague/ambiguous requirements?           │
+│ → Sonnet 4.5 (handles ambiguity well)  │
+└─────────────────────────────────────────┘
+     ↓ No
+┌─────────────────────────────────────────┐
+│ Using Cursor IDE? (Speck default)       │
+│ → Composer 1 (4x faster, native tools) │
+└─────────────────────────────────────────┘
+     ↓ Not using Cursor
+┌─────────────────────────────────────────┐
+│ Need maximum speed/low cost?            │
+│ → Gemini 3 Flash or Grok Code          │
 └─────────────────────────────────────────┘
      ↓ No
 ┌─────────────────────────────────────────┐
@@ -235,6 +319,8 @@ Story Implementation
 │ → Sonnet 4.5 (reliable default)        │
 └─────────────────────────────────────────┘
 ```
+
+**For Cursor/Speck users**: Composer 1 should be your default unless the task requires special handling (security, complex math, ambiguous requirements).
 
 ---
 
