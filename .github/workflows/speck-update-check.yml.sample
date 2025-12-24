@@ -1,0 +1,35 @@
+# Speck Update Checker (Sample)
+#
+# Copy this file to .github/workflows/speck-update-check.yml
+# to enable automatic Speck update PRs.
+#
+# This workflow:
+# 1. Runs weekly (Monday 9am UTC)
+# 2. Checks for new Speck releases
+# 3. Creates a PR with the update
+
+name: Speck Update Check
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Weekly on Monday at 9am UTC
+  workflow_dispatch:     # Manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-update:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Check for Speck updates
+        uses: telum-ai/speck/.github/workflows/speck-update-action@main
+        with:
+          version: 'latest'
+          create-pr: 'true'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
