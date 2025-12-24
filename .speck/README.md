@@ -1268,11 +1268,137 @@ The system will handle everything else!
 
 ---
 
+## 📦 Distribution & Updates
+
+Speck is distributed via GitHub releases. Two methods to get updates:
+
+### CLI (Manual Updates)
+
+Run directly from GitHub (no npm required):
+
+```bash
+# Initialize Speck in a new project
+npx github:telum-ai/speck init
+
+# Upgrade to latest version
+npx github:telum-ai/speck upgrade
+
+# Upgrade to specific version
+npx github:telum-ai/speck upgrade v2.3.0
+
+# Check for updates
+npx github:telum-ai/speck check
+
+# Preview changes without applying
+npx github:telum-ai/speck upgrade --dry-run
+```
+
+**Access Control**: Requires read permission to the Speck repository. If private, users must be collaborators or org members.
+
+### Update Action (Automated PRs)
+
+For automatic weekly update checks:
+
+```bash
+cp .github/workflows/speck-update-check.yml.sample \
+   .github/workflows/speck-update-check.yml
+```
+
+For private Speck repos, add `speck-token: ${{ secrets.SPECK_TOKEN }}` (PAT with `repo` scope).
+
+### What Gets Synced
+
+```
+.speck/                        # Templates, patterns, documentation
+.cursor/commands/              # Command files
+.cursor/hooks/                 # Validation hooks
+.github/workflows/speck-*.yml  # Orchestration workflows
+.github/copilot-instructions.md
+AGENTS.md
+```
+
+### What's Protected
+
+Create `.speckignore` to protect project-specific files (defaults protect `specs/**`, `src/**`, `README.md`, etc.).
+
+---
+
+## 🤖 Autonomous Development
+
+Speck integrates with **Cursor Background Agents** and **GitHub Copilot Coding Agent** for autonomous story execution.
+
+### Core Principle
+
+**All runtimes execute the same commands from `.cursor/commands/`.**
+
+The methodology is defined in `AGENTS.md`. Both Cursor and Copilot read it and follow the command flow.
+
+### Workflow Handoffs
+
+| Workflow | Scope | Trigger |
+|----------|-------|---------|
+| `speck-orchestrator.yml` | specify → implement | Push, manual |
+| `speck-validate-pr.yml` | story-validate | PR ready for review |
+| `speck-retrospective.yml` | story-retrospective | PR merged |
+
+```
+ORCHESTRATOR                    VALIDATE-PR           RETROSPECTIVE
+     │                               │                      │
+     ▼                               ▼                      ▼
+specify → clarify → plan →      validate              retrospective
+tasks → [analyze] → implement        │                      │
+     │                               │                      │
+     └──────► PR CREATED ───────────►└───► PR MERGED ──────►┘
+```
+
+### Rate Limiting
+
+GitHub Copilot Agent limit: ~2-3 concurrent sessions. The orchestrator uses `speck:queued` as a waiting queue.
+
+### Dependency Management
+
+Dependencies declared in `tasks.md` front matter:
+
+```yaml
+---
+depends_on: [story-001, story-003]
+---
+```
+
+### Setup
+
+1. Enable Copilot Coding Agent in org settings
+2. Enable Copilot Code Review for repository
+3. Configure `copilot-setup-steps.yml` (E000 epic)
+
+---
+
+## 💬 Methodology Feedback
+
+After running `/epic-retrospective` or `/project-retrospective`, you'll be asked:
+
+> "Would you like to share methodology-specific learnings with Speck?"
+
+If yes:
+1. **Only methodology insights** are extracted (no project data)
+2. **You review** before submission
+3. **Issue created** in telum-ai/speck
+
+### What Gets Shared
+
+- ✅ Process observations ("story-plan should ask about dependencies earlier")
+- ✅ Template improvements ("tasks template needs setup phase")
+- ✅ Generic patterns ("PostgreSQL window functions for time overlaps")
+- ❌ Project name, domain, business logic
+- ❌ Specific implementations or metrics
+
+**Privacy Guarantee**: Feedback is always opt-in and reviewed by you before submission.
+
+---
+
 ## 📝 Notes
 
 - The `.speck/` directory contains all templates, patterns, recipes, and scripts
-- Speck can be used as a GitHub template repo and kept synced across product repos (see `.speck/TEMPLATE-SYNC.md`)
-- Speck can also export validated retrospective learnings back to the template repo (see `.speck/TEMPLATE-FEEDBACK.md`)
 - Context and constitutions cascade down the hierarchy
 - Everything is designed to be discoverable via `/speck`
 - MCP servers are recommended but optional (see `.cursor/MCP-SETUP.md`)
@@ -1281,6 +1407,6 @@ Remember: The goal is to guide you through building great software with clear sp
 
 ---
 
-**Version**: 2.0  
-**Updated**: [Current Date]  
+**Version**: 2.3  
+**Updated**: December 2025  
 **Methodology**: Speck (Multi-Level)
