@@ -246,6 +246,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAX_CONCURRENT: ${{ env.MAX_CONCURRENT_COPILOT }}
+          REPO: ${{ github.repository }}
         run: |
           IN_PROGRESS=$(gh issue list --label "speck:in-progress" --json number --jq 'length' 2>/dev/null || echo "0")
           echo "In progress: $IN_PROGRESS / $MAX_CONCURRENT"
@@ -256,7 +257,29 @@ jobs:
           QUEUED=$(gh issue list --label "speck:queued" --json number --jq '.[].number' | head -n "$AVAILABLE")
           
           for ISSUE_NUM in $QUEUED; do
-            echo "Assigning #$ISSUE_NUM"
+            echo "Assigning Copilot to #$ISSUE_NUM"
+            
+            # Use official REST API to assign copilot-swe-agent[bot]
+            gh api \
+              --method POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/$REPO/issues/$ISSUE_NUM/assignees" \
+              --input - <<EOF
+{
+  "assignees": ["copilot-swe-agent[bot]"],
+  "agent_assignment": {
+    "target_repo": "$REPO",
+    "base_branch": "main",
+    "custom_instructions": "",
+    "custom_agent": "",
+    "model": ""
+  }
+}
+EOF
+            
+            # Update label to in-progress
             gh issue edit "$ISSUE_NUM" --remove-label "speck:queued" --add-label "speck:in-progress"
-            gh issue comment "$ISSUE_NUM" --body "@copilot Start now. Read AGENTS.md and follow the story command flow."
+            
+            echo "  ✓ Copilot assigned to #$ISSUE_NUM"
           done
