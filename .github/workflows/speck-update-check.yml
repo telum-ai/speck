@@ -1,24 +1,17 @@
-# Speck Update Checker (Sample)
+# Speck Update Checker
 #
-# Copy this file to .github/workflows/speck-update-check.yml
-# to enable automatic Speck update PRs.
+# Automatically checks for Speck methodology updates and creates PRs.
 #
-# This workflow:
-# 1. Runs weekly (Monday 9am UTC)
-# 2. Checks for new Speck releases
-# 3. Creates a PR with the update
+# This workflow runs daily and works out of the box for public Speck repos.
 #
 # FOR PRIVATE SPECK REPOS:
-# If telum-ai/speck is private, you need to:
-# 1. Create a Personal Access Token (PAT) with 'repo' scope
-# 2. Add it as a repository secret named SPECK_TOKEN
-# 3. The workflow will use it automatically
+# Add a repository secret named SPECK_GITHUB_TOKEN with a PAT that has 'repo' scope.
 
 name: Speck Update Check
 
 on:
   schedule:
-    - cron: '0 9 * * 1'  # Weekly on Monday at 9am UTC
+    - cron: '0 9 * * *'  # Daily at 9am UTC
   workflow_dispatch:     # Manual trigger
 
 permissions:
@@ -36,8 +29,8 @@ jobs:
       - name: Check for updates
         id: check
         env:
-          # Use SPECK_TOKEN if available (for private Speck repos), otherwise public access
-          SPECK_TOKEN: ${{ secrets.SPECK_TOKEN }}
+          # Use SPECK_GITHUB_TOKEN if available (for private Speck repos)
+          SPECK_GITHUB_TOKEN: ${{ secrets.SPECK_GITHUB_TOKEN }}
         run: |
           # Get current version from .speck/VERSION or AGENTS.md
           CURRENT=""
@@ -48,10 +41,10 @@ jobs:
             [ -n "$CURRENT" ] && CURRENT="v${CURRENT}.0"
           fi
           
-          # Build auth header if SPECK_TOKEN provided (for private repos)
+          # Build auth header if token provided (for private repos)
           AUTH_HEADER=""
-          if [ -n "$SPECK_TOKEN" ]; then
-            AUTH_HEADER="Authorization: token $SPECK_TOKEN"
+          if [ -n "$SPECK_GITHUB_TOKEN" ]; then
+            AUTH_HEADER="Authorization: token $SPECK_GITHUB_TOKEN"
           fi
           
           # Get latest version
@@ -64,7 +57,7 @@ jobs:
           # Check for errors (private repo without token)
           if [ "$LATEST" == "null" ] || [ -z "$LATEST" ]; then
             echo "❌ Could not fetch Speck releases."
-            echo "   If telum-ai/speck is private, add SPECK_TOKEN secret."
+            echo "   If telum-ai/speck is private, add SPECK_GITHUB_TOKEN secret."
             exit 1
           fi
           
@@ -83,14 +76,14 @@ jobs:
         if: steps.check.outputs.has_update == 'true'
         env:
           TARGET_VERSION: ${{ steps.check.outputs.latest }}
-          SPECK_TOKEN: ${{ secrets.SPECK_TOKEN }}
+          SPECK_GITHUB_TOKEN: ${{ secrets.SPECK_GITHUB_TOKEN }}
         run: |
           # Create temp directory for new version
           TEMP_DIR=$(mktemp -d)
           
           # Download release (with auth for private repos)
-          if [ -n "$SPECK_TOKEN" ]; then
-            curl -sL -H "Authorization: token $SPECK_TOKEN" \
+          if [ -n "$SPECK_GITHUB_TOKEN" ]; then
+            curl -sL -H "Authorization: token $SPECK_GITHUB_TOKEN" \
               "https://api.github.com/repos/telum-ai/speck/tarball/${TARGET_VERSION}" | \
               tar -xz -C "$TEMP_DIR" --strip-components=1
           else
@@ -106,6 +99,7 @@ jobs:
             ".github/workflows/speck-orchestrator.yml"
             ".github/workflows/speck-validate-pr.yml"
             ".github/workflows/speck-retrospective.yml"
+            ".github/workflows/speck-update-check.yml"
             ".github/copilot-instructions.md"
             ".github/instructions"
             ".github/ISSUE_TEMPLATE/speck-story.yml"
@@ -136,7 +130,7 @@ jobs:
         if: steps.check.outputs.has_update == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SPECK_TOKEN: ${{ secrets.SPECK_TOKEN }}
+          SPECK_GITHUB_TOKEN: ${{ secrets.SPECK_GITHUB_TOKEN }}
           CURRENT_VERSION: ${{ steps.check.outputs.current }}
           TARGET_VERSION: ${{ steps.check.outputs.latest }}
         run: |
@@ -173,8 +167,8 @@ See release notes: https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSI
           git push origin "$BRANCH"
           
           # Get release notes (with auth for private repos)
-          if [ -n "$SPECK_TOKEN" ]; then
-            RELEASE_BODY=$(curl -s -H "Authorization: token $SPECK_TOKEN" \
+          if [ -n "$SPECK_GITHUB_TOKEN" ]; then
+            RELEASE_BODY=$(curl -s -H "Authorization: token $SPECK_GITHUB_TOKEN" \
               "https://api.github.com/repos/telum-ai/speck/releases/tags/${TARGET_VERSION}" | \
               jq -r '.body // "See release notes for details."')
           else
