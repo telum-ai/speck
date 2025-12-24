@@ -85,6 +85,12 @@ jobs:
               [ -d "$STORY_DIR" ] || continue
               STORY_NAME=$(basename "$STORY_DIR")
               
+              # Skip if story is already complete (has validation report or retrospective)
+              if [ -f "$STORY_DIR/validation-report.md" ] || [ -f "$STORY_DIR/story-retro.md" ]; then
+                echo "  Skipping $STORY_NAME (already completed)"
+                continue
+              fi
+              
               EXISTING=$(gh issue list --label "speck:story" --search "in:title $STORY_NAME" --state open --json number --jq 'length' 2>/dev/null || echo "0")
               [ "$EXISTING" -gt "0" ] && continue
               
