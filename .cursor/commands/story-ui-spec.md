@@ -81,12 +81,7 @@ Work with the user to define:
 
 Create file at: `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]/ui-spec.md`
 
-Fill all sections comprehensively:
-   - Apply design system tokens
-   - Document all states
-   - Include code examples
-   - Add accessibility specs
-   - Mark unclear areas with [NEEDS CLARIFICATION]
+The template is self-documenting - follow all sections and guidelines within it.
 
 ### Step 5: Review and Guide
 

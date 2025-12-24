@@ -193,31 +193,8 @@ Given the implementation details provided as an argument, do this:
    .speck/templates/story/plan-template.md
    ```
    
-   - Write output to PLAN_PATH
-   - Run the Execution Flow (main) function steps 1-9
-   - The template is self-contained and executable
-   - Follow error handling and gate checks as specified
-   - Let the template guide artifact generation in STORY_DIR:
-     * Phase 1 generates data-model.md, contracts/, quickstart.md
-       - Use codebase-scan-*.md for existing patterns (naming, file organization, conventions)
-       - Reference existing entities/models from scans to avoid conflicts
-       - Follow existing API patterns from codebase-scan-api.md (if exists)
-       - Use existing component patterns from codebase-scan-design-system.md (if exists)
-     * Phase 1.5 generates Implementation Guidance section in plan.md:
-       - Extract ALL FRs from spec.md with IDs, summaries, acceptance criteria
-       - **Embed research findings from just-in-time research** (code examples, patterns)
-       - Catalog codebase patterns to reuse with file:line references (from codebase-scan-*.md)
-       - List performance targets with optimization techniques
-       - Document security requirements with implementation checklists
-       - Specify design system components to use (from codebase-scan-design-system.md)
-       - Include brand voice copy examples
-       - Map constitution gates to specific implementation requirements
-       - Add "Research Informing This Plan" section with web search findings and sources
-     * Phase 2 describes task approach (tasks.md generation deferred to /story-tasks command)
-   - Incorporate user-provided details from arguments into Technical Context: $ARGUMENTS
-   - Update Progress Tracking as you complete each phase
-   
-   **Note**: Research is embedded directly in plan.md (follow the just-in-time research pattern).
+   The template is self-documenting - follow all sections, phases, and guidelines within it.
+   Write output to PLAN_PATH. Use codebase-scan-*.md for existing patterns if available.
 
 10. Verify execution completed:
    - Check Progress Tracking shows all phases complete

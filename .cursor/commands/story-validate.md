@@ -176,23 +176,7 @@ Execution steps:
    .speck/templates/story/validation-report-template.md
    ```
    
-   Fill all sections from the template, including:
-   - Executive Summary with metrics
-   - Specification Deviations (MODIFIED/ADDED/REMOVED)
-   - Requirements Traceability Matrix
-   - Test Suite Results
-   - Quickstart Scenario Execution
-   - Performance Validation
-   - Constitution Compliance
-   - Research Alignment Validation
-   - Codebase Pattern Adherence
-   - Code Quality Gates
-   - Documentation Completeness
-   - Blockers & Critical Issues
-   - Recommendations
-   - Next Steps
-   
-   **Template sections are mandatory** - do not skip or abbreviate them.
+   The template is self-documenting - follow all sections and guidelines within it.
 
 14. **Project Truth Update Prompt** (if PASS):
     

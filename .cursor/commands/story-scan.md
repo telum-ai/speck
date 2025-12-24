@@ -92,10 +92,7 @@ $ARGUMENTS
    .speck/templates/story/codebase-scan-template.md
    ```
    
-   - Fill all sections with actual findings (no placeholder text)
-   - Include code examples from real files
-   - List specific file paths
-   - Flag any anti-patterns or technical debt
+   The template is self-documenting - follow all sections and guidelines within it.
 
 6. Save scan report:
    - To: `{STORY_DIR}/codebase-scan-{domain/similar-to}.md`

@@ -89,41 +89,8 @@ Load `validation-report.md` and extract:
 .speck/templates/story/story-retro-template.md
 ```
 
-Fill all sections:
-
-**Execution Metrics Section**:
-- Story/Epic IDs and names
-- Dates (completion, retro)
-- Effort variance calculated from data
-- Spec accuracy from validation report
-- File change statistics from .learning.log
-
-**Patterns Section**:
-- List all PATTERN: tags from commits
-- For each pattern, extract: description, code location, reusability
-- Ask: "Should this pattern be validated in other stories?" (escalate decision)
-
-**Gotchas Section**:
-- List all GOTCHA: tags from commits
-- For each gotcha: description, time impact, solution, prevention
-- Ask: "Might this gotcha appear in other stories?" (escalate decision)
-
-**Performance Section**:
-- List all PERF: tags from commits
-- Add performance gaps from validation report
-- Reusability assessment
-
-**Architecture Section**:
-- List all ARCH: tags from commits
-- Mark which need validation across epic
-
-**Change Pattern Analysis**:
-- Identify high-iteration files from .learning.log
-- Interpret what iterations mean (planning gap vs normal refinement)
-
-**Technical Debt Section**:
-- List all DEBT: tags from commits
-- Assess repayment timeline and impact
+The template is self-documenting - follow all sections and guidelines within it.
+Use the mined data from Step 1 to fill each section.
 
 ### Step 3: Apply Immediate Learnings (Non-Meta - Current Epic Only)
 

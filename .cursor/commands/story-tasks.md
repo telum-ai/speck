@@ -74,52 +74,19 @@ $ARGUMENTS
    - Use these as `depends_on` in tasks.md front matter
    - Also check for stories that depend on THIS story (for `blocks` field)
 
-3. Generate tasks with front matter:
-   - Include YAML front matter with dependency declarations:
-     ```yaml
-     ---
-     depends_on: [story-001, story-003]  # From epic-breakdown.md
-     blocks: [story-005]                  # Stories waiting on this one
-     ---
-     ```
-   - The orchestrator uses this to manage execution order
-
-   **⚠️ CRITICAL: EXACT TASK FORMAT REQUIRED ⚠️**
-   
-   Every task MUST use this EXACT markdown format (validation will fail otherwise):
-   
-   ```markdown
-   - [ ] T001 Task description here
-   - [ ] T002 [P] Parallel task description
-   - [ ] T003 Another task description
-   ```
-   
-   **Format Rules (MUST follow exactly):**
-   1. Line starts with `- [ ] ` (dash, space, open-bracket, space, close-bracket, space)
-   2. Task ID: `T` followed by exactly 3 digits (T001, T002, T003...)
-   3. Task IDs MUST be sequential with no gaps
-   4. Optional `[P]` marker immediately after task ID for parallel tasks
-   5. Task description follows on the same line
-   
-   **INVALID formats (will fail validation):**
-   - `- T001 Description` ❌ (missing checkbox)
-   - `[ ] T001 Description` ❌ (missing leading dash)
-   - `- [] T001 Description` ❌ (missing space in checkbox)
-   - `- [ ]T001 Description` ❌ (missing space after checkbox)
-   - `* [ ] T001 Description` ❌ (asterisk instead of dash)
-   - `- [x] T001 Description` ❌ (should be unchecked initially)
+3. Generate tasks.md:
 
    **CRITICAL**: Load and follow the template exactly:
    ```
    .speck/templates/story/tasks-template.md
    ```
    
-   Replace example tasks with actual tasks based on:
-     * **Setup tasks**: Project init, dependencies, linting
-     * **Test tasks [P]**: One per contract, one per integration scenario
-     * **Core tasks**: One per entity, service, CLI command, endpoint
-     * **Integration tasks**: DB connections, middleware, logging
-     * **Polish tasks [P]**: Unit tests, performance, docs
+   The template contains:
+   - YAML front matter format for dependencies
+   - Exact task format rules (validation will fail if not followed)
+   - FR → Task mapping table structure
+   - Task categories and ordering guidelines
+   - Enhanced task description format with context cards
 
 5. Task generation rules:
    - Each contract file → contract test task marked [P]

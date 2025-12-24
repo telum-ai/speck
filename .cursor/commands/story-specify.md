@@ -124,16 +124,7 @@ Note: Speck stories live in the hierarchical structure under:
 .speck/templates/story/story-template.md
 ```
 
-Use the template to create `spec.md` with:
-- Story context (from epic)
-- User story format (JTBD enhanced)
-- Detailed acceptance criteria (GIVEN/WHEN/THEN)
-- Functional requirements (FR-XXX format)
-- Non-functional requirements
-- Key entities (if data involved)
-- Review checklist
-
-**Template sections are mandatory** - do not skip or abbreviate them.
+The template is self-documenting - follow all sections and guidelines within it.
 
 ### Step 8: Apply 10-Minute Understandability Rule
 
