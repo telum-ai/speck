@@ -157,11 +157,9 @@ jobs:
           
           # Commit changes
           git add -A
-          git commit -m "chore: upgrade Speck to ${TARGET_VERSION}
-
-Updates Speck methodology from ${CURRENT_VERSION:-unknown} to ${TARGET_VERSION}.
-
-See release notes: https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSION}"
+          git commit -m "chore: upgrade Speck to ${TARGET_VERSION}" \
+            -m "Updates Speck methodology from ${CURRENT_VERSION:-unknown} to ${TARGET_VERSION}." \
+            -m "See release notes: https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSION}"
           
           # Push branch
           git push origin "$BRANCH"
@@ -176,23 +174,26 @@ See release notes: https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSI
               jq -r '.body // "See release notes for details."')
           fi
           
+          # Create PR body
+          PR_BODY="## Speck Update
+          
+          This PR upgrades Speck from **${CURRENT_VERSION:-unknown}** to **${TARGET_VERSION}**.
+          
+          ### What's Changed
+          
+          ${RELEASE_BODY}
+          
+          ### Release Notes
+          
+          https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSION}
+          
+          ---
+          *This PR was automatically created by Speck Update Check.*"
+          
           # Create PR
           PR_URL=$(gh pr create \
             --title "⬆️ Upgrade Speck to ${TARGET_VERSION}" \
-            --body "## Speck Update
-
-This PR upgrades Speck from **${CURRENT_VERSION:-unknown}** to **${TARGET_VERSION}**.
-
-### What's Changed
-
-${RELEASE_BODY}
-
-### Release Notes
-
-https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSION}
-
----
-*This PR was automatically created by Speck Update Check.*" \
+            --body "$PR_BODY" \
             --label "dependencies")
           
           echo "✅ Created PR: $PR_URL"
