@@ -18,7 +18,7 @@ $ARGUMENTS
 
 2. Load and analyze available design documents **WITH DEEP EXTRACTION**:
    
-   **CRITICAL: Read spec.md for complete requirements** (NEW!):
+   **CRITICAL: Read spec.md for complete requirements**:
    - Extract ALL functional requirements (FR-XXX) with full text
    - Extract acceptance criteria from scenarios
    - Extract edge cases and clarification decisions
@@ -29,7 +29,7 @@ $ARGUMENTS
    **Always read plan.md** for architecture and context:
    - Tech stack and libraries
    - Constitution compliance gates (specific implementation requirements)
-   - **NEW: Phase 1.5 Implementation Guidance section**:
+   - Phase 1.5 Implementation Guidance section:
      * FR extraction table (use for FR → task mapping)
      * Research findings with code examples (use in task descriptions)
      * Codebase patterns to reuse (specify in tasks)
@@ -41,30 +41,23 @@ $ARGUMENTS
    
    **IF EXISTS: Read data-model.md** for entities:
    - Entity names, fields, relationships
-   - **NEW**: Validation rules (include in implementation tasks)
-   - **NEW**: Business rules and constraints (include in service tasks)
+   - Validation rules (include in implementation tasks)
+   - Business rules and constraints (include in service tasks)
    
    **IF EXISTS: Read contracts/** for API endpoints:
    - Endpoint paths and methods
-   - **NEW**: Request/response schemas (include in test tasks)
-   - **NEW**: Error responses (include in error handling tasks)
-   
-   **Read plan.md** for technical decisions (research is embedded here):
-   - **OLD**: Extract decisions only
-   - **NEW**: Extract implementation patterns, code examples, performance benchmarks
-   - **NEW**: Extract security models and attack mitigations
-   - **NEW**: Extract rationale and alternatives considered (for task context)
+   - Request/response schemas (include in test tasks)
+   - Error responses (include in error handling tasks)
    
    **IF EXISTS: Read quickstart.md** for test scenarios:
    - Integration test scenarios
-   - **NEW**: Validation steps (use as acceptance criteria in tasks)
+   - Validation steps (use as acceptance criteria in tasks)
    
    **IF EXISTS: Read codebase-scan-*.md files** for patterns:
-   - **OLD**: Existing file naming conventions only
-   - **NEW**: Specific components to reuse with file:line references
-   - **NEW**: Code examples showing how to use existing patterns
-   - **NEW**: Anti-patterns to avoid
-   - **NEW**: Testing patterns and fixture examples
+   - Specific components to reuse with file:line references
+   - Code examples showing how to use existing patterns
+   - Anti-patterns to avoid
+   - Testing patterns and fixture examples
 
    Note: Not all projects have all documents, but spec.md and plan.md are REQUIRED.
 
@@ -81,103 +74,32 @@ $ARGUMENTS
    .speck/templates/story/tasks-template.md
    ```
    
-   The template contains:
-   - YAML front matter format for dependencies
-   - Exact task format rules (validation will fail if not followed)
-   - FR → Task mapping table structure
-   - Task categories and ordering guidelines
-   - Enhanced task description format with context cards
-
-5. Task generation rules:
-   - Each contract file → contract test task marked [P]
-   - Each entity in data-model → model creation task marked [P]
-   - Each endpoint → implementation task (not parallel if shared files)
-   - Each user story → integration test marked [P]
-   - Different files = can be parallel [P]
-   - Same file = sequential (no [P])
-
-6. Order tasks by dependencies:
-   - Setup before everything
-   - Tests before implementation (TDD)
-   - Models before services
-   - Services before endpoints
-   - Core before integration
-   - Everything before polish
-
-7. Include parallel execution examples:
-   - Group [P] tasks that can run together
-   - Show actual Task agent commands
-
-8. Create `{STORY_DIR}/tasks.md` with **ENHANCED FORMAT** including:
+   The template contains ALL format rules, task generation rules, ordering guidelines,
+   and enhanced task description format. Follow it precisely - validation will fail
+   if the exact format is not used.
    
-   **Header Section**:
-   - Feature name and input documents
-   - **NEW**: Implementation Context section with:
-     * FR → Task Mapping table (map every FR to implementing tasks)
-     * Research Decisions Reference (key decisions affecting tasks)
-     * Codebase Patterns to Reuse (components/patterns that exist)
-     * Performance Targets (optimization techniques per task)
-     * Security Requirements (implementation checklists)
-     * Design System Components (which to use where)
-     * Brand Voice Examples (copy patterns to follow)
-   
-   **Task Descriptions**:
-   - Numbered tasks (T001, T002, etc.) with **ENHANCED FORMAT**
-   - Each task MUST include (where applicable):
-     * **Implements**: FR IDs this task addresses
-     * **Pattern**: Reference to existing code with file:line numbers
-     * **Research**: Key decision/rationale from research reports
-     * **Performance**: Target + optimization technique
-     * **Security**: Requirements + implementation notes
-     * **Design System**: Components to use (not create)
-     * **Brand Voice**: Copy examples for UI tasks
-     * **Testing**: What tests validate this task
-     * **File**: Clear file path
-   - Minimum for every task: Implements (FR IDs), File path
-   - Minimum for technical tasks: + Pattern OR Research reference
-   - Minimum for UI tasks: + Design System components, Brand Voice
-   
-   **Example Enhanced Task**:
-   ```markdown
-   - [ ] T014 Implement privacy-preserving contact matching service
+   Key template sections:
+   - YAML front matter (dependencies from epic-breakdown.md)
+   - FR → Task Mapping table
+   - Enhanced task descriptions with context cards
+   - Task generation rules and ordering
+   - Validation checklist
 
-   **Implements**: FR-006, FR-010
+   **Apply extracted context** (from step 2) when generating tasks:
+   - Extracted FRs → FR → Task Mapping table
+   - Extracted patterns → Pattern references in task descriptions
+   - Extracted performance targets → Performance notes in tasks
+   - Extracted security requirements → Security checklists in tasks
+   - Extracted design components → Design System references in UI tasks
+   - Extracted brand voice → Copy examples in UI tasks
 
-   **Pattern**: Two-layer async from scan-user.md:206-268
-   
-   **Research**: SHA-256 + pepper (research-report-privacy-*.md)
-     - Query: `WHERE hash = ANY(?)` for batch matching
-     - Rate limit: 100/minute
-   
-   **Performance**: <500ms for 1000 contacts
-   
-   **File**: `backend/src/services/contact_matching.py`
-   ```
-   
-   **Integration with Codebase Scans**:
-   - Use scan findings for accurate file paths
-   - **NEW**: Extract specific patterns with line numbers
-   - **NEW**: List components that EXIST (with "DON'T recreate" warnings)
-   - **NEW**: Include code examples from scans in task descriptions
-   - Include references like "See codebase-scan-design-system.md:589-694 for PhoneInput"
+   Write output to `{STORY_DIR}/tasks.md`.
 
-**Integration with Research Reports**:
-   - **NEW**: Reference research-report-*.md for implementation details
-   - **NEW**: Include code examples from research in task notes
-   - **NEW**: Add performance benchmarks and optimization techniques
-   - **NEW**: Include security models and attack mitigations
+   The tasks.md should be immediately executable - each task must be specific enough 
+   that an LLM can complete it **with the context provided in the task description** 
+   (not requiring separate research).
 
-**Integration with Spec.md** (CRITICAL NEW REQUIREMENT):
-   - **NEW**: MUST read spec.md directly (don't rely on plan.md interpretation)
-   - **NEW**: Create FR → Task mapping table at top of tasks.md
-   - **NEW**: Every task references which FRs it implements
-   - **NEW**: Validate FR coverage (every FR has tasks, no FRs missed)
-
-Context for task generation: $ARGUMENTS
-
-The tasks.md should be immediately executable - each task must be specific enough that an LLM can complete it **with the context provided in the task description** (not requiring separate research).
-
-8. Output summary:
+4. Output summary:
    ```
    ✅ Story Tasks Generated!
    

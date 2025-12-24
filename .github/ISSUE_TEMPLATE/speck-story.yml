@@ -86,6 +86,7 @@ body:
         
         ✅ **ALWAYS** run `story-analyze` before `story-implement`  
         ✅ **ALWAYS** run `story-validate` after implementation  
+        ✅ **ALWAYS** follow exact command definitions in `.cursor/commands/story-*.md`  
         ✅ **ALWAYS** follow exact templates in `.speck/templates/story/`  
         ✅ **NEVER** skip required commands  
         

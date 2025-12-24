@@ -7,29 +7,6 @@ blocks: []      # e.g., [story-005] - stories waiting on this one (informational
 
 # Tasks: [STORY NAME]
 
-> ⚠️ **CRITICAL FORMAT REQUIREMENTS** ⚠️
-> 
-> **EVERY task MUST use this EXACT format:**
-> ```markdown
-> - [ ] T001 Task description here
-> - [ ] T002 [P] Parallel task (mark with [P] if different files)
-> - [ ] T003 Another sequential task
-> ```
-> 
-> **FORMAT RULES (violations will fail validation):**
-> 1. Start with `- [ ] ` (dash, space, bracket, space, bracket, space)
-> 2. Task ID format: `T` + 3 digits (T001, T002, T003...)
-> 3. IDs must be sequential with no gaps
-> 4. Optional `[P]` marker after ID for parallel tasks
-> 5. Description follows on same line
-> 
-> **INVALID formats (DO NOT USE):**
-> - `- T001 Description` ❌ (missing checkbox)
-> - `[ ] T001 Description` ❌ (missing dash)
-> - `- [] T001 Description` ❌ (missing space in checkbox)
-> - `- [ ]T001 Description` ❌ (missing space after checkbox)
-> - `* [ ] T001 Description` ❌ (asterisk instead of dash)
-
 **Input**: Design documents from `{STORY_DIR}/`
 **Prerequisites**: plan.md (required), data-model.md, contracts/
 
