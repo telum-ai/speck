@@ -84,6 +84,16 @@ Add automated update PRs to any existing repo:
 
 You can also trigger the update check manually from the Actions tab.
 
+### Private Speck Repos
+
+If telum-ai/speck is private, the action needs a token to access it:
+
+1. Create a Personal Access Token (PAT) with `repo` scope
+2. Add it as a repository secret named `SPECK_TOKEN`
+3. Update the workflow to include: `speck-token: ${{ secrets.SPECK_TOKEN }}`
+
+See the sample workflow file for the exact syntax.
+
 ## What Gets Synced
 
 Speck methodology files are always synced:
@@ -153,7 +163,7 @@ Speck follows semantic versioning:
 ### From Template Sync to CLI
 
 1. Remove `.github/workflows/template-sync.yml`
-2. Use `npx @telum-ai/speck upgrade` when you want updates
+2. Use `npx github:telum-ai/speck upgrade` when you want updates
 
 ### From CLI to Update Action
 

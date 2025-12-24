@@ -7,6 +7,12 @@
 # 1. Runs weekly (Monday 9am UTC)
 # 2. Checks for new Speck releases
 # 3. Creates a PR with the update
+#
+# FOR PRIVATE SPECK REPOS:
+# If telum-ai/speck is private, you need to:
+# 1. Create a Personal Access Token (PAT) with 'repo' scope
+# 2. Add it as a repository secret named SPECK_TOKEN
+# 3. Uncomment the speck-token line below
 
 name: Speck Update Check
 
@@ -33,3 +39,5 @@ jobs:
           version: 'latest'
           create-pr: 'true'
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Uncomment for private Speck repos:
+          # speck-token: ${{ secrets.SPECK_TOKEN }}
