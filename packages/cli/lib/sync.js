@@ -83,29 +83,31 @@ function mergeAgentsMd(sourceContent, targetContent) {
 }
 
 /**
- * Merge .gitignore - combine lines, deduplicate
+ * Merge .gitignore - preserve user's file, append missing Speck patterns
  */
 function mergeGitignore(sourceContent, targetContent) {
   if (!targetContent) {
     return { content: sourceContent, action: 'create' };
   }
   
-  const sourceLines = sourceContent.split('\n').map(l => l.trim()).filter(l => l);
-  const targetLines = targetContent.split('\n').map(l => l.trim()).filter(l => l);
+  // Get patterns (non-comment, non-empty lines) from both
+  const getPatterns = (content) => content
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l && !l.startsWith('#'));
   
-  // Find lines in target that aren't in source (user additions)
-  const userLines = targetLines.filter(line => 
-    !sourceLines.includes(line) && !line.startsWith('#')
-  );
+  const targetPatterns = new Set(getPatterns(targetContent));
+  const missingPatterns = getPatterns(sourceContent)
+    .filter(pattern => !targetPatterns.has(pattern));
   
-  // Combine: Speck defaults + user additions
-  let merged = '# === Speck defaults ===\n';
-  merged += sourceContent.trim() + '\n';
-  
-  if (userLines.length > 0) {
-    merged += '\n# === Project-specific ===\n';
-    merged += userLines.join('\n') + '\n';
+  if (missingPatterns.length === 0) {
+    return { content: targetContent, action: 'skip' };
   }
+  
+  // Preserve user's file, append missing Speck patterns at the end
+  let merged = targetContent.trimEnd() + '\n';
+  merged += '\n# Speck defaults\n';
+  merged += missingPatterns.join('\n') + '\n';
   
   return { content: merged, action: 'merge' };
 }
