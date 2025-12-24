@@ -92,9 +92,15 @@ jobs:
               fi
               
               EXISTING=$(gh issue list --label "speck:story" --search "in:title $STORY_NAME" --state open --json number --jq 'length' 2>/dev/null || echo "0")
-              [ "$EXISTING" -gt "0" ] && continue
+              if [ "$EXISTING" -gt "0" ]; then
+                echo "  Skipping $STORY_NAME (issue already exists)"
+                continue
+              fi
               
-              echo "$MERGED_PRS" | grep -q "$STORY_NAME" && continue
+              if echo "$MERGED_PRS" | grep -q "$STORY_NAME"; then
+                echo "  Skipping $STORY_NAME (PR already merged)"
+                continue
+              fi
               
               BLOCKED=false
               BLOCKING=""
