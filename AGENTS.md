@@ -94,7 +94,7 @@ User triggers commands, you follow instructions inside each command.
 5. **Planning**: plan (+ research) → [roadmap]
 6. **Infrastructure Epic** (E000): Developer Infrastructure (testing, CI/CD, linting, error tracking)
 7. **Epic Work**: specify → clarify → [architecture (+ research)] → plan (+ research) → breakdown
-8. **Story Work**: specify → clarify → plan (+ research) → tasks → implement → validate
+8. **Story Work**: specify → clarify → [outline] → [scan] → plan (+ research) → [ui-spec] → tasks → **analyze** → implement → validate
 9. **Learning**: story-retrospective → epic-retrospective → project-retrospective
 
 **Domain Expertise**: For specialized domains (healthcare, fitness, finance, etc.), `/project-domain` captures subject matter expertise (terminology, entities, rules, principles) that informs all downstream decisions.
@@ -229,10 +229,20 @@ Each command file contains step-by-step instructions for you to execute when use
 3. story-plan.md → Creates plan.md, data-model.md, contracts/, quickstart.md
    [UI-HEAVY: story-ui-spec.md → Creates ui-spec.md]
 4. story-tasks.md → Creates tasks.md (USES: plan, data-model, contracts)
-5. story-implement.md → Writes code (FOLLOWS: tasks.md)
-6. story-validate.md → Creates validation-report.md (checks spec compliance)
-7. story-retrospective.md → Mines .learning.log + commits → Creates story-retro.md
+5. story-analyze.md → ⚠️ REQUIRED Quality check before implementation
+6. story-implement.md → Writes code (FOLLOWS: tasks.md)
+7. story-validate.md → Creates validation-report.md (checks spec compliance)
+8. story-retrospective.md → Mines .learning.log + commits → Creates story-retro.md
 ```
+
+**Decision Gates for Optional Commands**:
+| Command | Include When |
+|---------|--------------|
+| `story-outline` | Complex tech decisions, unfamiliar stack, needs research |
+| `story-scan` | Brownfield - extending existing codebase |
+| `story-ui-spec` | UI-heavy with multiple components/states/animations |
+
+**Note**: `story-analyze` is REQUIRED, not optional. It catches issues before implementation.
 
 *Story commands: `story-*.md` in `.cursor/commands/`*
 
@@ -465,8 +475,9 @@ Why: tech spec USES architecture design
 
 At story level, run plan before tasks:
 ```
-Run: clarify → plan → tasks → implement → validate
-Why: tasks USES plan's technical design
+Run: clarify → [outline] → [scan] → plan → [ui-spec] → tasks → analyze → implement → validate
+Why: tasks USES plan's technical design, analyze catches issues before implementation
+Optional: [outline]=research mapping, [scan]=brownfield code, [ui-spec]=UI-heavy stories
 ```
 
 ### Understand Context Inheritance

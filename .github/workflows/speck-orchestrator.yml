@@ -1,7 +1,7 @@
 # Speck Orchestrator
 #
-# Creates issues for stories and assigns to Copilot (respecting rate limits).
-# Manages dependencies between stories.
+# Continuous orchestration of story work. Creates issues and assigns to Copilot.
+# Runs on schedule, push, PR merge, or manual trigger.
 #
 # SCOPE: Commands up to story-implement (creates PR)
 # HANDOFF: speck-validate-pr.yml handles validation, speck-retrospective.yml handles retro
@@ -9,6 +9,11 @@
 name: Speck Orchestrator
 
 on:
+  # Continuous orchestration - check every 15 minutes
+  schedule:
+    - cron: '*/15 * * * *'
+  
+  # Trigger on spec changes
   push:
     paths:
       - 'specs/**/epic-breakdown.md'
@@ -17,6 +22,7 @@ on:
       - main
       - develop
   
+  # Manual trigger
   workflow_dispatch:
     inputs:
       epic_path:
@@ -24,6 +30,7 @@ on:
         required: false
         type: string
   
+  # Re-orchestrate after PR merges (unblock dependents)
   pull_request:
     types: [closed]
     branches:
@@ -65,6 +72,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EPIC_PATH: ${{ inputs.epic_path || '' }}
+          REPO: ${{ github.repository }}
         run: |
           if [ -n "$EPIC_PATH" ]; then
             EPICS="$EPIC_PATH"
@@ -73,33 +81,31 @@ jobs:
             EPICS=$(find specs -name "epic-breakdown.md" -exec dirname {} \; 2>/dev/null | sort -t/ -k6 -V || true)
           fi
           
-          MERGED_PRS=$(gh pr list --state merged --limit 100 --json title --jq '.[].title' 2>/dev/null || true)
+          MERGED_PRS=$(gh pr list --repo "$REPO" --state merged --limit 100 --json title --jq '.[].title' 2>/dev/null || true)
           
           for EPIC_DIR in $EPICS; do
             echo "Processing epic: $EPIC_DIR"
             
-            # Get epic name for issue titles
+            # Get epic info
             EPIC_ID=$(basename "$EPIC_DIR")
             EPIC_NAME=$(grep -m1 "^# " "$EPIC_DIR/epic.md" 2>/dev/null | sed 's/^# //' || echo "$EPIC_ID")
+            EPIC_CONTEXT=$(sed -n '/^## Overview/,/^##/p' "$EPIC_DIR/epic.md" 2>/dev/null | head -10 | tail -9 || echo "See epic.md for details")
             
             # Extract planned stories from epic-breakdown.md
             PLANNED_STORIES=""
             if [ -f "$EPIC_DIR/epic-breakdown.md" ]; then
-              # Look for story IDs in markdown (S001, S002, story-001, etc.)
               PLANNED_STORIES=$(grep -oE '(S[0-9]{3}|story-[0-9]{3})' "$EPIC_DIR/epic-breakdown.md" 2>/dev/null | sort -u | tr '\n' ' ' || true)
             fi
             
             STORIES_DIR="$EPIC_DIR/stories"
             mkdir -p "$STORIES_DIR" 2>/dev/null || true
             
-            # Process all planned stories (from breakdown + existing directories)
+            # Collect all stories (from breakdown + existing directories)
             ALL_STORIES=""
             
-            # Add stories from epic-breakdown.md
             for STORY_ID in $PLANNED_STORIES; do
-              # Normalize to full format (S001 -> S001-name or keep as-is)
+              # Normalize: check if full directory exists
               if [[ "$STORY_ID" =~ ^S([0-9]{3})$ ]]; then
-                # Check if a full-name directory exists
                 FULL_DIR=$(ls -d "$STORIES_DIR/$STORY_ID"-* 2>/dev/null | head -1 || echo "")
                 if [ -n "$FULL_DIR" ]; then
                   STORY_ID=$(basename "$FULL_DIR")
@@ -108,56 +114,79 @@ jobs:
               ALL_STORIES="$ALL_STORIES $STORY_ID"
             done
             
-            # Add stories from existing directories (already in full format)
             for STORY_DIR in $(ls -d "$STORIES_DIR"/*/ 2>/dev/null); do
-              STORY_ID=$(basename "$STORY_DIR")
-              ALL_STORIES="$ALL_STORIES $STORY_ID"
+              ALL_STORIES="$ALL_STORIES $(basename "$STORY_DIR")"
             done
             
-            # Deduplicate and sort (now should properly match)
+            # Deduplicate and sort
             ALL_STORIES=$(echo "$ALL_STORIES" | tr ' ' '\n' | grep -v '^$' | sort -u -V | tr '\n' ' ')
             
-            # Process each story
             for STORY_ID in $ALL_STORIES; do
               [ -z "$STORY_ID" ] && continue
               
-              # Normalize story name (S001 -> story-001 if that's what exists on disk)
               STORY_DIR="$STORIES_DIR/$STORY_ID"
-              if [ ! -d "$STORY_DIR" ]; then
-                # Try alternative format
-                if [[ "$STORY_ID" =~ ^S([0-9]{3})$ ]]; then
-                  ALT_ID="story-${BASH_REMATCH[1]}"
-                  [ -d "$STORIES_DIR/$ALT_ID" ] && STORY_DIR="$STORIES_DIR/$ALT_ID" && STORY_ID="$ALT_ID"
-                elif [[ "$STORY_ID" =~ ^story-([0-9]{3})$ ]]; then
-                  ALT_ID="S${BASH_REMATCH[1]}"
-                  [ -d "$STORIES_DIR/$ALT_ID" ] && STORY_DIR="$STORIES_DIR/$ALT_ID" && STORY_ID="$ALT_ID"
-                fi
-              fi
               
-              STORY_NAME="$STORY_ID"
-              
-              # Skip if story is already complete (has validation report or retrospective)
+              # Skip completed stories
               if [ -d "$STORY_DIR" ]; then
                 if [ -f "$STORY_DIR/validation-report.md" ] || [ -f "$STORY_DIR/story-retro.md" ]; then
-                  echo "  Skipping $STORY_NAME (already completed)"
+                  echo "  Skipping $STORY_ID (completed)"
                   continue
                 fi
               fi
               
-              EXISTING=$(gh issue list --label "speck:story" --search "in:title $STORY_NAME" --state open --json number --jq 'length' 2>/dev/null || echo "0")
+              # Skip if issue already exists
+              EXISTING=$(gh issue list --repo "$REPO" --label "speck:story" --search "in:title $STORY_ID" --state open --json number --jq 'length' 2>/dev/null || echo "0")
               if [ "$EXISTING" -gt "0" ]; then
-                echo "  Skipping $STORY_NAME (issue already exists)"
+                echo "  Skipping $STORY_ID (issue exists)"
                 continue
               fi
               
-              if echo "$MERGED_PRS" | grep -q "$STORY_NAME"; then
-                echo "  Skipping $STORY_NAME (PR already merged)"
+              # Skip if PR already merged
+              if echo "$MERGED_PRS" | grep -q "$STORY_ID"; then
+                echo "  Skipping $STORY_ID (PR merged)"
                 continue
               fi
               
+              # Determine current phase based on existing files
+              CURRENT_PHASE="unspecced"
+              START_CMD="story-specify"
+              
+              if [ -d "$STORY_DIR" ]; then
+                if [ -f "$STORY_DIR/tasks.md" ]; then
+                  CURRENT_PHASE="tasked"
+                  START_CMD="story-analyze"  # ALWAYS run analyze before implement
+                elif [ -f "$STORY_DIR/plan.md" ]; then
+                  CURRENT_PHASE="planned"
+                  START_CMD="story-tasks"
+                elif [ -f "$STORY_DIR/spec.md" ]; then
+                  # Check if clarified (has acceptance criteria filled out)
+                  if grep -q "## Acceptance Criteria" "$STORY_DIR/spec.md" 2>/dev/null; then
+                    CURRENT_PHASE="clarified"
+                    START_CMD="story-plan"
+                  else
+                    CURRENT_PHASE="specified"
+                    START_CMD="story-clarify"
+                  fi
+                fi
+              fi
+              
+              # Get story title
+              TITLE=""
+              if [ -f "$STORY_DIR/spec.md" ]; then
+                TITLE=$(grep -m1 "^# " "$STORY_DIR/spec.md" 2>/dev/null | sed 's/^# //' || echo "")
+              fi
+              if [ -z "$TITLE" ]; then
+                if [[ "$STORY_ID" =~ ^[Ss][0-9]{3}-(.+)$ ]]; then
+                  TITLE=$(echo "${BASH_REMATCH[1]}" | tr '-' ' ' | sed 's/\b\(.\)/\u\1/g')
+                else
+                  TITLE="(needs spec)"
+                fi
+              fi
+              
+              # Check dependencies
               BLOCKED=false
               BLOCKING=""
-              if [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/tasks.md" ]; then
+              if [ -f "$STORY_DIR/tasks.md" ]; then
                 DEPS=$(sed -n '/^---$/,/^---$/p' "$STORY_DIR/tasks.md" | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
                 for DEP in $DEPS; do
                   DEP=$(echo "$DEP" | tr -d ' "')
@@ -169,66 +198,76 @@ jobs:
                 done
               fi
               
-              if [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/tasks.md" ]; then
-                START_CMD="story-implement"
-              elif [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/plan.md" ]; then
-                START_CMD="story-tasks"
-              elif [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/spec.md" ]; then
-                START_CMD="story-clarify"
-              else
-                START_CMD="story-specify"
+              # Build issue body (structured for Copilot to parse)
+              cat > /tmp/issue_body.md << ISSUE_EOF
+## Story: $TITLE
+
+| Field | Value |
+|-------|-------|
+| **Epic** | $EPIC_ID |
+| **Story** | $STORY_ID |
+| **Phase** | $CURRENT_PHASE |
+| **Start Command** | \`$START_CMD\` |
+
+### Epic Context
+$EPIC_CONTEXT
+
+### Command Flow
+
+Execute commands in order starting from \`$START_CMD\`:
+
+| Step | Command | Required | Creates |
+|------|---------|----------|---------|
+| 1 | \`story-specify\` | ✅ | \`spec.md\` |
+| 2 | \`story-clarify\` | ✅ | Updates \`spec.md\` |
+| 3 | \`story-plan\` | ✅ | \`plan.md\`, \`data-model.md\` |
+| 4 | \`story-tasks\` | ✅ | \`tasks.md\` |
+| 5 | \`story-analyze\` | ⚠️ **REQUIRED** | Quality check |
+| 6 | \`story-implement\` | ✅ | Code + PR |
+
+**Optional commands** (include when applicable):
+- \`story-outline\` - Complex tech decisions needing research
+- \`story-scan\` - Extending existing codebase
+- \`story-ui-spec\` - UI-heavy with multiple components
+
+### Critical: Task Format
+
+When creating \`tasks.md\`, use **EXACT** format:
+\`\`\`markdown
+- [ ] T001 Description of task
+- [ ] T002 [P] Parallel task (different files)
+- [ ] T003 Another task
+\`\`\`
+
+⚠️ **Validation will fail** if format differs!
+
+ISSUE_EOF
+
+              if [ "$BLOCKED" = true ]; then
+                cat >> /tmp/issue_body.md << BLOCK_EOF
+
+---
+⚠️ **BLOCKED** - Waiting for:$BLOCKING
+
+Do not start until dependencies merge.
+BLOCK_EOF
               fi
               
-              # Get story title - try spec.md, then humanize directory name, then mark as unspecced
-              if [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/spec.md" ]; then
-                TITLE=$(grep -m1 "^# " "$STORY_DIR/spec.md" 2>/dev/null | sed 's/^# //' || echo "")
-              fi
-              
-              if [ -z "$TITLE" ]; then
-                # Extract human-readable title from directory name (S001-project-setup -> Project Setup)
-                if [[ "$STORY_NAME" =~ ^[Ss][0-9]{3}-(.+)$ ]]; then
-                  TITLE=$(echo "${BASH_REMATCH[1]}" | tr '-' ' ' | sed 's/\b\(.\)/\u\1/g')
-                else
-                  TITLE="(needs spec)"
-                fi
-              fi
-              
-              {
-                echo "## Speck Story: $TITLE"
-                echo ""
-                echo "**Epic**: $EPIC_NAME"
-                echo "**Path**: \`$STORY_DIR\`"
-                echo "**Start At**: \`$START_CMD\`"
-                echo ""
-                echo "@copilot Complete this story:"
-                echo ""
-                echo "1. Read \`AGENTS.md\` for the Speck methodology"
-                echo "2. Navigate to \`$STORY_DIR\`"
-                echo "3. Execute commands from \`.cursor/commands/\` starting at \`$START_CMD\`"
-                echo "4. Create PR when implementation complete"
-                echo ""
-                echo "**Note**: Validation and retrospective are handled by separate workflows after PR creation."
-                
-                if [ "$BLOCKED" = true ]; then
-                  echo ""
-                  echo "---"
-                  echo "⚠️ **BLOCKED** - Waiting for:$BLOCKING"
-                fi
-              } > /tmp/issue_body.md
-              
+              # Set labels
               if [ "$BLOCKED" = true ]; then
                 LABEL="speck:story,automated,speck:blocked"
               else
                 LABEL="speck:story,automated,speck:queued"
               fi
               
-              # Create issue with epic and story info
+              # Create issue
               gh issue create \
-                --title "[$EPIC_ID] $STORY_NAME: $TITLE" \
+                --repo "$REPO" \
+                --title "[$EPIC_ID] $STORY_ID: $TITLE" \
                 --body-file /tmp/issue_body.md \
                 --label "$LABEL"
               
-              echo "  Created: $STORY_NAME ($([ "$BLOCKED" = true ] && echo 'BLOCKED' || echo 'QUEUED'))"
+              echo "  Created: $STORY_ID ($CURRENT_PHASE -> $START_CMD) [$([ "$BLOCKED" = true ] && echo 'BLOCKED' || echo 'QUEUED')]"
             done
           done
 
@@ -241,11 +280,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_TITLE: ${{ github.event.pull_request.title }}
+          REPO: ${{ github.repository }}
         run: |
-          STORY_NAME=$(echo "$PR_TITLE" | sed 's/.*\[Speck\] //' | head -1)
+          STORY_NAME=$(echo "$PR_TITLE" | grep -oE 'S[0-9]{3}[^ ]*' | head -1 || echo "")
+          [ -z "$STORY_NAME" ] && exit 0
+          
           echo "Story merged: $STORY_NAME"
           
-          BLOCKED_ISSUES=$(gh issue list --label "speck:blocked" --json number,body --jq '.[] | @base64' 2>/dev/null || true)
+          BLOCKED_ISSUES=$(gh issue list --repo "$REPO" --label "speck:blocked" --json number,body --jq '.[] | @base64' 2>/dev/null || true)
           
           for ISSUE_B64 in $BLOCKED_ISSUES; do
             ISSUE=$(echo "$ISSUE_B64" | base64 -d)
@@ -254,8 +296,8 @@ jobs:
             
             if echo "$ISSUE_BODY" | grep -q "$STORY_NAME"; then
               echo "Unblocking issue #$ISSUE_NUM"
-              gh issue edit "$ISSUE_NUM" --remove-label "speck:blocked" --add-label "speck:queued"
-              gh issue comment "$ISSUE_NUM" --body "✅ Dependency **$STORY_NAME** merged! This story is now queued."
+              gh issue edit "$ISSUE_NUM" --repo "$REPO" --remove-label "speck:blocked" --add-label "speck:queued"
+              gh issue comment "$ISSUE_NUM" --repo "$REPO" --body "✅ Dependency **$STORY_NAME** merged! This story is now queued."
             fi
           done
 
@@ -322,7 +364,7 @@ jobs:
               --input -
             
             # Update label to in-progress
-            gh issue edit "$ISSUE_NUM" --remove-label "speck:queued" --add-label "speck:in-progress"
+            gh issue edit "$ISSUE_NUM" --repo "$REPO" --remove-label "speck:queued" --add-label "speck:in-progress"
             
             echo "  ✓ Copilot assigned to #$ISSUE_NUM"
           done

@@ -84,6 +84,31 @@ $ARGUMENTS
      ```
    - The orchestrator uses this to manage execution order
 
+   **⚠️ CRITICAL: EXACT TASK FORMAT REQUIRED ⚠️**
+   
+   Every task MUST use this EXACT markdown format (validation will fail otherwise):
+   
+   ```markdown
+   - [ ] T001 Task description here
+   - [ ] T002 [P] Parallel task description
+   - [ ] T003 Another task description
+   ```
+   
+   **Format Rules (MUST follow exactly):**
+   1. Line starts with `- [ ] ` (dash, space, open-bracket, space, close-bracket, space)
+   2. Task ID: `T` followed by exactly 3 digits (T001, T002, T003...)
+   3. Task IDs MUST be sequential with no gaps
+   4. Optional `[P]` marker immediately after task ID for parallel tasks
+   5. Task description follows on the same line
+   
+   **INVALID formats (will fail validation):**
+   - `- T001 Description` ❌ (missing checkbox)
+   - `[ ] T001 Description` ❌ (missing leading dash)
+   - `- [] T001 Description` ❌ (missing space in checkbox)
+   - `- [ ]T001 Description` ❌ (missing space after checkbox)
+   - `* [ ] T001 Description` ❌ (asterisk instead of dash)
+   - `- [x] T001 Description` ❌ (should be unchecked initially)
+
    Generate tasks following the template:
    - Use `.speck/templates/story/tasks-template.md` as the base
    - Replace example tasks with actual tasks based on:
@@ -201,10 +226,10 @@ The tasks.md should be immediately executable - each task must be specific enoug
    FR Coverage: All [X] functional requirements mapped to tasks
    
    Next Steps:
-   1. Review task breakdown with team
-   2. Optional: /story-analyze (pre-implementation quality check)
-   3. Required: /story-implement (execute the tasks)
-   4. Then: /story-validate (verify completion)
+   1. Review task breakdown
+   2. ⚠️ REQUIRED: Run /story-analyze (quality check - DO NOT SKIP)
+   3. Then: /story-implement (execute the tasks)
+   4. Finally: /story-validate (verify completion)
    
    Note: /story-implement will execute these tasks in order,
    running parallel tasks [P] simultaneously for efficiency.

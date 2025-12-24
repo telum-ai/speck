@@ -14,6 +14,12 @@ $ARGUMENTS
    - If no `spec.md` found: instruct user to `cd` into the story directory or run `/speck` to route
    - Require `{STORY_DIR}/tasks.md` and `{STORY_DIR}/plan.md` (if missing: ERROR "Run /story-plan and /story-tasks first")
 
+   **⚠️ PRE-IMPLEMENTATION CHECK**:
+   Ask user: "Have you run `/story-analyze` to verify artifact quality?"
+   - If user says no or is unsure: RECOMMEND running `/story-analyze` first
+   - story-analyze catches issues BEFORE implementation, saving rework
+   - This is a REQUIRED step in the Speck methodology
+
 2. Load and analyze the implementation context:
    - **REQUIRED**: Read tasks.md for the complete task list and execution plan
    - **REQUIRED**: Read plan.md for tech stack, architecture, and file structure
