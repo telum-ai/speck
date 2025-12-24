@@ -138,5 +138,8 @@ export async function upgrade(targetDir, version, options = {}) {
 Review the changes and commit when ready:
   git add -A
   git commit -m "chore: upgrade Speck to ${targetVersion}"
+
+To check for future updates:
+  npx github:telum-ai/speck check
 `);
 }

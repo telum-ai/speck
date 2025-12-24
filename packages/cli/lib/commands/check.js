@@ -43,12 +43,12 @@ export async function check(targetDir) {
   
   console.log(`
 To upgrade, run:
-  npx @telum-ai/speck upgrade
+  npx github:telum-ai/speck upgrade
 
 Or to upgrade to a specific version:
-  npx @telum-ai/speck upgrade ${latestVersion}
+  npx github:telum-ai/speck upgrade ${latestVersion}
 
 Use --dry-run to preview changes first:
-  npx @telum-ai/speck upgrade --dry-run
+  npx github:telum-ai/speck upgrade --dry-run
 `);
 }

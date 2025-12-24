@@ -101,6 +101,9 @@ Next steps:
   2. Configure .speckignore if needed
   3. Run /speck to start your project!
 
+To check for updates later:
+  npx github:telum-ai/speck check
+
 Documentation: https://github.com/telum-ai/speck
 `);
 }
