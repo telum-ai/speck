@@ -1,10 +1,10 @@
 # Speck Orchestrator
 #
 # Continuous orchestration of story work. Creates issues and assigns to Copilot.
-# Runs on schedule, push, PR merge, or manual trigger.
+# Drives stories through the ENTIRE Speck flow up to and including story-validate.
 #
-# SCOPE: Commands up to story-implement (creates PR)
-# HANDOFF: speck-validate-pr.yml handles validation, speck-retrospective.yml handles retro
+# SCOPE: All commands from story-specify through story-validate
+# COMPLETION: Story is complete when validation-report.md exists with PASS status
 
 name: Speck Orchestrator
 
@@ -30,7 +30,7 @@ on:
         required: false
         type: string
   
-  # Re-orchestrate after PR merges (unblock dependents)
+  # Re-orchestrate after PR merges (unblock dependents, continue validation)
   pull_request:
     types: [closed]
     branches:
@@ -58,6 +58,7 @@ jobs:
           gh label create "speck:blocked" --color "B60205" --description "Blocked by dependencies" --force --repo "$GH_REPO" || true
           gh label create "speck:queued" --color "C5DEF5" --description "Queued for Copilot" --force --repo "$GH_REPO" || true
           gh label create "speck:in-progress" --color "FBCA04" --description "Copilot working" --force --repo "$GH_REPO" || true
+          gh label create "speck:validated" --color "0E8A16" --description "Story validated" --force --repo "$GH_REPO" || true
           gh label create "automated" --color "BFD4F2" --description "Created by automation" --force --repo "$GH_REPO" || true
 
   orchestrate:
@@ -69,21 +70,15 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Extract template instructions
-        id: template
         run: |
-          # Extract the markdown instructions from the issue template
           TEMPLATE_FILE=".github/ISSUE_TEMPLATE/speck-story.yml"
           if [ -f "$TEMPLATE_FILE" ]; then
-            # Extract content between 'value: |' and the end of the markdown block
-            INSTRUCTIONS=$(sed -n '/value: |/,/^[^ ]/p' "$TEMPLATE_FILE" | tail -n +2 | head -n -1 | sed 's/^        //')
-            echo "Found template instructions"
+            sed -n '/value: |/,/^[^ ]/p' "$TEMPLATE_FILE" | tail -n +2 | head -n -1 | sed 's/^        //' > /tmp/template_instructions.md
           else
-            INSTRUCTIONS="See .github/ISSUE_TEMPLATE/speck-story.yml for command flow."
+            echo "See .github/ISSUE_TEMPLATE/speck-story.yml for command flow." > /tmp/template_instructions.md
           fi
-          # Save to file for use in issue body
-          echo "$INSTRUCTIONS" > /tmp/template_instructions.md
       
-      - name: Find stories and create issues
+      - name: Find stories and create/update issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EPIC_PATH: ${{ inputs.epic_path || '' }}
@@ -134,35 +129,44 @@ jobs:
               
               STORY_DIR="$STORIES_DIR/$STORY_ID"
               
-              # Skip completed stories
-              if [ -d "$STORY_DIR" ]; then
-                if [ -f "$STORY_DIR/validation-report.md" ] || [ -f "$STORY_DIR/story-retro.md" ]; then
-                  echo "  Skipping $STORY_ID (completed)"
+              # Skip ONLY if validation-report.md exists with PASS status
+              if [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/validation-report.md" ]; then
+                if grep -q "Status.*PASS" "$STORY_DIR/validation-report.md" 2>/dev/null; then
+                  echo "  Skipping $STORY_ID (validated)"
                   continue
                 fi
               fi
               
-              # Skip if issue already exists
-              EXISTING=$(gh issue list --repo "$REPO" --label "speck:story" --search "in:title $STORY_ID" --state open --json number --jq 'length' 2>/dev/null || echo "0")
-              if [ "$EXISTING" -gt "0" ]; then
-                echo "  Skipping $STORY_ID (issue exists)"
-                continue
+              # Skip if issue already exists and is in progress
+              EXISTING_ISSUE=$(gh issue list --repo "$REPO" --label "speck:story" --search "in:title $STORY_ID" --state open --json number,labels --jq '.[0]' 2>/dev/null || echo "")
+              if [ -n "$EXISTING_ISSUE" ] && [ "$EXISTING_ISSUE" != "null" ]; then
+                ISSUE_NUM=$(echo "$EXISTING_ISSUE" | jq -r '.number')
+                IS_IN_PROGRESS=$(echo "$EXISTING_ISSUE" | jq -r '.labels | map(.name) | any(. == "speck:in-progress")')
+                if [ "$IS_IN_PROGRESS" = "true" ]; then
+                  echo "  Skipping $STORY_ID (issue #$ISSUE_NUM in progress)"
+                  continue
+                fi
               fi
               
-              # Skip if PR already merged
-              if echo "$MERGED_PRS" | grep -q "$STORY_ID"; then
-                echo "  Skipping $STORY_ID (PR merged)"
-                continue
-              fi
-              
-              # Determine current phase
+              # Determine current phase based on existing files
               CURRENT_PHASE="unspecced"
               START_CMD="story-specify"
               
               if [ -d "$STORY_DIR" ]; then
-                if [ -f "$STORY_DIR/tasks.md" ]; then
-                  CURRENT_PHASE="tasked"
-                  START_CMD="story-analyze"
+                if [ -f "$STORY_DIR/validation-report.md" ]; then
+                  # Validation exists but didn't pass - need to re-validate or fix
+                  CURRENT_PHASE="implemented"
+                  START_CMD="story-validate"
+                elif [ -f "$STORY_DIR/tasks.md" ]; then
+                  # Check if code has been written (look for non-spec files or git changes)
+                  CODE_FILES=$(find "$STORY_DIR" -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.tsx" 2>/dev/null | head -1)
+                  if [ -n "$CODE_FILES" ] || echo "$MERGED_PRS" | grep -q "$STORY_ID"; then
+                    CURRENT_PHASE="implemented"
+                    START_CMD="story-validate"
+                  else
+                    CURRENT_PHASE="tasked"
+                    START_CMD="story-analyze"
+                  fi
                 elif [ -f "$STORY_DIR/plan.md" ]; then
                   CURRENT_PHASE="planned"
                   START_CMD="story-tasks"
@@ -198,14 +202,19 @@ jobs:
                 for DEP in $DEPS; do
                   DEP=$(echo "$DEP" | tr -d ' "')
                   [ -z "$DEP" ] && continue
-                  if ! echo "$MERGED_PRS" | grep -q "$DEP"; then
+                  # Check if dependency is validated (not just merged)
+                  DEP_DIR=$(find specs -type d -name "*$DEP*" 2>/dev/null | head -1)
+                  if [ -z "$DEP_DIR" ] || [ ! -f "$DEP_DIR/validation-report.md" ]; then
+                    BLOCKED=true
+                    BLOCKING="$BLOCKING $DEP"
+                  elif ! grep -q "Status.*PASS" "$DEP_DIR/validation-report.md" 2>/dev/null; then
                     BLOCKED=true
                     BLOCKING="$BLOCKING $DEP"
                   fi
                 done
               fi
               
-              # Build issue body using template structure
+              # Build issue body
               cat > /tmp/issue_body.md << ISSUE_EOF
 ## Story Details
 
@@ -223,16 +232,15 @@ $EPIC_CONTEXT
 
 ISSUE_EOF
 
-              # Append template instructions
               cat /tmp/template_instructions.md >> /tmp/issue_body.md
 
               if [ "$BLOCKED" = true ]; then
                 cat >> /tmp/issue_body.md << BLOCK_EOF
 
 ---
-⚠️ **BLOCKED** - Waiting for:$BLOCKING
+⚠️ **BLOCKED** - Waiting for validated:$BLOCKING
 
-Do not start until dependencies merge.
+Do not start until dependencies are validated (have PASS in validation-report.md).
 BLOCK_EOF
               fi
               
@@ -243,14 +251,23 @@ BLOCK_EOF
                 LABEL="speck:story,automated,speck:queued"
               fi
               
-              # Create issue
-              gh issue create \
-                --repo "$REPO" \
-                --title "[$EPIC_ID] $STORY_ID: $TITLE" \
-                --body-file /tmp/issue_body.md \
-                --label "$LABEL"
-              
-              echo "  Created: $STORY_ID ($CURRENT_PHASE -> $START_CMD) [$([ "$BLOCKED" = true ] && echo 'BLOCKED' || echo 'QUEUED')]"
+              # Create or update issue
+              if [ -n "$EXISTING_ISSUE" ] && [ "$EXISTING_ISSUE" != "null" ]; then
+                ISSUE_NUM=$(echo "$EXISTING_ISSUE" | jq -r '.number')
+                echo "  Updating issue #$ISSUE_NUM for $STORY_ID ($CURRENT_PHASE -> $START_CMD)"
+                gh issue edit "$ISSUE_NUM" --repo "$REPO" --body-file /tmp/issue_body.md
+                # Re-queue if it was blocked but now unblocked
+                if [ "$BLOCKED" = false ]; then
+                  gh issue edit "$ISSUE_NUM" --repo "$REPO" --remove-label "speck:blocked" --add-label "speck:queued" 2>/dev/null || true
+                fi
+              else
+                gh issue create \
+                  --repo "$REPO" \
+                  --title "[$EPIC_ID] $STORY_ID: $TITLE" \
+                  --body-file /tmp/issue_body.md \
+                  --label "$LABEL"
+                echo "  Created: $STORY_ID ($CURRENT_PHASE -> $START_CMD) [$([ "$BLOCKED" = true ] && echo 'BLOCKED' || echo 'QUEUED')]"
+              fi
             done
           done
 
@@ -259,6 +276,9 @@ BLOCK_EOF
     runs-on: ubuntu-latest
     
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
       - name: Unblock dependent stories
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -270,6 +290,20 @@ BLOCK_EOF
           
           echo "Story merged: $STORY_NAME"
           
+          # Check if the merged story now has a passing validation
+          STORY_DIR=$(find specs -type d -name "*$STORY_NAME*" 2>/dev/null | head -1)
+          if [ -z "$STORY_DIR" ] || [ ! -f "$STORY_DIR/validation-report.md" ]; then
+            echo "Story not yet validated, dependents remain blocked"
+            exit 0
+          fi
+          
+          if ! grep -q "Status.*PASS" "$STORY_DIR/validation-report.md" 2>/dev/null; then
+            echo "Story validation not PASS, dependents remain blocked"
+            exit 0
+          fi
+          
+          echo "Story validated with PASS, unblocking dependents"
+          
           BLOCKED_ISSUES=$(gh issue list --repo "$REPO" --label "speck:blocked" --json number,body --jq '.[] | @base64' 2>/dev/null || true)
           
           for ISSUE_B64 in $BLOCKED_ISSUES; do
@@ -280,7 +314,7 @@ BLOCK_EOF
             if echo "$ISSUE_BODY" | grep -q "$STORY_NAME"; then
               echo "Unblocking issue #$ISSUE_NUM"
               gh issue edit "$ISSUE_NUM" --repo "$REPO" --remove-label "speck:blocked" --add-label "speck:queued"
-              gh issue comment "$ISSUE_NUM" --repo "$REPO" --body "✅ Dependency **$STORY_NAME** merged! This story is now queued."
+              gh issue comment "$ISSUE_NUM" --repo "$REPO" --body "✅ Dependency **$STORY_NAME** validated! This story is now queued."
             fi
           done
 
@@ -344,4 +378,41 @@ BLOCK_EOF
             gh issue edit "$ISSUE_NUM" --repo "$REPO" --remove-label "speck:queued" --add-label "speck:in-progress"
             
             echo "  ✓ Copilot assigned to #$ISSUE_NUM"
+          done
+
+  mark-validated:
+    needs: [ensure-labels, orchestrate]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Mark validated stories complete
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Find all in-progress issues and check if they're now validated
+          IN_PROGRESS=$(gh issue list --repo "$REPO" --label "speck:in-progress" --json number,title --jq '.[] | @base64' 2>/dev/null || true)
+          
+          for ISSUE_B64 in $IN_PROGRESS; do
+            ISSUE=$(echo "$ISSUE_B64" | base64 -d)
+            ISSUE_NUM=$(echo "$ISSUE" | jq -r '.number')
+            ISSUE_TITLE=$(echo "$ISSUE" | jq -r '.title')
+            
+            STORY_ID=$(echo "$ISSUE_TITLE" | grep -oE 'S[0-9]{3}[^ :]*' | head -1 || echo "")
+            [ -z "$STORY_ID" ] && continue
+            
+            STORY_DIR=$(find specs -type d -name "*$STORY_ID*" 2>/dev/null | head -1)
+            [ -z "$STORY_DIR" ] && continue
+            
+            if [ -f "$STORY_DIR/validation-report.md" ]; then
+              if grep -q "Status.*PASS" "$STORY_DIR/validation-report.md" 2>/dev/null; then
+                echo "Story $STORY_ID validated! Closing issue #$ISSUE_NUM"
+                gh issue edit "$ISSUE_NUM" --repo "$REPO" --remove-label "speck:in-progress" --add-label "speck:validated"
+                gh issue close "$ISSUE_NUM" --repo "$REPO" --reason completed --comment "✅ Story validated successfully! See \`$STORY_DIR/validation-report.md\`"
+              fi
+            fi
           done

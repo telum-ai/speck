@@ -1291,6 +1291,7 @@ Speck supports **autonomous development** through both **Cursor Background Agent
 2. Navigate to the story directory
 3. Follow the Story-Level Command Flow
 4. Execute each command from `.cursor/commands/story-*.md` step-by-step
+5. Story is complete when `validation-report.md` exists with PASS status
 
 **Dependency Management**:
 
@@ -1298,15 +1299,15 @@ Stories declare dependencies in `tasks.md` YAML front matter:
 
 ```yaml
 ---
-depends_on: [story-001, story-003]  # Stories that must merge first
+depends_on: [story-001, story-003]  # Stories that must be validated first
 blocks: [story-005]                  # Stories waiting on this one (informational)
 ---
 ```
 
 - The `/story-tasks` command extracts dependencies from `epic-breakdown.md`
-- The orchestrator checks dependencies before assigning to Copilot
+- The orchestrator checks dependencies by looking for `validation-report.md` with PASS status
 - Blocked stories get `speck:blocked` label
-- When dependencies merge, blocked stories auto-unblock
+- When dependencies are validated, blocked stories auto-unblock
 
 **Execution Order**: 
 - Epics are processed in numeric order (E000, E001, E002...)

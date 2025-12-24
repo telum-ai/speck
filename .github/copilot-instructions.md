@@ -27,35 +27,31 @@ Commands are in `.cursor/commands/story-*.md`. Execute in order:
 | `story-analyze` | Quality check on artifacts | Analysis report | ⚠️ **REQUIRED** |
 | `story-implement` | Write code following tasks.md | Code changes, PR | ✅ |
 
-### Verification & Learning
+### Validation
 | Command | Purpose | Output | Required |
 |---------|---------|--------|----------|
 | `story-validate` | Validate implementation against spec | `validation-report.md` | ✅ |
-| `story-retrospective` | Mine commits, capture learnings | `story-retro.md` | ✅ |
 
 ## When Assigned a Story Issue
 
 1. Check the issue for current phase and start command
 2. Navigate to story directory (create if needed)
-3. Execute commands from start command through `story-implement`
+3. Execute commands from start command through `story-validate`
 4. **ALWAYS run `story-analyze` before `story-implement`**
 5. **ALWAYS follow templates exactly** - see `.speck/templates/story/`
-6. Create PR when implementation complete
+6. Create PR with implementation
+7. Run `story-validate` to generate validation report
+8. Story is complete when `validation-report.md` shows PASS
 
-## When Performing Code Review
+## Completion Criteria
 
-Apply `story-validate` methodology from `.cursor/commands/story-validate.md`.
+A story is **complete** when:
+- `validation-report.md` exists in the story directory
+- Status in the report is **PASS**
 
 ## Dependency Handling
 
 If issue is marked `speck:blocked`:
-- Wait for dependencies to merge before starting
+- Wait for dependencies to be **validated** (not just merged)
+- A dependency is validated when its `validation-report.md` shows PASS
 - You'll be notified when unblocked
-
-## Workflow Handoffs
-
-| Workflow | Scope | Trigger |
-|----------|-------|---------|
-| `speck-orchestrator.yml` | specify → implement | Issue assigned |
-| `speck-validate-pr.yml` | validate | PR ready for review |
-| `speck-retrospective.yml` | retrospective | PR merged |

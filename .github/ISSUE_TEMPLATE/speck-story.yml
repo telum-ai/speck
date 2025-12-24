@@ -37,7 +37,9 @@ body:
         - "specified - needs story-clarify"  
         - "clarified - needs story-plan"
         - "planned - needs story-tasks"
-        - "tasked - needs story-analyze then story-implement"
+        - "tasked - needs story-analyze"
+        - "analyzed - needs story-implement"
+        - "implemented - needs story-validate"
     validations:
       required: true
 
@@ -75,17 +77,21 @@ body:
         8. `story-analyze` → ⚠️ **REQUIRED** Quality check before implementation
         9. `story-implement` → Write code, create PR
         
-        ### Post-PR (handled by other workflows)
-        - `story-validate` → Via `speck-validate-pr.yml`
-        - `story-retrospective` → Via `speck-retrospective.yml`
+        ### Validation
+        10. `story-validate` → Validates implementation, creates `validation-report.md`
         
         ---
         
         ## Critical Rules
         
         ✅ **ALWAYS** run `story-analyze` before `story-implement`  
+        ✅ **ALWAYS** run `story-validate` after implementation  
         ✅ **ALWAYS** follow exact templates in `.speck/templates/story/`  
         ✅ **NEVER** skip required commands  
+        
+        ## Completion Criteria
+        
+        A story is **complete** when `validation-report.md` exists with status PASS.
         
         ## Decision Gates for Optional Commands
         
