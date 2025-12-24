@@ -442,22 +442,55 @@ export function smartSync(sourceDir, targetDir, options = {}) {
 }
 
 /**
+ * Check if Speck is initialized in a directory
+ * 
+ * Uses Speck-specific markers, NOT AGENTS.md alone
+ * (AGENTS.md can exist for other AI agent frameworks)
+ */
+export function isSpeckInitialized(targetDir) {
+  // Definitive: .speck/VERSION exists
+  const versionPath = join(targetDir, '.speck', 'VERSION');
+  if (existsSync(versionPath)) {
+    return true;
+  }
+  
+  // Strong indicator: .speck/README.md exists (Speck methodology docs)
+  const speckReadme = join(targetDir, '.speck', 'README.md');
+  if (existsSync(speckReadme)) {
+    return true;
+  }
+  
+  // Strong indicator: .cursor/commands/speck.md exists (Speck router command)
+  const speckCommand = join(targetDir, '.cursor', 'commands', 'speck.md');
+  if (existsSync(speckCommand)) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
  * Get the current Speck version in a directory
+ * 
+ * Returns null if Speck is not initialized (use isSpeckInitialized() to check first)
  */
 export function getCurrentVersion(targetDir) {
-  // Try .speck/VERSION first
+  // Definitive source: .speck/VERSION
   const versionPath = join(targetDir, '.speck', 'VERSION');
   if (existsSync(versionPath)) {
     return readFileSync(versionPath, 'utf-8').trim();
   }
   
-  // Try to find version from AGENTS.md
-  const agentsPath = join(targetDir, 'AGENTS.md');
-  if (existsSync(agentsPath)) {
-    const content = readFileSync(agentsPath, 'utf-8');
-    const match = content.match(/\*\*Speck Version\*\*:\s*(\d+\.\d+)/);
-    if (match) {
-      return `v${match[1]}.0`;
+  // Legacy fallback: parse version from AGENTS.md (only if Speck markers exist)
+  // This handles older Speck installations before we had .speck/VERSION
+  if (isSpeckInitialized(targetDir)) {
+    const agentsPath = join(targetDir, 'AGENTS.md');
+    if (existsSync(agentsPath)) {
+      const content = readFileSync(agentsPath, 'utf-8');
+      const match = content.match(/\*\*Speck Version\*\*:\s*(\d+\.\d+)/);
+      if (match) {
+        return `v${match[1]}.0`;
+      }
     }
   }
   

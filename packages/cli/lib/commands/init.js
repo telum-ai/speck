@@ -2,19 +2,14 @@
  * Initialize Speck in a directory
  */
 
-import { existsSync } from 'fs';
-import { join } from 'path';
 import { getLatestRelease } from '../github.js';
-import { extractRelease, smartSync, saveVersion } from '../sync.js';
+import { extractRelease, smartSync, saveVersion, isSpeckInitialized } from '../sync.js';
 
 export async function init(targetDir, options = {}) {
   console.log('🥓 Initializing Speck...\n');
   
-  // Check if already initialized
-  const agentsPath = join(targetDir, 'AGENTS.md');
-  const speckDir = join(targetDir, '.speck');
-  
-  if (existsSync(agentsPath) || existsSync(speckDir)) {
+  // Check if already initialized (using Speck-specific markers)
+  if (isSpeckInitialized(targetDir)) {
     if (!options.force) {
       console.log('⚠️  Speck appears to be already initialized in this directory.');
       console.log('   Use --force to reinitialize, or use "speck upgrade" to update.');
