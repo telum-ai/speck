@@ -244,10 +244,19 @@ jobs:
         
       - name: Assign queued stories (rate limited)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.COPILOT_ASSIGNMENT_TOKEN || secrets.GITHUB_TOKEN }}
           MAX_CONCURRENT: ${{ env.MAX_CONCURRENT_COPILOT }}
           REPO: ${{ github.repository }}
         run: |
+          # Check if we have the required token
+          if [ -z "${{ secrets.COPILOT_ASSIGNMENT_TOKEN }}" ]; then
+            echo "⚠️  WARNING: COPILOT_ASSIGNMENT_TOKEN not set!"
+            echo "The default GITHUB_TOKEN cannot assign copilot-swe-agent[bot]."
+            echo "Please create a PAT with 'repo' scope and add it as COPILOT_ASSIGNMENT_TOKEN secret."
+            echo "See: .speck/README.md → Autonomous Development → Setup"
+            exit 1
+          fi
+          
           IN_PROGRESS=$(gh issue list --label "speck:in-progress" --json number --jq 'length' 2>/dev/null || echo "0")
           echo "In progress: $IN_PROGRESS / $MAX_CONCURRENT"
           

@@ -1363,9 +1363,24 @@ depends_on: [story-001, story-003]
 
 ### Setup
 
+**Prerequisites**:
 1. Enable Copilot Coding Agent in org settings
 2. Enable Copilot Code Review for repository
-3. Configure `copilot-setup-steps.yml` (E000 epic)
+3. Create Personal Access Token (classic) with `repo` scope
+4. Add as repository secret `COPILOT_ASSIGNMENT_TOKEN`
+
+**Why PAT Required**: The default `GITHUB_TOKEN` doesn't have permission to assign `copilot-swe-agent[bot]`. You need a PAT with `repo` scope.
+
+**To create PAT**:
+1. GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Generate new token with `repo` scope
+3. Add to repository: Settings → Secrets → Actions → New repository secret
+   - Name: `COPILOT_ASSIGNMENT_TOKEN`
+   - Value: your PAT
+
+**Project Setup**:
+4. Configure `copilot-setup-steps.yml` (E000 epic)
+5. Workflows will auto-create required labels (`speck:story`, `speck:queued`, etc.)
 
 ---
 
