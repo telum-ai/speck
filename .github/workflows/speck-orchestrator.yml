@@ -283,13 +283,13 @@ jobs:
             exit 1
           fi
           
-          IN_PROGRESS=$(gh issue list --label "speck:in-progress" --json number --jq 'length' 2>/dev/null || echo "0")
+          IN_PROGRESS=$(gh issue list --repo "$REPO" --label "speck:in-progress" --json number --jq 'length' 2>/dev/null || echo "0")
           echo "In progress: $IN_PROGRESS / $MAX_CONCURRENT"
           
           AVAILABLE=$((MAX_CONCURRENT - IN_PROGRESS))
           [ "$AVAILABLE" -le 0 ] && { echo "Rate limit reached"; exit 0; }
           
-          QUEUED=$(gh issue list --label "speck:queued" --json number --jq '.[].number' | head -n "$AVAILABLE")
+          QUEUED=$(gh issue list --repo "$REPO" --label "speck:queued" --json number --jq '.[].number' | head -n "$AVAILABLE")
           
           for ISSUE_NUM in $QUEUED; do
             echo "Assigning Copilot to #$ISSUE_NUM"
