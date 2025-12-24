@@ -310,6 +310,43 @@ Preparation for Next Epic:
 Ready for: Next epic / Project retrospective
 ```
 
+### Step 11: Offer Speck Methodology Feedback (Optional)
+
+After completing the retrospective, ask:
+
+> "Would you like to share any **methodology-specific** learnings with the Speck repository?
+> 
+> This will create a GitHub issue in telum-ai/speck with suggested improvements.
+> Only methodology insights will be shared - NO project-specific details."
+
+**If user says YES**:
+
+1. **Extract methodology-only insights** from epic-retro.md:
+   - Process improvements (commands, templates, flow)
+   - Validated patterns that could benefit other projects
+   - Systemic gotchas with prevention strategies
+   - Template gaps or improvements
+
+2. **Filter out project-specific content**:
+   - ❌ Project name, domain, business logic
+   - ❌ Specific feature implementations
+   - ❌ Performance metrics or user data
+   - ✅ Generic patterns (e.g., "PostgreSQL window functions for time overlaps")
+   - ✅ Process observations (e.g., "story-plan should ask about dependencies earlier")
+
+3. **Show the user what will be shared** and get confirmation
+
+4. **Create GitHub issue** using gh CLI:
+```bash
+gh issue create \
+  --repo telum-ai/speck \
+  --title "[Feedback] Methodology insights from epic retrospective" \
+  --body "[Filtered methodology content]" \
+  --label "feedback,methodology"
+```
+
+**If user says NO**: Skip this step.
+
 ## Integration Points
 
 **Consumes**:
@@ -329,6 +366,9 @@ Ready for: Next epic / Project retrospective
 - Updates story/epic commands based on validated issues
 - Updates templates based on repeated gaps
 - Creates/updates Cursor rules for validated patterns
+
+**Feeds Into Speck** (Optional):
+- User-approved methodology feedback via GitHub issues
 
 ---
 

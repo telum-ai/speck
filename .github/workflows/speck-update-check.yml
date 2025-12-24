@@ -1,0 +1,169 @@
+# Speck Update Checker
+#
+# Automatically checks for Speck methodology updates and creates PRs.
+# Uses the Speck CLI for smart merging to preserve your customizations.
+#
+# This workflow runs daily and works out of the box for public Speck repos.
+#
+# FOR PRIVATE SPECK REPOS:
+# Add a repository secret named SPECK_GITHUB_TOKEN with a PAT that has 'repo' scope.
+
+name: Speck Update Check
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # Daily at 9am UTC
+  workflow_dispatch:     # Manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-update:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Check for updates
+        id: check
+        env:
+          SPECK_GITHUB_TOKEN: ${{ secrets.SPECK_GITHUB_TOKEN }}
+        run: |
+          # Get current version
+          CURRENT=""
+          if [ -f ".speck/VERSION" ]; then
+            CURRENT=$(cat .speck/VERSION)
+          elif [ -f "AGENTS.md" ]; then
+            CURRENT=$(grep -oP '\*\*Speck Version\*\*:\s*\K[\d.]+' AGENTS.md | head -1)
+            [ -n "$CURRENT" ] && CURRENT="v${CURRENT}.0"
+          fi
+          
+          # Get latest version (with auth for private repos)
+          AUTH_HEADER=""
+          if [ -n "$SPECK_GITHUB_TOKEN" ]; then
+            AUTH_HEADER="Authorization: token $SPECK_GITHUB_TOKEN"
+          fi
+          
+          if [ -n "$AUTH_HEADER" ]; then
+            LATEST=$(curl -s -H "$AUTH_HEADER" https://api.github.com/repos/telum-ai/speck/releases/latest | jq -r '.tag_name')
+          else
+            LATEST=$(curl -s https://api.github.com/repos/telum-ai/speck/releases/latest | jq -r '.tag_name')
+          fi
+          
+          if [ "$LATEST" == "null" ] || [ -z "$LATEST" ]; then
+            echo "❌ Could not fetch Speck releases."
+            echo "   If telum-ai/speck is private, add SPECK_GITHUB_TOKEN secret."
+            exit 1
+          fi
+          
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          echo "latest=$LATEST" >> $GITHUB_OUTPUT
+          
+          if [ "$CURRENT" != "$LATEST" ]; then
+            echo "has_update=true" >> $GITHUB_OUTPUT
+            echo "📦 Update available: $CURRENT → $LATEST"
+          else
+            echo "has_update=false" >> $GITHUB_OUTPUT
+            echo "✅ Already up to date: $CURRENT"
+          fi
+
+      - name: Run Speck upgrade
+        if: steps.check.outputs.has_update == 'true'
+        env:
+          SPECK_GITHUB_TOKEN: ${{ secrets.SPECK_GITHUB_TOKEN }}
+        run: |
+          # Run the Speck CLI upgrade command
+          # This handles all smart merging logic
+          npx github:telum-ai/speck upgrade
+
+      - name: Create PR
+        if: steps.check.outputs.has_update == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPECK_GITHUB_TOKEN: ${{ secrets.SPECK_GITHUB_TOKEN }}
+          CURRENT_VERSION: ${{ steps.check.outputs.current }}
+          TARGET_VERSION: ${{ steps.check.outputs.latest }}
+        run: |
+          # Check if there are actually changes
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No file changes detected. Skipping PR."
+            exit 0
+          fi
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create branch
+          BRANCH="chore/speck-update-${TARGET_VERSION}"
+          
+          # Check if branch already exists
+          if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+            echo "Branch $BRANCH already exists. Skipping."
+            exit 0
+          fi
+          
+          git checkout -b "$BRANCH"
+          
+          # Commit changes
+          git add -A
+          git commit -m "chore: upgrade Speck to ${TARGET_VERSION}" \
+            -m "Updates Speck methodology from ${CURRENT_VERSION:-unknown} to ${TARGET_VERSION}." \
+            -m "See release notes: https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSION}"
+          
+          # Push branch
+          git push origin "$BRANCH"
+          
+          # Get release notes
+          if [ -n "$SPECK_GITHUB_TOKEN" ]; then
+            RELEASE_BODY=$(curl -s -H "Authorization: token $SPECK_GITHUB_TOKEN" \
+              "https://api.github.com/repos/telum-ai/speck/releases/tags/${TARGET_VERSION}" | \
+              jq -r '.body // "See release notes for details."')
+          else
+            RELEASE_BODY=$(curl -s "https://api.github.com/repos/telum-ai/speck/releases/tags/${TARGET_VERSION}" | \
+              jq -r '.body // "See release notes for details."')
+          fi
+          
+          # Create PR body (using temp file to avoid YAML issues)
+          cat > /tmp/pr_body.md << 'PREOF'
+          ## Speck Update
+          
+          ### Smart Merging Applied (via Speck CLI)
+          
+          - **AGENTS.md**: Your content outside SPECK tags preserved
+          - **.gitignore**: Your entries merged with Speck defaults
+          - **.cursor/hooks/hooks.json**: Your hooks merged with Speck hooks
+          - **.cursor/mcp.json**: Your config takes precedence
+          - **README.md**: Skipped if you customized it
+          - **copilot-setup-steps.yml**: Skipped if you customized it
+          PREOF
+          
+          echo "" >> /tmp/pr_body.md
+          echo "This PR upgrades Speck from **${CURRENT_VERSION:-unknown}** to **${TARGET_VERSION}**." >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "### What's Changed" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "$RELEASE_BODY" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "### Release Notes" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSION}" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "---" >> /tmp/pr_body.md
+          echo "*This PR was automatically created by Speck Update Check using \`npx github:telum-ai/speck upgrade\`.*" >> /tmp/pr_body.md
+          
+          # Create PR
+          PR_URL=$(gh pr create \
+            --title "⬆️ Upgrade Speck to ${TARGET_VERSION}" \
+            --body-file /tmp/pr_body.md \
+            --label "dependencies")
+          
+          echo "✅ Created PR: $PR_URL"

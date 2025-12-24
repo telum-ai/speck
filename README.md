@@ -22,17 +22,21 @@ See: `.cursor/MCP-SETUP.md`
 Speck project artifacts are written under:
 - `specs/projects/`
 
-## Template sync (optional)
+## Automatic Updates
 
-If you use this as a GitHub template repo, you can keep product repos up to date using:
-- `.github/workflows/template-sync.yml`
-- `.templatesyncignore`
+Speck checks daily for updates and creates PRs via `.github/workflows/speck-update-check.yml`.
 
-See: `.speck/TEMPLATE-SYNC.md`
+Updates use **smart merging** to preserve your customizations:
+- Your `AGENTS.md` content outside `SPECK:START..END` tags
+- Your `.gitignore` entries
+- Your custom hooks and MCP config
+- Your `README.md` (if customized)
+- Your `copilot-setup-steps.yml` (if customized)
 
-## Feeding learnings back (optional)
+For private Speck repos, add `SPECK_GITHUB_TOKEN` secret.
 
-Validated learnings can be exported back to the template repo from product repos via:
-- `.github/workflows/speck-template-feedback.yml`
+## Methodology Feedback
 
-See: `.speck/TEMPLATE-FEEDBACK.md`
+After running retrospective commands, you can opt-in to share methodology insights with the Speck team.
+
+See: `.speck/README.md` for full documentation.
