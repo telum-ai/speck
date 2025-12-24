@@ -289,7 +289,8 @@ jobs:
           AVAILABLE=$((MAX_CONCURRENT - IN_PROGRESS))
           [ "$AVAILABLE" -le 0 ] && { echo "Rate limit reached"; exit 0; }
           
-          QUEUED=$(gh issue list --repo "$REPO" --label "speck:queued" --json number --jq '.[].number' | head -n "$AVAILABLE")
+          # Get queued issues sorted by number (ascending) to respect epic-story ordering
+          QUEUED=$(gh issue list --repo "$REPO" --label "speck:queued" --json number --jq 'sort_by(.number) | .[].number' | head -n "$AVAILABLE")
           
           for ISSUE_NUM in $QUEUED; do
             echo "Assigning Copilot to #$ISSUE_NUM"
