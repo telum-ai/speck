@@ -93,17 +93,25 @@ jobs:
             
             # Add stories from epic-breakdown.md
             for STORY_ID in $PLANNED_STORIES; do
+              # Normalize to full format (S001 -> S001-name or keep as-is)
+              if [[ "$STORY_ID" =~ ^S([0-9]{3})$ ]]; then
+                # Check if a full-name directory exists
+                FULL_DIR=$(ls -d "$STORIES_DIR/$STORY_ID"-* 2>/dev/null | head -1 || echo "")
+                if [ -n "$FULL_DIR" ]; then
+                  STORY_ID=$(basename "$FULL_DIR")
+                fi
+              fi
               ALL_STORIES="$ALL_STORIES $STORY_ID"
             done
             
-            # Add stories from existing directories
+            # Add stories from existing directories (already in full format)
             for STORY_DIR in $(ls -d "$STORIES_DIR"/*/ 2>/dev/null); do
               STORY_ID=$(basename "$STORY_DIR")
               ALL_STORIES="$ALL_STORIES $STORY_ID"
             done
             
-            # Deduplicate and sort
-            ALL_STORIES=$(echo "$ALL_STORIES" | tr ' ' '\n' | sort -u -V | tr '\n' ' ')
+            # Deduplicate and sort (now should properly match)
+            ALL_STORIES=$(echo "$ALL_STORIES" | tr ' ' '\n' | grep -v '^$' | sort -u -V | tr '\n' ' ')
             
             # Process each story
             for STORY_ID in $ALL_STORIES; do
