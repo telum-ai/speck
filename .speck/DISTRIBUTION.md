@@ -11,7 +11,6 @@ Speck offers two distribution methods:
 | **CLI** | New projects, manual updates | On-demand |
 | **Update Action** | Existing repos wanting auto-updates | Automatic PRs |
 
-> ⚠️ **Template Sync is deprecated.** See [Migration Guide](#migrating-from-template-sync) below.
 
 ## Method 1: CLI (Recommended for New Projects)
 
@@ -133,9 +132,7 @@ Speck follows semantic versioning:
 
 ## Migrating from Template Sync
 
-Template Sync has been deprecated in favor of the CLI and Update Action.
-
-### Quick Migration (5 minutes)
+If you were using `actions-template-sync`, migrate to the new system:
 
 ```bash
 # 1. Delete the old workflow
@@ -146,7 +143,7 @@ mv .templatesyncignore .speckignore 2>/dev/null || true
 
 # 3. Create version file
 mkdir -p .speck
-echo "v2.2.0" > .speck/VERSION
+echo "v2.3.0" > .speck/VERSION
 
 # 4. For automated updates, copy the sample workflow
 cp .github/workflows/speck-update-check.yml.sample \
@@ -154,27 +151,16 @@ cp .github/workflows/speck-update-check.yml.sample \
 
 # 5. Commit
 git add -A
-git commit -m "chore: migrate from template-sync to speck-update-action"
+git commit -m "chore: migrate to speck-update-action"
 ```
 
-### What Changes
-
-| Before (Template Sync) | After (Update Action) |
-|------------------------|----------------------|
-| `.templatesyncignore` | `.speckignore` |
-| `TEMPLATE_SYNC_SOURCE_REPO` secret | No secrets needed (public) or `SPECK_TOKEN` (private) |
-| Syncs from HEAD | Syncs from releases |
-| actions-template-sync | Speck Update Action |
-
-### Manual Updates Only
-
-If you prefer manual control, skip step 4 and just use:
+Or just use the CLI for manual updates:
 
 ```bash
 npx github:telum-ai/speck upgrade
 ```
 
-## Migrating Between CLI and Update Action
+## Switching Between CLI and Update Action
 
 ### From CLI to Update Action
 

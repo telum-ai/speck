@@ -1,64 +1,50 @@
-# Feeding Learnings Back Into the Speck Template
+# Feeding Learnings Back Into Speck
 
-Speck is designed to be **self-improving**. When you build products with Speck, you will discover:
-- reusable patterns
-- systemic gotchas
-- missing template sections
-- command ordering improvements
-- automation improvements (CI/hooks)
+Speck is designed to be **self-improving**. When you build products with Speck, you may discover:
+- Reusable patterns
+- Systemic gotchas
+- Missing template sections
+- Command ordering improvements
+- Automation improvements
 
-To keep the template repo improving **without** letting product repos drift, use a **two-channel model**:
+## How Feedback Works
 
-1) **Template → Product sync** (via `actions-template-sync`)  
-2) **Product → Template feedback** (via issues/PRs driven by retrospectives)
+After running `/epic-retrospective` or `/project-retrospective`, you'll be asked:
 
-This file documents the **Product → Template** feedback channel.
+> "Would you like to share any methodology-specific learnings with the Speck repository?"
 
-## The feedback contract (where to write it)
+If you answer **yes**, an issue will be created in the Speck repo with:
+- Only the methodology insights (NOT project-specific details)
+- Suggested improvements to commands, templates, or patterns
+- Evidence of validation (e.g., "appeared in 3+ stories")
 
-Speck retrospectives are the source of truth for validated learnings:
-- Epic: `specs/projects/<PROJECT_ID>/epics/<EPIC_ID>/epic-retro.md`
-- Project: `specs/projects/<PROJECT_ID>/project-retro.md`
+## What Gets Shared
 
-The epic/project retro templates include an upstream section:
+**✅ SHARED (Methodology)**:
+- "The tasks template should include a setup phase"
+- "story-plan should ask about external dependencies earlier"
+- "Pattern: PostgreSQL window functions for time overlaps"
 
-- `<!-- SPECK_FEEDBACK:START -->`
-- `<!-- SPECK_FEEDBACK:END -->`
+**❌ NOT SHARED (Project-Specific)**:
+- Your project name, domain, or business logic
+- Specific feature implementations
+- Performance metrics or user data
+- Any content from your specs/
 
-Put template improvement proposals **only** inside that block.
+## Manual Feedback
 
-## What qualifies as “template-worthy”
+You can also create issues directly in the Speck repo:
 
-Only upstream improvements that are validated:
-- **Epic-level**: confirmed across **2+ stories** in the epic
-- **Project-level**: confirmed across **2+ epics** in the project
+https://github.com/telum-ai/speck/issues/new
 
-Each proposal SHOULD include:
-- target file(s) in the template (`.speck/**`, `.cursor/**`, `AGENTS.md`, `.github/workflows/speck-validation.yml`, etc.)
-- evidence (links to story/epic retros)
-- a suggested patch (preferred)
+Include:
+- Which command/template needs improvement
+- What the issue was
+- Your suggested fix (if any)
+- Evidence (how many stories/epics encountered this)
 
-## Automating the feedback to the template repo (recommended)
+## Privacy Guarantee
 
-This repo includes an optional workflow:
-- `.github/workflows/speck-template-feedback.yml`
-
-In a product repo, configure these secrets:
-- **`SPECK_TEMPLATE_FEEDBACK_REPO`**: `<owner>/<template-repo>`
-- **`SPECK_TEMPLATE_FEEDBACK_TOKEN`**: a PAT (fine-grained is recommended) with permission to create issues in the template repo
-
-When an epic/project retro changes, the workflow:
-1. Extracts the `SPECK_FEEDBACK` block(s)
-2. Opens an issue in the template repo containing the proposed changes + evidence
-
-If secrets are not configured, the workflow exits without doing anything.
-
-## Why issues (default) instead of auto-PRs
-
-Issues are the safest “intake” mechanism:
-- no accidental template breakage
-- human review of proposed diffs
-- can batch and prioritize improvements
-
-If you later want auto-PRs, add a second stage in the template repo that turns a labeled issue into a PR.
-
+- No automatic data collection from your projects
+- Feedback is always opt-in and reviewed by you before submission
+- You control exactly what gets shared

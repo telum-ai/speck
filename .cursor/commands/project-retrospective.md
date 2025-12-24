@@ -510,6 +510,45 @@ Next Steps:
 3. Apply insights to next project planning
 ```
 
+### Step 11: Offer Speck Methodology Feedback (Optional)
+
+After completing the retrospective, ask:
+
+> "Would you like to share **methodology-specific** learnings with the Speck repository?
+> 
+> This will create a GitHub issue in telum-ai/speck with suggested improvements.
+> Only methodology insights will be shared - NO project-specific details."
+
+**If user says YES**:
+
+1. **Extract methodology-only insights** from project-retro.md:
+   - Command value assessments (which were useful, which weren't)
+   - Template improvements needed
+   - Flow deviations that worked better
+   - Cross-project patterns that could benefit others
+   - Process improvements for the methodology
+
+2. **Filter out project-specific content**:
+   - ❌ Project name, domain, business logic
+   - ❌ Specific feature implementations
+   - ❌ Velocity/metrics tied to your project
+   - ✅ Generic process observations
+   - ✅ Template gap identifications
+   - ✅ Command improvement suggestions
+
+3. **Show the user what will be shared** and get confirmation
+
+4. **Create GitHub issue** using gh CLI:
+```bash
+gh issue create \
+  --repo telum-ai/speck \
+  --title "[Feedback] Methodology insights from project retrospective" \
+  --body "[Filtered methodology content]" \
+  --label "feedback,methodology"
+```
+
+**If user says NO**: Skip this step.
+
 ## Integration with Speck Evolution
 
 Project retrospectives feed back into:
@@ -519,6 +558,8 @@ Project retrospectives feed back into:
 - `.cursor/rules/` - Rule evolution
 
 This creates a self-improving methodology where each project makes Speck better!
+
+**Feedback is always opt-in** - see `.speck/TEMPLATE-FEEDBACK.md` for details.
 
 ---
 

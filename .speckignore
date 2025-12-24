@@ -1,0 +1,43 @@
+# Speck Ignore File
+#
+# Files and patterns listed here will NOT be overwritten when running:
+#   npx github:telum-ai/speck upgrade
+#
+# Customize this file in your project as needed.
+
+# Project-specific root files
+README.md
+.gitignore
+
+# Project specifications and work logs
+specs/**
+**/.learning.log
+
+# Product code locations
+backend/**
+frontend/**
+apps/**
+services/**
+src/**
+packages/**
+
+# Project-specific workflows
+.github/workflows/ci.yml
+.github/workflows/deploy.yml
+
+# Project-specific Copilot setup
+copilot-setup-steps.yml
+
+# Local configuration / secrets
+.env
+.env.*
+.cursor/mcp.json
+
+# Project-owned Cursor rules
+.cursor/rules/**
+
+# Project-owned hook extensions
+.cursor/hooks/hooks/hooks.d/**
+
+# Project-owned MCP overlay
+.cursor/mcp.project.json.example
