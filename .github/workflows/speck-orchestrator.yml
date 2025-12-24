@@ -239,6 +239,9 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
       - name: Assign queued stories (rate limited)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
