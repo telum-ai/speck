@@ -4,13 +4,14 @@ This document explains how to get Speck into your project and keep it updated.
 
 ## Distribution Methods
 
-Speck offers three distribution methods:
+Speck offers two distribution methods:
 
 | Method | Best For | Automation |
 |--------|----------|------------|
 | **CLI** | New projects, manual updates | On-demand |
-| **Template Sync** | Repos created from template | Automatic |
 | **Update Action** | Existing repos wanting auto-updates | Automatic PRs |
+
+> ⚠️ **Template Sync is deprecated.** See [Migration Guide](#migrating-from-template-sync) below.
 
 ## Method 1: CLI (Recommended for New Projects)
 
@@ -44,35 +45,7 @@ npx github:telum-ai/speck check
 | `--force` | Overwrite existing files without prompting |
 | `--ignore <pattern>` | Additional patterns to ignore (repeatable) |
 
-## Method 2: Template Sync (For Template-Based Projects)
-
-If you created your repo from the Speck template, automatic syncing is built in:
-
-1. The workflow `.github/workflows/template-sync.yml` syncs from the template
-2. Configure `.templatesyncignore` to protect your project-specific files
-3. When Speck releases a new version, a PR is automatically created
-
-### Configuration
-
-Edit `.templatesyncignore` to specify files that should never be overwritten:
-
-```gitignore
-# Your specifications
-specs/**
-
-# Your source code
-src/**
-backend/**
-frontend/**
-
-# Your README
-README.md
-
-# Project-specific Copilot setup
-copilot-setup-steps.yml
-```
-
-## Method 3: Update Action (For Existing Repos)
+## Method 2: Update Action (For Existing Repos)
 
 Add automated update PRs to any existing repo:
 
@@ -158,20 +131,57 @@ Speck follows semantic versioning:
 - **Minor** (v2.1.0): New features, backward compatible
 - **Patch** (v2.1.1): Bug fixes, documentation updates
 
-## Migrating Between Methods
+## Migrating from Template Sync
 
-### From Template Sync to CLI
+Template Sync has been deprecated in favor of the CLI and Update Action.
 
-1. Remove `.github/workflows/template-sync.yml`
-2. Use `npx github:telum-ai/speck upgrade` when you want updates
+### Quick Migration (5 minutes)
+
+```bash
+# 1. Delete the old workflow
+rm .github/workflows/template-sync.yml
+
+# 2. Rename ignore file (optional, for custom patterns)
+mv .templatesyncignore .speckignore 2>/dev/null || true
+
+# 3. Create version file
+mkdir -p .speck
+echo "v2.2.0" > .speck/VERSION
+
+# 4. For automated updates, copy the sample workflow
+cp .github/workflows/speck-update-check.yml.sample \
+   .github/workflows/speck-update-check.yml
+
+# 5. Commit
+git add -A
+git commit -m "chore: migrate from template-sync to speck-update-action"
+```
+
+### What Changes
+
+| Before (Template Sync) | After (Update Action) |
+|------------------------|----------------------|
+| `.templatesyncignore` | `.speckignore` |
+| `TEMPLATE_SYNC_SOURCE_REPO` secret | No secrets needed (public) or `SPECK_TOKEN` (private) |
+| Syncs from HEAD | Syncs from releases |
+| actions-template-sync | Speck Update Action |
+
+### Manual Updates Only
+
+If you prefer manual control, skip step 4 and just use:
+
+```bash
+npx github:telum-ai/speck upgrade
+```
+
+## Migrating Between CLI and Update Action
 
 ### From CLI to Update Action
 
 1. Copy the sample workflow to `.github/workflows/`
 2. The action will handle future updates automatically
 
-### From Template Sync to Update Action
+### From Update Action to CLI
 
-1. Remove `.github/workflows/template-sync.yml`
-2. Copy the sample workflow to `.github/workflows/`
-3. Rename `.templatesyncignore` to `.speckignore`
+1. Delete `.github/workflows/speck-update-check.yml`
+2. Use `npx github:telum-ai/speck upgrade` when you want updates

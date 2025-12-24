@@ -1,40 +1,46 @@
-name: Template Sync (Speck)
+# ⚠️ DEPRECATED - Use speck-update-check.yml instead
+#
+# Template sync has been replaced by the Speck Update Action.
+# This file will be removed in a future version.
+#
+# MIGRATION STEPS:
+# 1. Delete this file (.github/workflows/template-sync.yml)
+# 2. Delete .templatesyncignore (or rename to .speckignore)
+# 3. Copy .github/workflows/speck-update-check.yml.sample to
+#    .github/workflows/speck-update-check.yml
+# 4. Create .speck/VERSION with your current version (e.g., v2.2.0)
+#
+# OR use the CLI for manual updates:
+#   npx github:telum-ai/speck upgrade
+#
+# See .speck/DISTRIBUTION.md for full documentation.
+
+name: "[DEPRECATED] Template Sync"
 
 on:
-  # Monthly sync (1st of each month). Adjust as needed.
-  schedule:
-    - cron: "0 0 1 * *"
-  # Manual sync trigger
   workflow_dispatch:
-
-permissions:
-  contents: write
-  pull-requests: write
+    inputs:
+      confirm:
+        description: 'This workflow is deprecated. Use speck-update-check.yml instead.'
+        required: true
+        default: 'I understand'
 
 jobs:
-  repo-sync:
+  deprecated-notice:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Guard (requires TEMPLATE_SYNC_SOURCE_REPO)
+      - name: Deprecation Notice
         run: |
-          if [ -z "${{ secrets.TEMPLATE_SYNC_SOURCE_REPO }}" ]; then
-            echo "ℹ️  TEMPLATE_SYNC_SOURCE_REPO not set. Skipping template sync."
-            echo "    Set repository secret TEMPLATE_SYNC_SOURCE_REPO to <owner>/<template-repo> to enable."
-            exit 0
-          fi
-
-      - name: actions-template-sync
-        uses: AndreasAugustin/actions-template-sync@v2.5.0
-        with:
-          source_repo_path: ${{ secrets.TEMPLATE_SYNC_SOURCE_REPO }}
-          upstream_branch: ${{ secrets.TEMPLATE_SYNC_UPSTREAM_BRANCH || 'main' }}
-          pr_labels: template_sync,speck
-          pr_title: "[sync] Update from Speck template"
-          pr_commit_msg: "[sync] Update from Speck template"
-
+          echo "⚠️  DEPRECATED: Template sync has been replaced!"
+          echo ""
+          echo "Please migrate to the new Speck Update Action:"
+          echo ""
+          echo "1. Delete .github/workflows/template-sync.yml"
+          echo "2. Copy .github/workflows/speck-update-check.yml.sample"
+          echo "   to .github/workflows/speck-update-check.yml"
+          echo ""
+          echo "Or use the CLI: npx github:telum-ai/speck upgrade"
+          echo ""
+          echo "See .speck/DISTRIBUTION.md for details."
+          exit 1
 
