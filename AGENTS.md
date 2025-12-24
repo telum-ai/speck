@@ -94,7 +94,7 @@ User triggers commands, you follow instructions inside each command.
 5. **Planning**: plan (+ research) → [roadmap]
 6. **Infrastructure Epic** (E000): Developer Infrastructure (testing, CI/CD, linting, error tracking)
 7. **Epic Work**: specify → clarify → [architecture (+ research)] → plan (+ research) → breakdown
-8. **Story Work**: specify → clarify → [outline] → [scan] → plan (+ research) → [ui-spec] → tasks → **analyze** → implement → validate
+8. **Story Work**: specify → clarify → [outline] → [scan] → plan (+ research) → [ui-spec] → tasks → analyze → implement → validate
 9. **Learning**: story-retrospective → epic-retrospective → project-retrospective
 
 **Domain Expertise**: For specialized domains (healthcare, fitness, finance, etc.), `/project-domain` captures subject matter expertise (terminology, entities, rules, principles) that informs all downstream decisions.

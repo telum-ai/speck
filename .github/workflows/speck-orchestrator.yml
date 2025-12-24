@@ -68,6 +68,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
+      - name: Extract template instructions
+        id: template
+        run: |
+          # Extract the markdown instructions from the issue template
+          TEMPLATE_FILE=".github/ISSUE_TEMPLATE/speck-story.yml"
+          if [ -f "$TEMPLATE_FILE" ]; then
+            # Extract content between 'value: |' and the end of the markdown block
+            INSTRUCTIONS=$(sed -n '/value: |/,/^[^ ]/p' "$TEMPLATE_FILE" | tail -n +2 | head -n -1 | sed 's/^        //')
+            echo "Found template instructions"
+          else
+            INSTRUCTIONS="See .github/ISSUE_TEMPLATE/speck-story.yml for command flow."
+          fi
+          # Save to file for use in issue body
+          echo "$INSTRUCTIONS" > /tmp/template_instructions.md
+      
       - name: Find stories and create issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -77,7 +92,6 @@ jobs:
           if [ -n "$EPIC_PATH" ]; then
             EPICS="$EPIC_PATH"
           else
-            # Sort epics by numeric ID (E000, E001, E002...)
             EPICS=$(find specs -name "epic-breakdown.md" -exec dirname {} \; 2>/dev/null | sort -t/ -k6 -V || true)
           fi
           
@@ -86,12 +100,10 @@ jobs:
           for EPIC_DIR in $EPICS; do
             echo "Processing epic: $EPIC_DIR"
             
-            # Get epic info
             EPIC_ID=$(basename "$EPIC_DIR")
             EPIC_NAME=$(grep -m1 "^# " "$EPIC_DIR/epic.md" 2>/dev/null | sed 's/^# //' || echo "$EPIC_ID")
             EPIC_CONTEXT=$(sed -n '/^## Overview/,/^##/p' "$EPIC_DIR/epic.md" 2>/dev/null | head -10 | tail -9 || echo "See epic.md for details")
             
-            # Extract planned stories from epic-breakdown.md
             PLANNED_STORIES=""
             if [ -f "$EPIC_DIR/epic-breakdown.md" ]; then
               PLANNED_STORIES=$(grep -oE '(S[0-9]{3}|story-[0-9]{3})' "$EPIC_DIR/epic-breakdown.md" 2>/dev/null | sort -u | tr '\n' ' ' || true)
@@ -100,11 +112,8 @@ jobs:
             STORIES_DIR="$EPIC_DIR/stories"
             mkdir -p "$STORIES_DIR" 2>/dev/null || true
             
-            # Collect all stories (from breakdown + existing directories)
             ALL_STORIES=""
-            
             for STORY_ID in $PLANNED_STORIES; do
-              # Normalize: check if full directory exists
               if [[ "$STORY_ID" =~ ^S([0-9]{3})$ ]]; then
                 FULL_DIR=$(ls -d "$STORIES_DIR/$STORY_ID"-* 2>/dev/null | head -1 || echo "")
                 if [ -n "$FULL_DIR" ]; then
@@ -118,7 +127,6 @@ jobs:
               ALL_STORIES="$ALL_STORIES $(basename "$STORY_DIR")"
             done
             
-            # Deduplicate and sort
             ALL_STORIES=$(echo "$ALL_STORIES" | tr ' ' '\n' | grep -v '^$' | sort -u -V | tr '\n' ' ')
             
             for STORY_ID in $ALL_STORIES; do
@@ -147,19 +155,18 @@ jobs:
                 continue
               fi
               
-              # Determine current phase based on existing files
+              # Determine current phase
               CURRENT_PHASE="unspecced"
               START_CMD="story-specify"
               
               if [ -d "$STORY_DIR" ]; then
                 if [ -f "$STORY_DIR/tasks.md" ]; then
                   CURRENT_PHASE="tasked"
-                  START_CMD="story-analyze"  # ALWAYS run analyze before implement
+                  START_CMD="story-analyze"
                 elif [ -f "$STORY_DIR/plan.md" ]; then
                   CURRENT_PHASE="planned"
                   START_CMD="story-tasks"
                 elif [ -f "$STORY_DIR/spec.md" ]; then
-                  # Check if clarified (has acceptance criteria filled out)
                   if grep -q "## Acceptance Criteria" "$STORY_DIR/spec.md" 2>/dev/null; then
                     CURRENT_PHASE="clarified"
                     START_CMD="story-plan"
@@ -198,50 +205,26 @@ jobs:
                 done
               fi
               
-              # Build issue body (structured for Copilot to parse)
+              # Build issue body using template structure
               cat > /tmp/issue_body.md << ISSUE_EOF
-## Story: $TITLE
+## Story Details
 
 | Field | Value |
 |-------|-------|
 | **Epic** | $EPIC_ID |
 | **Story** | $STORY_ID |
+| **Title** | $TITLE |
 | **Phase** | $CURRENT_PHASE |
 | **Start Command** | \`$START_CMD\` |
 
 ### Epic Context
+
 $EPIC_CONTEXT
 
-### Command Flow
-
-Execute commands in order starting from \`$START_CMD\`:
-
-| Step | Command | Required | Creates |
-|------|---------|----------|---------|
-| 1 | \`story-specify\` | ✅ | \`spec.md\` |
-| 2 | \`story-clarify\` | ✅ | Updates \`spec.md\` |
-| 3 | \`story-plan\` | ✅ | \`plan.md\`, \`data-model.md\` |
-| 4 | \`story-tasks\` | ✅ | \`tasks.md\` |
-| 5 | \`story-analyze\` | ⚠️ **REQUIRED** | Quality check |
-| 6 | \`story-implement\` | ✅ | Code + PR |
-
-**Optional commands** (include when applicable):
-- \`story-outline\` - Complex tech decisions needing research
-- \`story-scan\` - Extending existing codebase
-- \`story-ui-spec\` - UI-heavy with multiple components
-
-### Critical: Task Format
-
-When creating \`tasks.md\`, use **EXACT** format:
-\`\`\`markdown
-- [ ] T001 Description of task
-- [ ] T002 [P] Parallel task (different files)
-- [ ] T003 Another task
-\`\`\`
-
-⚠️ **Validation will fail** if format differs!
-
 ISSUE_EOF
+
+              # Append template instructions
+              cat /tmp/template_instructions.md >> /tmp/issue_body.md
 
               if [ "$BLOCKED" = true ]; then
                 cat >> /tmp/issue_body.md << BLOCK_EOF
@@ -316,7 +299,6 @@ BLOCK_EOF
           MAX_CONCURRENT: ${{ env.MAX_CONCURRENT_COPILOT }}
           REPO: ${{ github.repository }}
         run: |
-          # Check if we have the required token
           if [ -z "${{ secrets.COPILOT_ASSIGNMENT_TOKEN }}" ]; then
             echo "⚠️  WARNING: COPILOT_ASSIGNMENT_TOKEN not set!"
             echo "The default GITHUB_TOKEN cannot assign copilot-swe-agent[bot]."
@@ -331,13 +313,11 @@ BLOCK_EOF
           AVAILABLE=$((MAX_CONCURRENT - IN_PROGRESS))
           [ "$AVAILABLE" -le 0 ] && { echo "Rate limit reached"; exit 0; }
           
-          # Get queued issues sorted by number (ascending) to respect epic-story ordering
           QUEUED=$(gh issue list --repo "$REPO" --label "speck:queued" --json number --jq 'sort_by(.number) | .[].number' | head -n "$AVAILABLE")
           
           for ISSUE_NUM in $QUEUED; do
             echo "Assigning Copilot to #$ISSUE_NUM"
             
-            # Build JSON payload
             PAYLOAD=$(cat <<'EOFPAYLOAD'
           {
             "assignees": ["copilot-swe-agent[bot]"],
@@ -352,10 +332,8 @@ BLOCK_EOF
           EOFPAYLOAD
           )
             
-            # Replace placeholder with actual repo
             PAYLOAD=$(echo "$PAYLOAD" | sed "s|REPO_PLACEHOLDER|$REPO|g")
             
-            # Use official REST API to assign copilot-swe-agent[bot]
             echo "$PAYLOAD" | gh api \
               --method POST \
               -H "Accept: application/vnd.github+json" \
@@ -363,7 +341,6 @@ BLOCK_EOF
               "/repos/$REPO/issues/$ISSUE_NUM/assignees" \
               --input -
             
-            # Update label to in-progress
             gh issue edit "$ISSUE_NUM" --repo "$REPO" --remove-label "speck:queued" --add-label "speck:in-progress"
             
             echo "  ✓ Copilot assigned to #$ISSUE_NUM"

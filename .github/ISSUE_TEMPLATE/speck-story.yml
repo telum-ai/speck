@@ -1,14 +1,13 @@
 name: "🤖 Speck Story"
 description: "Create a Speck story for Copilot Agent"
-title: "[EPIC_ID] STORY_ID: STORY_TITLE"
+title: "[EPIC] STORY: TITLE"
 labels: ["speck:story", "automated", "speck:queued"]
 body:
   - type: input
     id: epic_id
     attributes:
       label: Epic ID
-      description: "Epic identifier (e.g., 001-app-shell)"
-      placeholder: "001-app-shell"
+      description: "Epic identifier from epics/ directory"
     validations:
       required: true
 
@@ -16,8 +15,7 @@ body:
     id: story_id
     attributes:
       label: Story ID
-      description: "Story identifier (e.g., S001-project-setup)"
-      placeholder: "S001-project-setup"
+      description: "Story identifier from stories/ directory"
     validations:
       required: true
 
@@ -26,7 +24,6 @@ body:
     attributes:
       label: Story Title
       description: "Human-readable story title"
-      placeholder: "Initial Project Setup"
     validations:
       required: true
 
@@ -49,14 +46,12 @@ body:
     attributes:
       label: Epic Context
       description: "Brief description of the parent epic's goals"
-      placeholder: "This epic establishes the app shell and design system..."
 
   - type: textarea
     id: dependencies
     attributes:
       label: Dependencies
       description: "Story IDs this depends on (comma-separated)"
-      placeholder: "S001-project-setup, S002-auth-setup"
 
   - type: markdown
     attributes:
@@ -76,11 +71,7 @@ body:
         6. `story-ui-spec` → *(optional, UI-heavy)* Detailed UI specs
         
         ### Execution
-        7. `story-tasks` → Creates `tasks.md` with **EXACT** format:
-           ```
-           - [ ] T001 Task description
-           - [ ] T002 [P] Parallel task
-           ```
+        7. `story-tasks` → Creates `tasks.md`
         8. `story-analyze` → ⚠️ **REQUIRED** Quality check before implementation
         9. `story-implement` → Write code, create PR
         

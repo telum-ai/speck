@@ -33,36 +33,24 @@ Commands are in `.cursor/commands/story-*.md`. Execute in order:
 | `story-validate` | Validate implementation against spec | `validation-report.md` | ✅ |
 | `story-retrospective` | Mine commits, capture learnings | `story-retro.md` | ✅ |
 
-## ⚠️ CRITICAL: Task Format
+## When Assigned a Story Issue
 
-When creating `tasks.md`, use this **EXACT** format (validation will fail otherwise):
+1. Check the issue for current phase and start command
+2. Navigate to story directory (create if needed)
+3. Execute commands from start command through `story-implement`
+4. **ALWAYS run `story-analyze` before `story-implement`**
+5. **ALWAYS follow templates exactly** - see `.speck/templates/story/`
+6. Create PR when implementation complete
 
-```markdown
-- [ ] T001 Task description here
-- [ ] T002 [P] Parallel task (mark with [P] if different files)
-- [ ] T003 Another task
-```
+## When Performing Code Review
 
-**Rules:**
-1. Start with `- [ ] ` (dash, space, brackets, space)
-2. Task ID: `T` + 3 digits (T001, T002...)
-3. IDs must be sequential
-4. Optional `[P]` after ID for parallel tasks
+Apply `story-validate` methodology from `.cursor/commands/story-validate.md`.
 
-**INVALID (will fail):**
-- `- T001 Description` ❌
-- `[ ] T001 Description` ❌
-- `- [] T001 Description` ❌
+## Dependency Handling
 
-## Decision Gates for Optional Commands
-
-| Command | Include When |
-|---------|--------------|
-| `story-outline` | Complex technical decisions, unfamiliar tech stack, need research |
-| `story-scan` | Extending existing codebase (brownfield project) |
-| `story-ui-spec` | UI-heavy story with multiple components/states/animations |
-
-**Always include `story-analyze`** - it catches issues before implementation.
+If issue is marked `speck:blocked`:
+- Wait for dependencies to merge before starting
+- You'll be notified when unblocked
 
 ## Workflow Handoffs
 
@@ -71,32 +59,3 @@ When creating `tasks.md`, use this **EXACT** format (validation will fail otherw
 | `speck-orchestrator.yml` | specify → implement | Issue assigned |
 | `speck-validate-pr.yml` | validate | PR ready for review |
 | `speck-retrospective.yml` | retrospective | PR merged |
-
-## When Assigned a Story Issue
-
-1. Check the issue for current phase and start command
-2. Navigate to story directory (create if needed)
-3. Execute commands from start command through `story-implement`
-4. **ALWAYS run `story-analyze` before `story-implement`**
-5. Create PR when implementation complete
-
-## When Performing Code Review
-
-Apply `story-validate` methodology:
-
-1. Load spec.md, plan.md, tasks.md
-2. Verify all tasks marked complete
-3. Check each requirement (FR-XXX) is implemented
-4. Verify acceptance scenarios satisfied
-5. Check tests exist (TDD)
-
-## Dependency Handling
-
-If issue is marked `speck:blocked`:
-- Check which stories it depends on
-- Wait for those to merge before starting
-- You'll be notified when unblocked
-
-## Rate Limiting
-
-Max 2-3 concurrent Copilot sessions. Issues queue with `speck:queued` label.
