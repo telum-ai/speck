@@ -74,9 +74,14 @@ Work with the user to define:
 
 ### Step 4: Create UI Specification
 
-1. Load template: `.speck/templates/story/ui-spec-template.md`
-2. Create file at: `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]/ui-spec.md`
-3. Fill comprehensively:
+**CRITICAL**: Load and follow the template exactly:
+```
+.speck/templates/story/ui-spec-template.md
+```
+
+Create file at: `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]/ui-spec.md`
+
+Fill all sections comprehensively:
    - Apply design system tokens
    - Document all states
    - Include code examples

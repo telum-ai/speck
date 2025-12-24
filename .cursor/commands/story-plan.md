@@ -186,8 +186,13 @@ Given the implementation details provided as an argument, do this:
    4. Re-run this command to continue
    ```
 
-9. Execute the implementation plan template:
-   - Load `.speck/templates/story/plan-template.md`
+9. Execute the implementation plan:
+   
+   **CRITICAL**: Load and follow the template exactly:
+   ```
+   .speck/templates/story/plan-template.md
+   ```
+   
    - Write output to PLAN_PATH
    - Run the Execution Flow (main) function steps 1-9
    - The template is self-contained and executable

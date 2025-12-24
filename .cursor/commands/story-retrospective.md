@@ -84,7 +84,12 @@ Load `validation-report.md` and extract:
 
 ### Step 2: Consolidate into Template
 
-Load template from `.speck/templates/story/story-retro-template.md` and fill:
+**CRITICAL**: Load and follow the template exactly:
+```
+.speck/templates/story/story-retro-template.md
+```
+
+Fill all sections:
 
 **Execution Metrics Section**:
 - Story/Epic IDs and names

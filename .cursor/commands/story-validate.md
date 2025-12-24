@@ -170,116 +170,29 @@ Execution steps:
     - Agent context files updated: Verify recent changes include this feature
 
 13. Generate validation report in `{STORY_DIR}/validation-report.md`:
-    ```markdown
-    # Validation Report: [STORY]
-    
-    **Date**: YYYY-MM-DD HH:MM
-    **Branch**: [branch-name]
-    **Status**: [PASS / CONDITIONAL_PASS / FAIL]
-    
-    ## Executive Summary
-    - **Task Completion**: X/Y tasks complete (Z%)
-    - **Test Results**: X/Y tests passing (Z%)
-    - **Requirements Coverage**: X/Y requirements verified (Z%)
-    - **Performance**: [PASS / FAIL] (X/Y targets met)
-    - **Constitution Compliance**: [PASS / CONDITIONAL / FAIL]
-    - **Code Audit (Manual)**: [PASS / CONDITIONAL / FAIL]
-    - **Automated Quality Gates**: [PASS / CONDITIONAL / FAIL]
-    
-    ## Requirements Traceability Matrix
-    | Req ID | Description | Verification Method | Status | Notes |
-    |--------|-------------|---------------------|--------|-------|
-    | FR-001 | [desc] | Contract test | ✅ PASS | test_x.py passes |
-    | FR-002 | [desc] | Integration test | ❌ FAIL | Expected X, got Y |
-    | FR-003 | [desc] | Manual (quickstart) | ⚠️ PENDING | Needs user validation |
-    | FR-004 | [desc] | - | ❌ UNTESTED | No test coverage |
-    
-    ## Test Suite Results
-    - **Contract Tests**: X passed, Y failed
-    - **Integration Tests**: X passed, Y failed
-    - **Unit Tests**: X passed, Y failed
-    - **Performance Tests**: X passed, Y failed
-    - **Total Coverage**: Z%
-    
-    [Detailed test output or link to test report]
-    
-    ## Quickstart Scenario Execution
-    | Scenario | Steps | Status | Details |
-    |----------|-------|--------|---------|
-    | User Registration | 5 | ✅ PASS | All steps successful |
-    | Data Import | 3 | ❌ FAIL | Step 2 failed: timeout |
-    
-   ## Performance Validation
-   | Metric | Target | Actual | Status | Gap |
-   |--------|--------|--------|--------|-----|
-   | API latency (p95) | <200ms | 145ms | ✅ PASS | -55ms |
-   | Throughput | >1000 req/s | 850 req/s | ❌ FAIL | -150 req/s |
    
-   ## Cursor Rules Compliance
+   **CRITICAL**: Load and follow the template exactly:
+   ```
+   .speck/templates/story/validation-report-template.md
+   ```
    
-   **Rules Directory**: `.cursor/rules/` [exists/not found]
-   **Total Rules**: [X]
-   **Applicable to Story**: [Y]
+   Fill all sections from the template, including:
+   - Executive Summary with metrics
+   - Specification Deviations (MODIFIED/ADDED/REMOVED)
+   - Requirements Traceability Matrix
+   - Test Suite Results
+   - Quickstart Scenario Execution
+   - Performance Validation
+   - Constitution Compliance
+   - Research Alignment Validation
+   - Codebase Pattern Adherence
+   - Code Quality Gates
+   - Documentation Completeness
+   - Blockers & Critical Issues
+   - Recommendations
+   - Next Steps
    
-   | Rule File | Applies? | Status | Findings |
-   |-----------|----------|--------|----------|
-   | [rule-name.mdc] | ✅ Yes ([reason]) | ✅ PASS | [what was checked] |
-   | [rule-name.mdc] | ✅ Yes ([reason]) | ⚠️ WARN | [violations found] |
-   | [rule-name.mdc] | ❌ No | N/A | - |
-   
-   **Summary**: [X of Y applicable rules passed, Z warnings, A failures]
-   
-   **Detailed Findings**:
-   - [Rule name]: [Specific compliance check details, violations, or confirmations]
-   
-   ## Constitution Compliance
-    | Principle/Gate | Required | Implemented | Status | Notes |
-    |----------------|----------|-------------|--------|-------|
-    | [Principle Name] | [requirement] | [Yes/No/Partial] | [✅/⚠️/❌] | [details] |
-    
-    **Complexity Deviations**: [List any from plan.md and verify justifications]
-
-   ## Code Audit (Manual Review)
-
-   **Result**: [PASS / CONDITIONAL_PASS / FAIL]
-
-   | Area | Status | Findings | Evidence |
-   |------|--------|----------|----------|
-   | Correctness & edge cases | ✅/⚠️/❌ | [findings] | [files/tests] |
-   | Maintainability | ✅/⚠️/❌ | [findings] | [files] |
-   | Security & privacy | ✅/⚠️/❌ | [findings] | [files] |
-   | Performance | ✅/⚠️/❌ | [findings] | [files/benchmarks] |
-   | Operability / observability | ✅/⚠️/❌ | [findings] | [logs/metrics] |
-   | Frontend UX/a11y (if applicable) | ✅/⚠️/❌ | [findings] | [pages/components] |
-   | Test quality | ✅/⚠️/❌ | [findings] | [tests] |
-    
-    ## Code Quality Gates
-    - **Linting**: [PASS / FAIL] ([X violations])
-    - **Type Checking**: [PASS / FAIL] ([X errors])
-    - **Security**: [PASS / WARN / FAIL] ([X issues])
-    
-    [Detailed violations if any]
-    
-    ## Documentation Status
-    - [ ] API documentation complete
-    - [ ] Model/entity documentation complete
-    - [ ] CLI help text complete
-    - [ ] Migration guide (if breaking changes)
-    - [ ] Agent context files updated
-    
-    ## Blockers & Issues
-    [List any critical issues that must be resolved before merge/deploy]
-    
-    ## Recommendations
-    1. [Action item 1]
-    2. [Action item 2]
-    3. [Action item 3]
-    
-    ## Next Steps
-    - [If PASS]: Ready for code review and merge
-    - [If CONDITIONAL_PASS]: Address warnings, then merge
-    - [If FAIL]: Fix blockers, then re-run /story-validate
-    ```
+   **Template sections are mandatory** - do not skip or abbreviate them.
 
 14. **Project Truth Update Prompt** (if PASS):
     

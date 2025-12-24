@@ -85,7 +85,13 @@ $ARGUMENTS
       - Check for route conflicts with endpoints in spec
       - Flag potential integration issues
 
-5. Generate scan report using `.speck/templates/story/codebase-scan-template.md`:
+5. Generate scan report:
+
+   **CRITICAL**: Load and follow the template exactly:
+   ```
+   .speck/templates/story/codebase-scan-template.md
+   ```
+   
    - Fill all sections with actual findings (no placeholder text)
    - Include code examples from real files
    - List specific file paths

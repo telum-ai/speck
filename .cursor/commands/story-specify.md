@@ -119,14 +119,21 @@ Note: Speck stories live in the hierarchical structure under:
 
 ### Step 7: Story Specification
 
-Load template and create spec.md with:
+**CRITICAL**: Load and follow the template exactly:
+```
+.speck/templates/story/story-template.md
+```
+
+Use the template to create `spec.md` with:
 - Story context (from epic)
-- User story format
-- Detailed acceptance criteria
-- Technical requirements
-- UI/UX requirements (if applicable)
-- Test scenarios
-- Dependencies
+- User story format (JTBD enhanced)
+- Detailed acceptance criteria (GIVEN/WHEN/THEN)
+- Functional requirements (FR-XXX format)
+- Non-functional requirements
+- Key entities (if data involved)
+- Review checklist
+
+**Template sections are mandatory** - do not skip or abbreviate them.
 
 ### Step 8: Apply 10-Minute Understandability Rule
 

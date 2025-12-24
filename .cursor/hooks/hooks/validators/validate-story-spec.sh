@@ -55,7 +55,7 @@ log_success() {
 # === VALIDATION RULES ===
 
 # 1. Check for User Story format
-if echo "$content" | grep -q "As a.*I want to.*so that"; then
+if echo "$content" | grep -q "As a.*I want.*so that"; then
   log_success "User story format found"
 else
   log_error "Missing user story in standard format" \

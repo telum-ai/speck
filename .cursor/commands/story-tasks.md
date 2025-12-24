@@ -109,9 +109,12 @@ $ARGUMENTS
    - `* [ ] T001 Description` ❌ (asterisk instead of dash)
    - `- [x] T001 Description` ❌ (should be unchecked initially)
 
-   Generate tasks following the template:
-   - Use `.speck/templates/story/tasks-template.md` as the base
-   - Replace example tasks with actual tasks based on:
+   **CRITICAL**: Load and follow the template exactly:
+   ```
+   .speck/templates/story/tasks-template.md
+   ```
+   
+   Replace example tasks with actual tasks based on:
      * **Setup tasks**: Project init, dependencies, linting
      * **Test tasks [P]**: One per contract, one per integration scenario
      * **Core tasks**: One per entity, service, CLI command, endpoint
