@@ -179,7 +179,19 @@ jobs:
                 START_CMD="story-specify"
               fi
               
-              TITLE=$([ -d "$STORY_DIR" ] && grep -m1 "^# " "$STORY_DIR/spec.md" 2>/dev/null | sed 's/^# //' || echo "$STORY_NAME")
+              # Get story title - try spec.md, then humanize directory name, then mark as unspecced
+              if [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/spec.md" ]; then
+                TITLE=$(grep -m1 "^# " "$STORY_DIR/spec.md" 2>/dev/null | sed 's/^# //' || echo "")
+              fi
+              
+              if [ -z "$TITLE" ]; then
+                # Extract human-readable title from directory name (S001-project-setup -> Project Setup)
+                if [[ "$STORY_NAME" =~ ^[Ss][0-9]{3}-(.+)$ ]]; then
+                  TITLE=$(echo "${BASH_REMATCH[1]}" | tr '-' ' ' | sed 's/\b\(.\)/\u\1/g')
+                else
+                  TITLE="(needs spec)"
+                fi
+              fi
               
               {
                 echo "## Speck Story: $TITLE"
