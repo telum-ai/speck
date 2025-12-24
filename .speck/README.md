@@ -1295,7 +1295,7 @@ npx github:telum-ai/speck upgrade --dry-run
 
 **Access Control**: Requires read permission to the Speck repository. If private, users must be collaborators or org members.
 
-### Update Action (Automated PRs)
+### Update Workflow (Automated PRs)
 
 For automatic weekly update checks:
 
@@ -1304,7 +1304,7 @@ cp .github/workflows/speck-update-check.yml.sample \
    .github/workflows/speck-update-check.yml
 ```
 
-For private Speck repos, add `speck-token: ${{ secrets.SPECK_TOKEN }}` (PAT with `repo` scope).
+For private Speck repos, add a `SPECK_TOKEN` secret (PAT with `repo` scope) - the workflow will use it automatically.
 
 ### What Gets Synced
 

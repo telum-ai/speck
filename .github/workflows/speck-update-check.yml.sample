@@ -12,7 +12,7 @@
 # If telum-ai/speck is private, you need to:
 # 1. Create a Personal Access Token (PAT) with 'repo' scope
 # 2. Add it as a repository secret named SPECK_TOKEN
-# 3. Uncomment the speck-token line below
+# 3. The workflow will use it automatically
 
 name: Speck Update Check
 
@@ -33,11 +33,172 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Check for Speck updates
-        uses: telum-ai/speck/.github/workflows/speck-update-action@main
-        with:
-          version: 'latest'
-          create-pr: 'true'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Uncomment for private Speck repos:
-          # speck-token: ${{ secrets.SPECK_TOKEN }}
+      - name: Check for updates
+        id: check
+        env:
+          # Use SPECK_TOKEN if available (for private Speck repos), otherwise public access
+          SPECK_TOKEN: ${{ secrets.SPECK_TOKEN }}
+        run: |
+          # Get current version from .speck/VERSION or AGENTS.md
+          CURRENT=""
+          if [ -f ".speck/VERSION" ]; then
+            CURRENT=$(cat .speck/VERSION)
+          elif [ -f "AGENTS.md" ]; then
+            CURRENT=$(grep -oP '\*\*Speck Version\*\*:\s*\K[\d.]+' AGENTS.md | head -1)
+            [ -n "$CURRENT" ] && CURRENT="v${CURRENT}.0"
+          fi
+          
+          # Build auth header if SPECK_TOKEN provided (for private repos)
+          AUTH_HEADER=""
+          if [ -n "$SPECK_TOKEN" ]; then
+            AUTH_HEADER="Authorization: token $SPECK_TOKEN"
+          fi
+          
+          # Get latest version
+          if [ -n "$AUTH_HEADER" ]; then
+            LATEST=$(curl -s -H "$AUTH_HEADER" https://api.github.com/repos/telum-ai/speck/releases/latest | jq -r '.tag_name')
+          else
+            LATEST=$(curl -s https://api.github.com/repos/telum-ai/speck/releases/latest | jq -r '.tag_name')
+          fi
+          
+          # Check for errors (private repo without token)
+          if [ "$LATEST" == "null" ] || [ -z "$LATEST" ]; then
+            echo "❌ Could not fetch Speck releases."
+            echo "   If telum-ai/speck is private, add SPECK_TOKEN secret."
+            exit 1
+          fi
+          
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          echo "latest=$LATEST" >> $GITHUB_OUTPUT
+          
+          if [ "$CURRENT" != "$LATEST" ]; then
+            echo "has_update=true" >> $GITHUB_OUTPUT
+            echo "📦 Update available: $CURRENT → $LATEST"
+          else
+            echo "has_update=false" >> $GITHUB_OUTPUT
+            echo "✅ Already up to date: $CURRENT"
+          fi
+
+      - name: Download and apply update
+        if: steps.check.outputs.has_update == 'true'
+        env:
+          TARGET_VERSION: ${{ steps.check.outputs.latest }}
+          SPECK_TOKEN: ${{ secrets.SPECK_TOKEN }}
+        run: |
+          # Create temp directory for new version
+          TEMP_DIR=$(mktemp -d)
+          
+          # Download release (with auth for private repos)
+          if [ -n "$SPECK_TOKEN" ]; then
+            curl -sL -H "Authorization: token $SPECK_TOKEN" \
+              "https://api.github.com/repos/telum-ai/speck/tarball/${TARGET_VERSION}" | \
+              tar -xz -C "$TEMP_DIR" --strip-components=1
+          else
+            curl -sL "https://github.com/telum-ai/speck/archive/refs/tags/${TARGET_VERSION}.tar.gz" | \
+              tar -xz -C "$TEMP_DIR" --strip-components=1
+          fi
+          
+          # Files to sync (methodology files only)
+          SYNC_PATTERNS=(
+            ".speck"
+            ".cursor/commands"
+            ".cursor/hooks"
+            ".github/workflows/speck-orchestrator.yml"
+            ".github/workflows/speck-validate-pr.yml"
+            ".github/workflows/speck-retrospective.yml"
+            ".github/copilot-instructions.md"
+            ".github/instructions"
+            ".github/ISSUE_TEMPLATE/speck-story.yml"
+            "AGENTS.md"
+          )
+          
+          # Sync files (respecting .speckignore if it exists)
+          for pattern in "${SYNC_PATTERNS[@]}"; do
+            if [ -e "$TEMP_DIR/$pattern" ]; then
+              # Skip if in .speckignore
+              if [ -f ".speckignore" ] && grep -qx "$pattern" .speckignore 2>/dev/null; then
+                echo "Skipping $pattern (in .speckignore)"
+                continue
+              fi
+              mkdir -p "$(dirname "$pattern")"
+              cp -r "$TEMP_DIR/$pattern" "$pattern" 2>/dev/null || true
+              echo "Updated: $pattern"
+            fi
+          done
+          
+          # Save version
+          mkdir -p .speck
+          echo "$TARGET_VERSION" > .speck/VERSION
+          
+          echo "✅ Downloaded Speck $TARGET_VERSION"
+
+      - name: Create PR
+        if: steps.check.outputs.has_update == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPECK_TOKEN: ${{ secrets.SPECK_TOKEN }}
+          CURRENT_VERSION: ${{ steps.check.outputs.current }}
+          TARGET_VERSION: ${{ steps.check.outputs.latest }}
+        run: |
+          # Check if there are actually changes
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No file changes detected. Skipping PR."
+            exit 0
+          fi
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create branch
+          BRANCH="chore/speck-update-${TARGET_VERSION}"
+          
+          # Check if branch already exists
+          if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+            echo "Branch $BRANCH already exists. Skipping."
+            exit 0
+          fi
+          
+          git checkout -b "$BRANCH"
+          
+          # Commit changes
+          git add -A
+          git commit -m "chore: upgrade Speck to ${TARGET_VERSION}
+
+Updates Speck methodology from ${CURRENT_VERSION:-unknown} to ${TARGET_VERSION}.
+
+See release notes: https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSION}"
+          
+          # Push branch
+          git push origin "$BRANCH"
+          
+          # Get release notes (with auth for private repos)
+          if [ -n "$SPECK_TOKEN" ]; then
+            RELEASE_BODY=$(curl -s -H "Authorization: token $SPECK_TOKEN" \
+              "https://api.github.com/repos/telum-ai/speck/releases/tags/${TARGET_VERSION}" | \
+              jq -r '.body // "See release notes for details."')
+          else
+            RELEASE_BODY=$(curl -s "https://api.github.com/repos/telum-ai/speck/releases/tags/${TARGET_VERSION}" | \
+              jq -r '.body // "See release notes for details."')
+          fi
+          
+          # Create PR
+          PR_URL=$(gh pr create \
+            --title "⬆️ Upgrade Speck to ${TARGET_VERSION}" \
+            --body "## Speck Update
+
+This PR upgrades Speck from **${CURRENT_VERSION:-unknown}** to **${TARGET_VERSION}**.
+
+### What's Changed
+
+${RELEASE_BODY}
+
+### Release Notes
+
+https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSION}
+
+---
+*This PR was automatically created by Speck Update Check.*" \
+            --label "dependencies")
+          
+          echo "✅ Created PR: $PR_URL"
