@@ -1,6 +1,7 @@
 # Speck Update Checker
 #
 # Automatically checks for Speck methodology updates and creates PRs.
+# Uses smart merging to preserve user customizations.
 #
 # This workflow runs daily and works out of the box for public Speck repos.
 #
@@ -29,7 +30,6 @@ jobs:
       - name: Check for updates
         id: check
         env:
-          # Use SPECK_GITHUB_TOKEN if available (for private Speck repos)
           SPECK_GITHUB_TOKEN: ${{ secrets.SPECK_GITHUB_TOKEN }}
         run: |
           # Get current version from .speck/VERSION or AGENTS.md
@@ -72,16 +72,16 @@ jobs:
             echo "✅ Already up to date: $CURRENT"
           fi
 
-      - name: Download and apply update
+      - name: Download update
         if: steps.check.outputs.has_update == 'true'
         env:
           TARGET_VERSION: ${{ steps.check.outputs.latest }}
           SPECK_GITHUB_TOKEN: ${{ secrets.SPECK_GITHUB_TOKEN }}
         run: |
-          # Create temp directory for new version
           TEMP_DIR=$(mktemp -d)
+          echo "SPECK_TEMP_DIR=$TEMP_DIR" >> $GITHUB_ENV
           
-          # Download release (with auth for private repos)
+          # Download release
           if [ -n "$SPECK_GITHUB_TOKEN" ]; then
             curl -sL -H "Authorization: token $SPECK_GITHUB_TOKEN" \
               "https://api.github.com/repos/telum-ai/speck/tarball/${TARGET_VERSION}" | \
@@ -91,40 +91,189 @@ jobs:
               tar -xz -C "$TEMP_DIR" --strip-components=1
           fi
           
-          # Files to sync (methodology files only)
-          SYNC_PATTERNS=(
-            ".speck"
+          echo "✅ Downloaded Speck $TARGET_VERSION to $TEMP_DIR"
+
+      - name: Apply updates with smart merging
+        if: steps.check.outputs.has_update == 'true'
+        env:
+          TARGET_VERSION: ${{ steps.check.outputs.latest }}
+        run: |
+          TEMP_DIR="$SPECK_TEMP_DIR"
+          
+          # =============================================================
+          # ALWAYS OVERWRITE: Pure Speck methodology files
+          # =============================================================
+          OVERWRITE_PATTERNS=(
+            ".speck/templates"
+            ".speck/patterns"
+            ".speck/recipes"
+            ".speck/scripts"
             ".cursor/commands"
-            ".cursor/hooks"
+            ".cursor/hooks/hooks"
+            ".cursor/hooks/VALIDATION.md"
             ".github/workflows/speck-orchestrator.yml"
             ".github/workflows/speck-validate-pr.yml"
             ".github/workflows/speck-retrospective.yml"
             ".github/workflows/speck-update-check.yml"
+            ".github/workflows/speck-validation.yml"
             ".github/copilot-instructions.md"
             ".github/instructions"
             ".github/ISSUE_TEMPLATE/speck-story.yml"
-            "AGENTS.md"
           )
           
-          # Sync files (respecting .speckignore if it exists)
-          for pattern in "${SYNC_PATTERNS[@]}"; do
+          for pattern in "${OVERWRITE_PATTERNS[@]}"; do
             if [ -e "$TEMP_DIR/$pattern" ]; then
-              # Skip if in .speckignore
-              if [ -f ".speckignore" ] && grep -qx "$pattern" .speckignore 2>/dev/null; then
-                echo "Skipping $pattern (in .speckignore)"
-                continue
-              fi
               mkdir -p "$(dirname "$pattern")"
-              cp -r "$TEMP_DIR/$pattern" "$pattern" 2>/dev/null || true
-              echo "Updated: $pattern"
+              rm -rf "$pattern"
+              cp -r "$TEMP_DIR/$pattern" "$pattern"
+              echo "✅ Updated: $pattern"
             fi
           done
+          
+          # =============================================================
+          # SMART MERGE: AGENTS.md (Speck controls SPECK:START..SPECK:END)
+          # =============================================================
+          if [ -f "$TEMP_DIR/AGENTS.md" ]; then
+            if [ -f "AGENTS.md" ]; then
+              # Extract user content before SPECK:START
+              USER_BEFORE=$(sed -n '1,/<!-- SPECK:START -->/p' AGENTS.md | head -n -1)
+              # Extract user content after SPECK:END
+              USER_AFTER=$(sed -n '/<!-- SPECK:END -->/,$p' AGENTS.md | tail -n +2)
+              # Get new Speck content
+              SPECK_CONTENT=$(cat "$TEMP_DIR/AGENTS.md")
+              # Merge
+              {
+                [ -n "$USER_BEFORE" ] && echo "$USER_BEFORE"
+                echo "$SPECK_CONTENT"
+                [ -n "$USER_AFTER" ] && echo "$USER_AFTER"
+              } > AGENTS.md
+              echo "✅ Merged: AGENTS.md (preserved user content outside SPECK tags)"
+            else
+              cp "$TEMP_DIR/AGENTS.md" AGENTS.md
+              echo "✅ Created: AGENTS.md"
+            fi
+          fi
+          
+          # =============================================================
+          # SMART MERGE: .gitignore (combine lines, deduplicate)
+          # =============================================================
+          if [ -f "$TEMP_DIR/.gitignore" ]; then
+            if [ -f ".gitignore" ]; then
+              # Combine and deduplicate, preserving comments
+              {
+                echo "# === Speck defaults ==="
+                cat "$TEMP_DIR/.gitignore"
+                echo ""
+                echo "# === Project-specific ==="
+                # Add lines from current .gitignore that aren't in Speck's
+                grep -vxFf "$TEMP_DIR/.gitignore" .gitignore 2>/dev/null || true
+              } | awk '!seen[$0]++ || /^#/ || /^$/' > .gitignore.new
+              mv .gitignore.new .gitignore
+              echo "✅ Merged: .gitignore"
+            else
+              cp "$TEMP_DIR/.gitignore" .gitignore
+              echo "✅ Created: .gitignore"
+            fi
+          fi
+          
+          # =============================================================
+          # SMART MERGE: .cursor/hooks/hooks.json (merge hooks arrays)
+          # =============================================================
+          if [ -f "$TEMP_DIR/.cursor/hooks/hooks.json" ]; then
+            mkdir -p .cursor/hooks
+            if [ -f ".cursor/hooks/hooks.json" ]; then
+              # Merge JSON hooks (Speck hooks + user hooks)
+              jq -s '
+                .[0] as $speck | .[1] as $user |
+                {
+                  version: ($speck.version // $user.version // 1),
+                  hooks: {
+                    afterFileEdit: (($speck.hooks.afterFileEdit // []) + ($user.hooks.afterFileEdit // []) | unique)
+                  }
+                }
+              ' "$TEMP_DIR/.cursor/hooks/hooks.json" ".cursor/hooks/hooks.json" > .cursor/hooks/hooks.json.new
+              mv .cursor/hooks/hooks.json.new .cursor/hooks/hooks.json
+              echo "✅ Merged: .cursor/hooks/hooks.json"
+            else
+              cp "$TEMP_DIR/.cursor/hooks/hooks.json" .cursor/hooks/hooks.json
+              echo "✅ Created: .cursor/hooks/hooks.json"
+            fi
+          fi
+          
+          # =============================================================
+          # SMART MERGE: .cursor/mcp.json (merge server configs)
+          # =============================================================
+          # Speck provides .cursor/mcp.json.example, merge into user's mcp.json
+          if [ -f "$TEMP_DIR/.cursor/mcp.json.example" ]; then
+            mkdir -p .cursor
+            if [ -f ".cursor/mcp.json" ]; then
+              # User has mcp.json - merge Speck defaults (don't overwrite user keys)
+              jq -s '
+                .[0] as $speck | .[1] as $user |
+                { mcpServers: ($speck.mcpServers + $user.mcpServers) }
+              ' "$TEMP_DIR/.cursor/mcp.json.example" ".cursor/mcp.json" > .cursor/mcp.json.new
+              mv .cursor/mcp.json.new .cursor/mcp.json
+              echo "✅ Merged: .cursor/mcp.json (user config takes precedence)"
+            else
+              # No mcp.json yet - copy example
+              cp "$TEMP_DIR/.cursor/mcp.json.example" .cursor/mcp.json.example
+              echo "✅ Updated: .cursor/mcp.json.example"
+            fi
+          fi
+          
+          # =============================================================
+          # HANDS-OFF IF MODIFIED: README.md
+          # =============================================================
+          if [ -f "$TEMP_DIR/README.md" ]; then
+            if [ -f "README.md" ]; then
+              # Check if README has been customized (differs from Speck template)
+              SPECK_FIRST_LINE=$(head -1 "$TEMP_DIR/README.md")
+              USER_FIRST_LINE=$(head -1 README.md)
+              if [ "$SPECK_FIRST_LINE" = "$USER_FIRST_LINE" ]; then
+                # Still looks like Speck template, update it
+                cp "$TEMP_DIR/README.md" README.md
+                echo "✅ Updated: README.md"
+              else
+                echo "⏭️  Skipped: README.md (customized by user)"
+              fi
+            else
+              cp "$TEMP_DIR/README.md" README.md
+              echo "✅ Created: README.md"
+            fi
+          fi
+          
+          # =============================================================
+          # HANDS-OFF IF MODIFIED: copilot-setup-steps.yml
+          # =============================================================
+          if [ -f "$TEMP_DIR/.github/workflows/copilot-setup-steps.yml" ]; then
+            mkdir -p .github/workflows
+            if [ -f ".github/workflows/copilot-setup-steps.yml" ]; then
+              # Check if customized (has uncommented setup steps)
+              if grep -q "^[^#]*uses:.*setup-node\|^[^#]*uses:.*setup-python\|^[^#]*uses:.*rust-toolchain" .github/workflows/copilot-setup-steps.yml; then
+                echo "⏭️  Skipped: copilot-setup-steps.yml (customized by user)"
+              else
+                cp "$TEMP_DIR/.github/workflows/copilot-setup-steps.yml" .github/workflows/copilot-setup-steps.yml
+                echo "✅ Updated: copilot-setup-steps.yml"
+              fi
+            else
+              cp "$TEMP_DIR/.github/workflows/copilot-setup-steps.yml" .github/workflows/copilot-setup-steps.yml
+              echo "✅ Created: copilot-setup-steps.yml"
+            fi
+          fi
+          
+          # =============================================================
+          # SPECK DOCS: Always update the main README
+          # =============================================================
+          if [ -f "$TEMP_DIR/.speck/README.md" ]; then
+            mkdir -p .speck
+            cp "$TEMP_DIR/.speck/README.md" .speck/README.md
+            echo "✅ Updated: .speck/README.md"
+          fi
           
           # Save version
           mkdir -p .speck
           echo "$TARGET_VERSION" > .speck/VERSION
-          
-          echo "✅ Downloaded Speck $TARGET_VERSION"
+          echo "✅ Updated: .speck/VERSION"
 
       - name: Create PR
         if: steps.check.outputs.has_update == 'true'
@@ -164,7 +313,7 @@ jobs:
           # Push branch
           git push origin "$BRANCH"
           
-          # Get release notes (with auth for private repos)
+          # Get release notes
           if [ -n "$SPECK_GITHUB_TOKEN" ]; then
             RELEASE_BODY=$(curl -s -H "Authorization: token $SPECK_GITHUB_TOKEN" \
               "https://api.github.com/repos/telum-ai/speck/releases/tags/${TARGET_VERSION}" | \
@@ -174,26 +323,39 @@ jobs:
               jq -r '.body // "See release notes for details."')
           fi
           
-          # Create PR body
-          PR_BODY="## Speck Update
+          # Create PR body (using heredoc to temp file to avoid YAML issues)
+          cat > /tmp/pr_body.md << 'PREOF'
+          ## Speck Update
           
-          This PR upgrades Speck from **${CURRENT_VERSION:-unknown}** to **${TARGET_VERSION}**.
+          ### Smart Merging Applied
           
-          ### What's Changed
+          - **AGENTS.md**: Your content outside SPECK tags preserved
+          - **.gitignore**: Your entries merged with Speck defaults
+          - **.cursor/hooks/hooks.json**: Your hooks merged with Speck hooks
+          - **.cursor/mcp.json**: Your config takes precedence
+          - **README.md**: Skipped if you customized it
+          - **copilot-setup-steps.yml**: Skipped if you customized it
+          PREOF
           
-          ${RELEASE_BODY}
-          
-          ### Release Notes
-          
-          https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSION}
-          
-          ---
-          *This PR was automatically created by Speck Update Check.*"
+          # Add dynamic content
+          echo "" >> /tmp/pr_body.md
+          echo "This PR upgrades Speck from **${CURRENT_VERSION:-unknown}** to **${TARGET_VERSION}**." >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "### What's Changed" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "$RELEASE_BODY" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "### Release Notes" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "https://github.com/telum-ai/speck/releases/tag/${TARGET_VERSION}" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "---" >> /tmp/pr_body.md
+          echo "*This PR was automatically created by Speck Update Check.*" >> /tmp/pr_body.md
           
           # Create PR
           PR_URL=$(gh pr create \
             --title "⬆️ Upgrade Speck to ${TARGET_VERSION}" \
-            --body "$PR_BODY" \
+            --body-file /tmp/pr_body.md \
             --label "dependencies")
           
           echo "✅ Created PR: $PR_URL"

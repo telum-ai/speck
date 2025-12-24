@@ -652,14 +652,12 @@ RULE: Update project testing rule - Add overlap testing pattern
 - **Epic retros** read story-retro.md (validate patterns) → produce epic-retro.md
 - **Project retros** read epic-retro.md (validate cross-epic) → evolve Speck methodology
 
-### Feeding Learnings Back Into the Template (Optional)
+### Sharing Methodology Learnings (Optional)
 
-If you use Speck as a GitHub template repo, prefer upstreaming methodology improvements via retrospectives:
-- Write validated improvements in the `SPECK_FEEDBACK` block in `epic-retro.md` / `project-retro.md`
-- Use `.github/workflows/speck-template-feedback.yml` to open an issue in the template repo automatically
-- Then sync the accepted improvements back down via `actions-template-sync`
-
-See: `.speck/TEMPLATE-FEEDBACK.md`
+After retrospectives, you can opt-in to share methodology insights with the Speck team:
+- Only methodology improvements are shared (no project-specific data)
+- You review before submission
+- Creates an issue in the Speck repository
 
 ### Pattern Validation Through Frequency
 - **1 occurrence** = story-specific (don't promote)
@@ -1042,9 +1040,9 @@ Current reliability issues (code deletion, context loss) make it unsuitable for 
 - `.speck/templates/epic/` - Epic templates
 - `.speck/templates/story/` - Story templates
 
-**Template Sync**:
-- `.speck/TEMPLATE-SYNC.md` - How to keep product repos synced from a Speck template repo
-- `.templatesyncignore` - Default sync boundaries (customize per product repo)
+**Updates**:
+- Daily automatic updates via `.github/workflows/speck-update-check.yml`
+- Smart merging preserves your customizations
 
 **MCP Setup**:
 - `.cursor/MCP-SETUP.md` - How to configure MCP servers (supports project overlay + merge script)

@@ -1303,20 +1303,19 @@ Speck includes a pre-configured workflow that checks for updates **daily** and c
 
 For private Speck repos, add a `SPECK_GITHUB_TOKEN` secret (PAT with `repo` scope).
 
-### What Gets Synced
+### Smart Merging (No Config Needed!)
 
-```
-.speck/                        # Templates, patterns, documentation
-.cursor/commands/              # Command files
-.cursor/hooks/                 # Validation hooks
-.github/workflows/speck-*.yml  # Orchestration workflows
-.github/copilot-instructions.md
-AGENTS.md
-```
+Updates use smart merging to preserve your customizations:
 
-### What's Protected
-
-Create `.speckignore` to protect project-specific files (defaults protect `specs/**`, `src/**`, `README.md`, etc.).
+| File | Strategy |
+|------|----------|
+| **AGENTS.md** | Speck controls `SPECK:START..END`, your content outside preserved |
+| **.gitignore** | Your entries merged with Speck defaults |
+| **.cursor/hooks/hooks.json** | Your hooks merged with Speck hooks |
+| **.cursor/mcp.json** | Your config takes precedence over Speck defaults |
+| **README.md** | Skipped if you customized it |
+| **copilot-setup-steps.yml** | Skipped if you customized it |
+| Everything else | Always updated (methodology files) |
 
 ---
 
