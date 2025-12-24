@@ -229,6 +229,7 @@ jobs:
         run: |
           echo "🏗️  Checking Speck methodology files..."
 
+          # Files required in ALL Speck-enabled repos (including projects)
           required_files=(
             # Core documentation
             ".speck/README.md"
@@ -263,19 +264,24 @@ jobs:
             "AGENTS.md"
             
             # Workflows
-            ".github/workflows/speck-orchestrator.yml"
-            ".github/workflows/speck-validate-pr.yml"
-            ".github/workflows/speck-retrospective.yml"
-            ".github/workflows/speck-update-check.yml"
             ".github/workflows/speck-validation.yml"
-            ".github/workflows/copilot-setup-steps.yml"
             ".github/copilot-instructions.md"
-            
-            # CLI
-            "packages/cli/bin/speck.js"
-            "packages/cli/lib/sync.js"
-            "packages/cli/lib/github.js"
           )
+          
+          # Files only required in the Speck template repo itself (not in projects)
+          # Check if this is the Speck repo by looking for the CLI
+          if [ -d "packages/cli" ]; then
+            required_files+=(
+              ".github/workflows/speck-orchestrator.yml"
+              ".github/workflows/speck-validate-pr.yml"
+              ".github/workflows/speck-retrospective.yml"
+              ".github/workflows/speck-update-check.yml"
+              ".github/workflows/copilot-setup-steps.yml"
+              "packages/cli/bin/speck.js"
+              "packages/cli/lib/sync.js"
+              "packages/cli/lib/github.js"
+            )
+          fi
 
           missing=""
           for file in "${required_files[@]}"; do
