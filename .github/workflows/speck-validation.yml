@@ -230,18 +230,21 @@ jobs:
           echo "🏗️  Checking Speck methodology files..."
 
           required_files=(
+            # Core documentation
             ".speck/README.md"
             ".speck/patterns/just-in-time-research-pattern.md"
             ".speck/recipes/README.md"
             ".claude/skills/README.md"
-            ".speck/TEMPLATE-SYNC.md"
-            ".speck/TEMPLATE-FEEDBACK.md"
+            
+            # Scripts
             ".speck/scripts/bash/analyze-scale.sh"
             ".speck/scripts/bash/create-new-project.sh"
             ".speck/scripts/bash/export-template-repo.sh"
             ".speck/scripts/bash/get-context.sh"
             ".speck/scripts/bash/merge-mcp-config.sh"
             ".speck/scripts/bash/validate-artifact-docs.sh"
+            
+            # Cursor configuration
             ".cursor/MCP-SETUP.md"
             ".cursor/mcp.json.example"
             ".cursor/commands/speck.md"
@@ -255,10 +258,23 @@ jobs:
             ".cursor/hooks/hooks/validators/validate-story-plan.sh"
             ".cursor/hooks/hooks/validators/validate-story-tasks.sh"
             ".cursor/hooks/hooks/validators/validate-epic-tech-spec.sh"
+            
+            # Core methodology
             "AGENTS.md"
-            ".github/workflows/template-sync.yml"
-            ".github/workflows/speck-template-feedback.yml"
-            ".templatesyncignore"
+            
+            # Workflows
+            ".github/workflows/speck-orchestrator.yml"
+            ".github/workflows/speck-validate-pr.yml"
+            ".github/workflows/speck-retrospective.yml"
+            ".github/workflows/speck-update-check.yml"
+            ".github/workflows/speck-validation.yml"
+            ".github/workflows/copilot-setup-steps.yml"
+            ".github/copilot-instructions.md"
+            
+            # CLI
+            "packages/cli/bin/speck.js"
+            "packages/cli/lib/sync.js"
+            "packages/cli/lib/github.js"
           )
 
           missing=""
