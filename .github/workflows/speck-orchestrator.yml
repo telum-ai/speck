@@ -259,24 +259,31 @@ jobs:
           for ISSUE_NUM in $QUEUED; do
             echo "Assigning Copilot to #$ISSUE_NUM"
             
+            # Build JSON payload
+            PAYLOAD=$(cat <<'EOFPAYLOAD'
+          {
+            "assignees": ["copilot-swe-agent[bot]"],
+            "agent_assignment": {
+              "target_repo": "REPO_PLACEHOLDER",
+              "base_branch": "main",
+              "custom_instructions": "",
+              "custom_agent": "",
+              "model": ""
+            }
+          }
+          EOFPAYLOAD
+          )
+            
+            # Replace placeholder with actual repo
+            PAYLOAD=$(echo "$PAYLOAD" | sed "s|REPO_PLACEHOLDER|$REPO|g")
+            
             # Use official REST API to assign copilot-swe-agent[bot]
-            gh api \
+            echo "$PAYLOAD" | gh api \
               --method POST \
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               "/repos/$REPO/issues/$ISSUE_NUM/assignees" \
-              --input - <<EOF
-{
-  "assignees": ["copilot-swe-agent[bot]"],
-  "agent_assignment": {
-    "target_repo": "$REPO",
-    "base_branch": "main",
-    "custom_instructions": "",
-    "custom_agent": "",
-    "model": ""
-  }
-}
-EOF
+              --input -
             
             # Update label to in-progress
             gh issue edit "$ISSUE_NUM" --remove-label "speck:queued" --add-label "speck:in-progress"
