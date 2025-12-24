@@ -1,5 +1,5 @@
 {
-  "name": "@telum-ai/speck",
+  "name": "speck-cli",
   "version": "2.2.0",
   "description": "CLI for managing Speck methodology in your projects",
   "type": "module",
@@ -28,9 +28,5 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "files": [
-    "bin/",
-    "lib/",
-    "README.md"
-  ]
+  "private": true
 }

@@ -30,7 +30,7 @@ export async function showVersion(targetDir) {
     console.log(`🎯 Latest available:      ${latest.tag_name}`);
     
     if (currentVersion && currentVersion !== latest.tag_name) {
-      console.log('\n💡 Run "npx @telum-ai/speck upgrade" to update');
+      console.log('\n💡 Run "npx github:telum-ai/speck upgrade" to update');
     }
   } catch (error) {
     console.log('🎯 Latest available:      (could not fetch)');

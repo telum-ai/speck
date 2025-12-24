@@ -14,24 +14,27 @@ Speck offers three distribution methods:
 
 ## Method 1: CLI (Recommended for New Projects)
 
-The simplest way to add or update Speck:
+The simplest way to add or update Speck. Runs directly from GitHub (no npm publish):
 
 ```bash
 # Initialize Speck in current directory
-npx @telum-ai/speck init
+npx github:telum-ai/speck init
 
 # Upgrade to latest version
-npx @telum-ai/speck upgrade
+npx github:telum-ai/speck upgrade
 
 # Upgrade to specific version
-npx @telum-ai/speck upgrade v2.1.0
+npx github:telum-ai/speck upgrade v2.1.0
 
 # Preview changes before applying
-npx @telum-ai/speck upgrade --dry-run
+npx github:telum-ai/speck upgrade --dry-run
 
 # Check for available updates
-npx @telum-ai/speck check
+npx github:telum-ai/speck check
 ```
+
+> **Access Control**: Requires read permission to the telum-ai/speck repository.
+> If the repo is private, users must be collaborators or org members.
 
 ### CLI Options
 

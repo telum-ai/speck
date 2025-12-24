@@ -4,13 +4,18 @@
  * Speck CLI
  * 
  * Manages Speck methodology installation and updates in your projects.
+ * Runs directly from GitHub - no npm publishing required.
  * 
  * Usage:
- *   npx @telum-ai/speck init          # Initialize Speck in current directory
- *   npx @telum-ai/speck upgrade       # Upgrade to latest version
- *   npx @telum-ai/speck upgrade v2.1.0 # Upgrade to specific version
- *   npx @telum-ai/speck check         # Check for available updates
- *   npx @telum-ai/speck version       # Show current and latest versions
+ *   npx github:telum-ai/speck init          # Initialize Speck in current directory
+ *   npx github:telum-ai/speck upgrade       # Upgrade to latest version
+ *   npx github:telum-ai/speck upgrade v2.1.0 # Upgrade to specific version
+ *   npx github:telum-ai/speck check         # Check for available updates
+ *   npx github:telum-ai/speck version       # Show current and latest versions
+ * 
+ * Access Control:
+ *   Requires read permission to telum-ai/speck repository.
+ *   If repo is private, user must be a collaborator or org member.
  */
 
 import { fileURLToPath } from 'url';
@@ -31,7 +36,7 @@ const HELP = `
 🥓 Speck CLI v${pkg.version}
 
 USAGE
-  npx @telum-ai/speck <command> [options]
+  npx github:telum-ai/speck <command> [options]
 
 COMMANDS
   init              Initialize Speck in current directory
@@ -46,11 +51,15 @@ OPTIONS
   --ignore <glob>   Additional patterns to ignore (can be repeated)
 
 EXAMPLES
-  npx @telum-ai/speck init
-  npx @telum-ai/speck upgrade
-  npx @telum-ai/speck upgrade v2.1.0
-  npx @telum-ai/speck check
-  npx @telum-ai/speck upgrade --dry-run
+  npx github:telum-ai/speck init
+  npx github:telum-ai/speck upgrade
+  npx github:telum-ai/speck upgrade v2.1.0
+  npx github:telum-ai/speck check
+  npx github:telum-ai/speck upgrade --dry-run
+
+ACCESS CONTROL
+  Requires read permission to telum-ai/speck repository.
+  If the repo is private, you must be a collaborator or org member.
 
 MORE INFO
   https://github.com/telum-ai/speck

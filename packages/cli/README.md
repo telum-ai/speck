@@ -1,27 +1,30 @@
-# @telum-ai/speck
+# Speck CLI
 
 CLI for managing the Speck methodology in your projects.
 
-## Installation
+## Usage
 
-No installation needed - use directly with `npx`:
-
-```bash
-npx @telum-ai/speck <command>
-```
-
-Or install globally:
+Run directly from GitHub (no npm install needed):
 
 ```bash
-npm install -g @telum-ai/speck
+# Using npx with GitHub
+npx github:telum-ai/speck <command>
+
+# Or clone and run locally
+git clone https://github.com/telum-ai/speck.git
+cd speck/packages/cli
+node bin/speck.js <command>
 ```
+
+> **Note**: Access requires read permission to the telum-ai/speck repository.
+> If the repo is private, you'll need to be a collaborator or org member.
 
 ## Commands
 
 ### Initialize Speck
 
 ```bash
-npx @telum-ai/speck init
+npx github:telum-ai/speck init
 ```
 
 Creates all Speck methodology files in your current directory.
@@ -30,25 +33,25 @@ Creates all Speck methodology files in your current directory.
 
 ```bash
 # Upgrade to latest version
-npx @telum-ai/speck upgrade
+npx github:telum-ai/speck upgrade
 
 # Upgrade to specific version
-npx @telum-ai/speck upgrade v2.1.0
+npx github:telum-ai/speck upgrade v2.1.0
 
 # Preview changes without applying
-npx @telum-ai/speck upgrade --dry-run
+npx github:telum-ai/speck upgrade --dry-run
 ```
 
 ### Check for Updates
 
 ```bash
-npx @telum-ai/speck check
+npx github:telum-ai/speck check
 ```
 
 ### Show Versions
 
 ```bash
-npx @telum-ai/speck version
+npx github:telum-ai/speck version
 ```
 
 ## Options
