@@ -1,0 +1,36 @@
+{
+  "name": "@telum-ai/speck",
+  "version": "2.2.0",
+  "description": "CLI for managing Speck methodology in your projects",
+  "type": "module",
+  "bin": {
+    "speck": "./bin/speck.js"
+  },
+  "scripts": {
+    "build": "echo 'No build step required'",
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "speck",
+    "methodology",
+    "specification",
+    "ai",
+    "cursor",
+    "copilot"
+  ],
+  "author": "Telum AI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/telum-ai/speck.git",
+    "directory": "packages/cli"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md"
+  ]
+}
