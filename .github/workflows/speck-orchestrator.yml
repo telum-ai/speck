@@ -78,6 +78,10 @@ jobs:
           for EPIC_DIR in $EPICS; do
             echo "Processing epic: $EPIC_DIR"
             
+            # Get epic name for issue titles
+            EPIC_ID=$(basename "$EPIC_DIR")
+            EPIC_NAME=$(grep -m1 "^# " "$EPIC_DIR/epic.md" 2>/dev/null | sed 's/^# //' || echo "$EPIC_ID")
+            
             # Extract planned stories from epic-breakdown.md
             PLANNED_STORIES=""
             if [ -f "$EPIC_DIR/epic-breakdown.md" ]; then
@@ -180,6 +184,7 @@ jobs:
               {
                 echo "## Speck Story: $TITLE"
                 echo ""
+                echo "**Epic**: $EPIC_NAME"
                 echo "**Path**: \`$STORY_DIR\`"
                 echo "**Start At**: \`$START_CMD\`"
                 echo ""
@@ -205,8 +210,9 @@ jobs:
                 LABEL="speck:story,automated,speck:queued"
               fi
               
+              # Create issue with epic and story info
               gh issue create \
-                --title "🤖 [Speck] $STORY_NAME" \
+                --title "[$EPIC_ID] $STORY_NAME: $TITLE" \
                 --body-file /tmp/issue_body.md \
                 --label "$LABEL"
               
