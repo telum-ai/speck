@@ -280,7 +280,7 @@ jobs:
               "packages/cli/bin/speck.js"
               "packages/cli/lib/sync.js"
               "packages/cli/lib/github.js"
-            )
+          )
           fi
 
           missing=""
