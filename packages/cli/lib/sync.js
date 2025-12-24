@@ -443,46 +443,26 @@ export function smartSync(sourceDir, targetDir, options = {}) {
 
 /**
  * Check if Speck is initialized in a directory
- * 
- * Uses Speck-specific markers, NOT AGENTS.md alone
- * (AGENTS.md can exist for other AI agent frameworks)
  */
 export function isSpeckInitialized(targetDir) {
-  // Definitive: .speck/VERSION exists
-  const versionPath = join(targetDir, '.speck', 'VERSION');
-  if (existsSync(versionPath)) {
-    return true;
-  }
-  
-  // Strong indicator: .speck/README.md exists (Speck methodology docs)
-  const speckReadme = join(targetDir, '.speck', 'README.md');
-  if (existsSync(speckReadme)) {
-    return true;
-  }
-  
-  // Strong indicator: .cursor/commands/speck.md exists (Speck router command)
-  const speckCommand = join(targetDir, '.cursor', 'commands', 'speck.md');
-  if (existsSync(speckCommand)) {
-    return true;
-  }
-  
-  return false;
+  const markers = [
+    join(targetDir, '.speck', 'VERSION'),
+    join(targetDir, '.speck', 'README.md'),
+    join(targetDir, '.cursor', 'commands', 'speck.md'),
+  ];
+  return markers.some(path => existsSync(path));
 }
 
 /**
  * Get the current Speck version in a directory
- * 
- * Returns null if Speck is not initialized (use isSpeckInitialized() to check first)
  */
 export function getCurrentVersion(targetDir) {
-  // Definitive source: .speck/VERSION
   const versionPath = join(targetDir, '.speck', 'VERSION');
   if (existsSync(versionPath)) {
     return readFileSync(versionPath, 'utf-8').trim();
   }
   
-  // Legacy fallback: parse version from AGENTS.md (only if Speck markers exist)
-  // This handles older Speck installations before we had .speck/VERSION
+  // Fallback: parse from AGENTS.md for older installations
   if (isSpeckInitialized(targetDir)) {
     const agentsPath = join(targetDir, 'AGENTS.md');
     if (existsSync(agentsPath)) {
