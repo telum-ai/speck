@@ -45,12 +45,13 @@ jobs:
       - name: Create Speck labels if missing
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          gh label create "speck:story" --color "0E8A16" --description "Speck story" --force 2>/dev/null || true
-          gh label create "speck:blocked" --color "B60205" --description "Blocked by dependencies" --force 2>/dev/null || true
-          gh label create "speck:queued" --color "C5DEF5" --description "Queued for Copilot" --force 2>/dev/null || true
-          gh label create "speck:in-progress" --color "FBCA04" --description "Copilot working" --force 2>/dev/null || true
-          gh label create "automated" --color "BFD4F2" --description "Created by automation" --force 2>/dev/null || true
+          gh label create "speck:story" --color "0E8A16" --description "Speck story" --force --repo "$GH_REPO" || true
+          gh label create "speck:blocked" --color "B60205" --description "Blocked by dependencies" --force --repo "$GH_REPO" || true
+          gh label create "speck:queued" --color "C5DEF5" --description "Queued for Copilot" --force --repo "$GH_REPO" || true
+          gh label create "speck:in-progress" --color "FBCA04" --description "Copilot working" --force --repo "$GH_REPO" || true
+          gh label create "automated" --color "BFD4F2" --description "Created by automation" --force --repo "$GH_REPO" || true
 
   orchestrate:
     needs: ensure-labels
