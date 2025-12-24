@@ -77,18 +77,59 @@ jobs:
           
           for EPIC_DIR in $EPICS; do
             echo "Processing epic: $EPIC_DIR"
-            STORIES_DIR="$EPIC_DIR/stories"
-            [ -d "$STORIES_DIR" ] || continue
             
-            # Sort stories by numeric ID (story-001, story-002...)
-            for STORY_DIR in $(ls -d "$STORIES_DIR"/*/ 2>/dev/null | sort -V); do
-              [ -d "$STORY_DIR" ] || continue
-              STORY_NAME=$(basename "$STORY_DIR")
+            # Extract planned stories from epic-breakdown.md
+            PLANNED_STORIES=""
+            if [ -f "$EPIC_DIR/epic-breakdown.md" ]; then
+              # Look for story IDs in markdown (S001, S002, story-001, etc.)
+              PLANNED_STORIES=$(grep -oE '(S[0-9]{3}|story-[0-9]{3})' "$EPIC_DIR/epic-breakdown.md" 2>/dev/null | sort -u | tr '\n' ' ' || true)
+            fi
+            
+            STORIES_DIR="$EPIC_DIR/stories"
+            mkdir -p "$STORIES_DIR" 2>/dev/null || true
+            
+            # Process all planned stories (from breakdown + existing directories)
+            ALL_STORIES=""
+            
+            # Add stories from epic-breakdown.md
+            for STORY_ID in $PLANNED_STORIES; do
+              ALL_STORIES="$ALL_STORIES $STORY_ID"
+            done
+            
+            # Add stories from existing directories
+            for STORY_DIR in $(ls -d "$STORIES_DIR"/*/ 2>/dev/null); do
+              STORY_ID=$(basename "$STORY_DIR")
+              ALL_STORIES="$ALL_STORIES $STORY_ID"
+            done
+            
+            # Deduplicate and sort
+            ALL_STORIES=$(echo "$ALL_STORIES" | tr ' ' '\n' | sort -u -V | tr '\n' ' ')
+            
+            # Process each story
+            for STORY_ID in $ALL_STORIES; do
+              [ -z "$STORY_ID" ] && continue
+              
+              # Normalize story name (S001 -> story-001 if that's what exists on disk)
+              STORY_DIR="$STORIES_DIR/$STORY_ID"
+              if [ ! -d "$STORY_DIR" ]; then
+                # Try alternative format
+                if [[ "$STORY_ID" =~ ^S([0-9]{3})$ ]]; then
+                  ALT_ID="story-${BASH_REMATCH[1]}"
+                  [ -d "$STORIES_DIR/$ALT_ID" ] && STORY_DIR="$STORIES_DIR/$ALT_ID" && STORY_ID="$ALT_ID"
+                elif [[ "$STORY_ID" =~ ^story-([0-9]{3})$ ]]; then
+                  ALT_ID="S${BASH_REMATCH[1]}"
+                  [ -d "$STORIES_DIR/$ALT_ID" ] && STORY_DIR="$STORIES_DIR/$ALT_ID" && STORY_ID="$ALT_ID"
+                fi
+              fi
+              
+              STORY_NAME="$STORY_ID"
               
               # Skip if story is already complete (has validation report or retrospective)
-              if [ -f "$STORY_DIR/validation-report.md" ] || [ -f "$STORY_DIR/story-retro.md" ]; then
-                echo "  Skipping $STORY_NAME (already completed)"
-                continue
+              if [ -d "$STORY_DIR" ]; then
+                if [ -f "$STORY_DIR/validation-report.md" ] || [ -f "$STORY_DIR/story-retro.md" ]; then
+                  echo "  Skipping $STORY_NAME (already completed)"
+                  continue
+                fi
               fi
               
               EXISTING=$(gh issue list --label "speck:story" --search "in:title $STORY_NAME" --state open --json number --jq 'length' 2>/dev/null || echo "0")
@@ -104,7 +145,7 @@ jobs:
               
               BLOCKED=false
               BLOCKING=""
-              if [ -f "$STORY_DIR/tasks.md" ]; then
+              if [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/tasks.md" ]; then
                 DEPS=$(sed -n '/^---$/,/^---$/p' "$STORY_DIR/tasks.md" | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
                 for DEP in $DEPS; do
                   DEP=$(echo "$DEP" | tr -d ' "')
@@ -116,17 +157,17 @@ jobs:
                 done
               fi
               
-              if [ -f "$STORY_DIR/tasks.md" ]; then
+              if [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/tasks.md" ]; then
                 START_CMD="story-implement"
-              elif [ -f "$STORY_DIR/plan.md" ]; then
+              elif [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/plan.md" ]; then
                 START_CMD="story-tasks"
-              elif [ -f "$STORY_DIR/spec.md" ]; then
+              elif [ -d "$STORY_DIR" ] && [ -f "$STORY_DIR/spec.md" ]; then
                 START_CMD="story-clarify"
               else
                 START_CMD="story-specify"
               fi
               
-              TITLE=$(grep -m1 "^# " "$STORY_DIR/spec.md" 2>/dev/null | sed 's/^# //' || echo "$STORY_NAME")
+              TITLE=$([ -d "$STORY_DIR" ] && grep -m1 "^# " "$STORY_DIR/spec.md" 2>/dev/null | sed 's/^# //' || echo "$STORY_NAME")
               
               {
                 echo "## Speck Story: $TITLE"
