@@ -1,0 +1,16 @@
+{
+  "name": "speck",
+  "version": "2.3.0",
+  "description": "Speck methodology CLI",
+  "type": "module",
+  "bin": {
+    "speck": "./packages/cli/bin/speck.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/telum-ai/speck.git"
+  }
+}
