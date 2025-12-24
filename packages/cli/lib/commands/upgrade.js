@@ -1,14 +1,12 @@
 /**
- * Upgrade Speck to a new version
+ * Upgrade Speck to a new version with smart merging
  */
 
 import { getLatestRelease, getReleaseByTag, getChangelog } from '../github.js';
 import { 
   extractRelease, 
-  planSync, 
-  executeSync, 
+  smartSync,
   saveVersion, 
-  loadIgnorePatterns,
   getCurrentVersion 
 } from '../sync.js';
 
@@ -67,63 +65,36 @@ export async function upgrade(targetDir, version, options = {}) {
   
   // Download target version
   console.log('📦 Downloading...');
-  const sourceDir = await extractRelease(targetVersion);
+  const sourceDir = await extractRelease(targetVersion, options.token);
   console.log('   Done!\n');
   
-  // Plan the sync
-  const ignorePatterns = loadIgnorePatterns(targetDir);
-  if (options.ignore) {
-    ignorePatterns.push(...options.ignore);
-  }
-  
-  const plan = planSync(sourceDir, targetDir, ignorePatterns);
-  
-  // Show what will change
-  if (plan.create.length > 0) {
-    console.log('📋 New files:');
-    for (const file of plan.create.slice(0, 10)) {
-      console.log(`   + ${file}`);
-    }
-    if (plan.create.length > 10) {
-      console.log(`   ... and ${plan.create.length - 10} more`);
-    }
-    console.log('');
-  }
-  
-  if (plan.update.length > 0) {
-    console.log('📋 Files to update:');
-    for (const file of plan.update.slice(0, 15)) {
-      console.log(`   ~ ${file}`);
-    }
-    if (plan.update.length > 15) {
-      console.log(`   ... and ${plan.update.length - 15} more`);
-    }
-    console.log('');
-  }
-  
-  if (plan.create.length === 0 && plan.update.length === 0) {
-    console.log('✅ No changes needed - all files are up to date!');
-    return;
-  }
-  
-  console.log(`📊 Summary: ${plan.create.length} new, ${plan.update.length} updated, ${plan.skip.length} skipped\n`);
-  
-  // Dry run stops here
+  // Dry run - just show what would happen
   if (options.dryRun) {
-    console.log('🔍 Dry run - no changes made.');
-    console.log('   Run without --dry-run to apply changes.');
+    console.log('🔍 Dry run - showing what would change:\n');
+    console.log('Smart merge strategies:');
+    console.log('  • AGENTS.md: Speck controls SPECK:START..END, your content preserved');
+    console.log('  • .gitignore: Your entries merged with Speck defaults');
+    console.log('  • .cursor/hooks/hooks.json: Your hooks merged with Speck hooks');
+    console.log('  • .cursor/mcp.json: Your config takes precedence');
+    console.log('  • README.md: Skipped if customized');
+    console.log('  • copilot-setup-steps.yml: Skipped if customized');
+    console.log('  • Everything else: Always updated\n');
+    console.log('Run without --dry-run to apply changes.');
     return;
   }
   
-  // Execute sync
-  console.log('✨ Applying changes...');
-  const results = executeSync(sourceDir, targetDir, plan);
+  // Execute smart sync
+  console.log('✨ Applying changes with smart merging...\n');
+  const results = smartSync(sourceDir, targetDir, { verbose: true });
   
+  // Summary
+  console.log('');
   if (results.errors.length > 0) {
-    console.log('\n❌ Some files failed:');
+    console.log('❌ Some files failed:');
     for (const { file, error } of results.errors) {
       console.log(`   ${file}: ${error}`);
     }
+    console.log('');
   }
   
   // Save new version
@@ -132,8 +103,10 @@ export async function upgrade(targetDir, version, options = {}) {
   console.log(`
 ✅ Upgraded from ${currentVersion} to ${targetVersion}!
 
-📁 Created ${results.created.length} files
-📝 Updated ${results.updated.length} files
+📁 Created: ${results.created.length} files
+📝 Updated: ${results.updated.length} files
+🔀 Merged:  ${results.merged.length} files
+⏭️  Skipped: ${results.skipped.length} files
 
 Review the changes and commit when ready:
   git add -A

@@ -5,7 +5,7 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { getLatestRelease } from '../github.js';
-import { extractRelease, planSync, executeSync, saveVersion, loadIgnorePatterns } from '../sync.js';
+import { extractRelease, smartSync, saveVersion } from '../sync.js';
 
 export async function init(targetDir, options = {}) {
   console.log('🥓 Initializing Speck...\n');
@@ -30,61 +30,36 @@ export async function init(targetDir, options = {}) {
   
   // Download release
   console.log('📦 Downloading...');
-  const sourceDir = await extractRelease(release.tag_name);
+  const sourceDir = await extractRelease(release.tag_name, options.token);
   console.log('   Done!\n');
-  
-  // Plan the sync
-  const ignorePatterns = loadIgnorePatterns(targetDir);
-  if (options.ignore) {
-    ignorePatterns.push(...options.ignore);
-  }
-  
-  const plan = planSync(sourceDir, targetDir, ignorePatterns);
-  
-  // Show what will be created
-  console.log('📋 Files to create:');
-  if (plan.create.length === 0) {
-    console.log('   (none)');
-  } else {
-    for (const file of plan.create.slice(0, 20)) {
-      console.log(`   + ${file}`);
-    }
-    if (plan.create.length > 20) {
-      console.log(`   ... and ${plan.create.length - 20} more`);
-    }
-  }
-  
-  if (plan.update.length > 0) {
-    console.log('\n📋 Files to update:');
-    for (const file of plan.update.slice(0, 10)) {
-      console.log(`   ~ ${file}`);
-    }
-    if (plan.update.length > 10) {
-      console.log(`   ... and ${plan.update.length - 10} more`);
-    }
-  }
-  
-  if (plan.skip.length > 0) {
-    console.log(`\n⏭️  Skipped ${plan.skip.length} files (ignored patterns)`);
-  }
-  
-  console.log('');
   
   // Dry run stops here
   if (options.dryRun) {
-    console.log('🔍 Dry run - no changes made.');
+    console.log('🔍 Dry run - showing what would be created:\n');
+    console.log('Smart merge strategies:');
+    console.log('  • AGENTS.md: Speck controls SPECK:START..END');
+    console.log('  • .gitignore: Your entries merged with Speck defaults');
+    console.log('  • .cursor/hooks/hooks.json: Your hooks merged with Speck hooks');
+    console.log('  • .cursor/mcp.json: Your config takes precedence');
+    console.log('  • README.md: Skipped if customized');
+    console.log('  • copilot-setup-steps.yml: Skipped if customized');
+    console.log('  • Everything else: Always updated\n');
+    console.log('Run without --dry-run to apply changes.');
     return;
   }
   
-  // Execute sync
-  console.log('✨ Creating files...');
-  const results = executeSync(sourceDir, targetDir, plan);
+  // Execute smart sync
+  console.log('✨ Creating files with smart merging...\n');
+  const results = smartSync(sourceDir, targetDir, { verbose: true });
   
+  // Summary
+  console.log('');
   if (results.errors.length > 0) {
-    console.log('\n❌ Some files failed:');
+    console.log('❌ Some files failed:');
     for (const { file, error } of results.errors) {
       console.log(`   ${file}: ${error}`);
     }
+    console.log('');
   }
   
   // Save version
@@ -93,12 +68,14 @@ export async function init(targetDir, options = {}) {
   console.log(`
 ✅ Speck ${release.tag_name} initialized!
 
-📁 Created ${results.created.length} files
-📝 Updated ${results.updated.length} files
+📁 Created: ${results.created.length} files
+📝 Updated: ${results.updated.length} files
+🔀 Merged:  ${results.merged.length} files
+⏭️  Skipped: ${results.skipped.length} files
 
 Next steps:
   1. Review the created files
-  2. Configure .speckignore if needed
+  2. Configure MCP servers in .cursor/mcp.json (copy from .cursor/mcp.json.example)
   3. Run /speck to start your project!
 
 To check for updates later:

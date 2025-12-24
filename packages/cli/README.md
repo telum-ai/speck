@@ -1,115 +1,94 @@
 # Speck CLI
 
-CLI for managing the Speck methodology in your projects.
+Command-line interface for managing Speck methodology in your projects.
 
 ## Usage
 
-Run directly from GitHub (no npm install needed):
+Run directly from GitHub (no install needed):
 
 ```bash
-# Using npx with GitHub
-npx github:telum-ai/speck <command>
-
-# Or clone and run locally
-git clone https://github.com/telum-ai/speck.git
-cd speck/packages/cli
-node bin/speck.js <command>
-```
-
-> **Note**: Access requires read permission to the telum-ai/speck repository.
-> If the repo is private, you'll need to be a collaborator or org member.
-
-## Commands
-
-### Initialize Speck
-
-```bash
+# Initialize Speck in a new project
 npx github:telum-ai/speck init
-```
 
-Creates all Speck methodology files in your current directory.
-
-### Upgrade Speck
-
-```bash
 # Upgrade to latest version
 npx github:telum-ai/speck upgrade
 
-# Upgrade to specific version
-npx github:telum-ai/speck upgrade v2.1.0
+# Check for updates
+npx github:telum-ai/speck check
 
-# Preview changes without applying
-npx github:telum-ai/speck upgrade --dry-run
+# Show current version
+npx github:telum-ai/speck version
 ```
 
-### Check for Updates
+## Smart Merging
+
+The CLI uses intelligent merging to preserve your customizations during updates:
+
+| File | Strategy |
+|------|----------|
+| **AGENTS.md** | Speck controls `SPECK:START..END`, your content outside preserved |
+| **.gitignore** | Your entries merged with Speck defaults |
+| **.cursor/hooks/hooks.json** | Your hooks merged with Speck hooks |
+| **.cursor/mcp.json** | Your config takes precedence over Speck defaults |
+| **README.md** | Skipped if you customized it |
+| **copilot-setup-steps.yml** | Skipped if you customized it |
+| **Methodology files** | Always updated (commands, templates, patterns, workflows) |
+
+## Commands
+
+### `init`
+
+Initialize Speck in the current directory.
+
+```bash
+npx github:telum-ai/speck init [options]
+```
+
+Options:
+- `--force` - Reinitialize even if already initialized
+- `--dry-run` - Show what would be created without making changes
+
+### `upgrade`
+
+Upgrade Speck to the latest version (or a specific version).
+
+```bash
+npx github:telum-ai/speck upgrade [version] [options]
+```
+
+Options:
+- `version` - Target version (default: latest)
+- `--dry-run` - Show what would change without making changes
+
+### `check`
+
+Check if a newer version of Speck is available.
 
 ```bash
 npx github:telum-ai/speck check
 ```
 
-### Show Versions
+### `version`
+
+Show the current Speck version.
 
 ```bash
 npx github:telum-ai/speck version
 ```
 
-## Options
+## Private Repositories
 
-| Option | Description |
-|--------|-------------|
-| `--dry-run` | Show what would change without making changes |
-| `--force` | Overwrite existing files without prompting |
-| `--ignore <pattern>` | Additional patterns to ignore (can be repeated) |
+If the Speck repository is private, set the `SPECK_GITHUB_TOKEN` environment variable:
 
-## Configuration
-
-### `.speckignore`
-
-Create a `.speckignore` file in your project root to specify files that should never be overwritten by Speck updates:
-
-```gitignore
-# Project-specific files
-specs/**
-src/**
-README.md
-
-# Configuration
-copilot-setup-steps.yml
-.env*
-
-# Custom Cursor rules
-.cursor/rules/my-project-rules.mdc
+```bash
+SPECK_GITHUB_TOKEN=ghp_xxx npx github:telum-ai/speck upgrade
 ```
 
-### Default Ignored Patterns
+## Automatic Updates
 
-These patterns are always ignored (never synced from template):
+Projects include a daily update workflow (`.github/workflows/speck-update-check.yml`) that:
+1. Checks for new Speck versions
+2. Runs `npx github:telum-ai/speck upgrade`
+3. Creates a PR with the changes
 
-- `specs/**` - Your specifications
-- `src/**` - Your source code
-- `README.md` - Your README
-- `.git/**` - Git directory
-- `node_modules/**` - Dependencies
-- `package.json` - Your package.json
-- `.env*` - Environment files
-- `copilot-setup-steps.yml` - Project-specific Copilot setup
-
-## What Gets Synced
-
-Speck methodology files:
-
-- `.speck/**` - Templates, patterns, documentation
-- `.cursor/commands/**` - Command files
-- `.cursor/hooks/**` - Validation hooks
-- `.github/workflows/speck-*.yml` - Orchestration workflows
-- `.github/copilot-instructions.md` - Copilot instructions
-- `AGENTS.md` - Agent methodology guide
-
-## Releases
-
-See [GitHub Releases](https://github.com/telum-ai/speck/releases) for version history and changelogs.
-
-## License
-
-MIT
+For private Speck repos, add `SPECK_GITHUB_TOKEN` as a repository secret.
