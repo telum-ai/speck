@@ -203,20 +203,7 @@ Create `specs/projects/[PROJECT_ID]/context.md`:
 
 Use the template from `.speck/templates/project/context-template.md` and fill with gathered information.
 
-**Add "Research Informing This Context" section** at the top after metadata:
-```markdown
-## Research Informing This Context
-
-### Web Search Findings
-- **Compliance**: GDPR requires explicit consent for data processing (Source: [URL], Date: [Date])
-- **Technology**: PostgreSQL supports up to 10K concurrent connections (Source: [URL], Date: [Date])
-
-### Deep Research (if conducted)
-- **Regulatory**: [Key findings] (Report: project-context-research-report-compliance.md)
-
-### Best Practices Applied
-- Standard industry practices for [domain] applications
-```
+Populate the template’s **Research Informing This Context** section using findings from the research step above.
 
 Key sections to populate:
 - Technical Constraints (required tech, browser support, integrations)

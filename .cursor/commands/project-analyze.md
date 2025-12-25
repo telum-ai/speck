@@ -83,93 +83,13 @@ Analyze project planning artifacts for consistency, completeness, and feasibilit
    ```
 
 4. Generate analysis report:
+
+   **CRITICAL**: Load and follow the template exactly:
    ```
-   # Project Analysis Report: [Project Name]
-   
-   **Date**: [Date]
-   **Scale**: Level [X]
-   **Status**: [Ready/Issues Found/Blocked]
-   
-   ## Executive Summary
-   [High-level findings and recommendations]
-   
-   ## Analysis Results
-   
-   ### ✅ Strengths
-   - [What's well-designed]
-   - [What's clear and actionable]
-   - [What reduces risk]
-   
-   ### ⚠️ Issues Found
-   
-   | ID | Category | Severity | Description | Recommendation |
-   |----|----------|----------|-------------|----------------|
-   | P1 | Epic Overlap | HIGH | E002 and E003 both handle user auth | Consolidate into E002 |
-   | P2 | Missing Req | MEDIUM | Performance requirements not assigned | Add to E001 |
-   
-   ### 📊 Metrics
-   
-   #### Requirement Coverage
-   - Total requirements: [X]
-   - Mapped to epics: [X] ([Y]%)
-   - Orphaned: [List]
-   
-   #### Epic Analysis
-   - Total epics: [X]
-   - Dependencies: [Y] identified
-   - Parallel opportunities: [Z]
-   - Critical path length: [N] epics
-   
-   #### Scope Validation
-   - Estimated total stories: [X]
-   - Expected for Level [N]: [Y-Z]
-   - Assessment: [On track/Over/Under]
-   
-   #### Risk Summary
-   - High risks: [X]
-   - Medium risks: [Y]
-   - Unmitigated: [Z]
-   
-   ## Detailed Findings
-   
-   ### Epic Boundary Issues
-   [Detailed description of any overlap/gap issues]
-   
-   ### Requirement Issues  
-   [Detailed list of unmapped or unclear requirements]
-   
-   ### Dependency Concerns
-   [Analysis of dependency chains and bottlenecks]
-   
-   ### Resource Gaps
-   [Skills or resources needed but not identified]
-   
-   ## Recommendations
-   
-   ### Immediate Actions
-   1. [Most critical fix]
-   2. [Second priority]
-   
-   ### Before Epic Planning
-   1. [What must be resolved]
-   2. [What should be clarified]
-   
-   ### Process Improvements
-   1. [For this project]
-   2. [For future projects]
-   
-   ## Readiness Assessment
-   
-   - [ ] Strategic alignment confirmed
-   - [ ] Epic boundaries clean
-   - [ ] Dependencies manageable  
-   - [ ] Scope appropriate for scale
-   - [ ] Risks identified and mitigated
-   - [ ] Resources available
-   - [ ] Success metrics defined
-   
-   **Overall Status**: [Ready to proceed / Address issues first]
+   .speck/templates/project/project-analysis-report-template.md
    ```
+
+   Write output to: `[PROJECT_DIR]/project-analysis-report.md`
 
 5. Severity classification:
    - **CRITICAL**: Blocks project execution

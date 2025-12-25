@@ -60,12 +60,12 @@ Given the implementation details provided as an argument, do this:
    - **IF outline.md EXISTS**: 
      * Mode: Post-research planning
      * Load outline.md for Technical Context
-     * Skip to step 4 (constitution check) then proceed with Phase 0 consolidation
+     * Proceed to step 6 (constitution check), then continue through execution
    - **IF outline.md MISSING**:
      * Mode: Full planning (current behavior)
-     * Continue with step 3 (analyze spec and fill Technical Context)
+     * Proceed to step 4 (full planning mode)
 
-3. **IF full planning mode** (outline.md missing - current behavior):
+4. **Full planning mode** (outline.md missing - current behavior):
    - Read and analyze the feature specification to understand:
      * Feature requirements and user stories
      * Functional and non-functional requirements
@@ -78,7 +78,7 @@ Given the implementation details provided as an argument, do this:
   - **Codebase Scan**: Check STORY_DIR for `codebase-scan-*.md`
      * If present: Use existing tech stack, patterns, conventions in Technical Context
 
-4. **ELSE (post-research mode)** - outline.md exists:
+5. **Post-research mode** (outline.md exists):
    - Load Technical Context from outline.md (already filled)
    - Note research areas that were flagged
    
@@ -101,9 +101,9 @@ Given the implementation details provided as an argument, do this:
    - Note: "No codebase scans found. Planning will proceed without existing pattern references"
    - Still valid for greenfield projects or new domains
 
-5. Read the project constitution at `specs/projects/[PROJECT_ID]/constitution.md` if it exists to understand constitutional requirements.
+6. Read the project constitution at `specs/projects/[PROJECT_ID]/constitution.md` if it exists to understand constitutional requirements.
 
-6. **Load Project Context Documents** (CRITICAL for consistency):
+7. **Load Project Context Documents** (CRITICAL for consistency):
    
    Determine PROJECT_ID from the story path (e.g., `specs/projects/001-myproject/epics/...`).
    
@@ -222,7 +222,7 @@ Given the implementation details provided as an argument, do this:
    Next Steps:
    1. Review technical design with team
    2. Required: /story-tasks (generate implementation tasks)
-   3. Optional: /story-analyze (quality check before implementation)
+   3. ⚠️ REQUIRED: /story-analyze (quality check before implementation - DO NOT SKIP)
    4. Then: /story-implement (execute the tasks)
    
    Note: /story-tasks will use these artifacts to generate concrete,

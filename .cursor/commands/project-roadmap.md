@@ -45,110 +45,16 @@ Create a project-level roadmap that shows epic execution timeline, dependencies,
    - Independent work parallel
    - Risk-based approach
 
-4. Generate project roadmap structure:
+4. Generate project roadmap:
+   
+   **CRITICAL**: Load and follow the template exactly:
    ```
-   # Project Roadmap: [Project Name]
-   
-   **Strategy**: [Sequential/Parallel/Hybrid]
-   **Timeline**: [Estimated duration]
-   **Team Size**: [Recommended]
-   
-   ## Epic Execution Plan
-   
-   ### Phase 1: Foundation
-   - [ ] E001 [Epic Name] (~[X] stories)
-     - **Why First**: [Rationale]
-     - **Duration**: [Estimate]
-     - **Team**: [Size/Skills needed]
-     - **Success Gate**: [What marks completion]
-   
-   ### Phase 2: Core Features [Can run parallel]
-   - [ ] E002 [Epic Name] (~[X] stories) [P]
-   - [ ] E003 [Epic Name] (~[X] stories) [P]
-     - **Dependencies**: None (can run parallel)
-     - **Duration**: [Estimate]
-     - **Teams**: [How to split]
-   
-   ### Phase 3: Enhancement [Depends on Phase 2]
-   - [ ] E004 [Epic Name] (~[X] stories)
-     - **Dependencies**: E002, E003 complete
-     - **Duration**: [Estimate]
-   
-   ## Execution Timeline
-   
-   ```
-   Week 1-4:   [E001: Foundation Epic]
-   Week 5-8:   [E002: Feature A] [P]
-               [E003: Feature B] [P]
-   Week 9-12:  [E004: Integration]
-   Week 13-14: [Project validation & launch]
+   .speck/templates/project/roadmap-template.md
    ```
    
-   ## Risk Mitigation Plan
-   
-   | Epic | Risk | Mitigation | Trigger |
-   |------|------|-----------|---------|
-   | E001 | [Risk] | [Action] | [When to act] |
-   
-   ## Resource Allocation
-   
-   ### Team Structure
-   - **Team A**: E001, then E002
-   - **Team B**: E003, then E004
-   - **Shared**: Architecture, DevOps
-   
-   ### Skill Requirements by Phase
-   | Phase | Skills Needed | Source |
-   |-------|--------------|--------|
-   | 1 | [List skills] | [Team/Hire/Contract] |
-   
-   ## Success Metrics Tracking
-   
-   ### Per Epic
-   - E001: [Key metric] = [Target]
-   - E002: [Key metric] = [Target]
-   
-   ### Project Level
-   - Overall: [Metric] = [Target]
-   - Launch criteria: [List]
-   ```
+   Write output to: `[PROJECT_DIR]/project-roadmap.md`
 
-5. Create parallel execution examples:
-   ```
-   ## Parallel Execution Commands
-   
-   When Phase 2 begins, run these in parallel:
-   
-   Terminal 1:
-   /epic-specify "E002: [Epic Name]"
-   /epic-plan
-   /epic-breakdown
-   
-   Terminal 2:  
-   /epic-specify "E003: [Epic Name]"
-   /epic-plan
-   /epic-breakdown
-   ```
-
-6. Integration checkpoints:
-   - After each epic completes
-   - Before dependent epics begin
-   - At phase boundaries
-   - Pre-launch validation
-
-7. Generate visual timeline:
-   ```
-   Epic Timeline:
-   
-   E001: |████████████████|                           Foundation
-   E002:                  |████████████|              Feature A
-   E003:                  |████████████|              Feature B
-   E004:                                |████████|    Integration
-   ```
-
-8. Save as `[PROJECT_DIR]/project-roadmap.md`
-
-9. Output summary:
+5. Output summary:
    ```
    ✅ Project Roadmap Generated!
    

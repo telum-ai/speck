@@ -12,15 +12,13 @@ Generate precise UI specifications that developers can implement directly.
 
 ## Context Requirements
 
-**Must identify:**
-1. Project (for design system)
-2. Epic (for wireframes/patterns)
-3. Story (specific component/feature)
-
-Ask progressively:
-- "Which project is this story part of?"
-- "Which epic does this story belong to?"
-- "Which specific story are we creating UI specs for?"
+1. Locate the active story directory (STORY_DIR):
+   - Preferred: user is already in the story directory (or a subfolder like `contracts/`)
+   - Determine STORY_DIR by walking up from current directory until you find `spec.md`
+   - If no `spec.md` found: instruct user to `cd` into the story directory or run `/speck` to route
+   - Define:
+     - SPEC_PATH = `{STORY_DIR}/spec.md`
+     - UI_SPEC_PATH = `{STORY_DIR}/ui-spec.md`
 
 Load context:
 - Design system tokens
@@ -44,8 +42,8 @@ Load context:
 
 **Load story context**:
 - Story specification (what needs to be built)
-- Epic wireframes (where it fits) - `epic/wireframes.md` if exists
-- Epic user journey (user flow context) - `epic/user-journey.md` if exists
+- Epic wireframes (where it fits) - `{EPIC_DIR}/wireframes.md` if exists
+- Epic user journey (user flow context) - `{EPIC_DIR}/user-journey.md` if exists
 
 ### Step 2: Component Discovery
 
@@ -79,7 +77,7 @@ Work with the user to define:
 .speck/templates/story/ui-spec-template.md
 ```
 
-Create file at: `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]/ui-spec.md`
+Write output to UI_SPEC_PATH (`{STORY_DIR}/ui-spec.md`)
 
 The template is self-documenting - follow all sections and guidelines within it.
 
@@ -96,8 +94,10 @@ Validate completeness:
 - "Want me to generate CSS utility classes?"
 
 Guide to next steps:
-- Ready to build → `/story-implement`
-- Need tests → `/story-test`
+- Required: `/story-tasks` (generate implementation tasks)
+- ⚠️ REQUIRED: `/story-analyze` (quality check - DO NOT SKIP)
+- Then: `/story-implement`
+- Finally: `/story-validate`
 - Want component story → Consider Storybook
 
 The template contains comprehensive sections for all UI specification needs.

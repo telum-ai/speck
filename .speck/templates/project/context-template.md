@@ -1,5 +1,26 @@
 # Project Context
 
+**Project**: [PROJECT_ID]  
+**Created**: [DATE]  
+**Version**: 1.0.0  
+**Status**: [Draft/Active/Deprecated]
+
+---
+
+## 🔬 Research Informing This Context
+
+**Web Search Findings**:
+- [Topic]: [Finding with source URL]
+- [Topic]: [Finding with source URL]
+
+**Deep Research Reports** (if any):
+- [Report filename]: [Key insights that influenced constraints/standards]
+
+**Best Practices Applied**:
+- [List key best practices applied to this context]
+
+---
+
 ## Executive Summary
 
 [Brief overview of the key constraints and requirements that will guide all technical decisions]

@@ -1,0 +1,183 @@
+# Project Roadmap: [Project Name]
+ 
+**Project**: [PROJECT_ID]  
+**Created**: [DATE]  
+**Version**: 1.0.0  
+**Status**: [Draft/Active/Deprecated]
+ 
+---
+ 
+## 📊 Information Sources
+ 
+**Traceability**: This roadmap was created from the following sources:
+ 
+- **Required Inputs**:
+  - `PRD.md` → Epics, priorities, scope (REQUIRED)
+  - `epics.md` → Epic list and metadata (REQUIRED)
+- **Recommended Inputs**:
+  - `architecture.md` → Technical sequencing constraints
+  - `context.md` → Team/budget/timeline constraints
+  - `ux-strategy.md` → UX dependencies and sequencing considerations
+  - `design-system.md` → UI dependencies (if design system work is gated)
+ 
+**Information Flow**:
+```
+PRD.md + epics.md + [architecture/context/ux/design-system]
+  ↓
+project-roadmap.md (this document)
+  ↓
+epic execution (specify → plan → breakdown → stories)
+```
+ 
+---
+ 
+## Strategy
+ 
+**Execution Strategy**: [Sequential/Parallel/Hybrid]  
+**Timeline**: [Estimated duration]  
+**Team Size**: [Recommended]  
+**Cadence**: [e.g., 1–2 week sprints, continuous delivery]
+ 
+**Rationale**:
+- [Why this strategy fits the team and risk profile]
+ 
+---
+ 
+## Epic Execution Plan
+ 
+### Phase 1: Foundation
+- [ ] E000 Developer Infrastructure (~[X] stories) *(optional but recommended)*
+  - **Why First**: [Rationale]
+  - **Duration**: [Estimate]
+  - **Team**: [Size/skills needed]
+  - **Success Gate**: [What marks completion]
+ 
+- [ ] E001 [Epic Name] (~[X] stories)
+  - **Why First**: [Rationale]
+  - **Duration**: [Estimate]
+  - **Team**: [Size/skills needed]
+  - **Success Gate**: [What marks completion]
+ 
+### Phase 2: Core Features *(can run in parallel when safe)*
+- [ ] E002 [Epic Name] (~[X] stories) [P]
+  - **Dependencies**: [None / E001 / E000]
+  - **Duration**: [Estimate]
+  - **Team**: [Team A / Skills]
+  - **Success Gate**: [What marks completion]
+ 
+- [ ] E003 [Epic Name] (~[X] stories) [P]
+  - **Dependencies**: [None / E001 / E000]
+  - **Duration**: [Estimate]
+  - **Team**: [Team B / Skills]
+  - **Success Gate**: [What marks completion]
+ 
+### Phase 3: Integration / Enhancement *(depends on Phase 2)*
+- [ ] E004 [Epic Name]
+  - **Dependencies**: E002, E003 complete
+  - **Duration**: [Estimate]
+  - **Team**: [Team/Skills]
+  - **Success Gate**: [What marks completion]
+ 
+---
+ 
+## Execution Timeline (Calendar View)
+ 
+```
+Week 1-2:   [E000: Developer Infrastructure] (if included)
+Week 1-4:   [E001: Foundation Epic]
+Week 5-8:   [E002: Feature A] [P]
+            [E003: Feature B] [P]
+Week 9-12:  [E004: Integration / Hardening]
+Week 13-14: [Project validation & launch]
+```
+ 
+**Critical Path**: [List epics in order, e.g., E001 → E002 → E004] ([X] weeks minimum)
+ 
+---
+ 
+## Risk Mitigation Plan
+ 
+| Epic | Risk Type | Risk | Mitigation | Trigger |
+|------|----------|------|------------|---------|
+| E001 | Technical | [Unknown integration] | [Spike in week 1] | [If blocked >2 days] |
+| E002 | Business | [Revenue dependency] | [Stakeholder review cadence] | [If scope changes] |
+ 
+---
+ 
+## Resource Allocation
+ 
+### Team Structure
+- **Team A**: [Epics assigned]
+- **Team B**: [Epics assigned]
+- **Shared/Platform**: [Architecture/DevOps/Design]
+ 
+### Skill Requirements by Phase
+| Phase | Skills Needed | Source |
+|-------|--------------|--------|
+| 1 | [Backend, DevOps, QA] | [Team/Hire/Contract] |
+| 2 | [Frontend, UX, API] | [Team/Hire/Contract] |
+| 3 | [Integration, Perf, Security] | [Team/Hire/Contract] |
+ 
+---
+ 
+## Success Metrics Tracking
+ 
+### Per Epic
+- E001: [Key metric] = [Target]
+- E002: [Key metric] = [Target]
+ 
+### Project Level
+- Overall: [Metric] = [Target]
+- Launch criteria:
+  - [ ] [Criterion 1]
+  - [ ] [Criterion 2]
+ 
+---
+ 
+## Parallel Execution Commands (Operational)
+ 
+When parallel execution is safe, you can run epic planning in parallel:
+ 
+Terminal 1:
+- `/epic-specify "E002: [Epic Name]"`
+- `/epic-plan`
+- `/epic-breakdown`
+ 
+Terminal 2:
+- `/epic-specify "E003: [Epic Name]"`
+- `/epic-plan`
+- `/epic-breakdown`
+ 
+---
+ 
+## Integration Checkpoints
+ 
+- After each epic completes (run `/epic-validate`)
+- Before starting dependent epics
+- At phase boundaries (re-check architecture/context constraints)
+- Pre-launch validation (`/project-validate`)
+ 
+---
+ 
+## Visual Timeline (Gantt-ish)
+ 
+```
+E000: |██████|                                       Developer Infrastructure
+E001: |████████████████|                               Foundation
+E002:                 |████████████|                   Feature A
+E003:                 |████████████|                   Feature B
+E004:                               |████████|          Integration / Hardening
+```
+ 
+---
+ 
+## Next Steps
+ 
+1. Review roadmap with stakeholders
+2. Assign epic owners
+3. Begin Phase 1 by running:
+   - `/epic-specify "E001: [Epic Name]"`
+ 
+---
+*Generated by /project-roadmap command*  
+*Template Version: 1.0.0*

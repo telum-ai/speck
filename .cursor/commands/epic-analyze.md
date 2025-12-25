@@ -73,104 +73,13 @@ Validate epic planning artifacts to identify issues before story implementation 
    - Technical compromises?
 
 4. Generate analysis report:
+
+   **CRITICAL**: Load and follow the template exactly:
    ```
-   # Epic Analysis Report: [Epic Name]
-   
-   **Date**: [Date]
-   **Status**: [Ready/Issues Found/Blocked]
-   
-   ## Executive Summary
-   [Overall assessment and recommendations]
-   
-   ## Coverage Analysis
-   
-   ### Requirement Coverage
-   - User Stories: [X] total
-   - With Tasks: [Y] ([Z]%)
-   - With Tests: [A] ([B]%)
-   
-   ### Technical Coverage
-   - Architecture complete: Yes/No
-   - APIs specified: [X of Y]
-   - Data models defined: Yes/No
-   
-   ## Issues Found
-   
-   | ID | Category | Severity | Description | Fix |
-   |----|----------|----------|-------------|-----|
-   | E1 | Coverage | HIGH | Story 2.1 has no task | Create task |
-   | E2 | Dependency | MEDIUM | S005 and S006 circular | Refactor |
-   
-   ## Dependency Analysis
-   
-   ### Critical Path
-   [S001] → [S004] → [S005] → [S020]
-   Duration: [X] days
-   
-   ### Parallel Opportunities
-   - Phase 2: [X] stories can run parallel
-   - Phase 3: [Y] stories can run parallel
-   
-   ### Blockers
-   - External: [List]
-   - Technical: [List]
-   
-   ## Technical Validation
-   
-   ### Architecture
-   - Supports all stories: ✅/❌
-   - Scalable design: ✅/❌
-   - Security addressed: ✅/❌
-   
-   ### Technology Stack
-   - All choices justified: ✅/❌
-   - Licenses compatible: ✅/❌
-   - Team skills adequate: ✅/❌
-   
-   ## Risk Summary
-   
-   | Risk | Level | Mitigation | Status |
-   |------|-------|------------|--------|
-   | [Risk] | High | [Strategy] | ⚠️ Partial |
-   
-   ## Quality Gates
-   
-   ### Test Coverage Plan
-   - Unit: [Target]% specified
-   - Integration: [X] scenarios
-   - E2E: [Y] journeys
-   - Performance: [Z] benchmarks
-   
-   ### Documentation
-   - API docs: Planned/Missing
-   - User docs: Planned/Missing
-   - Dev docs: Planned/Missing
-   
-   ## Recommendations
-   
-   ### Must Fix
-   1. [Critical issue]
-   2. [Critical issue]
-   
-   ### Should Fix
-   1. [Important issue]
-   2. [Important issue]
-   
-   ### Consider
-   1. [Enhancement]
-   2. [Enhancement]
-   
-   ## Readiness Checklist
-   
-   - [ ] All stories have tasks
-   - [ ] Dependencies mapped
-   - [ ] Architecture complete
-   - [ ] Tests planned
-   - [ ] Risks mitigated
-   - [ ] Team aligned
-   
-   **Overall**: [Ready/Fix Issues First]
+   .speck/templates/epic/epic-analysis-report-template.md
    ```
+
+   Write output to: `[EPIC_DIR]/epic-analysis-report.md`
 
 5. Generate fix suggestions:
    ```

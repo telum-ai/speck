@@ -8,36 +8,38 @@ blocks: []      # e.g., [story-005] - stories waiting on this one (informational
 # Tasks: [STORY NAME]
 
 **Input**: Design documents from `{STORY_DIR}/`
-**Prerequisites**: plan.md (required), data-model.md, contracts/
+**Prerequisites**: spec.md (required), plan.md (required), data-model.md, contracts/
 
 ## Execution Flow (main)
 ```
-1. Load plan.md from feature directory
+1. Load spec.md and plan.md from feature directory
    → If not found: ERROR "No implementation plan found"
    → Extract: tech stack, libraries, structure (research is embedded in plan.md)
-2. Load optional design documents:
+2. From spec.md:
+   → Extract: all FR-XXX requirements, scenarios, NFRs (performance/security/privacy/accessibility)
+3. Load optional design documents:
    → data-model.md: Extract entities → model tasks
    → contracts/: Each file → contract test task
    → codebase-scan-*.md: Extract conventions → enforce in tasks
-3. Generate tasks by category:
+4. Generate tasks by category:
    → Setup: project init, dependencies, linting, feature flags
    → Tests: contract tests, social scenario tests, AI behavior tests
    → Core: models, services, availability matching, AI integration
    → Real-time: WebSocket, push notifications, presence
    → Privacy: availability encryption, data protection
    → Polish: performance validation, dogfooding, brand voice
-4. Apply task rules:
+5. Apply task rules:
    → Different files = mark [P] for parallel
    → Same file = sequential (no [P])
    → Tests before implementation (TDD)
-5. Number tasks sequentially (T001, T002...)
-6. Generate dependency graph
-7. Create parallel execution examples
-8. Validate task completeness:
+6. Number tasks sequentially (T001, T002...)
+7. Generate dependency graph
+8. Create parallel execution examples
+9. Validate task completeness:
    → All contracts have tests?
    → All entities have models?
    → All endpoints implemented?
-9. Return: SUCCESS (tasks ready for execution)
+10. Return: SUCCESS (tasks ready for execution)
 ```
 
 ## Format: `[ID] [P?] Description`

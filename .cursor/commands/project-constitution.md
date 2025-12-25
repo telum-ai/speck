@@ -68,109 +68,21 @@ Define project-specific principles and constraints that will guide all developme
    - Brand requirements
    - Localization needs
 
-3. Generate project constitution structure:
+4. Generate project constitution using the template:
+   
+   **CRITICAL**: Load and follow the template exactly:
    ```
-   # Project Constitution: [Project Name]
-   
-   **Version**: 1.0.0
-   **Ratified**: [Date]
-   **Extends**: Base Constitution v[X.Y.Z]
-   
-   ## Preamble
-   
-   This project constitution extends the project constitution with 
-   project-specific principles for [Project Name]. These principles 
-   are binding for all development within this project and take 
-   precedence over base principles where they provide more specific 
-   guidance.
-   
-   ## Core Project Principles
-   
-   ### I. [Project-Specific Principle Name]
-   
-   [Statement of principle in clear, actionable terms]
-   
-   **Rationale**: [Why this principle is necessary for this project]
-   
-   **Implementation Requirements**:
-   - MUST: [Concrete requirement]
-   - MUST: [Concrete requirement]
-   - SHOULD: [Best practice]
-   - MUST NOT: [Prohibition]
-   
-   **Validation Criteria**:
-   - [ ] [How to verify compliance]
-   - [ ] [How to verify compliance]
-   
-   ### II. [Domain-Specific Principle]
-   
-   [Principle statement]
-   
-   **Applies To**: [Which epics/areas this affects]
-   
-   **Examples**:
-   - ✅ Good: [Concrete example]
-   - ❌ Bad: [What to avoid]
-   
-   ## Technical Standards
-   
-   ### Performance Requirements
-   - [Specific metric]: [Target]
-   - [Specific metric]: [Target]
-   
-   ### Security Requirements
-   - [Standard]: [How applied]
-   - [Standard]: [How applied]
-   
-   ### Integration Standards
-   - [System]: [Requirements]
-   - [System]: [Requirements]
-   
-   ## Epic-Specific Principles
-   
-   ### Epic: [Epic Name]
-   - Additional constraints: [List]
-   - Success criteria: [List]
-   
-   ## Validation Gates
-   
-   ### Story Level
-   - [ ] Meets project-specific principles
-   - [ ] Passes domain validation
-   
-   ### Epic Level  
-   - [ ] All stories validated
-   - [ ] Integration requirements met
-   - [ ] Performance targets achieved
-   
-   ### Project Level
-   - [ ] All principles demonstrated
-   - [ ] Stakeholder approval received
-   - [ ] Production criteria met
-   
-   ## Amendment Process
-   
-   Project-specific principles may be amended when:
-   1. New regulations or requirements emerge
-   2. Technical constraints change
-   3. User needs evolution is documented
-   
-   Amendment requires:
-   - Documented rationale
-   - Impact analysis
-   - Stakeholder approval
-   - Version increment
-   
-   ## Enforcement
-   
-   These principles are enforced through:
-   - Automated validation in CI/CD
-   - Code review checklists
-   - Epic/story acceptance criteria
-   - Project validation gates
+   .speck/templates/project/constitution-template.md
    ```
+   
+   Create/update: `specs/projects/[PROJECT_ID]/constitution.md`
+   
+   Notes:
+   - Use normative language (MUST/SHALL/SHOULD/MAY) in all principles and standards.
+   - Embed any research findings in the template’s "Research Informing This Constitution" section.
+   - If updating an existing constitution, preserve unchanged principles and add a short changelog entry.
 
-4. Interactive principle development:
+5. Interactive principle development:
    
    If no specific requirements provided, ask:
    - "What unique constraints does this project have?"
@@ -178,7 +90,7 @@ Define project-specific principles and constraints that will guide all developme
    - "What quality attributes are non-negotiable?"
    - "What would constitute failure for this project?"
 
-5. Principle categories to consider:
+6. Principle categories to consider:
    
    **Regulatory Compliance**
    - GDPR, HIPAA, SOX, etc.
@@ -203,19 +115,19 @@ Define project-specific principles and constraints that will guide all developme
    - Documentation needs
    - Deployment constraints
 
-6. Generate validation checklists:
+7. Generate validation checklists:
    - Per-story checklist items
    - Per-epic validation gates
    - Project-level success criteria
 
-7. Save as `[PROJECT_DIR]/constitution.md`
+8. Save as `specs/projects/[PROJECT_ID]/constitution.md`
 
-8. Update references:
+9. Update references:
    - Add to project.md references section
    - Note in PRD.md compliance section
    - Reference in epic templates
 
-9. Output summary:
+10. Output summary:
    ```
    ✅ Project Constitution Created!
    

@@ -12,11 +12,12 @@ Aggregate epic retrospectives, validate project-wide patterns, and propose metho
 
 ## Critical Understanding
 
-**Project retrospective consumes ONLY epic summaries (NOT story data)**:
+**Project retrospective consumes epic summaries (NOT raw story-level data)**:
 - ✅ Reads `epic-retro.md` files (structured summaries from epic retros)
 - ✅ Reads project-level artifacts (project.md, PRD.md, architecture.md)
 - ❌ Does NOT read story-retro.md files (already synthesized in epic retros)
-- ❌ Does NOT read .learning.log or git commits (already processed)
+- ❌ Does NOT read `.learning.log` (story retros already mined it)
+- ⚠️ MAY optionally mine git commit learning tags if epic retros are missing signal
 
 **Produces strategic output**:
 - Creates `project-retro.md` using template
@@ -127,7 +128,7 @@ elif gotcha_frequency_across_epics == 1:
 - Epic-specific gotchas: [One-time issues]
 - Prevention effectiveness: [Did documented gotchas prevent repeats?]
 
-### Step 3: Mine All Project Commits
+### Step 3: Mine All Project Commits (Optional)
 
 Aggregate learning tags from entire project:
 ```bash
@@ -244,228 +245,17 @@ git log --all --grep="PATTERN:\|GOTCHA:\|PERF:\|ARCH:\|RULE:\|DEBT:"
 
 ### Step 8: Generate Project Retrospective Report
 
-Create `[PROJECT_DIR]/project-retrospective.md`:
+Create `[PROJECT_DIR]/project-retro.md`:
 
-```markdown
-# Project Retrospective: [Project Name]
-
-**Project ID**: [ID]  
-**Completed**: [Date]  
-**Duration**: [X months]  
-**Epics Completed**: [X of Y]  
-**Stories Completed**: [X of Y]
-
----
-
-## Executive Summary
-
-[Strategic overview of project outcomes, key learnings, and methodology insights]
-
----
-
-## Project Goals Achievement
-
-[From project.md]
-
-| Goal | Target | Actual | Status | Notes |
-|------|--------|--------|--------|-------|
-| [Goal 1] | [Target] | [Actual] | ✅/⚠️/❌ | [Context] |
-
----
-
-## Cross-Epic Patterns
-
-[Patterns that appeared in multiple epics]
-
-### Pattern 1: [Name]
-- **Used in**: Epic [X], Epic [Y], Epic [Z]
-- **Effectiveness**: [High/Medium/Low]
-- **Documentation**: [Where documented]
-- **Action**: Promote to project architecture / Create shared library
-
----
-
-## Gotcha Database
-
-[All gotchas from all epics with prevention strategies]
-
-### Category: [Setup/Runtime/Testing/Deployment]
-1. **[Gotcha]**: [Description]
-   - Appeared in: Epic [X], Epic [Y]
-   - Total time impact: [Z hours]
-   - Now prevented by: @[rule].mdc
-   - Effectiveness: [Prevented Y instances]
-
----
-
-## Velocity Evolution
-
-[Tracking velocity across epics]
-
-| Epic | Planned Stories | Actual | Velocity | Notes |
-|------|----------------|--------|----------|-------|
-| E001 | 8 | 8 | 1.0x | Baseline |
-| E007 | 5 | 5 | 1.2x | Capacitor learning curve |
-| E005 | 6 | 6 | 0.9x | Improved from E007 learnings |
-
-**Overall Project Velocity**: [Average across epics]  
-**Velocity Trend**: [Improving/Stable/Declining]  
-**For Next Project**: Start with [X]x multiplier
-
----
-
-## Speck Methodology Review
-
-### Commands by Value
-
-**High Value** (Keep, enhance):
-- [Command]: [Why valuable, usage frequency]
-
-**Medium Value** (Keep, consider refinement):
-- [Command]: [Why used, what could improve]
-
-**Low Value** (Consider removing or merging):
-- [Command]: [Why not used, alternative approach]
-
-### Flow Analysis
-
-**Actual Flow Used**:
+**CRITICAL**: Load and follow the template exactly:
 ```
-[Document the actual sequence of commands used]
+.speck/templates/project/project-retro-template.md
 ```
 
-**Documented Flow**:
-```
-[What README suggested]
-```
-
-**Deviations**:
-- [Where we went off-script and why]
-
-**Flow Improvements Needed**:
-- [Specific change to README flow]
-
-### Template Effectiveness
-
-[For each template used]
-
-| Template | Usage | Sections Used | Sections Skipped | Improvements Needed |
-|----------|-------|--------------|------------------|-------------------|
-| [Template name] | [X times] | [Sections] | [Sections] | [Specific changes] |
-
----
-
-## Cursor Rules Evolution
-
-### Rules Created During Project
-- @[rule].mdc: [Created in Epic X, effectiveness rating]
-
-### Rules Updated During Project
-- @[rule].mdc: [Updated X times, final state vs initial]
-
-### Rule Effectiveness Analysis
-| Rule | Times Caught Issues | Times Ignored | Effectiveness | Action |
-|------|-------------------|---------------|---------------|---------|
-| @[rule].mdc | [X] | [Y] | [%] | Keep/Update/Remove |
-
----
-
-## Knowledge Base Built
-
-**Pattern Library**:
-- Total patterns: [X]
-- Reusable across projects: [Y]
-- Project-specific: [Z]
-- Documentation quality: [Rating]
-
-**Anti-Pattern Documentation**:
-- Total gotchas: [X]
-- Prevention strategies: [Y]
-- Estimated time saved: [Z hours]
-
-**Architecture Decisions**:
-- ADRs documented: [X]
-- Decisions validated: [Y]
-- Decisions that need revision: [Z]
-
----
-
-## Strategic Learnings
-
-### What We'd Do Again
-1. [Thing 1]: [Why it worked, apply to next project]
-2. [Thing 2]: [Evidence of success]
-
-### What We'd Change
-1. [Thing 1]: [What didn't work, better approach]
-2. [Thing 2]: [Cost vs benefit analysis]
-
-### What We Discovered
-1. [Insight 1]: [Unexpected learning]
-2. [Insight 2]: [New capability or understanding]
-
----
-
-## Speck Process Improvements
-
-### Immediate Changes
-- [ ] Update command: [Which command, what change]
-- [ ] Update template: [Which template, what change]
-- [ ] Update README flow: [Specific flow change]
-- [ ] Create new command: [Gap identified, purpose]
-
-### For Consideration
-- [ ] Merge commands: [Which ones, rationale]
-- [ ] Split command: [Which one, why]
-- [ ] New template needed: [Purpose]
-
----
-
-## For Next Project
-
-### Start With
-- [Command/process that should be standard]
-- [Pattern/approach that worked well]
-
-### Skip or Defer
-- [Command/process that didn't add value]
-- [Activity that can wait]
-
-### Watch Out For
-- [Gotcha that might appear again]
-- [Decision point that needs early attention]
-
-### Estimation Guidance
-- [Story type]: Use [X]x multiplier
-- [Epic type]: Expect [Y] week duration
-- [Project type]: Plan for [Z]% variance
-
----
-
-## Action Items
-
-### Methodology Updates
-- [ ] Update .speck/README.md: [Specific change]
-- [ ] Update command flow diagram: [Change]
-- [ ] Create missing template: [Which one]
-
-### Cursor Rules
-- [ ] Create @[new-rule].mdc
-- [ ] Update @[existing-rule].mdc
-- [ ] Archive @[outdated-rule].mdc
-
-### Documentation
-- [ ] Document patterns in architecture.md
-- [ ] Update best practices guide
-- [ ] Share learnings with community
-
----
-
-**Retrospective Complete**: [Date]  
-**Facilitator**: [Name]  
-**Next Project**: [Name if planned]  
-**Carry Forward**: [Top 3 learnings to apply]
-```
+Fill it using:
+- Project-level truth docs (project.md, PRD.md, architecture.md, context.md, ux-strategy.md, design-system.md)
+- All `epic-retro.md` files (primary signal for patterns/gotchas)
+- Optional: aggregated commit learning tags (PATTERN/GOTCHA/PERF/ARCH/RULE/DEBT), if used
 
 ### Step 9: Execute Approved Actions
 
@@ -502,7 +292,7 @@ For Next Project:
 - Start with: [Top 3 practices]
 - Watch out for: [Top 3 gotchas]
 
-Report: [PROJECT_DIR]/project-retrospective.md
+Report: [PROJECT_DIR]/project-retro.md
 
 Next Steps:
 1. Review and approve methodology updates

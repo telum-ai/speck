@@ -47,133 +47,14 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    - Performance validation stories
    - Security review stories
 
-4. Generate epic breakdown structure:
+4. Generate epic breakdown:
+
+   **CRITICAL**: Load and follow the template exactly:
    ```
-   # Epic Story Breakdown: [Epic Name]
-   
-   **Epic**: [ID and Name]
-   **Total Stories**: [Count]
-   **Dependencies**: [Other epics]
-   **Estimated Duration**: [Timeframe]
-   
-   ## Story Organization
-   
-   ### Phase 1: Foundation Setup
-   - [ ] S001 [Technical setup task]
-     - **Type**: Technical
-     - **Details**: [What to set up]
-     - **References**: Tech spec section X
-     - **Duration**: [Estimate]
-   
-   - [ ] S002 [Database setup] [P]
-   - [ ] S003 [API scaffolding] [P]
-     - Can run in parallel (different concerns)
-   
-   ### Phase 2: Core Stories
-   - [ ] S004 [User Story 1.1 implementation]
-     - **Story**: "As a [user], I want to [action]..."
-     - **Technical Approach**: [From tech spec]
-     - **Components**: [List what to build]
-     - **APIs**: [Endpoints to implement]
-     - **Tests**: [Test scenarios]
-     - **References**: epic-tech-spec.md#story-1-1
-     - **Duration**: [Estimate]
-   
-   - [ ] S005 [User Story 1.2 implementation]
-     - **Story**: "As a [user], I want to [action]..."
-     - **Depends on**: S004
-     - [Similar details...]
-   
-   ### Phase 3: Integration Stories [Parallel]
-   - [ ] S010 [Story 2.1] [P]
-   - [ ] S011 [Story 2.2] [P]
-   - [ ] S012 [Story 2.3] [P]
-     - These can run in parallel (independent features)
-   
-   ### Phase 4: Quality & Polish
-   - [ ] S020 [Integration testing]
-   - [ ] S021 [Performance optimization]
-   - [ ] S022 [Documentation]
-   - [ ] S023 [Security review]
-   
-   ## Story Details
-   
-   ### S004: [Full Story Name]
-   
-   **User Story**: 
-   As a [user type], I want to [action] so that [benefit]
-   
-   **Acceptance Criteria**:
-   - Given [context], when [action], then [outcome]
-   - Given [context], when [action], then [outcome]
-   
-   **Technical Implementation**:
-   1. Create component: [Name and purpose]
-   2. Implement API: [Endpoint details]
-   3. Add state management: [Approach]
-   4. Connect to backend: [Integration]
-   
-   **Code Patterns**: [Reference to tech spec]
-   
-   **Test Coverage**:
-   - Unit: [What to test]
-   - Integration: [Scenarios]
-   - E2E: [User journey]
-   
-   ### [Continue for each story...]
-   
-   ## Execution Strategy
-   
-   ### Parallel Execution Groups
-   
-   **Group A** (Can run simultaneously):
-   - S002, S003 (Different layers)
-   
-   **Group B** (After Phase 1):
-   - S010, S011, S012 (Independent features)
-   
-   ### Critical Path
-   S001 → S004 → S005 → S020 → Complete
-   
-   ### Resource Allocation
-   - Phase 1: 1 developer
-   - Phase 2: 2 developers  
-   - Phase 3: 3 developers (parallel)
-   - Phase 4: 2 developers
-   
-   ## Dependencies
-   
-   ### External Dependencies
-   - [Service/API]: Needed by [Story]
-   - [Library]: Needed by [Story]
-   
-   ### Inter-Story Dependencies  
-   | Story | Depends On | Provides To |
-   |-------|-----------|-------------|
-   | S005 | S004 | S020 |
-   
-   ## Risk Mitigation
-   
-   | Story | Risk | Mitigation |
-   |-------|------|------------|
-   | S004 | [Risk] | [Action] |
-   
-   ## Definition of Done
-   
-   Per Story:
-   - [ ] Code implemented and reviewed
-   - [ ] Unit tests passing (>80% coverage)
-   - [ ] Integration tests passing
-   - [ ] Documentation updated
-   - [ ] Acceptance criteria verified
-   
-   Epic Complete:
-   - [ ] All stories done
-   - [ ] E2E tests passing
-   - [ ] Performance targets met
-   - [ ] Security scan clean
-   - [ ] Stakeholder sign-off
+   .speck/templates/epic/breakdown-template.md
    ```
+
+   Write output to: `[EPIC_DIR]/epic-breakdown.md`
 
 5. Create story directories:
    ```
@@ -191,11 +72,17 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    # Terminal 1:
    cd stories/S002-database-setup
    /story-specify
+   /story-plan
+   /story-tasks
+   /story-analyze
    /story-implement
    
    # Terminal 2:
    cd stories/S003-api-scaffolding
    /story-specify
+   /story-plan
+   /story-tasks
+   /story-analyze
    /story-implement
    ```
 

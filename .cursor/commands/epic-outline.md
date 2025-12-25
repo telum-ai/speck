@@ -44,54 +44,13 @@ Create a technical outline that identifies key architectural decisions and resea
    - Performance benchmarks needed
 
 4. Generate epic outline:
+
+   **CRITICAL**: Load and follow the template exactly:
    ```
-   # Epic Technical Outline: [Epic Name]
-   
-   ## Summary
-   [2-3 sentences on epic technical scope]
-   
-   ## Key Technical Decisions
-   
-   ### Architecture
-   1. **[Decision Name]**
-      - Current thinking: [Initial approach]
-      - Options: [List 2-3]
-      - Research needed: [What would help decide]
-      - Priority: Critical/Important/Nice-to-have
-   
-   ### Technology Stack
-   [Similar structure]
-   
-   ### Implementation Patterns
-   [Similar structure]
-   
-   ## Research Priorities
-   
-   ### Priority 1: Critical (Blocks design)
-   1. **[Area]**: [Specific questions]
-      - Why critical: [Impact]
-      - Approach: [How to research]
-   
-   ### Priority 2: Important
-   [Similar structure]
-   
-   ## Integration Analysis
-   
-   ### Dependencies
-   - [Epic/System]: [What we need to know]
-   
-   ### Provided Interfaces
-   - [What we expose]: [Design considerations]
-   
-   ## Risk Areas
-   
-   ### Technical Risks
-   1. **[Risk]**: [Mitigation research needed]
-   
-   ## Recommended Research Queries
-   1. "[Specific research query]"
-   2. "[Specific research query]"
+   .speck/templates/epic/outline-template.md
    ```
+
+   Write output to: `[EPIC_DIR]/epic-outline.md`
 
 5. Save as `[EPIC_DIR]/epic-outline.md`
 

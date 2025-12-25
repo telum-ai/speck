@@ -103,138 +103,26 @@ Create story structure:
 mkdir -p specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-[story-name]
 ```
 
-Generate spec.md:
+Generate the story artifacts using existing Speck templates (this command does NOT have its own output template).
 
-```markdown
-# Story: [Extracted Story Name]
+1) Generate `spec.md` (WHAT/WHY) using the story spec template:
+- **Load and follow the template exactly**: `.speck/templates/story/story-template.md`
+- Populate from observed behavior in code/tests/docs
+- Mark uncertain inferences as: `[NEEDS CLARIFICATION: ...]`
+- **Do not** include deep implementation details, schemas, or file-by-file inventories here (those belong in the scan report)
 
-## Extraction Metadata
-- **Source Files**: [Primary files analyzed]
-- **Implementation Status**: [Complete/Partial/Unknown]
-- **Extraction Date**: [Date]
-- **Confidence Level**: [High/Medium/Low]
+2) Generate `codebase-scan-extracted.md` (HOW/WHERE evidence) using the scan template:
+- **Load and follow the template exactly**: `.speck/templates/story/codebase-scan-template.md`
+- Capture:
+  - Primary files and entry points
+  - Routes/endpoints, data models, and integration points (if relevant)
+  - Observed validation/error handling patterns
+  - Test locations + missing tests
+  - Notable technical debt / anti-patterns discovered
 
-## User Story
-
-As a [user type - inferred from code]
-I want to [action - from function/endpoint name]
-So that [value - inferred from business logic]
-
-**Note**: User story inferred from implementation
-
-## Current Implementation
-
-### Code Locations
-- Primary logic: [file:line]
-- UI components: [file:line]
-- API endpoints: [file:line]
-- Tests: [file:line]
-
-### Functionality Discovered
-
-✅ **Implemented Features:**
-- [Feature from code]
-- [Feature from code]
-
-⚠️ **Partial/Unclear:**
-- [Feature that seems incomplete]
-
-❌ **Missing/TODO:**
-- [From TODO comments]
-- [From error handlers]
-
-## Acceptance Criteria (Extracted)
-
-Based on implementation:
-
-1. **[Criteria from validation]**
-   - Source: [file:line]
-   - Implementation: [How it's checked]
-
-2. **[Criteria from business logic]**
-   - Source: [file:line]
-   - Implementation: [How it works]
-
-3. **[Criteria from tests]**
-   - Source: [test file]
-   - Test case: [description]
-
-## Technical Specification
-
-### API Details
-```
-[Method] [Endpoint]
-Request: [Extracted schema]
-Response: [Extracted schema]
-Auth: [Required/Optional]
-```
-
-### Data Model
-```
-[Entity]: {
-  field: type, // From code
-  field: type
-}
-```
-
-### Business Rules
-From code logic:
-- Rule: [Implementation]
-- Rule: [Implementation]
-
-### Error Handling
-- [Error case]: [How handled]
-- [Error case]: [How handled]
-
-## UI/UX Extraction
-
-### Components Used
-- [Component]: [Purpose]
-- [Component]: [Purpose]
-
-### User Flow
-1. [Step from code]
-2. [Step from code]
-3. [Step from code]
-
-### States Handled
-- Loading: [How shown]
-- Error: [How displayed]
-- Success: [Feedback method]
-- Empty: [What displays]
-
-## Test Coverage Analysis
-
-### Existing Tests
-- ✅ [Test scenario]: [test file]
-- ✅ [Test scenario]: [test file]
-
-### Missing Tests
-- ❌ [Scenario not tested]
-- ❌ [Edge case not covered]
-
-## Technical Debt Identified
-
-From code analysis:
-- ⚠️ [Issue found]
-- ⚠️ [Refactoring needed]
-
-## Gaps and Questions
-
-### Clarification Needed
-1. [Unclear business rule]: [Why uncertain]
-2. [Missing information]: [What's needed]
-
-### Potential Improvements
-1. [Improvement opportunity]
-2. [Performance optimization]
-
-## Related Stories
-
-Dependencies found:
-- Uses: [Other feature/story]
-- Used by: [Other feature/story]
-```
+**Traceability markers**:
+- Use `[FROM SCAN]` for facts derived directly from code reading/search
+- Use `[INFERRED]` for inferred behavior not directly verified
 
 ## Step 4: Bulk Story Extraction
 
@@ -270,77 +158,14 @@ Create multiple story specs efficiently:
 
 ## Step 5: Extraction Report
 
-Generate summary of extraction:
+Return an extraction summary as command output (do not introduce a new “report template” doc).
 
-```markdown
-# Story Extraction Report
-
-## Summary
-- **Epic**: [Epic name]
-- **Stories Extracted**: [Number]
-- **Code Coverage**: [Lines/files analyzed]
-- **Implementation Status**: [Overall percentage]
-
-## Extracted Stories
-
-### Complete Implementations
-1. **[Story name]**: 100% implemented
-   - Confidence: High
-   - Tests: Yes
-   - Documentation: [Yes/No]
-
-### Partial Implementations
-1. **[Story name]**: ~[%] implemented
-   - Missing: [What's not done]
-   - Confidence: Medium
-
-### Discovered but Unimplemented
-1. **[Story name]**: TODO found
-   - Source: [Where referenced]
-   - Priority: [Inferred]
-
-## Code Quality Insights
-
-### Well-Implemented Areas
-- ✅ [Area]: Clean, tested, documented
-
-### Needs Attention
-- ⚠️ [Area]: [Issues found]
-
-### Technical Debt
-- 🚩 [Debt item]: [Impact]
-
-## Coverage Analysis
-
-### Epic Coverage
-- Total epic scope: ~[X] stories
-- Implemented: [Y] stories
-- Coverage: [Y/X]%
-
-### Missing Features
-From analysis, these seem missing:
-- [Expected feature not found]
-- [Common pattern not implemented]
-
-## Recommendations
-
-1. **High Priority Reviews**
-   - [Story]: [Why needs review]
-
-2. **Refactoring Opportunities**
-   - [Area]: [Benefit]
-
-3. **Test Coverage Gaps**
-   - [Story]: Missing [test type]
-
-## Next Steps
-
-- [ ] Review extracted stories with team
-- [ ] Validate business rules
-- [ ] Plan missing implementations
-- [ ] Update story priorities
-- [ ] Create tech debt tickets
-```
+Include:
+- Epic + code scope analyzed
+- Story directories created/updated
+- Per-story status: Complete / Partial / Unknown + confidence
+- Biggest gaps/questions needing human clarification
+- Recommended next command(s): `/story-clarify`, `/story-plan`, `/story-validate`, or follow-up scan
 
 ## Step 6: Interactive Review
 
@@ -366,6 +191,7 @@ Based on extraction:
 **If many gaps:**
 - "Several stories need completion"
 - "Consider `/story-plan` for missing pieces"
+- "Consider `/story-scan` for a deep, HIGH-confidence implementation guide before planning"
 - "Prioritize based on user value"
 
 **If messy code:**
