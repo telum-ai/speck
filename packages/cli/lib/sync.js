@@ -21,8 +21,6 @@ const ALWAYS_OVERWRITE = [
   '.cursor/hooks/VALIDATION.md',
   '.cursor/MCP-SETUP.md',
   '.github/workflows/speck-orchestrator.yml',
-  '.github/workflows/speck-validate-pr.yml',
-  '.github/workflows/speck-retrospective.yml',
   '.github/workflows/speck-update-check.yml',
   '.github/workflows/speck-validation.yml',
   '.github/copilot-instructions.md',

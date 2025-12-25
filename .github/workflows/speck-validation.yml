@@ -273,8 +273,6 @@ jobs:
           if [ -d "packages/cli" ]; then
             required_files+=(
               ".github/workflows/speck-orchestrator.yml"
-              ".github/workflows/speck-validate-pr.yml"
-              ".github/workflows/speck-retrospective.yml"
               ".github/workflows/speck-update-check.yml"
               ".github/workflows/copilot-setup-steps.yml"
               "packages/cli/bin/speck.js"
