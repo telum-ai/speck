@@ -1,4 +1,4 @@
-# 🥓 Speck - Speck
+# 🥓 Speck
 
 Welcome to **Speck**, a comprehensive spec-driven development methodology with project, epic, and story levels! This guide covers everything, but ideally, you'll never need to read it - just run `/speck` and let it guide you.
 

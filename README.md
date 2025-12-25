@@ -1,42 +1,118 @@
-# Speck 🥓 Template
+# Speck 🥓
 
-Speck is a spec-driven development methodology for building digital products via:
-- **Commands** (`.cursor/commands/`)
-- **Templates** (`.speck/templates/`)
-- **Automation hooks** (`.cursor/hooks/`)
-- **Validation workflows** (`.github/workflows/`)
+**Spec-driven development methodology** for building digital products through project → epic → story levels.
 
-## Getting Started
+## 🚀 Quick Start
 
-In Cursor, start with:
-- `/speck [describe what you want to build]`
+### In Cursor IDE
 
-Speck will route you through **project → epic → story** levels.
+Just type `/speck` followed by what you want to build:
 
-## MCP Setup (Recommended)
+```
+/speck Build a social networking app
+/speck Add user authentication
+/speck Import my existing codebase at ~/projects/myapp
+/speck Continue working on my project
+```
 
-See: `.cursor/MCP-SETUP.md`
+Speck will automatically:
+- Detect the appropriate level (project/epic/story)
+- Guide you through the process
+- Create the right specifications
 
-## Specs live here
+**That's it!** No need to memorize commands—just describe what you want to accomplish.
 
-Speck project artifacts are written under:
-- `specs/projects/`
+## 📦 Installation & Setup
 
-## Automatic Updates
+### First Time Setup
 
-Speck checks daily for updates and creates PRs via `.github/workflows/speck-update-check.yml`.
+If you're starting a new project with Speck:
 
-Updates use **smart merging** to preserve your customizations:
-- Your `AGENTS.md` content outside `SPECK:START..END` tags
-- Your `.gitignore` entries
-- Your custom hooks and MCP config
-- Your `README.md` (if customized)
-- Your `copilot-setup-steps.yml` (if customized)
+```bash
+# Initialize Speck in your project
+npx github:telum-ai/speck init
+```
 
-For private Speck repos, add `SPECK_GITHUB_TOKEN` secret.
+This sets up:
+- Command files (`.cursor/commands/`)
+- Templates (`.speck/templates/`)
+- Validation hooks (`.cursor/hooks/`)
+- Update workflows (`.github/workflows/`)
 
-## Methodology Feedback
+### Recommended: MCP Setup
 
-After running retrospective commands, you can opt-in to share methodology insights with the Speck team.
+For the best experience, configure MCP servers for research and documentation:
 
-See: `.speck/README.md` for full documentation.
+1. See `.cursor/MCP-SETUP.md` for setup instructions
+2. Recommended servers:
+   - **Perplexity** - Research and web search
+   - **GitHub** - PRs, issues, code search
+   - **Context7** - Up-to-date library docs
+
+> 💡 Speck works without MCP servers, but they're highly recommended for research capabilities.
+
+## 🔄 Keeping Speck Updated
+
+### Automatic Updates (Recommended)
+
+Speck includes a workflow that **automatically checks for updates daily** and creates PRs:
+
+- ✅ **Works out of the box** for public Speck repos
+- ✅ **Smart merging** preserves your customizations
+- 🔒 For private repos: Add `SPECK_GITHUB_TOKEN` secret
+
+### Manual Updates
+
+```bash
+# Check for available updates
+npx github:telum-ai/speck check
+
+# Upgrade to latest version
+npx github:telum-ai/speck upgrade
+
+# Preview changes without applying
+npx github:telum-ai/speck upgrade --dry-run
+
+# Upgrade to specific version
+npx github:telum-ai/speck upgrade v2.3.0
+```
+
+### What Gets Updated
+
+Updates preserve your customizations:
+- ✅ Your `AGENTS.md` content outside `SPECK:START..END` tags
+- ✅ Your `.gitignore` entries
+- ✅ Your custom hooks and MCP config
+- ✅ Your `README.md` (if customized)
+- ✅ Your `copilot-setup-steps.yml` (if customized)
+
+## 📁 Project Structure
+
+Your Speck project artifacts live under:
+```
+specs/projects/[project-id]/
+├── project.md          # Project vision & goals
+├── PRD.md              # Product requirements
+├── architecture.md     # System design
+└── epics/              # Epic specifications
+    └── stories/        # Story specifications
+```
+
+## 📚 Documentation
+
+**Full documentation**: See `.speck/README.md` for:
+- Complete command reference
+- Workflow examples
+- Best practices
+- Troubleshooting
+- Advanced usage
+
+**Quick reference**: Just use `/speck` and follow the prompts!
+
+## 🤝 Contributing Methodology Insights
+
+After running retrospective commands (`/story-retrospective`, `/epic-retrospective`, `/project-retrospective`), you can opt-in to share methodology insights with the Speck team. Only process improvements are shared—no project-specific data.
+
+---
+
+**Need help?** Just type `/speck` and describe what you want to build. Speck will guide you through the rest!
