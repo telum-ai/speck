@@ -158,11 +158,16 @@ jobs:
                   CURRENT_PHASE="implemented"
                   START_CMD="story-validate"
                 elif [ -f "$STORY_DIR/tasks.md" ]; then
-                  # Check if code has been written (look for non-spec files or git changes)
-                  CODE_FILES=$(find "$STORY_DIR" -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.tsx" 2>/dev/null | head -1)
-                  if [ -n "$CODE_FILES" ] || echo "$MERGED_PRS" | grep -q "$STORY_ID"; then
+                  # Check if implementation has started by looking for:
+                  # 1. A PR (open or merged) that mentions this story
+                  # 2. analysis-report.md exists (story-analyze was run)
+                  HAS_PR=$(gh pr list --repo "$REPO" --state all --search "$STORY_ID in:title" --json number --jq 'length' 2>/dev/null || echo "0")
+                  if [ "$HAS_PR" -gt 0 ]; then
                     CURRENT_PHASE="implemented"
                     START_CMD="story-validate"
+                  elif [ -f "$STORY_DIR/analysis-report.md" ]; then
+                    CURRENT_PHASE="analyzed"
+                    START_CMD="story-implement"
                   else
                     CURRENT_PHASE="tasked"
                     START_CMD="story-analyze"
@@ -214,34 +219,34 @@ jobs:
                 done
               fi
               
-              # Build issue body
-              cat > /tmp/issue_body.md << ISSUE_EOF
-## Story Details
-
-| Field | Value |
-|-------|-------|
-| **Epic** | $EPIC_ID |
-| **Story** | $STORY_ID |
-| **Title** | $TITLE |
-| **Phase** | $CURRENT_PHASE |
-| **Start Command** | \`$START_CMD\` |
-
-### Epic Context
-
-$EPIC_CONTEXT
-
-ISSUE_EOF
+              # Build issue body (avoid heredoc with special YAML chars)
+              {
+                echo "## Story Details"
+                echo ""
+                echo "| Field | Value |"
+                echo "|-------|-------|"
+                echo "| **Epic** | $EPIC_ID |"
+                echo "| **Story** | $STORY_ID |"
+                echo "| **Title** | $TITLE |"
+                echo "| **Phase** | $CURRENT_PHASE |"
+                echo "| **Start Command** | \`$START_CMD\` |"
+                echo ""
+                echo "### Epic Context"
+                echo ""
+                echo "$EPIC_CONTEXT"
+                echo ""
+              } > /tmp/issue_body.md
 
               cat /tmp/template_instructions.md >> /tmp/issue_body.md
 
               if [ "$BLOCKED" = true ]; then
-                cat >> /tmp/issue_body.md << BLOCK_EOF
-
----
-⚠️ **BLOCKED** - Waiting for validated:$BLOCKING
-
-Do not start until dependencies are validated (have PASS in validation-report.md).
-BLOCK_EOF
+                {
+                  echo ""
+                  echo "---"
+                  echo "⚠️ **BLOCKED** - Waiting for validated:$BLOCKING"
+                  echo ""
+                  echo "Do not start until dependencies are validated (have PASS in validation-report.md)."
+                } >> /tmp/issue_body.md
               fi
               
               # Set labels
