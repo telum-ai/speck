@@ -47,6 +47,25 @@ const SKIP_IF_CUSTOMIZED = {
   '.github/workflows/copilot-setup-steps.yml': isCopilotSetupCustomized,
 };
 
+/**
+ * Files that were removed from Speck and should be deleted during upgrade
+ */
+const REMOVE_FILES = [
+  '.github/workflows/speck-retrospective.yml',
+  '.github/workflows/speck-template-feedback.yml',
+  '.github/workflows/speck-update-action/action.yml',
+  '.github/workflows/speck-validate-pr.yml',
+  '.github/workflows/template-sync.yml',
+  '.speck/AUTONOMOUS-DEVELOPMENT.md',
+  '.speck/DISTRIBUTION.md',
+  '.speck/TEMPLATE-FEEDBACK.md',
+  '.speck/TEMPLATE-SYNC.md',
+  '.speck/templates/context/epic-context.md',
+  '.speck/templates/context/project-context.md',
+  '.speckignore',
+  '.templatesyncignore',
+];
+
 // ============================================================
 // Smart Merge Functions
 // ============================================================
@@ -283,21 +302,6 @@ export function getAllFiles(dir, baseDir = dir) {
 }
 
 /**
- * Check if a path matches any of the always-overwrite patterns
- */
-function shouldOverwrite(filePath) {
-  const normalized = filePath.replace(/\\/g, '/');
-  
-  for (const pattern of ALWAYS_OVERWRITE) {
-    if (normalized === pattern || normalized.startsWith(pattern + '/')) {
-      return true;
-    }
-  }
-  
-  return false;
-}
-
-/**
  * Recursively copy a directory
  */
 function copyDir(src, dest) {
@@ -324,6 +328,7 @@ export function smartSync(sourceDir, targetDir, options = {}) {
     updated: [],
     merged: [],
     skipped: [],
+    removed: [],
     errors: [],
   };
   
@@ -435,6 +440,30 @@ export function smartSync(sourceDir, targetDir, options = {}) {
       }
     } catch (error) {
       results.errors.push({ file, error: error.message });
+    }
+  }
+  
+  // 4. Remove files that were deleted from Speck
+  for (const deletedFile of REMOVE_FILES) {
+    const targetPath = join(targetDir, deletedFile);
+    
+    try {
+      if (existsSync(targetPath)) {
+        const isDir = statSync(targetPath).isDirectory();
+        
+        if (isDir) {
+          rmSync(targetPath, { recursive: true, force: true });
+        } else {
+          rmSync(targetPath, { force: true });
+        }
+        
+        results.removed.push(deletedFile);
+        if (verbose) {
+          console.log(`  🗑️  Removed: ${deletedFile}`);
+        }
+      }
+    } catch (error) {
+      results.errors.push({ file: deletedFile, error: error.message });
     }
   }
   

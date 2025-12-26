@@ -121,3 +121,4 @@ export async function getChangelog(fromVersion, toVersion) {
     url: r.html_url,
   }));
 }
+

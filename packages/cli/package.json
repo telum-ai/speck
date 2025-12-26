@@ -1,6 +1,6 @@
 {
   "name": "speck-cli",
-  "version": "2.2.0",
+  "version": "2.9.0",
   "description": "CLI for managing Speck methodology in your projects",
   "type": "module",
   "bin": {

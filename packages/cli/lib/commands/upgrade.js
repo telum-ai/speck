@@ -78,7 +78,8 @@ export async function upgrade(targetDir, version, options = {}) {
     console.log('  • .cursor/mcp.json: Your config takes precedence');
     console.log('  • README.md: Skipped if customized');
     console.log('  • copilot-setup-steps.yml: Skipped if customized');
-    console.log('  • Everything else: Always updated\n');
+    console.log('  • Everything else: Always updated');
+    console.log('  • Removed files: Files deleted from Speck will be removed from your project\n');
     console.log('Run without --dry-run to apply changes.');
     return;
   }
@@ -106,6 +107,7 @@ export async function upgrade(targetDir, version, options = {}) {
 📁 Created: ${results.created.length} files
 📝 Updated: ${results.updated.length} files
 🔀 Merged:  ${results.merged.length} files
+🗑️  Removed: ${results.removed.length} files
 ⏭️  Skipped: ${results.skipped.length} files
 
 Review the changes and commit when ready:
