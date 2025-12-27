@@ -103,35 +103,35 @@ jobs:
           
           FAILURES=0
           
-          # S001: Unspecced → story-specify
-          validate_state "S001-unspecced" "unspecced" "story-specify" "false" || FAILURES=$((FAILURES+1))
+          # S001: Unspecced (empty dir) → story-specify
+          validate_state "S001-project-setup" "unspecced" "story-specify" "false" || FAILURES=$((FAILURES+1))
           
-          # S002: Specified (has spec.md but no AC) → story-clarify
-          validate_state "S002-specified" "specified" "story-clarify" "false" || FAILURES=$((FAILURES+1))
+          # S002: Specified (spec.md but no AC) → story-clarify
+          validate_state "S002-express-config" "specified" "story-clarify" "false" || FAILURES=$((FAILURES+1))
           
-          # S003: Clarified (has spec.md with AC) → story-plan
-          validate_state "S003-clarified" "clarified" "story-plan" "false" || FAILURES=$((FAILURES+1))
+          # S003: Clarified (spec.md with AC) → story-plan
+          validate_state "S003-greeting-service" "clarified" "story-plan" "false" || FAILURES=$((FAILURES+1))
           
           # S004: Planned (has plan.md) → story-tasks
-          validate_state "S004-planned" "planned" "story-tasks" "false" || FAILURES=$((FAILURES+1))
+          validate_state "S004-greeting-endpoint" "planned" "story-tasks" "false" || FAILURES=$((FAILURES+1))
           
-          # S005: Tasked (has tasks.md, no analysis) → story-analyze
-          validate_state "S005-tasked" "tasked" "story-analyze" "false" || FAILURES=$((FAILURES+1))
+          # S005: Tasked + blocked (depends on S004 not validated) → story-analyze, blocked
+          validate_state "S005-input-validation" "tasked" "story-analyze" "true" || FAILURES=$((FAILURES+1))
           
-          # S006: Analyzed (has analysis-report.md) → story-implement
-          validate_state "S006-analyzed" "analyzed" "story-implement" "false" || FAILURES=$((FAILURES+1))
+          # S006: Analyzed + blocked (depends on S005 not validated) → story-implement, blocked  
+          validate_state "S006-error-handling" "analyzed" "story-implement" "true" || FAILURES=$((FAILURES+1))
           
           # S007: Validated PASS → skip (no cmd)
-          validate_state "S007-validated-pass" "validated" "" "false" || FAILURES=$((FAILURES+1))
+          validate_state "S007-integration-tests" "validated" "" "false" || FAILURES=$((FAILURES+1))
           
-          # S008: Validated FAIL → story-validate (needs re-validation)
-          validate_state "S008-validated-fail" "implemented" "story-validate" "false" || FAILURES=$((FAILURES+1))
+          # S008: Validated FAIL → story-validate (needs retry)
+          validate_state "S008-performance-test" "implemented" "story-validate" "false" || FAILURES=$((FAILURES+1))
           
-          # S009: Blocked (depends on S005 which is not validated) → blocked=true
-          validate_state "S009-blocked" "tasked" "story-analyze" "true" || FAILURES=$((FAILURES+1))
+          # S009: Tasked + blocked (depends on S005 not validated)
+          validate_state "S009-load-testing" "tasked" "story-analyze" "true" || FAILURES=$((FAILURES+1))
           
-          # S010: Unblocked (depends on S007 which IS validated) → blocked=false
-          validate_state "S010-unblocked" "tasked" "story-analyze" "false" || FAILURES=$((FAILURES+1))
+          # S010: Tasked + unblocked (depends on S007 which IS validated)
+          validate_state "S010-api-documentation" "tasked" "story-analyze" "false" || FAILURES=$((FAILURES+1))
           
           echo ""
           echo "=== Summary ==="
@@ -147,7 +147,7 @@ jobs:
           export SPECS_ROOT="tests/fixtures/orchestrator-test/specs/projects/000-test/epics/E001-test"
           export EPIC_PATH="$SPECS_ROOT"
           export DRY_RUN="true"
-          export SINGLE_STORY="S003"
+          export SINGLE_STORY="S003-greeting"
           
           .speck/scripts/orchestrate.sh > /tmp/single.jsonl 2>&1 || true
           
