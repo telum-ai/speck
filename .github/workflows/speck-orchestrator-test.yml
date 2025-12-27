@@ -147,22 +147,23 @@ jobs:
           export SPECS_ROOT="tests/fixtures/orchestrator-test/specs/projects/000-test/epics/E001-test"
           export EPIC_PATH="$SPECS_ROOT"
           export DRY_RUN="true"
-          export SINGLE_STORY="S003-greeting"
+          export SINGLE_STORY="S007-integration-tests"
           
           .speck/scripts/orchestrate.sh > /tmp/single.jsonl 2>&1 || true
           
-          LINE_COUNT=$(wc -l < /tmp/single.jsonl | tr -d ' ')
-          echo "Single story mode returned $LINE_COUNT line(s)"
+          # Count JSON objects, not lines (pretty-printed JSON has multiple lines per object)
+          OBJECT_COUNT=$(jq -s 'length' /tmp/single.jsonl)
+          echo "Single story mode returned $OBJECT_COUNT object(s)"
           
-          if [ "$LINE_COUNT" -ne 1 ]; then
+          if [ "$OBJECT_COUNT" -ne 1 ]; then
             echo "❌ FAIL: Expected exactly 1 result for single story mode"
             cat /tmp/single.jsonl
             exit 1
           fi
           
           STORY=$(jq -r '.story' /tmp/single.jsonl)
-          if [[ "$STORY" != *"S003"* ]]; then
-            echo "❌ FAIL: Single story filter didn't work"
+          if [[ "$STORY" != "S007-integration-tests" ]]; then
+            echo "❌ FAIL: Single story filter returned wrong story: $STORY"
             exit 1
           fi
           
