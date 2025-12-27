@@ -1,0 +1,169 @@
+# Speck Orchestrator Integration Test
+#
+# ONLY RUNS IN telum-ai/speck REPOSITORY
+# This workflow will never run in project repos that use Speck.
+#
+# Tests the orchestrator logic in dry-run mode against fixture data.
+# No issues are created, no external calls are made.
+
+name: Orchestrator Integration Test
+
+on:
+  push:
+    paths:
+      - '.github/workflows/speck-orchestrator.yml'
+      - '.github/workflows/speck-orchestrator-test.yml'
+      - '.speck/scripts/orchestrate.sh'
+      - 'tests/fixtures/orchestrator-test/**'
+    branches:
+      - main
+      - develop
+      - 'feat/**'
+  pull_request:
+    paths:
+      - '.github/workflows/speck-orchestrator.yml'
+      - '.github/workflows/speck-orchestrator-test.yml'
+      - '.speck/scripts/orchestrate.sh'
+      - 'tests/fixtures/orchestrator-test/**'
+  workflow_dispatch:
+
+jobs:
+  test-orchestrator:
+    # CRITICAL: Only run in the Speck template repository
+    if: github.repository == 'telum-ai/speck'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Verify not a project repo
+        run: |
+          # Double-check we're in the Speck repo, not a project
+          if [ ! -d "tests/fixtures/orchestrator-test" ]; then
+            echo "ERROR: Test fixtures not found - this should never run outside telum-ai/speck"
+            exit 1
+          fi
+          echo "✓ Running in Speck repository with test fixtures"
+      
+      - name: Test dry-run mode - state detection
+        run: |
+          chmod +x .speck/scripts/orchestrate.sh
+          
+          # Run orchestrator in dry-run mode against test fixtures
+          export SPECS_ROOT="tests/fixtures/orchestrator-test/specs/projects/000-test/epics/E001-test"
+          export EPIC_PATH="$SPECS_ROOT"
+          export DRY_RUN="true"
+          export TEST_MODE="true"
+          
+          echo "=== Running dry-run orchestrator ==="
+          .speck/scripts/orchestrate.sh > /tmp/results.jsonl 2>&1 || true
+          
+          echo "=== Results ==="
+          cat /tmp/results.jsonl
+          
+          # Parse and validate results
+          echo ""
+          echo "=== Validating state detection ==="
+          
+          validate_state() {
+            local story="$1"
+            local expected_phase="$2"
+            local expected_cmd="$3"
+            local expected_blocked="$4"
+            
+            local result=$(grep "\"story\":\"$story\"" /tmp/results.jsonl | head -1)
+            if [ -z "$result" ]; then
+              echo "❌ FAIL: $story not found in results"
+              return 1
+            fi
+            
+            local phase=$(echo "$result" | jq -r '.phase')
+            local cmd=$(echo "$result" | jq -r '.cmd')
+            local blocked=$(echo "$result" | jq -r '.blocked')
+            
+            if [ "$phase" != "$expected_phase" ]; then
+              echo "❌ FAIL: $story phase=$phase (expected $expected_phase)"
+              return 1
+            fi
+            
+            if [ "$cmd" != "$expected_cmd" ]; then
+              echo "❌ FAIL: $story cmd=$cmd (expected $expected_cmd)"
+              return 1
+            fi
+            
+            if [ "$blocked" != "$expected_blocked" ]; then
+              echo "❌ FAIL: $story blocked=$blocked (expected $expected_blocked)"
+              return 1
+            fi
+            
+            echo "✅ PASS: $story → phase=$phase, cmd=$cmd, blocked=$blocked"
+            return 0
+          }
+          
+          FAILURES=0
+          
+          # S001: Unspecced → story-specify
+          validate_state "S001-unspecced" "unspecced" "story-specify" "false" || FAILURES=$((FAILURES+1))
+          
+          # S002: Specified (has spec.md but no AC) → story-clarify
+          validate_state "S002-specified" "specified" "story-clarify" "false" || FAILURES=$((FAILURES+1))
+          
+          # S003: Clarified (has spec.md with AC) → story-plan
+          validate_state "S003-clarified" "clarified" "story-plan" "false" || FAILURES=$((FAILURES+1))
+          
+          # S004: Planned (has plan.md) → story-tasks
+          validate_state "S004-planned" "planned" "story-tasks" "false" || FAILURES=$((FAILURES+1))
+          
+          # S005: Tasked (has tasks.md, no analysis) → story-analyze
+          validate_state "S005-tasked" "tasked" "story-analyze" "false" || FAILURES=$((FAILURES+1))
+          
+          # S006: Analyzed (has analysis-report.md) → story-implement
+          validate_state "S006-analyzed" "analyzed" "story-implement" "false" || FAILURES=$((FAILURES+1))
+          
+          # S007: Validated PASS → skip (no cmd)
+          validate_state "S007-validated-pass" "validated" "" "false" || FAILURES=$((FAILURES+1))
+          
+          # S008: Validated FAIL → story-validate (needs re-validation)
+          validate_state "S008-validated-fail" "implemented" "story-validate" "false" || FAILURES=$((FAILURES+1))
+          
+          # S009: Blocked (depends on S005 which is not validated) → blocked=true
+          validate_state "S009-blocked" "tasked" "story-analyze" "true" || FAILURES=$((FAILURES+1))
+          
+          # S010: Unblocked (depends on S007 which IS validated) → blocked=false
+          validate_state "S010-unblocked" "tasked" "story-analyze" "false" || FAILURES=$((FAILURES+1))
+          
+          echo ""
+          echo "=== Summary ==="
+          if [ "$FAILURES" -gt 0 ]; then
+            echo "❌ $FAILURES test(s) failed"
+            exit 1
+          else
+            echo "✅ All tests passed!"
+          fi
+      
+      - name: Test single story mode
+        run: |
+          export SPECS_ROOT="tests/fixtures/orchestrator-test/specs/projects/000-test/epics/E001-test"
+          export EPIC_PATH="$SPECS_ROOT"
+          export DRY_RUN="true"
+          export SINGLE_STORY="S003"
+          
+          .speck/scripts/orchestrate.sh > /tmp/single.jsonl 2>&1 || true
+          
+          LINE_COUNT=$(wc -l < /tmp/single.jsonl | tr -d ' ')
+          echo "Single story mode returned $LINE_COUNT line(s)"
+          
+          if [ "$LINE_COUNT" -ne 1 ]; then
+            echo "❌ FAIL: Expected exactly 1 result for single story mode"
+            cat /tmp/single.jsonl
+            exit 1
+          fi
+          
+          STORY=$(jq -r '.story' /tmp/single.jsonl)
+          if [[ "$STORY" != *"S003"* ]]; then
+            echo "❌ FAIL: Single story filter didn't work"
+            exit 1
+          fi
+          
+          echo "✅ Single story mode works correctly"

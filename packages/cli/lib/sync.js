@@ -48,6 +48,22 @@ const SKIP_IF_CUSTOMIZED = {
 };
 
 /**
+ * Files/patterns that should NEVER be synced to project repos
+ * (test files, internal tooling, etc.)
+ */
+const SKIP_PATTERNS = [
+  /.*-test\.yml$/,       // Test workflow files (e.g., speck-orchestrator-test.yml)
+  /^tests\//,            // Test directory
+];
+
+/**
+ * Check if a file should be skipped during sync
+ */
+function shouldSkipFile(filePath) {
+  return SKIP_PATTERNS.some(pattern => pattern.test(filePath));
+}
+
+/**
  * Files that were removed from Speck and should be deleted during upgrade
  */
 const REMOVE_FILES = [
@@ -302,17 +318,24 @@ export function getAllFiles(dir, baseDir = dir) {
 }
 
 /**
- * Recursively copy a directory
+ * Recursively copy a directory, respecting SKIP_PATTERNS
  */
-function copyDir(src, dest) {
+function copyDir(src, dest, baseDir = null) {
   mkdirSync(dest, { recursive: true });
+  baseDir = baseDir || src;
   
   for (const entry of readdirSync(src)) {
     const srcPath = join(src, entry);
     const destPath = join(dest, entry);
+    const relativePath = relative(baseDir, srcPath);
+    
+    // Skip files matching skip patterns
+    if (shouldSkipFile(relativePath) || shouldSkipFile(entry)) {
+      continue;
+    }
     
     if (statSync(srcPath).isDirectory()) {
-      copyDir(srcPath, destPath);
+      copyDir(srcPath, destPath, baseDir);
     } else {
       copyFileSync(srcPath, destPath);
     }
@@ -336,6 +359,9 @@ export function smartSync(sourceDir, targetDir, options = {}) {
   
   // 1. Handle ALWAYS_OVERWRITE patterns
   for (const pattern of ALWAYS_OVERWRITE) {
+    // Skip patterns that match skip rules
+    if (shouldSkipFile(pattern)) continue;
+    
     const sourcePath = join(sourceDir, pattern);
     const targetPath = join(targetDir, pattern);
     
