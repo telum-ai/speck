@@ -1,0 +1,258 @@
+# Speck Orchestrator End-to-End Test
+#
+# ONLY RUNS IN telum-ai/speck REPOSITORY
+# Tests the full orchestration flow with a real issue and Copilot assignment.
+#
+# Flow:
+# 1. Pick a random unvalidated story from test fixtures
+# 2. Create a real GitHub issue with test:e2e label
+# 3. Assign Copilot to the issue
+# 4. Wait for Copilot to complete (or timeout after 15 min)
+# 5. Clean up: close issue and delete branch
+
+name: Orchestrator E2E Test
+
+on:
+  push:
+    paths:
+      - '.github/workflows/speck-orchestrator.yml'
+      - '.github/workflows/speck-orchestrator-e2e-test.yml'
+      - '.speck/scripts/orchestrate.sh'
+      - 'tests/fixtures/orchestrator-test/**'
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  e2e-test:
+    # CRITICAL: Only run in the Speck template repository
+    if: github.repository == 'telum-ai/speck'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Verify test environment
+        run: |
+          if [ ! -d "tests/fixtures/orchestrator-test" ]; then
+            echo "ERROR: Test fixtures not found"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.COPILOT_ASSIGNMENT_TOKEN }}" ]; then
+            echo "⚠️  WARNING: COPILOT_ASSIGNMENT_TOKEN not set - skipping E2E test"
+            echo "This test requires a PAT with 'repo' scope to assign Copilot."
+            echo "To enable E2E testing, add COPILOT_ASSIGNMENT_TOKEN to repository secrets."
+            exit 0
+          fi
+          
+          echo "✓ E2E test environment ready"
+      
+      - name: Pick random test story
+        id: pick_story
+        run: |
+          # Pick a non-validated story (anything except S007 which is already validated)
+          CANDIDATES=(
+            "S001-project-setup:unspecced:story-specify"
+            "S002-express-config:specified:story-clarify"
+            "S003-greeting-service:clarified:story-plan"
+            "S004-greeting-endpoint:planned:story-tasks"
+            "S008-performance-test:implemented:story-validate"
+          )
+          
+          # Pick random
+          RANDOM_INDEX=$((RANDOM % ${#CANDIDATES[@]}))
+          SELECTED="${CANDIDATES[$RANDOM_INDEX]}"
+          
+          STORY_ID=$(echo "$SELECTED" | cut -d: -f1)
+          PHASE=$(echo "$SELECTED" | cut -d: -f2)
+          CMD=$(echo "$SELECTED" | cut -d: -f3)
+          
+          echo "story_id=$STORY_ID" >> $GITHUB_OUTPUT
+          echo "phase=$PHASE" >> $GITHUB_OUTPUT
+          echo "cmd=$CMD" >> $GITHUB_OUTPUT
+          
+          echo "🎲 Randomly selected: $STORY_ID (phase=$PHASE, cmd=$CMD)"
+      
+      - name: Create test issue
+        id: create_issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STORY_ID: ${{ steps.pick_story.outputs.story_id }}
+          PHASE: ${{ steps.pick_story.outputs.phase }}
+          CMD: ${{ steps.pick_story.outputs.cmd }}
+        run: |
+          STORY_PATH="tests/fixtures/orchestrator-test/specs/projects/000-test/epics/E001-test/stories/$STORY_ID"
+          
+          # Build issue body
+          cat > /tmp/issue_body.md <<'EOF'
+## 🧪 E2E Test Issue
+          
+**This is an automated end-to-end test. It will be automatically closed and cleaned up.**
+          
+### Test Story Details
+          
+| Field | Value |
+|-------|-------|
+| **Story** | $STORY_ID |
+| **Phase** | $PHASE |
+| **Start Command** | `$CMD` |
+| **Story Path** | `$STORY_PATH` |
+          
+### Instructions for Copilot
+          
+This is a **test story** from the Greeting API example project.
+          
+**IMPORTANT**: 
+- This is a TEST - do not create actual code in `src/`
+- All work should be done in the story's `tests/fixtures/orchestrator-test/specs/projects/000-test/epics/E001-test/stories/$STORY_ID/` directory
+- Follow the normal Speck story flow as documented in `AGENTS.md`
+- Start with: `$CMD`
+          
+See `AGENTS.md` for the full Speck methodology.
+EOF
+          
+          # Substitute variables
+          sed -i "s/\$STORY_ID/$STORY_ID/g" /tmp/issue_body.md
+          sed -i "s/\$PHASE/$PHASE/g" /tmp/issue_body.md
+          sed -i "s/\$CMD/$CMD/g" /tmp/issue_body.md
+          sed -i "s|\$STORY_PATH|$STORY_PATH|g" /tmp/issue_body.md
+          
+          # Create issue
+          ISSUE_URL=$(gh issue create \
+            --title "[E2E Test] $STORY_ID - Greeting API" \
+            --body-file /tmp/issue_body.md \
+            --label "test:e2e,speck:story,automated")
+          
+          ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+          
+          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          echo "issue_url=$ISSUE_URL" >> $GITHUB_OUTPUT
+          
+          echo "📝 Created test issue #$ISSUE_NUMBER"
+      
+      - name: Assign Copilot
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_ASSIGNMENT_TOKEN }}
+          ISSUE_NUM: ${{ steps.create_issue.outputs.issue_number }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "🤖 Assigning Copilot to issue #$ISSUE_NUM"
+          
+          PAYLOAD=$(cat <<'EOFPAYLOAD'
+          {
+            "assignees": ["copilot-swe-agent[bot]"],
+            "agent_assignment": {
+              "target_repo": "REPO_PLACEHOLDER",
+              "base_branch": "main",
+              "custom_instructions": "This is a test story. Keep all work in the story directory under tests/fixtures/. Do not create actual implementation code.",
+              "custom_agent": "",
+              "model": ""
+            }
+          }
+          EOFPAYLOAD
+          )
+          
+          PAYLOAD=$(echo "$PAYLOAD" | sed "s|REPO_PLACEHOLDER|$REPO|g")
+          
+          echo "$PAYLOAD" | gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/$REPO/issues/$ISSUE_NUM/assignees" \
+            --input -
+          
+          echo "✅ Copilot assigned to issue #$ISSUE_NUM"
+      
+      - name: Monitor Copilot progress
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUM: ${{ steps.create_issue.outputs.issue_number }}
+          REPO: ${{ github.repository }}
+        timeout-minutes: 15
+        run: |
+          echo "⏱️  Monitoring Copilot progress for up to 15 minutes..."
+          
+          MAX_WAIT=900  # 15 minutes
+          ELAPSED=0
+          CHECK_INTERVAL=30
+          
+          while [ $ELAPSED -lt $MAX_WAIT ]; do
+            # Check for PR created by Copilot
+            PR_COUNT=$(gh pr list --repo "$REPO" --search "$ISSUE_NUM in:title" --json number --jq 'length')
+            
+            if [ "$PR_COUNT" -gt 0 ]; then
+              echo "✅ Copilot created a PR!"
+              PR_NUMBER=$(gh pr list --repo "$REPO" --search "$ISSUE_NUM in:title" --json number --jq '.[0].number')
+              echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            
+            # Check if issue was closed/commented
+            COMMENTS=$(gh issue view "$ISSUE_NUM" --repo "$REPO" --json comments --jq '.comments | length')
+            if [ "$COMMENTS" -gt 0 ]; then
+              echo "📝 Copilot added comments (count: $COMMENTS)"
+            fi
+            
+            echo "⏳ Waiting... ($ELAPSED/$MAX_WAIT seconds)"
+            sleep $CHECK_INTERVAL
+            ELAPSED=$((ELAPSED + CHECK_INTERVAL))
+          done
+          
+          echo "⚠️  Timeout reached - Copilot did not complete within 15 minutes"
+          echo "This may be normal for a test - proceeding to cleanup"
+      
+      - name: Cleanup test issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUM: ${{ steps.create_issue.outputs.issue_number }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$ISSUE_NUM" ]; then
+            echo "No issue to clean up"
+            exit 0
+          fi
+          
+          echo "🧹 Cleaning up test issue #$ISSUE_NUM"
+          
+          # Close any PRs created
+          PR_NUMBERS=$(gh pr list --repo "$REPO" --search "$ISSUE_NUM in:title" --json number --jq '.[].number')
+          for PR_NUM in $PR_NUMBERS; do
+            echo "  Closing PR #$PR_NUM"
+            gh pr close "$PR_NUM" --repo "$REPO" --comment "E2E test completed - auto-closing" || true
+            
+            # Delete branch
+            BRANCH=$(gh pr view "$PR_NUM" --repo "$REPO" --json headRefName --jq '.headRefName')
+            if [[ "$BRANCH" == copilot/* ]]; then
+              echo "  Deleting branch: $BRANCH"
+              git push origin --delete "$BRANCH" 2>/dev/null || true
+            fi
+          done
+          
+          # Close issue
+          gh issue close "$ISSUE_NUM" --repo "$REPO" --comment "✅ E2E test completed and cleaned up" || true
+          
+          echo "✅ Cleanup complete"
+      
+      - name: Report results
+        if: always()
+        env:
+          ISSUE_URL: ${{ steps.create_issue.outputs.issue_url }}
+          STORY_ID: ${{ steps.pick_story.outputs.story_id }}
+        run: |
+          echo "## 🧪 E2E Test Results"
+          echo ""
+          echo "- **Story**: $STORY_ID"
+          echo "- **Issue**: $ISSUE_URL"
+          echo "- **Status**: Test completed (check logs for details)"
+          echo ""
+          echo "Note: This test verifies the orchestrator can create issues and assign Copilot."
+          echo "Full story completion may take longer than the test timeout."
