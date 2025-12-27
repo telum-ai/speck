@@ -72,7 +72,7 @@ jobs:
             local expected_cmd="$3"
             local expected_blocked="$4"
             
-            local result=$(grep "\"story\":\"$story\"" /tmp/results.jsonl | head -1)
+            local result=$(jq -c ". | select(.story == \"$story\")" /tmp/results.jsonl | head -1)
             if [ -z "$result" ]; then
               echo "❌ FAIL: $story not found in results"
               return 1
