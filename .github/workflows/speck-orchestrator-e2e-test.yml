@@ -200,7 +200,7 @@ jobs:
           
           for ISSUE_NUM in $ISSUE_NUMS; do
             echo "  Closing issue #$ISSUE_NUM"
-            gh issue close "$ISSUE_NUM" --repo "$REPO" --reason "not_planned" --comment "🧹 E2E test cleanup" 2>/dev/null || true
+            gh issue close "$ISSUE_NUM" --repo "$REPO" --reason "not planned" --comment "🧹 E2E test cleanup" 2>/dev/null || true
           done
           
           # Close any test PRs
