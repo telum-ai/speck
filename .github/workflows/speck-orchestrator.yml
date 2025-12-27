@@ -34,6 +34,11 @@ on:
         required: false
         type: string
         default: 'specs'
+      single_story:
+        description: 'Only process this single story ID (for testing)'
+        required: false
+        type: string
+        default: ''
       test_mode:
         description: 'Test mode - adds test:e2e label for cleanup'
         required: false
@@ -85,6 +90,7 @@ jobs:
           EPIC_PATH: ${{ inputs.epic_path || '' }}
           REPO: ${{ github.repository }}
           SPECS_ROOT: ${{ inputs.specs_root || 'specs' }}
+          SINGLE_STORY: ${{ inputs.single_story || '' }}
           DRY_RUN: "false"
           TEST_MODE: ${{ inputs.test_mode && 'true' || 'false' }}
         run: |

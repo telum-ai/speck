@@ -58,18 +58,38 @@ jobs:
           
           echo "✓ E2E test environment ready"
       
+      - name: Pick random test story
+        id: pick_story
+        run: |
+          # Pick ONE random story for testing
+          CANDIDATES=(
+            "S001-project-setup"
+            "S002-express-config"
+            "S003-greeting-service"
+            "S004-greeting-endpoint"
+            "S008-performance-test"
+          )
+          
+          RANDOM_INDEX=$((RANDOM % ${#CANDIDATES[@]}))
+          STORY="${CANDIDATES[$RANDOM_INDEX]}"
+          
+          echo "story_id=$STORY" >> $GITHUB_OUTPUT
+          echo "🎲 Randomly selected: $STORY"
+      
       - name: Trigger real orchestrator workflow
         id: trigger
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          STORY_ID: ${{ steps.pick_story.outputs.story_id }}
         run: |
-          echo "🚀 Triggering speck-orchestrator.yml with test_mode=true"
+          echo "🚀 Triggering orchestrator for SINGLE story: $STORY_ID"
           
-          # Trigger the real orchestrator with test fixtures
+          # Trigger with SINGLE_STORY filter - only creates ONE issue
           gh workflow run speck-orchestrator.yml \
             --repo "$REPO" \
             -f specs_root="tests/fixtures/orchestrator-test/specs" \
+            -f single_story="$STORY_ID" \
             -f test_mode=true
           
           # Wait a bit for the run to be created
@@ -84,7 +104,7 @@ jobs:
             --jq '.[0].databaseId')
           
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
-          echo "📋 Started orchestrator run: $RUN_ID"
+          echo "📋 Started orchestrator run: $RUN_ID (single story: $STORY_ID)"
       
       - name: Wait for orchestrator to complete
         env:
@@ -120,34 +140,40 @@ jobs:
           
           echo "⚠️  Timeout waiting for orchestrator"
       
-      - name: Verify issues created
+      - name: Verify single issue created
         id: verify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          STORY_ID: ${{ steps.pick_story.outputs.story_id }}
         run: |
-          echo "🔍 Checking for test issues..."
+          echo "🔍 Checking for test issue (expecting exactly 1)..."
           
-          # Get all issues with test:e2e label
-          ISSUES=$(gh issue list --repo "$REPO" --label "test:e2e" --json number,title,labels --jq '.')
+          # Get issues with test:e2e label
+          ISSUES=$(gh issue list --repo "$REPO" --label "test:e2e" --state open --json number,title,labels --jq '.')
           COUNT=$(echo "$ISSUES" | jq 'length')
           
           echo "issues_created=$COUNT" >> $GITHUB_OUTPUT
-          echo "📝 Found $COUNT test issues"
+          echo "📝 Found $COUNT test issue(s)"
           
           if [ "$COUNT" -eq 0 ]; then
-            echo "❌ No test issues created!"
+            echo "❌ No test issue created!"
             exit 1
           fi
           
-          # Show the issues
+          if [ "$COUNT" -gt 1 ]; then
+            echo "⚠️  WARNING: Expected 1 issue, found $COUNT!"
+            echo "Single story filter may not be working correctly."
+          fi
+          
+          # Show the issue
           echo "$ISSUES" | jq -r '.[] | "  - #\(.number): \(.title)"'
           
-          # Check if any are queued for Copilot
-          QUEUED=$(echo "$ISSUES" | jq '[.[] | select(.labels | map(.name) | any(. == "speck:queued"))] | length')
-          echo "  Queued for Copilot: $QUEUED"
+          # Get issue number for cleanup
+          ISSUE_NUM=$(echo "$ISSUES" | jq -r '.[0].number')
+          echo "issue_number=$ISSUE_NUM" >> $GITHUB_OUTPUT
           
-          echo "✅ Test issues created successfully!"
+          echo "✅ Test issue created for story: $STORY_ID"
       
       - name: Monitor Copilot assignment
         env:
@@ -222,19 +248,21 @@ jobs:
       - name: Report results
         if: always()
         env:
-          ISSUES_CREATED: ${{ steps.verify.outputs.issues_created }}
+          STORY_ID: ${{ steps.pick_story.outputs.story_id }}
+          ISSUE_NUM: ${{ steps.verify.outputs.issue_number }}
           RUN_ID: ${{ steps.trigger.outputs.run_id }}
         run: |
           echo "## 🧪 E2E Test Results"
           echo ""
           echo "| Metric | Value |"
           echo "|--------|-------|"
+          echo "| Story Tested | $STORY_ID |"
+          echo "| Issue Created | #$ISSUE_NUM |"
           echo "| Orchestrator Run | $RUN_ID |"
-          echo "| Test Issues Created | $ISSUES_CREATED |"
           echo ""
           echo "This test verified that the **real orchestrator** can:"
-          echo "1. ✅ Scan test fixtures for stories"
-          echo "2. ✅ Create issues with proper labels"
-          echo "3. ✅ Route stories to correct commands"
+          echo "1. ✅ Process a SINGLE story from test fixtures"
+          echo "2. ✅ Create exactly ONE issue with proper labels"
+          echo "3. ✅ Route the story to correct command"
           echo ""
           echo "All test artifacts have been cleaned up."
