@@ -40,6 +40,8 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Verify test environment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ ! -d "tests/fixtures/orchestrator-test" ]; then
             echo "ERROR: Test fixtures not found"
@@ -52,6 +54,13 @@ jobs:
             echo "To enable E2E testing, add COPILOT_ASSIGNMENT_TOKEN to repository secrets."
             exit 0
           fi
+          
+          # Ensure test:e2e label exists
+          gh label create "test:e2e" \
+            --description "End-to-end integration test" \
+            --color "E99695" \
+            --force \
+            --repo "${{ github.repository }}" || true
           
           echo "✓ E2E test environment ready"
       
