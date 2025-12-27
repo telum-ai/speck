@@ -323,7 +323,7 @@ main() {
         # Set labels
         local labels="speck:story,automated"
         if [ "$TEST_MODE" = "true" ]; then
-          labels="$labels,test:orchestrator"
+          labels="$labels,test:e2e"
         fi
         if [ "$blocked" = "true" ]; then
           labels="$labels,speck:blocked"

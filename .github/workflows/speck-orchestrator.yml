@@ -29,6 +29,16 @@ on:
         description: 'Epic path (or leave empty to scan all)'
         required: false
         type: string
+      specs_root:
+        description: 'Specs root directory (default: specs)'
+        required: false
+        type: string
+        default: 'specs'
+      test_mode:
+        description: 'Test mode - adds test:e2e label for cleanup'
+        required: false
+        type: boolean
+        default: false
   
   # Re-orchestrate after PR merges (unblock dependents, continue validation)
   pull_request:
@@ -74,9 +84,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EPIC_PATH: ${{ inputs.epic_path || '' }}
           REPO: ${{ github.repository }}
-          SPECS_ROOT: specs
+          SPECS_ROOT: ${{ inputs.specs_root || 'specs' }}
           DRY_RUN: "false"
-          TEST_MODE: "false"
+          TEST_MODE: ${{ inputs.test_mode && 'true' || 'false' }}
         run: |
           chmod +x .speck/scripts/orchestrate.sh
           .speck/scripts/orchestrate.sh
