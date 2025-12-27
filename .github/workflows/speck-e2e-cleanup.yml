@@ -1,0 +1,141 @@
+# Speck E2E Test Cleanup
+#
+# Triggers when Copilot commits the completion marker file.
+# Cleans up test issues, PRs, and branches.
+#
+# Flow:
+# 1. Copilot is instructed to commit .e2e-test-complete when done
+# 2. This workflow triggers on that file being pushed
+# 3. Closes the PR with a comment
+# 4. Closes the related issue
+# 5. Deletes the copilot branch
+
+name: E2E Test Cleanup
+
+on:
+  push:
+    branches:
+      - 'copilot/**'
+    paths:
+      - '.e2e-test-complete'
+  
+  # Backup: scheduled cleanup for any orphaned test artifacts
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  cleanup-on-complete:
+    # Only run for the file trigger, not schedule
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      
+      - name: Read completion marker
+        id: marker
+        run: |
+          if [ -f ".e2e-test-complete" ]; then
+            ISSUE_NUM=$(cat .e2e-test-complete | grep -oE 'issue:[0-9]+' | cut -d: -f2 || echo "")
+            STORY_ID=$(cat .e2e-test-complete | grep -oE 'story:[^ ]+' | cut -d: -f2 || echo "")
+            
+            echo "issue_number=$ISSUE_NUM" >> $GITHUB_OUTPUT
+            echo "story_id=$STORY_ID" >> $GITHUB_OUTPUT
+            echo "📋 Found completion marker: issue=$ISSUE_NUM, story=$STORY_ID"
+          else
+            echo "No completion marker found"
+          fi
+      
+      - name: Close PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          echo "🔍 Looking for PR from branch: $BRANCH"
+          
+          PR_NUM=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number --jq '.[0].number' || echo "")
+          
+          if [ -n "$PR_NUM" ]; then
+            echo "📝 Closing PR #$PR_NUM"
+            gh pr close "$PR_NUM" --repo "$REPO" --comment "✅ E2E test completed successfully! Cleaning up test artifacts."
+          else
+            echo "No open PR found for this branch"
+          fi
+      
+      - name: Close issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUM: ${{ steps.marker.outputs.issue_number }}
+        run: |
+          if [ -n "$ISSUE_NUM" ]; then
+            echo "📝 Closing issue #$ISSUE_NUM"
+            gh issue close "$ISSUE_NUM" --repo "$REPO" --reason "completed" --comment "✅ E2E test completed! Story validated successfully." || true
+          else
+            echo "No issue number in completion marker"
+          fi
+      
+      - name: Delete branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          echo "🗑️  Deleting branch: $BRANCH"
+          git push origin --delete "$BRANCH" 2>/dev/null || echo "Branch already deleted or protected"
+
+  scheduled-cleanup:
+    # Only run for scheduled trigger
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Cleanup orphaned test artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "🧹 Cleaning up orphaned E2E test artifacts..."
+          
+          # Close any open test issues older than 1 hour
+          OLD_ISSUES=$(gh issue list --repo "$REPO" --label "test:e2e" --state open --json number,createdAt --jq '.[] | select((.createdAt | fromdateiso8601) < (now - 3600)) | .number')
+          
+          for ISSUE_NUM in $OLD_ISSUES; do
+            echo "  Closing orphaned issue #$ISSUE_NUM"
+            gh issue close "$ISSUE_NUM" --repo "$REPO" --reason "not planned" --comment "🧹 Orphaned E2E test cleanup (>1 hour old)" || true
+          done
+          
+          # Close any open test PRs older than 1 hour  
+          OLD_PRS=$(gh pr list --repo "$REPO" --label "test:e2e" --state open --json number,createdAt --jq '.[] | select((.createdAt | fromdateiso8601) < (now - 3600)) | .number')
+          
+          for PR_NUM in $OLD_PRS; do
+            echo "  Closing orphaned PR #$PR_NUM"
+            gh pr close "$PR_NUM" --repo "$REPO" --comment "🧹 Orphaned E2E test cleanup (>1 hour old)" || true
+          done
+          
+          # Delete orphaned copilot branches with e2e in the name
+          BRANCHES=$(git branch -r | grep 'origin/copilot/' | grep -i 'e2e\|test\|S0' | sed 's|origin/||' || true)
+          
+          for BRANCH in $BRANCHES; do
+            # Check if branch has no open PR
+            PR_COUNT=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number --jq 'length' 2>/dev/null || echo "0")
+            if [ "$PR_COUNT" -eq 0 ]; then
+              echo "  Deleting orphaned branch: $BRANCH"
+              git push origin --delete "$BRANCH" 2>/dev/null || true
+            fi
+          done
+          
+          echo "✅ Cleanup complete"

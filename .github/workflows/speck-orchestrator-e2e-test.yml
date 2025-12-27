@@ -213,38 +213,6 @@ jobs:
             ELAPSED=$((ELAPSED + 30))
           done
       
-      - name: Cleanup test artifacts
-        if: always()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-        run: |
-          echo "🧹 Cleaning up test artifacts..."
-          
-          # Get all test issues
-          ISSUE_NUMS=$(gh issue list --repo "$REPO" --label "test:e2e" --state all --json number --jq '.[].number' 2>/dev/null || true)
-          
-          for ISSUE_NUM in $ISSUE_NUMS; do
-            echo "  Closing issue #$ISSUE_NUM"
-            gh issue close "$ISSUE_NUM" --repo "$REPO" --reason "not planned" --comment "🧹 E2E test cleanup" 2>/dev/null || true
-          done
-          
-          # Close any test PRs
-          PR_NUMS=$(gh pr list --repo "$REPO" --label "test:e2e" --state open --json number --jq '.[].number' 2>/dev/null || true)
-          
-          for PR_NUM in $PR_NUMS; do
-            echo "  Closing PR #$PR_NUM"
-            gh pr close "$PR_NUM" --repo "$REPO" --comment "🧹 E2E test cleanup" 2>/dev/null || true
-            
-            BRANCH=$(gh pr view "$PR_NUM" --repo "$REPO" --json headRefName --jq '.headRefName' 2>/dev/null || true)
-            if [[ "$BRANCH" == copilot/* ]]; then
-              echo "  Deleting branch: $BRANCH"
-              git push origin --delete "$BRANCH" 2>/dev/null || true
-            fi
-          done
-          
-          echo "✅ Cleanup complete"
-      
       - name: Report results
         if: always()
         env:
@@ -264,5 +232,9 @@ jobs:
           echo "1. ✅ Process a SINGLE story from test fixtures"
           echo "2. ✅ Create exactly ONE issue with proper labels"
           echo "3. ✅ Route the story to correct command"
+          echo "4. ✅ Assign Copilot with E2E test instructions"
           echo ""
-          echo "All test artifacts have been cleaned up."
+          echo "**Cleanup**: When Copilot completes, it will commit \`.e2e-test-complete\`"
+          echo "which triggers \`speck-e2e-cleanup.yml\` to close the PR, issue, and branch."
+          echo ""
+          echo "Orphaned test artifacts (>1 hour old) are cleaned up every 6 hours."

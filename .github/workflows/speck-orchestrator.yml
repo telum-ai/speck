@@ -173,26 +173,34 @@ jobs:
           AVAILABLE=$((MAX_CONCURRENT - IN_PROGRESS))
           [ "$AVAILABLE" -le 0 ] && { echo "Rate limit reached"; exit 0; }
           
-          QUEUED=$(gh issue list --repo "$REPO" --label "speck:queued" --json number --jq 'sort_by(.number) | .[].number' | head -n "$AVAILABLE")
+          QUEUED=$(gh issue list --repo "$REPO" --label "speck:queued" --json number,labels --jq 'sort_by(.number) | .[] | @base64' | head -n "$AVAILABLE")
           
-          for ISSUE_NUM in $QUEUED; do
-            echo "Assigning Copilot to #$ISSUE_NUM"
+          for ISSUE_B64 in $QUEUED; do
+            ISSUE_DATA=$(echo "$ISSUE_B64" | base64 -d)
+            ISSUE_NUM=$(echo "$ISSUE_DATA" | jq -r '.number')
+            IS_E2E_TEST=$(echo "$ISSUE_DATA" | jq -r '.labels | map(.name) | any(. == "test:e2e")')
             
-            PAYLOAD=$(cat <<'EOFPAYLOAD'
+            echo "Assigning Copilot to #$ISSUE_NUM (e2e_test=$IS_E2E_TEST)"
+            
+            # Build custom instructions based on whether this is an E2E test
+            CUSTOM_INSTRUCTIONS=""
+            if [ "$IS_E2E_TEST" = "true" ]; then
+              CUSTOM_INSTRUCTIONS="🧪 E2E TEST MODE - This is an automated integration test. CRITICAL RULES: 1) Do NOT modify files in tests/fixtures/ - these are test data that must remain stable. 2) When you complete your work, commit a file named .e2e-test-complete with contents 'issue:$ISSUE_NUM' to trigger cleanup. 3) Keep your work minimal - just verify the story flow works. 4) The goal is to test the Speck orchestrator, not to do real implementation work."
+            fi
+            
+            PAYLOAD=$(cat <<EOFPAYLOAD
           {
             "assignees": ["copilot-swe-agent[bot]"],
             "agent_assignment": {
-              "target_repo": "REPO_PLACEHOLDER",
+              "target_repo": "$REPO",
               "base_branch": "main",
-              "custom_instructions": "",
+              "custom_instructions": "$CUSTOM_INSTRUCTIONS",
               "custom_agent": "",
               "model": ""
             }
           }
           EOFPAYLOAD
           )
-            
-            PAYLOAD=$(echo "$PAYLOAD" | sed "s|REPO_PLACEHOLDER|$REPO|g")
             
             echo "$PAYLOAD" | gh api \
               --method POST \
