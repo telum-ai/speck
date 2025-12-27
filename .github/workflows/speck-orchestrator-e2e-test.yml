@@ -91,39 +91,33 @@ jobs:
         run: |
           STORY_PATH="tests/fixtures/orchestrator-test/specs/projects/000-test/epics/E001-test/stories/$STORY_ID"
           
-          # Build issue body
-          cat > /tmp/issue_body.md <<'EOF'
-## 🧪 E2E Test Issue
-          
-**This is an automated end-to-end test. It will be automatically closed and cleaned up.**
-          
-### Test Story Details
-          
-| Field | Value |
-|-------|-------|
-| **Story** | $STORY_ID |
-| **Phase** | $PHASE |
-| **Start Command** | `$CMD` |
-| **Story Path** | `$STORY_PATH` |
-          
-### Instructions for Copilot
-          
-This is a **test story** from the Greeting API example project.
-          
-**IMPORTANT**: 
-- This is a TEST - do not create actual code in `src/`
-- All work should be done in the story's `tests/fixtures/orchestrator-test/specs/projects/000-test/epics/E001-test/stories/$STORY_ID/` directory
-- Follow the normal Speck story flow as documented in `AGENTS.md`
-- Start with: `$CMD`
-          
-See `AGENTS.md` for the full Speck methodology.
-EOF
-          
-          # Substitute variables
-          sed -i "s/\$STORY_ID/$STORY_ID/g" /tmp/issue_body.md
-          sed -i "s/\$PHASE/$PHASE/g" /tmp/issue_body.md
-          sed -i "s/\$CMD/$CMD/g" /tmp/issue_body.md
-          sed -i "s|\$STORY_PATH|$STORY_PATH|g" /tmp/issue_body.md
+          # Build issue body with echo to avoid YAML heredoc issues
+          {
+            echo "## 🧪 E2E Test Issue"
+            echo ""
+            echo "**This is an automated end-to-end test. It will be automatically closed and cleaned up.**"
+            echo ""
+            echo "### Test Story Details"
+            echo ""
+            echo "| Field | Value |"
+            echo "|-------|-------|"
+            echo "| **Story** | $STORY_ID |"
+            echo "| **Phase** | $PHASE |"
+            echo "| **Start Command** | \`$CMD\` |"
+            echo "| **Story Path** | \`$STORY_PATH\` |"
+            echo ""
+            echo "### Instructions for Copilot"
+            echo ""
+            echo "This is a **test story** from the Greeting API example project."
+            echo ""
+            echo "**IMPORTANT**:"
+            echo "- This is a TEST - do not create actual code in \`src/\`"
+            echo "- All work should be done in the story's \`tests/fixtures/orchestrator-test/specs/projects/000-test/epics/E001-test/stories/$STORY_ID/\` directory"
+            echo "- Follow the normal Speck story flow as documented in \`AGENTS.md\`"
+            echo "- Start with: \`$CMD\`"
+            echo ""
+            echo "See \`AGENTS.md\` for the full Speck methodology."
+          } > /tmp/issue_body.md
           
           # Create issue
           ISSUE_URL=$(gh issue create \
