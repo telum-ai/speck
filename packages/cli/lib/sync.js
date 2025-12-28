@@ -17,9 +17,11 @@ const ALWAYS_OVERWRITE = [
   '.speck/scripts',
   '.speck/README.md',
   '.cursor/commands',
+  '.cursor/agents',
   '.cursor/hooks/hooks',
   '.cursor/hooks/VALIDATION.md',
   '.cursor/MCP-SETUP.md',
+  '.claude/skills',
   '.github/workflows/speck-orchestrator.yml',
   '.github/workflows/speck-update-check.yml',
   '.github/workflows/speck-validation.yml',
@@ -37,6 +39,7 @@ const SMART_MERGE_FILES = {
   '.cursor/hooks/hooks.json': mergeHooksJson,
   '.cursor/mcp.json': mergeMcpJson,
   '.cursor/mcp.json.example': copyMcpExample,
+  '.cursor/mcp.project.json.example': copyMcpExample,
 };
 
 /**
