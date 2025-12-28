@@ -420,6 +420,47 @@ Skills are **agent-decided** expertise packages - automatically loaded when rele
 
 See `.claude/skills/README.md` for details.
 
+## 🤖 Subagents (Intra-Command Parallelization)
+
+Subagents are **parallel workers** that speed up command execution. The main agent spawns them for independent sub-tasks within commands.
+
+**Location**: `.cursor/agents/`
+
+**Key principle**: All subagents are spawned directly by the main agent. There is NO hierarchy - subagents never spawn other subagents.
+
+### The 7 Parallel Workers
+
+| Agent | Model | Purpose | Speed |
+|-------|-------|---------|-------|
+| **speck-explore** | Haiku | Fast file/pattern finding | ⚡ 1-2s |
+| **speck-researcher** | Sonnet + MCP | External research | 🔄 3-10s |
+| **speck-scanner** | Sonnet | Deep code/domain analysis | 🔄 5-15s |
+| **speck-scribe** | Sonnet | Document section drafting | 🔄 5-20s |
+| **speck-auditor** | Sonnet | Validation aspect checking | 🔄 3-10s |
+| **speck-architect** | Opus | Complex reasoning/decisions | 🔄 10-30s |
+| **speck-coder** | Composer 1 | Code writing for [P] tasks | 🔄 10-60s |
+
+### Skills vs Subagents
+
+| Aspect | Skills (`.claude/skills/`) | Subagents (`.cursor/agents/`) |
+|--------|---------------------------|-------------------------------|
+| **What** | Knowledge loaded into context | Parallel workers with own context |
+| **When** | Auto-loaded when relevant | Spawned for parallel execution |
+| **Examples** | Stripe patterns, PWA rules | speck-explore, speck-coder |
+
+**Skills = WHAT to know** (domain expertise)
+**Subagents = HOW to work faster** (parallelization)
+
+### When to Parallelize
+
+- **3+ independent sub-tasks** → Parallelize
+- **1-2 items** → Just do it sequentially
+- **Tasks share dependencies** → Don't parallelize
+
+### Command-Specific Instructions
+
+Each command file in `.cursor/commands/` contains its own "Subagent Parallelization" section with specific instructions for that command. Check the command file for details.
+
 ## 🔄 Guide Users Through the Process
 
 ### Unified Flow (Both Greenfield and Brownfield)

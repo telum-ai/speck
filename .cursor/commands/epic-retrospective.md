@@ -10,6 +10,29 @@ $ARGUMENTS
 
 Aggregate story retrospectives, validate patterns, apply immediate learnings to current project, and propose process improvements for Speck methodology.
 
+## Subagent Parallelization
+
+This command benefits from parallel data loading and validation:
+
+**Data Loading Phase** - Load all story retros in parallel:
+```
+├── [Parallel] Load all story-retro.md files in epic
+├── [Parallel] Load epic.md, epic-architecture.md
+├── [Parallel] Load epic-tech-spec.md, epic-breakdown.md
+└── [Continue] with all data loaded
+```
+
+**Validation Phase** - Spawn parallel speck-auditor:
+```
+├── [Parallel] speck-auditor: "Validate pattern frequency across stories (2+ = validated)"
+├── [Parallel] speck-auditor: "Identify systemic issues from story gotchas"
+├── [Parallel] speck-auditor: "Calculate effort variance across stories"
+├── [Parallel] speck-auditor: "Find methodology gaps from story retros"
+└── [Wait] → Synthesize into epic-retro.md
+```
+
+**Speedup**: 3-4x compared to sequential validation.
+
 ## Critical Understanding
 
 **Epic retrospective consumes ONLY synthesized data (NOT raw)**:

@@ -608,6 +608,65 @@ When a recipe recommends Stripe for payments, the Stripe skill provides:
 
 ---
 
+## 🤖 Subagents (Speed Through Parallelization)
+
+Subagents are **parallel workers** that speed up command execution. When a command has multiple independent sub-tasks, subagents can work on them simultaneously.
+
+### The 7 Parallel Workers
+
+| Agent | Model | Purpose | When Used |
+|-------|-------|---------|-----------|
+| **speck-explore** | Haiku | Fast file/pattern finding | Codebase navigation |
+| **speck-researcher** | Sonnet + MCP | External research | Tech evaluation, docs |
+| **speck-scanner** | Sonnet | Deep code analysis | Understanding existing code |
+| **speck-scribe** | Sonnet | Document drafting | Writing spec sections |
+| **speck-auditor** | Sonnet | Validation checks | Quality verification |
+| **speck-architect** | Opus | Complex decisions | Architecture trade-offs |
+| **speck-coder** | Composer 1 | Code implementation | Parallel [P] tasks |
+
+### How It Works
+
+The main agent executes all Speck commands. When it encounters parallelizable work, it spawns multiple subagents:
+
+```
+Main Agent executing /project-architecture:
+├── [Parallel] speck-researcher: "Best database for real-time?"
+├── [Parallel] speck-researcher: "Deployment patterns for AWS?"
+├── [Parallel] speck-researcher: "Auth patterns for B2B?"
+└── [Wait] → Synthesize findings → Make decisions
+
+Then:
+├── [Parallel] speck-scribe: Draft "System Architecture" section
+├── [Parallel] speck-scribe: Draft "Security Architecture" section
+├── [Parallel] speck-scribe: Draft "Data Architecture" section
+└── [Wait] → Assemble into architecture.md
+```
+
+### Commands with Major Parallelization
+
+| Command | Subagents Used | Speedup |
+|---------|---------------|---------|
+| `/project-architecture` | 5x researcher + 9x scribe | 5-10x |
+| `/story-implement` | Nx coder (for [P] tasks) | Nx |
+| `/story-validate` | 8x auditor | 6-8x |
+| `/story-scan` | 6-8x scanner | 5-6x |
+| `/epic-breakdown` | Nx scribe (for stories) | Nx |
+
+### Skills vs Subagents
+
+| | Skills | Subagents |
+|-|--------|-----------|
+| **What** | Knowledge loaded into context | Parallel workers |
+| **When** | Auto-loaded when relevant | Spawned for parallel work |
+| **Examples** | Stripe patterns, PWA rules | speck-explore, speck-coder |
+
+**Skills = WHAT to know** (domain expertise)
+**Subagents = HOW to work faster** (parallelization)
+
+**Technical Details**: See `AGENTS.md` for complete subagent documentation.
+
+---
+
 ## 🎯 Jobs-to-Be-Done (JTBD) Framework
 
 Speck integrates Jobs-to-Be-Done theory (Tony Ulwick, Clayton Christensen) and Outcome-Driven Innovation (ODI) to ensure specifications focus on **what users are trying to accomplish**, not just features they request.

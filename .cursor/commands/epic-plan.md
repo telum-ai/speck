@@ -12,6 +12,21 @@ Generate a comprehensive technical specification that bridges epic requirements 
 
 **Research Approach**: Uses just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`) for implementation patterns, integration strategies, and technical approaches
 
+## Subagent Parallelization
+
+This command benefits from parallel execution:
+
+**Research Phase** - Spawn parallel speck-researcher:
+```
+├── [Parallel] speck-researcher: "Implementation patterns for [feature]"
+├── [Parallel] speck-researcher: "Library comparison for [purpose]"
+├── [Parallel] speck-researcher: "Integration strategy for [service]"
+├── [Parallel] speck-researcher: "Testing approaches for [functionality]"
+└── [Wait] → Embed findings in tech spec
+```
+
+**Speedup**: 3-4x compared to sequential research.
+
 1. Load epic planning context:
    - Epic specification (epic.md) - required
    - Project PRD and technical constraints

@@ -10,6 +10,26 @@ $ARGUMENTS
 
 Comprehensive validation of project completion, ensuring all goals are met and the system is ready for production.
 
+## Subagent Parallelization
+
+This command benefits from parallel validation checks:
+
+```
+├── [Parallel] speck-auditor: "Check project.md goals are achieved"
+├── [Parallel] speck-auditor: "Verify all PRD requirements are implemented"
+├── [Parallel] speck-auditor: "Confirm all epics are complete"
+├── [Parallel] speck-auditor: "Test cross-epic integration flows"
+├── [Parallel] speck-auditor: "Check code quality, security, accessibility"
+├── [Parallel] speck-auditor: "Verify Cursor rules compliance"
+└── [Wait] → Synthesize into project-validation-report.md
+
+Each auditor returns PASS | FAIL | PARTIAL with evidence.
+```
+
+**Speedup**: 5-6x compared to sequential validation.
+
+---
+
 1. Load project artifacts and status:
    - Original: project.md, PRD.md, epics.md
    - Epic status: Check each epic directory for completion

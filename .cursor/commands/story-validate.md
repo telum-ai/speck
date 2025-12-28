@@ -10,7 +10,27 @@ $ARGUMENTS
 
 Goal: Comprehensively validate that the implementation fulfills the specification, meets non-functional requirements, adheres to constitutional principles, and is ready for review/deployment.
 
-Execution steps:
+## Subagent Parallelization
+
+This command benefits from parallel speck-auditor execution for independent validation aspects:
+
+```
+├── [Parallel] speck-auditor: "Check all FR-XXX requirements are implemented with tests"
+├── [Parallel] speck-auditor: "Run test suite and verify all tests pass"
+├── [Parallel] speck-auditor: "Validate performance against spec targets"
+├── [Parallel] speck-auditor: "Verify constitution principle compliance"
+├── [Parallel] speck-auditor: "Check Cursor rules compliance for changed files"
+├── [Parallel] speck-auditor: "Run linters and type checks"
+├── [Parallel] speck-auditor: "Code review for security and maintainability"
+├── [Parallel] speck-auditor: "Check documentation completeness"
+└── [Wait] → Synthesize into validation-report.md
+
+Each auditor returns: PASS | FAIL | PARTIAL with evidence
+```
+
+**Speedup**: 6-8x compared to sequential validation.
+
+## Execution steps
 
 1. Locate the active story directory (STORY_DIR):
    - Preferred: user is already in the story directory (or a subfolder like `contracts/`)

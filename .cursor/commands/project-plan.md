@@ -12,6 +12,28 @@ Generate a Product Requirements Document (PRD) and identify epics based on proje
 
 **Research Approach**: If planning needs market/business research, uses just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
 
+## Subagent Parallelization
+
+This command benefits from parallel execution:
+
+**Epic Spec Drafting** - Spawn parallel speck-scribe:
+```
+├── [Parallel] speck-scribe: Draft E001 epic.md placeholder
+├── [Parallel] speck-scribe: Draft E002 epic.md placeholder
+├── [Parallel] speck-scribe: Draft E003 epic.md placeholder
+└── [Wait] → Create all epic directories with drafted specs
+```
+
+**Research Phase** (if needed) - Spawn parallel speck-researcher:
+```
+├── [Parallel] speck-researcher: "Market sizing for [domain]"
+├── [Parallel] speck-researcher: "Competitor analysis"
+├── [Parallel] speck-researcher: "Pricing strategies"
+└── [Wait] → Embed findings in PRD
+```
+
+**Speedup**: Nx (where N = number of epics) for spec drafting.
+
 1. Load project context and foundation artifacts:
    - Find active project directory (check cwd, then scan specs/projects/)
    - Load and validate project.md

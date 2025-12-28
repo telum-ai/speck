@@ -10,6 +10,26 @@ $ARGUMENTS
 
 Comprehensive validation that the epic delivers on its promises and integrates properly with the system.
 
+## Subagent Parallelization
+
+This command benefits from parallel validation checks:
+
+```
+├── [Parallel] speck-auditor: "Verify all story validations pass"
+├── [Parallel] speck-auditor: "Check epic goals from epic.md are achieved"
+├── [Parallel] speck-auditor: "Verify architecture matches epic-architecture.md"
+├── [Parallel] speck-auditor: "Test integration with other epics works"
+├── [Parallel] speck-auditor: "Check code quality, tests, and docs"
+├── [Parallel] speck-auditor: "Verify Cursor rules compliance"
+└── [Wait] → Synthesize into epic-validation-report.md
+
+Each auditor returns PASS | FAIL | PARTIAL with evidence.
+```
+
+**Speedup**: 5-6x compared to sequential validation.
+
+---
+
 1. Load epic completion status:
    - Original specs: epic.md, epic-tech-spec.md
    - Story status: Check epic-breakdown.md completion

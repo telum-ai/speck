@@ -34,6 +34,26 @@ $ARGUMENTS
 
 ---
 
+## Subagent Parallelization
+
+This command benefits from parallel speck-scanner execution for domain analysis:
+
+```
+├── [Parallel] speck-scanner: "Deep analyze auth patterns in src/"
+├── [Parallel] speck-scanner: "Deep analyze API patterns in src/api/"
+├── [Parallel] speck-scanner: "Deep analyze data models in src/models/"
+├── [Parallel] speck-scanner: "Deep analyze UI components in src/components/"
+├── [Parallel] speck-scanner: "Analyze testing patterns in tests/"
+├── [Parallel] speck-scanner: "Analyze error handling patterns in src/"
+├── [Parallel] speck-scanner: "Quick scan logging patterns in src/"
+├── [Parallel] speck-scanner: "Quick scan code conventions in src/"
+└── [Wait] → Synthesize into codebase-scan-*.md
+
+Each scanner returns domain-specific patterns and examples.
+```
+
+**Speedup**: 5-6x compared to sequential scanning.
+
 ## Scan Process
 
 1. Locate the active story directory (STORY_DIR):

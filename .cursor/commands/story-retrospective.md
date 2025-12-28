@@ -10,6 +10,21 @@ $ARGUMENTS
 
 Mine raw learning data from story implementation and consolidate into structured summary. Apply immediate learnings to current epic, flag patterns for epic retrospective validation.
 
+## Subagent Parallelization
+
+This command benefits from parallel data mining:
+
+**Data Mining Phase** - Spawn parallel speck-explore:
+```
+├── [Parallel] speck-explore: Parse .learning.log for edit events
+├── [Parallel] speck-explore: Mine git commits for learning tags
+├── [Parallel] speck-explore: Read validation-report.md
+├── [Parallel] speck-explore: Find future story specs in epic
+└── [Wait] → Synthesize into story-retro.md
+```
+
+**Speedup**: 2-3x compared to sequential mining.
+
 ## Critical Understanding
 
 **Story retrospective is the ONLY level that consumes raw data**:

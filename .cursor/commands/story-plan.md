@@ -12,6 +12,32 @@ Given the implementation details provided as an argument, do this:
 
 **Research Approach**: Uses just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`) for implementation patterns, code examples, and API usage
 
+## Subagent Parallelization
+
+This command benefits from parallel execution:
+
+**Context Loading** - Load multiple docs in parallel:
+```
+├── [Parallel] Load constitution.md
+├── [Parallel] Load domain-model.md
+├── [Parallel] Load ux-strategy.md
+├── [Parallel] Load design-system.md
+├── [Parallel] Load codebase-scan-*.md (all scans)
+└── [Continue] with all context loaded
+```
+
+**Research Phase** - Spawn parallel speck-researcher:
+```
+├── [Parallel] speck-researcher: "API usage for [library]"
+├── [Parallel] speck-researcher: "Testing patterns for [functionality]"
+├── [Parallel] speck-researcher: "Edge cases for [scenario]"
+└── [Wait] → Embed findings in plan
+```
+
+**Speedup**: 4-5x compared to sequential execution.
+
+---
+
 1. Locate the active story directory (STORY_DIR):
    - Preferred: user is already in the story directory (or a subfolder like `contracts/`)
    - Determine STORY_DIR by walking up from current directory until you find `spec.md`

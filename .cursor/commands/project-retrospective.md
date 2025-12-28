@@ -10,6 +10,29 @@ $ARGUMENTS
 
 Aggregate epic retrospectives, validate project-wide patterns, and propose methodology evolution for Speck based on strategic project insights.
 
+## Subagent Parallelization
+
+This command benefits from parallel data loading and analysis:
+
+**Data Loading Phase** - Load multiple docs in parallel:
+```
+├── [Parallel] Load all epic-retro.md files
+├── [Parallel] Load project.md, PRD.md, architecture.md
+├── [Parallel] Load context.md, design-system.md, ux-strategy.md
+└── [Continue] with all data loaded
+```
+
+**Pattern Analysis Phase** - Spawn parallel speck-auditor:
+```
+├── [Parallel] speck-auditor: "Analyze patterns appearing across epics"
+├── [Parallel] speck-auditor: "Identify systemic issues from epic gotchas"
+├── [Parallel] speck-auditor: "Find methodology gaps from epic retros"
+├── [Parallel] speck-auditor: "Analyze effort trends across epics"
+└── [Wait] → Synthesize into project-retro.md
+```
+
+**Speedup**: 3-4x compared to sequential analysis.
+
 ## Critical Understanding
 
 **Project retrospective consumes epic summaries (NOT raw story-level data)**:

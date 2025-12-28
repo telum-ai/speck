@@ -10,6 +10,23 @@ $ARGUMENTS
 
 Goal: Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `/story-tasks` has successfully produced a complete `tasks.md`.
 
+## Subagent Parallelization
+
+This command benefits from parallel speck-auditor execution for independent checks:
+
+```
+├── [Parallel] speck-auditor: "Find near-duplicate requirements in spec/plan/tasks"
+├── [Parallel] speck-auditor: "Flag vague adjectives and [TBD] placeholders"
+├── [Parallel] speck-auditor: "Verify all requirements map to tasks"
+├── [Parallel] speck-auditor: "Check constitution principle compliance"
+├── [Parallel] speck-auditor: "Verify plan uses patterns from codebase scans"
+└── [Wait] → Synthesize into analysis report
+
+Each auditor returns findings with severity → Combine into report.
+```
+
+**Speedup**: 3-4x compared to sequential checking.
+
 STRICTLY READ-ONLY: Do **not** modify any files. Output a structured analysis report. Offer an optional remediation plan (user must explicitly approve before any follow-up editing commands would be invoked manually).
 
 Constitution Authority: The applicable constitution chain (**project + epic**) is **non-negotiable** within this analysis scope. Constitution conflicts are automatically CRITICAL and require adjustment of the spec, plan, or tasks—not dilution, reinterpretation, or silent ignoring of the principle. If a principle itself needs to change, that must occur in a separate, explicit constitution update outside `/analyze`.

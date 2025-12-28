@@ -56,7 +56,24 @@ Create a comprehensive story breakdown that maps all user stories within the epi
 
    Write output to: `[EPIC_DIR]/epic-breakdown.md`
 
-5. Create story directories:
+5. Create story directories with parallel spec drafting:
+
+   **Subagent Parallelization** - Spawn speck-scribe for each story spec:
+   ```
+   ├── [Parallel] speck-scribe: Draft S001 spec.md from epic-tech-spec.md
+   ├── [Parallel] speck-scribe: Draft S002 spec.md from epic-tech-spec.md
+   ├── [Parallel] speck-scribe: Draft S003 spec.md from epic-tech-spec.md
+   └── [Wait] → Create all story directories with drafted specs
+   ```
+   
+   Each speck-scribe receives:
+   - Story requirements from epic-breakdown.md
+   - Technical context from epic-tech-spec.md
+   - Template from .speck/templates/story/story-template.md
+   
+   **Speedup**: Nx (where N = number of stories)
+
+   Create story directories:
    ```
    [EPIC_DIR]/
    └── stories/

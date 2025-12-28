@@ -24,6 +24,41 @@ This command requires:
 
 **Research Approach**: Uses just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`) for technology evaluation and architecture patterns
 
+## Subagent Parallelization
+
+This command benefits from parallel subagent execution:
+
+**Research Phase** - Spawn parallel speck-researcher:
+```
+├── [Parallel] speck-researcher: "Best database for [requirements]"
+├── [Parallel] speck-researcher: "Architecture patterns for [scale]"
+├── [Parallel] speck-researcher: "Deployment patterns for [cloud]"
+├── [Parallel] speck-researcher: "Security patterns for [domain]"
+├── [Parallel] speck-researcher: "Integration patterns for [services]"
+└── [Wait] → Synthesize findings into decisions
+```
+
+**Decision Phase** (for complex trade-offs) - Spawn speck-architect:
+```
+├── [Parallel] speck-architect: "Database architecture decision"
+├── [Parallel] speck-architect: "Auth architecture decision"
+├── [Parallel] speck-architect: "API design decision"
+└── [Wait] → Consolidate into coherent architecture
+```
+
+**Drafting Phase** - Spawn parallel speck-scribe:
+```
+├── [Parallel] speck-scribe: "System Architecture" section
+├── [Parallel] speck-scribe: "Technology Strategy" section
+├── [Parallel] speck-scribe: "Security Architecture" section
+├── [Parallel] speck-scribe: "Data Architecture" section
+├── [Parallel] speck-scribe: "Integration Architecture" section
+├── [Parallel] speck-scribe: "Deployment Architecture" section
+└── [Wait] → Assemble into architecture.md
+```
+
+**Speedup**: 5-10x compared to sequential execution.
+
 ## Architecture Design Process
 
 1. Load project context and detect mode:

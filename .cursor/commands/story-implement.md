@@ -41,6 +41,23 @@ $ARGUMENTS
    - **File-based coordination**: Tasks affecting the same files must run sequentially
    - **Validation checkpoints**: Verify each phase completion before proceeding
 
+   **Subagent Parallelization** - For tasks marked `[P]`, spawn parallel speck-coder:
+   ```
+   Phase 2: Tests (example)
+   - [P] [ ] T2.1: Write user tests → speck-coder instance 1
+   - [P] [ ] T2.2: Write auth tests → speck-coder instance 2 (parallel!)
+   - [P] [ ] T2.3: Write API tests  → speck-coder instance 3 (parallel!)
+   - [ ] T2.4: Integration tests    → speck-coder (sequential, depends on above)
+   ```
+   
+   Each speck-coder receives:
+   - Task ID and description
+   - Files to create/modify
+   - Relevant patterns from codebase scan
+   - TDD flag (write test first)
+   
+   Wait for all parallel tasks to complete before proceeding to dependent tasks.
+
 5. Implementation execution rules:
    - **Setup first**: Initialize project structure, dependencies, configuration
    - **Tests before code**: If you need to write tests for contracts, entities, and integration scenarios

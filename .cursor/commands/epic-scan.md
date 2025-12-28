@@ -15,6 +15,22 @@ Analyze codebase for existing patterns, similar implementations, and reusable co
 **Purpose**: Find what's relevant to YOUR epic  
 **Output**: Epic-specific scan with reusable patterns
 
+## Subagent Parallelization
+
+This command benefits from parallel speck-scanner execution for domain analysis:
+
+```
+├── [Parallel] speck-scanner: "Analyze API patterns relevant to this epic in src/"
+├── [Parallel] speck-scanner: "Analyze data models relevant to this epic in src/models/"
+├── [Parallel] speck-scanner: "Analyze auth patterns relevant to this epic in src/"
+├── [Parallel] speck-scanner: "Analyze integration patterns relevant to this epic in src/"
+└── [Wait] → Synthesize into epic-codebase-scan.md
+
+Focus each scanner on domains relevant to THIS epic.
+```
+
+**Speedup**: 3-4x compared to sequential scanning.
+
 ## When to Use
 
 - **After `/epic-specify` or `/epic-clarify`** - Understand existing patterns before planning
