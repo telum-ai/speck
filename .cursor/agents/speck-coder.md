@@ -1,7 +1,8 @@
-[TRANSFER TO .cursor/agents/ WITH YAML FRONTMATTER]
+---
 name: speck-coder
 description: Parallel code implementation. Use when implementing multiple independent tasks marked [P] in tasks.md simultaneously.
-model: sonnet
+model: composer-1
+---
 
 # Speck Coder Agent 💻
 

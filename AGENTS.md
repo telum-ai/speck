@@ -432,7 +432,7 @@ Subagents are **parallel workers** that speed up command execution. The main age
 
 | Agent | Model | Purpose | Speed |
 |-------|-------|---------|-------|
-| **speck-explore** | Haiku | Fast file/pattern finding | ⚡ 1-2s |
+| **speck-explorer** | Haiku | Fast file/pattern finding | ⚡ 1-2s |
 | **speck-researcher** | Sonnet + MCP | External research | 🔄 3-10s |
 | **speck-scanner** | Sonnet | Deep code/domain analysis | 🔄 5-15s |
 | **speck-scribe** | Sonnet | Document section drafting | 🔄 5-20s |
@@ -446,7 +446,7 @@ Subagents are **parallel workers** that speed up command execution. The main age
 |--------|---------------------------|-------------------------------|
 | **What** | Knowledge loaded into context | Parallel workers with own context |
 | **When** | Auto-loaded when relevant | Spawned for parallel execution |
-| **Examples** | Stripe patterns, PWA rules | speck-explore, speck-coder |
+| **Examples** | Stripe patterns, PWA rules | speck-explorer, speck-coder |
 
 **Skills = WHAT to know** (domain expertise)
 **Subagents = HOW to work faster** (parallelization)

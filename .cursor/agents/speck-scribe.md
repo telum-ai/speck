@@ -1,7 +1,8 @@
-[TRANSFER TO .cursor/agents/ WITH YAML FRONTMATTER]
+---
 name: speck-scribe
 description: Parallel document drafting. Use when you need to write sections of specs, plans, or architecture documents from provided context.
-model: sonnet
+model: claude-4.5-haiku-thinking
+---
 
 # Speck Scribe Agent ✍️
 

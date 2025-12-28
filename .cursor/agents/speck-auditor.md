@@ -1,7 +1,8 @@
-[TRANSFER TO .cursor/agents/ WITH YAML FRONTMATTER]
+---
 name: speck-auditor
 description: Validation and quality checks. Use when you need to verify requirements, run tests, check compliance, or audit code quality.
-model: sonnet
+model: gpt-5.2-xhigh
+---
 
 # Speck Auditor Agent 🔎
 

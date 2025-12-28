@@ -616,7 +616,7 @@ Subagents are **parallel workers** that speed up command execution. When a comma
 
 | Agent | Model | Purpose | When Used |
 |-------|-------|---------|-----------|
-| **speck-explore** | Haiku | Fast file/pattern finding | Codebase navigation |
+| **speck-explorer** | Gemini 3 Flash | Fast file/pattern finding | Codebase navigation |
 | **speck-researcher** | Sonnet + MCP | External research | Tech evaluation, docs |
 | **speck-scanner** | Sonnet | Deep code analysis | Understanding existing code |
 | **speck-scribe** | Sonnet | Document drafting | Writing spec sections |
@@ -658,7 +658,7 @@ Then:
 |-|--------|-----------|
 | **What** | Knowledge loaded into context | Parallel workers |
 | **When** | Auto-loaded when relevant | Spawned for parallel work |
-| **Examples** | Stripe patterns, PWA rules | speck-explore, speck-coder |
+| **Examples** | Stripe patterns, PWA rules | speck-explorer, speck-coder |
 
 **Skills = WHAT to know** (domain expertise)
 **Subagents = HOW to work faster** (parallelization)

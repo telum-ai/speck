@@ -12,14 +12,14 @@ Quick codebase survey to understand the high-level architecture shape and identi
 
 ## Subagent Parallelization
 
-This command benefits from parallel speck-explore execution:
+This command benefits from parallel speck-explorer execution:
 
 ```
-├── [Parallel] speck-explore: "Keyword heatmap for src/auth/"
-├── [Parallel] speck-explore: "Keyword heatmap for src/api/"
-├── [Parallel] speck-explore: "Keyword heatmap for src/models/"
-├── [Parallel] speck-explore: "Keyword heatmap for src/components/"
-├── [Parallel] speck-explore: "Coupling analysis for top modules"
+├── [Parallel] speck-explorer: "Keyword heatmap for src/auth/"
+├── [Parallel] speck-explorer: "Keyword heatmap for src/api/"
+├── [Parallel] speck-explorer: "Keyword heatmap for src/models/"
+├── [Parallel] speck-explorer: "Keyword heatmap for src/components/"
+├── [Parallel] speck-explorer: "Coupling analysis for top modules"
 └── [Wait] → Synthesize into landscape overview
 ```
 

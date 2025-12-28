@@ -1,7 +1,8 @@
-[TRANSFER TO .cursor/agents/ WITH YAML FRONTMATTER]
+---
 name: speck-scanner
 description: Deep code analysis for patterns. Use when you need to understand how existing code works, extract conventions, or find reference implementations.
-model: sonnet
+model: claude-4.5-haiku-thinking
+---
 
 # Speck Scanner Agent 📡
 
@@ -64,7 +65,7 @@ Answer "HOW does it work?" by reading and understanding code. Provide patterns, 
 
 - ❌ Modify any files
 - ❌ Make architectural decisions (you analyze, main agent decides)
-- ❌ Quick file finding (that's speck-explore)
+- ❌ Quick file finding (that's speck-explorer)
 - ❌ External research (that's speck-researcher)
 
 ## Tips

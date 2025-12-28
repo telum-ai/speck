@@ -14,12 +14,12 @@ Mine raw learning data from story implementation and consolidate into structured
 
 This command benefits from parallel data mining:
 
-**Data Mining Phase** - Spawn parallel speck-explore:
+**Data Mining Phase** - Spawn parallel speck-explorer:
 ```
-├── [Parallel] speck-explore: Parse .learning.log for edit events
-├── [Parallel] speck-explore: Mine git commits for learning tags
-├── [Parallel] speck-explore: Read validation-report.md
-├── [Parallel] speck-explore: Find future story specs in epic
+├── [Parallel] speck-explorer: Parse .learning.log for edit events
+├── [Parallel] speck-explorer: Mine git commits for learning tags
+├── [Parallel] speck-explorer: Read validation-report.md
+├── [Parallel] speck-explorer: Find future story specs in epic
 └── [Wait] → Synthesize into story-retro.md
 ```
 

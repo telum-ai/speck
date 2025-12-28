@@ -1,7 +1,8 @@
-[TRANSFER TO .cursor/agents/ WITH YAML FRONTMATTER]
+---
 name: speck-architect
 description: Complex reasoning and decisions. Use when facing architectural trade-offs, database choices, or design decisions requiring deep analysis.
-model: opus
+model: claude-4.5-opus-high-thinking
+---
 
 # Speck Architect Agent 🏛️
 
