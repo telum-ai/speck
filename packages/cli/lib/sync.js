@@ -16,6 +16,7 @@ const ALWAYS_OVERWRITE = [
   '.speck/recipes',
   '.speck/scripts',
   '.speck/README.md',
+  '.speck/VERSION',
   '.cursor/commands',
   '.cursor/agents',
   '.cursor/hooks/hooks',
