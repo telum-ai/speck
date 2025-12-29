@@ -60,9 +60,9 @@ Create a comprehensive story breakdown that maps all user stories within the epi
 
    **Subagent Parallelization** - Spawn speck-scribe for each story spec:
    ```
-   ├── [Parallel] speck-scribe: Draft S001 spec.md from epic-tech-spec.md
-   ├── [Parallel] speck-scribe: Draft S002 spec.md from epic-tech-spec.md
-   ├── [Parallel] speck-scribe: Draft S003 spec.md from epic-tech-spec.md
+   ├── [Parallel] speck-scribe: Draft S001 spec-draft.md from epic-tech-spec.md
+   ├── [Parallel] speck-scribe: Draft S002 spec-draft.md from epic-tech-spec.md
+   ├── [Parallel] speck-scribe: Draft S003 spec-draft.md from epic-tech-spec.md
    └── [Wait] → Create all story directories with drafted specs
    ```
    
@@ -72,40 +72,25 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    - Template from .speck/templates/story/story-template.md
    
    **Speedup**: Nx (where N = number of stories)
+   
+   **IMPORTANT**: Drafts are saved as `spec-draft.md` (NOT `spec.md`).
+   This ensures the orchestrator won't treat them as fully specified stories.
+   The `/story-specify` command will upgrade `spec-draft.md` → `spec.md`.
 
    Create story directories:
    ```
    [EPIC_DIR]/
    └── stories/
        ├── S001-technical-setup/
+       │   └── spec-draft.md
        ├── S004-story-name/
+       │   └── spec-draft.md
        └── .../
    ```
 
-6. Execution examples:
-   ```
-   ## Parallel Execution Example
-   
-   # Terminal 1:
-   cd stories/S002-database-setup
-   /story-specify
-   /story-plan
-   /story-tasks
-   /story-analyze
-   /story-implement
-   
-   # Terminal 2:
-   cd stories/S003-api-scaffolding
-   /story-specify
-   /story-plan
-   /story-tasks
-   /story-analyze
-   /story-implement
-   ```
+6. Save as `[EPIC_DIR]/epic-breakdown.md`
 
-7. Save as `[EPIC_DIR]/epic-breakdown.md`
-
-8. Output summary:
+7. Output summary:
    ```
    ✅ Epic Story Breakdown Complete!
    
@@ -122,13 +107,16 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    Critical Path Length: [Duration]
    
    Story Directories Created: [Count]
+   Draft Specs Created: [Count] (as spec-draft.md)
    
    Next Steps:
-   1. Review task breakdown with team
-   2. Begin Phase 1:
-      cd stories/S001-*
-      /story-specify
-   3. Or run /epic-analyze for validation
+   1. Review story breakdown with team
+   2. Run /story-specify on Phase 1 stories to upgrade drafts to full specs
+   3. Stories marked [P] can be specified/implemented in parallel
+   4. Or run /epic-analyze for validation first
+   
+   Note: Draft specs (spec-draft.md) need /story-specify to become
+   proper specs (spec.md) before the orchestrator will process them.
    ```
 
-Note: This breakdown organizes stories for planning and coordination. Each story will generate its own concrete implementation tasks via /story-tasks.
+Note: This breakdown organizes stories for planning and coordination. Each story will generate its own concrete implementation tasks via /story-tasks. Draft specs provide a starting point but require /story-specify to validate and refine them.

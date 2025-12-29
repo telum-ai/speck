@@ -35,7 +35,27 @@ find specs/projects -name "project.md" -exec dirname {} \; | xargs -I {} basenam
 ls specs/projects/[PROJECT_ID]/epics/
 ```
 
-### Step 2: Pre-Validation Checklist (Prevent Duplication)
+### Step 2: Detect Draft Spec (From Epic Breakdown)
+
+Check if a draft spec exists from `/epic-breakdown`:
+
+```bash
+# Check for draft spec in story directory
+if [ -f "specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]/spec-draft.md" ]; then
+  echo "Draft spec found - will upgrade to full spec"
+fi
+```
+
+**If `spec-draft.md` exists**:
+1. Load the draft as a starting point
+2. Display to user: "Found draft spec from epic breakdown. I'll use this as a starting point."
+3. Validate and enhance through interactive Q&A (Steps 4-8)
+4. Save the finalized version as `spec.md` (replacing/alongside the draft)
+5. Keep `spec-draft.md` for reference, or delete after successful upgrade
+
+**If no draft exists**: Continue with normal interactive specification flow.
+
+### Step 3: Pre-Validation Checklist (Prevent Duplication)
 
 Before creating the story, check:
 
@@ -60,7 +80,7 @@ Before creating the story, check:
 
 **Note**: Only check specs/docs for duplication, not implementation code.
 
-### Step 3: Load Context Documents
+### Step 4: Load Context Documents
 
 Load project-level documents for consistency:
 ```
@@ -75,7 +95,7 @@ LOAD (if exists):
 - Respect domain invariants in acceptance criteria
 - Reference domain entities for data requirements
 
-### Step 4: Story Validation
+### Step 5: Story Validation
 
 Validate story fits epic scope:
 - Load epic spec: `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/epic.md`
@@ -87,9 +107,16 @@ If mismatch: "This story seems outside the epic scope. Would you like to:
 2. Expand the current epic scope?
 3. Create a new epic for this?"
 
-### Step 5: Interactive Story Development
+### Step 6: Interactive Story Development
 
-If minimal description, gather details:
+If minimal description (or upgrading from draft), gather/validate details:
+
+**If upgrading from `spec-draft.md`**:
+- Show draft content to user
+- Ask: "Does this draft capture your intent? What would you change?"
+- Focus on gaps and refinements rather than starting from scratch
+
+**If starting fresh**, gather details:
 
 **Story Essentials:**
 1. "As a [who], I want to [what], so that [why]"
@@ -106,18 +133,18 @@ If minimal description, gather details:
 8. "Any API changes needed?"
 9. "Database impacts?"
 
-### Step 6: Create Story Structure
+### Step 7: Create Story Structure
 
-Create directly in the **current hierarchical structure**:
+Create directly in the **current hierarchical structure** (if not already created by epic-breakdown):
 ```bash
-# Generate story ID and create directory
+# Generate story ID and create directory (skip if already exists from epic-breakdown)
 mkdir -p specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-[story-name]
 ```
 
 Note: Speck stories live in the hierarchical structure under:
 `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-[story-name]/`
 
-### Step 7: Story Specification
+### Step 8: Story Specification
 
 **CRITICAL**: Load and follow the template exactly:
 ```
@@ -126,7 +153,9 @@ Note: Speck stories live in the hierarchical structure under:
 
 The template is self-documenting - follow all sections and guidelines within it.
 
-### Step 8: Apply 10-Minute Understandability Rule
+**Output**: Save as `spec.md` (this is the canonical spec, distinct from any `spec-draft.md`).
+
+### Step 9: Apply 10-Minute Understandability Rule
 
 Before finalizing, validate story scope:
 
@@ -148,11 +177,11 @@ Before finalizing, validate story scope:
 
 If story seems too complex, suggest splitting and ask user approval.
 
-### Step 9: Update Epic Tracking
+### Step 10: Update Epic Tracking
 
 Add story to epic's story list with status "specified"
 
-### Step 10: Guide Next Steps
+### Step 11: Guide Next Steps
 
 ```
 ✅ Story Specification Created!
