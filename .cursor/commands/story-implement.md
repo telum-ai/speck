@@ -27,6 +27,13 @@ $ARGUMENTS
    - **IF EXISTS**: Read contracts/ for API specifications and test requirements
    - **IF EXISTS**: Read plan.md for technical decisions and constraints (research is embedded here)
    - **IF EXISTS**: Read quickstart.md for integration scenarios
+   
+   **Update tasks.md YAML frontmatter** to mark implementation started:
+   ```yaml
+   ---
+   status: in_progress
+   ---
+   ```
 
 3. Parse tasks.md structure and extract:
    - **Task phases**: Setup, Tests, Core, Integration, Polish
@@ -72,12 +79,22 @@ $ARGUMENTS
    - Provide clear error messages with context for debugging
    - Suggest next steps if implementation cannot proceed
    - **IMPORTANT** For completed tasks, make sure to mark the task off as [X] in the tasks file.
+   
 
 7. Completion validation:
    - Verify all required tasks are completed
    - Mark all completed tasks as [X] in tasks.md
    - Report final status with summary of completed work
    - Suggest running `/story-validate` to verify implementation against spec
+   
+   **CRITICAL: Update tasks.md YAML frontmatter to mark completion**:
+   ```yaml
+   ---
+   status: completed
+   ---
+   ```
+   
+   The orchestrator uses `status: completed` to know implementation is done.
 
 8. Next steps:
    ```

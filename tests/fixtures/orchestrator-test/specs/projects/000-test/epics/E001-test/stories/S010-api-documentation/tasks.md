@@ -1,6 +1,5 @@
 ---
-depends_on: [S007-integration-tests]
-blocks: []
+status: pending
 ---
 
 # Tasks: S010 API Documentation

@@ -10,6 +10,8 @@ $ARGUMENTS
 
 Goal: Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `/story-tasks` has successfully produced a complete `tasks.md`.
 
+**Output**: This command writes `analysis-report.md` to the story directory. The orchestrator uses this file to detect that analysis is complete and implementation can proceed.
+
 ## Subagent Parallelization
 
 This command benefits from parallel speck-auditor execution for independent checks:
@@ -27,7 +29,7 @@ Each auditor returns findings with severity → Combine into report.
 
 **Speedup**: 3-4x compared to sequential checking.
 
-STRICTLY READ-ONLY: Do **not** modify any files. Output a structured analysis report. Offer an optional remediation plan (user must explicitly approve before any follow-up editing commands would be invoked manually).
+**Output Mode**: Write the analysis report to `{STORY_DIR}/analysis-report.md` using the template at `.speck/templates/story/analysis-report-template.md`. This file is used by the orchestrator to detect that analysis is complete. Do NOT modify spec.md, plan.md, or tasks.md - only create the analysis report. Offer an optional remediation plan (user must explicitly approve before any follow-up editing commands would be invoked manually).
 
 Constitution Authority: The applicable constitution chain (**project + epic**) is **non-negotiable** within this analysis scope. Constitution conflicts are automatically CRITICAL and require adjustment of the spec, plan, or tasks—not dilution, reinterpretation, or silent ignoring of the principle. If a principle itself needs to change, that must occur in a separate, explicit constitution update outside `/analyze`.
 
@@ -138,9 +140,14 @@ Execution steps:
    - MEDIUM: Terminology drift, missing non-functional task coverage, underspecified edge case, file paths not matching codebase conventions, test structure inconsistencies, **NEW**: tasks missing pattern references, >20 percent of tasks in "old format".
    - LOW: Style/wording improvements, minor redundancy not affecting execution order, optional pattern reuse opportunities.
 
-6. Produce a Markdown report (no file writes) with sections:
+6. Produce analysis report and save to `{STORY_DIR}/analysis-report.md`:
 
-   ### Specification Analysis Report
+   **CRITICAL**: Load and follow the template exactly:
+   ```
+   .speck/templates/story/analysis-report-template.md
+   ```
+
+   Key sections to populate:
    | ID | Category | Severity | Location(s) | Summary | Recommendation |
    |----|----------|----------|-------------|---------|----------------|
    | A1 | Duplication | HIGH | spec.md:L120-134 | Two similar requirements ... | Merge phrasing; keep clearer version |

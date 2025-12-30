@@ -1,9 +1,7 @@
 ---
-# Story dependencies (OPTIONAL here - primary source is spec.md)
-# The orchestrator reads depends_on from spec.md first, then falls back here
-# Only include here if you need to override or add dependencies discovered during planning
-depends_on: []  # e.g., [S001, S003] - stories that must be validated first
-blocks: []      # e.g., [S005] - stories waiting on this one (informational)
+# Implementation status for orchestrator
+# Values: pending | in_progress | completed
+status: pending
 ---
 
 # Tasks: [STORY NAME]

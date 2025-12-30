@@ -1,6 +1,5 @@
 ---
-depends_on: [S004-greeting-endpoint]
-blocks: [S006-error-handling, S009-load-testing]
+status: pending
 ---
 
 # Tasks: S005 Add Request Validation

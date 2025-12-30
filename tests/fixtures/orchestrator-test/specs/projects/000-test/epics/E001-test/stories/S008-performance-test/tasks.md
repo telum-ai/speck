@@ -1,6 +1,5 @@
 ---
-depends_on: [S007-integration-tests]
-blocks: []
+status: completed
 ---
 
 # Tasks: S008 Performance Benchmarks

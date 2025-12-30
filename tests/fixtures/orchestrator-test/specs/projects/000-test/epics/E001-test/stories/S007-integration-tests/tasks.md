@@ -1,6 +1,5 @@
 ---
-depends_on: [S006-error-handling]
-blocks: [S008-performance-test]
+status: completed
 ---
 
 # Tasks: S007 Integration Tests

@@ -72,19 +72,24 @@ detect_phase() {
         cmd="story-validate"
       fi
     elif [ -f "$story_dir/tasks.md" ]; then
-      # Check for PR or analysis-report
-      local has_pr="0"
-      if [ "$DRY_RUN" != "true" ] && [ -n "$REPO" ]; then
-        has_pr=$(gh pr list --repo "$REPO" --state all --search "$story_id in:title" --json number --jq 'length' 2>/dev/null || echo "0")
-      fi
+      # Check implementation status from YAML frontmatter
+      local impl_status
+      impl_status=$(sed -n '/^---$/,/^---$/p' "$story_dir/tasks.md" 2>/dev/null | grep "^status:" | sed 's/status://' | tr -d ' ' || echo "pending")
       
-      if [ "$has_pr" -gt 0 ]; then
+      if [ "$impl_status" = "completed" ]; then
+        # Implementation marked complete, run validation
         phase="implemented"
         cmd="story-validate"
+      elif [ "$impl_status" = "in_progress" ]; then
+        # Implementation in progress, continue it
+        phase="implementing"
+        cmd="story-implement"
       elif [ -f "$story_dir/analysis-report.md" ]; then
+        # Analysis done, ready to implement
         phase="analyzed"
         cmd="story-implement"
       else
+        # Tasks exist but not analyzed yet
         phase="tasked"
         cmd="story-analyze"
       fi

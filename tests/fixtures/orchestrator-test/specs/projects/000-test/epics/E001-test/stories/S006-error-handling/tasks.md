@@ -1,6 +1,5 @@
 ---
-depends_on: [S005-input-validation]
-blocks: [S007-integration-tests]
+status: pending
 ---
 
 # Tasks: S006 Error Handling
