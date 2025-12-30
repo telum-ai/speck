@@ -163,7 +163,21 @@ if [ "$clarification_markers" -gt 0 ]; then
 Each marker indicates an uncertainty that could cause rework later."
 fi
 
-# 6. Check for state tracking
+# 6. Check for YAML frontmatter with dependency tracking
+if echo "$content" | grep -q "^---$" && echo "$content" | sed -n '/^---$/,/^---$/p' | grep -q "depends_on:"; then
+  log_success "YAML frontmatter with dependency tracking found"
+else
+  log_warning "Missing YAML frontmatter with dependency tracking" \
+    "Add YAML frontmatter at the top of spec.md for orchestration:
+---
+depends_on: []  # e.g., [S001, S003] - stories that must be validated first
+blocks: []      # e.g., [S005] - stories waiting on this one (informational)
+---
+
+This enables the orchestrator to manage story execution order."
+fi
+
+# 7. Check for state tracking
 if echo "$content" | grep -q "^- \[x\] \*\*Specified\*\*"; then
   log_success "Lifecycle state tracking present"
 else
@@ -176,7 +190,7 @@ else
 ..."
 fi
 
-# 7. Check for implementation-detail leakage (heuristic, avoid false positives)
+# 8. Check for implementation-detail leakage (heuristic, avoid false positives)
 if echo "$content" | grep -Eq '^[[:space:]]*(import|from)[[:space:]]' \
   || echo "$content" | grep -Eq '^[[:space:]]*(class|def|function)[[:space:]]+[A-Za-z_]' \
   || echo "$content" | grep -Eq '^```' \

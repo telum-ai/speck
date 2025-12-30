@@ -54,7 +54,35 @@ log_success() {
 
 # === VALIDATION RULES ===
 
-# 1. Count total tasks (accept [ ] + [x]/[X])
+# 1. Check for YAML frontmatter with status tracking
+if echo "$content" | grep -q "^---$" && echo "$content" | sed -n '/^---$/,/^---$/p' | grep -q "status:"; then
+  log_success "YAML frontmatter with status tracking found"
+  
+  # Extract status value
+  status=$(echo "$content" | sed -n '/^---$/,/^---$/p' | grep "status:" | sed 's/.*status:[[:space:]]*//' | tr -d '"')
+  if [ -n "$status" ]; then
+    case "$status" in
+      pending|in_progress|completed)
+        log_success "Status is valid: $status"
+        ;;
+      *)
+        log_warning "Status has unexpected value: $status" \
+          "Use one of: pending | in_progress | completed
+These values help the orchestrator track implementation progress."
+        ;;
+    esac
+  fi
+else
+  log_warning "Missing YAML frontmatter with status tracking" \
+    "Add YAML frontmatter at the top of tasks.md for orchestration:
+---
+status: pending  # pending | in_progress | completed
+---
+
+The orchestrator uses this to detect implementation progress."
+fi
+
+# 2. Count total tasks (accept [ ] + [x]/[X])
 total_tasks=$(echo "$content" | grep -E -c "^- \[[ xX]\] T[0-9]+")
 completed_tasks=$(echo "$content" | grep -E -c "^- \[[xX]\] T[0-9]+")
 
@@ -86,7 +114,7 @@ Apply simplicity-first: Can this be done in <100 lines of code?"
   fi
 fi
 
-# 2. Check for phase organization (accept legacy '## Phase' and current '### Phase')
+# 3. Check for phase organization (accept legacy '## Phase' and current '### Phase')
 if echo "$content" | grep -E -q "^##+ Phase"; then
   log_success "Tasks organized into phases"
   
@@ -107,7 +135,7 @@ else
 - [ ] T002 ..."
 fi
 
-# 3. Check for parallel tasks marker [P]
+# 4. Check for parallel tasks marker [P]
 parallel_tasks=$(echo "$content" | grep -c "\[P\]")
 if [ "$parallel_tasks" -gt 0 ]; then
   log_success "Has $parallel_tasks task(s) marked for parallel execution"
@@ -120,7 +148,7 @@ else
 Speeds up implementation by allowing concurrent work."
 fi
 
-# 4. Check for test tasks
+# 5. Check for test tasks
 test_tasks=$(echo "$content" | grep -i -c "test\|spec")
 if [ "$test_tasks" -eq 0 ]; then
   log_warning "No test tasks found" \
@@ -134,7 +162,7 @@ else
   log_success "Has $test_tasks test-related task(s)"
 fi
 
-# 5. Check for task IDs in sequence
+# 6. Check for task IDs in sequence
 task_ids=$(echo "$content" | grep -o "T[0-9]\+" | sed 's/T//' | sort -n)
 if [ -n "$task_ids" ]; then
   # Check for gaps
@@ -157,7 +185,7 @@ Makes it easier to reference and track tasks."
   fi
 fi
 
-# 6. Check for ambiguous task descriptions
+# 7. Check for ambiguous task descriptions
 if echo "$content" | grep -q "TODO\|FIXME\|TBD\|\[?\]"; then
   log_warning "Found ambiguous task descriptions (TODO/FIXME/TBD)" \
     "Make all tasks concrete and actionable.
@@ -165,7 +193,7 @@ Replace 'TODO: figure out' with specific tasks.
 If uncertain, run /story-clarify before creating tasks."
 fi
 
-# 7. Check for simplicity (line count of new code)
+# 8. Check for simplicity (line count of new code)
 if echo "$content" | grep -qi "new file\|create file"; then
   new_files=$(echo "$content" | grep -c -i "new file\|create file")
   if [ "$new_files" -gt 3 ]; then
