@@ -1,6 +1,6 @@
 {
   "name": "speck",
-  "version": "3.4.9",
+  "version": "4.0.0",
   "description": "Speck methodology CLI",
   "type": "module",
   "bin": {
