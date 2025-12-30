@@ -29,6 +29,7 @@ const ALWAYS_OVERWRITE = [
   '.github/copilot-instructions.md',
   '.github/instructions',
   '.github/ISSUE_TEMPLATE/speck-story.yml',
+  '.github/pull_request_template.md',
 ];
 
 /**
