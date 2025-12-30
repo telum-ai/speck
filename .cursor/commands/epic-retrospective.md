@@ -249,7 +249,7 @@ echo "
 - Success rate: 99.2%
 - Fallback: Generic suggestions if API fails
 
-See: epics/005-ai-activity-suggestions/ for full details
+See: [EPIC_DIR]/ for full details
 " >> architecture.md
 
 # 4. Update timestamps
@@ -396,7 +396,7 @@ gh issue create \
 ---
 
 **Position in Flow**: After all epic stories complete and validated  
-**Duration**: 30-60 minutes  
+**Duration**: 20-40 minutes  
 **Purpose**: Validate learnings, apply to project, improve process  
 **Output**: `epic-retro.md` for project retrospective consumption
 

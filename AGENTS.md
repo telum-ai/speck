@@ -262,15 +262,6 @@ Each command file contains step-by-step instructions for you to execute when use
 
 **Note**: `story-analyze` is REQUIRED, not optional. It catches issues before implementation.
 
-**Decision Gates for Optional Commands**:
-| Command | Include When |
-|---------|--------------|
-| `story-outline` | Complex tech decisions, unfamiliar stack, needs research |
-| `story-scan` | Brownfield - extending existing codebase |
-| `story-ui-spec` | UI-heavy with multiple components/states/animations |
-
-**Note**: `story-analyze` is REQUIRED, not optional. It catches issues before implementation.
-
 *Story commands: `story-*.md` in `.cursor/commands/`*
 
 ### Critical Command Dependencies (What NEEDS What)
@@ -285,7 +276,7 @@ project-roadmap.md → NEEDS: epics.md (from /project-plan)
 **At Epic Level**:
 ```
 epic-architecture.md → OPTIONAL: Use when cross-cutting, new patterns, or complex integrations
-epic-plan.md → NEEDS: epic.md + [epic-architecture.md] + [epic-codebase-scan.md]
+epic-plan.md → NEEDS: epic.md + [epic-architecture.md] + [epic-codebase-scan*.md]
 epic-breakdown.md → NEEDS: epic-tech-spec.md (from plan)
 ```
 
@@ -586,7 +577,7 @@ For brownfield projects, also read:
 ```
 - project-import.md (non-code aspects)
 - project-landscape-overview.md (code aspects)
-- epic-codebase-scan.md (epic-specific code)
+- epic-codebase-scan*.md (epic-specific code)
 - codebase-scan-*.md (story-specific code)
 ```
 
@@ -1127,8 +1118,7 @@ Current reliability issues (code deletion, context loss) make it unsuitable for 
 ## 📚 Key Reference Files
 
 **Methodology**:
-- @.speck/README.md - Complete Speck guide
-- @.speck/spec-driven-development.md - Core philosophy
+- @.speck/README.md - Complete Speck guide (includes Spec-Driven Development philosophy)
 
 **Patterns**:
 - `.speck/patterns/model-selection-pattern.md` - LLM selection guide
@@ -1387,12 +1377,12 @@ Speck supports **autonomous development** through both **Cursor Background Agent
 
 **Dependency Management**:
 
-Stories declare dependencies in `tasks.md` YAML front matter:
+Stories declare dependencies in `spec.md` (or `spec-draft.md`) YAML front matter:
 
 ```yaml
 ---
-depends_on: [story-001, story-003]  # Stories that must be validated first
-blocks: [story-005]                  # Stories waiting on this one (informational)
+depends_on: [S001, S003]  # Stories that must be validated first
+blocks: [S005]            # Stories waiting on this one (informational)
 ---
 ```
 
@@ -1425,7 +1415,7 @@ blocks: [story-005]                  # Stories waiting on this one (informationa
 
 ---
 
-**Speck Version**: 3.4.9  
+**Speck Version**: 4.0.0  
 **Updated**: 2025-12-28  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 

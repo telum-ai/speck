@@ -191,7 +191,7 @@ else
 - Unit tests: [What to test]
 - Integration tests: [What to test]
 - Contract tests: [What to validate]
-See @testing.mdc for patterns."
+See Speck docs in `.speck/README.md` (or your project’s `.cursor/rules/` if you maintain one)."
 fi
 
 # === OUTPUT RESULTS ===

@@ -36,3 +36,4 @@ For each issue found, reference:
 - The specific requirement (FR-XXX) or task (TXXX)
 - The file and line with the issue
 - The expected behavior from spec.md
+

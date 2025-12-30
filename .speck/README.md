@@ -49,6 +49,24 @@ Project Level (Strategic)
 - **Epic**: Feature sets that deliver specific value
 - **Story**: Individual implementable tasks
 
+### Spec-Driven Development (SDD) Philosophy
+
+Speck follows **spec-driven development**:
+- **Specs first, code second**: define testable requirements before implementation
+- **Truth vs proposal**:
+  - Project-level docs (`project.md`, `PRD.md`, `architecture.md`, etc.) are **TRUTH** (current reality)
+  - Epic/story docs are **PROPOSALS** until validated
+  - After validation, update project truth so docs reflect “what exists now”
+- **Verifiability is the point**: scenarios + normative language (SHALL/MUST/SHOULD/MAY) + validation reports
+- **Research is just-in-time**: do research only when needed, and embed it in the artifact that uses it
+- **Simplicity-first**: require evidence before adding complexity
+
+If you’re unsure where something belongs:
+- **WHAT/WHY** → specs (`project.md`, `epic.md`, `spec.md`)
+- **HOW** → plans (`architecture.md`, `epic-tech-spec.md`, `plan.md`)
+- **Step-by-step work** → `tasks.md`
+- **Evidence/results** → `validation-report.md` + retrospectives
+
 ### Project-Level Command Flow
 
 **Unified Flow** (Same sequence for both greenfield and brownfield):
@@ -215,10 +233,10 @@ graph TD
     storyClarify -.-> storyScan
     storyScan -.-> storyPlan
     
-    storyClarify -.-> storyUISpec
-    storyUISpec --> storyPlan
-    
     storyPlan --> storyTasks
+    
+    storyPlan -.-> storyUISpec
+    storyUISpec --> storyTasks
     
     storyTasks --> storyAnalyze
     storyAnalyze --> storyImplement
@@ -410,7 +428,7 @@ Speck includes a built-in learning capture and retrospective system that makes t
 - Feeds epic retrospective
 
 **Epic Level**: `/epic-retrospective`
-- Deep dive (30-60 min) after epic completion
+- Deep dive (20-40 min) after epic completion
 - Mines commits, logs, validation reports
 - Extracts patterns, documents gotchas
 - Updates Cursor rules
@@ -840,7 +858,7 @@ Speck: I need to understand the context. Which project is this for?
 ### Scenario 3: Implementing a Specific Task
 
 ```
-You: /speck project:001-task-manager epic:notifications Create notification bell icon
+You: /speck project:001-task-manager epic:E003-notifications Create notification bell icon
 
 Speck: Got it! This is a story-level task within the notifications epic.
      I'll help you create the story specification...
@@ -865,34 +883,33 @@ Speck: I'll create an Speck structure for your existing codebase.
      ⚠️ IMPORTANT: This was a lightweight import (10 min)
      
      Next Steps (REQUIRED):
-     1. Run /project-scan for comprehensive analysis
-        → Deep architecture analysis
-        → Epic discovery
-        → Quality metrics
+     1. Run /project-scan for a quick landscape survey (10-15 min)
+        → Architecture shape (directional)
+        → Potential epic areas (directional; validate with /epic-scan)
+        → High-level tech inventory
         
-     The scan will analyze your Rails app deeply (30-60 min)
-     and guide the rest of the brownfield setup.
+     The scan produces project-landscape-overview.md and guides the rest
+     of the brownfield setup.
 ```
 
 **After scan completes:**
 ```
 You: /project-scan
 
-Speck: Scanning your codebase deeply...
+Speck: Running a quick landscape survey...
      
-     Analysis complete! (45 minutes)
+     Analysis complete! (12 minutes)
      - Architecture: Rails MVC monolith
-     - Found: 5 epic candidates
-     - Quality: Good (Test coverage: 82%)
+     - Found: 5 potential epic areas (directional)
      
      Epic Candidates:
-     - Authentication & Authorization (High confidence)
-     - User Management (High confidence)
-     - Admin Panel (Medium confidence)
-     - API Layer (High confidence)
-     - Billing System (High confidence)
+     - Authentication & Authorization (Validate with /epic-scan)
+     - User Management (Validate with /epic-scan)
+     - Admin Panel (Validate with /epic-scan)
+     - API Layer (Validate with /epic-scan)
+     - Billing System (Validate with /epic-scan)
      
-     Full report: specs/projects/001-myapp/codebase-scan.md
+     Full report: specs/projects/001-myapp/project-landscape-overview.md
      
      Next Steps:
      1. Review scan findings
@@ -935,7 +952,7 @@ Speck: I found the authentication epic in project 001-my-project.
 - `/project-specify` - Create project vision, goals, and scope from natural language description
 - `/project-clarify` - Ask strategic questions to resolve ambiguities in project spec
 - `/project-import` - **Lightweight**: Create Speck structure for existing code (~10 min)
-- `/project-scan` - **Comprehensive**: Deep codebase analysis after import (~30-60 min)
+- `/project-scan` - **Quick**: Landscape survey after import (~10-15 min, directional)
 
 #### Phase 2: Foundation (Define Constraints & Principles)
 - `/project-domain` - Capture domain expertise (terminology, entities, rules, principles) for specialized domains
@@ -1071,13 +1088,24 @@ Day 3: Validation & Epic Start
 Day 3: Story Implementation
 /speck Create the add customer form
 → Story specification
-→ UI requirements
+
+/story-plan
+→ Technical plan + contracts + quickstart
 
 /story-ui-spec
-→ Detailed design specs
+→ Detailed UI specs (required if UI-heavy)
+
+/story-tasks
+→ Task checklist
+
+/story-analyze
+→ Quality gate
 
 /story-implement
 → Build it!
+
+/story-validate
+→ Verify completion
 ```
 
 ### Example 2: Brownfield Project (Existing Code)
@@ -1400,11 +1428,12 @@ GitHub Copilot Agent limit: ~2-3 concurrent sessions. Use `speck:queued` label a
 
 ### Dependency Management
 
-Dependencies declared in `tasks.md` front matter:
+Dependencies declared in `spec.md` (or `spec-draft.md`) front matter:
 
 ```yaml
 ---
-depends_on: [story-001, story-003]
+depends_on: [S001, S003]
+blocks: [S005]
 ---
 ```
 
@@ -1465,6 +1494,6 @@ Remember: The goal is to guide you through building great software with clear sp
 
 ---
 
-**Version**: 3.4.9  
+**Version**: 4.0.0  
 **Updated**: December 2025  
 **Methodology**: Speck (Multi-Level with Retrospectives)

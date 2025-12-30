@@ -66,7 +66,7 @@ This command benefits from parallel execution:
    **Architecture-Informed Mode** (epic-architecture.md exists):
    - Use architecture decisions from epic-architecture.md
    - Incorporate any research referenced in architecture
-   - Apply scan recommendations from epic-codebase-scan.md
+   - Apply scan recommendations from epic-codebase-scan*.md
    
    **Direct Mode** (no epic-architecture.md):
    - Analyze epic.md for technical needs

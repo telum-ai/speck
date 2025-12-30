@@ -114,7 +114,7 @@ $ARGUMENTS
    - Test results (all tests passing)
    - Performance targets (if specified)
    - Constitution compliance
-   - Generate validation-report.md and pr-description.md
+   - Generate validation-report.md
    ```
 
 Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/story-tasks` first to regenerate the task list.

@@ -12,7 +12,7 @@ Import an existing project into the Speck structure.
 
 ## Purpose
 
-**Lightweight setup command** that creates Speck structure for existing projects. Does NOT do comprehensive analysis - that's what `/project-scan` is for!
+**Lightweight setup command** that creates Speck structure for existing projects. Does NOT do analysis - that's what `/project-scan` (landscape survey) and `/epic-scan` (deeper) are for.
 
 **Time**: ~10 minutes  
 **Output**: Skeleton project.md with basic info  
@@ -109,10 +109,10 @@ Create skeleton project.md with ONLY basic info:
 **CRITICAL**: This is a skeleton. Run these commands to complete import:
 
 1. **Run `/project-scan`** - Comprehensive codebase analysis
-   - Architecture patterns
-   - Epic discovery
-   - Quality metrics
-   - Detailed tech inventory
+   - Architecture shape (30,000-foot view)
+   - Potential epic areas (directional; validate with `/epic-scan`)
+   - High-level tech inventory (major languages/frameworks)
+   - Outputs: project-landscape-overview.md
 
 2. **Run `/project-context`** - Extract constraints from scan
    - Technical constraints
@@ -147,7 +147,7 @@ Run `/project-scan` to replace with comprehensive analysis.
 - Don't try to parse all documentation
 - Don't extract architecture details
 - Don't identify all epics
-- **Scan will do deep analysis!**
+- Scan will do the (still lightweight) landscape survey. Deep code analysis happens later via `/epic-scan` and `/story-scan`.
 
 ## Step 5: Output Summary & Routing
 
@@ -165,11 +165,11 @@ Language: [Primary language]
 ⚠️ IMPORTANT: This is a lightweight import!
 
 Next Steps (REQUIRED):
-1. Run /project-scan for comprehensive analysis
-   → Deep architecture analysis
-   → Epic discovery
-   → Quality metrics
-   → Pattern extraction
+1. Run /project-scan for a quick landscape survey
+   → Architecture shape (directional)
+   → Potential epic areas to validate
+   → High-level tech inventory
+   → Outputs: project-landscape-overview.md
    
 2. Run /project-context to extract constraints
    → Uses scan findings
@@ -180,13 +180,13 @@ Next Steps (REQUIRED):
 4. Run /project-plan to create PRD
    → Organizes into epics
 
-The scan will analyze your codebase deeply and guide the rest of the setup.
+The scan will produce a directional landscape overview to guide the rest of the setup (validate details via `/epic-scan` and `/story-scan` as needed).
 ```
 
 ## Integration with Other Commands
 
 **Feeds into**:
-- `/project-scan` - Uses minimal project.md as context for deep analysis
+- `/project-scan` - Uses minimal project.md as context for a landscape survey
 - User has structure ready for scan to populate
 
 **Does NOT**:
@@ -204,7 +204,7 @@ A successful import:
 - ✅ Takes ~10 minutes (not hours!)
 - ✅ Doesn't duplicate scan work
 
-**If you find yourself doing deep analysis in import, STOP and move it to scan!**
+**If you find yourself doing deep analysis in import, STOP and move it to `/epic-scan` / `/story-scan`!**
 
 ---
 

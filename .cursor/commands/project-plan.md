@@ -245,8 +245,8 @@ This command benefits from parallel execution:
    ├── PRD.md (new - with embedded research if any)
    ├── epics.md (new)
    └── epics/
-       ├── 001-[epic-name]/
-       ├── 002-[epic-name]/
+       ├── E001-[epic-name]/
+       ├── E002-[epic-name]/
        └── .../
    ```
 
@@ -293,7 +293,7 @@ This command benefits from parallel execution:
       - /project-analyze (deep quality analysis)
       - /project-validate (go/no-go decision)
    5. Begin epic development:
-      - cd epics/001-[epic-name]
+      - cd epics/E001-[epic-name]
       - /epic-specify (enhances the placeholder epic.md)
       - /epic-clarify (if needed)
       - /epic-plan (generates tech spec)

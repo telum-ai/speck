@@ -33,6 +33,17 @@ const ALWAYS_OVERWRITE = [
 ];
 
 /**
+ * Subdirectories inside ALWAYS_OVERWRITE directories that should be preserved
+ * across init/upgrade (project-owned extension points).
+ *
+ * This enables customization without editing template-managed files.
+ */
+const PRESERVE_SUBDIRS = {
+  // Project hook extension points used by .cursor/hooks/hooks/after-file-edit.sh
+  '.cursor/hooks/hooks': ['hooks.d'],
+};
+
+/**
  * Files that need smart merging
  */
 const SMART_MERGE_FILES = {
@@ -377,10 +388,44 @@ export function smartSync(sourceDir, targetDir, options = {}) {
       
       if (isDir) {
         // Remove existing and copy entire directory
+        // (but preserve any project-owned extension points configured under this directory).
+        const preserveSubdirs = PRESERVE_SUBDIRS[pattern] || [];
+        const preserved = [];
+        let preserveTmpRoot = null;
+
+        if (preserveSubdirs.length > 0 && existsSync(targetPath)) {
+          preserveTmpRoot = join(
+            tmpdir(),
+            `speck-preserve-${Date.now()}-${Math.random().toString(16).slice(2)}`
+          );
+          mkdirSync(preserveTmpRoot, { recursive: true });
+
+          for (const subdir of preserveSubdirs) {
+            const existingSubdirPath = join(targetPath, subdir);
+            if (existsSync(existingSubdirPath) && statSync(existingSubdirPath).isDirectory()) {
+              const tmpPath = join(preserveTmpRoot, subdir);
+              copyDir(existingSubdirPath, tmpPath);
+              preserved.push({ subdir, tmpPath });
+            }
+          }
+        }
+
         if (existsSync(targetPath)) {
           rmSync(targetPath, { recursive: true, force: true });
         }
         copyDir(sourcePath, targetPath);
+
+        // Restore preserved extension points (overlay on top of copied content).
+        for (const { subdir, tmpPath } of preserved) {
+          const restorePath = join(targetPath, subdir);
+          copyDir(tmpPath, restorePath);
+        }
+
+        // Cleanup temp preserve dir
+        if (preserveTmpRoot) {
+          rmSync(preserveTmpRoot, { recursive: true, force: true });
+        }
+
         results.updated.push(pattern + '/');
       } else {
         // Copy single file

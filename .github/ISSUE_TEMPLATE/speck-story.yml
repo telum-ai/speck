@@ -39,6 +39,7 @@ body:
         - "planned - needs story-tasks"
         - "tasked - needs story-analyze"
         - "analyzed - needs story-implement"
+        - "implementing - in progress (continue story-implement)"
         - "implemented - needs story-validate"
     validations:
       required: true

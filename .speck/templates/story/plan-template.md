@@ -1,7 +1,7 @@
 
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Branch**: `S###-story-name` | **Date**: [DATE] | **Spec**: [link]
 **Input**: Story specification from `{STORY_DIR}/spec.md`
 
 ## Execution Flow (/story-plan command scope)
@@ -98,6 +98,7 @@ The plan MUST explicitly address these gates derived from the project constituti
 ├── data-model.md            # Planning Phase 1 output (/story-plan)
 ├── quickstart.md            # Planning Phase 1 output (/story-plan)
 ├── contracts/               # Planning Phase 1 output (/story-plan)
+├── ui-spec.md               # UI specification (/story-ui-spec; REQUIRED if UI-heavy)
 └── tasks.md                 # /story-tasks output (NOT created by /story-plan)
 ```
 

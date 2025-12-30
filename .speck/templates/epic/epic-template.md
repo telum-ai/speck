@@ -1,6 +1,6 @@
 # Epic Specification: [Epic Name]
 
-**Epic ID**: [ENNN]  
+**Epic ID**: E###  
 **Project**: [Project Name]  
 **Created**: [Date]  
 **Status**: Planning  

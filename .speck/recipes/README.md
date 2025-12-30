@@ -326,17 +326,22 @@ _active_recipe: nextjs-supabase
 
 ### Recipe Epic ID Convention
 
-Recipe epics use the `E###-` format:
-- `E000-infrastructure` - Developer Infrastructure (always first)
-- `E001-auth` - Authentication (if recipe includes auth epic)
-- Custom numbering continues from there
+Speck epic directories use the `E###-` format:
+- `E000-infrastructure` - Developer Infrastructure (recommended first)
+- `E001-...`, `E002-...`, ... - Feature epics
 
-**Example for nextjs-supabase**:
+**In recipes (`recipe.yaml`)**:
+- `suggested_epics[].id` is treated as a **stable slug** (e.g. `auth`, `core-features`) *or* a fully-qualified epic directory id (e.g. `E000-infrastructure`).
+- During `/project-plan`, epics are assigned concrete `E###-...` directory IDs in priority order and written into:
+  - `specs/projects/<project-id>/epics.md`
+  - `specs/projects/<project-id>/epics/E###-epic-name/`
+
+**Example output** (for a Next.js + Supabase project):
 ```
 E000-infrastructure/  # Testing, CI/CD, linting, error tracking
-E001-auth/           # Supabase Auth integration
-E002-data-model/     # Database schema, RLS policies
-E003-core-features/  # Main application features
+E001-auth/            # Authentication setup
+E002-data-model/      # Database schema, RLS policies
+E003-core-features/   # Main application features
 ```
 
 ### Overriding Recipe Choices

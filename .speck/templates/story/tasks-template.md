@@ -7,7 +7,7 @@ status: pending
 # Tasks: [STORY NAME]
 
 **Input**: Design documents from `{STORY_DIR}/`
-**Prerequisites**: spec.md (required), plan.md (required), data-model.md, contracts/
+**Prerequisites**: spec.md (required), plan.md (required), ui-spec.md (required if UI-heavy), data-model.md, contracts/
 
 ## Execution Flow (main)
 ```

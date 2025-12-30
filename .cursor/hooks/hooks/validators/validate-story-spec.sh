@@ -193,7 +193,7 @@ fi
 # 8. Check for implementation-detail leakage (heuristic, avoid false positives)
 if echo "$content" | grep -Eq '^[[:space:]]*(import|from)[[:space:]]' \
   || echo "$content" | grep -Eq '^[[:space:]]*(class|def|function)[[:space:]]+[A-Za-z_]' \
-  || echo "$content" | grep -Eq '^```' \
+  || echo "$content" | grep -Eq '^```[a-zA-Z]+' \
   || echo "$content" | grep -Eq '^[[:space:]]*(GET|POST|PUT|PATCH|DELETE)[[:space:]]+/' \
   || echo "$content" | grep -Eq '\.(py|ts|tsx|js|jsx|sql)\b'; then
   log_warning "Spec may contain implementation details (code/endpoints/files detected)" \

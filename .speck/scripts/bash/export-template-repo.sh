@@ -67,7 +67,6 @@ copy_dir() {
 
 # Core files
 copy_file "$REPO_ROOT/AGENTS.md" "$OUT_DIR/AGENTS.md"
-copy_file "$REPO_ROOT/.templatesyncignore" "$OUT_DIR/.templatesyncignore"
 
 # Speck methodology
 copy_dir "$REPO_ROOT/.speck" "$OUT_DIR/.speck"
@@ -89,8 +88,16 @@ fi
 # Workflows (methodology-only)
 mkdir -p "$OUT_DIR/.github/workflows"
 copy_file "$REPO_ROOT/.github/workflows/speck-validation.yml" "$OUT_DIR/.github/workflows/speck-validation.yml"
-copy_file "$REPO_ROOT/.github/workflows/template-sync.yml" "$OUT_DIR/.github/workflows/template-sync.yml"
-copy_file "$REPO_ROOT/.github/workflows/speck-template-feedback.yml" "$OUT_DIR/.github/workflows/speck-template-feedback.yml"
+copy_file "$REPO_ROOT/.github/workflows/speck-orchestrator.yml" "$OUT_DIR/.github/workflows/speck-orchestrator.yml"
+copy_file "$REPO_ROOT/.github/workflows/speck-update-check.yml" "$OUT_DIR/.github/workflows/speck-update-check.yml"
+copy_file "$REPO_ROOT/.github/workflows/copilot-setup-steps.yml" "$OUT_DIR/.github/workflows/copilot-setup-steps.yml"
+
+# GitHub repo hygiene (methodology-only)
+mkdir -p "$OUT_DIR/.github"
+copy_file "$REPO_ROOT/.github/copilot-instructions.md" "$OUT_DIR/.github/copilot-instructions.md"
+copy_dir "$REPO_ROOT/.github/instructions" "$OUT_DIR/.github/instructions"
+copy_dir "$REPO_ROOT/.github/ISSUE_TEMPLATE" "$OUT_DIR/.github/ISSUE_TEMPLATE"
+copy_file "$REPO_ROOT/.github/pull_request_template.md" "$OUT_DIR/.github/pull_request_template.md"
 
 # Template repo root README.md
 cat > "$OUT_DIR/README.md" <<'EOF'
@@ -118,20 +125,15 @@ See: `.cursor/MCP-SETUP.md`
 Speck project artifacts are written under:
 - `specs/projects/`
 
-## Template sync (optional)
+## Keeping Speck up to date (recommended)
 
-If you use this as a GitHub template repo, you can keep product repos up to date using:
-- `.github/workflows/template-sync.yml`
-- `.templatesyncignore`
+This template includes the Speck update workflow:
+- `.github/workflows/speck-update-check.yml` (daily)
 
-See: `.speck/TEMPLATE-SYNC.md`
+It runs:
+- `npx github:telum-ai/speck upgrade`
 
-## Feeding learnings back (optional)
-
-Validated learnings can be exported back to the template repo from product repos via:
-- `.github/workflows/speck-template-feedback.yml`
-
-See: `.speck/TEMPLATE-FEEDBACK.md`
+This applies smart merging rules and preserves project customizations where intended.
 EOF
 
 # Template repo .gitignore (minimal + Speck-specific)

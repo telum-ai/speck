@@ -107,7 +107,7 @@ If minimal description provided:
 
 Load project context:
 - `specs/projects/[PROJECT_ID]/project.md`
-- `specs/projects/[PROJECT_ID]/prd.md` 
+- `specs/projects/[PROJECT_ID]/PRD.md` 
 - `specs/projects/[PROJECT_ID]/epics.md`
 - `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/epic-codebase-scan.md` (if exists - brownfield)
 
@@ -130,8 +130,12 @@ Load project context:
 **For CREATE mode:**
 Generate epic ID (next available number):
 ```bash
-# Find highest epic number in project
-ls specs/projects/[PROJECT_ID]/epics/ | grep -E '^[0-9]{3}' | sort -n | tail -1
+# Find highest epic number in project (supports E###- and legacy ###- prefixes)
+ls specs/projects/[PROJECT_ID]/epics/ \
+  | grep -E '^(E[0-9]{3}|[0-9]{3})' \
+  | sed -E 's/^E?([0-9]{3}).*/\1/' \
+  | sort -n \
+  | tail -1
 ```
 
 Create epic directory:
@@ -240,7 +244,7 @@ Create epic directory:
 
 **Workflow 1: After project-plan**
 ```bash
-cd specs/projects/001-my-app/epics/001-authentication
+cd specs/projects/001-my-app/epics/E001-authentication
 /epic-specify
 # Detects existing epic.md, enhances it with full specification
 ```

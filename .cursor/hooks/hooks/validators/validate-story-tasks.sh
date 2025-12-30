@@ -157,7 +157,7 @@ if [ "$test_tasks" -eq 0 ]; then
 - [ ] TXXX Implement [feature] to pass test
 - [ ] TXXX Remove .skip() marker from test
 
-See @testing.mdc for patterns."
+See Speck docs in `.speck/README.md` (or your project’s `.cursor/rules/` if you maintain one)."
 else
   log_success "Has $test_tasks test-related task(s)"
 fi

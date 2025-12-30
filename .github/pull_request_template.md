@@ -8,7 +8,7 @@
 |-------|-------|
 | **Epic** | <!-- EPIC_ID - EPIC_NAME --> |
 | **Story** | <!-- STORY_ID --> |
-| **Story Path** | <!-- `specs/projects/.../stories/STORY_ID` --> |
+| **Story Path** | <!-- `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-[story-name]/` --> |
 | **Fixes** | <!-- #ISSUE_NUMBER --> |
 
 ---
@@ -60,6 +60,7 @@ Technical overview of what was built. Include:
 - [ ] `story-outline` → *(optional)* Research mapping
 - [ ] `story-scan` → *(optional)* Codebase analysis
 - [ ] `story-plan` → Created `plan.md`, `data-model.md`
+- [ ] `story-ui-spec` → *(optional, UI-heavy)* Created `ui-spec.md`
 
 ### Execution
 - [ ] `story-tasks` → Created `tasks.md`

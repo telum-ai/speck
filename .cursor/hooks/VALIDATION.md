@@ -28,8 +28,8 @@ After every file edit, Cursor calls:
 - `validate-template.sh` → routes to validators (below)
 
 **Project extensions (optional):**
-- Add scripts to `hooks/hooks.d/afterFileEdit/pre/*.sh` (runs before Speck hooks)
-- Add scripts to `hooks/hooks.d/afterFileEdit/post/*.sh` (runs after Speck hooks)
+- Add scripts to `.cursor/hooks/hooks/hooks.d/afterFileEdit/pre/*.sh` (runs before Speck hooks)
+- Add scripts to `.cursor/hooks/hooks/hooks.d/afterFileEdit/post/*.sh` (runs after Speck hooks)
 
 `validate-template.sh` detects file type and routes to appropriate validator:
 - `specs/*/spec.md` → `validate-story-spec.sh`
@@ -48,12 +48,13 @@ Hook scripts parse Cursor’s JSON payload using:
 
 If neither is available, hooks skip validation/logging gracefully.
 
-### Template Sync Note
+### Speck Upgrade Preservation Note
 
-When using `actions-template-sync`, project-specific hook extensions should live under:
+Project-specific hook extensions should live under:
 - `.cursor/hooks/hooks/hooks.d/afterFileEdit/**`
 
-Those paths are ignored by `.templatesyncignore` by default so template sync won’t overwrite or delete them.
+These extension points are **preserved by the Speck CLI** during `speck init` / `speck upgrade`
+so upgrades won’t overwrite or delete your custom hook scripts.
 
 ### 3. Validators
 

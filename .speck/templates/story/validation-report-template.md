@@ -1,7 +1,7 @@
 # Validation Report: [STORY NAME]
 
 **Date**: [YYYY-MM-DD HH:MM:SS]  
-**Branch** (optional): `[###-story-name]`  
+**Branch** (optional): `S###-story-name`  
 **Status**: [PASS / CONDITIONAL_PASS / FAIL]  
 **Validator**: [/story-validate command v1.0]
 

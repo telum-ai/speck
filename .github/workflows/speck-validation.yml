@@ -342,6 +342,7 @@ jobs:
             "story-codebase-scan"
             "epic-constitution.md"
             "roadmap.md (USES: epics)"
+            "spec-driven-development.md"
             "sdd-validation"
             "/sdd"
           )

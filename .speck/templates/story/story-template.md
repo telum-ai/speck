@@ -7,8 +7,8 @@ blocks: []      # e.g., [S005] - stories waiting on this one (informational)
 
 # Story Specification: [STORY NAME]
 
-**Story ID**: `[###-story-name]`  
-**Branch** (optional): `[###-story-name]`  
+**Story ID**: `S###-story-name`  
+**Branch** (optional): `S###-story-name`  
 **Created**: [DATE]  
 **Status**: Draft  
 **Input**: [User description from /story-specify command]

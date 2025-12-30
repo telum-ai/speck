@@ -40,9 +40,10 @@ ls specs/projects/[PROJECT_ID]/epics/
 Check if a draft spec exists from `/epic-breakdown`:
 
 ```bash
-# Check for draft spec in story directory
-if [ -f "specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]/spec-draft.md" ]; then
-  echo "Draft spec found - will upgrade to full spec"
+# Find draft spec in story directory (supports `S###-story-name/` dirs)
+DRAFT_SPEC=$(ls -1 specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-*/spec-draft.md 2>/dev/null | head -1 || true)
+if [ -n "$DRAFT_SPEC" ]; then
+  echo "Draft spec found at $DRAFT_SPEC - will upgrade to full spec"
 fi
 ```
 

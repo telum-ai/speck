@@ -166,7 +166,7 @@ done
 - `utils` referenced by everything? → Foundational shared library.
 - Circular references (A refs B, B refs A)? → Potential architectural issue.
 
-### Step 4: Spot Potential Epic Areas (Medium Confidence)
+### Step 4: Spot Potential Epic Areas (Low-to-Medium Confidence)
 
 Combine **Directory Scan** (Step 2) with **Heatmap Data** (Step 3).
 
@@ -183,7 +183,7 @@ Combine **Directory Scan** (Step 2) with **Heatmap Data** (Step 3).
 - **Found**: [Directory path]
 - **Heatmap Signal**: High count of 'user', 'profile', 'auth' keywords
 - **Coupling**: Referenced by [X, Y] modules
-- **Confidence**: MEDIUM - backed by keyword density
+- **Confidence**: LOW/MEDIUM - backed by keyword density, still directional
 - **Next**: Run `/epic-scan --domain=user` to validate patterns
 
 ### Area 2: [Name]
@@ -288,6 +288,6 @@ Suggest focused survey: /project-scan --domain=backend
 
 **Position in Flow**: After import, before epic validation  
 **Duration**: 10-15 minutes (quick survey)  
-**Confidence**: MEDIUM (due to keyword heatmap validation)  
+**Confidence**: LOW (directional; validate boundaries and patterns with `/epic-scan`)  
 **Purpose**: Spot potential epic areas with data backing  
 **Output**: project-landscape-overview.md with potential areas

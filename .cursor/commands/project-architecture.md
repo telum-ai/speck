@@ -357,13 +357,16 @@ The architecture informs:
 
 ### Greenfield Example
 ```
-1. Run /project-plan → No existing code
+1. Run /project-context (and optionally /project-constitution) → No existing code
 2. Run /project-architecture:
    - No scan found → GREENFIELD MODE
    - Asks: Architecture pattern, deployment targets, tech stack
    - Designs: Component structure, integration approach
    - Documents: Technology choices with rationale
-3. Output: architecture.md with design from scratch
+3. Run /project-plan:
+   - Uses architecture.md + context.md as inputs
+   - Produces PRD.md + epics.md + epics/
+4. Output: architecture.md with design from scratch
 ```
 
 ## Notes
@@ -373,4 +376,4 @@ The architecture informs:
 - **For brownfield**: Always run `/project-scan` first to extract existing architecture
 - **For greenfield**: Use research and planning to inform architecture decisions
 - Architecture should be living document, updated as project evolves
-- Consider running `/project-refine` later to update architecture
+- Consider re-running `/project-architecture` later (or updating `architecture.md`) as the project evolves

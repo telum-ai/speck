@@ -122,7 +122,7 @@ The levels complement each other without overlap:
 
 ### Explicit Context
 ```
-Input: "/speck project:001-my-app epic:auth Add password reset"
+Input: "/speck project:001-my-app epic:E001-authentication Add password reset"
 → Routes to: /story-specify with context pre-filled
 ```
 
@@ -209,9 +209,9 @@ a) A new epic for comprehensive search
 b) A story within an existing epic
 
 Available epics in 001-my-app:
-- 001-authentication: User Auth & Onboarding
-- 002-connections: Social Connections  
-- 003-activities: Activity Planning
+- E001-authentication: User Auth & Onboarding
+- E002-connections: Social Connections  
+- E003-activities: Activity Planning
 
 Where does search belong? 
 a) New epic (comprehensive search system)
