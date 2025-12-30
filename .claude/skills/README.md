@@ -27,45 +27,45 @@ When you're working on a task, the agent:
 
 ## Available Skills
 
-### External Services (`external-services/`)
+### External Services (`external-services-*`)
 
 | Skill | MCP | Description | Key Patterns |
 |-------|-----|-------------|--------------|
-| [Stripe](external-services/stripe/SKILL.md) | ✅ Official | Payment integration | Webhooks, idempotency, subscriptions, 5s timeout |
-| [Supabase](external-services/supabase/SKILL.md) | ✅ Official | Backend-as-a-service | RLS policies, `getUser()` vs `getSession()`, real-time |
-| [Clerk](external-services/clerk/SKILL.md) | 🔧 Build | Authentication | Middleware, 4KB cookie limit, organizations |
-| [AI APIs](external-services/ai-apis/SKILL.md) | — | OpenAI & Claude | Structured outputs, streaming, prompt caching |
-| [Sentry](external-services/sentry/SKILL.md) | ✅ Official | Error tracking | Source maps, fingerprinting, replay sampling |
-| [Resend](external-services/resend/SKILL.md) | ✅ Docker | Transactional email | React Email, webhooks, idempotency keys |
-| [Firebase](external-services/firebase/SKILL.md) | 🔧 Community | Google BaaS | Firestore rules, custom claims, FCM |
-| [PostHog](external-services/posthog/SKILL.md) | ✅ Official | Product analytics | Event taxonomy, feature flags, session replay |
-| [RevenueCat](external-services/revenuecat/SKILL.md) | ✅ Official | In-app purchases | Entitlements, webhooks, sandbox testing |
+| [Stripe](external-services-stripe/SKILL.md) | ✅ Official | Payment integration | Webhooks, idempotency, subscriptions, 5s timeout |
+| [Supabase](external-services-supabase/SKILL.md) | ✅ Official | Backend-as-a-service | RLS policies, `getUser()` vs `getSession()`, real-time |
+| [Clerk](external-services-clerk/SKILL.md) | 🔧 Build | Authentication | Middleware, 4KB cookie limit, organizations |
+| [AI APIs](external-services-ai-apis/SKILL.md) | — | OpenAI & Claude | Structured outputs, streaming, prompt caching |
+| [Sentry](external-services-sentry/SKILL.md) | ✅ Official | Error tracking | Source maps, fingerprinting, replay sampling |
+| [Resend](external-services-resend/SKILL.md) | ✅ Docker | Transactional email | React Email, webhooks, idempotency keys |
+| [Firebase](external-services-firebase/SKILL.md) | 🔧 Community | Google BaaS | Firestore rules, custom claims, FCM |
+| [PostHog](external-services-posthog/SKILL.md) | ✅ Official | Product analytics | Event taxonomy, feature flags, session replay |
+| [RevenueCat](external-services-revenuecat/SKILL.md) | ✅ Official | In-app purchases | Entitlements, webhooks, sandbox testing |
 
-### Technologies (`technologies/`)
-
-| Skill | Description | Key Patterns |
-|-------|-------------|--------------|
-| [PWA](technologies/pwa/SKILL.md) | Progressive Web Apps | Service workers, caching strategies, manifests |
-| [React Query](technologies/react-query/SKILL.md) | Server state | Query keys, mutations, optimistic updates |
-| [WebSockets](technologies/websockets/SKILL.md) | Real-time comms | Reconnection, heartbeats, scaling with Redis |
-| [Docker](technologies/docker/SKILL.md) | Containerization | Multi-stage builds, Compose, layer caching |
-| [GitHub Actions](technologies/github-actions/SKILL.md) | CI/CD | Caching, matrix builds, secrets |
-
-### Domains (`domains/`)
+### Technologies (`technologies-*`)
 
 | Skill | Description | Key Patterns |
 |-------|-------------|--------------|
-| [SaaS Billing](domains/saas-billing/SKILL.md) | Subscription management | State machine, proration, dunning, trials |
-| [Multi-tenancy](domains/multi-tenancy/SKILL.md) | B2B architecture | RLS, org switching, RBAC, invitations |
-| [OAuth](domains/oauth-implementation/SKILL.md) | Authentication flows | PKCE, token refresh, provider gotchas |
-| [GDPR Compliance](domains/gdpr-compliance/SKILL.md) | Privacy | Consent, data export, right to erasure |
+| [PWA](technologies-pwa/SKILL.md) | Progressive Web Apps | Service workers, caching strategies, manifests |
+| [React Query](technologies-react-query/SKILL.md) | Server state | Query keys, mutations, optimistic updates |
+| [WebSockets](technologies-websockets/SKILL.md) | Real-time comms | Reconnection, heartbeats, scaling with Redis |
+| [Docker](technologies-docker/SKILL.md) | Containerization | Multi-stage builds, Compose, layer caching |
+| [GitHub Actions](technologies-github-actions/SKILL.md) | CI/CD | Caching, matrix builds, secrets |
 
-### Architectures (`architectures/`)
+### Domains (`domains-*`)
 
 | Skill | Description | Key Patterns |
 |-------|-------------|--------------|
-| [Serverless](architectures/serverless/SKILL.md) | FaaS patterns | Cold starts, connection pooling, queues |
-| [Offline-First](architectures/offline-first/SKILL.md) | Local-first apps | Sync queues, conflict resolution, IndexedDB |
+| [SaaS Billing](domains-saas-billing/SKILL.md) | Subscription management | State machine, proration, dunning, trials |
+| [Multi-tenancy](domains-multi-tenancy/SKILL.md) | B2B architecture | RLS, org switching, RBAC, invitations |
+| [OAuth](domains-oauth-implementation/SKILL.md) | Authentication flows | PKCE, token refresh, provider gotchas |
+| [GDPR Compliance](domains-gdpr-compliance/SKILL.md) | Privacy | Consent, data export, right to erasure |
+
+### Architectures (`architectures-*`)
+
+| Skill | Description | Key Patterns |
+|-------|-------------|--------------|
+| [Serverless](architectures-serverless/SKILL.md) | FaaS patterns | Cold starts, connection pooling, queues |
+| [Offline-First](architectures-offline-first/SKILL.md) | Local-first apps | Sync queues, conflict resolution, IndexedDB |
 
 ---
 
@@ -73,31 +73,27 @@ When you're working on a task, the agent:
 
 ```
 .claude/skills/
-├── README.md                           # This file
-├── external-services/                  # Third-party SaaS integrations
-│   ├── stripe/SKILL.md
-│   ├── supabase/SKILL.md
-│   ├── clerk/SKILL.md
-│   ├── ai-apis/SKILL.md
-│   ├── sentry/SKILL.md
-│   ├── resend/SKILL.md
-│   ├── firebase/SKILL.md
-│   ├── posthog/SKILL.md
-│   └── revenuecat/SKILL.md
-├── technologies/                       # Framework/library expertise
-│   ├── pwa/SKILL.md
-│   ├── react-query/SKILL.md
-│   ├── websockets/SKILL.md
-│   ├── docker/SKILL.md
-│   └── github-actions/SKILL.md
-├── domains/                            # Industry/domain patterns
-│   ├── saas-billing/SKILL.md
-│   ├── multi-tenancy/SKILL.md
-│   ├── oauth-implementation/SKILL.md
-│   └── gdpr-compliance/SKILL.md
-└── architectures/                      # System architecture patterns
-    ├── serverless/SKILL.md
-    └── offline-first/SKILL.md
+├── README.md                               # This file
+├── external-services-stripe/SKILL.md       # Third-party: Stripe
+├── external-services-supabase/SKILL.md     # Third-party: Supabase
+├── external-services-clerk/SKILL.md        # Third-party: Clerk
+├── external-services-ai-apis/SKILL.md      # Third-party: OpenAI & Claude APIs
+├── external-services-sentry/SKILL.md       # Third-party: Sentry
+├── external-services-resend/SKILL.md       # Third-party: Resend
+├── external-services-firebase/SKILL.md     # Third-party: Firebase
+├── external-services-posthog/SKILL.md      # Third-party: PostHog
+├── external-services-revenuecat/SKILL.md   # Third-party: RevenueCat
+├── technologies-pwa/SKILL.md               # Framework: PWA
+├── technologies-react-query/SKILL.md       # Framework: React Query
+├── technologies-websockets/SKILL.md        # Framework: WebSockets
+├── technologies-docker/SKILL.md            # Framework: Docker
+├── technologies-github-actions/SKILL.md    # Framework: GitHub Actions
+├── domains-saas-billing/SKILL.md           # Domain pattern: SaaS Billing
+├── domains-multi-tenancy/SKILL.md          # Domain pattern: Multi-tenancy
+├── domains-oauth-implementation/SKILL.md   # Domain pattern: OAuth
+├── domains-gdpr-compliance/SKILL.md        # Domain pattern: GDPR Compliance
+├── architectures-serverless/SKILL.md       # Architecture: Serverless
+└── architectures-offline-first/SKILL.md    # Architecture: Offline-First
 ```
 
 ---
@@ -116,7 +112,7 @@ When a user picks a recipe like `nextjs-supabase`, the agent automatically has a
 ### 1. Create the Directory
 
 ```bash
-mkdir -p .claude/skills/external-services/my-service
+mkdir -p .claude/skills/external-services-my-service
 ```
 
 ### 2. Create SKILL.md
