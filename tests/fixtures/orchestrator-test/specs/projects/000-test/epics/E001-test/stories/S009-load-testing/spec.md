@@ -23,6 +23,11 @@ As a developer, I want automated load testing so that I can detect performance r
 
 ## Acceptance Criteria
 
+#### Scenario: Load test execution compares against baseline
+- **GIVEN** the staging environment is deployed
+- **WHEN** I run the load test suite
+- **THEN** results are compared to baseline and regressions are flagged
+
 ```gherkin
 Scenario: Load test execution
   Given the staging environment is deployed

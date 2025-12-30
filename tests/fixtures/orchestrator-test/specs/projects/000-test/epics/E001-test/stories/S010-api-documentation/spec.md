@@ -23,6 +23,11 @@ As an API consumer, I want OpenAPI documentation so that I can understand how to
 
 ## Acceptance Criteria
 
+#### Scenario: Interactive API docs are available
+- **GIVEN** the API is running
+- **WHEN** I navigate to `/docs`
+- **THEN** I see interactive API documentation with examples for all endpoints
+
 ```gherkin
 Scenario: View API documentation
   Given the API is running

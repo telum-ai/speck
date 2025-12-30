@@ -97,17 +97,89 @@ detect_phase() {
       phase="planned"
       cmd="story-tasks"
     elif [ -f "$story_dir/spec.md" ]; then
-      if grep -q "## Acceptance Criteria" "$story_dir/spec.md" 2>/dev/null; then
-        phase="clarified"
-        cmd="story-plan"
-      else
+      # "Clarified" is determined by the absence of unresolved clarification markers.
+      # This aligns with /story-plan's clarification gate (and avoids brittle heading checks).
+      if grep -q "\[NEEDS CLARIFICATION" "$story_dir/spec.md" 2>/dev/null; then
         phase="specified"
         cmd="story-clarify"
+      else
+        phase="clarified"
+        cmd="story-plan"
       fi
     fi
   fi
   
   echo "$phase|$cmd"
+}
+
+# Extract depends_on from a story artifact YAML frontmatter.
+# Supports both inline lists:
+#   depends_on: [S001, S003]
+# ...and block lists:
+#   depends_on:
+#     - S001
+#     - S003
+#
+# IMPORTANT: strips trailing comments (e.g. "# example") so templates can include guidance.
+extract_depends_on() {
+  local file_path="$1"
+  [[ -f "$file_path" ]] || return 0
+
+  awk '
+    BEGIN { in_fm=0; multiline=0; items="" }
+    /^---[[:space:]]*$/ {
+      if (in_fm==0) { in_fm=1; next }
+      else { exit }
+    }
+    in_fm==1 {
+      line=$0
+      sub(/\r$/, "", line)
+
+      if (multiline==1) {
+        # Stop if we hit another YAML key
+        if (line ~ /^[[:space:]]*[A-Za-z0-9_-]+:[[:space:]]*/) {
+          print items
+          exit
+        }
+
+        # Collect list items
+        if (line ~ /^[[:space:]]*-[[:space:]]*/) {
+          sub(/#.*/, "", line)                           # strip comments
+          sub(/^[[:space:]]*-[[:space:]]*/, "", line)    # strip "- "
+          gsub(/["'\''\[\],]/, "", line)                 # strip quotes/brackets/commas
+          if (line != "") items = items " " line
+        }
+        next
+      }
+
+      if (line ~ /^[[:space:]]*depends_on:[[:space:]]*/) {
+        sub(/#.*/, "", line)                              # strip comments
+        sub(/^[[:space:]]*depends_on:[[:space:]]*/, "", line)
+
+        # Inline list form: [A, B]
+        if (line ~ /^\[/) {
+          gsub(/[\[\],]/, " ", line)
+          gsub(/["'\''"]/,"", line)
+          print line
+          exit
+        }
+
+        # Empty value → treat following "- item" lines as the list
+        if (line == "") {
+          multiline=1
+          next
+        }
+
+        # Single scalar value
+        gsub(/["'\''\[\],]/, "", line)
+        print line
+        exit
+      }
+    }
+    END {
+      if (multiline==1) print items
+    }
+  ' "$file_path" | tr -s ' ' | xargs 2>/dev/null || true
 }
 
 # Check if story is blocked by dependencies
@@ -119,19 +191,17 @@ check_blocked() {
   local blocking=""
   local deps=""
   
-  # Priority 1: Check spec.md YAML frontmatter (primary source of truth)
-  if [ -f "$story_dir/spec.md" ]; then
-    deps=$(sed -n '/^---$/,/^---$/p' "$story_dir/spec.md" 2>/dev/null | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
+  # Priority 1: spec.md YAML frontmatter (primary source of truth)
+  deps="$(extract_depends_on "$story_dir/spec.md")"
+
+  # Priority 2: spec-draft.md (early in flow, before story-specify)
+  if [ -z "$deps" ]; then
+    deps="$(extract_depends_on "$story_dir/spec-draft.md")"
   fi
-  
-  # Priority 2: Check spec-draft.md (early in the flow, before story-specify)
-  if [ -z "$deps" ] && [ -f "$story_dir/spec-draft.md" ]; then
-    deps=$(sed -n '/^---$/,/^---$/p' "$story_dir/spec-draft.md" 2>/dev/null | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
-  fi
-  
-  # Priority 3: Fall back to tasks.md (legacy/backwards compatibility)
-  if [ -z "$deps" ] && [ -f "$story_dir/tasks.md" ]; then
-    deps=$(sed -n '/^---$/,/^---$/p' "$story_dir/tasks.md" 2>/dev/null | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
+
+  # Priority 3: tasks.md (legacy/backwards compatibility)
+  if [ -z "$deps" ]; then
+    deps="$(extract_depends_on "$story_dir/tasks.md")"
   fi
   
   # Check each dependency

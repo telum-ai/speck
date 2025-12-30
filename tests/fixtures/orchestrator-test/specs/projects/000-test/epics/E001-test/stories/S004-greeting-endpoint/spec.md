@@ -24,6 +24,11 @@ As an API consumer, I want to call GET /greet with a name parameter so that I re
 
 ## Acceptance Criteria
 
+#### Scenario: Successful greeting
+- **GIVEN** the API is running
+- **WHEN** I GET `/greet?name=World`
+- **THEN** the status code is 200 and the response contains `{"message": "Hello, World!"}`
+
 ```gherkin
 Scenario: Successful greeting
   Given the API is running

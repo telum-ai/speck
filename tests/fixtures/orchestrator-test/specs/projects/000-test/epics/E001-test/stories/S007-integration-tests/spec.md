@@ -23,6 +23,11 @@ As a developer, I want integration tests so that I can verify the API works end-
 
 ## Acceptance Criteria
 
+#### Scenario: Integration test suite runs successfully
+- **GIVEN** the test suite is configured
+- **WHEN** I run `npm test`
+- **THEN** all integration tests pass
+
 ```gherkin
 Scenario: Full test coverage
   Given the test suite is configured

@@ -106,14 +106,14 @@ jobs:
           # S001: Unspecced (empty dir) → story-specify
           validate_state "S001-project-setup" "unspecced" "story-specify" "false" || FAILURES=$((FAILURES+1))
           
-          # S002: Specified (spec.md but no AC) → story-clarify
+          # S002: Specified (spec.md contains unresolved [NEEDS CLARIFICATION]) → story-clarify
           validate_state "S002-express-config" "specified" "story-clarify" "false" || FAILURES=$((FAILURES+1))
           
-          # S003: Clarified (spec.md with AC) → story-plan
+          # S003: Clarified (spec.md has no unresolved [NEEDS CLARIFICATION]) → story-plan
           validate_state "S003-greeting-service" "clarified" "story-plan" "false" || FAILURES=$((FAILURES+1))
           
-          # S004: Planned (has plan.md) → story-tasks
-          validate_state "S004-greeting-endpoint" "planned" "story-tasks" "false" || FAILURES=$((FAILURES+1))
+          # S004: Planned (has plan.md) + blocked (depends on S001/S002/S003 not validated) → story-tasks, blocked
+          validate_state "S004-greeting-endpoint" "planned" "story-tasks" "true" || FAILURES=$((FAILURES+1))
           
           # S005: Tasked + blocked (depends on S004 not validated) → story-analyze, blocked
           validate_state "S005-input-validation" "tasked" "story-analyze" "true" || FAILURES=$((FAILURES+1))

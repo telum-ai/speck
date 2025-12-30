@@ -21,7 +21,7 @@ S008-performance-test (FAILED - needs retry)
 
 S009-load-testing ──────────▶ (blocked by S005)
 
-S010-documentation ─────────▶ (depends on S007)
+S010-api-documentation ─────▶ (depends on S007)
 ```
 
 ## Stories

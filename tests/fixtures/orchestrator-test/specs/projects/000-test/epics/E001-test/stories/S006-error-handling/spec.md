@@ -22,6 +22,11 @@ As an API consumer, I want consistent error responses so that I can programmatic
 
 ## Acceptance Criteria
 
+#### Scenario: Validation errors return a consistent JSON shape
+- **GIVEN** the API is running
+- **WHEN** I send an invalid request
+- **THEN** the response contains an `error` field and uses a 4xx status code
+
 ```gherkin
 Scenario: Validation error format
   Given the API is running

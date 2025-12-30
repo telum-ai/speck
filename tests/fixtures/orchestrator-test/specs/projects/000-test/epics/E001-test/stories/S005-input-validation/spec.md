@@ -23,6 +23,11 @@ As an API consumer, I want the API to validate my input so that I receive helpfu
 
 ## Acceptance Criteria
 
+#### Scenario: Name too long returns a validation error
+- **GIVEN** the API is running
+- **WHEN** I GET `/greet?name={101 character string}`
+- **THEN** the status code is 400 and the response contains an error message
+
 ```gherkin
 Scenario: Valid name
   Given the API is running

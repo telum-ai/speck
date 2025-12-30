@@ -23,6 +23,11 @@ As a developer, I want a greeting service that generates personalized messages s
 
 ## Acceptance Criteria
 
+#### Scenario: Greet with valid name
+- **GIVEN** the greeting service is initialized
+- **WHEN** I call greet with name "Alice"
+- **THEN** the response is "Hello, Alice!"
+
 ```gherkin
 Scenario: Greet with valid name
   Given the greeting service is initialized

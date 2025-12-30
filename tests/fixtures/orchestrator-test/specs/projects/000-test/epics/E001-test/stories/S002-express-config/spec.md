@@ -8,6 +8,16 @@ depends_on: []
 
 As a developer, I want to configure an Express.js server so that I can handle HTTP requests.
 
+## Acceptance Criteria
+
+#### Scenario: Health check endpoint is available
+- **GIVEN** the Express server is running
+- **WHEN** I send a `GET /health` request
+- **THEN** the server responds with HTTP 200
+
+> [!NOTE]
+> [NEEDS CLARIFICATION: Should `GET /health` return a JSON body (and if so, what shape)?]
+
 ## Requirements
 
 ### Functional Requirements

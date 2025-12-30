@@ -23,6 +23,11 @@ As a developer, I want performance benchmarks so that I can ensure the API meets
 
 ## Acceptance Criteria
 
+#### Scenario: API meets p99 latency target under load
+- **GIVEN** the API is running
+- **WHEN** 100 concurrent requests are made
+- **THEN** p99 latency is below 100ms and no requests fail
+
 ```gherkin
 Scenario: Performance under load
   Given the API is running
