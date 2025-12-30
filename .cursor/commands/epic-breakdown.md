@@ -70,21 +70,33 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    - Story requirements from epic-breakdown.md
    - Technical context from epic-tech-spec.md
    - Template from .speck/templates/story/story-template.md
+   - **Dependencies from epic-breakdown.md** (for YAML frontmatter)
    
    **Speedup**: Nx (where N = number of stories)
    
    **IMPORTANT**: Drafts are saved as `spec-draft.md` (NOT `spec.md`).
    This ensures the orchestrator won't treat them as fully specified stories.
    The `/story-specify` command will upgrade `spec-draft.md` → `spec.md`.
+   
+   **CRITICAL**: Include dependencies in YAML frontmatter:
+   ```yaml
+   ---
+   depends_on: [S004]  # From "Depends on" in epic-breakdown.md
+   blocks: [S006]      # From Inter-Story Dependencies table
+   ---
+   ```
+   
+   The orchestrator reads `depends_on` from spec-draft.md/spec.md to determine
+   which stories are blocked. This is the primary source of dependency truth.
 
    Create story directories:
    ```
    [EPIC_DIR]/
    └── stories/
        ├── S001-technical-setup/
-       │   └── spec-draft.md
-       ├── S004-story-name/
-       │   └── spec-draft.md
+       │   └── spec-draft.md (with depends_on: [] in frontmatter)
+       ├── S005-story-name/
+       │   └── spec-draft.md (with depends_on: [S004] in frontmatter)
        └── .../
    ```
 

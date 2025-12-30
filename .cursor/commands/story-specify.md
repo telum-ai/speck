@@ -48,10 +48,14 @@ fi
 
 **If `spec-draft.md` exists**:
 1. Load the draft as a starting point
-2. Display to user: "Found draft spec from epic breakdown. I'll use this as a starting point."
-3. Validate and enhance through interactive Q&A (Steps 4-8)
-4. Save the finalized version as `spec.md` (replacing/alongside the draft)
-5. Keep `spec-draft.md` for reference, or delete after successful upgrade
+2. **Preserve YAML frontmatter** (especially `depends_on` and `blocks`)
+3. Display to user: "Found draft spec from epic breakdown. I'll use this as a starting point."
+4. Validate and enhance through interactive Q&A (Steps 4-8)
+5. Save the finalized version as `spec.md` with preserved frontmatter
+6. Keep `spec-draft.md` for reference, or delete after successful upgrade
+
+**CRITICAL**: The `depends_on` field in the YAML frontmatter is read by the
+orchestrator to determine story blocking. Always preserve it when upgrading.
 
 **If no draft exists**: Continue with normal interactive specification flow.
 

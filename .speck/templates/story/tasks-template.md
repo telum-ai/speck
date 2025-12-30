@@ -1,8 +1,9 @@
 ---
-# Story dependency declaration for autonomous orchestration
-# The orchestrator reads this to determine execution order
-depends_on: []  # e.g., [story-001, story-003] - stories that must merge first
-blocks: []      # e.g., [story-005] - stories waiting on this one (informational)
+# Story dependencies (OPTIONAL here - primary source is spec.md)
+# The orchestrator reads depends_on from spec.md first, then falls back here
+# Only include here if you need to override or add dependencies discovered during planning
+depends_on: []  # e.g., [S001, S003] - stories that must be validated first
+blocks: []      # e.g., [S005] - stories waiting on this one (informational)
 ---
 
 # Tasks: [STORY NAME]

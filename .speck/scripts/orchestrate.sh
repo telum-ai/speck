@@ -114,40 +114,19 @@ check_blocked() {
   local blocking=""
   local deps=""
   
-  # Extract story ID from directory name (e.g., S005-story-name -> S005)
-  local story_id
-  story_id=$(basename "$story_dir" | grep -oE '^S[0-9]{3}' || echo "")
-  
-  # Priority 1: Check tasks.md (authoritative source when it exists)
-  if [ -f "$story_dir/tasks.md" ]; then
-    deps=$(sed -n '/^---$/,/^---$/p' "$story_dir/tasks.md" 2>/dev/null | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
+  # Priority 1: Check spec.md YAML frontmatter (primary source of truth)
+  if [ -f "$story_dir/spec.md" ]; then
+    deps=$(sed -n '/^---$/,/^---$/p' "$story_dir/spec.md" 2>/dev/null | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
   fi
   
-  # Priority 2: Fall back to epic-breakdown.md (early in the flow)
-  if [ -z "$deps" ] && [ -n "$story_id" ]; then
-    local epic_dir
-    epic_dir=$(dirname "$story_dir")
-    epic_dir=$(dirname "$epic_dir")  # Go up from stories/ to epic dir
-    
-    if [ -f "$epic_dir/epic-breakdown.md" ]; then
-      # Method A: Parse inline "**Depends on**: S004" for this story
-      # Find lines that start with this story ID and extract depends on
-      local inline_deps
-      inline_deps=$(sed -n "/\[$story_id\]/,/^\- \[/p" "$epic_dir/epic-breakdown.md" 2>/dev/null | \
-        grep -i "depends on" | \
-        grep -oE 'S[0-9]{3}' | \
-        tr '\n' ' ' || true)
-      
-      # Method B: Parse Inter-Story Dependencies table
-      # Format: | S005 | S004 | S020 | (story depends on S004)
-      local table_deps
-      table_deps=$(grep -E "^\| *$story_id *\|" "$epic_dir/epic-breakdown.md" 2>/dev/null | \
-        awk -F'|' '{print $3}' | \
-        grep -oE 'S[0-9]{3}' | \
-        tr '\n' ' ' || true)
-      
-      deps="$inline_deps $table_deps"
-    fi
+  # Priority 2: Check spec-draft.md (early in the flow, before story-specify)
+  if [ -z "$deps" ] && [ -f "$story_dir/spec-draft.md" ]; then
+    deps=$(sed -n '/^---$/,/^---$/p' "$story_dir/spec-draft.md" 2>/dev/null | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
+  fi
+  
+  # Priority 3: Fall back to tasks.md (legacy/backwards compatibility)
+  if [ -z "$deps" ] && [ -f "$story_dir/tasks.md" ]; then
+    deps=$(sed -n '/^---$/,/^---$/p' "$story_dir/tasks.md" 2>/dev/null | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
   fi
   
   # Check each dependency

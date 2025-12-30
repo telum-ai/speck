@@ -1,3 +1,10 @@
+---
+# Story dependency declaration for autonomous orchestration
+# The orchestrator reads this to determine execution order
+depends_on: []  # e.g., [S001, S003] - stories that must be validated first
+blocks: []      # e.g., [S005] - stories waiting on this one (informational)
+---
+
 # Story Specification: [STORY NAME]
 
 **Story ID**: `[###-story-name]`  
