@@ -112,27 +112,60 @@ check_blocked() {
   
   local blocked="false"
   local blocking=""
+  local deps=""
   
+  # Extract story ID from directory name (e.g., S005-story-name -> S005)
+  local story_id
+  story_id=$(basename "$story_dir" | grep -oE '^S[0-9]{3}' || echo "")
+  
+  # Priority 1: Check tasks.md (authoritative source when it exists)
   if [ -f "$story_dir/tasks.md" ]; then
-    local deps
     deps=$(sed -n '/^---$/,/^---$/p' "$story_dir/tasks.md" 2>/dev/null | grep "depends_on:" | sed 's/depends_on://' | tr -d '[],' || true)
-    
-    for dep in $deps; do
-      dep=$(echo "$dep" | tr -d ' "')
-      [ -z "$dep" ] && continue
-      
-      local dep_dir
-      dep_dir=$(find "$specs_root" -type d -name "*$dep*" 2>/dev/null | head -1)
-      
-      if [ -z "$dep_dir" ] || [ ! -f "$dep_dir/validation-report.md" ]; then
-        blocked="true"
-        blocking="$blocking $dep"
-      elif ! grep -q "Status.*PASS" "$dep_dir/validation-report.md" 2>/dev/null; then
-        blocked="true"
-        blocking="$blocking $dep"
-      fi
-    done
   fi
+  
+  # Priority 2: Fall back to epic-breakdown.md (early in the flow)
+  if [ -z "$deps" ] && [ -n "$story_id" ]; then
+    local epic_dir
+    epic_dir=$(dirname "$story_dir")
+    epic_dir=$(dirname "$epic_dir")  # Go up from stories/ to epic dir
+    
+    if [ -f "$epic_dir/epic-breakdown.md" ]; then
+      # Method A: Parse inline "**Depends on**: S004" for this story
+      # Find lines that start with this story ID and extract depends on
+      local inline_deps
+      inline_deps=$(sed -n "/\[$story_id\]/,/^\- \[/p" "$epic_dir/epic-breakdown.md" 2>/dev/null | \
+        grep -i "depends on" | \
+        grep -oE 'S[0-9]{3}' | \
+        tr '\n' ' ' || true)
+      
+      # Method B: Parse Inter-Story Dependencies table
+      # Format: | S005 | S004 | S020 | (story depends on S004)
+      local table_deps
+      table_deps=$(grep -E "^\| *$story_id *\|" "$epic_dir/epic-breakdown.md" 2>/dev/null | \
+        awk -F'|' '{print $3}' | \
+        grep -oE 'S[0-9]{3}' | \
+        tr '\n' ' ' || true)
+      
+      deps="$inline_deps $table_deps"
+    fi
+  fi
+  
+  # Check each dependency
+  for dep in $deps; do
+    dep=$(echo "$dep" | tr -d ' "')
+    [ -z "$dep" ] && continue
+    
+    local dep_dir
+    dep_dir=$(find "$specs_root" -type d -name "*$dep*" 2>/dev/null | head -1)
+    
+    if [ -z "$dep_dir" ] || [ ! -f "$dep_dir/validation-report.md" ]; then
+      blocked="true"
+      blocking="$blocking $dep"
+    elif ! grep -q "Status.*PASS" "$dep_dir/validation-report.md" 2>/dev/null; then
+      blocked="true"
+      blocking="$blocking $dep"
+    fi
+  done
   
   echo "$blocked|$blocking"
 }

@@ -1374,7 +1374,7 @@ blocks: [story-005]                  # Stories waiting on this one (informationa
 
 ---
 
-**Speck Version**: 3.4.3  
+**Speck Version**: 3.4.4  
 **Updated**: 2025-12-28  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 
