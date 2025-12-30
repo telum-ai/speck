@@ -9,7 +9,7 @@
 name: Speck Orchestrator
 
 on:
-  # Continuous orchestration - check every 15 minutes
+  # Continuous orchestration - check every 30 minutes
   schedule:
     - cron: '*/30 * * * *'
   
@@ -88,53 +88,6 @@ jobs:
         run: |
           chmod +x .speck/scripts/orchestrate.sh
           .speck/scripts/orchestrate.sh
-
-  unblock-dependents:
-    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Unblock dependent stories
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          REPO: ${{ github.repository }}
-        run: |
-          STORY_NAME=$(echo "$PR_TITLE" | grep -oE 'S[0-9]{3}[^ ]*' | head -1 || echo "")
-          [ -z "$STORY_NAME" ] && exit 0
-          
-          echo "Story merged: $STORY_NAME"
-          
-          # Check if the merged story now has a passing validation
-          STORY_DIR=$(find specs -type d -name "*$STORY_NAME*" 2>/dev/null | head -1)
-          if [ -z "$STORY_DIR" ] || [ ! -f "$STORY_DIR/validation-report.md" ]; then
-            echo "Story not yet validated, dependents remain blocked"
-            exit 0
-          fi
-          
-          if ! grep -q "Status.*PASS" "$STORY_DIR/validation-report.md" 2>/dev/null; then
-            echo "Story validation not PASS, dependents remain blocked"
-            exit 0
-          fi
-          
-          echo "Story validated with PASS, unblocking dependents"
-          
-          BLOCKED_ISSUES=$(gh issue list --repo "$REPO" --label "speck:blocked" --json number,body --jq '.[] | @base64' 2>/dev/null || true)
-          
-          for ISSUE_B64 in $BLOCKED_ISSUES; do
-            ISSUE=$(echo "$ISSUE_B64" | base64 -d)
-            ISSUE_NUM=$(echo "$ISSUE" | jq -r '.number')
-            ISSUE_BODY=$(echo "$ISSUE" | jq -r '.body')
-            
-            if echo "$ISSUE_BODY" | grep -q "$STORY_NAME"; then
-              echo "Unblocking issue #$ISSUE_NUM"
-              gh issue edit "$ISSUE_NUM" --repo "$REPO" --remove-label "speck:blocked" --add-label "speck:queued"
-              gh issue comment "$ISSUE_NUM" --repo "$REPO" --body "✅ Dependency **$STORY_NAME** validated! This story is now queued."
-            fi
-          done
 
   assign-copilot:
     needs: [ensure-labels, orchestrate]
