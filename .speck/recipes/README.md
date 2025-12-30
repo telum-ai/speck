@@ -299,6 +299,55 @@ You can also request a recipe explicitly:
 
 ---
 
+## Recipe Traceability
+
+When a recipe is selected, it's tracked throughout the project lifecycle:
+
+### How Recipe Selection is Stored
+
+When you select a recipe, `_active_recipe: [recipe-name]` is stored in `project.md`:
+
+```yaml
+# project.md frontmatter
+---
+_active_recipe: nextjs-supabase
+---
+```
+
+### Commands That Use Recipe Data
+
+| Command | Recipe Data Used | How |
+|---------|-----------------|-----|
+| `/project-specify` | Entire recipe | Pre-fills project.md template |
+| `/project-context` | `context:` section | Pre-fills constraints and requirements |
+| `/project-architecture` | `stack:` + `architecture:` | Pre-fills technology choices and patterns |
+| `/project-plan` | `suggested_epics:` | Creates epics.md with recipe's epic structure |
+| `/epic-specify` | `suggested_epics:` descriptions | Pre-fills epic scope when creating recipe epics |
+
+### Recipe Epic ID Convention
+
+Recipe epics use the `E###-` format:
+- `E000-infrastructure` - Developer Infrastructure (always first)
+- `E001-auth` - Authentication (if recipe includes auth epic)
+- Custom numbering continues from there
+
+**Example for nextjs-supabase**:
+```
+E000-infrastructure/  # Testing, CI/CD, linting, error tracking
+E001-auth/           # Supabase Auth integration
+E002-data-model/     # Database schema, RLS policies
+E003-core-features/  # Main application features
+```
+
+### Overriding Recipe Choices
+
+If you need to deviate from recipe recommendations:
+1. Document the deviation in the artifact that changes (e.g., `architecture.md`)
+2. Add rationale: "Deviated from nextjs-supabase recipe: Using Prisma instead of Drizzle because..."
+3. The recipe remains tracked for reference but doesn't constrain your choices
+
+---
+
 ## Creating Custom Recipes
 
 To add a new recipe:

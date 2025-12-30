@@ -80,7 +80,7 @@ not_ideal_for:
 
 # Common epics for this stack
 suggested_epics:
-  - id: infrastructure
+  - id: E000-infrastructure
     name: "Developer Infrastructure"
     priority: 0
     phase: foundation

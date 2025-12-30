@@ -44,7 +44,7 @@ specs/projects/[project-id]/
 ├── project-punch-list.md    # EXECUTION: Remaining items (optional)
 ├── project-*-research-prompt-*.md # RESEARCH: Prompts (optional)
 ├── project-*-research-report-*.md # RESEARCH: Reports (optional)
-└── epics/[epic-id]/
+└── epics/E001-epic-name/        # Format: E###-epic-name (E for epic prefix)
     ├── epic.md             # PROPOSAL: Proposed epic scope
     ├── context.md          # TRUTH: Epic-specific context (optional)
     ├── constitution.md     # TRUTH: Epic principles (optional)
@@ -53,34 +53,41 @@ specs/projects/[project-id]/
     ├── epic-validation-report.md # VERIFICATION: Epic validation (optional)
     ├── epic-punch-list.md  # EXECUTION: Remaining items (optional)
     ├── epic-codebase-scan*.md # [Brownfield] Epic code analysis (optional)
-    ├── epic-architecture.md # PROPOSAL: Proposed design
+    ├── epic-architecture.md # PROPOSAL: Proposed design (optional - see criteria)
     ├── epic-tech-spec.md   # PROPOSAL: Proposed technical approach
     ├── epic-breakdown.md   # EXECUTION: Story mapping + ordering
     ├── user-journey.md     # PROPOSAL: UX journey map (optional)
     ├── wireframes.md       # PROPOSAL: UX wireframes (optional)
     ├── epic-retro.md       # LEARNING: Epic retrospective (optional)
     ├── epic-*-research-prompt-*.md # RESEARCH: Prompts (optional)
-    ├── epic-*-research-report-*.md # RESEARCH: Reports (optional)
-    └── stories/[story-id]/
+    ├── epic-*-research-report-*.md # RESEARCH: Reports (manual or generated)
+    └── stories/S001-story-name/   # Format: S###-story-name (S for story prefix)
         ├── spec.md         # PROPOSAL: Proposed story requirements
         ├── outline.md      # PROPOSAL: Research/decision outline (optional)
         ├── codebase-scan-*.md # [Brownfield] Story code analysis (optional)
         ├── story-*-research-prompt-*.md # RESEARCH: Prompts (optional)
-        ├── story-*-research-report-*.md # RESEARCH: Reports (optional)
+        ├── story-*-research-report-*.md # RESEARCH: Reports (manual or generated)
         ├── plan.md         # PROPOSAL: Proposed technical design
         ├── tasks.md        # EXECUTION: Implementation checklist
         ├── data-model.md   # PROPOSAL: Data model (optional)
         ├── contracts/      # PROPOSAL: Contracts (optional)
-        ├── quickstart.md   # VERIFICATION: Quickstart scenarios (optional)
-        ├── ui-spec.md      # PROPOSAL: UI spec (optional)
+        ├── quickstart.md   # VERIFICATION: Test scenarios + manual validation steps
+        ├── ui-spec.md      # PROPOSAL: UI spec (required for UI-heavy stories)
         ├── validation-report.md  # VERIFICATION: What actually changed (optional)
         └── story-retro.md  # LEARNING: Story retrospective (optional)
 ```
+
+**Naming Convention**:
+- **Epic directories**: `E###-epic-name` (e.g., `E001-authentication`, `E002-user-management`)
+- **Story directories**: `S###-story-name` (e.g., `S001-login-form`, `S002-password-reset`)
+- **Shorthand reference**: Use `E001` or `S001` when referring to epics/stories in discussions
+- **Backwards compatibility**: Directories without E/S prefix (e.g., `001-epic-name`) are still supported
 
 **Truth vs Proposal Model**:
 - **Project-level docs** (project.md, PRD.md, architecture.md, etc.) = **Current production state**
 - **Epic/Story specs** (epic.md, spec.md) = **Proposed changes** (until validated)
 - **After validation** → Update project-level docs to reflect new reality
+- **Constitution**: Exists at project and epic levels only; stories inherit from parent epic/project
 
 ## 📋 The Speck Command Phases (User Triggers, You Execute)
 
@@ -206,8 +213,10 @@ Each command file contains step-by-step instructions for you to execute when use
 1. epic-specify.md → Creates/enhances epic.md (from project-plan placeholder)
 2. epic-clarify.md → Resolves ambiguities
    [OPTIONAL: epic-outline.md → Maps research needs, uses JIT research pattern]
-3. epic-architecture.md → Creates epic-architecture.md (technical design)
-4. epic-plan.md → Creates epic-tech-spec.md (USES: architecture)
+3. [OPTIONAL: epic-architecture.md → Creates epic-architecture.md (technical design)]
+   → RECOMMENDED when: Cross-cutting concerns, new patterns, complex integrations
+   → SKIP when: Simple CRUD, follows existing patterns, single-concern epic
+4. epic-plan.md → Creates epic-tech-spec.md (USES: architecture if available)
    [UX-HEAVY: epic-journey.md + epic-wireframes.md → Before plan]
    [COMPLEX: /epic-constitution → Creates `constitution.md` (epic principles)]
 5. epic-breakdown.md → Creates epic-breakdown.md (USES: tech-spec)
@@ -215,6 +224,15 @@ Each command file contains step-by-step instructions for you to execute when use
 7. epic-validate.md → Completion verification
    [AFTER EPIC: epic-retrospective.md → Reads story retros, validates patterns]
 ```
+
+**Epic Architecture Decision Criteria**:
+| Include `/epic-architecture` When | Skip When |
+|-----------------------------------|-----------|
+| Cross-cutting change (affects 2+ services) | Simple CRUD operations |
+| New architectural pattern being introduced | Follows existing project patterns |
+| Complex third-party integrations | Single-concern epic |
+| Performance-critical with specific targets | Clear implementation path |
+| Security-critical epic | UI-only changes |
 
 *Epic commands: `epic-*.md` in `.cursor/commands/`*
 
@@ -227,13 +245,22 @@ Each command file contains step-by-step instructions for you to execute when use
    [OPTIONAL: story-outline.md → Maps research needs, uses JIT research pattern]
    [OPTIONAL: story-scan.md → Analyzes existing code]
 3. story-plan.md → Creates plan.md, data-model.md, contracts/, quickstart.md
-   [UI-HEAVY: story-ui-spec.md → Creates ui-spec.md]
+   [UI-HEAVY: story-ui-spec.md → Creates ui-spec.md - REQUIRED if story has UI components]
 4. story-tasks.md → Creates tasks.md (USES: plan, data-model, contracts)
 5. story-analyze.md → ⚠️ REQUIRED Quality check before implementation
 6. story-implement.md → Writes code (FOLLOWS: tasks.md)
 7. story-validate.md → Creates validation-report.md (checks spec compliance)
 8. story-retrospective.md → Mines .learning.log + commits → Creates story-retro.md
 ```
+
+**Decision Gates for Optional Commands**:
+| Command | Include When |
+|---------|--------------|
+| `story-outline` | Complex tech decisions, unfamiliar stack, needs research |
+| `story-scan` | Brownfield - extending existing codebase |
+| `story-ui-spec` | UI-heavy with multiple components/states/animations |
+
+**Note**: `story-analyze` is REQUIRED, not optional. It catches issues before implementation.
 
 **Decision Gates for Optional Commands**:
 | Command | Include When |
@@ -257,6 +284,7 @@ project-roadmap.md → NEEDS: epics.md (from /project-plan)
 
 **At Epic Level**:
 ```
+epic-architecture.md → OPTIONAL: Use when cross-cutting, new patterns, or complex integrations
 epic-plan.md → NEEDS: epic.md + [epic-architecture.md] + [epic-codebase-scan.md]
 epic-breakdown.md → NEEDS: epic-tech-spec.md (from plan)
 ```
@@ -268,6 +296,13 @@ story-implement.md → NEEDS: tasks.md
 story-validate.md → NEEDS: spec.md + implementation complete
 story-retrospective.md → NEEDS: validation-report.md + .learning.log + git commits
 ```
+
+**Handling Optional Artifacts**:
+- Artifacts in `[brackets]` are optional - commands work without them
+- When optional artifact exists: Load and incorporate its content
+- When optional artifact missing: Proceed without it, don't error
+- Always check for existence before loading optional documents
+- Common pattern: "IF [artifact] exists: Use it for [purpose]. IF missing: Proceed without."
 
 ## 🔬 Just-In-Time Research Pattern
 
@@ -497,6 +532,21 @@ When user makes a request, determine the appropriate level and suggest:
 - **Level 3-4 (Platform)**: Full product, e-commerce site → Suggest `/speck` routing to project
 
 When unsure, guide user to use `/speck [description]` first - it auto-detects and routes appropriately!
+
+### Project Complexity Scale (Standardized)
+
+| Level | Scope | Examples | Typical Duration | Team Size |
+|-------|-------|----------|------------------|-----------|
+| **0** | Atomic change | Typo fix, config tweak | Hours | 1 |
+| **1** | Single story | Form, button, endpoint | 1-3 days | 1 |
+| **2** | Epic/Feature | Auth system, CRUD module | 1-4 weeks | 1-3 |
+| **3** | Full product | Complete MVP, SaaS app | 1-3 months | 2-5 |
+| **4** | Platform | Multi-product ecosystem | 3-12 months | 5+ |
+
+This scale is used by:
+- `/speck` router for level detection
+- Recipe `complexity.level_range` field
+- `/project-specify` for complexity assessment
 
 ## 💡 Remember These Critical Patterns
 
@@ -758,9 +808,9 @@ Check project Cursor rules for testing rules (if present):
 - Story retros mine your commits to extract patterns
 - Without tags, valuable learnings are lost!
 
-### Commit Checkpoints (Suggest Commits at Natural Points!)
+### Commit Checkpoints (Proactively Commit at Natural Points!)
 
-The agent SHOULD suggest commits at these natural completion points:
+The agent SHOULD proactively make commits at these natural completion points (not just suggest - actually commit!):
 
 **After Spec Commands** (project-specify, epic-specify, story-specify):
 ```
@@ -788,10 +838,11 @@ docs(story): validate [story-name] completion
 ```
 
 **Agent Behavior**:
-- After completing each command that creates/updates spec files, suggest: "Ready to commit these changes?"
+- After completing each command that creates/updates spec files, proactively run `git add` and `git commit` with appropriate message
 - Batch related spec file changes into single commits
 - Never leave uncommitted spec changes when switching contexts
 - Include learning tags in implementation commits when patterns discovered
+- Only ask for confirmation if user has explicitly requested review-before-commit mode
 
 ## 🎯 Jobs-to-Be-Done (JTBD) Framework
 
@@ -1374,7 +1425,7 @@ blocks: [story-005]                  # Stories waiting on this one (informationa
 
 ---
 
-**Speck Version**: 3.4.8  
+**Speck Version**: 3.4.9  
 **Updated**: 2025-12-28  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 

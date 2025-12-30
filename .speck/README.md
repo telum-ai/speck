@@ -209,6 +209,9 @@ graph TD
     storySpecify --> storyClarify
     storyClarify --> storyPlan
     
+    storyClarify -.-> storyOutline
+    storyOutline -.-> storyPlan
+    
     storyClarify -.-> storyScan
     storyScan -.-> storyPlan
     
@@ -217,10 +220,9 @@ graph TD
     
     storyPlan --> storyTasks
     
-    storyTasks -.-> storyAnalyze
-    storyAnalyze -.-> storyImplement
+    storyTasks --> storyAnalyze
+    storyAnalyze --> storyImplement
     
-    storyTasks --> storyImplement
     storyImplement --> storyValidate
     
     storyValidate --> |PASS| storyRetro
@@ -230,12 +232,13 @@ graph TD
     storySpecify["/story-specify"]
     storyExtract["/story-extract"]
     storyClarify["/story-clarify"]
+    storyOutline["/story-outline<br/>(Optional: research mapping)"]
     storyPlan["/story-plan<br/>(Design + research)"]
-    storyScan["/story-scan"]
-    storyUISpec["/story-ui-spec"]
+    storyScan["/story-scan<br/>(Optional: brownfield)"]
+    storyUISpec["/story-ui-spec<br/>(Required if UI-heavy)"]
     storyTasks["/story-tasks"]
     storyImplement["/story-implement"]
-    storyAnalyze["/story-analyze"]
+    storyAnalyze["/story-analyze<br/>⚠️ REQUIRED"]
     storyValidate["/story-validate"]
     storyRetro["/story-retrospective"]
     
@@ -280,7 +283,7 @@ Code → Extract → Document → Enhance
 **Unified Flow**:
 Both greenfield and brownfield follow the **same command sequence** after initial setup:
 ```
-specify → clarify → [research] → [domain] → [ux] → context → [constitution] → architecture → [design-system] → plan → [roadmap] → analyze → validate
+specify → clarify → [domain (+ research)] → [ux (+ research)] → context (+ research) → [constitution (+ research)] → architecture (+ research) → [design-system (+ research)] → plan (+ research) → [roadmap] → analyze → validate
 ```
 
 **Key Differences**:
@@ -324,7 +327,7 @@ specs/
         ├── project-*-research-prompt-*.md # RESEARCH: Prompts (optional)
         ├── project-*-research-report-*.md # RESEARCH: Reports (optional)
         └── epics/
-            └── 001-epic-name/
+            └── E001-epic-name/           # Format: E###-epic-name (E for epic)
                 ├── epic.md                 # PROPOSAL: Epic specification
                 ├── context.md              # Epic-specific context (optional)
                 ├── constitution.md         # Epic principles (optional)
@@ -332,36 +335,43 @@ specs/
                 ├── epic-analysis-report.md # VERIFICATION: Read-only analysis output (optional)
                 ├── epic-validation-report.md # VERIFICATION: Epic validation (optional)
                 ├── epic-punch-list.md      # EXECUTION: Remaining items (optional)
-                ├── epic-codebase-scan*.md  # [Brownfield] Epic code analysis (optional)
-                ├── epic-architecture.md    # PROPOSAL: Epic technical design
+                ├── epic-codebase-scan*.md  # BROWNFIELD: Epic code analysis (optional)
+                ├── epic-architecture.md    # PROPOSAL: Epic technical design (optional - see criteria)
                 ├── epic-tech-spec.md       # PROPOSAL: Implementation details
                 ├── epic-breakdown.md       # EXECUTION: Story mapping + ordering
                 ├── user-journey.md         # UX journey map (optional)
                 ├── wireframes.md           # Visual designs (optional)
                 ├── epic-retro.md           # LEARNING: Epic retrospective (optional)
                 ├── epic-*-research-prompt-*.md # RESEARCH: Prompts (optional)
-                ├── epic-*-research-report-*.md # RESEARCH: Reports (optional)
+                ├── epic-*-research-report-*.md # RESEARCH: Reports (manual or generated)
                 └── stories/
-                    └── 001-story-name/
+                    └── S001-story-name/    # Format: S###-story-name (S for story)
                         ├── spec.md                 # PROPOSAL: Story requirements
                         ├── plan.md                 # PROPOSAL: Technical design
                         ├── tasks.md                # EXECUTION: Implementation checklist
                         ├── data-model.md           # PROPOSAL: Entities + schemas (optional)
                         ├── contracts/              # PROPOSAL: API/event contracts (optional)
-                        ├── quickstart.md           # VERIFICATION: Manual verification path (optional)
-                        ├── ui-spec.md              # PROPOSAL: UI spec (optional)
+                        ├── quickstart.md           # VERIFICATION: Test scenarios + manual steps
+                        ├── ui-spec.md              # PROPOSAL: UI spec (required for UI-heavy)
                         ├── validation-report.md    # VERIFICATION: What actually changed (optional)
                         ├── story-retro.md          # LEARNING: Story retrospective (optional)
-                        ├── outline.md               # PROPOSAL: Research/decision outline (optional)
-                        ├── codebase-scan-*.md       # [Brownfield] Story code analysis (optional)
+                        ├── outline.md              # PROPOSAL: Research/decision outline (optional)
+                        ├── codebase-scan-*.md      # BROWNFIELD: Story code analysis (optional)
                         ├── story-*-research-prompt-*.md # RESEARCH: Prompts (optional)
-                        └── story-*-research-report-*.md # RESEARCH: Reports (optional)
+                        └── story-*-research-report-*.md # RESEARCH: Reports (manual or generated)
 ```
+
+**Naming Conventions**:
+- **Epic directories**: `E###-epic-name` (e.g., `E001-authentication`, `E000-infrastructure`)
+- **Story directories**: `S###-story-name` (e.g., `S001-login-form`, `S002-password-reset`)
+- **Backwards compatibility**: Directories without E/S prefix (e.g., `001-epic-name`) are still supported
+- **Shorthand**: Use `E001` or `S001` when referring in discussions
 
 **Truth vs Proposal Model**:
 - **Project-level docs** (`project.md`, `PRD.md`, `architecture.md`, etc.) = **Current production state**
 - **Epic/Story specs** (`epic.md`, `spec.md`) = **Proposed changes** (until validated)
-- **Import/Scan artifacts** = **Brownfield extraction data** (consumed by all commands)
+- **BROWNFIELD artifacts** = **Extraction data from existing code** (consumed by all commands)
+- **Constitution**: Exists at project and epic levels only; stories inherit from parent
 - **After validation** → Update project-level docs to reflect new reality
 
 ---
@@ -472,10 +482,11 @@ The agent should **automatically suggest or create commits** at natural completi
 | `/story-retrospective` | `docs(story): capture [story-name] learnings` | `story-retro.md` |
 
 **Agent Behavior:**
-- After completing each command, the agent SHOULD suggest: "Ready to commit these changes?"
+- After completing each command, the agent SHOULD proactively commit changes (not just suggest)
 - Include learning tags (PATTERN:, GOTCHA:, etc.) in implementation commits
 - Batch related spec file changes into single commits
 - Never leave uncommitted spec changes when switching contexts
+- Only ask for confirmation if user has explicitly requested review-before-commit mode
 
 ---
 
@@ -616,7 +627,7 @@ Subagents are **parallel workers** that speed up command execution. When a comma
 
 | Agent | Model | Purpose | When Used |
 |-------|-------|---------|-----------|
-| **speck-explorer** | Gemini 3 Flash | Fast file/pattern finding | Codebase navigation |
+| **speck-explorer** | Haiku | Fast file/pattern finding | Codebase navigation |
 | **speck-researcher** | Sonnet + MCP | External research | Tech evaluation, docs |
 | **speck-scanner** | Sonnet | Deep code analysis | Understanding existing code |
 | **speck-scribe** | Sonnet | Document drafting | Writing spec sections |
@@ -1313,12 +1324,7 @@ bash .speck/scripts/bash/merge-mcp-config.sh
    /speck import [path to your code]
    ```
 
-3. **For Current Speck Project**:
-   ```
-   /speck continue
-   ```
-
-4. **To Continue Work**:
+3. **To Continue Work**:
    ```
    /speck continue
    ```
@@ -1388,27 +1394,9 @@ Speck integrates with **Cursor Background Agents** and **GitHub Copilot Coding A
 
 The methodology is defined in `AGENTS.md`. Both Cursor and Copilot read it and follow the command flow.
 
-### Workflow Handoffs
-
-| Workflow | Scope | Trigger |
-|----------|-------|---------|
-| `speck-orchestrator.yml` | specify → implement | Push, manual |
-| `speck-validate-pr.yml` | story-validate | PR ready for review |
-| `speck-retrospective.yml` | story-retrospective | PR merged |
-
-```
-ORCHESTRATOR                    VALIDATE-PR           RETROSPECTIVE
-     │                               │                      │
-     ▼                               ▼                      ▼
-specify → clarify → plan →      validate              retrospective
-tasks → [analyze] → implement        │                      │
-     │                               │                      │
-     └──────► PR CREATED ───────────►└───► PR MERGED ──────►┘
-```
-
 ### Rate Limiting
 
-GitHub Copilot Agent limit: ~2-3 concurrent sessions. The orchestrator uses `speck:queued` as a waiting queue.
+GitHub Copilot Agent limit: ~2-3 concurrent sessions. Use `speck:queued` label as a waiting queue.
 
 ### Dependency Management
 
@@ -1477,6 +1465,6 @@ Remember: The goal is to guide you through building great software with clear sp
 
 ---
 
-**Version**: 2.3  
+**Version**: 3.4.9  
 **Updated**: December 2025  
-**Methodology**: Speck (Multi-Level)
+**Methodology**: Speck (Multi-Level with Retrospectives)

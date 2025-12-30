@@ -1,5 +1,5 @@
 ---
-description: Create detailed UI specifications for story implementation, including exact styling, behavior, and code examples.
+description: Create detailed UI specifications for story implementation, including exact styling, behavior, and code examples. REQUIRED for stories with UI components.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
@@ -9,6 +9,13 @@ User input:
 $ARGUMENTS
 
 Generate precise UI specifications that developers can implement directly.
+
+**When to use this command**:
+- ⚠️ **REQUIRED** for stories that include UI components (forms, pages, interactive elements)
+- **REQUIRED** for stories with multiple component states, variants, or animations
+- **OPTIONAL** for simple, single-state UI elements that follow existing patterns
+
+If `/story-plan` detected UI requirements, you MUST run this command before `/story-tasks`.
 
 ## Context Requirements
 

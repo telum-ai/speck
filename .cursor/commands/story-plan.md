@@ -155,8 +155,15 @@ This command benefits from parallel execution:
    - Use token values in any UI-related contract specifications
    
    **IF neither exists AND story has UI requirements**:
-   - WARN: "No project design documents found. Consider running `/project-ux` and `/project-design-system` first for UI consistency."
+   - WARN: "No project design documents found. Consider running `/project-ux` and `/project-design-system` for UI consistency."
    - Proceed but note in plan.md that design decisions may need alignment later
+   
+   **UI Component Detection** (for downstream guidance):
+   - Check if this story has UI requirements by looking for:
+     * Frontend components mentioned in spec.md
+     * User interface acceptance criteria
+     * Visual/interactive elements described
+   - **IF UI requirements detected**: Note in plan.md that `/story-ui-spec` is REQUIRED before `/story-tasks`
 
 8. Just-In-Time Research (before executing plan template):
    
@@ -247,9 +254,10 @@ This command benefits from parallel execution:
    
    Next Steps:
    1. Review technical design with team
-   2. Required: /story-tasks (generate implementation tasks)
-   3. ⚠️ REQUIRED: /story-analyze (quality check before implementation - DO NOT SKIP)
-   4. Then: /story-implement (execute the tasks)
+   2. ⚠️ If UI components detected: /story-ui-spec (REQUIRED before tasks)
+   3. Required: /story-tasks (generate implementation tasks)
+   4. ⚠️ REQUIRED: /story-analyze (quality check before implementation - DO NOT SKIP)
+   5. Then: /story-implement (execute the tasks)
    
    Note: /story-tasks will use these artifacts to generate concrete,
    numbered tasks that /story-implement can execute.

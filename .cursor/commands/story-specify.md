@@ -193,11 +193,14 @@ Add story to epic's story list with status "specified"
 Next Steps:
 - Recommended: /story-clarify (resolve any ambiguities)
 - If already clear: /story-plan (create technical design)
-- If UI-heavy: /story-ui-spec (design interfaces first)
 - If complex tech: /story-outline, then follow the just-in-time research pattern
-  (`.speck/patterns/just-in-time-research-pattern.md`) for the outline’s open questions/queries,
+  (`.speck/patterns/just-in-time-research-pattern.md`) for the outline's open questions/queries,
   then proceed to /story-plan
 - If extracting patterns: /story-scan (analyze existing code)
+
+After /story-plan:
+- ⚠️ If UI-heavy: /story-ui-spec is REQUIRED before /story-tasks
+- Then: /story-tasks → /story-analyze → /story-implement → /story-validate
 
 Note: /story-plan is the gateway to implementation - it generates the technical
 blueprint that /story-tasks will break down into executable steps.

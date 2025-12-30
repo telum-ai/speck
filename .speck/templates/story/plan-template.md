@@ -33,7 +33,7 @@
 ```
 
 **IMPORTANT**: The /story-plan command STOPS at step 7. Phases 2-4 are executed by other commands:
-- Phase 2: /story-tasks command creates tasks.md
+- /story-tasks command creates tasks.md with Execution Phases 1-5
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
@@ -95,10 +95,10 @@ The plan MUST explicitly address these gates derived from the project constituti
 ├── outline.md               # Optional: analysis + research plan (/story-outline output)
 ├── codebase-scan-*.md       # Optional: code analysis (/story-scan output)
 ├── plan.md                  # This file (/story-plan output with embedded research)
-├── data-model.md            # Phase 1 output (/story-plan)
-├── quickstart.md            # Phase 1 output (/story-plan)
-├── contracts/               # Phase 1 output (/story-plan)
-└── tasks.md                 # Phase 2 output (/story-tasks - NOT created by /story-plan)
+├── data-model.md            # Planning Phase 1 output (/story-plan)
+├── quickstart.md            # Planning Phase 1 output (/story-plan)
+├── contracts/               # Planning Phase 1 output (/story-plan)
+└── tasks.md                 # /story-tasks output (NOT created by /story-plan)
 ```
 
 ### Source Code (repository root)
@@ -162,7 +162,7 @@ directories captured above]
 
 **Note**: Research is performed just-in-time during planning, not as a separate phase.
 
-## Phase 1: Design & Contracts
+## Planning Phase 1: Design & Contracts
 
 **Check for codebase scans** (from `/story-scan` command):
 - Look in {STORY_DIR} for `codebase-scan-*.md` files
@@ -207,7 +207,7 @@ directories captured above]
 
 **Output**: data-model.md, /contracts/*, quickstart.md
 
-## Phase 1.5: Implementation Guidance (NEW - For /story-tasks)
+## Planning Phase 2: Implementation Guidance (For /story-tasks)
 *This section provides rich context that /story-tasks will use when generating tasks.md*
 
 ### Functional Requirements Extraction
@@ -365,7 +365,7 @@ directories captured above]
 
 **Note for /story-tasks**: Include constitution gate in task description if task validates a gate
 
-## Phase 2: Task Planning Approach
+## Planning Phase 3: Task Planning Approach
 *This section describes what the /story-tasks command will do - DO NOT execute during /story-plan*
 
 **Task Generation Strategy**:
@@ -385,7 +385,7 @@ directories captured above]
 
 **IMPORTANT**: This phase is executed by the /story-tasks command, NOT by /story-plan
 
-## Phase 3+: Future Implementation
+## Execution Phases (Beyond /story-plan scope)
 *These phases are beyond the scope of the /story-plan command*
 
 **Phase 3**: Task generation (/story-tasks command creates tasks.md)  
@@ -404,13 +404,16 @@ directories captured above]
 ## Progress Tracking
 *This checklist is updated during execution flow*
 
-**Phase Status**:
+**Planning Phase Status** (this command):
 - [ ] Research embedded in plan (just-in-time during /story-plan)
-- [ ] Phase 1: Design complete (/story-plan)
-- [ ] Phase 2: Task planning complete (/story-plan - describe approach only)
-- [ ] Phase 3: Tasks generated (/story-tasks)
-- [ ] Phase 4: Implementation complete
-- [ ] Phase 5: Validation passed
+- [ ] Planning Phase 1: Design complete (/story-plan)
+- [ ] Planning Phase 2: Implementation guidance complete (/story-plan)
+- [ ] Planning Phase 3: Task approach described (/story-plan)
+
+**Execution Phase Status** (later commands):
+- [ ] Tasks generated (/story-tasks → Execution Phases 1-5)
+- [ ] Implementation complete (/story-implement)
+- [ ] Validation passed (/story-validate)
 
 **Gate Status**:
 - [ ] Initial Constitution Check: PASS
