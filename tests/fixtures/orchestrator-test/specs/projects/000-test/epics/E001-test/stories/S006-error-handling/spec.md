@@ -1,3 +1,7 @@
+---
+depends_on: [S005]
+---
+
 # S006: Implement Error Responses
 
 ## User Story

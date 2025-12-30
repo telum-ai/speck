@@ -1,3 +1,7 @@
+---
+depends_on: [S001, S002, S003]
+---
+
 # S004: Create /greet Endpoint
 
 ## User Story

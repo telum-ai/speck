@@ -1,3 +1,7 @@
+---
+depends_on: [S007]
+---
+
 # S010: API Documentation
 
 ## User Story

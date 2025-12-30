@@ -1,3 +1,7 @@
+---
+depends_on: [S007]
+---
+
 # S008: Performance Benchmarks
 
 ## User Story

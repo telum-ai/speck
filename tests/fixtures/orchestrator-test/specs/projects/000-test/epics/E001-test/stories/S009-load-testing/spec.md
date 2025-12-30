@@ -1,3 +1,7 @@
+---
+depends_on: [S005]
+---
+
 # S009: Load Testing Setup
 
 ## User Story

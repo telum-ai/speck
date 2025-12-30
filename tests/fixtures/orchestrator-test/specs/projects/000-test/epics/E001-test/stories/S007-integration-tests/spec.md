@@ -1,3 +1,7 @@
+---
+depends_on: [S006]
+---
+
 # S007: Add Integration Test Suite
 
 ## User Story

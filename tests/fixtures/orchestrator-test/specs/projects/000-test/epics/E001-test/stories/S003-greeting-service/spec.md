@@ -1,3 +1,7 @@
+---
+depends_on: []
+---
+
 # S003: Implement Greeting Service
 
 ## User Story

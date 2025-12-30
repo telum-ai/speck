@@ -1,3 +1,7 @@
+---
+depends_on: []
+---
+
 # S002: Configure Express Server
 
 ## User Story

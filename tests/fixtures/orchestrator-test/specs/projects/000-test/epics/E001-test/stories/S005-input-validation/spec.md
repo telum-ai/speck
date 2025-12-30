@@ -1,3 +1,7 @@
+---
+depends_on: [S004]
+---
+
 # S005: Add Request Validation
 
 ## User Story
