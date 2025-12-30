@@ -11,7 +11,7 @@ name: Speck Orchestrator
 on:
   # Continuous orchestration - check every 15 minutes
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/30 * * * *'
   
   # Trigger on spec changes
   push:
@@ -20,7 +20,6 @@ on:
       - 'specs/**/stories/**'
     branches:
       - main
-      - develop
   
   # Manual trigger
   workflow_dispatch:
@@ -44,13 +43,6 @@ on:
         required: false
         type: boolean
         default: false
-  
-  # Re-orchestrate after PR merges (unblock dependents, continue validation)
-  pull_request:
-    types: [closed]
-    branches:
-      - main
-      - develop
 
 permissions:
   contents: read
