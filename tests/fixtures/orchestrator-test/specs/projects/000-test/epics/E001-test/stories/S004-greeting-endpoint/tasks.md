@@ -32,7 +32,7 @@ No setup tasks needed - project already configured by dependencies.
 
 ### Phase 2: Tests First (TDD)
 
-- [ ] T001 [P] Create route test file
+- [x] T001 [P] Create route test file
 
 **Implements**: FR-001, FR-002, FR-003, FR-004
 
@@ -60,7 +60,7 @@ describe('GET /greet', () => {
 
 ### Phase 3: Core Implementation
 
-- [ ] T002 [P] Create greet route handler
+- [x] T002 [P] Create greet route handler
 
 **Implements**: FR-001, FR-002, FR-003, FR-004
 
@@ -84,7 +84,7 @@ export default router;
 
 **File**: `src/routes/greet.ts`
 
-- [ ] T003 Register route in main application
+- [x] T003 Register route in main application
 
 **Implements**: Integration of FR-001
 
@@ -102,7 +102,7 @@ No external integration needed for this simple endpoint.
 
 ### Phase 5: Polish & Validation
 
-- [ ] T004 [P] Verify response time meets NFR-001 (<100ms)
+- [x] T004 [P] Verify response time meets NFR-001 (<100ms)
 
 **Implements**: NFR-001
 
