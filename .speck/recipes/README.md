@@ -2,7 +2,7 @@
 
 Recipes are pre-configured project templates for common full-stack setups. They provide starting points that accelerate the `/project-specify` → `/project-plan` flow by pre-filling architectural decisions, technology choices, and common epic structures.
 
-**Related**: Each recipe has companion **Skills** in `.claude/skills/` that provide deep implementation patterns for the recommended services (Stripe, Supabase, Clerk, etc.).
+**Related**: Each recipe has companion **Skills** in `.cursor/rules/speck/` that provide deep implementation patterns for the recommended services (Stripe, Supabase, Clerk, etc.).
 
 ## 🛒 Buy vs. Build Philosophy
 

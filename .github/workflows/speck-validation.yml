@@ -235,7 +235,6 @@ jobs:
             ".speck/README.md"
             ".speck/patterns/just-in-time-research-pattern.md"
             ".speck/recipes/README.md"
-            ".claude/skills/README.md"
             
             # Scripts
             ".speck/scripts/bash/analyze-scale.sh"

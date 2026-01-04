@@ -79,10 +79,10 @@ copy_file "$REPO_ROOT/.cursor/MCP-SETUP.md" "$OUT_DIR/.cursor/MCP-SETUP.md"
 copy_file "$REPO_ROOT/.cursor/mcp.json.example" "$OUT_DIR/.cursor/mcp.json.example"
 copy_file "$REPO_ROOT/.cursor/mcp.project.json.example" "$OUT_DIR/.cursor/mcp.project.json.example"
 
-# Cursor Agent Skills (Cursor reads these from `.claude/skills`)
-if [[ -d "$REPO_ROOT/.claude/skills" ]]; then
-  mkdir -p "$OUT_DIR/.claude"
-  copy_dir "$REPO_ROOT/.claude/skills" "$OUT_DIR/.claude/skills"
+# Cursor Agent Skills (Cursor reads these from `.cursor/rules/speck`)
+if [[ -d "$REPO_ROOT/.cursor/rules/speck" ]]; then
+  mkdir -p "$OUT_DIR/.cursor/rules"
+  copy_dir "$REPO_ROOT/.cursor/rules/speck" "$OUT_DIR/.cursor/rules/speck"
 fi
 
 # Workflows (methodology-only)

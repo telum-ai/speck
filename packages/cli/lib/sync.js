@@ -22,7 +22,7 @@ const ALWAYS_OVERWRITE = [
   '.cursor/hooks/hooks',
   '.cursor/hooks/VALIDATION.md',
   '.cursor/MCP-SETUP.md',
-  '.claude/skills',
+  '.cursor/rules/speck',
   '.github/workflows/speck-orchestrator.yml',
   '.github/workflows/speck-update-check.yml',
   '.github/workflows/speck-validation.yml',

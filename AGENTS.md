@@ -456,7 +456,7 @@ If Context7 has no docs after **2-3 attempts** (try variants), use `web_search` 
 
 Skills are **agent-decided** expertise packages - automatically loaded when relevant to the current task.
 
-**Location**: `.claude/skills/`
+**Location**: `.cursor/rules/speck/`
 
 | Category | Examples | When Loaded |
 |----------|----------|-------------|
@@ -469,7 +469,7 @@ Skills are **agent-decided** expertise packages - automatically loaded when rele
 
 **Enabling Skills**: Cursor Settings → Rules → Import Settings → Toggle "Agent Skills" on.
 
-See `.claude/skills/README.md` for details.
+See `.cursor/rules/speck/` for details.
 
 ## 🤖 Subagents (Intra-Command Parallelization)
 
@@ -493,7 +493,7 @@ Subagents are **parallel workers** that speed up command execution. The main age
 
 ### Skills vs Subagents
 
-| Aspect | Skills (`.claude/skills/`) | Subagents (`.cursor/agents/`) |
+| Aspect | Skills (`.cursor/rules/speck/`) | Subagents (`.cursor/agents/`) |
 |--------|---------------------------|-------------------------------|
 | **What** | Knowledge loaded into context | Parallel workers with own context |
 | **When** | Auto-loaded when relevant | Spawned for parallel execution |

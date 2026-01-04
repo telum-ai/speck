@@ -595,33 +595,33 @@ Skills are **domain-specific expertise packages** that AI agents load automatica
 
 ### Available Skills
 
-**External Services** (`.claude/skills/external-services/`):
-- `stripe/` - Payments, subscriptions, webhooks
-- `supabase/` - Database, auth, real-time, RLS
-- `clerk/` - Authentication for Next.js/React
-- `ai-apis/` - OpenAI & Anthropic patterns
-- `sentry/` - Error tracking, performance monitoring
-- `resend/` - Transactional email with React Email
-- `firebase/` - Firestore, FCM, custom claims
-- `posthog/` - Product analytics, feature flags
-- `revenuecat/` - In-app purchases, subscriptions
+**External Services** (`.cursor/rules/speck/external-services/`):
+- `stripe-integration.mdc` - Payments, subscriptions, webhooks
+- `supabase-integration.mdc` - Database, auth, real-time, RLS
+- `clerk-authentication.mdc` - Authentication for Next.js/React
+- `ai-api-integration.mdc` - OpenAI & Anthropic patterns
+- `sentry-integration.mdc` - Error tracking, performance monitoring
+- `resend-integration.mdc` - Transactional email with React Email
+- `firebase-integration.mdc` - Firestore, FCM, custom claims
+- `posthog-integration.mdc` - Product analytics, feature flags
+- `revenuecat-integration.mdc` - In-app purchases, subscriptions
 
-**Technologies** (`.claude/skills/technologies/`):
-- `pwa/` - Progressive Web App patterns
-- `react-query/` - Server state with TanStack Query
-- `websockets/` - Real-time communication
-- `docker/` - Containerization patterns
-- `github-actions/` - CI/CD pipelines
+**Technologies** (`.cursor/rules/speck/technologies/`):
+- `progressive-web-apps.mdc` - Progressive Web App patterns
+- `tanstack-query.mdc` - Server state with TanStack Query
+- `websocket-implementation.mdc` - Real-time communication
+- `docker-containerization.mdc` - Containerization patterns
+- `github-actions-cicd.mdc` - CI/CD pipelines
 
-**Domains** (`.claude/skills/domains/`):
-- `saas-billing/` - Subscription state machines, dunning
-- `multi-tenancy/` - Tenant isolation, RBAC
-- `oauth-implementation/` - OAuth 2.0, PKCE flows
-- `gdpr-compliance/` - Consent, data rights
+**Domains** (`.cursor/rules/speck/domains/`):
+- `saas-billing-patterns.mdc` - Subscription state machines, dunning
+- `multi-tenancy-patterns.mdc` - Tenant isolation, RBAC
+- `oauth-implementation.mdc` - OAuth 2.0, PKCE flows
+- `gdpr-compliance.mdc` - Consent, data rights
 
-**Architectures** (`.claude/skills/architectures/`):
-- `serverless/` - FaaS patterns, cold starts
-- `offline-first/` - Sync, conflict resolution
+**Architectures** (`.cursor/rules/speck/architectures/`):
+- `serverless-architecture.mdc` - FaaS patterns, cold starts
+- `offline-first-architecture.mdc` - Sync, conflict resolution
 
 ### Relationship to Recipes
 
@@ -633,7 +633,7 @@ When a recipe recommends Stripe for payments, the Stripe skill provides:
 - Common gotchas (idempotency, signature verification)
 - Code patterns for checkout, subscriptions
 
-**See `.claude/skills/README.md` for complete details.**
+**See `.cursor/rules/speck/` for complete details.**
 
 ---
 
