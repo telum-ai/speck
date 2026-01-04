@@ -358,4 +358,3 @@ Sync incrementally (since last sync timestamp) rather than full dataset.
 - [Local-First Software](https://www.inkandswitch.com/local-first/)
 - [Dexie.js](https://dexie.org/)
 - [Background Sync](https://developer.mozilla.org/en-US/docs/Web/API/Background_Synchronization_API)
-

@@ -310,4 +310,3 @@ Use hidden iframe for silent refresh, but handle third-party cookie blocks grace
 - [OAuth 2.0 RFC](https://oauth.net/2/)
 - [PKCE RFC](https://oauth.net/2/pkce/)
 - [OpenID Connect](https://openid.net/connect/)
-

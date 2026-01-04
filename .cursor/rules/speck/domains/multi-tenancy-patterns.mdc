@@ -327,4 +327,3 @@ When deleting a tenant, cascade to all related data. Use soft deletes for recove
 
 - [PostgreSQL RLS](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
 - [Clerk Organizations](https://clerk.com/docs/organizations)
-
