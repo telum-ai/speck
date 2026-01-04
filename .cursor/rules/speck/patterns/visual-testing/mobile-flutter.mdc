@@ -1,4 +1,9 @@
-# Flutter Visual Testing Pattern
+---
+name: visual-testing-mobile-flutter
+description: Visual testing for Flutter mobile applications using Golden Tests, Alchemist, and Fastlane. Use when validating widget rendering, theme variations, and device-specific screenshots.
+---
+
+# Flutter Visual Testing
 
 **Platform**: `mobile-flutter`  
 **Applicable Recipes**: flutter-firebase  
@@ -19,7 +24,7 @@ Flutter's golden testing system captures widget renders as images and compares t
 **Start Small**:
 - Add/update goldens for the 1–3 widgets/screens changed in this story
 - Cover **light + dark** if the app supports it
-- Cover **one “phone-sized” constraint** first; add tablet constraints only if layout changes
+- Cover **one "phone-sized" constraint** first; add tablet constraints only if layout changes
 
 **Run**:
 1. Run goldens: `flutter test test/goldens/`
@@ -171,69 +176,6 @@ goldenTest(
 );
 ```
 
-### Agent Commands
-
-```bash
-# Generate goldens
-flutter test --update-goldens
-
-# Run tests with Alchemist
-flutter test test/goldens/
-
-# CI mode (platform-agnostic)
-flutter test --dart-define=CI=true
-```
-
----
-
-## 📚 Widgetbook Integration
-
-Widgetbook provides a component catalog that auto-generates golden tests:
-
-### Setup
-
-```yaml
-# pubspec.yaml
-dev_dependencies:
-  widgetbook: ^3.0.0
-  widgetbook_annotation: ^3.0.0
-  widgetbook_generator: ^3.0.0
-  build_runner: ^2.0.0
-```
-
-### Define Use Cases
-
-```dart
-import 'package:widgetbook_annotation/widgetbook_annotation.dart';
-
-@UseCase(name: 'Default', type: MyButton)
-Widget defaultButton(BuildContext context) {
-  return MyButton(label: 'Click me');
-}
-
-@UseCase(name: 'Primary', type: MyButton)
-Widget primaryButton(BuildContext context) {
-  return MyButton(label: 'Primary', variant: ButtonVariant.primary);
-}
-```
-
-### Run Widgetbook
-
-```bash
-# Generate code
-flutter pub run build_runner build
-
-# Run Widgetbook locally
-flutter run -d chrome -t lib/widgetbook.dart
-```
-
-### Widgetbook Cloud (Visual Regression)
-
-```bash
-# Run visual regression in cloud
-widgetbook-cli upload --api-key=xxx
-```
-
 ---
 
 ## 📱 Device Testing
@@ -338,90 +280,6 @@ fastlane screenshots
 
 ---
 
-## 🔧 Integration Testing
-
-### Flutter Integration Test with Screenshots
-
-```dart
-import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
-
-void main() {
-  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
-  testWidgets('Screenshot flow', (tester) async {
-    await tester.pumpWidget(MyApp());
-
-    // Wait for app to load
-    await tester.pumpAndSettle();
-
-    // Take screenshot
-    await binding.takeScreenshot('home_screen');
-
-    // Navigate and screenshot
-    await tester.tap(find.byKey(Key('login_button')));
-    await tester.pumpAndSettle();
-    await binding.takeScreenshot('login_screen');
-  });
-}
-```
-
-### Agent Commands
-
-```bash
-# Run integration tests
-flutter test integration_test/
-
-# Run on specific device
-flutter test integration_test/ -d "iPhone 15"
-
-# Run on Android emulator
-flutter test integration_test/ -d emulator-5554
-```
-
----
-
-## 📊 Platform-Specific Baselines
-
-Flutter renders differently on macOS, Windows, and Linux due to font rendering. Use platform-specific baselines:
-
-### CI Configuration
-
-```yaml
-# .github/workflows/golden_tests.yml
-jobs:
-  golden-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: subosito/flutter-action@v2
-      - run: flutter test test/goldens/ --update-goldens
-      - uses: actions/upload-artifact@v3
-        with:
-          name: goldens-linux
-          path: test/goldens/**/goldens/
-
-  golden-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: subosito/flutter-action@v2
-      - run: flutter test test/goldens/
-```
-
-### Directory Structure
-
-```
-test/
-├── goldens/
-│   ├── button_test.dart
-│   └── goldens/
-│       ├── ci/          # CI baselines (Linux)
-│       │   └── button_variants.png
-│       └── local/       # Local baselines (macOS/Windows)
-│           └── button_variants.png
-```
-
----
-
 ## 📝 Recipe Configuration
 
 Add to recipe.yaml:
@@ -479,7 +337,3 @@ visual_testing:
 - [ ] Fastlane configured for app store screenshots
 - [ ] CI pipeline includes golden test validation
 - [ ] Platform-specific baselines managed correctly
-
----
-
-*Platform Pattern Version: 1.0.0*

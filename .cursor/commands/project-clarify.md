@@ -187,7 +187,7 @@ Research Needed: 3 areas identified
 
 Next Steps:
 - If research needed: Apply the just-in-time research pattern
-  (`.speck/patterns/just-in-time-research-pattern.md`) to answer the queries above, then continue
+  (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) to answer the queries above, then continue
 - If UX-heavy product: /project-ux (define experience strategy)
 - If standard product: /project-context (define constraints and standards)
 - If very simple (Level 0-1): Skip to /project-plan

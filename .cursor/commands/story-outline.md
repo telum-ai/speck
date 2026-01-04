@@ -71,7 +71,7 @@ $ARGUMENTS
    - "[Generated research query 1]"
    - "[Generated research query 2]"
    
-   Use the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`):
+   Use the just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`):
    - Do quick web search for each high-priority query
    - If web search is insufficient, generate a deep research prompt file and incorporate results
    

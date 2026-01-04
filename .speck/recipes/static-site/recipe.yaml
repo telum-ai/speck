@@ -184,7 +184,7 @@ context:
 visual_testing:
   platform: web
   strategy: browser-mcp
-  pattern_file: "visual-testing/web-visual-testing.md"
+  pattern_file: "visual-testing/web.mdc"
   breakpoints:
     mobile: 375
     tablet: 768

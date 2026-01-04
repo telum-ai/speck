@@ -340,7 +340,7 @@ Focus on outcomes with:
 
 **Research Needed**:
 - Business model research: YES/NO
-- If YES: Use the **just-in-time research pattern** (`.speck/patterns/just-in-time-research-pattern.md`)
+- If YES: Use the **just-in-time research pattern** (`.cursor/rules/speck/patterns/just-in-time-research.mdc`)
   to gather the information needed for these topics, and embed findings into the relevant
   artifact (usually `PRD.md`, and sometimes `ux-strategy.md` / `context.md` / `architecture.md`):
   - business-model-validation (revenue models, unit economics)

@@ -10,7 +10,7 @@ $ARGUMENTS
 
 Generate a comprehensive technical specification that bridges epic requirements to implementable stories.
 
-**Research Approach**: Uses just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`) for implementation patterns, integration strategies, and technical approaches
+**Research Approach**: Uses just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) for implementation patterns, integration strategies, and technical approaches
 
 ## Subagent Parallelization
 
@@ -75,7 +75,7 @@ This command benefits from parallel execution:
 
 4. Just-In-Time Research (before tech spec generation):
    
-   **Reference**: Follow the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
+   **Reference**: Follow the just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`)
    
    Before making implementation decisions, identify knowledge gaps and conduct research:
    

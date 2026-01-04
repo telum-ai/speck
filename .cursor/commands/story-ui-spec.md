@@ -60,7 +60,7 @@ Load context:
   - Populate **Responsive Behavior** with the actual breakpoints/devices we will validate
   - Populate **Testing Checklist** coverage matrix (web browsers vs mobile devices vs desktop OS)
   - Add **stability requirements** for automation (e.g. `data-testid`/`testID`/Flutter keys for critical elements)
-  - Reference `.speck/patterns/{visual_testing.pattern_file}` so implementers know the expected visual test approach
+  - Reference `.cursor/rules/speck/patterns/{visual_testing.pattern_file}` so implementers know the expected visual test approach
 
 ### Step 2: Component Discovery
 

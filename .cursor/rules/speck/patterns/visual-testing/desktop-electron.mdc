@@ -1,4 +1,8 @@
-# Electron Visual Testing Pattern
+---
+name: visual-testing-desktop-electron
+description: Visual testing for Electron desktop applications using Playwright Electron API. Use when validating window states, multi-window apps, and cross-platform desktop UIs.
+---
+
 
 **Platform**: `desktop-electron`  
 **Applicable Recipes**: electron-react  

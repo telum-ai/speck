@@ -57,7 +57,7 @@ pre_configured_patterns:
 visual_testing:
   platform: mobile-flutter
   strategy: golden-tests
-  pattern_file: "visual-testing/mobile-flutter-visual-testing.md"
+  pattern_file: "visual-testing/mobile-flutter.mdc"
   tools:
     primary: alchemist
     component_catalog: widgetbook

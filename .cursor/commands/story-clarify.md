@@ -154,7 +154,7 @@ Execution steps:
    Next Steps:
    - Default: /story-plan (create technical design)
    - If technical unknowns: /story-outline, then follow the just-in-time research pattern
-     (`.speck/patterns/just-in-time-research-pattern.md`) for the outline’s open questions/queries,
+     (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) for the outline’s open questions/queries,
      then proceed to /story-plan
    - If UI-heavy: run /story-plan, then /story-ui-spec before /story-tasks
    - If deferred items remain: Consider another /story-clarify after research

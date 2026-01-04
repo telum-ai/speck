@@ -107,7 +107,7 @@ Each auditor returns PASS | FAIL | PARTIAL with evidence.
 
 4.5. **Visual Design Validation** (if epic has UI components):
 
-   **Reference**: `.speck/patterns/visual-testing-pattern.md`
+   **Reference**: `.cursor/rules/speck/patterns/visual-testing.mdc`
    
    **Load Epic-Level Visual Artifacts**:
    - `[EPIC_DIR]/wireframes.md` → Layout expectations

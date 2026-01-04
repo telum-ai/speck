@@ -62,7 +62,7 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
      visual_testing:
        platform: [web|mobile-flutter|mobile-rn|desktop-electron|desktop-tauri|extension|api|cli]
       strategy: [browser-mcp|golden-tests|maestro|playwright|playwright-electron|webdriverio|puppeteer|none]
-      # Varies by platform (see `.speck/patterns/visual-testing/`), e.g.:
+      # Varies by platform (see `.cursor/rules/speck/patterns/visual-testing/`), e.g.:
       # - web: "visual-testing/web-visual-testing.md"
       # - mobile-flutter: "visual-testing/mobile-flutter-visual-testing.md"
       # - mobile-rn: "visual-testing/mobile-react-native-visual-testing.md"
@@ -72,7 +72,7 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
        tools: {...}
        agent_commands: {...}
      ```
-   - Load platform pattern: `.speck/patterns/[pattern_file]`
+   - Load platform pattern: `.cursor/rules/speck/patterns/[pattern_file]`
    - Store visual config for use in step 10.5
    - If `platform: api` or `platform: cli`: Skip visual validation (no UI)
 
@@ -176,13 +176,13 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
    ```
    Platform: {visual_testing.platform}
    Strategy: {visual_testing.strategy}
-   Pattern: .speck/patterns/{visual_testing.pattern_file}
+   Pattern: .cursor/rules/speck/patterns/{visual_testing.pattern_file}
    Breakpoints: {visual_testing.breakpoints}
    Devices: {visual_testing.devices}
    Agent Commands: {visual_testing.agent_commands}
    ```
    
-   **Reference**: Load `.speck/patterns/{visual_testing.pattern_file}` for platform-specific guidance.
+   **Reference**: Load `.cursor/rules/speck/patterns/{visual_testing.pattern_file}` for platform-specific guidance.
    
    **Load Design Specifications**:
    - `specs/projects/[PROJECT_ID]/design-system.md` → tokens, breakpoints
@@ -196,7 +196,7 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
    - Capture at least one interaction state (hover/focus/pressed) if specified in ui-spec.md
  
    **Execute Platform Pattern (recipe-driven)**:
-   - Load `.speck/patterns/{visual_testing.pattern_file}` and follow it
+   - Load `.cursor/rules/speck/patterns/{visual_testing.pattern_file}` and follow it
    - Use `visual_testing.agent_commands` as the source of truth for what to run (Playwright/Maestro/goldens/WebdriverIO/etc.)
    - Use `visual_testing.breakpoints` / `visual_testing.devices` / `visual_testing.window_sizes` to drive capture
  

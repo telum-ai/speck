@@ -62,7 +62,7 @@ Create a technical outline that identifies key architectural decisions and resea
    Research Areas: [Y] critical, [Z] important
    
    Next Steps:
-   1. Use the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
+   1. Use the just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`)
       to address the outline’s highest-priority questions (web search first; generate a deep
       research prompt only if needed)
    2. Then: /epic-plan

@@ -15,7 +15,7 @@ This command requires:
 - Project-level architecture.md (from /project-architecture)
 - Ideally run after `/epic-clarify` but before `/epic-plan`
 
-**Research Approach**: Uses just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`) for epic-specific architecture patterns, integration strategies, and technology evaluation
+**Research Approach**: Uses just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) for epic-specific architecture patterns, integration strategies, and technology evaluation
 
 ## Epic Architecture Design Process
 
@@ -28,7 +28,7 @@ This command requires:
 
 2. Just-In-Time Research (before architectural decisions):
    
-   **Reference**: Follow the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
+   **Reference**: Follow the just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`)
    
    Before designing epic architecture, identify knowledge gaps and conduct research:
    

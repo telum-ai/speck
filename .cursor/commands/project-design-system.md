@@ -34,7 +34,7 @@ Develop a detailed design system that will ensure consistency across the entire 
 - Architecture informs tech-specific design choices (Tailwind vs CSS-in-JS)
 - Design system informs UI requirements in planning
 
-**Research Approach**: Uses just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`) for design patterns, tokens, and accessibility standards
+**Research Approach**: Uses just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) for design patterns, tokens, and accessibility standards
 
 ## Just-In-Time Research
 

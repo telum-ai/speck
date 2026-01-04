@@ -10,7 +10,7 @@ $ARGUMENTS
 
 Generate a Product Requirements Document (PRD) and identify epics based on project specification and upstream artifacts.
 
-**Research Approach**: If planning needs market/business research, uses just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
+**Research Approach**: If planning needs market/business research, uses just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`)
 
 ## Subagent Parallelization
 

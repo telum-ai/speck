@@ -59,7 +59,7 @@ pre_configured_patterns:
 visual_testing:
   platform: desktop-tauri
   strategy: webdriverio
-  pattern_file: "visual-testing/desktop-tauri-visual-testing.md"
+  pattern_file: "visual-testing/desktop-tauri.mdc"
   platform_specific_baselines: true  # CRITICAL for Tauri - different WebView per OS
   tools:
     primary: webdriverio

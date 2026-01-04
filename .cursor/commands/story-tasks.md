@@ -71,7 +71,7 @@ $ARGUMENTS
    - If present, load `.speck/recipes/[recipe-name]/recipe.yaml`
    - Extract `visual_testing:` (platform/strategy/pattern_file/breakpoints/devices/window_sizes/agent_commands)
    - Use this to generate explicit tasks so visual testing is part of development (not just validation):
-     * Add/extend the platform’s visual test harness (per `.speck/patterns/{pattern_file}`)
+     * Add/extend the platform’s visual test harness (per `.cursor/rules/speck/patterns/{pattern_file}`)
      * Add a **visual smoke test** for the 1–3 most impacted screens/components
      * Ensure stable selectors/keys exist (`data-testid` / RN `testID` / Flutter keys)
      * Add a baseline capture/update step (snapshots/goldens/screenshots as appropriate)

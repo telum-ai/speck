@@ -195,7 +195,7 @@ Next Steps:
 - Recommended: /story-clarify (resolve any ambiguities)
 - If already clear: /story-plan (create technical design)
 - If complex tech: /story-outline, then follow the just-in-time research pattern
-  (`.speck/patterns/just-in-time-research-pattern.md`) for the outline's open questions/queries,
+  (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) for the outline's open questions/queries,
   then proceed to /story-plan
 - If extracting patterns: /story-scan (analyze existing code)
 

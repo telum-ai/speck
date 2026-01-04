@@ -1,4 +1,8 @@
-# Tauri Visual Testing Pattern
+---
+name: visual-testing-desktop-tauri
+description: Visual testing for Tauri desktop applications using WebdriverIO and tauri-driver. Use when validating platform-specific rendering (WebView differences across OS).
+---
+
 
 **Platform**: `desktop-tauri`  
 **Applicable Recipes**: tauri-react  

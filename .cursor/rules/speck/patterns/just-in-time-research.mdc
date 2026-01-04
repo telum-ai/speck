@@ -1,8 +1,11 @@
+---
+name: just-in-time-research
+description: Standardized approach for commands to identify knowledge gaps and conduct research exactly when needed. Use when making decisions requiring external knowledge (standards, best practices, market data, technical evaluation).
+---
+
 # Just-In-Time Research Pattern
 
-**Purpose**: Standardized approach for commands to identify knowledge gaps and conduct research exactly when needed.
-
-**When to Use**: Any command that needs to make decisions requiring external knowledge (standards, best practices, market data, technical evaluation).
+Standardized approach for commands to identify knowledge gaps and conduct research exactly when needed.
 
 ---
 
@@ -21,7 +24,7 @@ When the Perplexity MCP server is configured, use these tools in order of comple
 | `perplexity_research` | sonar-deep-research | Comprehensive analysis, detailed reports |
 | `perplexity_reason` | sonar-reasoning-pro | Complex logic, decision analysis, problem-solving |
 
-**Setup**: See `.cursor/mcp.json.example` for configuration.
+**Setup**: See `.cursor/MCP-SETUP.md` for configuration.
 
 ### 2. Built-in web_search (Fallback)
 
@@ -215,7 +218,7 @@ If Perplexity MCP is not available, generate a research prompt for the user:
    I'll pause here until research is provided.
    
    💡 **Tip**: Configure Perplexity MCP for automated deep research!
-   See: `.cursor/mcp.json.example`
+   See: `.cursor/MCP-SETUP.md`
    ```
 
 3. PAUSE execution, wait for user input
@@ -431,16 +434,8 @@ synthesize_and_document(results)
 
 ---
 
-**Reference this pattern in commands with:**
-```markdown
-Follow the just-in-time research pattern (see `.speck/patterns/just-in-time-research-pattern.md`)
-```
-
----
-
 ## 🔧 MCP Setup
 
 For setup instructions, see `.cursor/MCP-SETUP.md`.
 
 **The pattern works with or without MCP servers** - they're optional but recommended.
-

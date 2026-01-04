@@ -217,7 +217,7 @@ Create epic directory:
    - Recommended: /epic-clarify (resolve ambiguities)
    - If already clear: /epic-plan (create tech spec)
    - If complex tech: /epic-outline, then follow the just-in-time research pattern
-     (`.speck/patterns/just-in-time-research-pattern.md`) for the outline’s open questions/queries,
+     (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) for the outline’s open questions/queries,
      then proceed to /epic-plan
    - If UX-heavy: /epic-journey then /epic-wireframes
    ```
@@ -235,7 +235,7 @@ Create epic directory:
    - Recommended: /epic-clarify (resolve ambiguities)
    - If already clear: /epic-plan (create tech spec)
    - If complex tech: /epic-outline, then follow the just-in-time research pattern
-     (`.speck/patterns/just-in-time-research-pattern.md`) for the outline’s open questions/queries,
+     (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) for the outline’s open questions/queries,
      then proceed to /epic-plan
    - If UX-heavy: /epic-journey then /epic-wireframes
    ```

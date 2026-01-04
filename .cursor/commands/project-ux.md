@@ -31,7 +31,7 @@ Load project context:
 
 ## Just-In-Time Research
 
-**Reference**: Follow the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
+**Reference**: Follow the just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`)
 
 Before defining UX strategy, identify knowledge gaps and conduct research:
 
@@ -213,7 +213,7 @@ Guide to next steps:
 - Need refinement → "Review and let me know what needs adjustment"
 - Ready to continue → `/project-context` (define technical constraints)
 - If UX validation needed → apply the just-in-time research pattern
-  (`.speck/patterns/just-in-time-research-pattern.md`) and embed findings in ux-strategy.md
+  (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) and embed findings in ux-strategy.md
 
 Note: UX strategy provides essential inputs for PRD creation in /project-plan
 

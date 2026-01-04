@@ -1,4 +1,8 @@
-# Browser Extension Visual Testing Pattern
+---
+name: visual-testing-extension
+description: Visual testing for browser extensions using Puppeteer and Playwright. Use when validating popup, options page, content script overlays, and extension state variations.
+---
+
 
 **Platform**: `extension`  
 **Applicable Recipes**: chrome-extension  

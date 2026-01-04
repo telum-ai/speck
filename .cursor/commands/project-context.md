@@ -37,7 +37,7 @@ Load existing project context if it exists:
 
 ## Just-In-Time Research
 
-**Reference**: Follow the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
+**Reference**: Follow the just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`)
 
 Before defining context, identify knowledge gaps and conduct research:
 

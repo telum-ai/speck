@@ -131,7 +131,7 @@ User triggers commands, you follow instructions inside each command.
 visual_testing:
   platform: [web|mobile-flutter|mobile-rn|desktop-electron|desktop-tauri|extension|api|cli]
   strategy: [browser-mcp|golden-tests|maestro|playwright|playwright-electron|webdriverio|puppeteer|none]
-  # Varies by platform (see `.speck/patterns/visual-testing/`), e.g.:
+  # Varies by platform (see `.cursor/rules/speck/patterns/visual-testing/`), e.g.:
   # - web: "visual-testing/web-visual-testing.md"
   # - mobile-flutter: "visual-testing/mobile-flutter-visual-testing.md"
   # - mobile-rn: "visual-testing/mobile-react-native-visual-testing.md"
@@ -144,7 +144,7 @@ visual_testing:
 ```
 
 - `/story-validate` loads this config and executes platform-specific visual testing
-- Platform patterns in `.speck/patterns/visual-testing/` provide detailed guidance
+- Platform patterns in `.cursor/rules/speck/patterns/visual-testing/` provide detailed guidance
 - Results feed into validation-report.md and story retrospectives
 
 ### Command Files Reference
@@ -350,7 +350,7 @@ Speck recommends configuring **Perplexity MCP** for automated deep research:
 - **Epic** (Tactical): Integration, performance, security
 - **Story** (Operational): API usage, edge cases, testing
 
-For details, see `.speck/patterns/just-in-time-research-pattern.md`.
+For details, see `.cursor/rules/speck/patterns/just-in-time-research.mdc`.
 
 ## 🔧 Recommended MCP Servers
 
@@ -1044,7 +1044,7 @@ Use verb-led prefixes for clear intent:
 
 Different LLMs excel at different tasks. Always instruct the user to switch to the right model for the job.
 
-**Reference**: `.speck/patterns/model-selection-pattern.md` for full details.
+**Reference**: `.cursor/rules/speck/patterns/model-selection.mdc` for full details.
 
 ### Quick Model Selection Guide
 
@@ -1146,7 +1146,7 @@ Current reliability issues (code deletion, context loss) make it unsuitable for 
 - @.speck/README.md - Complete Speck guide (includes Spec-Driven Development philosophy)
 
 **Patterns**:
-- `.speck/patterns/model-selection-pattern.md` - LLM selection guide
+- `.cursor/rules/speck/patterns/model-selection.mdc` - LLM selection guide
 
 **Commands**:
 - `.cursor/commands/` - Project-level commands

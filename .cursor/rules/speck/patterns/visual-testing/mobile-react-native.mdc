@@ -1,4 +1,8 @@
-# React Native / Expo Visual Testing Pattern
+---
+name: visual-testing-mobile-react-native
+description: Visual testing for React Native/Expo applications using Maestro, Detox, and ADB/simctl. Use when validating mobile UI flows, device-specific screenshots, and E2E testing.
+---
+
 
 **Platform**: `mobile-rn`  
 **Applicable Recipes**: expo-fastapi  

@@ -77,7 +77,7 @@ external_services:
 visual_testing:
   platform: extension
   strategy: puppeteer
-  pattern_file: "visual-testing/extension-visual-testing.md"
+  pattern_file: "visual-testing/extension.mdc"
   contexts:
     - popup
     - options

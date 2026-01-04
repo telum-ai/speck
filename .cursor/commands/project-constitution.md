@@ -32,7 +32,7 @@ Define project-specific principles and constraints that will guide all developme
 
 2. Just-In-Time Research (if needed):
    
-   **Reference**: Follow the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
+   **Reference**: Follow the just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`)
    
    **Research Areas for Constitution**:
    - **Security Best Practices**: Web search for industry-standard security patterns

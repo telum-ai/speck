@@ -10,7 +10,7 @@ $ARGUMENTS
 
 Given the implementation details provided as an argument, do this:
 
-**Research Approach**: Uses just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`) for implementation patterns, code examples, and API usage
+**Research Approach**: Uses just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) for implementation patterns, code examples, and API usage
 
 ## Subagent Parallelization
 
@@ -182,13 +182,13 @@ This command benefits from parallel execution:
      - Platform: {platform}
      - Strategy: {strategy}
      - Breakpoints/Devices: {from recipe}
-     - Pattern Reference: .speck/patterns/visual-testing/{pattern_file}
+     - Pattern Reference: .cursor/rules/speck/patterns/visual-testing/{pattern_file}
      ```
    - This ensures `/story-validate` has the context it needs
 
 8. Just-In-Time Research (before executing plan template):
    
-   **Reference**: Follow the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
+   **Reference**: Follow the just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`)
    
    Before making implementation decisions, identify knowledge gaps and conduct research:
    

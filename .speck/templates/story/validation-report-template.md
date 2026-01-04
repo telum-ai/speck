@@ -309,7 +309,7 @@ Recommendation: Increase pool size or implement streaming upload
 |----------|-------|
 | **Platform** | [web / mobile-flutter / mobile-rn / desktop-electron / desktop-tauri / extension / N/A] |
 | **Strategy** | [browser-mcp / golden-tests / maestro / playwright / webdriverio / puppeteer / N/A] |
-| **Pattern Reference** | `.speck/patterns/visual-testing/[platform]-visual-testing.md` |
+| **Pattern Reference** | `.cursor/rules/speck/patterns/visual-testing/[platform]-visual-testing.md` |
 
 *If Platform = N/A: Story has no UI components, skip this section*
 

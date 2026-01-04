@@ -22,7 +22,7 @@ This command requires:
 
 **Position in Flow**: Runs AFTER context/constitution, BEFORE planning (architecture decisions inform planning!)
 
-**Research Approach**: Uses just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`) for technology evaluation and architecture patterns
+**Research Approach**: Uses just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) for technology evaluation and architecture patterns
 
 ## Subagent Parallelization
 
@@ -103,7 +103,7 @@ This command benefits from parallel subagent execution:
 
 2. **Just-In-Time Research** (BOTH modes - before architectural decisions):
    
-   **Reference**: Follow the just-in-time research pattern (`.speck/patterns/just-in-time-research-pattern.md`)
+   **Reference**: Follow the just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`)
    
    Before making architecture decisions (greenfield) or proposing evolution (brownfield), conduct research for:
    

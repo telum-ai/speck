@@ -57,7 +57,7 @@ pre_configured_patterns:
 visual_testing:
   platform: desktop-electron
   strategy: playwright-electron
-  pattern_file: "visual-testing/desktop-electron-visual-testing.md"
+  pattern_file: "visual-testing/desktop-electron.mdc"
   tools:
     primary: playwright
     component_testing: storybook

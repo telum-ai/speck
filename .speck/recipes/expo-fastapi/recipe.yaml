@@ -216,7 +216,7 @@ context:
 visual_testing:
   platform: mobile-rn
   strategy: maestro
-  pattern_file: "visual-testing/mobile-react-native-visual-testing.md"
+  pattern_file: "visual-testing/mobile-react-native.mdc"
   tools:
     primary: maestro
     e2e: detox
