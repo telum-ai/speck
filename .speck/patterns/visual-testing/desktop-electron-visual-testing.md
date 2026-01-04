@@ -12,6 +12,21 @@ Electron bundles Chromium with every app, ensuring consistent rendering across p
 
 ---
 
+## Tight Loop (Default)
+
+**Goal**: One command to validate the main window and the key changed flow with screenshots.
+
+**Start Small**:
+- Screenshot **main window** + the 1–2 windows/routes touched by the story
+- Test **normal** window size first; add small/large only if layout is in scope
+- Test **light** theme first; add dark theme only if the story affects theming
+
+**Run**:
+1. Run Electron visual tests: `npx playwright test --project=electron`
+2. If screenshots fail: determine intended vs unintended diffs, then update snapshots or fix UI
+
+---
+
 ## 🎭 Playwright Electron API
 
 ### Basic Setup

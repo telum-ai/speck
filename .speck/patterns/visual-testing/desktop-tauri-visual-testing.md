@@ -12,6 +12,22 @@ Tauri uses native platform WebViews (Safari on macOS, Edge WebView2 on Windows, 
 
 ---
 
+## Tight Loop (Default)
+
+**Goal**: Validate the key changed UI flow on the current OS, fast, with minimal flake.
+
+**Start Small**:
+- Run the WebdriverIO suite for the 1–2 flows touched by the story
+- Capture **normal** window size first
+- Maintain **platform-specific baselines** (Tauri renders differently per OS)
+
+**Run**:
+1. Build: `cargo tauri build`
+2. Visual test: `npx wdio run wdio.conf.js`
+3. If diffs occur: update **only** the baseline for the current platform *when intended*
+
+---
+
 ## ⚠️ Critical: Platform-Specific Rendering
 
 Unlike Electron (which bundles Chromium), Tauri renders differently on each OS:

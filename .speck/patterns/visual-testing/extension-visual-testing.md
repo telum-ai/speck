@@ -12,6 +12,22 @@ Browser extensions operate in privileged contexts with access to browser APIs, p
 
 ---
 
+## Tight Loop (Default)
+
+**Goal**: Validate the most visible UX surfaces (popup + options) quickly, in a headed browser.
+
+**Start Small**:
+- Test **popup** default + one key state (logged-in / permission request / error)
+- Test **options** default (if changed)
+- Run on **Chrome** first; add Edge only if store support requires it
+
+**Run**:
+1. Build extension: `npm run build`
+2. Run visual tests (headed): `npx jest tests/` (Puppeteer) or Playwright equivalent
+3. If diffs occur: decide intended vs bug, then update baselines or fix UI
+
+---
+
 ## 🧩 Extension Architecture
 
 Extensions have multiple visual contexts to test:

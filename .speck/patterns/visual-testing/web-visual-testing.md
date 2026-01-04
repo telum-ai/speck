@@ -12,6 +12,23 @@ Web visual testing leverages the Speck agent's browser MCP tools for autonomous 
 
 ---
 
+## Tight Loop (Default)
+
+**Goal**: Get high-signal visual feedback fast (minutes, not hours) with minimal flake.
+
+**Start Small**:
+- **Screens**: 1–3 screens/components most impacted by the story
+- **Breakpoints**: `mobile` + `desktop` first (expand to `tablet`/`wide` only if responsive behavior is in scope)
+- **States**: default + loading + empty + error (as applicable) + one interaction state (hover/focus)
+
+**Run (recommended order)**:
+1. Stabilize UI (disable animations/transitions, wait for network idle)
+2. Capture screenshots for the scoped screens at scoped breakpoints
+3. Run accessibility audit (`runAccessibilityAudit`) and capture console errors
+4. If diffs occur: decide “expected change” vs “bug”, then either update baselines or fix UI
+
+---
+
 ## 🤖 Agent Capabilities
 
 ### Browser MCP Tools Available

@@ -24,9 +24,10 @@ status: pending
    → Setup: project init, dependencies, linting, feature flags
    → Tests: contract tests, social scenario tests, AI behavior tests
    → Core: models, services, availability matching, AI integration
+   → UI/Visual: UI implementation + visual smoke tests (if ui-spec.md exists)
    → Real-time: WebSocket, push notifications, presence
    → Privacy: availability encryption, data protection
-   → Polish: performance validation, dogfooding, brand voice
+   → Polish: performance validation, dogfooding, brand voice, visual polish
 5. Apply task rules:
    → Different files = mark [P] for parallel
    → Same file = sequential (no [P])
@@ -38,6 +39,7 @@ status: pending
    → All contracts have tests?
    → All entities have models?
    → All endpoints implemented?
+   → If ui-spec.md exists: visual test harness + visual smoke tests included?
 10. Return: SUCCESS (tasks ready for execution)
 ```
 

@@ -12,6 +12,22 @@ React Native visual testing combines E2E testing frameworks with platform-specif
 
 ---
 
+## Tight Loop (Default)
+
+**Goal**: Get deterministic screenshots quickly using Maestro flows (agent-friendly, low flake).
+
+**Start Small**:
+- Create/extend 1–2 Maestro flows for the story’s main user journey
+- Capture screenshots for: default + error/empty + loading (as applicable)
+- Run on **one iOS simulator + one Android emulator** first (expand only if needed)
+
+**Run**:
+1. Execute flows: `maestro test flows/`
+2. Review captured screenshots for obvious regressions
+3. If differences are intended: update baselines / accept changes; otherwise fix UI
+
+---
+
 ## 🎭 Maestro (Recommended for Agents)
 
 Maestro uses YAML-based flows that are perfect for autonomous agent generation and execution.

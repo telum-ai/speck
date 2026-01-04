@@ -42,7 +42,7 @@ suggested_epics:
     description: Implement primary application functionality with React frontend.
     stories_estimate: 10-15
   - name: Native Rust Features
-    description: Build high-performance features in Rust: file processing, crypto, system APIs.
+    description: "Build high-performance features in Rust: file processing, crypto, system APIs."
     stories_estimate: 7-10
   - name: Build & Distribution
     description: Configure Tauri for multi-platform builds, code signing, and updates.

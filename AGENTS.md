@@ -119,6 +119,8 @@ User triggers commands, you follow instructions inside each command.
 | `/project-context` | Uses recipe's `context:` section |
 | `/project-architecture` | Uses recipe's `stack:` and `architecture:` sections |
 | `/project-plan` | Uses recipe's `suggested_epics:` for epic structure |
+| `/story-ui-spec` | Uses recipe's `visual_testing:` to define breakpoints/devices and make UI specs verifiable |
+| `/story-tasks` | Uses recipe's `visual_testing:` to generate visual smoke-test tasks (so visuals are validated during development) |
 | `/story-validate` | Uses recipe's `visual_testing:` for platform-aware visual validation |
 
 **Recipe Metadata**: When a recipe is selected, `_active_recipe: [name]` is stored in project.md for downstream commands to use.
@@ -128,8 +130,12 @@ User triggers commands, you follow instructions inside each command.
 ```yaml
 visual_testing:
   platform: [web|mobile-flutter|mobile-rn|desktop-electron|desktop-tauri|extension|api|cli]
-  strategy: [browser-mcp|golden-tests|maestro|playwright|webdriverio|puppeteer|none]
-  pattern_file: "visual-testing/[platform]-visual-testing.md"
+  strategy: [browser-mcp|golden-tests|maestro|playwright|playwright-electron|webdriverio|puppeteer|none]
+  # Varies by platform (see `.speck/patterns/visual-testing/`), e.g.:
+  # - web: "visual-testing/web-visual-testing.md"
+  # - mobile-flutter: "visual-testing/mobile-flutter-visual-testing.md"
+  # - mobile-rn: "visual-testing/mobile-react-native-visual-testing.md"
+  pattern_file: "visual-testing/web-visual-testing.md"
   breakpoints: {mobile: 375, tablet: 768, desktop: 1024, wide: 1280}
   devices: {ios: [...], android: [...]}
   tools: {primary: ..., visual_regression: ...}

@@ -40,7 +40,7 @@ suggested_epics:
     description: Implement primary application functionality with React components.
     stories_estimate: 10-15
   - name: Native OS Integration
-    description: Integrate with OS features: system tray, notifications, file system, auto-updates.
+    description: "Integrate with OS features: system tray, notifications, file system, auto-updates."
     stories_estimate: 6-9
   - name: Build & Distribution
     description: Set up electron-builder for multi-platform builds, code signing, and auto-updates.

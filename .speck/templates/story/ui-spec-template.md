@@ -17,6 +17,7 @@
 | Design System | `specs/projects/[PROJECT_ID]/design-system.md` | [Tokens, Components] |
 | UX Strategy | `specs/projects/[PROJECT_ID]/ux-strategy.md` | [Principles, Voice/Tone] |
 | Epic Wireframes | `[EPIC_PATH]/wireframes.md` | [Relevant screens] |
+| Recipe (if active) | `.speck/recipes/[RECIPE]/recipe.yaml` | [visual_testing, stack] |
 
 **If documents missing**: Run `/project-design-system` and `/project-ux` for consistency.
 
@@ -195,6 +196,21 @@ Example:
 - Layout: [Default]
 - Sizing: [Default]
 
+### Validation Matrix (from recipe visual_testing)
+
+*Use the active recipe’s `visual_testing` config to define what “responsive” means for this story.*
+
+| Target | Breakpoint/Device | Required | Notes |
+|--------|-------------------|----------|-------|
+| Web | mobile (e.g. 375px) | [Yes/No] | |
+| Web | tablet (e.g. 768px) | [Yes/No] | |
+| Web | desktop (e.g. 1024px) | [Yes/No] | |
+| Web | wide (e.g. 1280px) | [Yes/No] | |
+| Mobile | iOS (e.g. iPhone 15) | [Yes/No] | |
+| Mobile | Android (e.g. Pixel 8) | [Yes/No] | |
+| Desktop | OS (macOS/Windows/Linux) | [Yes/No] | |
+| Extension | popup sizes (standard/compact/wide) | [Yes/No] | |
+
 ### Adaptive Elements
 - [Element that changes]
 - [How it adapts]
@@ -307,11 +323,26 @@ Example:
 - [ ] Screen reader announcements correct
 - [ ] Error states handle gracefully
 
-### Cross-browser
+### Platform Coverage (from recipe visual_testing)
+
+**Web (if applicable)**:
 - [ ] Chrome/Edge
 - [ ] Firefox
 - [ ] Safari
 - [ ] Mobile browsers
+
+**Mobile (if applicable)**:
+- [ ] iOS devices (from recipe)
+- [ ] Android devices (from recipe)
+
+**Desktop (if applicable)**:
+- [ ] macOS
+- [ ] Windows
+- [ ] Linux
+
+**Extension (if applicable)**:
+- [ ] Chrome
+- [ ] Edge
 
 ---
 

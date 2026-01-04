@@ -12,6 +12,22 @@ Flutter's golden testing system captures widget renders as images and compares t
 
 ---
 
+## Tight Loop (Default)
+
+**Goal**: Catch UI regressions immediately via goldens before doing full device screenshot runs.
+
+**Start Small**:
+- Add/update goldens for the 1–3 widgets/screens changed in this story
+- Cover **light + dark** if the app supports it
+- Cover **one “phone-sized” constraint** first; add tablet constraints only if layout changes
+
+**Run**:
+1. Run goldens: `flutter test test/goldens/`
+2. If failures: fix UI or update baselines (only when change is intended)
+3. Only then (optional): capture emulator/simulator screenshots for app-store-level visuals
+
+---
+
 ## 🧪 Flutter Golden Tests
 
 ### Basic Golden Test

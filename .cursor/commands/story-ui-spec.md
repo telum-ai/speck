@@ -52,6 +52,16 @@ Load context:
 - Epic wireframes (where it fits) - `{EPIC_DIR}/wireframes.md` if exists
 - Epic user journey (user flow context) - `{EPIC_DIR}/user-journey.md` if exists
 
+**Load recipe visual testing config** (tight feedback loop):
+- Read `specs/projects/[PROJECT_ID]/project.md` frontmatter for `_active_recipe:`
+- If present, load `.speck/recipes/[recipe-name]/recipe.yaml`
+- Extract `visual_testing:` (platform/strategy/pattern_file/breakpoints/devices/window_sizes)
+- Use this config to make the UI spec *testable* and *verifiable*:
+  - Populate **Responsive Behavior** with the actual breakpoints/devices we will validate
+  - Populate **Testing Checklist** coverage matrix (web browsers vs mobile devices vs desktop OS)
+  - Add **stability requirements** for automation (e.g. `data-testid`/`testID`/Flutter keys for critical elements)
+  - Reference `.speck/patterns/{visual_testing.pattern_file}` so implementers know the expected visual test approach
+
 ### Step 2: Component Discovery
 
 The UI spec template needs specific details. Ask only what's missing:
