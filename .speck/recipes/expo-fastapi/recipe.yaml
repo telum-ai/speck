@@ -212,3 +212,39 @@ context:
     - "Handle all permission states"
     - "Graceful offline behavior"
 
+# Visual testing configuration
+visual_testing:
+  platform: mobile-rn
+  strategy: maestro
+  pattern_file: "visual-testing/mobile-react-native-visual-testing.md"
+  tools:
+    primary: maestro
+    e2e: detox
+    screenshot_automation: fastlane
+    visual_regression: percy
+  devices:
+    ios:
+      - "iPhone SE (3rd generation)"
+      - "iPhone 15"
+      - "iPhone 15 Pro Max"
+    android:
+      - "Pixel 4a"
+      - "Pixel 8"
+      - "Pixel 8 Pro"
+  themes:
+    - light
+    - dark
+  agent_commands:
+    maestro_test: "maestro test flows/"
+    maestro_studio: "maestro studio"
+    detox_build: "detox build --configuration ios.sim.debug"
+    detox_test: "detox test --configuration ios.sim.debug"
+    ios_screenshot: "xcrun simctl io booted screenshot"
+    android_screenshot: "adb exec-out screencap -p"
+    ios_status_bar: "xcrun simctl status_bar booted override --time 9:41 --batteryState charged --batteryLevel 100"
+    android_demo_mode: "adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0941"
+    fastlane_ios: "cd ios && fastlane snapshot"
+    fastlane_android: "cd android && fastlane screengrab"
+  ci_integration:
+    on_pr: true
+    block_on_diff: true

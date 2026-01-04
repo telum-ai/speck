@@ -164,6 +164,27 @@ This command benefits from parallel execution:
      * User interface acceptance criteria
      * Visual/interactive elements described
    - **IF UI requirements detected**: Note in plan.md that `/story-ui-spec` is REQUIRED before `/story-tasks`
+   
+   **Load Visual Testing Configuration** (if UI detected):
+   - Read `specs/projects/[PROJECT_ID]/project.md` frontmatter for `_active_recipe:` field
+   - If recipe found, load `.speck/recipes/[recipe-name]/recipe.yaml`
+   - Extract `visual_testing:` section:
+     ```yaml
+     platform: [web|mobile-flutter|mobile-rn|desktop-electron|desktop-tauri|extension]
+     strategy: [browser-mcp|golden-tests|maestro|playwright|webdriverio|puppeteer]
+     breakpoints: {...}
+     devices: {...}
+     agent_commands: {...}
+     ```
+   - Note in plan.md Technical Context:
+     ```
+     ## Visual Testing
+     - Platform: {platform}
+     - Strategy: {strategy}
+     - Breakpoints/Devices: {from recipe}
+     - Pattern Reference: .speck/patterns/visual-testing/{pattern_file}
+     ```
+   - This ensures `/story-validate` has the context it needs
 
 8. Just-In-Time Research (before executing plan template):
    

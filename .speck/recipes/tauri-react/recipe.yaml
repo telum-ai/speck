@@ -55,3 +55,29 @@ pre_configured_patterns:
   - name: Enhanced Security
     description: Rust backend with memory safety and permission-based API access.
 
+# Visual testing configuration
+visual_testing:
+  platform: desktop-tauri
+  strategy: webdriverio
+  pattern_file: "visual-testing/desktop-tauri-visual-testing.md"
+  platform_specific_baselines: true  # CRITICAL for Tauri - different WebView per OS
+  tools:
+    primary: webdriverio
+    driver: tauri-driver
+    component_testing: storybook
+    visual_regression: percy
+  window_sizes:
+    small: [800, 600]
+    normal: [1280, 800]
+    large: [1920, 1080]
+  themes:
+    - light
+    - dark
+  agent_commands:
+    tauri_build: "cargo tauri build"
+    wdio_test: "npx wdio run wdio.conf.js"
+    storybook: "npm run storybook"
+    chromatic: "npx chromatic --project-token=xxx"
+  ci_integration:
+    platforms: [ubuntu-latest, windows-latest, macos-latest]
+    platform_baselines: true  # Must be true for Tauri

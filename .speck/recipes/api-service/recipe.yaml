@@ -191,3 +191,12 @@ context:
     - "API contract tests"
     - "Performance benchmarks"
 
+# Visual testing configuration
+visual_testing:
+  platform: api
+  strategy: none
+  reason: "API services have no visual output - use contract testing and OpenAPI validation"
+  notes:
+    - "OpenAPI schema validation for response structure"
+    - "Contract tests for API consumer compatibility"
+    - "Swagger/ReDoc UI is auto-generated, no custom visual testing needed"

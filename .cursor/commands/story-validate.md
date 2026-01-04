@@ -51,6 +51,26 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
      - Epic: `{EPIC_DIR}/constitution.md` (optional)
    - **quickstart.md** (if exists): Integration test scenarios
    - **contracts/** (if exists): API specifications to verify
+   - **ui-spec.md** (if exists): UI component specifications and Testing Checklist
+   
+   **Load Visual Testing Configuration** (for UI stories):
+   - Navigate to project root: `specs/projects/<PROJECT_ID>/`
+   - Read `project.md` frontmatter for `_active_recipe:` field
+   - If recipe found, load `.speck/recipes/[recipe-name]/recipe.yaml`
+   - Extract `visual_testing:` section:
+     ```yaml
+     visual_testing:
+       platform: [web|mobile-flutter|mobile-rn|desktop-electron|desktop-tauri|extension|api|cli]
+       strategy: [browser-mcp|golden-tests|maestro|playwright|webdriverio|puppeteer|none]
+       pattern_file: "visual-testing/[platform]-visual-testing.md"
+       breakpoints: {...}
+       devices: {...}
+       tools: {...}
+       agent_commands: {...}
+     ```
+   - Load platform pattern: `.speck/patterns/[pattern_file]`
+   - Store visual config for use in step 10.5
+   - If `platform: api` or `platform: cli`: Skip visual validation (no UI)
 
 3. Task completion verification:
    - Parse tasks.md for all task checkboxes
@@ -146,13 +166,19 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
 
 10.5. **Visual/UX Validation** (if ui-spec.md exists OR story has UI components):
    
-   **Reference**: `.speck/patterns/visual-testing-pattern.md` for complete details.
+   **SKIP if**: visual_testing.platform is `api` or `cli` (loaded in step 2)
    
-   **Platform Detection**:
-   - Load `project.md` frontmatter for `_active_recipe`
-   - Load recipe's `visual_testing.platform` from recipe.yaml
-   - If no recipe: detect from architecture.md stack
-   - Load appropriate platform pattern from `.speck/patterns/visual-testing/`
+   **Use Recipe Configuration** (loaded in step 2):
+   ```
+   Platform: {visual_testing.platform}
+   Strategy: {visual_testing.strategy}
+   Pattern: .speck/patterns/{visual_testing.pattern_file}
+   Breakpoints: {visual_testing.breakpoints}
+   Devices: {visual_testing.devices}
+   Agent Commands: {visual_testing.agent_commands}
+   ```
+   
+   **Reference**: Load `.speck/patterns/{visual_testing.pattern_file}` for platform-specific guidance.
    
    **Load Design Specifications**:
    - `specs/projects/[PROJECT_ID]/design-system.md` → tokens, breakpoints
@@ -160,29 +186,94 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
    - `{STORY_DIR}/ui-spec.md` → component specs, Testing Checklist
    - `{EPIC_DIR}/wireframes.md` → layouts (if exists)
    
-   **Web Platform** (use Browser MCP tools):
-   - Navigate to implemented pages/components
-   - For each breakpoint in design-system.md:
-     * `browser_resize(width, height)`
-     * `browser_take_screenshot(filename)`
-   - Capture component states (hover, focus, disabled, loading, error)
-   - Run `runAccessibilityAudit()` → Check WCAG compliance
-   - Run `runPerformanceAudit()` → Check Core Web Vitals (if targets specified)
-   - Check console for errors: `getConsoleErrors()`
+   ---
    
-   **Mobile Platform** (if emulator/simulator available):
-   - Check device availability via `adb devices` or `xcrun simctl list`
-   - If available:
-     * Set Demo Mode / status bar override for clean screenshots
-     * Capture screenshots on target devices
-     * Test dark mode if applicable
-   - If unavailable: Generate manual testing checklist
+   **EXECUTE BASED ON PLATFORM** (use recipe's agent_commands):
    
-   **Desktop/Extension Platforms**:
-   - Follow platform-specific pattern guidance
-   - Capture window states and theme variations
+   **Platform: web** (strategy: browser-mcp)
+   ```
+   Commands from recipe.visual_testing.agent_commands:
+   - screenshot: browser_take_screenshot
+   - audit_a11y: runAccessibilityAudit
+   - audit_perf: runPerformanceAudit
    
-   **Design Token Compliance Check**:
+   Breakpoints from recipe.visual_testing.breakpoints:
+   - mobile: 375px
+   - tablet: 768px
+   - desktop: 1024px
+   - wide: 1280px
+   ```
+   Execute:
+   1. Navigate to implemented pages/components
+   2. For each breakpoint: `browser_resize(width, height)` → `browser_take_screenshot(filename)`
+   3. Capture component states (hover, focus, disabled, loading, error)
+   4. Run `runAccessibilityAudit()` → WCAG compliance
+   5. Run `runPerformanceAudit()` → Core Web Vitals
+   6. Check console for errors: `getConsoleErrors()`
+   
+   **Platform: mobile-flutter** (strategy: golden-tests)
+   ```
+   Commands from recipe.visual_testing.agent_commands:
+   - update_goldens: flutter test --update-goldens
+   - run_goldens: flutter test test/goldens/
+   - ios_screenshot: xcrun simctl io booted screenshot
+   - android_screenshot: adb exec-out screencap -p
+   ```
+   Execute:
+   1. Check for existing golden test files
+   2. Run golden tests: `{agent_commands.run_goldens}`
+   3. If emulator available: Capture device screenshots with status bar override
+   4. Test both light and dark themes
+   
+   **Platform: mobile-rn** (strategy: maestro)
+   ```
+   Commands from recipe.visual_testing.agent_commands:
+   - maestro_test: maestro test flows/
+   - ios_screenshot: xcrun simctl io booted screenshot
+   - android_screenshot: adb exec-out screencap -p
+   ```
+   Execute:
+   1. Check for Maestro flow files in flows/ directory
+   2. Run Maestro tests: `{agent_commands.maestro_test}`
+   3. If no flows: Generate manual testing checklist
+   4. Capture screenshots on target devices from recipe.visual_testing.devices
+   
+   **Platform: desktop-electron** (strategy: playwright-electron)
+   ```
+   Commands from recipe.visual_testing.agent_commands:
+   - playwright_test: npx playwright test --project=electron
+   - storybook: npm run storybook
+   ```
+   Execute:
+   1. Run Playwright Electron tests: `{agent_commands.playwright_test}`
+   2. Capture window at sizes from recipe.visual_testing.window_sizes
+   3. Test light and dark themes
+   
+   **Platform: desktop-tauri** (strategy: webdriverio)
+   ```
+   Commands from recipe.visual_testing.agent_commands:
+   - tauri_build: cargo tauri build
+   - wdio_test: npx wdio run wdio.conf.js
+   ```
+   Execute:
+   1. Build app: `{agent_commands.tauri_build}`
+   2. Run WebdriverIO tests: `{agent_commands.wdio_test}`
+   3. **NOTE**: Tauri requires platform-specific baselines (different WebView per OS)
+   
+   **Platform: extension** (strategy: puppeteer)
+   ```
+   Commands from recipe.visual_testing.agent_commands:
+   - build: npm run build
+   - puppeteer_test: npx jest tests/
+   ```
+   Execute:
+   1. Build extension: `{agent_commands.build}`
+   2. Run Puppeteer tests: `{agent_commands.puppeteer_test}`
+   3. **NOTE**: Requires `headless: false` for extension testing
+   
+   ---
+   
+   **Design Token Compliance Check** (ALL platforms):
    - Grep changed files for hardcoded values:
      * Hex colors: `#[0-9A-Fa-f]{6}`
      * Pixel values: raw `px` instead of tokens
@@ -210,6 +301,13 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
      * Accessibility audit results
      * Voice/tone compliance notes
      * ui-spec.md checklist status
+   
+   **FEEDBACK LOOP** (Critical for methodology improvement):
+   - If design token violations found → Flag for design-system.md update
+   - If voice/tone issues found → Flag for ux-strategy.md update
+   - If new UI patterns discovered → Flag for design-system.md addition
+   - If accessibility issues found → Add to story-retro.md as GOTCHA
+   - If visual test command failed → Document in commit as GOTCHA tag
 
 11. Code audit (manual, REQUIRED — "meets requirements" is not enough):
    - Identify the change surface:

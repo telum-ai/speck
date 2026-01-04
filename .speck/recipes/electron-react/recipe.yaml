@@ -53,3 +53,27 @@ pre_configured_patterns:
   - name: Auto-Update with electron-updater
     description: Seamless application updates from GitHub Releases or custom server.
 
+# Visual testing configuration
+visual_testing:
+  platform: desktop-electron
+  strategy: playwright-electron
+  pattern_file: "visual-testing/desktop-electron-visual-testing.md"
+  tools:
+    primary: playwright
+    component_testing: storybook
+    visual_regression: chromatic
+  window_sizes:
+    small: [800, 600]
+    normal: [1280, 800]
+    large: [1920, 1080]
+  themes:
+    - light
+    - dark
+  agent_commands:
+    playwright_test: "npx playwright test --project=electron"
+    playwright_update: "npx playwright test --project=electron --update-snapshots"
+    storybook: "npm run storybook"
+    chromatic: "npx chromatic --project-token=xxx"
+  ci_integration:
+    platforms: [ubuntu-latest, windows-latest, macos-latest]
+    platform_baselines: false  # Electron bundles Chromium - consistent rendering

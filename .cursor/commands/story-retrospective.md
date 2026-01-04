@@ -90,6 +90,12 @@ Load `validation-report.md` and extract:
 - Performance vs targets (met/missed with gaps)
 - Constitution compliance (violations if any)
 - Learnings for Retrospective section (if present)
+- **Visual/UX Validation findings** (if section exists):
+  * Design token compliance % → If <100%, note which tokens were violated
+  * Accessibility audit issues → Note a11y GOTCHAs for future stories
+  * Voice/tone violations → Note for ux-strategy.md updates
+  * ui-spec.md checklist gaps → Note unchecked items
+  * Screenshot notes → Any visual anomalies or platform-specific issues
 
 **D. Calculate Effort Variance**
 

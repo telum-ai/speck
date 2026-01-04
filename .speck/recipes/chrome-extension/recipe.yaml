@@ -73,3 +73,30 @@ external_services:
     recommended: sentry
     reason: "Browser extension support"
 
+# Visual testing configuration
+visual_testing:
+  platform: extension
+  strategy: puppeteer
+  pattern_file: "visual-testing/extension-visual-testing.md"
+  contexts:
+    - popup
+    - options
+    - content_script
+  tools:
+    primary: puppeteer
+    alternative: playwright
+    component_testing: storybook
+    visual_regression: chromatic
+  viewport_sizes:
+    popup:
+      standard: [400, 600]
+      compact: [300, 400]
+      wide: [600, 400]
+  agent_commands:
+    build: "npm run build"
+    test: "npm test"
+    puppeteer_test: "npx jest tests/"
+    storybook: "npm run storybook"
+    chromatic: "npx chromatic --project-token=xxx"
+  ci_integration:
+    requires_xvfb: true  # Headed browser required on CI

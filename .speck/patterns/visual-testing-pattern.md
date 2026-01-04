@@ -363,6 +363,110 @@ Add this section to validation-report.md:
 
 ---
 
+## 🔄 Feedback Loop (CRITICAL!)
+
+Visual testing is only valuable if findings flow back into the methodology. Here's the complete feedback loop:
+
+### Immediate Feedback (During Validation)
+
+```
+┌─────────────────────────────────────────────────┐
+│ VALIDATION FINDING              ACTION          │
+├─────────────────────────────────────────────────┤
+│ Design token violation    →  Flag in report     │
+│                              Add to plan.md     │
+│                              Commit with GOTCHA │
+├─────────────────────────────────────────────────┤
+│ Voice/tone mismatch       →  Flag in report     │
+│                              Note for ux-       │
+│                              strategy.md update │
+├─────────────────────────────────────────────────┤
+│ Accessibility failure     →  Block validation   │
+│                              Add to tasks.md    │
+│                              Commit with GOTCHA │
+├─────────────────────────────────────────────────┤
+│ New UI pattern discovered →  Flag for design-   │
+│                              system.md addition │
+│                              Commit with PATTERN│
+├─────────────────────────────────────────────────┤
+│ Visual test command fail  →  Document in commit │
+│                              as GOTCHA tag      │
+│                              Update recipe?     │
+└─────────────────────────────────────────────────┘
+```
+
+### Story-Level Feedback
+
+After `/story-validate`, findings flow to:
+
+1. **validation-report.md** → Visual/UX section captures all issues
+2. **Commit tags** → GOTCHA: for surprises, PATTERN: for reusable solutions
+3. **story-retro.md** → Visual issues become retrospective inputs
+
+### Epic-Level Feedback
+
+After `/epic-validate`, aggregated findings flow to:
+
+1. **epic-validation-report.md** → Cross-story consistency issues
+2. **design-system.md** → New patterns discovered across stories
+3. **ux-strategy.md** → Voice/tone refinements
+4. **epic-retro.md** → Validated patterns for promotion
+
+### Project-Level Feedback
+
+After `/project-retrospective`:
+
+1. **Cursor rules** → Visual testing best practices become rules
+2. **Recipe updates** → New agent_commands discovered
+3. **Pattern updates** → Improved platform patterns
+
+### Commit Tag Guidelines for Visual Issues
+
+```bash
+# Design token violation found and fixed
+git commit -m "fix(ui): replace hardcoded colors with tokens
+
+GOTCHA: #3B82F6 should be var(--primary-500)
+RULE: Update design-system-enforcement.mdc to catch hex colors
+"
+
+# New visual pattern discovered
+git commit -m "feat(ui): add skeleton loading state
+
+PATTERN: Skeleton components for async data loading
+"
+
+# Accessibility issue found
+git commit -m "fix(a11y): add ARIA labels to icon buttons
+
+GOTCHA: Screen readers can't announce icon-only buttons
+"
+
+# Platform-specific visual issue
+git commit -m "fix(tauri): update Windows baseline screenshots
+
+GOTCHA: Tauri WebView2 on Windows renders fonts differently than macOS WebKit
+ARCH: Must maintain platform-specific baselines for Tauri apps
+"
+```
+
+### Recipe Feedback Loop
+
+If visual testing reveals recipe improvements:
+
+```yaml
+# New agent command discovered during validation
+visual_testing:
+  agent_commands:
+    # Add new command discovered during project
+    dark_mode_toggle: "xcrun simctl ui booted appearance dark"
+```
+
+→ Create PR to update `.speck/recipes/[recipe]/recipe.yaml`
+→ Benefits all future projects using this recipe
+
+---
+
 ## 🔗 Integration Points
 
 ### With /story-validate

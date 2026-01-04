@@ -200,3 +200,26 @@ context:
     - "TypeScript strict mode"
     - "RLS policies tested locally"
 
+# Visual testing configuration
+visual_testing:
+  platform: web
+  strategy: browser-mcp
+  pattern_file: "visual-testing/web-visual-testing.md"
+  breakpoints:
+    mobile: 375
+    tablet: 768
+    desktop: 1024
+    wide: 1280
+  tools:
+    primary: playwright
+    storybook: true
+    visual_regression: chromatic
+  agent_commands:
+    screenshot: "browser_take_screenshot"
+    audit_a11y: "runAccessibilityAudit"
+    audit_perf: "runPerformanceAudit"
+    playwright_test: "npx playwright test"
+    playwright_update: "npx playwright test --update-snapshots"
+  ci_integration:
+    on_pr: true
+    block_on_diff: true

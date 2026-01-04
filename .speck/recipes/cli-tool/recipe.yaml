@@ -144,3 +144,12 @@ context:
     - "Help text for all commands"
     - "Examples in README"
 
+# Visual testing configuration
+visual_testing:
+  platform: cli
+  strategy: none
+  reason: "CLI tools have no visual output to test - terminal output is text-based"
+  notes:
+    - "Validate terminal output format in functional tests"
+    - "Use snapshot testing for complex table/report output"
+    - "Test color/formatting with Rich or Chalk mocks"

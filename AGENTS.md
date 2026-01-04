@@ -119,8 +119,27 @@ User triggers commands, you follow instructions inside each command.
 | `/project-context` | Uses recipe's `context:` section |
 | `/project-architecture` | Uses recipe's `stack:` and `architecture:` sections |
 | `/project-plan` | Uses recipe's `suggested_epics:` for epic structure |
+| `/story-validate` | Uses recipe's `visual_testing:` for platform-aware visual validation |
 
 **Recipe Metadata**: When a recipe is selected, `_active_recipe: [name]` is stored in project.md for downstream commands to use.
+
+**Visual Testing Configuration**: Each recipe includes a `visual_testing:` section that configures autonomous visual validation:
+
+```yaml
+visual_testing:
+  platform: [web|mobile-flutter|mobile-rn|desktop-electron|desktop-tauri|extension|api|cli]
+  strategy: [browser-mcp|golden-tests|maestro|playwright|webdriverio|puppeteer|none]
+  pattern_file: "visual-testing/[platform]-visual-testing.md"
+  breakpoints: {mobile: 375, tablet: 768, desktop: 1024, wide: 1280}
+  devices: {ios: [...], android: [...]}
+  tools: {primary: ..., visual_regression: ...}
+  agent_commands: {screenshot: ..., audit_a11y: ..., playwright_test: ...}
+  ci_integration: {on_pr: true, block_on_diff: true}
+```
+
+- `/story-validate` loads this config and executes platform-specific visual testing
+- Platform patterns in `.speck/patterns/visual-testing/` provide detailed guidance
+- Results feed into validation-report.md and story retrospectives
 
 ### Command Files Reference
 Commands are markdown files in `.cursor/commands/`:
