@@ -1,11 +1,11 @@
 ---
 name: ai-api-integration
-description: Integrate OpenAI and Anthropic Claude APIs for AI-powered features. Use when implementing structured outputs, streaming responses, function calling, or managing token costs.
+description: Load when integrating OpenAI and Anthropic Claude APIs for AI-powered features. Applies when implementing structured outputs, streaming responses, function calling, or managing token costs.
 ---
 
 # AI API Integration (OpenAI & Anthropic Claude)
 
-## When to use this skill
+## When This Rule Applies
 - Implementing AI chat or completion features
 - Setting up function calling / tool use
 - Streaming responses for real-time UX

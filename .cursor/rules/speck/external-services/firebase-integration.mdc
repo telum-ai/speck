@@ -1,11 +1,11 @@
 ---
 name: firebase-integration
-description: Integrate Firebase for mobile and web apps. Use when implementing Firestore security rules, custom claims, FCM push notifications, or offline persistence in Flutter/React Native.
+description: Load when integrating Firebase for mobile and web apps. Applies when implementing Firestore security rules, custom claims, FCM push notifications, or offline persistence in Flutter/React Native.
 ---
 
 # Integrating Firebase
 
-Provides patterns for Firebase integration in Flutter and React Native apps. Covers Firestore security rules, custom claims, FCM push notifications, offline persistence, and performance optimization.
+Follow these patterns for Firebase integration in Flutter and React Native apps. Covers Firestore security rules, custom claims, FCM push notifications, offline persistence, and performance optimization.
 
 ## 🔌 MCP Server (Community)
 
@@ -35,7 +35,7 @@ Install a community Firebase MCP server for AI-assisted development:
 
 ---
 
-## When to Use
+## When This Rule Applies
 
 Apply when building mobile or web apps with Firebase Auth, Firestore, or Cloud Messaging.
 

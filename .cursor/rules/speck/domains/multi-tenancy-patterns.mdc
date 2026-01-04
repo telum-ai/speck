@@ -1,13 +1,13 @@
 ---
 name: multi-tenancy-patterns
-description: Implement multi-tenancy for B2B SaaS applications. Use when designing tenant isolation, Row-Level Security, organization switching, or role-based access control.
+description: Load when implementing multi-tenancy for B2B SaaS applications. Applies when designing tenant isolation, Row-Level Security, organization switching, or role-based access control.
 ---
 
 # Implementing Multi-Tenancy
 
-Provides patterns for building multi-tenant SaaS applications. Covers tenant isolation strategies, database design, RLS, organization switching, and RBAC.
+Follow these patterns for building multi-tenant SaaS applications. Covers tenant isolation strategies, database design, RLS, organization switching, and RBAC.
 
-## When to Use
+## When This Rule Applies
 
 Apply when building B2B SaaS where multiple organizations share infrastructure.
 

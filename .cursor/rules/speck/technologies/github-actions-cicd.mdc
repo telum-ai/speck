@@ -1,13 +1,13 @@
 ---
 name: github-actions-cicd
-description: Use GitHub Actions for CI/CD pipelines. Use when creating workflows for testing, building, deploying, or automating repository tasks.
+description: Load when using GitHub Actions for CI/CD pipelines. Applies when creating workflows for testing, building, deploying, or automating repository tasks.
 ---
 
 # Using GitHub Actions
 
-Provides patterns for CI/CD with GitHub Actions. Covers workflow structure, caching, secrets, matrix builds, and deployment patterns.
+Follow these patterns for CI/CD with GitHub Actions. Covers workflow structure, caching, secrets, matrix builds, and deployment patterns.
 
-## When to Use
+## When This Rule Applies
 
 Apply when setting up CI/CD pipelines, automated testing, or deployment workflows in GitHub repositories.
 

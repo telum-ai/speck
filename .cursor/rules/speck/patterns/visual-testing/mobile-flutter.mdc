@@ -1,6 +1,6 @@
 ---
 name: visual-testing-mobile-flutter
-description: Visual testing for Flutter mobile applications using Golden Tests, Alchemist, and Fastlane. Use when validating widget rendering, theme variations, and device-specific screenshots.
+description: Load when running visual validation for Flutter mobile applications. Provides Golden Tests, Alchemist, and Fastlane patterns for widget rendering and theme variations.
 ---
 
 # Flutter Visual Testing
@@ -11,29 +11,30 @@ description: Visual testing for Flutter mobile applications using Golden Tests, 
 
 ---
 
-## 🎯 Overview
-
-Flutter's golden testing system captures widget renders as images and compares them against baseline "golden files". This pattern covers widget visual regression, responsive testing, and theme variations.
-
----
-
-## Tight Loop (Default)
+## 🔄 Tight Loop (Default)
 
 **Goal**: Catch UI regressions immediately via goldens before doing full device screenshot runs.
 
 **Start Small**:
-- Add/update goldens for the 1–3 widgets/screens changed in this story
-- Cover **light + dark** if the app supports it
-- Cover **one "phone-sized" constraint** first; add tablet constraints only if layout changes
+- **Widgets**: Add/update goldens for 1–3 widgets/screens changed in this story
+- **Themes**: Cover light + dark if the app supports both
+- **Sizes**: One "phone-sized" constraint first; add tablet only if layout changes
 
-**Run**:
+**Run Order**:
 1. Run goldens: `flutter test test/goldens/`
-2. If failures: fix UI or update baselines (only when change is intended)
-3. Only then (optional): capture emulator/simulator screenshots for app-store-level visuals
+2. If failures: Fix UI or update baselines (only when change is intended)
+3. Only then (optional): Capture emulator/simulator screenshots for app-store visuals
+
+**Expand Only When**:
+- Story explicitly covers tablet layouts
+- Need app store screenshots (Fastlane)
+- Epic validation requires device matrix
 
 ---
 
-## 🧪 Flutter Golden Tests
+## 🧪 Golden Tests
+
+Flutter's golden testing captures widget renders as images and compares against baselines.
 
 ### Basic Golden Test
 
@@ -42,7 +43,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:my_app/widgets/button.dart';
 
 void main() {
-  testWidgets('Button renders correctly', (tester) async {
+  testWidgets('MyButton golden', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -50,52 +51,94 @@ void main() {
         ),
       ),
     );
-
+    
     await expectLater(
       find.byType(MyButton),
-      matchesGoldenFile('goldens/button_default.png'),
+      matchesGoldenFile('goldens/my_button.png'),
     );
   });
 }
 ```
 
-### Agent Commands
+### Running Golden Tests
 
 ```bash
-# Generate/update golden files
-flutter test --update-goldens
-
 # Run golden tests
 flutter test test/goldens/
 
-# Run specific test file
-flutter test test/goldens/button_test.dart --update-goldens
+# Update goldens when changes are intentional
+flutter test --update-goldens test/goldens/
 ```
 
 ---
 
-## 🧪 Alchemist Framework
+## 🎨 Theme Variation Testing
 
-Alchemist provides a declarative, terse API for golden tests with better organization:
+Test both light and dark themes:
 
-### Installation
-
-```yaml
-# pubspec.yaml
-dev_dependencies:
-  alchemist: ^0.7.0
+```dart
+void main() {
+  for (final brightness in [Brightness.light, Brightness.dark]) {
+    testWidgets('MyWidget ${brightness.name} theme', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(brightness: brightness),
+          home: MyWidget(),
+        ),
+      );
+      
+      await expectLater(
+        find.byType(MyWidget),
+        matchesGoldenFile('goldens/my_widget_${brightness.name}.png'),
+      );
+    });
+  }
+}
 ```
 
-### Usage
+---
+
+## 📱 Device Size Constraints
+
+Test different screen sizes:
+
+```dart
+void main() {
+  final devices = {
+    'phone': Size(375, 667),
+    'tablet': Size(768, 1024),
+  };
+  
+  for (final entry in devices.entries) {
+    testWidgets('Screen on ${entry.key}', (tester) async {
+      tester.view.physicalSize = entry.value;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      
+      await tester.pumpWidget(MyApp());
+      
+      await expectLater(
+        find.byType(MyApp),
+        matchesGoldenFile('goldens/screen_${entry.key}.png'),
+      );
+    });
+  }
+}
+```
+
+---
+
+## ⚗️ Alchemist (Advanced Golden Testing)
+
+Alchemist provides more sophisticated golden testing with scenarios:
 
 ```dart
 import 'package:alchemist/alchemist.dart';
-import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   goldenTest(
-    'Button variants',
-    fileName: 'button_variants',
+    'MyButton states',
+    fileName: 'my_button_states',
     builder: () => GoldenTestGroup(
       children: [
         GoldenTestScenario(
@@ -103,12 +146,8 @@ void main() {
           child: MyButton(label: 'Default'),
         ),
         GoldenTestScenario(
-          name: 'primary',
-          child: MyButton(label: 'Primary', variant: ButtonVariant.primary),
-        ),
-        GoldenTestScenario(
           name: 'disabled',
-          child: MyButton(label: 'Disabled', disabled: true),
+          child: MyButton(label: 'Disabled', enabled: false),
         ),
         GoldenTestScenario(
           name: 'loading',
@@ -120,220 +159,130 @@ void main() {
 }
 ```
 
-### Theme Variations
-
-```dart
-goldenTest(
-  'Button in themes',
-  fileName: 'button_themes',
-  builder: () => GoldenTestGroup(
-    scenarioConstraints: BoxConstraints(maxWidth: 300),
-    children: [
-      GoldenTestScenario(
-        name: 'light_theme',
-        child: Theme(
-          data: ThemeData.light(),
-          child: MyButton(label: 'Light'),
-        ),
-      ),
-      GoldenTestScenario(
-        name: 'dark_theme',
-        child: Theme(
-          data: ThemeData.dark(),
-          child: MyButton(label: 'Dark'),
-        ),
-      ),
-    ],
-  ),
-);
-```
-
-### Screen Size Testing
-
-```dart
-goldenTest(
-  'Dashboard responsive',
-  fileName: 'dashboard_responsive',
-  builder: () => GoldenTestGroup(
-    children: [
-      GoldenTestScenario(
-        name: 'mobile',
-        constraints: BoxConstraints(maxWidth: 375, maxHeight: 667),
-        child: DashboardScreen(),
-      ),
-      GoldenTestScenario(
-        name: 'tablet',
-        constraints: BoxConstraints(maxWidth: 768, maxHeight: 1024),
-        child: DashboardScreen(),
-      ),
-      GoldenTestScenario(
-        name: 'desktop',
-        constraints: BoxConstraints(maxWidth: 1280, maxHeight: 800),
-        child: DashboardScreen(),
-      ),
-    ],
-  ),
-);
-```
-
 ---
 
-## 📱 Device Testing
+## 📲 Emulator/Simulator Screenshots
 
-### Android Emulator Screenshots
+For app store or integration testing, capture from real devices:
+
+### iOS Simulator
 
 ```bash
-# List emulators
+# List available simulators
+xcrun simctl list devices
+
+# Boot a simulator
+xcrun simctl boot "iPhone 15 Pro"
+
+# Take screenshot
+xcrun simctl io booted screenshot ~/Desktop/screenshot.png
+
+# With status bar cleaned up
+xcrun simctl status_bar booted override --time "9:41" --batteryState charged --batteryLevel 100
+xcrun simctl io booted screenshot screenshot.png
+```
+
+### Android Emulator
+
+```bash
+# List available emulators
 emulator -list-avds
 
 # Start emulator
-emulator -avd Pixel_6_API_33 &
-
-# Wait for boot
-adb wait-for-device
+emulator -avd Pixel_8_API_34 &
 
 # Take screenshot
 adb exec-out screencap -p > screenshot.png
 
-# Enable Demo Mode (consistent status bar)
+# Set demo mode for clean status bar
 adb shell settings put global sysui_demo_allowed 1
 adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0941
-adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
-adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4
-
-# Take clean screenshot
-adb exec-out screencap -p > screenshot_clean.png
-
-# Disable Demo Mode
-adb shell am broadcast -a com.android.systemui.demo -e command exit
-```
-
-### iOS Simulator Screenshots
-
-```bash
-# List simulators
-xcrun simctl list devices
-
-# Boot simulator
-xcrun simctl boot "iPhone 15 Pro"
-
-# Override status bar (consistent for screenshots)
-xcrun simctl status_bar booted override \
-  --time "9:41" \
-  --batteryState charged \
-  --batteryLevel 100 \
-  --wifiBars 3 \
-  --cellularBars 4
-
-# Take screenshot
-xcrun simctl io booted screenshot screenshot.png
-
-# Clear status bar override
-xcrun simctl status_bar booted clear
+adb exec-out screencap -p > screenshot.png
 ```
 
 ---
 
-## 🚀 Fastlane Integration
+## 📸 Fastlane Screenshots
 
-### iOS Screenshots (Snapfile)
+For automated app store screenshots:
+
+### iOS (Fastlane Snapshot)
 
 ```ruby
-# fastlane/Snapfile
+# Snapfile
 devices([
-  "iPhone SE (3rd generation)",
-  "iPhone 15",
   "iPhone 15 Pro Max",
-  "iPad Pro (12.9-inch) (6th generation)"
+  "iPhone SE (3rd generation)",
+  "iPad Pro (12.9-inch)"
 ])
 
-languages(["en-US", "de-DE", "ja", "es"])
+languages(["en-US"])
 
-scheme("Runner")
+scheme("MyApp")
 output_directory("./screenshots")
 clear_previous_screenshots(true)
 ```
 
-### Android Screenshots (Screengrabfile)
+```bash
+fastlane snapshot
+```
+
+### Android (Fastlane Screengrab)
 
 ```ruby
-# fastlane/Screengrabfile
-locales(['en-US', 'de-DE', 'ja', 'es'])
-clear_previous_screenshots(true)
+# Screengrabfile
+locales(['en-US'])
 app_package_name('com.example.myapp')
-tests_package_name('com.example.myapp.test')
-use_tests_in_classes(['com.example.myapp.Screenshots'])
+app_apk_path('build/app/outputs/apk/debug/app-debug.apk')
+tests_apk_path('build/app/outputs/apk/androidTest/debug/app-debug-androidTest.apk')
 ```
-
-### Agent Commands
 
 ```bash
-# iOS screenshots
-cd ios && fastlane snapshot
-
-# Android screenshots
-cd android && fastlane screengrab
-
-# Both platforms
-fastlane screenshots
+fastlane screengrab
 ```
 
 ---
 
-## 📝 Recipe Configuration
+## ✅ Validation Checklist
 
-Add to recipe.yaml:
+Verify these for each validation:
 
-```yaml
-visual_testing:
-  platform: mobile-flutter
-  strategy: golden-tests
-  tools:
-    primary: alchemist
-    component_catalog: widgetbook
-    screenshot_automation: fastlane
-  devices:
-    ios:
-      - "iPhone SE (3rd generation)"
-      - "iPhone 15"
-      - "iPhone 15 Pro Max"
-      - "iPad Pro (12.9-inch)"
-    android:
-      - "Pixel 4a"
-      - "Pixel 8"
-      - "Pixel Fold"
-  agent_commands:
-    update_goldens: "flutter test --update-goldens"
-    run_goldens: "flutter test test/goldens/"
-    ios_screenshot: "xcrun simctl io booted screenshot"
-    android_screenshot: "adb exec-out screencap -p"
-    fastlane_ios: "cd ios && fastlane snapshot"
-    fastlane_android: "cd android && fastlane screengrab"
-  ci_integration:
-    platform_baselines: true
-    runs_on: ubuntu-latest
+- [ ] Golden tests pass for changed widgets
+- [ ] Light and dark themes tested
+- [ ] Key screen sizes covered (phone at minimum)
+- [ ] No golden file regressions
+- [ ] Widget states tested (default, disabled, loading, error)
+- [ ] Text renders correctly (no overflow)
+- [ ] Colors match design system tokens
+
+---
+
+## 📁 Golden File Organization
+
+```
+test/
+├── goldens/
+│   ├── widgets/
+│   │   ├── button_light.png
+│   │   ├── button_dark.png
+│   │   └── button_states.png
+│   ├── screens/
+│   │   ├── home_phone.png
+│   │   ├── home_tablet.png
+│   │   └── settings.png
+│   └── components/
+│       └── header.png
 ```
 
 ---
 
-## 🚨 Common Issues
+## 🔗 Widgetbook Integration
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Golden mismatch on CI | Font rendering differences | Use platform-specific baselines |
-| Flaky animation tests | Unfinished animations | Use `pumpAndSettle()` |
-| Text rendering varies | System fonts | Bundle custom fonts |
-| Status bar inconsistent | Dynamic content | Use Demo Mode (Android) or status_bar override (iOS) |
-| Large golden files | High resolution | Use appropriate constraints |
+If using Widgetbook for component documentation:
 
----
+```bash
+# Run Widgetbook
+flutter run -d chrome -t lib/widgetbook.dart
+```
 
-## 📋 Validation Checklist
-
-- [ ] Golden tests exist for all custom widgets
-- [ ] Theme variations tested (light/dark)
-- [ ] Responsive layouts tested (mobile/tablet/desktop)
-- [ ] Integration tests capture key flows
-- [ ] Fastlane configured for app store screenshots
-- [ ] CI pipeline includes golden test validation
-- [ ] Platform-specific baselines managed correctly
+Capture screenshots of catalogued components for comprehensive coverage.

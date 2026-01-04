@@ -1,8 +1,9 @@
 ---
 name: visual-testing-desktop-tauri
-description: Visual testing for Tauri desktop applications using WebdriverIO and tauri-driver. Use when validating platform-specific rendering (WebView differences across OS).
+description: Load when running visual validation for Tauri desktop applications. Provides WebdriverIO and tauri-driver patterns with platform-specific baseline guidance.
 ---
 
+# Tauri Visual Testing
 
 **Platform**: `desktop-tauri`  
 **Applicable Recipes**: tauri-react  
@@ -10,56 +11,52 @@ description: Visual testing for Tauri desktop applications using WebdriverIO and
 
 ---
 
-## 🎯 Overview
-
-Tauri uses native platform WebViews (Safari on macOS, Edge WebView2 on Windows, WebKit on Linux), resulting in **different rendering per platform**. Visual testing must account for platform-specific baselines.
-
----
-
-## Tight Loop (Default)
+## 🔄 Tight Loop (Default)
 
 **Goal**: Validate the key changed UI flow on the current OS, fast, with minimal flake.
 
 **Start Small**:
-- Run the WebdriverIO suite for the 1–2 flows touched by the story
-- Capture **normal** window size first
-- Maintain **platform-specific baselines** (Tauri renders differently per OS)
+- **Flows**: Run WebdriverIO suite for 1–2 flows touched by the story
+- **Sizes**: Normal window size first
+- **Platform**: Current OS only (Tauri renders differently per OS)
 
-**Run**:
+**Run Order**:
 1. Build: `cargo tauri build`
 2. Visual test: `npx wdio run wdio.conf.js`
-3. If diffs occur: update **only** the baseline for the current platform *when intended*
+3. If diffs occur: Update only the baseline for current platform when intended
+
+**Expand Only When**:
+- Story covers window resize behavior
+- Release requires all three platforms (macOS, Windows, Linux)
+- Epic validation requires cross-platform consistency
 
 ---
 
-## ⚠️ Critical: Platform-Specific Rendering
+## ⚠️ Platform Rendering Differences
 
-Unlike Electron (which bundles Chromium), Tauri renders differently on each OS:
+**Critical**: Tauri uses native platform WebViews:
+- **macOS**: Safari/WebKit
+- **Windows**: Edge WebView2
+- **Linux**: WebKitGTK
 
-| Platform | WebView Engine | Baseline Needed |
-|----------|---------------|-----------------|
-| macOS | Safari/WebKit | ✅ Separate |
-| Windows | Edge WebView2 (Chromium) | ✅ Separate |
-| Linux | WebKitGTK | ✅ Separate |
+This means **visual output differs per platform**. Maintain separate baselines for each.
 
-**You MUST maintain platform-specific screenshot baselines!**
-
----
-
-## 🧪 WebdriverIO Setup
-
-Tauri provides `tauri-driver` as a WebDriver wrapper:
-
-### Installation
-
-```bash
-# Install tauri-driver
-cargo install tauri-driver
-
-# Install WebdriverIO
-npm install --save-dev @wdio/cli
-npx wdio config
 ```
+screenshots/
+├── darwin/
+│   ├── main-window.png
+│   └── settings.png
+├── win32/
+│   ├── main-window.png
+│   └── settings.png
+└── linux/
+    ├── main-window.png
+    └── settings.png
+```
+
+---
+
+## 🔧 WebdriverIO Setup
 
 ### Configuration
 
@@ -68,371 +65,199 @@ npx wdio config
 const path = require('path');
 
 exports.config = {
-  runner: 'local',
-  specs: ['./e2e/**/*.spec.js'],
-  
+  specs: ['./tests/**/*.spec.js'],
   capabilities: [{
     'tauri:options': {
-      application: path.resolve('./src-tauri/target/release/my-app'),
+      application: path.resolve('./src-tauri/target/release/bundle/macos/MyApp.app'),
     },
   }],
-  
   services: ['tauri'],
-  
   framework: 'mocha',
   reporters: ['spec'],
-  
-  mochaOpts: {
-    timeout: 60000,
-  },
 };
 ```
 
-### Basic Test
+### Installing tauri-driver
+
+```bash
+# Install tauri-driver
+cargo install tauri-driver
+
+# Or via npm (if using the wrapper)
+npm install --save-dev @tauri-apps/driver
+```
+
+---
+
+## 🧪 Writing Visual Tests
+
+### Basic Screenshot Test
 
 ```javascript
-// e2e/visual.spec.js
+// tests/visual.spec.js
 describe('Visual Tests', () => {
-  it('should capture main window', async () => {
-    // Wait for app to load
-    await browser.waitUntil(
-      async () => (await browser.getTitle()) !== '',
-      { timeout: 10000 }
-    );
+  it('should match main window', async () => {
+    const screenshot = await browser.takeScreenshot();
+    await expect(screenshot).toMatchScreenshot('main-window', {
+      // Platform-specific baseline
+      baselineFolder: `./baselines/${process.platform}`,
+    });
+  });
+
+  it('should match settings page', async () => {
+    await $('[data-testid="settings-btn"]').click();
+    await browser.pause(500); // Wait for navigation
     
-    // Take screenshot
-    await browser.saveScreenshot('./screenshots/main-window.png');
-  });
-  
-  it('should capture after navigation', async () => {
-    const settingsBtn = await $('[data-testid="settings"]');
-    await settingsBtn.click();
-    
-    await browser.pause(500); // Allow transition
-    await browser.saveScreenshot('./screenshots/settings.png');
+    const screenshot = await browser.takeScreenshot();
+    await expect(screenshot).toMatchScreenshot('settings', {
+      baselineFolder: `./baselines/${process.platform}`,
+    });
   });
 });
 ```
 
-### Agent Commands
-
-```bash
-# Build Tauri app first
-cargo tauri build
-
-# Run WebdriverIO tests
-npx wdio run wdio.conf.js
-
-# Run specific spec
-npx wdio run wdio.conf.js --spec ./e2e/visual.spec.js
-```
-
----
-
-## 🚀 Tauri Driver
-
-`tauri-driver` wraps the appropriate WebDriver for each platform:
-
-### Start Driver Manually
-
-```bash
-# Start tauri-driver (listens on port 4444)
-tauri-driver
-
-# In another terminal, run tests
-npx wdio run wdio.conf.js
-```
-
-### With WebdriverIO Service
+### Window State Testing
 
 ```javascript
-// wdio.conf.js
-exports.config = {
-  // ... other config
-  services: [
-    ['tauri', {
-      // tauri-driver options
-    }]
-  ],
-};
-```
+describe('Window States', () => {
+  it('should handle resize', async () => {
+    // Normal size
+    await browser.setWindowSize(1280, 800);
+    await browser.pause(300);
+    let screenshot = await browser.takeScreenshot();
+    await expect(screenshot).toMatchScreenshot('window-normal');
 
----
-
-## 🔧 Screenshot Comparison
-
-WebdriverIO doesn't have built-in visual comparison. Use these approaches:
-
-### Option 1: wdio-image-comparison-service
-
-```bash
-npm install --save-dev wdio-image-comparison-service
-```
-
-```javascript
-// wdio.conf.js
-exports.config = {
-  services: [
-    ['image-comparison', {
-      baselineFolder: path.join(process.cwd(), './baselines/'),
-      formatImageName: '{tag}-{platformName}',
-      screenshotPath: path.join(process.cwd(), './screenshots/'),
-      savePerInstance: true,
-      autoSaveBaseline: true,
-      blockOutStatusBar: true,
-      blockOutToolBar: true,
-    }],
-  ],
-};
-```
-
-```javascript
-// Test with comparison
-it('should match baseline', async () => {
-  await browser.waitUntil(async () => (await browser.getTitle()) !== '');
-  
-  const result = await browser.checkScreen('main-window', {
-    // Comparison options
+    // Small size
+    await browser.setWindowSize(800, 600);
+    await browser.pause(300);
+    screenshot = await browser.takeScreenshot();
+    await expect(screenshot).toMatchScreenshot('window-small');
   });
-  
-  expect(result).toBeLessThan(0.1); // Less than 10% difference
-});
-```
-
-### Option 2: Percy Integration
-
-```bash
-npm install --save-dev @percy/webdriverio
-```
-
-```javascript
-const { percySnapshot } = require('@percy/webdriverio');
-
-it('Percy snapshot', async () => {
-  await browser.waitUntil(async () => (await browser.getTitle()) !== '');
-  await percySnapshot(browser, 'Main Window');
 });
 ```
 
 ---
 
-## 📸 Platform-Specific Baselines
+## 🖥️ Platform-Specific Builds
 
-### Directory Structure
-
-```
-baselines/
-├── darwin/          # macOS baselines
-│   ├── main-window.png
-│   └── settings.png
-├── win32/           # Windows baselines
-│   ├── main-window.png
-│   └── settings.png
-└── linux/           # Linux baselines
-    ├── main-window.png
-    └── settings.png
-```
-
-### Dynamic Baseline Selection
-
-```javascript
-// wdio.conf.js
-const os = require('os');
-const platform = os.platform(); // 'darwin', 'win32', 'linux'
-
-exports.config = {
-  services: [
-    ['image-comparison', {
-      baselineFolder: path.join(process.cwd(), `./baselines/${platform}/`),
-      // ...
-    }],
-  ],
-};
-```
-
----
-
-## 📚 Storybook for Components
-
-The React frontend in Tauri can use Storybook independently:
-
-### Setup
+Build for each platform before testing:
 
 ```bash
-cd src  # React frontend directory
-npx storybook@latest init
+# macOS
+cargo tauri build --target universal-apple-darwin
+
+# Windows
+cargo tauri build --target x86_64-pc-windows-msvc
+
+# Linux
+cargo tauri build --target x86_64-unknown-linux-gnu
 ```
 
-### Component Stories
-
-```typescript
-// src/components/Button.stories.tsx
-import { Button } from './Button';
-
-export default {
-  title: 'Components/Button',
-  component: Button,
-};
-
-export const Primary = { args: { variant: 'primary' } };
-export const Secondary = { args: { variant: 'secondary' } };
-```
-
-### Agent Commands
-
-```bash
-# Run Storybook (frontend only)
-npm run storybook
-
-# Build Storybook
-npm run build-storybook
-
-# Chromatic visual regression
-npx chromatic --project-token=xxx
-```
-
----
-
-## 🔧 Rust Command Testing
-
-For Tauri commands that affect UI, test the visual result:
-
-```javascript
-it('should update UI after Rust command', async () => {
-  // Trigger Rust command via UI
-  const button = await $('[data-testid="fetch-data"]');
-  await button.click();
-  
-  // Wait for UI update
-  await browser.waitUntil(
-    async () => {
-      const text = await $('[data-testid="data-display"]').getText();
-      return text !== 'Loading...';
-    },
-    { timeout: 5000 }
-  );
-  
-  // Capture result
-  await browser.saveScreenshot('./screenshots/data-loaded.png');
-});
-```
-
----
-
-## 🔄 CI/CD Configuration
-
-### GitHub Actions
+### CI Matrix Example
 
 ```yaml
 # .github/workflows/visual-tests.yml
-name: Visual Tests
-
-on: [push, pull_request]
-
 jobs:
-  test:
+  visual-test:
     strategy:
       matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux
-          - os: windows-latest
-            platform: win32
-          - os: macos-latest
-            platform: darwin
-    
+        os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Rust
-        uses: dtolnay/rust-action@stable
-      
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      
-      - name: Install dependencies
-        run: |
-          npm ci
-          cargo install tauri-driver
-      
-      - name: Build Tauri app
+      - name: Build
         run: cargo tauri build
-      
-      - name: Run visual tests
+      - name: Visual Tests
         run: npx wdio run wdio.conf.js
-        env:
-          BASELINE_PLATFORM: ${{ matrix.platform }}
-      
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
-        if: failure()
         with:
-          name: screenshots-${{ matrix.platform }}
-          path: screenshots/
+          name: screenshots-${{ matrix.os }}
+          path: ./screenshots/
 ```
 
 ---
 
-## 📝 Recipe Configuration
+## 📸 Native Screenshot Commands
 
-Add to recipe.yaml:
+For manual validation or when WebdriverIO isn't suitable:
 
-```yaml
-visual_testing:
-  platform: desktop-tauri
-  strategy: webdriverio
-  platform_specific_baselines: true  # REQUIRED for Tauri
-  tools:
-    primary: webdriverio
-    driver: tauri-driver
-    component_testing: storybook
-    visual_regression: percy  # or image-comparison-service
-  window_sizes:
-    small: [800, 600]
-    normal: [1280, 800]
-    large: [1920, 1080]
-  themes:
-    - light
-    - dark
-  agent_commands:
-    tauri_build: "cargo tauri build"
-    wdio_test: "npx wdio run wdio.conf.js"
-    storybook: "npm run storybook"
-    chromatic: "npx chromatic --project-token=xxx"
-  ci_integration:
-    platforms: [ubuntu-latest, windows-latest, macos-latest]
-    platform_baselines: true  # Must be true for Tauri
+### macOS
+
+```bash
+# Full screen
+screencapture -x ~/screenshots/macos-full.png
+
+# Window only (interactive click)
+screencapture -w ~/screenshots/macos-window.png
+
+# Specific window by name (requires additional tooling)
+screencapture -l $(osascript -e 'tell app "MyApp" to id of window 1') ~/screenshots/macos-app.png
+```
+
+### Windows (PowerShell)
+
+```powershell
+Add-Type -AssemblyName System.Windows.Forms
+[System.Windows.Forms.Screen]::PrimaryScreen | ForEach-Object {
+    $bitmap = New-Object System.Drawing.Bitmap($_.Bounds.Width, $_.Bounds.Height)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    $graphics.CopyFromScreen($_.Bounds.Location, [System.Drawing.Point]::Empty, $_.Bounds.Size)
+    $bitmap.Save("$HOME\screenshots\windows-screen.png")
+}
+```
+
+### Linux
+
+```bash
+# Using scrot
+scrot ~/screenshots/linux-screen.png
+
+# Using gnome-screenshot
+gnome-screenshot -f ~/screenshots/linux-screen.png
+
+# Using import (ImageMagick)
+import -window root ~/screenshots/linux-screen.png
 ```
 
 ---
 
-## 🚨 Common Issues
+## ✅ Validation Checklist
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Different rendering per OS | Native WebView engines | Use platform-specific baselines |
-| tauri-driver not found | Not installed | `cargo install tauri-driver` |
-| App not launching | Wrong binary path | Check `tauri:options.application` path |
-| Slow tests | Full app build | Use dev build for faster iteration |
-| WebView not ready | Async loading | Use `waitUntil` with proper conditions |
+Verify these for each validation:
 
----
-
-## 📋 Validation Checklist
-
-- [ ] Tauri app builds successfully
-- [ ] tauri-driver installed and working
-- [ ] Platform-specific baselines configured
-- [ ] Main window screenshot captured
-- [ ] Navigation flows tested
-- [ ] Rust command results validated visually
-- [ ] Component Storybook exists for frontend
-- [ ] Cross-platform CI configured
+- [ ] Main window captured on current platform
+- [ ] Key routes/screens captured
+- [ ] Platform-specific baseline used
+- [ ] Window resize behavior tested (if in scope)
+- [ ] No visual regressions from baseline
+- [ ] Text renders correctly (check font rendering)
+- [ ] Colors match design system tokens
+- [ ] Cross-platform CI configured for release
 
 ---
 
-*Platform Pattern Version: 1.0.0*
+## 🔗 Storybook Integration
+
+If using Storybook for the frontend (React/Vue/Svelte):
+
+```bash
+# Run Storybook for frontend components
+npm run storybook
+```
+
+Test components in isolation before Tauri integration. Use Percy or Chromatic for Storybook visual regression.
+
+---
+
+## 📝 Notes on Font Rendering
+
+Fonts render differently across platforms:
+- **macOS**: Subpixel antialiasing (smooth)
+- **Windows**: ClearType (sharper)
+- **Linux**: Variable by distro/config
+
+Consider using:
+1. Platform-specific baselines (recommended)
+2. Higher tolerance thresholds for font areas
+3. Web-safe fonts with consistent cross-platform rendering

@@ -1,11 +1,11 @@
 ---
 name: sentry-integration
-description: Integrate Sentry for error tracking and performance monitoring. Use when implementing source maps, performance tracing, issue grouping, or release tracking in React/Next.js applications.
+description: Load when integrating Sentry for error tracking and performance monitoring. Applies when implementing source maps, performance tracing, issue grouping, or release tracking in React/Next.js applications.
 ---
 
 # Integrating Sentry
 
-Provides patterns for error tracking and performance monitoring with Sentry in React/Next.js applications. Covers source maps, performance monitoring, issue grouping, release tracking, and common pitfalls.
+Follow these patterns for error tracking and performance monitoring with Sentry in React/Next.js applications. Covers source maps, performance monitoring, issue grouping, release tracking, and common pitfalls.
 
 ## 🔌 MCP Server (Recommended)
 
@@ -31,7 +31,7 @@ OAuth authentication will prompt you to login. Supports Cursor 1.0+, Claude Desk
 
 ---
 
-## When to Use
+## When This Rule Applies
 
 Apply when implementing error tracking, performance monitoring, or release management with Sentry.
 

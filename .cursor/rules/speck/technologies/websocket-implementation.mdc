@@ -1,13 +1,13 @@
 ---
 name: websocket-implementation
-description: Implement WebSockets for real-time communication. Use when building chat, notifications, live updates, or any feature requiring bidirectional server-client communication.
+description: Implement WebSockets for real-time communication. Applies when building chat, notifications, live updates, or any feature requiring bidirectional server-client communication.
 ---
 
 # Implementing WebSockets
 
-Provides patterns for real-time communication with WebSockets. Covers connection management, reconnection, heartbeats, and scaling considerations.
+Follow these patterns for real-time communication with WebSockets. Covers connection management, reconnection, heartbeats, and scaling considerations.
 
-## When to Use
+## When This Rule Applies
 
 Apply when implementing real-time features: chat, notifications, live updates, collaborative editing.
 

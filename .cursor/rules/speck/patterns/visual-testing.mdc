@@ -1,528 +1,204 @@
 ---
 name: visual-testing
-description: Guide the Speck agent to autonomously capture, compare, and validate visual implementation against UI/UX specifications. Use when implementing UI stories, validating design tokens, or running accessibility audits.
+description: Load when running /story-validate or /epic-validate for stories with UI components, when ui-spec.md exists, or when validating design token usage and accessibility.
 ---
 
-# Visual Testing Pattern
+# Visual Testing
 
-Guide the Speck agent to autonomously capture, compare, and validate visual implementation against UI/UX specifications across all platform types.
+When validating UI stories, capture screenshots, run audits, and compare against design specifications.
 
 ---
 
 ## 🎯 Core Principle
 
-The Speck agent has powerful autonomous visual testing capabilities that should be leveraged during validation. Visual testing ensures that:
-1. Implementation matches design specifications (ui-spec.md, wireframes.md)
+Visual testing ensures that:
+1. Implementation matches design specifications (`ui-spec.md`, `wireframes.md`)
 2. Design system tokens are used correctly (no hardcoded values)
 3. Responsive behavior works across breakpoints
 4. Accessibility requirements are met (color contrast, touch targets)
-5. Voice/tone in UI copy matches ux-strategy.md
+5. Voice/tone in UI copy matches `ux-strategy.md`
 
 **Visual testing is NOT optional for UI-heavy stories** - it catches bugs that functional tests miss.
 
 ---
 
+## 🔄 Tight Loop (Default)
+
+**Goal**: Get high-signal visual feedback fast (minutes, not hours) with minimal flake.
+
+**Start Small**:
+- **Screens**: Focus on 1–3 screens/components most impacted by the story
+- **Breakpoints**: Start with `mobile` + `desktop` (expand only if responsive behavior is in scope)
+- **States**: Cover default + loading + empty + error (as applicable) + one interaction state
+
+**Expand Only When**:
+- Initial findings reveal more issues
+- Story explicitly covers responsive edge cases
+- Epic validation requires cross-story consistency check
+
+---
+
 ## 🔍 Platform Detection
 
-The agent determines the testing platform from:
+Determine the testing platform from:
 
-1. **`_active_recipe`** in project.md frontmatter (preferred)
-2. **Recipe's `visual_testing.platform`** field
-3. **Stack detection** from architecture.md (fallback)
+1. Read `_active_recipe` from `project.md` frontmatter
+2. Load the recipe's `visual_testing.platform` field
+3. Fallback: detect stack from `architecture.md`
 
-### Platform Categories
+Based on platform, load the appropriate sub-rule:
 
-| Platform | Recipes | Pattern File |
-|----------|---------|--------------|
-| `web` | nextjs-supabase, sveltekit-supabase, t3-stack, django-htmx, go-templ-htmx, react-fastapi-postgres, static-site | visual-testing/web.mdc |
-| `mobile-flutter` | flutter-firebase | visual-testing/mobile-flutter.mdc |
-| `mobile-rn` | expo-fastapi | visual-testing/mobile-react-native.mdc |
-| `desktop-electron` | electron-react | visual-testing/desktop-electron.mdc |
-| `desktop-tauri` | tauri-react | visual-testing/desktop-tauri.mdc |
-| `extension` | chrome-extension | visual-testing/extension.mdc |
-| `cli` | cli-tool, api-service | No visual testing (terminal output only) |
-
----
-
-## 🤖 Agent Capabilities by Platform
-
-### Web Platform
-- **Browser MCP tools**: Screenshots, snapshots, navigation, interaction
-- **Audits**: Accessibility, performance, SEO, best practices
-- **Responsive testing**: Viewport resizing at breakpoints
-
-### Mobile Platforms
-- **Android Emulator**: ADB commands for screenshots, screen recording, display override
-- **iOS Simulator**: xcrun simctl for screenshots, video recording, status bar control
-- **Maestro**: YAML-based E2E testing (agent-friendly!)
-- **Fastlane**: Automated app store screenshot generation
-
-### Desktop Platforms
-- **Electron**: Playwright Electron API for full automation
-- **Tauri**: WebdriverIO with tauri-driver for WebDriver-based testing
-- **Cross-platform screenshots**: Python mss library or native commands
-
-### Browser Extensions
-- **Puppeteer/Playwright**: Chrome DevTools Protocol for extension automation
-- **Extension context detection**: Navigate to popup, background, content scripts
+| Platform | Sub-Rule | Tools |
+|----------|----------|-------|
+| `web` | `visual-testing/web.mdc` | Browser MCP, Playwright |
+| `mobile-flutter` | `visual-testing/mobile-flutter.mdc` | Golden tests, Alchemist |
+| `mobile-rn` | `visual-testing/mobile-react-native.mdc` | Maestro, Detox |
+| `desktop-electron` | `visual-testing/desktop-electron.mdc` | Playwright Electron |
+| `desktop-tauri` | `visual-testing/desktop-tauri.mdc` | WebdriverIO |
+| `extension` | `visual-testing/extension.mdc` | Puppeteer/Playwright |
+| `cli` / `api` | None | Skip visual testing |
 
 ---
 
-## 🔄 Visual Testing Workflow
+## 📋 Validation Workflow
 
-```
-┌─────────────────────────────────────────────────┐
-│ 1. DETECT PLATFORM                              │
-│    - Read _active_recipe from project.md        │
-│    - Load recipe's visual_testing config        │
-│    - Load platform-specific pattern             │
-└──────────────────────┬──────────────────────────┘
-                       ↓
-┌─────────────────────────────────────────────────┐
-│ 2. CHECK CAPABILITIES                           │
-│    Web: Browser MCP tools available?            │
-│    Mobile: Emulator/simulator running?          │
-│    Desktop: Can access application window?      │
-│    If unavailable: Generate manual checklist    │
-└──────────────────────┬──────────────────────────┘
-                       ↓
-┌─────────────────────────────────────────────────┐
-│ 3. LOAD SPECIFICATIONS                          │
-│    - design-system.md (tokens, breakpoints)     │
-│    - ui-spec.md (states, components, Testing    │
-│      Checklist)                                 │
-│    - wireframes.md (layouts)                    │
-│    - ux-strategy.md (voice/tone, accessibility) │
-└──────────────────────┬──────────────────────────┘
-                       ↓
-┌─────────────────────────────────────────────────┐
-│ 4. CAPTURE SCREENSHOTS                          │
-│    - Navigate to each screen/component          │
-│    - Capture at each breakpoint/device          │
-│    - Trigger and capture each state             │
-│    - Store in {STORY_DIR}/screenshots/          │
-└──────────────────────┬──────────────────────────┘
-                       ↓
-┌─────────────────────────────────────────────────┐
-│ 5. RUN PLATFORM AUDITS                          │
-│    Web: Accessibility, performance audits       │
-│    Mobile: Check console errors                 │
-│    All: Verify design token usage               │
-└──────────────────────┬──────────────────────────┘
-                       ↓
-┌─────────────────────────────────────────────────┐
-│ 6. VALIDATE AGAINST SPECS                       │
-│    - Compare screenshots to wireframes          │
-│    - Verify ui-spec.md Testing Checklist        │
-│    - Check voice/tone in UI copy                │
-│    - Verify accessibility requirements          │
-└──────────────────────┬──────────────────────────┘
-                       ↓
-┌─────────────────────────────────────────────────┐
-│ 7. GENERATE VISUAL VALIDATION REPORT            │
-│    - Screenshot gallery with annotations        │
-│    - Design token compliance %                  │
-│    - Accessibility audit results                │
-│    - Responsive behavior assessment             │
-│    - Voice/tone compliance notes                │
-└─────────────────────────────────────────────────┘
-```
+### 1. Load Design Specifications
 
----
+Read these files to understand what to validate:
+- `design-system.md` → tokens, breakpoints, components
+- `ui-spec.md` → component specs, states, Testing Checklist
+- `wireframes.md` → layouts (if exists)
+- `ux-strategy.md` → voice/tone, accessibility requirements
 
-## 📱 Standard Device Matrix
+### 2. Check Capabilities
 
-### Mobile Devices
+Before attempting visual testing, verify:
+- **Web**: Are Browser MCP tools available?
+- **Mobile**: Is emulator/simulator running?
+- **Desktop**: Can you access the application window?
 
-| Category | iOS | Android |
-|----------|-----|---------|
-| **Small Phone** | iPhone SE (375×667) | Pixel 4a (360×760) |
-| **Standard Phone** | iPhone 15 (393×852) | Pixel 8 (411×915) |
-| **Large Phone** | iPhone 15 Pro Max (430×932) | Pixel 8 Pro (448×998) |
-| **Tablet** | iPad (768×1024) | Pixel Tablet (800×1280) |
+If tools unavailable, generate a manual validation checklist instead.
 
-### Web Breakpoints
+### 3. Capture Screenshots (Tight Loop Scope)
 
-| Token | Width | Target |
-|-------|-------|--------|
-| `mobile` | 375px | Small phones |
-| `tablet` | 768px | Tablets, small laptops |
-| `desktop` | 1024px | Standard desktop |
-| `wide` | 1280px | Large monitors |
-| `ultrawide` | 1536px | Ultra-wide displays |
+For 1–3 key screens/components in the story:
+- Navigate to the page/component
+- Capture at `mobile` + `desktop` breakpoints
+- Trigger and capture key states (default, hover, error, empty)
+- Store in `{STORY_DIR}/screenshots/`
 
-### Desktop Platforms
+### 4. Run Platform Audits
 
-| Platform | Primary Resolution | Secondary |
-|----------|-------------------|-----------|
-| macOS | 1920×1080 | 2560×1440 (Retina) |
-| Windows | 1920×1080 | 1366×768 (laptops) |
-| Linux | 1920×1080 | CI baseline generation |
+- **Web**: Run `runAccessibilityAudit()`, `getConsoleErrors()`
+- **Mobile**: Check for runtime warnings
+- **All**: Grep source for hardcoded hex colors and pixel values
+
+### 5. Validate Against Specs
+
+Compare findings to specifications:
+- Screenshots match wireframes/layouts?
+- `ui-spec.md` Testing Checklist items pass?
+- Voice/tone matches `ux-strategy.md`?
+- Accessibility requirements met?
+
+### 6. Generate Report Section
+
+Add a "Visual/UX Validation" section to `validation-report.md`:
+- Screenshot gallery with annotations
+- Design token compliance percentage
+- Accessibility audit results
+- Issues found (with severity)
 
 ---
 
 ## 🎨 Design Token Validation
 
-During visual validation, check that implementation uses design system tokens:
+Check that implementation uses tokens, not hardcoded values:
 
-### What to Check
-
-| Property | Good (Token) | Bad (Hardcoded) |
-|----------|--------------|-----------------|
+| Property | ✅ Token | ❌ Hardcoded |
+|----------|----------|--------------|
 | Color | `var(--primary-500)` | `#0EA5E9` |
-| Typography | `text-lg` or `var(--text-lg)` | `font-size: 18px` |
-| Spacing | `space-4` or `var(--space-4)` | `margin: 16px` |
+| Spacing | `space-4` | `16px` |
+| Typography | `text-lg` | `font-size: 18px` |
 | Border Radius | `rounded-lg` | `border-radius: 8px` |
-| Shadows | `shadow-md` | `box-shadow: 0 4px 6px...` |
 
-### How to Detect
+**Detection**:
+```bash
+# Find hardcoded hex colors
+grep -r "#[0-9A-Fa-f]\{6\}" src/
 
-1. **Grep for hardcoded values** in changed files:
-   ```bash
-   grep -r "#[0-9A-Fa-f]\{6\}" src/  # Hex colors
-   grep -r "px" src/components/      # Pixel values
-   ```
+# Find pixel values
+grep -r "[0-9]\+px" src/components/
+```
 
-2. **Check CSS/style files** for raw values vs tokens
-
-3. **Compare computed styles** against design-system.md tokens
+Flag violations in the validation report.
 
 ---
 
-## 🔊 Voice/Tone Validation
+## ♿ Accessibility Requirements
 
-Check UI copy against ux-strategy.md voice attributes:
+Run accessibility audit and verify:
 
-### What to Validate
+| Check | Target | Tool |
+|-------|--------|------|
+| Color contrast | 4.5:1 text, 3:1 UI (WCAG AA) | `runAccessibilityAudit` |
+| Touch targets | 44×44px minimum | Manual/computed styles |
+| Focus indicators | 2px+ visible outline | Visual inspection |
+| ARIA labels | All interactive elements | DOM inspection |
 
-| Element | Check Against |
-|---------|---------------|
-| Error messages | ux-strategy.md → Tone → Error situations |
-| Success messages | ux-strategy.md → Tone → Success moments |
-| Button labels | ux-strategy.md → Voice attributes |
-| Empty states | ux-strategy.md → Content guidelines |
-| Loading text | ux-strategy.md → Voice attributes |
-
-### Common Issues
-
-| Voice Attribute | ❌ Bad | ✅ Good |
-|-----------------|--------|---------|
-| "Friendly" | "Error: Invalid input" | "Oops! That doesn't look right" |
-| "Professional" | "lol ur data saved" | "Your changes have been saved" |
-| "Encouraging" | "Form submitted" | "Great job! You're all set" |
-| "Concise" | "Please click the button below to continue" | "Continue" |
+**Block validation on critical accessibility failures.**
 
 ---
 
-## ♿ Accessibility Validation
+## 🖼️ Screenshot Storage
 
-### Automated Checks
-
-| Check | Tool/Method | Target |
-|-------|-------------|--------|
-| Color contrast | `runAccessibilityAudit` | WCAG 2.1 AA (4.5:1 text, 3:1 UI) |
-| Touch targets | Manual/computed styles | 44×44px minimum |
-| Focus indicators | Visual inspection | 2px+ visible outline |
-| ARIA labels | DOM inspection | All interactive elements |
-| Heading hierarchy | DOM inspection | h1 → h2 → h3 sequence |
-
-### Manual Checks
-
-- [ ] Keyboard navigation works (Tab, Enter, Escape)
-- [ ] Screen reader announces correctly
-- [ ] Focus visible on all interactive elements
-- [ ] No information conveyed by color alone
-
----
-
-## 🖼️ Screenshot Storage Convention
-
-Store screenshots in a consistent location for validation:
+Store screenshots consistently:
 
 ```
 {STORY_DIR}/
 ├── screenshots/
-│   ├── {screen}-{breakpoint}.png
-│   ├── {screen}-{state}.png
-│   └── {screen}-{device}.png
-```
-
-### Naming Convention
-
-| Pattern | Example | Use Case |
-|---------|---------|----------|
-| `{screen}-{breakpoint}` | `dashboard-mobile.png` | Responsive testing |
-| `{screen}-{state}` | `button-hover.png` | State testing |
-| `{screen}-{device}` | `login-iphone15.png` | Device-specific |
-| `{screen}-dark` | `settings-dark.png` | Dark mode |
-
----
-
-## 🔧 Dynamic Content Handling
-
-Dynamic content causes false positives. Use these strategies:
-
-### Masking
-
-```javascript
-// Playwright - mask dynamic elements
-await expect(page).toHaveScreenshot({
-  mask: [
-    page.getByTestId('timestamp'),
-    page.getByTestId('avatar'),
-    page.getByTestId('ad-slot')
-  ]
-})
-```
-
-### CSS Injection
-
-```javascript
-// Hide dynamic content before screenshot
-await page.addStyleTag({
-  content: `
-    .timestamp, .avatar, .dynamic-content {
-      visibility: hidden !important;
-    }
-    *, *::before, *::after {
-      animation-duration: 0s !important;
-      transition-duration: 0s !important;
-    }
-  `
-})
-```
-
-### Tolerance Thresholds
-
-```javascript
-// Allow minor pixel differences
-await expect(page).toHaveScreenshot({
-  maxDiffPixels: 100,           // Allow up to 100 different pixels
-  maxDiffPixelRatio: 0.01,      // Or 1% of total pixels
-  threshold: 0.2                // Per-pixel color threshold
-})
+│   ├── {screen}-mobile.png
+│   ├── {screen}-desktop.png
+│   ├── {screen}-hover.png
+│   └── {screen}-error.png
 ```
 
 ---
 
-## 📊 Visual Validation Report Section
+## 🔄 Feedback Loop
 
-Add this section to validation-report.md:
+Visual testing findings must flow back into the methodology:
 
-```markdown
-## Visual/UX Validation
+| Finding | Immediate Action | Commit Tag |
+|---------|------------------|------------|
+| Design token violation | Flag in report, fix code | `GOTCHA` |
+| Voice/tone mismatch | Note for ux-strategy.md update | - |
+| Accessibility failure | Block validation, add to tasks.md | `GOTCHA` |
+| New UI pattern discovered | Flag for design-system.md addition | `PATTERN` |
 
-### Platform: [web | mobile-flutter | mobile-rn | desktop-electron | desktop-tauri | extension]
-
-### Screenshots Captured
-
-| Screen | Breakpoint/Device | Screenshot | Status |
-|--------|-------------------|------------|--------|
-| [Name] | [Size/Device] | [Link to file] | ✅/⚠️/❌ |
-
-### Design Token Compliance
-
-| Property | Specified | Implemented | Status |
-|----------|-----------|-------------|--------|
-| Primary color | `primary-500` | ✅ Token used | ✅ PASS |
-| Button padding | `space-4` | ❌ Hardcoded `16px` | ❌ FAIL |
-
-**Token Compliance**: [X/Y] properties use tokens ([Z]%)
-
-### Responsive Behavior
-
-| Breakpoint | Expected | Actual | Status |
-|------------|----------|--------|--------|
-| Mobile (375px) | Stack layout | ✅ Stacks | ✅ PASS |
-| Tablet (768px) | 2-column | ✅ 2-column | ✅ PASS |
-| Desktop (1024px) | 3-column | ❌ 2-column | ❌ FAIL |
-
-### Accessibility Audit
-
-| Requirement | Target | Status | Notes |
-|-------------|--------|--------|-------|
-| Color contrast | 4.5:1 (AA) | ✅ 5.2:1 | |
-| Touch targets | 44×44px | ✅ 48×48px | |
-| Keyboard nav | Full | ⚠️ Partial | Modal trap missing |
-| ARIA labels | Required | ✅ Present | |
-
-### Voice/Tone Compliance
-
-| Element | Expected | Actual | Status |
-|---------|----------|--------|--------|
-| Error messages | Helpful | "Error 500" | ❌ FAIL - Too technical |
-| Success state | Encouraging | "Saved!" | ✅ PASS |
-| Button labels | Action-oriented | "Submit" → "Save Changes" | ⚠️ WARN |
-
-### ui-spec.md Testing Checklist
-
-[Copy and check off items from ui-spec.md Testing Checklist section]
-
-- [x] All states render correctly
-- [ ] Responsive at all breakpoints
-- [x] Animations perform smoothly
-- [ ] Design tokens applied correctly
-```
+After validation, findings feed into `story-retro.md`.
 
 ---
 
-## 🔄 Feedback Loop (CRITICAL!)
+## ⏭️ When to Skip Visual Testing
 
-Visual testing is only valuable if findings flow back into the methodology. Here's the complete feedback loop:
+Skip for:
+- API-only stories (no UI)
+- CLI commands
+- Data migrations
+- Configuration changes
 
-### Immediate Feedback (During Validation)
-
-```
-┌─────────────────────────────────────────────────┐
-│ VALIDATION FINDING              ACTION          │
-├─────────────────────────────────────────────────┤
-│ Design token violation    →  Flag in report     │
-│                              Add to plan.md     │
-│                              Commit with GOTCHA │
-├─────────────────────────────────────────────────┤
-│ Voice/tone mismatch       →  Flag in report     │
-│                              Note for ux-       │
-│                              strategy.md update │
-├─────────────────────────────────────────────────┤
-│ Accessibility failure     →  Block validation   │
-│                              Add to tasks.md    │
-│                              Commit with GOTCHA │
-├─────────────────────────────────────────────────┤
-│ New UI pattern discovered →  Flag for design-   │
-│                              system.md addition │
-│                              Commit with PATTERN│
-├─────────────────────────────────────────────────┤
-│ Visual test command fail  →  Document in commit │
-│                              as GOTCHA tag      │
-│                              Update recipe?     │
-└─────────────────────────────────────────────────┘
-```
-
-### Story-Level Feedback
-
-After `/story-validate`, findings flow to:
-
-1. **validation-report.md** → Visual/UX section captures all issues
-2. **Commit tags** → GOTCHA: for surprises, PATTERN: for reusable solutions
-3. **story-retro.md** → Visual issues become retrospective inputs
-
-### Epic-Level Feedback
-
-After `/epic-validate`, aggregated findings flow to:
-
-1. **epic-validation-report.md** → Cross-story consistency issues
-2. **design-system.md** → New patterns discovered across stories
-3. **ux-strategy.md** → Voice/tone refinements
-4. **epic-retro.md** → Validated patterns for promotion
-
-### Project-Level Feedback
-
-After `/project-retrospective`:
-
-1. **Cursor rules** → Visual testing best practices become rules
-2. **Recipe updates** → New agent_commands discovered
-3. **Pattern updates** → Improved platform patterns
-
-### Commit Tag Guidelines for Visual Issues
-
-```bash
-# Design token violation found and fixed
-git commit -m "fix(ui): replace hardcoded colors with tokens
-
-GOTCHA: #3B82F6 should be var(--primary-500)
-RULE: Update design-system-enforcement.mdc to catch hex colors
-"
-
-# New visual pattern discovered
-git commit -m "feat(ui): add skeleton loading state
-
-PATTERN: Skeleton components for async data loading
-"
-
-# Accessibility issue found
-git commit -m "fix(a11y): add ARIA labels to icon buttons
-
-GOTCHA: Screen readers can't announce icon-only buttons
-"
-
-# Platform-specific visual issue
-git commit -m "fix(tauri): update Windows baseline screenshots
-
-GOTCHA: Tauri WebView2 on Windows renders fonts differently than macOS WebKit
-ARCH: Must maintain platform-specific baselines for Tauri apps
-"
-```
-
-### Recipe Feedback Loop
-
-If visual testing reveals recipe improvements:
-
-```yaml
-# New agent command discovered during validation
-visual_testing:
-  agent_commands:
-    # Add new command discovered during project
-    dark_mode_toggle: "xcrun simctl ui booted appearance dark"
-```
-
-→ Create PR to update `.speck/recipes/[recipe]/recipe.yaml`
-→ Benefits all future projects using this recipe
+**Rule**: If `ui-spec.md` exists, visual testing is REQUIRED.
 
 ---
 
-## 🔗 Integration Points
+## 📚 Platform-Specific Rules
 
-### With /story-validate
+For detailed implementation, load platform-specific rules:
 
-Visual validation runs as step 10.5 in story-validate, after code quality gates but before code audit:
-
-1. Detect platform from recipe
-2. Load platform-specific pattern
-3. Execute visual testing workflow
-4. Generate visual validation section in report
-
-### With /epic-validate
-
-Epic visual validation aggregates story visual results:
-
-1. Collect screenshots from all story validations
-2. Check cross-story visual consistency
-3. Validate against epic wireframes.md
-4. Check user journey touchpoints are visually complete
-
-### With /story-ui-spec
-
-The Testing Checklist in ui-spec.md becomes the validation checklist:
-
-1. Copy Testing Checklist items to validation report
-2. Agent checks off items during validation
-3. Unchecked items become validation failures
-
----
-
-## 📚 Platform-Specific Patterns
-
-For detailed implementation guidance, see platform-specific rules in `.cursor/rules/speck/patterns/visual-testing/`:
-
-- **visual-testing/web.mdc** - Browser MCP tools, Playwright, Percy
-- **visual-testing/mobile-flutter.mdc** - Golden tests, Alchemist
-- **visual-testing/mobile-react-native.mdc** - Maestro, Detox, ADB/simctl
-- **visual-testing/desktop-electron.mdc** - Playwright Electron
-- **visual-testing/desktop-tauri.mdc** - WebdriverIO
-- **visual-testing/extension.mdc** - Puppeteer, CDP
-
----
-
-## 🚦 When Visual Testing is Required
-
-| Story Type | Visual Testing | Reason |
-|------------|----------------|--------|
-| UI components | **REQUIRED** | Core purpose |
-| Forms/inputs | **REQUIRED** | States, validation |
-| Pages/screens | **REQUIRED** | Layout, responsive |
-| API-only | SKIP | No visual output |
-| CLI commands | SKIP | No visual output |
-| Data migrations | SKIP | No visual output |
-| Config changes | SKIP | No visual output |
-
-**Rule**: If ui-spec.md exists for a story, visual testing is REQUIRED.
+- `visual-testing/web.mdc` - Browser MCP tools, Playwright, Percy
+- `visual-testing/mobile-flutter.mdc` - Golden tests, Alchemist
+- `visual-testing/mobile-react-native.mdc` - Maestro, Detox
+- `visual-testing/desktop-electron.mdc` - Playwright Electron
+- `visual-testing/desktop-tauri.mdc` - WebdriverIO
+- `visual-testing/extension.mdc` - Puppeteer, CDP

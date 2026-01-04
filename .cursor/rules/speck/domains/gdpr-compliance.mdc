@@ -1,13 +1,13 @@
 ---
 name: gdpr-compliance
-description: Implement GDPR compliance for applications processing EU personal data. Use when building consent management, data export, right to erasure, or audit logging.
+description: Load when implementing GDPR compliance for applications processing EU personal data. Applies when building consent management, data export, right to erasure, or audit logging.
 ---
 
 # Implementing GDPR Compliance
 
-Provides patterns for GDPR-compliant applications. Covers consent management, data subject rights, data minimization, and audit logging.
+Follow these patterns for GDPR-compliant applications. Covers consent management, data subject rights, data minimization, and audit logging.
 
-## When to Use
+## When This Rule Applies
 
 Apply when building applications that process personal data of EU residents.
 

@@ -1,6 +1,6 @@
 ---
 name: stripe-integration
-description: Integrate Stripe for payments, subscriptions, and billing. Use when implementing checkout flows, subscription management, webhook handling, or payment processing with Stripe.
+description: Load when implementing Stripe checkout flows, subscription management, webhook handling, or payment processing.
 ---
 
 # Stripe Integration
@@ -40,7 +40,7 @@ Or run locally with your API key:
 
 ---
 
-## When to use this skill
+## When This Rule Applies
 - Implementing checkout or payment flows
 - Setting up subscription billing
 - Handling Stripe webhooks

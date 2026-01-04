@@ -1,13 +1,13 @@
 ---
 name: oauth-implementation
-description: Implement OAuth 2.0 and OpenID Connect authentication. Use when building social login, SSO, PKCE flows, or integrating with OAuth providers like Google, GitHub, Apple.
+description: Load when implementing OAuth 2.0 and OpenID Connect authentication. Applies when building social login, SSO, PKCE flows, or integrating with OAuth providers like Google, GitHub, Apple.
 ---
 
 # Implementing OAuth
 
-Provides patterns for OAuth 2.0 and OpenID Connect implementation. Covers PKCE flow, token refresh, provider-specific gotchas, and security best practices.
+Follow these patterns for OAuth 2.0 and OpenID Connect implementation. Covers PKCE flow, token refresh, provider-specific gotchas, and security best practices.
 
-## When to Use
+## When This Rule Applies
 
 Apply when implementing social login, SSO, or third-party API integrations using OAuth.
 

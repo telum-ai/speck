@@ -1,13 +1,13 @@
 ---
 name: saas-billing-patterns
-description: Implement subscription billing for SaaS applications. Use when building subscription state machines, proration logic, trials, dunning sequences, or metered billing.
+description: Load when implementing subscription billing for SaaS applications. Applies when building subscription state machines, proration logic, trials, dunning sequences, or metered billing.
 ---
 
 # Implementing SaaS Billing
 
-Provides patterns for subscription billing in SaaS applications. Covers subscription state machines, proration, trials, dunning, and metered billing.
+Follow these patterns for subscription billing in SaaS applications. Covers subscription state machines, proration, trials, dunning, and metered billing.
 
-## When to Use
+## When This Rule Applies
 
 Apply when implementing subscription management, billing, pricing tiers, or usage-based billing.
 

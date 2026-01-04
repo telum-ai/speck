@@ -1,11 +1,11 @@
 ---
 name: serverless-architecture
-description: Build serverless applications with AWS Lambda, Vercel Functions, or Cloudflare Workers. Use when implementing FaaS patterns, managing cold starts, or optimizing serverless costs.
+description: Load when building serverless applications with AWS Lambda, Vercel Functions, or Cloudflare Workers. Applies when implementing FaaS patterns, managing cold starts, or optimizing serverless costs.
 ---
 
 # Building Serverless Applications
 
-Provides patterns for serverless architecture. Covers cold starts, connection pooling, function composition, and cost optimization.
+Follow these patterns for serverless architecture. Covers cold starts, connection pooling, function composition, and cost optimization.
 
 ## 🔌 MCP Servers (Cloudflare)
 
@@ -34,7 +34,7 @@ If using Cloudflare Workers, they provide official MCP servers:
 
 ---
 
-## When to Use
+## When This Rule Applies
 
 Apply when building with AWS Lambda, Vercel Functions, Cloudflare Workers, or similar FaaS platforms.
 

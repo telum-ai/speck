@@ -1,11 +1,11 @@
 ---
 name: resend-integration
-description: Integrate Resend for transactional email with React Email templates. Use when implementing email sending, webhook handling, domain verification, or batch email operations.
+description: Load when integrating Resend for transactional email with React Email templates. Applies when implementing email sending, webhook handling, domain verification, or batch email operations.
 ---
 
 # Integrating Resend
 
-Provides patterns for transactional email with Resend API and React Email templates. Covers template creation, webhook handling, retry patterns, domain verification, and batch sending.
+Follow these patterns for transactional email with Resend API and React Email templates. Covers template creation, webhook handling, retry patterns, domain verification, and batch sending.
 
 ## 🔌 MCP Server (Recommended)
 
@@ -34,7 +34,7 @@ Install the official Resend MCP server via Docker:
 
 ---
 
-## When to Use
+## When This Rule Applies
 
 Apply when implementing transactional email, marketing email, or any email sending with Resend.
 

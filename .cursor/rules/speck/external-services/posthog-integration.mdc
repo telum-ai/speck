@@ -1,11 +1,11 @@
 ---
 name: posthog-integration
-description: Integrate PostHog for product analytics and feature flags. Use when implementing event tracking, A/B testing, session replay, or funnel analysis.
+description: Load when integrating PostHog for product analytics and feature flags. Applies when implementing event tracking, A/B testing, session replay, or funnel analysis.
 ---
 
 # Integrating PostHog
 
-Provides patterns for product analytics with PostHog. Covers event taxonomy, feature flags, session replay, funnel analysis, and self-hosting considerations.
+Follow these patterns for product analytics with PostHog. Covers event taxonomy, feature flags, session replay, funnel analysis, and self-hosting considerations.
 
 ## 🔌 MCP Server (Recommended)
 
@@ -35,7 +35,7 @@ Get your API key with the [MCP Server preset](https://app.posthog.com/settings/u
 
 ---
 
-## When to Use
+## When This Rule Applies
 
 Apply when implementing product analytics, feature flags, A/B testing, or session replay with PostHog.
 

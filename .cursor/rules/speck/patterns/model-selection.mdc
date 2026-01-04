@@ -1,626 +1,117 @@
 ---
 name: model-selection
-description: Guide agents and users to select the optimal LLM for each task based on cost, quality, speed, and task characteristics. Use when choosing models for complex reasoning, code generation, or validation.
+description: Load at the start of any task to assess whether the current model is optimal. Prompt the user to switch models when task characteristics indicate a better choice exists.
 ---
 
-# Model Selection Pattern
+# Model Selection
 
-Guide agents and users to select the optimal LLM for each task based on cost, quality, speed, and task characteristics.
+At the start of each significant task, assess whether the current model is optimal for the work ahead. If a different model would be substantially better, prompt the user to switch.
 
----
+## When to Prompt for Model Switch
 
-## 🎯 Quick Reference: Which Model When?
+Evaluate these conditions and prompt the user if a switch is warranted:
+
+### Upgrade to Opus 4.5 When:
+- Task involves complex architecture design or multi-system reasoning
+- Critical code review where accuracy is paramount
+- Deep domain understanding required (e.g., `/project-domain`, `/project-constitution`)
+- User is struggling with a complex problem that needs deeper reasoning
+
+**Prompt template**:
+```
+💡 **Model Recommendation**: This task involves [complex architecture/deep reasoning/critical review]. 
+Consider switching to **Opus 4.5** for higher accuracy. You can switch back to Sonnet after this step.
+```
+
+### Upgrade to GPT-5.2 Extra High When:
+- Writing security-sensitive code (lowest vulnerability rate)
+- Mathematical or algorithmic problems requiring precise reasoning
+- Long-document analysis
+
+### Switch to Gemini 3 Flash / Grok Code When:
+- User needs fast responses for interactive work
+- Simple fixes or quick iterations
+- Budget is a concern
+- "Vibe coding" or UI polish work
+
+**Prompt template**:
+```
+💡 **Model Recommendation**: For this interactive/quick-fix work, **Gemini 3 Flash** would provide 
+faster responses while maintaining sufficient quality.
+```
+
+### Use Composer 1 (in Cursor) When:
+- Story implementation (`/story-implement`)
+- Multi-file editing and refactoring
+- Rapid prototyping
+- User is in Cursor IDE and speed matters
+
+### Cross-Validation Recommended When:
+- Architecture decisions are being finalized
+- Security-sensitive code has been written
+- Production deployment is imminent
+
+**Prompt template**:
+```
+💡 **Cross-Validation Recommended**: This [architecture/critical code] was authored with [current model]. 
+For additional confidence, consider having a different model review it before proceeding.
+```
+
+## Quick Reference Table
 
 | Task Type | Recommended Model | Why |
 |-----------|------------------|-----|
-| **Complex architecture design** | Opus 4.5 | Deep reasoning, multi-system understanding |
-| **Production code review (critical)** | Opus 4.5 | Highest accuracy, catches subtle bugs |
-| **Security-sensitive code** | GPT-5.2 Extra High | Lowest vulnerability rate (16/MLOC) |
-| **Standard feature implementation** | Sonnet 4.5 | Best balance of quality/cost/speed |
-| **Interactive pair programming** | Gemini 3 Flash / GPT-5.2 | Speed for flow state |
-| **UI/Frontend work ("vibe coding")** | Gemini 3 Flash / Gemini 3 Pro | Excels at visual polish and interfaces |
-| **Quick fixes and small changes** | Gemini 3 Flash / Grok Code | Fast, cheap, reliable |
-| **Large codebase analysis** | GPT-5.2 / Gemini 3 Flash | Long context handling |
-| **Multi-file refactoring** | Sonnet 4.5 / Opus 4.5 | 0% edit error rate |
-| **Long-horizon autonomous tasks** | Codex Max / Sonnet 4.5 | Context compaction, sustained coherence |
-| **Mathematical/algorithmic problems** | GPT-5.2 Extra High | 100% AIME 2025, superior reasoning |
-| **Budget-constrained high volume** | Gemini 3 Flash / Grok Code | $0.20-$0.50/M input tokens |
-| **Real-time agentic pipelines** | Grok Code / Composer 1 | 250-455 tok/s speed |
-| **Story implementation (Cursor)** | **Composer 1** | 4x faster, native Cursor integration |
-| **Multi-file editing (Cursor)** | **Composer 1** | Parallel tool execution |
-| **Zero-to-one project building** | **Composer 1** | Optimized for this use case |
-| **Cross-model validation** | Different model than author | Fresh perspective, catches blind spots |
-| **LLM-as-Judge evaluation** | Opus 4.5 / GPT-5.2 Extra High | Stronger judges catch more issues |
-
----
-
-## 📊 Model Profiles (December 2025)
-
-### Tier 1: Frontier Reasoning (Complex Tasks)
-
-#### Claude Opus 4.5
-- **Strengths**: Highest SWE-bench (80.9%), exceptional multi-step reasoning, understands complex architectures, 76% more token-efficient than Sonnet
-- **Code Quality**: 83.62% pass rate, 55 control flow mistakes/MLOC, 44 blocker vulns/MLOC
-- **Speed/Cost**: Slowest (49-70 tok/s), most expensive ($5/$25 per M tokens)
-- **Best for**: Architecture decisions, complex debugging, mission-critical code review, SEO analysis, business analysis
-- **Avoid for**: Quick iterations, high-volume tasks, budget-constrained work
-
-#### GPT-5.2 (Instant / Thinking / Pro)
-
-GPT-5.2 comes in three variants with configurable reasoning effort (medium, extra high):
-
-| Variant | Use Case | Pricing ($/M) |
-|---------|----------|---------------|
-| **Instant** | Fast routine tasks, info seeking | Low |
-| **Thinking** | Balanced for coding, analysis | $1.75 / $14 |
-| **Pro** | Peak quality, frontier challenges | $21 / $168 |
-
-- **Strengths**: 
-  - 80% SWE-bench Verified, 55.6% SWE-bench Pro
-  - 100% AIME 2025, 70.9% beats experts (GDPval)
-  - Exceptional long-context (77% at 256K)
-  - 98.7% tool-calling accuracy (Tau2-bench)
-  - 30% fewer hallucinations than GPT-5.1
-- **Code Quality**: **Best security** - 22 control flow mistakes/MLOC, **16 blocker vulns/MLOC** (lowest!)
-- **Weaknesses**: 
-  - Can be **slow** (minutes for complex tasks, hours reported by some users)
-  - Requires reasoning mode for best results
-  - 38% on SimpleQA (factual accuracy)
-  - Users note "robotic personality" and over-safety
-- **Best for**: Security-sensitive code, mathematical problems, long-document analysis, professional knowledge work
-- **Avoid for**: Interactive work where latency matters, simple tasks
-
-### Tier 2: Production Workhorses (Daily Development)
-
-#### Claude Sonnet 4.5
-- **Strengths**: 77-82% SWE-bench, **0% code edit error rate**, maintains coherence 30+ hours, reliable
-- **Code Quality**: ~80% pass rate, but 152 control flow mistakes/MLOC (higher than Opus)
-- **Token Usage**: Uses 12-22% MORE tokens than Opus for similar tasks
-- **Speed/Cost**: Moderate speed, $3/$15 per M tokens
-- **Best for**: Feature implementation, bug fixing, code review, most development work
-- **Trade-off**: The "default choice" - excellent for 90% of tasks
-
-#### GPT-5.2 (Medium Reasoning)
-- **Strengths**: Fast (187 tok/s), good SWE-bench, excellent tool calling (98.7%), multimodal, 70.9% beats experts
-- **Weaknesses**: Needs configuration for optimal results, context smaller than Gemini
-- **Best for**: Speed-sensitive work, API integrations, visual debugging
-- **Trade-off**: Faster than Sonnet but requires more parameter tuning
-
-### Tier 3: Speed/Cost Optimized (High Volume)
-
-#### Gemini 3 Flash
-
-Released December 17, 2025. Often **outperforms Pro in agentic coding** while being faster and cheaper.
-
-- **Benchmarks**: 
-  - 78% SWE-bench Verified (beats Pro's 76.2%!)
-  - 49.4% Toolathlon (long-horizon agentic tasks)
-  - 90.4% GPQA Diamond, 81.2% MMMU-Pro
-- **Strengths**: 
-  - Very fast (218 tok/s, 3x faster than 2.5 Pro)
-  - Cheapest quality option ($0.50/$3)
-  - 30% more token-efficient than prior models
-  - Excels at "vibe coding" and intention-first development
-  - Reads files minimally, makes targeted changes
-  - Great for real-time apps, A/B testing, rapid iterations
-- **Modes**: Flash Thinking (Elo 2316 competitive coding)
-- **Weaknesses**: Less depth for very complex reasoning
-- **Best for**: Interactive development, UI/frontend, high-volume, scaling production
-- **User Feedback**: "Game changer" for prototypes, bridges non-coders to engineering
-
-#### Grok Code
-- **Strengths**: **Fastest** (455 tok/s!), extreme cost efficiency ($0.20/$1.50), 90%+ cache hit rates
-- **Weaknesses**: 70.8% SWE-bench (lower than leaders), struggles with complex architecture
-- **Best for**: Rapid prototyping, agentic workflows, real-time product pipelines
-- **Avoid for**: Production code review, complex multi-file changes, visual polish
-
-### Tier 4: Specialized
-
-#### GPT-5.1 Codex Max / Codex
-
-Specialized for agentic, long-horizon coding workflows (released November 2025).
-
-- **Benchmarks**: 77.9% SWE-bench Verified, 58.1% Terminal-Bench 2.0, 88% Aider Polyglot
-- **Strengths**: 
-  - **Compaction**: Manages millions of tokens efficiently for extended sessions
-  - Optimized for multi-hour refactors, debugging, test generation
-  - Strong Windows support and multimodal (interprets diagrams → code)
-  - Medium and extra high reasoning modes
-- **Pricing**: $1.25 / $10 per M tokens (cost-effective)
-- **Weaknesses**: 
-  - Generalization issues reported (benchmark-focused vs real-world)
-  - Occasional over-engineering
-  - Less versatile for quick queries
-- **Best for**: Large refactoring, migrations, 24-hour autonomous sessions, GitHub Copilot integration
-
-#### GPT-5.2 Codex (December 17, 2025)
-
-Merges GPT-5.2 reasoning with Codex optimizations.
-
-- **Benchmarks**: 56.4% SWE-bench Pro, 64.0% Terminal-Bench (better than Codex Max)
-- **Strengths**:
-  - Native compaction for persistent million-token sessions
-  - **Cybersecurity features**: Vulnerability detection (React disclosures, etc.)
-  - Dependency-aware changes across large repos
-  - Visual → prototype translation
-- **Weaknesses**: Premium pricing, restricted access for cyber features
-- **Best for**: Large repo refactoring with dependencies, security auditing, long-running agents
-
-#### Composer 1 (Cursor)
-
-Cursor's proprietary LLM, purpose-built for agentic coding workflows.
-
-- **Architecture**: Mixture-of-Experts (MoE), trained via reinforcement learning on real software engineering challenges
-- **Strengths**: 
-  - **4x faster** than Sonnet 4.5/GPT-5.2 (250 tok/s)
-  - Native Cursor integration (semantic search, file editing, terminal commands)
-  - Parallel tool execution (reads multiple files simultaneously)
-  - Frontier-level on Cursor Bench for agentic tasks
-  - Completes tasks in <30 seconds
-  - Excellent at fixing linter errors, writing tests autonomously
-- **Pricing**: $1.25/$10 per M tokens (competitive with GPT-5.2)
-- **Weaknesses**: 
-  - Slightly less "smart" for vague prompts (give explicit instructions!)
-  - May overcomplicate simple tasks
-  - Less depth in complex reasoning vs Opus 4.5
-- **Best for**: 
-  - All Speck story implementation (`/story-implement`)
-  - Rapid prototyping and MVPs
-  - Multi-file editing and refactoring
-  - Zero-to-one project building
-  - Iterative development where speed matters
-- **Multi-Agent Pattern**: Use heavier models (Opus/GPT-5.2) for planning, Composer for execution
-
-**User Feedback (X/Twitter)**: "Total game changer" - eliminates wait times, enables step-by-step control. Users report building full apps in minutes. Works well in stacks with Gemini 3 Flash for rapid MVP building (~$1.42/MVP reported).
-
-### ⚠️ Use With Caution
-
-#### Gemini 3 Pro
-
-Released November 18, 2025. Strong in multimodal reasoning but has reliability concerns.
-
-- **Benchmarks**: 
-  - 76.2% SWE-bench Verified (lower than Flash!)
-  - 54.2% Terminal-Bench
-  - 91.9% GPQA Diamond (highest!), 81.0% MMMU-Pro
-- **Strengths**:
-  - Excellent "vibe coding" - transforms abstract ideas into prototypes
-  - Deep multimodal reasoning (text, images, video, audio, code)
-  - 1M token context window
-  - Deep Think mode for PhD-level reasoning
-  - 35-50% improvement over Gemini 2.5 in coding accuracy
-- **Pricing**: $2/$12 (scales to $4/$18 for >200k tokens)
-- **Speed**: ~70 tok/s (slower than Flash)
-- **Known Issues**: 
-  - Aggressive code deletion reported
-  - Context loss, memory leaks (137GB reported)
-  - 200 control flow mistakes/MLOC (highest error rate!)
-  - May ignore complex instructions
-- **Recommendation**: Use for multimodal/visual work, but verify outputs carefully
-- **Better Alternative**: Gemini 3 Flash for most coding tasks
-
----
-
-## 🔄 Multi-Model Strategy
-
-### The Principle
-No single model dominates all dimensions. Use different models for different tasks:
-
-```
-Task Assessment
-     ↓
-┌────────────────────────────────────────────────┐
-│  Is this a complex reasoning task?             │
-│  - Architecture design                         │
-│  - Complex debugging                           │
-│  - Critical code review                        │
-│  → Use Opus 4.5 or GPT-5.2 Extra High         │
-└────────────────────────────────────────────────┘
-     ↓ No
-┌────────────────────────────────────────────────┐
-│  Is speed critical for flow state?             │
-│  - Interactive pair programming                │
-│  - Rapid prototyping                           │
-│  - Quick fixes                                 │
-│  → Use Gemini 3 Flash or GPT-5.2              │
-└────────────────────────────────────────────────┘
-     ↓ No
-┌────────────────────────────────────────────────┐
-│  Is this standard development work?            │
-│  - Feature implementation                      │
-│  - Bug fixes                                   │
-│  - Code modifications                          │
-│  → Use Sonnet 4.5 (default)                   │
-└────────────────────────────────────────────────┘
-```
-
-### Cross-Model Validation Pattern
-
-For critical decisions, use a different model to validate:
-
-1. **Author with Model A** → Generates solution
-2. **Review with Model B** → Fresh perspective catches blind spots
-3. **Synthesize** → Combine insights
-
-**Example Pairings**:
-- Sonnet 4.5 authors code → Opus 4.5 reviews
-- GPT-5.2 designs architecture → Sonnet 4.5 implements
-- Any model implements → Different model validates
-
-### LLM-as-Judge Best Practices
-
-When using one LLM to evaluate another's work (increasingly common in 2025):
-
-**1. Use Rubric-Based Grading**:
-```
-Evaluate this code against the following criteria:
-- Correctness: Does it solve the problem? (1-5)
-- Maintainability: Is it readable and well-structured? (1-5)
-- Security: Are there any vulnerabilities? (1-5)
-- Performance: Is it efficient? (1-5)
-```
-
-**2. Consider Ensemble Approaches**:
-- Have 2-3 different models evaluate the same output
-- Aggregate scores to reduce individual model biases
-- Flag cases where models disagree significantly
-
-**3. Match Judge Capability to Task**:
-- Use Opus 4.5 or GPT-5.2 Extra High as judges (stronger models catch more issues)
-- Weaker judges may miss subtle problems or prefer their own style
-- Cross-model evaluation highlights style preferences and accuracy differences
-
-**4. Evaluate Against References**:
-- Provide spec.md or acceptance criteria as reference
-- Ask judge to verify alignment, not just quality
-
----
-
-## ⚡ Cursor MAX Mode: When to Use It
-
-MAX mode unlocks extended context windows and more tool calls, but at significant cost. Use deliberately.
-
-### What MAX Mode Actually Does
-
-| Feature | Normal Mode | MAX Mode |
-|---------|-------------|----------|
-| Context window | 200K tokens (~16K lines) | Model's max (varies) |
-| Tool calls per request | 25 | **200** |
-| File read per operation | Limited | 750 lines |
-| Pricing | Request-based | **Token-based** (API + 20%) |
-| Speed | Faster | **Slower** (more context to process) |
-
-**Context expansion varies by model:**
-- Claude models: Stays at 200K (no increase!)
-- Gemini 2.5 Pro: Expands to **1M tokens** (5x increase)
-
-### ✅ When to Use MAX Mode
-
-| Scenario | Why MAX Helps |
-|----------|---------------|
-| **Project-wide refactoring** | AI sees full impact across codebase |
-| **Large codebase navigation** | Understand architectural patterns |
-| **Multi-file coordinated changes** | 200 tool calls for autonomous operation |
-| **Background agents (complex tasks)** | Complete without user intervention |
-| **Understanding new large codebase** | Reference actual implementations everywhere |
-
-### ❌ When to AVOID MAX Mode
-
-| Scenario | Why Normal Mode Suffices |
-|----------|--------------------------|
-| **Single-file edits** | Explicitly include relevant files |
-| **Small feature implementation** | Reference 1-2 pattern files manually |
-| **Bug fixes in specific modules** | Error messages pinpoint the area |
-| **Documentation tasks** | Only needs current component context |
-| **Terminal commands, debugging** | General knowledge, not codebase-specific |
-
-### 💸 Cost Reality Check
-
-**MAX mode uses token-based pricing** - costs depend entirely on context consumed.
-
-| Example | Estimated Cost |
-|---------|----------------|
-| Single moderate MAX request | $0.50 - $1.00 |
-| Single complex MAX request (Claude Opus) | **$5 - $10+** |
-| Background agent complex task | **$20 - $60+** |
-| $20/month Pro plan exhausted after | ~40 moderate MAX requests |
-
-**User reports from forums:**
-- "Claude 4.5 Sonnet 1 message alone easily costs you $5+"
-- "174 gemini requests + 1269 tool calls = $79 in a single day"
-- Background agents can burn monthly budget in one session
-
-### Decision Framework
-
-```
-Before enabling MAX mode, ask:
-     ↓
-┌─────────────────────────────────────────┐
-│ Does this task span multiple unrelated  │
-│ modules/components?                     │
-│ → No: Use normal mode                   │
-└─────────────────────────────────────────┘
-     ↓ Yes
-┌─────────────────────────────────────────┐
-│ Can I explicitly include relevant       │
-│ context files manually?                 │
-│ → Yes: Use normal mode + explicit files │
-└─────────────────────────────────────────┘
-     ↓ No
-┌─────────────────────────────────────────┐
-│ Will I need >25 tool calls for this     │
-│ agent task?                             │
-│ → No: Normal mode probably fine         │
-└─────────────────────────────────────────┘
-     ↓ Yes
-┌─────────────────────────────────────────┐
-│ Am I prepared for $5-$60+ cost?         │
-│ → Yes: Enable MAX mode                  │
-│ → No: Break task into smaller pieces    │
-└─────────────────────────────────────────┘
-```
-
-### Best Practices
-
-1. **Default to normal mode** - Most tasks don't need MAX
-2. **Use Auto model** - Unlimited usage, intelligent model selection
-3. **Explicitly manage context** - Open relevant files, select in chat
-4. **Monitor background agents** - They default to MAX mode!
-5. **Break large tasks** - Smaller pieces in normal mode often works better
-
----
-
-## 🎯 Multi-Agent Strategy with Composer
-
-When using Cursor, leverage Composer for execution tasks.
-
-### The Multi-Agent Pattern
-
-```
-Heavy Reasoning Model (Opus 4.5 / GPT-5.2)
-    ↓ Plans architecture, makes decisions
-    ↓ Creates specs, designs systems
-    
-Composer 1 (Default for Execution)
-    ↓ Implements the plan 4x faster
-    ↓ Handles multi-file edits, refactoring
-    ↓ Fixes linter errors, writes tests
-    
-Validation Model (Different from implementer)
-    ↓ Reviews Composer's output
-    ↓ Catches blind spots
-```
-
-### When to Use Composer vs. Other Models
-
-| Scenario | Use Composer? | Alternative |
-|----------|---------------|-------------|
-| Story implementation | ✅ Yes | Opus 4.5 for security-critical |
-| Structured task output | ✅ Yes | Gemini 3 Flash |
-| Multi-file refactoring | ✅ Yes (parallel tool use) | Sonnet 4.5 |
-| Rapid prototyping | ✅ Yes (speed matters) | Grok Code |
-| Zero-to-one project | ✅ Yes | - |
-| Complex architecture design | ❌ No | Opus 4.5 |
-| Vague/ambiguous prompts | ❌ No | Sonnet 4.5 |
-| Security-critical code | ❌ No | GPT-5.2 Extra High |
-| Deep reasoning tasks | ❌ No | Opus 4.5 |
-
-### Composer Best Practices
-
-1. **Be explicit**: Composer excels with clear instructions, may overcomplicate vague prompts
-2. **Use for execution, not planning**: Pair with heavier models for the "thinking" phase
-3. **Leverage parallel tool use**: Let it read/edit multiple files simultaneously
-4. **Trust its linting**: It fixes linter errors autonomously
-5. **Iterate fast**: Its speed enables rapid feedback loops
-
----
-
-## 📋 Model Selection by Speck Command
+| Complex architecture | Opus 4.5 | Deep reasoning |
+| Critical code review | Opus 4.5 | Highest accuracy |
+| Security-sensitive code | GPT-5.2 Extra High | Lowest vulns |
+| Standard implementation | Sonnet 4.5 | Best balance |
+| Story implementation (Cursor) | Composer 1 | 4x faster |
+| Interactive/quick fixes | Gemini 3 Flash | Speed |
+| Budget-constrained | Gemini 3 Flash | Cheapest quality |
+| Mathematical problems | GPT-5.2 Extra High | 100% AIME 2025 |
+| Validation | Different model | Fresh perspective |
+
+## Speck Command Recommendations
 
 ### Project Level
-
-| Command | Recommended Model | Reasoning |
-|---------|------------------|-----------|
-| `/project-specify` | Sonnet 4.5 | Standard Q&A, good reasoning |
-| `/project-domain` | Opus 4.5 | Deep domain understanding, terminology precision |
-| `/project-ux` | Sonnet 4.5 | Creative + analytical balance |
-| `/project-context` | Sonnet 4.5 | Standard documentation |
-| `/project-constitution` | Opus 4.5 | Principle extraction requires deep reasoning |
-| `/project-architecture` | **Opus 4.5** | Complex system design, critical decisions |
-| `/project-plan` | Sonnet 4.5 | Structured output, good organization |
-| `/project-validate` | **Different model than author** | Cross-validation catches blind spots |
-
-### Epic Level
-
-| Command | Recommended Model | Reasoning |
-|---------|------------------|-----------|
-| `/epic-specify` | Sonnet 4.5 | Standard specification work |
-| `/epic-architecture` | Opus 4.5 / Sonnet 4.5 | Depends on epic complexity |
-| `/epic-plan` | Sonnet 4.5 | Technical specification |
-| `/epic-breakdown` | Sonnet 4.5 | Story organization |
-| `/epic-validate` | **Different model than author** | Cross-validation |
+| Command | Model | Reason |
+|---------|-------|--------|
+| `/project-domain` | Opus 4.5 | Deep domain understanding |
+| `/project-architecture` | Opus 4.5 | Complex system design |
+| `/project-constitution` | Opus 4.5 | Principle extraction |
+| `/project-validate` | Different model | Cross-validation |
+| Other project commands | Sonnet 4.5 | Good balance |
 
 ### Story Level
+| Command | Model | Reason |
+|---------|-------|--------|
+| `/story-implement` | Composer 1 | Speed + Cursor integration |
+| `/story-tasks` | Composer 1 / Gemini 3 Flash | Fast structured output |
+| `/story-plan` | Sonnet 4.5 | Reasoning needed |
+| `/story-validate` | Different from implementer | Cross-validation |
 
-| Command | Recommended Model | Reasoning |
-|---------|------------------|-----------|
-| `/story-specify` | Sonnet 4.5 / Composer 1 | Quick, reliable |
-| `/story-plan` | Sonnet 4.5 | Technical design, reasoning needed |
-| `/story-tasks` | **Composer 1** / Gemini 3 Flash | Fast, structured output |
-| `/story-implement` | **Composer 1** (default) | 4x faster, native Cursor integration |
-| `/story-validate` | **Different model than implementer** | Catch implementer's blind spots |
+## When NOT to Prompt
 
-**Note**: When using Cursor, Composer 1 is optimal for story-level execution due to native integration.
+Don't prompt for model switch if:
+- User just switched models (avoid flip-flopping)
+- Task is simple and current model is adequate
+- User has explicitly stated model preference
+- Switching would interrupt flow for minimal gain
 
-### Implementation Task Selection
+## MAX Mode Guidance
 
-```
-Story Implementation
-     ↓
-┌─────────────────────────────────────────┐
-│ Security-critical code?                 │
-│ → GPT-5.2 Extra High (lowest vulns)    │
-└─────────────────────────────────────────┘
-     ↓ No
-┌─────────────────────────────────────────┐
-│ Complex algorithm / math problem?       │
-│ → GPT-5.2 Extra High (100% AIME 2025)  │
-└─────────────────────────────────────────┘
-     ↓ No
-┌─────────────────────────────────────────┐
-│ Vague/ambiguous requirements?           │
-│ → Sonnet 4.5 (handles ambiguity well)  │
-└─────────────────────────────────────────┘
-     ↓ No
-┌─────────────────────────────────────────┐
-│ Using Cursor IDE?                       │
-│ → Composer 1 (4x faster, native tools) │
-└─────────────────────────────────────────┘
-     ↓ Not using Cursor
-┌─────────────────────────────────────────┐
-│ Need maximum speed/low cost?            │
-│ → Gemini 3 Flash or Grok Code          │
-└─────────────────────────────────────────┘
-     ↓ No
-┌─────────────────────────────────────────┐
-│ Standard feature implementation?        │
-│ → Sonnet 4.5 (reliable default)        │
-└─────────────────────────────────────────┘
-```
-
----
-
-## 💰 Cost Optimization Strategies
-
-### Token Efficiency Matters More Than Per-Token Price
-
-| Model | Input/Output (per M) | Token Efficiency |
-|-------|---------------------|------------------|
-| Gemini 3 Flash | $0.50 / $3 | Good |
-| GPT-5.2 | $1.75 / $14 | Very Good |
-| Sonnet 4.5 | $3 / $15 | Good |
-| Opus 4.5 | $5 / $25 | **Best** (76% fewer tokens) |
-
-**Paradox**: Opus 4.5's higher per-token cost often results in lower total cost due to superior efficiency.
-
-### Budget Tiers
-
-**Tight Budget**:
-- Default: Gemini 3 Flash
-- Complex: Sonnet 4.5
-- Critical: Opus 4.5 (sparingly)
-
-**Moderate Budget**:
-- Default: Sonnet 4.5
-- Complex: Opus 4.5
-- Quick fixes: Gemini 3 Flash
-
-**Performance Priority**:
-- Default: Sonnet 4.5
-- Complex: Opus 4.5
-- Cross-validation: Always use different model
-
----
-
-## 🔧 How Agents Should Use This Pattern
-
-### Before Starting a Command
-
-1. **Assess task complexity**: Simple → Complex scale
-2. **Check speed requirements**: Is user waiting interactively?
-3. **Consider budget context**: Is this a cost-sensitive project?
-4. **Apply selection logic**: Use the decision trees above
-
-### Suggesting Model Switches
-
-When the current model may not be optimal, suggest:
+If you detect a task that would benefit from MAX mode (project-wide refactoring, large codebase navigation, >25 tool calls needed), inform the user:
 
 ```
-💡 **Model Recommendation**: This task involves [complex architecture design / 
-deep reasoning / critical code review]. Consider switching to Opus 4.5 for 
-this step, then returning to Sonnet 4.5 for implementation.
+💡 **MAX Mode**: This task spans multiple modules and may need >25 tool calls. 
+Consider enabling MAX mode, but be aware it uses token-based pricing ($5-60+ per complex request).
 ```
 
-Or for speed:
+Avoid MAX mode for single-file edits, small features, or bug fixes.
 
-```
-💡 **Model Recommendation**: For this interactive debugging session, 
-Gemini 3 Flash or GPT-5.2 would provide faster responses while 
-maintaining sufficient quality.
-```
+## Cost Awareness
 
-### Cross-Validation Prompts
-
-After generating critical artifacts:
-
-```
-💡 **Cross-Validation Recommended**: This [architecture / critical code / 
-security-sensitive change] was authored with [Model A]. For additional 
-confidence, consider having [Model B] review it with fresh perspective.
-```
-
----
-
-## 📈 Benchmark Comparison Tables
-
-### Coding Performance
-
-| Model | SWE-Bench | Terminal-Bench | GPQA Diamond | Control Flow/MLOC | Vulns/MLOC |
-|-------|-----------|----------------|--------------|-------------------|------------|
-| Opus 4.5 | 80.9% | 59.3% | 87.0% | 55 | 44 |
-| GPT-5.2 | 80.0% | 62.2% | - | **22** | **16** |
-| Gemini 3 Flash | 78.0% | 47.6% | 90.4% | - | - |
-| GPT-5.1 Codex Max | 77.9% | 58.1% | - | 98 | - |
-| Sonnet 4.5 | 77.2% | 50.0% | 83.4% | 152 | ~198 |
-| Gemini 3 Pro | 76.2% | 54.2% | **91.9%** | 200 | - |
-| Grok Code | 70.8% | - | - | - | - |
-| GPT-5.2 Codex | - | **64.0%** | - | - | - |
-
-**Key Insights**: 
-- GPT-5.2 has the **best security profile** (lowest vulnerability rates)
-- GPT-5.2 Codex leads on Terminal-Bench (64.0%) for CLI automation
-- **Gemini 3 Flash beats Pro** on SWE-bench (78% vs 76.2%)!
-- Gemini 3 Pro leads GPQA Diamond (91.9%) but has highest code errors
-
-### Speed and Pricing
-
-| Model | Input/Output ($/M) | Speed | Notes |
-|-------|-------------------|-------|-------|
-| Grok Code | $0.20 / $1.50 | **455 tok/s** | Fastest, cheapest |
-| Gemini 3 Flash | $0.50 / $3 | 218 tok/s | Best price/performance |
-| GPT-5.1 Codex Max | $1.25 / $10 | Fast | Cost-effective for coding |
-| Composer 1 | $1.25 / $10 | 250 tok/s | Native Cursor integration |
-| GPT-5.2 Thinking | $1.75 / $14 | 187 tok/s | Can be slow for complex |
-| Gemini 3 Pro | $2 / $12 ($4/$18 >200k) | ~70 tok/s | Multimodal, reliability issues |
-| Sonnet 4.5 | $3 / $15 | Moderate | Best balance |
-| Opus 4.5 | $5 / $25 | 49-70 tok/s | Premium quality |
-| GPT-5.2 Pro | $21 / $168 | Variable | Peak quality, very slow |
-
-**Key Insights**: 
-- Grok Code is 30x cheaper than Opus 4.5
-- GPT-5.2 Pro is premium tier ($21/M input) but can take minutes/hours
-- Composer 1 matches Codex Max pricing with native Cursor integration
-
----
-
-## 📚 Sources
-
-This pattern is based on December 2025 benchmarks and user reports:
-
-- SWE-bench Verified scores
-- Terminal-Bench 2.0 evaluations
-- SonarQube code quality analysis
-- Token efficiency measurements
-- Production reliability reports
-- Speed benchmarks (tokens/second)
-- Pricing data from official sources
-- X/Twitter developer community reports
-
-**Key Citations**:
-- LLM Comparison Guide: December 2025 Rankings
-- New data on code quality: GPT-5.2, Opus 4.5, Gemini 3
-- LLM Evaluation in 2025: LLM-as-Judge Best Practices
-- Composer: Building a fast frontier model with RL
-- Grok Code Fast 1 | xAI
-
-**Update Frequency**: This pattern should be reviewed monthly as model capabilities evolve rapidly.
+When budget is mentioned or implied:
+- Default to Gemini 3 Flash for routine work
+- Reserve Opus 4.5 for critical decisions only
+- Note that Opus 4.5's higher per-token cost often results in lower total cost due to 76% better token efficiency

@@ -1,6 +1,6 @@
 ---
 name: visual-testing-web
-description: Visual testing for web applications using Browser MCP tools, Playwright, Percy, and Chromatic. Use when validating responsive layouts, component states, and accessibility on web platforms.
+description: Load when running visual validation for web applications - Next.js, SvelteKit, React, Django, Go+HTMX, or static sites. Provides Browser MCP tool usage and Playwright patterns.
 ---
 
 # Web Visual Testing
@@ -11,394 +11,194 @@ description: Visual testing for web applications using Browser MCP tools, Playwr
 
 ---
 
-## 🎯 Overview
-
-Web visual testing leverages the Speck agent's browser MCP tools for autonomous screenshot capture, interaction, and auditing. This pattern covers responsive testing, component state validation, and accessibility verification.
-
----
-
-## Tight Loop (Default)
+## 🔄 Tight Loop (Default)
 
 **Goal**: Get high-signal visual feedback fast (minutes, not hours) with minimal flake.
 
 **Start Small**:
-- **Screens**: 1–3 screens/components most impacted by the story
-- **Breakpoints**: `mobile` + `desktop` first (expand to `tablet`/`wide` only if responsive behavior is in scope)
-- **States**: default + loading + empty + error (as applicable) + one interaction state (hover/focus)
+- **Screens**: Focus on 1–3 screens/components most impacted by the story
+- **Breakpoints**: Start with `mobile` (375px) + `desktop` (1024px) only
+- **States**: Cover default + loading + empty + error + one interaction state (hover/focus)
 
-**Run (recommended order)**:
-1. Stabilize UI (disable animations/transitions, wait for network idle)
-2. Capture screenshots for the scoped screens at scoped breakpoints
-3. Run accessibility audit (`runAccessibilityAudit`) and capture console errors
-4. If diffs occur: decide "expected change" vs "bug", then either update baselines or fix UI
+**Run Order**:
+1. Stabilize UI (disable animations, wait for network idle)
+2. Capture screenshots for scoped screens at scoped breakpoints
+3. Run accessibility audit + check console errors
+4. If diffs occur: decide "expected change" vs "bug", update baselines or fix UI
+
+**Expand Only When**:
+- Initial findings reveal responsive issues → add tablet/wide
+- Story explicitly covers all breakpoints
+- Epic validation requires full matrix
 
 ---
 
-## 🤖 Agent Capabilities
+## 🌐 Browser MCP Tools
 
-### Browser MCP Tools Available
+Use these tools for live validation:
 
-| Tool | Purpose | Example Use |
-|------|---------|-------------|
-| `browser_navigate` | Go to URL | Navigate to pages/routes |
-| `browser_snapshot` | Accessibility tree | Get element refs for interaction |
-| `browser_take_screenshot` | Capture current state | Visual evidence |
-| `browser_resize` | Set viewport size | Responsive testing |
-| `browser_click` | Click elements | Trigger states |
-| `browser_hover` | Hover elements | Capture hover states |
-| `browser_type` | Enter text | Form testing |
-| `browser_wait_for` | Wait for content | Dynamic content |
+| Tool | Purpose | Example |
+|------|---------|---------|
+| `browser_navigate` | Navigate to pages | `browser_navigate("http://localhost:3000/dashboard")` |
+| `browser_resize` | Set viewport for responsive | `browser_resize(375, 667)` |
+| `browser_take_screenshot` | Capture current state | `browser_take_screenshot("dashboard-mobile.png")` |
+| `browser_snapshot` | Get element refs for interaction | Before clicks/hovers |
+| `browser_hover` | Trigger hover states | `browser_hover(element, ref)` |
+| `browser_click` | Trigger click states | `browser_click(element, ref)` |
+| `browser_wait_for` | Wait for content to load | `browser_wait_for(text="Dashboard")` |
 
 ### Audit Tools
 
-| Tool | Purpose | When to Run |
-|------|---------|-------------|
-| `runAccessibilityAudit` | WCAG compliance | Every visual validation |
-| `runPerformanceAudit` | Core Web Vitals | Performance-sensitive stories |
-| `runBestPracticesAudit` | General best practices | Every validation |
-| `runSEOAudit` | SEO compliance | Public/marketing pages |
+| Tool | When to Run | What It Checks |
+|------|-------------|----------------|
+| `runAccessibilityAudit` | Every validation | WCAG violations, ARIA issues |
+| `runPerformanceAudit` | When perf targets specified | LCP, CLS, TTI |
+| `runBestPracticesAudit` | Every validation | Security, modern APIs |
+| `runSEOAudit` | Public/marketing pages | Meta tags, structure |
+| `getConsoleErrors` | Every validation | Runtime errors, warnings |
 
 ---
 
-## 📋 Visual Testing Workflow
+## 📱 Standard Breakpoints
 
-### 1. Navigate and Prepare
+| Name | Width | Height | When to Test |
+|------|-------|--------|--------------|
+| Mobile | 375 | 667 | **Always** (Tight Loop) |
+| Tablet | 768 | 1024 | When responsive scope |
+| Desktop | 1024 | 768 | **Always** (Tight Loop) |
+| Wide | 1280 | 800 | When wide layouts in scope |
+| Ultrawide | 1536 | 864 | Admin dashboards only |
 
-```
-1. browser_navigate(url: "http://localhost:3000/page")
-2. browser_wait_for(text: "Expected content")
-3. browser_snapshot() → Get element refs
-```
+---
 
-### 2. Responsive Testing
+## 🔧 Validation Sequence
 
-```
-For each breakpoint in design-system.md:
-  1. browser_resize(width: breakpoint, height: 800)
-  2. browser_wait_for(time: 0.5)  # Layout settle
-  3. browser_take_screenshot(filename: "page-{breakpoint}.png")
-```
-
-**Standard Breakpoints:**
-- Mobile: 375×667
-- Tablet: 768×1024
-- Desktop: 1024×768
-- Wide: 1280×800
-- Ultrawide: 1536×864
-
-### 3. State Testing
+Follow this exact sequence for each page:
 
 ```
-For each state in ui-spec.md:
-  1. browser_snapshot() → Find element ref
-  2. Trigger state:
-     - Hover: browser_hover(ref: "element-ref")
-     - Focus: browser_click(ref: "element-ref")
-     - Active: browser_click + hold (if supported)
-  3. browser_take_screenshot(filename: "component-{state}.png")
-```
+1. NAVIGATE
+   browser_navigate(url)
+   browser_wait_for(text="expected content")
 
-### 4. Run Audits
+2. STABILIZE (before any screenshots)
+   - Inject CSS to disable animations
+   - Wait for network idle
+   - Mask dynamic content if needed
 
-```
-1. runAccessibilityAudit() → Check WCAG compliance
-2. runPerformanceAudit() → Check Core Web Vitals
-3. runBestPracticesAudit() → General checks
+3. RESPONSIVE CAPTURE (Tight Loop: mobile + desktop only)
+   For each breakpoint:
+     browser_resize(width, height)
+     browser_take_screenshot("{page}-{breakpoint}.png")
+
+4. STATE CAPTURE
+   For each interactive component:
+     browser_snapshot()  # Get refs
+     browser_hover(element, ref)
+     browser_take_screenshot("{component}-hover.png")
+
+5. AUDITS
+   runAccessibilityAudit()
+   getConsoleErrors()
+   runPerformanceAudit()  # If targets specified
+
+6. VALIDATE
+   Compare screenshots to wireframes
+   Check ui-spec.md Testing Checklist
+   Report findings
 ```
 
 ---
 
-## 🔧 Playwright Integration
+## 🎭 Dynamic Content Handling
 
-For CI/CD and advanced visual regression, use Playwright:
+Before taking screenshots, stabilize dynamic content:
 
-### Visual Snapshot Testing
-
+**CSS Injection** (via `browser_evaluate`):
 ```javascript
-import { test, expect } from '@playwright/test'
-
-test('visual regression', async ({ page }) => {
-  await page.goto('/dashboard')
-  
-  // Full page screenshot
-  await expect(page).toHaveScreenshot('dashboard.png')
-  
-  // Component screenshot
-  const card = page.getByTestId('stats-card')
-  await expect(card).toHaveScreenshot('stats-card.png')
-})
+// Disable all animations
+document.head.insertAdjacentHTML('beforeend', `
+  <style>
+    *, *::before, *::after {
+      animation-duration: 0s !important;
+      transition-duration: 0s !important;
+    }
+  </style>
+`);
 ```
 
-### Responsive Testing
-
+**Masking** (for Playwright CI):
 ```javascript
-const breakpoints = [
-  { name: 'mobile', width: 375, height: 667 },
-  { name: 'tablet', width: 768, height: 1024 },
-  { name: 'desktop', width: 1280, height: 800 }
-]
-
-for (const bp of breakpoints) {
-  test(`responsive - ${bp.name}`, async ({ page }) => {
-    await page.setViewportSize({ width: bp.width, height: bp.height })
-    await page.goto('/dashboard')
-    await expect(page).toHaveScreenshot(`dashboard-${bp.name}.png`)
-  })
-}
+await expect(page).toHaveScreenshot({
+  mask: [
+    page.getByTestId('timestamp'),
+    page.getByTestId('avatar'),
+    page.getByTestId('ad-slot')
+  ]
+});
 ```
 
-### State Testing
-
+**Tolerance** (for minor differences):
 ```javascript
-test('button states', async ({ page }) => {
-  await page.goto('/components/button')
-  const button = page.getByRole('button', { name: 'Submit' })
-  
-  // Default state
-  await expect(button).toHaveScreenshot('button-default.png')
-  
-  // Hover state
-  await button.hover()
-  await expect(button).toHaveScreenshot('button-hover.png')
-  
-  // Focus state
-  await button.focus()
-  await expect(button).toHaveScreenshot('button-focus.png')
-  
-  // Disabled state
-  await page.evaluate(() => {
-    document.querySelector('button').disabled = true
-  })
-  await expect(button).toHaveScreenshot('button-disabled.png')
-})
+await expect(page).toHaveScreenshot({
+  maxDiffPixels: 100,        // Allow up to 100 different pixels
+  maxDiffPixelRatio: 0.01,   // Or 1% of total
+  threshold: 0.2             // Per-pixel color threshold
+});
 ```
 
-### Agent Commands
+---
+
+## 🧪 Playwright for CI
+
+For CI/CD visual regression, set up Playwright:
 
 ```bash
 # Run visual tests
 npx playwright test --project=chromium
 
-# Update baselines
+# Update baselines when changes are intentional
 npx playwright test --update-snapshots
-
-# Run specific test
-npx playwright test visual.spec.ts
-
-# Generate report
-npx playwright show-report
 ```
 
----
-
-## 🎨 Percy Integration
-
-For cloud-based visual regression with AI comparison:
-
-### Setup
-
-```bash
-npm install --save-dev @percy/cli @percy/playwright
-```
-
-### Usage
-
-```javascript
-import { percySnapshot } from '@percy/playwright'
-
-test('dashboard visual', async ({ page }) => {
-  await page.goto('/dashboard')
-  
-  // Single snapshot
-  await percySnapshot(page, 'Dashboard')
-  
-  // Responsive snapshot (multiple widths)
-  await percySnapshot(page, 'Dashboard Responsive', {
-    widths: [375, 768, 1280]
-  })
-  
-  // With CSS to hide dynamic content
-  await percySnapshot(page, 'Dashboard Clean', {
-    percyCSS: `
-      .timestamp { visibility: hidden; }
-      .avatar { visibility: hidden; }
-    `
-  })
-})
-```
-
-### Agent Commands
-
-```bash
-# Run Percy tests
-PERCY_TOKEN=xxx npx percy exec -- npx playwright test
-
-# Percy with specific browsers
-npx percy exec -- npx playwright test --project=chromium
-```
-
----
-
-## 📚 Storybook + Chromatic
-
-For component-level visual testing:
-
-### Storybook Stories
-
+**Key Patterns**:
 ```typescript
-// Button.stories.tsx
-export default {
-  title: 'Components/Button',
-  component: Button
-}
+// Visual assertion
+await expect(page).toHaveScreenshot('dashboard.png');
 
-export const Default = { args: { children: 'Click me' } }
-export const Primary = { args: { variant: 'primary' } }
-export const Disabled = { args: { disabled: true } }
-export const Loading = { args: { loading: true } }
+// Component screenshot
+await expect(page.getByTestId('header')).toHaveScreenshot('header.png');
+
+// Full page
+await expect(page).toHaveScreenshot('page.png', { fullPage: true });
 ```
 
-### Chromatic Integration
+---
+
+## ✅ Validation Criteria
+
+| Check | Pass Criteria | Blocking? |
+|-------|---------------|-----------|
+| Responsive layout | Correct at mobile + desktop | Yes |
+| Design tokens | No hardcoded colors/spacing in changed files | Yes |
+| Accessibility | 0 critical/serious issues | Yes |
+| Console errors | 0 errors (warnings OK) | Yes |
+| Performance | LCP < 2.5s, CLS < 0.1 (if targets specified) | No |
+| Voice/tone | Matches ux-strategy.md | No |
+
+---
+
+## 🔗 Integration with Storybook
+
+If the project uses Storybook:
+1. Run Storybook: `npm run storybook`
+2. Navigate to component stories
+3. Capture screenshots of each state
+4. Use Chromatic or Percy for automated regression
 
 ```bash
-# Install Chromatic
-npm install --save-dev chromatic
-
-# Run Chromatic
+# Chromatic (if configured)
 npx chromatic --project-token=xxx
+
+# Percy (if configured)  
+npx percy storybook
 ```
-
-Chromatic automatically:
-- Captures screenshots of every story
-- Compares against baselines
-- Provides visual diff review UI
-- Integrates with GitHub PRs
-
-### Agent Commands
-
-```bash
-# Build Storybook
-npm run build-storybook
-
-# Run Chromatic
-npx chromatic --project-token=xxx --exit-zero-on-changes
-
-# Accept all changes (update baselines)
-npx chromatic --project-token=xxx --auto-accept-changes
-```
-
----
-
-## 🔍 Dynamic Content Handling
-
-### Mask Dynamic Elements
-
-```javascript
-// Playwright
-await expect(page).toHaveScreenshot({
-  mask: [
-    page.getByTestId('timestamp'),
-    page.getByTestId('user-avatar'),
-    page.locator('.ad-container')
-  ]
-})
-```
-
-### Disable Animations
-
-```javascript
-// Before screenshot
-await page.addStyleTag({
-  content: `
-    *, *::before, *::after {
-      animation-duration: 0s !important;
-      animation-delay: 0s !important;
-      transition-duration: 0s !important;
-      transition-delay: 0s !important;
-    }
-  `
-})
-```
-
-### Wait for Stable State
-
-```javascript
-// Wait for network idle
-await page.waitForLoadState('networkidle')
-
-// Wait for specific content
-await page.waitForSelector('[data-loaded="true"]')
-
-// Wait for animations to complete
-await page.waitForTimeout(500) // Use sparingly
-```
-
----
-
-## 📊 Validation Checklist
-
-### Before Validation
-
-- [ ] App is running on local dev server
-- [ ] Test data is seeded/mocked
-- [ ] Browser MCP tools connected (or Playwright available)
-
-### During Validation
-
-- [ ] Screenshots captured at all breakpoints
-- [ ] All component states captured
-- [ ] Accessibility audit run
-- [ ] Performance audit run (if targets specified)
-- [ ] Console errors checked
-
-### Validation Criteria
-
-| Check | Pass Criteria |
-|-------|---------------|
-| Responsive | Layout correct at all breakpoints |
-| Design tokens | 100% token usage (no hardcoded values) |
-| Accessibility | 0 critical issues, 0 serious issues |
-| Performance | LCP < 2.5s, FID < 100ms, CLS < 0.1 |
-| States | All specified states render correctly |
-
----
-
-## 📝 Recipe Configuration
-
-Add to recipe.yaml:
-
-```yaml
-visual_testing:
-  platform: web
-  strategy: browser-mcp
-  breakpoints:
-    mobile: 375
-    tablet: 768
-    desktop: 1024
-    wide: 1280
-  tools:
-    primary: playwright
-    visual_regression: percy  # or chromatic
-    storybook: true
-  agent_commands:
-    screenshot: "browser_take_screenshot"
-    audit_a11y: "runAccessibilityAudit"
-    audit_perf: "runPerformanceAudit"
-    playwright_test: "npx playwright test"
-    playwright_update: "npx playwright test --update-snapshots"
-  ci_integration:
-    on_pr: true
-    block_on_diff: true
-```
-
----
-
-## 🚨 Common Issues
-
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Flaky screenshots | Animations | Disable animations before capture |
-| Different baselines per OS | Font rendering | Use Docker for consistent CI environment |
-| Dynamic content fails | Timestamps, avatars | Mask dynamic elements |
-| Layout shift detected | Lazy loading | Wait for content to load |
-| Color diff on different monitors | Color profiles | Use sRGB color space |

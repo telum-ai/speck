@@ -1,13 +1,13 @@
 ---
 name: docker-containerization
-description: Use Docker for containerizing applications. Use when creating Dockerfiles, docker-compose setups, multi-stage builds, or optimizing container images.
+description: Load when using Docker for containerizing applications. Applies when creating Dockerfiles, docker-compose setups, multi-stage builds, or optimizing container images.
 ---
 
 # Using Docker
 
-Provides patterns for containerizing applications with Docker. Covers multi-stage builds, Compose, caching, and security best practices.
+Follow these patterns for containerizing applications with Docker. Covers multi-stage builds, Compose, caching, and security best practices.
 
-## When to Use
+## When This Rule Applies
 
 Apply when containerizing applications, setting up development environments, or deploying to container orchestration platforms.
 

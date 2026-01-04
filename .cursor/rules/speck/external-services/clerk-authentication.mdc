@@ -1,6 +1,6 @@
 ---
 name: clerk-authentication
-description: Integrate Clerk for authentication in React and Next.js apps. Use when implementing auth with Next.js App Router, managing sessions, handling webhooks, or building multi-tenant apps with Organizations.
+description: Load when integrating Clerk for authentication in React and Next.js apps. Applies when implementing auth with Next.js App Router, managing sessions, handling webhooks, or building multi-tenant apps with Organizations.
 ---
 
 # Clerk Authentication
@@ -25,7 +25,7 @@ See [Clerk's MCP guide](https://clerk.com/docs/integrations/mcp) for full setup.
 
 ---
 
-## When to use this skill
+## When This Rule Applies
 - Setting up auth in Next.js App Router
 - Protecting routes with middleware
 - Handling user webhooks

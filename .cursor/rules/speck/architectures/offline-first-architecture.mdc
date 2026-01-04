@@ -1,13 +1,13 @@
 ---
 name: offline-first-architecture
-description: Build offline-first applications that work without network connectivity. Use when implementing local storage, sync queues, conflict resolution, or background sync.
+description: Load when building offline-first applications that work without network connectivity. Applies when implementing local storage, sync queues, conflict resolution, or background sync.
 ---
 
 # Building Offline-First Applications
 
-Provides patterns for applications that work without network connectivity. Covers local-first data, sync strategies, conflict resolution, and background sync.
+Follow these patterns for applications that work without network connectivity. Covers local-first data, sync strategies, conflict resolution, and background sync.
 
-## When to Use
+## When This Rule Applies
 
 Apply when building mobile apps, PWAs, or any application requiring reliable offline functionality.
 

@@ -1,11 +1,11 @@
 ---
 name: revenuecat-integration
-description: Integrate RevenueCat for in-app purchases and subscriptions. Use when implementing iOS/Android subscriptions, entitlement checking, or purchase webhooks in React Native/Flutter.
+description: Load when integrating RevenueCat for in-app purchases and subscriptions. Applies when implementing iOS/Android subscriptions, entitlement checking, or purchase webhooks in React Native/Flutter.
 ---
 
 # Integrating RevenueCat
 
-Provides patterns for in-app purchases and subscriptions with RevenueCat. Covers iOS/Android setup, entitlement checking, webhook handling, sandbox testing, and common pitfalls.
+Follow these patterns for in-app purchases and subscriptions with RevenueCat. Covers iOS/Android setup, entitlement checking, webhook handling, sandbox testing, and common pitfalls.
 
 ## 🔌 MCP Server (Recommended)
 
@@ -35,7 +35,7 @@ Or use the VS Code/Cursor extension from the [Visual Studio Marketplace](https:/
 
 ---
 
-## When to Use
+## When This Rule Applies
 
 Apply when implementing subscriptions or in-app purchases in React Native or Flutter apps.
 

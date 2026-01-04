@@ -1,6 +1,6 @@
 ---
 name: supabase-integration
-description: Integrate Supabase for database, auth, storage, and real-time features. Use when implementing Row-Level Security, Supabase Auth with Next.js/React, real-time subscriptions, or Edge Functions.
+description: Load when integrating Supabase for database, auth, storage, and real-time features. Applies when implementing Row-Level Security, Supabase Auth with Next.js/React, real-time subscriptions, or Edge Functions.
 ---
 
 # Supabase Integration
@@ -32,7 +32,7 @@ OAuth authentication will prompt you to login. Alternatively, configure in your 
 
 ---
 
-## When to use this skill
+## When This Rule Applies
 - Setting up Row-Level Security (RLS) policies
 - Integrating Supabase Auth with Next.js SSR
 - Implementing real-time subscriptions

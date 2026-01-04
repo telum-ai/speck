@@ -1,13 +1,13 @@
 ---
 name: tanstack-query
-description: Use TanStack Query (React Query) for server state management. Use when implementing data fetching, caching, mutations, or optimistic updates in React applications.
+description: Load when using TanStack Query (React Query) for server state management. Applies when implementing data fetching, caching, mutations, or optimistic updates in React applications.
 ---
 
 # Using TanStack Query (React Query)
 
-Provides patterns for server state management with TanStack Query. Covers query keys, mutations, optimistic updates, infinite queries, and caching strategies.
+Follow these patterns for server state management with TanStack Query. Covers query keys, mutations, optimistic updates, infinite queries, and caching strategies.
 
-## When to Use
+## When This Rule Applies
 
 Apply when managing server state in React applications - data fetching, caching, synchronization.
 

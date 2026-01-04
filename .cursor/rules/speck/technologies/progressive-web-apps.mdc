@@ -1,6 +1,6 @@
 ---
 name: progressive-web-apps
-description: Build Progressive Web Apps with offline support, push notifications, and installability. Use when implementing service workers, caching strategies, or PWA manifest configuration.
+description: Load when building Progressive Web Apps with offline support, push notifications, and installability. Applies when implementing service workers, caching strategies, or PWA manifest configuration.
 ---
 
 # Progressive Web Apps (PWA)

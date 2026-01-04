@@ -1,8 +1,9 @@
 ---
 name: visual-testing-desktop-electron
-description: Visual testing for Electron desktop applications using Playwright Electron API. Use when validating window states, multi-window apps, and cross-platform desktop UIs.
+description: Load when running visual validation for Electron desktop apps. Provides Playwright Electron API patterns.
 ---
 
+# Electron Visual Testing
 
 **Platform**: `desktop-electron`  
 **Applicable Recipes**: electron-react  
@@ -10,458 +11,182 @@ description: Visual testing for Electron desktop applications using Playwright E
 
 ---
 
-## 🎯 Overview
+## 🔄 Tight Loop (Default)
 
-Electron bundles Chromium with every app, ensuring consistent rendering across platforms. Playwright provides first-class Electron automation through its `_electron` API, enabling full control over both renderer and main processes.
-
----
-
-## Tight Loop (Default)
-
-**Goal**: One command to validate the main window and the key changed flow with screenshots.
+**Goal**: One command to validate the main window and key changed flows with screenshots.
 
 **Start Small**:
-- Screenshot **main window** + the 1–2 windows/routes touched by the story
-- Test **normal** window size first; add small/large only if layout is in scope
-- Test **light** theme first; add dark theme only if the story affects theming
+- **Windows**: Main window + 1–2 windows/routes touched by the story
+- **Sizes**: Normal size (1280×800) first; add small/maximized only if layout is in scope
+- **Themes**: Light mode first; add dark mode only if story affects theming
 
-**Run**:
-1. Run Electron visual tests: `npx playwright test --project=electron`
-2. If screenshots fail: determine intended vs unintended diffs, then update snapshots or fix UI
+**Run Order**:
+1. Launch Electron app via Playwright
+2. Capture main window screenshot
+3. Navigate to changed routes, capture each
+4. If diffs occur: determine intended vs unintended, update snapshots or fix UI
+
+**Expand Only When**:
+- Story explicitly covers multiple window sizes
+- Story involves multi-window interactions
+- Epic validation requires full window state matrix
 
 ---
 
-## 🎭 Playwright Electron API
+## ⚡ Playwright Electron API
 
-### Basic Setup
+Electron bundles Chromium, ensuring consistent rendering. Playwright provides first-class support.
 
-```javascript
-// playwright.config.js
-import { defineConfig } from '@playwright/test';
-
-export default defineConfig({
-  testDir: './e2e',
-  use: {
-    trace: 'on-first-retry',
-  },
-  projects: [
-    {
-      name: 'electron',
-      testMatch: '**/*.electron.spec.ts',
-    },
-  ],
-});
-```
-
-### Launch and Screenshot
+### Launching the App
 
 ```typescript
-// e2e/visual.electron.spec.ts
-import { test, expect, _electron as electron } from '@playwright/test';
+import { _electron as electron } from 'playwright';
 
-test('main window visual', async () => {
-  // Launch Electron app
-  const electronApp = await electron.launch({ args: ['.'] });
-  
-  // Wait for first window
-  const window = await electronApp.firstWindow();
-  
-  // Wait for app to be ready
-  await window.waitForLoadState('domcontentloaded');
-  await window.waitForTimeout(500); // Allow render to settle
-  
-  // Take screenshot
-  await window.screenshot({ path: 'screenshots/main-window.png' });
-  
-  // Visual assertion
-  await expect(window).toHaveScreenshot('main-window.png');
-  
-  // Clean up
-  await electronApp.close();
+const electronApp = await electron.launch({
+  args: ['path/to/your/app']
 });
+
+// Get the first window
+const window = await electronApp.firstWindow();
+
+// Wait for app to load
+await window.waitForLoadState('domcontentloaded');
 ```
 
-### Main Process Access
+### Taking Screenshots
 
 ```typescript
-test('app info from main process', async () => {
-  const electronApp = await electron.launch({ args: ['.'] });
-  
-  // Evaluate in main process
-  const appPath = await electronApp.evaluate(async ({ app }) => {
-    return app.getAppPath();
-  });
-  
-  const isPackaged = await electronApp.evaluate(async ({ app }) => {
-    return app.isPackaged;
-  });
-  
-  console.log('App path:', appPath);
-  console.log('Is packaged:', isPackaged);
-  
-  await electronApp.close();
-});
+// Full window screenshot
+await window.screenshot({ path: 'screenshots/main-window.png' });
+
+// Element screenshot
+const header = window.locator('[data-testid="header"]');
+await header.screenshot({ path: 'screenshots/header.png' });
+
+// Visual assertion (for CI)
+await expect(window).toHaveScreenshot('main-window.png');
 ```
 
-### Multi-Window Testing
+### Window State Testing
 
 ```typescript
-test('multiple windows', async () => {
-  const electronApp = await electron.launch({ args: ['.'] });
-  
-  // Get main window
-  const mainWindow = await electronApp.firstWindow();
-  await expect(mainWindow).toHaveScreenshot('main-window.png');
-  
-  // Trigger new window (e.g., settings)
-  await mainWindow.click('[data-testid="open-settings"]');
-  
-  // Wait for new window
-  const settingsWindow = await electronApp.waitForEvent('window');
-  await settingsWindow.waitForLoadState();
-  
-  await expect(settingsWindow).toHaveScreenshot('settings-window.png');
-  
-  await electronApp.close();
+// Normal size
+await window.setViewportSize({ width: 1280, height: 800 });
+await window.screenshot({ path: 'screenshots/normal.png' });
+
+// Small window
+await window.setViewportSize({ width: 800, height: 600 });
+await window.screenshot({ path: 'screenshots/small.png' });
+
+// Maximized (platform-specific)
+await electronApp.evaluate(async ({ BrowserWindow }) => {
+  const win = BrowserWindow.getAllWindows()[0];
+  win.maximize();
 });
+await window.screenshot({ path: 'screenshots/maximized.png' });
 ```
 
-### Agent Commands
+### Theme Testing
+
+```typescript
+// Force dark mode
+await electronApp.evaluate(async ({ nativeTheme }) => {
+  nativeTheme.themeSource = 'dark';
+});
+await window.screenshot({ path: 'screenshots/dark-mode.png' });
+
+// Force light mode
+await electronApp.evaluate(async ({ nativeTheme }) => {
+  nativeTheme.themeSource = 'light';
+});
+await window.screenshot({ path: 'screenshots/light-mode.png' });
+```
+
+---
+
+## 🪟 Multi-Window Testing
+
+If the app opens multiple windows:
+
+```typescript
+// Wait for second window to open
+const [secondWindow] = await Promise.all([
+  electronApp.waitForEvent('window'),
+  window.click('[data-testid="open-settings"]')
+]);
+
+// Capture secondary window
+await secondWindow.screenshot({ path: 'screenshots/settings-window.png' });
+
+// Test modal dialogs
+await window.click('[data-testid="open-dialog"]');
+await window.screenshot({ path: 'screenshots/dialog-open.png' });
+```
+
+---
+
+## 🖥️ Cross-Platform Considerations
+
+Electron renders consistently due to bundled Chromium, but test on:
+- **macOS**: Primary development
+- **Windows**: Most users
+- **Linux**: CI environment
+
+**Platform-Specific Baselines** (if needed):
+```
+screenshots/
+├── main-window-darwin.png
+├── main-window-win32.png
+└── main-window-linux.png
+```
+
+```typescript
+// Dynamic baseline selection
+const platform = process.platform;
+await expect(window).toHaveScreenshot(`main-window-${platform}.png`);
+```
+
+---
+
+## 🔧 Test Commands
 
 ```bash
 # Run Electron visual tests
 npx playwright test --project=electron
 
-# Update snapshots
+# Update baselines when changes are intentional
 npx playwright test --project=electron --update-snapshots
 
-# Run with trace
-npx playwright test --project=electron --trace on
-
-# Show report
-npx playwright show-report
+# Run specific test file
+npx playwright test tests/visual/main-window.spec.ts
 ```
 
 ---
 
-## 🖼️ Window State Testing
+## ✅ Validation Checklist
 
-### Window Sizes
+Verify these for each validation:
 
-```typescript
-test('window resize states', async () => {
-  const electronApp = await electron.launch({ args: ['.'] });
-  const window = await electronApp.firstWindow();
-  
-  // Get BrowserWindow handle
-  const browserWindow = await electronApp.browserWindow(window);
-  
-  // Normal size
-  await browserWindow.evaluate((win) => win.setSize(1280, 800));
-  await window.waitForTimeout(300);
-  await expect(window).toHaveScreenshot('window-normal.png');
-  
-  // Small size
-  await browserWindow.evaluate((win) => win.setSize(800, 600));
-  await window.waitForTimeout(300);
-  await expect(window).toHaveScreenshot('window-small.png');
-  
-  // Maximized
-  await browserWindow.evaluate((win) => win.maximize());
-  await window.waitForTimeout(300);
-  await expect(window).toHaveScreenshot('window-maximized.png');
-  
-  await electronApp.close();
-});
-```
-
-### Dark Mode
-
-```typescript
-test('dark mode', async () => {
-  const electronApp = await electron.launch({ 
-    args: ['.'],
-    colorScheme: 'dark'  // Force dark mode
-  });
-  
-  const window = await electronApp.firstWindow();
-  await window.waitForLoadState();
-  
-  await expect(window).toHaveScreenshot('dark-mode.png');
-  
-  await electronApp.close();
-});
-
-test('light mode', async () => {
-  const electronApp = await electron.launch({ 
-    args: ['.'],
-    colorScheme: 'light'
-  });
-  
-  const window = await electronApp.firstWindow();
-  await window.waitForLoadState();
-  
-  await expect(window).toHaveScreenshot('light-mode.png');
-  
-  await electronApp.close();
-});
-```
+- [ ] Main window captured in normal size
+- [ ] Key routes/screens captured
+- [ ] Light mode tested (dark if story touches theming)
+- [ ] Window resize behavior works (if in scope)
+- [ ] Secondary windows/dialogs captured (if applicable)
+- [ ] No console errors in main process
+- [ ] No console errors in renderer process
 
 ---
 
-## 📚 Storybook Integration
+## 🔗 Storybook Integration
 
-For component-level testing, use Storybook with Chromatic:
-
-### Setup
+If using Storybook for component development:
 
 ```bash
-# Initialize Storybook
-npx storybook@latest init
-
-# Add Chromatic
-npm install --save-dev chromatic
-```
-
-### Component Story
-
-```typescript
-// src/components/Button.stories.tsx
-import type { Meta, StoryObj } from '@storybook/react';
-import { Button } from './Button';
-
-const meta: Meta<typeof Button> = {
-  component: Button,
-};
-
-export default meta;
-
-export const Primary: StoryObj<typeof Button> = {
-  args: { variant: 'primary', children: 'Primary' },
-};
-
-export const Secondary: StoryObj<typeof Button> = {
-  args: { variant: 'secondary', children: 'Secondary' },
-};
-
-export const Disabled: StoryObj<typeof Button> = {
-  args: { disabled: true, children: 'Disabled' },
-};
-```
-
-### Agent Commands
-
-```bash
-# Run Storybook locally
+# Run Storybook for Electron renderer components
 npm run storybook
 
-# Build Storybook
-npm run build-storybook
-
-# Run Chromatic
+# Visual regression with Chromatic
 npx chromatic --project-token=xxx
 ```
 
----
-
-## 🔧 Cross-Platform Testing
-
-Electron apps need testing on Windows, macOS, and Linux:
-
-### CI Matrix
-
-```yaml
-# .github/workflows/visual-tests.yml
-name: Visual Tests
-
-on: [push, pull_request]
-
-jobs:
-  test:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    
-    runs-on: ${{ matrix.os }}
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      
-      - run: npm ci
-      
-      - run: npx playwright install
-      
-      - run: npm run build
-      
-      - run: npx playwright test --project=electron
-        env:
-          CI: true
-      
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: screenshots-${{ matrix.os }}
-          path: screenshots/
-```
-
-### Platform-Specific Baselines
-
-```typescript
-// playwright.config.js
-import { defineConfig } from '@playwright/test';
-import os from 'os';
-
-const platform = os.platform(); // 'darwin', 'linux', 'win32'
-
-export default defineConfig({
-  snapshotDir: `./snapshots/${platform}`,
-  // ...
-});
-```
-
----
-
-## 🔍 Percy Integration
-
-### Setup
-
-```bash
-npm install --save-dev @percy/cli @percy/playwright
-```
-
-### Usage
-
-```typescript
-import { test } from '@playwright/test';
-import { _electron as electron } from '@playwright/test';
-import { percySnapshot } from '@percy/playwright';
-
-test('Percy snapshot', async () => {
-  const electronApp = await electron.launch({ args: ['.'] });
-  const window = await electronApp.firstWindow();
-  await window.waitForLoadState();
-  
-  // Percy captures and compares in cloud
-  await percySnapshot(window, 'Main Window');
-  
-  await electronApp.close();
-});
-```
-
-### Agent Commands
-
-```bash
-# Run with Percy
-PERCY_TOKEN=xxx npx percy exec -- npx playwright test --project=electron
-```
-
----
-
-## 📸 Native Screenshot Alternatives
-
-For cases where Playwright isn't suitable:
-
-### macOS
-
-```bash
-# Full screen
-screencapture screenshot.png
-
-# Specific window (by title)
-screencapture -l $(osascript -e 'tell app "MyApp" to id of window 1') screenshot.png
-
-# Region
-screencapture -R 0,0,1280,800 screenshot.png
-```
-
-### Windows (PowerShell)
-
-```powershell
-# Full screen
-Add-Type -AssemblyName System.Windows.Forms
-[System.Windows.Forms.Screen]::PrimaryScreen | ForEach-Object {
-    $bitmap = New-Object System.Drawing.Bitmap($_.Bounds.Width, $_.Bounds.Height)
-    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
-    $graphics.CopyFromScreen($_.Bounds.Location, [System.Drawing.Point]::Empty, $_.Bounds.Size)
-    $bitmap.Save("screenshot.png")
-}
-```
-
-### Linux
-
-```bash
-# Full screen (X11)
-scrot screenshot.png
-
-# Active window
-scrot -u screenshot.png
-
-# GNOME
-gnome-screenshot -f screenshot.png
-
-# KDE
-spectacle -b -n -o screenshot.png
-```
-
----
-
-## 📝 Recipe Configuration
-
-Add to recipe.yaml:
-
-```yaml
-visual_testing:
-  platform: desktop-electron
-  strategy: playwright-electron
-  tools:
-    primary: playwright
-    component_testing: storybook
-    visual_regression: chromatic
-  window_sizes:
-    small: [800, 600]
-    normal: [1280, 800]
-    large: [1920, 1080]
-  themes:
-    - light
-    - dark
-  agent_commands:
-    playwright_test: "npx playwright test --project=electron"
-    playwright_update: "npx playwright test --project=electron --update-snapshots"
-    storybook: "npm run storybook"
-    chromatic: "npx chromatic --project-token=xxx"
-  ci_integration:
-    platforms: [ubuntu-latest, windows-latest, macos-latest]
-    platform_baselines: true
-```
-
----
-
-## 🚨 Common Issues
-
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Window not ready | Async initialization | Use `waitForLoadState()` + timeout |
-| Different fonts per OS | System font rendering | Use bundled fonts |
-| Snapshot mismatch on CI | Platform differences | Use platform-specific baselines |
-| IPC not working | Main process timing | Wait for IPC ready signal |
-| Menu bar included | Window chrome | Use `page.screenshot()` not window capture |
-
----
-
-## 📋 Validation Checklist
-
-- [ ] Main window screenshot captured
-- [ ] All dialog/modal windows captured
-- [ ] Window resize states tested
-- [ ] Dark mode / light mode tested
-- [ ] Component Storybook stories exist
-- [ ] Cross-platform CI configured
-- [ ] Platform-specific baselines managed
-
----
-
-*Platform Pattern Version: 1.0.0*
+Components can be tested in isolation before full app integration.
