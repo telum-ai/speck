@@ -132,10 +132,10 @@ visual_testing:
   platform: [web|mobile-flutter|mobile-rn|desktop-electron|desktop-tauri|extension|api|cli]
   strategy: [browser-mcp|golden-tests|maestro|playwright|playwright-electron|webdriverio|puppeteer|none]
   # Varies by platform (see `.cursor/rules/speck/patterns/visual-testing/`), e.g.:
-  # - web: "visual-testing/web-visual-testing.md"
-  # - mobile-flutter: "visual-testing/mobile-flutter-visual-testing.md"
-  # - mobile-rn: "visual-testing/mobile-react-native-visual-testing.md"
-  pattern_file: "visual-testing/web-visual-testing.md"
+  # - web: "visual-testing/web.mdc"
+  # - mobile-flutter: "visual-testing/mobile-flutter.mdc"
+  # - mobile-rn: "visual-testing/mobile-react-native.mdc"
+  pattern_file: "visual-testing/web.mdc"
   breakpoints: {mobile: 375, tablet: 768, desktop: 1024, wide: 1280}
   devices: {ios: [...], android: [...]}
   tools: {primary: ..., visual_regression: ...}
@@ -1145,8 +1145,19 @@ Current reliability issues (code deletion, context loss) make it unsuitable for 
 **Methodology**:
 - @.speck/README.md - Complete Speck guide (includes Spec-Driven Development philosophy)
 
-**Patterns**:
-- `.cursor/rules/speck/patterns/model-selection.mdc` - LLM selection guide
+**Patterns** (`.cursor/rules/speck/patterns/`):
+- `visual-testing.mdc` - Autonomous visual testing across platforms
+- `model-selection.mdc` - LLM selection guide
+- `just-in-time-research.mdc` - Research integration pattern
+- `visual-testing/web.mdc` - Web platform visual testing
+- `visual-testing/mobile-flutter.mdc` - Flutter visual testing
+- `visual-testing/mobile-react-native.mdc` - React Native visual testing
+- `visual-testing/desktop-electron.mdc` - Electron visual testing
+- `visual-testing/desktop-tauri.mdc` - Tauri visual testing
+- `visual-testing/extension.mdc` - Browser extension visual testing
+
+**Learned Patterns** (project-specific):
+- `.speck/patterns/learned/` - Patterns validated through retrospectives
 
 **Commands**:
 - `.cursor/commands/` - Project-level commands
