@@ -105,6 +105,51 @@ Each auditor returns PASS | FAIL | PARTIAL with evidence.
    - If no `.cursor/rules/` directory: Note "No project-specific rules found"
    - If patterns of violations across stories: Flag for epic-level retrospective
 
+4.5. **Visual Design Validation** (if epic has UI components):
+
+   **Reference**: `.speck/patterns/visual-testing-pattern.md`
+   
+   **Load Epic-Level Visual Artifacts**:
+   - `[EPIC_DIR]/wireframes.md` → Layout expectations
+   - `[EPIC_DIR]/user-journey.md` → Touchpoint visual requirements
+   - `specs/projects/[PROJECT_ID]/design-system.md` → Tokens, patterns
+   - `specs/projects/[PROJECT_ID]/ux-strategy.md` → Voice/tone, accessibility
+   
+   **Aggregate Story Visual Results**:
+   - Collect screenshots from all `stories/[STORY_ID]/screenshots/`
+   - Check each story's validation-report.md for visual validation section
+   - Aggregate design token compliance percentages
+   - Aggregate accessibility audit results
+   
+   **Wireframe Adherence Check**:
+   - Compare implemented screens against wireframes.md layouts
+   - Check grid alignment, spacing, hierarchy
+   - Verify responsive breakpoints match wireframe variants
+   - Note deviations with justification
+   
+   **User Journey Visual Completion**:
+   - For each touchpoint in user-journey.md:
+     * Verify screen exists and is implemented
+     * Check visual treatment matches emotional goals
+     * Verify transitions/animations between touchpoints
+   - Flag missing or incomplete touchpoints
+   
+   **Cross-Story Visual Consistency**:
+   - Same components look identical across stories
+   - Consistent spacing, typography, colors
+   - No one-off styling deviations
+   - All use design system tokens (no hardcoded values)
+   
+   **Design System Adoption**:
+   - Calculate % of components using design-system.md patterns
+   - Flag custom components that should use existing patterns
+   - Note design system gaps (patterns needed but not defined)
+   
+   **Voice/Tone Consistency**:
+   - Aggregate voice/tone compliance from story validations
+   - Check consistency across epic (same voice everywhere)
+   - Flag mixed messaging or tonal inconsistencies
+
 5. Execute validation suites:
 
    **Automated Testing**

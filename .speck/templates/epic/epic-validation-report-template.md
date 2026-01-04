@@ -124,6 +124,82 @@
 
 ---
 
+## Visual Design Validation
+
+*Aggregated visual validation from story-level reports*
+
+### Wireframe Adherence
+
+| Screen/Flow | Wireframe Reference | Implementation | Status | Notes |
+|-------------|---------------------|----------------|--------|-------|
+| [Screen name] | `wireframes.md#section` | ✅ Matches | ✅ PASS | |
+| [Screen name] | `wireframes.md#section` | ⚠️ Deviates | ⚠️ PARTIAL | [Justified deviation] |
+| [Flow name] | `wireframes.md#section` | ❌ Missing | ❌ FAIL | Not implemented |
+
+**Wireframe Coverage**: [X/Y] screens match wireframes ([Z]%)
+
+### User Journey Completion
+
+*From user-journey.md touchpoints*
+
+| Journey Stage | Touchpoint | Screen | Status | Emotional Goal Met? |
+|---------------|------------|--------|--------|---------------------|
+| [Stage] | [Touchpoint] | [Screen path] | ✅ Complete | ✅ Yes |
+| [Stage] | [Touchpoint] | [Screen path] | ⚠️ Partial | ⚠️ Needs polish |
+| [Stage] | [Touchpoint] | [Screen path] | ❌ Missing | ❌ No |
+
+**Journey Completion**: [X/Y] touchpoints complete ([Z]%)
+
+### Cross-Story Visual Consistency
+
+| Aspect | Status | Details |
+|--------|--------|---------|
+| Component consistency | ✅/⚠️/❌ | [Same components look identical across stories] |
+| Typography consistency | ✅/⚠️/❌ | [Same text styles everywhere] |
+| Color usage | ✅/⚠️/❌ | [No one-off colors outside design system] |
+| Spacing consistency | ✅/⚠️/❌ | [Consistent margins/padding] |
+| Animation consistency | ✅/⚠️/❌ | [Same interaction patterns] |
+
+**Inconsistencies Found**:
+1. [Story X uses different button style than Story Y]
+2. [Story Z has custom shadow not in design system]
+
+### Design System Adoption
+
+**Epic-Wide Token Compliance**: [X]% (aggregated from stories)
+
+| Story | Token Compliance | Accessibility Score | Voice/Tone |
+|-------|------------------|---------------------|------------|
+| S001 | 95% | 92/100 | ✅ PASS |
+| S002 | 78% | 85/100 | ⚠️ PARTIAL |
+| S003 | 100% | 95/100 | ✅ PASS |
+
+**Design System Gaps** (patterns needed but not defined):
+1. [Pattern needed] - Used in [X] stories - Recommend adding to design-system.md
+2. [Pattern needed] - Used in [Y] stories - Recommend adding to design-system.md
+
+### Screenshot Gallery
+
+| Story | Screen | Screenshot | Notes |
+|-------|--------|------------|-------|
+| S001 | Dashboard | `stories/S001/screenshots/dashboard-desktop.png` | |
+| S002 | Login | `stories/S002/screenshots/login-mobile.png` | |
+| [etc] | | | |
+
+### Epic Visual Summary
+
+| Metric | Target | Actual | Status |
+|--------|--------|--------|--------|
+| Wireframe adherence | 100% | [X]% | ✅/⚠️/❌ |
+| Journey completion | 100% | [X]% | ✅/⚠️/❌ |
+| Cross-story consistency | High | [Rating] | ✅/⚠️/❌ |
+| Token compliance (avg) | >90% | [X]% | ✅/⚠️/❌ |
+| Accessibility (avg) | >85/100 | [X]/100 | ✅/⚠️/❌ |
+
+**Overall Visual Status**: [✅ PASS / ⚠️ PARTIAL / ❌ FAIL]
+
+---
+
 ## Deviations from Plan
 
 | Area | Planned | Actual | Reason |

@@ -144,7 +144,74 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
      * JavaScript: npm audit
    - Capture all violations and warnings
 
-11. Code audit (manual, REQUIRED — “meets requirements” is not enough):
+10.5. **Visual/UX Validation** (if ui-spec.md exists OR story has UI components):
+   
+   **Reference**: `.speck/patterns/visual-testing-pattern.md` for complete details.
+   
+   **Platform Detection**:
+   - Load `project.md` frontmatter for `_active_recipe`
+   - Load recipe's `visual_testing.platform` from recipe.yaml
+   - If no recipe: detect from architecture.md stack
+   - Load appropriate platform pattern from `.speck/patterns/visual-testing/`
+   
+   **Load Design Specifications**:
+   - `specs/projects/[PROJECT_ID]/design-system.md` → tokens, breakpoints
+   - `specs/projects/[PROJECT_ID]/ux-strategy.md` → voice/tone, accessibility
+   - `{STORY_DIR}/ui-spec.md` → component specs, Testing Checklist
+   - `{EPIC_DIR}/wireframes.md` → layouts (if exists)
+   
+   **Web Platform** (use Browser MCP tools):
+   - Navigate to implemented pages/components
+   - For each breakpoint in design-system.md:
+     * `browser_resize(width, height)`
+     * `browser_take_screenshot(filename)`
+   - Capture component states (hover, focus, disabled, loading, error)
+   - Run `runAccessibilityAudit()` → Check WCAG compliance
+   - Run `runPerformanceAudit()` → Check Core Web Vitals (if targets specified)
+   - Check console for errors: `getConsoleErrors()`
+   
+   **Mobile Platform** (if emulator/simulator available):
+   - Check device availability via `adb devices` or `xcrun simctl list`
+   - If available:
+     * Set Demo Mode / status bar override for clean screenshots
+     * Capture screenshots on target devices
+     * Test dark mode if applicable
+   - If unavailable: Generate manual testing checklist
+   
+   **Desktop/Extension Platforms**:
+   - Follow platform-specific pattern guidance
+   - Capture window states and theme variations
+   
+   **Design Token Compliance Check**:
+   - Grep changed files for hardcoded values:
+     * Hex colors: `#[0-9A-Fa-f]{6}`
+     * Pixel values: raw `px` instead of tokens
+   - Compare against design-system.md tokens
+   - Report: "[X/Y] properties use design tokens ([Z]%)"
+   
+   **Voice/Tone Compliance** (load ux-strategy.md):
+   - Check UI copy (error messages, button labels, empty states)
+   - Compare against voice attributes in ux-strategy.md
+   - Flag generic/technical copy that doesn't match voice
+   
+   **ui-spec.md Testing Checklist** (if exists):
+   - Load Testing Checklist section from ui-spec.md
+   - Check off each item during validation
+   - Unchecked items become validation issues
+   
+   **Store Screenshots**:
+   - Create `{STORY_DIR}/screenshots/` directory
+   - Save screenshots with convention: `{screen}-{breakpoint|state|device}.png`
+   
+   **Generate Visual Validation Section**:
+   - Include in validation-report.md:
+     * Screenshot gallery with annotations
+     * Design token compliance percentage
+     * Accessibility audit results
+     * Voice/tone compliance notes
+     * ui-spec.md checklist status
+
+11. Code audit (manual, REQUIRED — "meets requirements" is not enough):
    - Identify the change surface:
      * List changed files (prefer: `git diff --name-only` and `git diff` for the story’s branch)
      * Identify entrypoints touched: API routes, background jobs, UI pages/routes, migrations, cron, etc.

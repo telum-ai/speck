@@ -53,6 +53,42 @@ pre_configured_patterns:
   - name: Real-Time Sync
     description: Automatic offline-first data synchronization.
 
+# Visual testing configuration
+visual_testing:
+  platform: mobile-flutter
+  strategy: golden-tests
+  pattern_file: "visual-testing/mobile-flutter-visual-testing.md"
+  tools:
+    primary: alchemist
+    component_catalog: widgetbook
+    screenshot_automation: fastlane
+    visual_regression: widgetbook-cloud
+  devices:
+    ios:
+      - "iPhone SE (3rd generation)"
+      - "iPhone 15"
+      - "iPhone 15 Pro Max"
+      - "iPad Pro (12.9-inch)"
+    android:
+      - "Pixel 4a"
+      - "Pixel 8"
+      - "Pixel Fold"
+  themes:
+    - light
+    - dark
+  agent_commands:
+    update_goldens: "flutter test --update-goldens"
+    run_goldens: "flutter test test/goldens/"
+    ios_screenshot: "xcrun simctl io booted screenshot"
+    android_screenshot: "adb exec-out screencap -p"
+    ios_status_bar: "xcrun simctl status_bar booted override --time 9:41 --batteryState charged --batteryLevel 100"
+    android_demo_mode: "adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0941"
+    fastlane_ios: "cd ios && fastlane snapshot"
+    fastlane_android: "cd android && fastlane screengrab"
+  ci_integration:
+    platform_baselines: true
+    runs_on: ubuntu-latest
+
 # External services to consider (Buy vs Build)
 external_services:
   auth:

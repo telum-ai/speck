@@ -299,6 +299,123 @@ Recommendation: Increase pool size or implement streaming upload
 
 ---
 
+## Visual/UX Validation
+
+*Validating implementation against design specifications*
+
+### Platform & Strategy
+
+| Property | Value |
+|----------|-------|
+| **Platform** | [web / mobile-flutter / mobile-rn / desktop-electron / desktop-tauri / extension / N/A] |
+| **Strategy** | [browser-mcp / golden-tests / maestro / playwright / webdriverio / puppeteer / N/A] |
+| **Pattern Reference** | `.speck/patterns/visual-testing/[platform]-visual-testing.md` |
+
+*If Platform = N/A: Story has no UI components, skip this section*
+
+### Screenshots Captured
+
+| Screen | Breakpoint/Device | Screenshot | Status | Notes |
+|--------|-------------------|------------|--------|-------|
+| [Screen name] | mobile (375px) | `screenshots/[name]-mobile.png` | ✅ | |
+| [Screen name] | tablet (768px) | `screenshots/[name]-tablet.png` | ✅ | |
+| [Screen name] | desktop (1024px) | `screenshots/[name]-desktop.png` | ⚠️ | Minor layout shift |
+| [Component] | hover state | `screenshots/[name]-hover.png` | ✅ | |
+| [Component] | error state | `screenshots/[name]-error.png` | ✅ | |
+
+**Screenshot Directory**: `{STORY_DIR}/screenshots/`
+
+### Design Token Compliance
+
+| Property | Expected Token | Actual Implementation | Status |
+|----------|---------------|----------------------|--------|
+| Primary color | `var(--primary-500)` | ✅ Token used | ✅ PASS |
+| Text color | `var(--gray-900)` | ✅ Token used | ✅ PASS |
+| Button padding | `var(--space-4)` | ❌ Hardcoded `16px` | ❌ FAIL |
+| Border radius | `var(--radius-md)` | ✅ Token used | ✅ PASS |
+| Shadow | `var(--shadow-sm)` | ❌ Hardcoded `box-shadow` | ❌ FAIL |
+
+**Token Compliance**: [X/Y] properties use design tokens ([Z]%)
+
+**Hardcoded Values Found**:
+```
+[File path:line] - [hardcoded value] → should use [token]
+```
+
+### Responsive Behavior
+
+| Breakpoint | Expected Layout | Actual Layout | Status |
+|------------|----------------|---------------|--------|
+| Mobile (375px) | Single column, stacked | ✅ Matches | ✅ PASS |
+| Tablet (768px) | 2-column grid | ✅ Matches | ✅ PASS |
+| Desktop (1024px) | 3-column with sidebar | ⚠️ 2-column only | ⚠️ PARTIAL |
+| Wide (1280px) | Max-width container | ✅ Matches | ✅ PASS |
+
+### Accessibility Audit
+
+*From `runAccessibilityAudit()` or equivalent*
+
+| Category | Issues | Severity | Status |
+|----------|--------|----------|--------|
+| Color contrast | 0 | - | ✅ PASS |
+| Touch targets | 2 | Medium | ⚠️ WARN |
+| ARIA labels | 0 | - | ✅ PASS |
+| Heading structure | 1 | Low | ⚠️ WARN |
+| Keyboard navigation | 0 | - | ✅ PASS |
+| Focus indicators | 0 | - | ✅ PASS |
+
+**Accessibility Score**: [X]/100
+
+**Issues to Address**:
+1. [Issue description] - [Severity] - [Fix suggestion]
+
+### Voice/Tone Compliance
+
+*Comparing UI copy against ux-strategy.md voice attributes*
+
+| Voice Attribute | Expected | UI Copy Example | Status |
+|-----------------|----------|-----------------|--------|
+| Friendly | Approachable language | "Oops! That didn't work" | ✅ PASS |
+| Professional | Clear and concise | "Save changes" | ✅ PASS |
+| Encouraging | Positive reinforcement | "Error" → should be "Let's try again" | ⚠️ WARN |
+
+**Voice/Tone Notes**:
+- [Specific copy that doesn't match voice]
+- [Suggestions for improvement]
+
+### ui-spec.md Testing Checklist
+
+*Copy from ui-spec.md and check off during validation*
+
+**Visual Testing**:
+- [✅/❌] All states render correctly
+- [✅/❌] Responsive at all breakpoints
+- [✅/❌] Animations perform smoothly
+- [✅/❌] Design tokens applied correctly
+
+**Functional Testing**:
+- [✅/❌] All interactions work as specified
+- [✅/❌] Keyboard navigation complete
+- [✅/❌] Screen reader announcements correct
+- [✅/❌] Error states handle gracefully
+
+**Checklist Completion**: [X/Y] items checked ([Z]%)
+
+### Visual Validation Summary
+
+| Aspect | Status | Score |
+|--------|--------|-------|
+| Screenshots | ✅ PASS | [X/Y] captured |
+| Design Tokens | ⚠️ PARTIAL | [Z]% compliant |
+| Responsive | ✅ PASS | All breakpoints |
+| Accessibility | ⚠️ PARTIAL | [X]/100 |
+| Voice/Tone | ✅ PASS | Matches strategy |
+| ui-spec Checklist | ⚠️ PARTIAL | [Z]% complete |
+
+**Overall Visual Status**: [✅ PASS / ⚠️ PARTIAL / ❌ FAIL]
+
+---
+
 ## Code Quality Gates
 
 ### Linting Results
