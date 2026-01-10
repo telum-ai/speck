@@ -510,7 +510,7 @@ The agent should **automatically suggest or create commits** at natural completi
 
 ## 🔬 Just-In-Time Research Pattern
 
-Research happens during command execution, not as a separate phase. Commands use the pattern defined in `.speck/patterns/just-in-time-research-pattern.md`.
+Research happens during command execution, not as a separate phase. Commands use the pattern defined in `.cursor/rules/patterns/just-in-time-research.mdc`.
 
 ### How Research Works
 
@@ -578,7 +578,7 @@ architecture.md includes:
 ✅ **Efficient** - Web search covers 90% of needs, deep research for complex cases
 ✅ **Self-documenting** - Research trail always visible in artifacts
 
-**See `.speck/patterns/just-in-time-research-pattern.md` for complete pattern details.**
+**See `.cursor/rules/patterns/just-in-time-research.mdc` for complete pattern details.**
 
 ## 🎯 Agent Skills
 

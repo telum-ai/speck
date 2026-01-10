@@ -233,7 +233,6 @@ jobs:
           required_files=(
             # Core documentation
             ".speck/README.md"
-            ".speck/patterns/just-in-time-research-pattern.md"
             ".speck/recipes/README.md"
             
             # Scripts
