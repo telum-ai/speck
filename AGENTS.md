@@ -1451,7 +1451,7 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 4.1.0  
+**Speck Version**: 4.1.1  
 **Updated**: 2026-01-04  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 

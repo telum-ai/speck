@@ -1494,6 +1494,6 @@ Remember: The goal is to guide you through building great software with clear sp
 
 ---
 
-**Version**: 4.1.0  
+**Version**: 4.1.1  
 **Updated**: January 2026  
 **Methodology**: Speck (Multi-Level with Retrospectives)
