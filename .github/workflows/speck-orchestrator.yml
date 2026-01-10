@@ -9,10 +9,6 @@
 name: Speck Orchestrator
 
 on:
-  # Continuous orchestration - check every 30 minutes
-  schedule:
-    - cron: '*/30 * * * *'
-  
   # Trigger on spec changes
   push:
     paths:
