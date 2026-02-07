@@ -4,7 +4,7 @@
 
 ## 🚀 Quick Start
 
-### In Cursor IDE
+### In Cursor IDE or Claude Code
 
 Just type `/speck` followed by what you want to build:
 
@@ -34,10 +34,15 @@ npx github:telum-ai/speck init
 ```
 
 This sets up:
-- Command files (`.cursor/commands/`)
+- Command files (`.cursor/commands/` and `.claude/commands/`)
 - Templates (`.speck/templates/`)
 - Validation hooks (`.cursor/hooks/`)
 - Update workflows (`.github/workflows/`)
+
+Command source of truth:
+- Canonical command source is `.cursor/commands/`
+- `.claude/commands/` is mirrored for Claude Code compatibility
+- Sync manually with: `bash .speck/scripts/bash/sync-claude-commands.sh`
 
 ### Recommended: MCP Setup
 

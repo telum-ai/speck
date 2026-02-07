@@ -18,6 +18,7 @@ const ALWAYS_OVERWRITE = [
   '.speck/README.md',
   '.speck/VERSION',
   '.cursor/commands',
+  '.claude/commands',
   '.cursor/agents',
   '.cursor/hooks/hooks',
   '.cursor/hooks/VALIDATION.md',
@@ -359,6 +360,29 @@ function copyDir(src, dest, baseDir = null) {
 }
 
 /**
+ * Mirror Cursor slash commands into Claude Code command directory.
+ *
+ * Why copy instead of symlink/hardlink?
+ * - Works consistently across platforms, archives, and git clients.
+ * - Keeps downstream Speck init/upgrade behavior predictable.
+ */
+function mirrorClaudeCommands(targetDir) {
+  const cursorCommands = join(targetDir, '.cursor', 'commands');
+  const claudeCommands = join(targetDir, '.claude', 'commands');
+
+  if (!existsSync(cursorCommands) || !statSync(cursorCommands).isDirectory()) {
+    return { action: 'skip', reason: 'missing .cursor/commands' };
+  }
+
+  if (existsSync(claudeCommands)) {
+    rmSync(claudeCommands, { recursive: true, force: true });
+  }
+
+  copyDir(cursorCommands, claudeCommands);
+  return { action: 'sync', path: '.claude/commands/' };
+}
+
+/**
  * Plan and execute smart sync
  */
 export function smartSync(sourceDir, targetDir, options = {}) {
@@ -519,7 +543,20 @@ export function smartSync(sourceDir, targetDir, options = {}) {
     }
   }
   
-  // 4. Remove files that were deleted from Speck
+  // 4. Mirror Cursor commands to Claude Code commands for runtime parity
+  try {
+    const mirrorResult = mirrorClaudeCommands(targetDir);
+    if (mirrorResult.action === 'sync') {
+      results.updated.push(mirrorResult.path);
+      if (verbose) {
+        console.log(`  ✅ Synced: ${mirrorResult.path} (from .cursor/commands/)`);
+      }
+    }
+  } catch (error) {
+    results.errors.push({ file: '.claude/commands', error: error.message });
+  }
+
+  // 5. Remove files that were deleted from Speck
   for (const deletedFile of REMOVE_FILES) {
     const targetPath = join(targetDir, deletedFile);
     
@@ -554,6 +591,7 @@ export function isSpeckInitialized(targetDir) {
     join(targetDir, '.speck', 'VERSION'),
     join(targetDir, '.speck', 'README.md'),
     join(targetDir, '.cursor', 'commands', 'speck.md'),
+    join(targetDir, '.claude', 'commands', 'speck.md'),
   ];
   return markers.some(path => existsSync(path));
 }

@@ -76,6 +76,7 @@ export async function upgrade(targetDir, version, options = {}) {
     console.log('  • .gitignore: Your entries merged with Speck defaults');
     console.log('  • .cursor/hooks/hooks.json: Your hooks merged with Speck hooks');
     console.log('  • .cursor/mcp.json: Your config takes precedence');
+    console.log('  • .claude/commands: Claude Code slash commands synced');
     console.log('  • README.md: Skipped if customized');
     console.log('  • copilot-setup-steps.yml: Skipped if customized');
     console.log('  • Everything else: Always updated');

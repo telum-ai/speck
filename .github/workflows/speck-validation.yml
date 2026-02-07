@@ -6,6 +6,7 @@ on:
       - 'specs/**'
       - '.speck/**'
       - '.cursor/**'
+      - '.claude/**'
       - 'AGENTS.md'
       - '.github/workflows/**'
   push:
@@ -14,6 +15,7 @@ on:
       - 'specs/**'
       - '.speck/**'
       - '.cursor/**'
+      - '.claude/**'
       - 'AGENTS.md'
       - '.github/workflows/**'
 
@@ -241,12 +243,14 @@ jobs:
             ".speck/scripts/bash/export-template-repo.sh"
             ".speck/scripts/bash/get-context.sh"
             ".speck/scripts/bash/merge-mcp-config.sh"
+            ".speck/scripts/bash/sync-claude-commands.sh"
             ".speck/scripts/bash/validate-artifact-docs.sh"
             
             # Cursor configuration
             ".cursor/MCP-SETUP.md"
             ".cursor/mcp.json.example"
             ".cursor/commands/speck.md"
+            ".claude/commands/speck.md"
             ".cursor/hooks/hooks.json"
             ".cursor/hooks/VALIDATION.md"
             ".cursor/hooks/hooks/after-file-edit.sh"
@@ -324,6 +328,32 @@ jobs:
           fi
 
           echo "✅ All command references resolve"
+
+      - name: Verify Cursor/Claude command parity
+        run: |
+          set -euo pipefail
+          echo "🔁 Verifying .claude/commands mirrors .cursor/commands..."
+
+          if [ ! -d ".cursor/commands" ]; then
+            echo "❌ Missing .cursor/commands"
+            exit 1
+          fi
+
+          if [ ! -d ".claude/commands" ]; then
+            echo "❌ Missing .claude/commands"
+            exit 1
+          fi
+
+          diff_output="$(diff -ru .cursor/commands .claude/commands || true)"
+          if [ -n "$diff_output" ]; then
+            echo "❌ Command directories are out of sync."
+            echo "Run: bash .speck/scripts/bash/sync-claude-commands.sh"
+            echo ""
+            echo "$diff_output"
+            exit 1
+          fi
+
+          echo "✅ Cursor and Claude command directories are in sync"
 
       - name: Guard against deprecated artifact names (methodology drift)
         run: |

@@ -8,7 +8,7 @@ You are working in a project using **Speck 🥓**, a multi-level methodology for
 
 **When user asks to build something**: Always start with `/speck [description]` - it routes you to the right level  
 **When you need methodology details**: Read @.speck/README.md
-**When you need command instructions**: Check `.cursor/commands/[level]-[command].md`
+**When you need command instructions**: Check `.cursor/commands/[level]-[command].md` (or `.claude/commands/...` in Claude Code)
 **When you need templates**: Use files in `.speck/templates/[level]/`
 
 ## 🏗️ How to Navigate Speck Structure
@@ -364,93 +364,31 @@ Configure these in `.cursor/mcp.json` (see `.cursor/MCP-SETUP.md`):
 
 All optional but recommended. Speck works without them via fallbacks.
 
-## 📚 Context7 MCP - Up-to-Date Library Documentation (Methodology Core)
-
-This section replaces the need for a template-provided `.cursor/rules/context7-mcp.mdc`.
+## 📚 Context7 MCP - Up-to-Date Library Documentation
 
 ### Critical Rules
 
-- **ALWAYS use Context7 MCP** when implementing features with external libraries, frameworks, or packages
-- **Automatically invoke Context7 tools** for code generation, setup steps, or API documentation without requiring explicit user request
-- **Use two-step process**: First call `resolve-library-id` to get the Context7-compatible library ID, then call `get-library-docs` with that ID
-- **Skip resolution step** if user provides explicit library ID in format `/org/project` or `/org/project/version` - go directly to `get-library-docs`
-- **Focus documentation** using the `topic` parameter when you know the specific area (e.g., "routing", "authentication", "hooks")
-- **Adjust token limit** based on complexity: use default 5000 for general queries, increase for comprehensive features, decrease for simple lookups
-- **Cite Context7 documentation** in responses by referencing specific sections retrieved
-- **Prefer Context7 docs** over training data when conflicts arise - Context7 has the most current information
-- **Fallback to web search** if Context7 doesn't have documentation after 2-3 reasonable attempts (try alternative library names, check for typos, verify library exists)
+- **ALWAYS use Context7** when implementing features with external libraries/frameworks
+- **Two-step process**: `resolve-library-id` → `get-library-docs` (or skip to docs if user provides `/org/project` format)
+- **Use `topic` parameter** to focus docs (e.g., "routing", "authentication")
+- **Prefer Context7** over training data when conflicts arise
+- **Fallback**: After 2-3 attempts (try name variants), use `web_search`
 
-### Tool Usage
+### When to Use
 
-#### 1) resolve-library-id
-**Purpose**: Convert a general library name into a Context7-compatible library ID.
+**USE for**: Library setup, third-party APIs, configuration, resolving deprecated methods  
+**DON'T use for**: Language fundamentals, standard library, project business logic
 
-**Required Parameters**:
-- `libraryName` (string): the library/package name to search for (e.g. "supabase", "next.js", "mongodb")
+### Quick Reference
 
-**When to use**:
-- User mentions a library by common name
-- You need to implement a feature with a specific package
-- You're unsure of the exact Context7 library ID
+| Library | ID |
+|---------|-----|
+| Next.js | `/vercel/next.js` |
+| React | `/facebook/react` |
+| Supabase | `/supabase/supabase` |
+| Stripe | `/stripe/stripe-node` |
 
-#### 2) get-library-docs
-**Purpose**: Fetch up-to-date documentation for a specific library.
-
-**Required Parameters**:
-- `context7CompatibleLibraryID` (string): exact library ID in format `/org/project` or `/org/project/version`
-
-**Optional Parameters**:
-- `topic` (string): focus docs on a specific area (e.g. "hooks", "routing", "authentication")
-- `tokens` (number): max tokens to return (default: 5000, min: 1000)
-
-### When to Use Context7
-
-**ALWAYS use for**:
-- Setting up new libraries or frameworks
-- Implementing features with third-party APIs
-- Configuration and initialization code
-- Understanding library-specific patterns or best practices
-- Resolving API changes or deprecated methods
-- Code generation using external packages
-- Troubleshooting library-specific errors
-
-**DON'T use for**:
-- Language fundamentals (JavaScript, Python, etc.)
-- Standard library features
-- Project-specific business logic
-- Custom internal libraries
-- General programming concepts
-
-### Fallback Rule
-
-If Context7 has no docs after **2-3 attempts** (try variants), use `web_search` with a specific query and cite sources.
-
-### Common Library IDs (Shortcuts)
-
-- Next.js: `/vercel/next.js`
-- React: `/facebook/react`
-- Supabase: `/supabase/supabase`
-- MongoDB: `/mongodb/docs`
-- Stripe: `/stripe/stripe-node`
-
-### Tips (High Leverage)
-
-- **Topic precision**: prefer specific topics like "server actions" over broad topics like "routing"
-- **Token sizing**:
-  - Simple query: 1000–2000 tokens
-  - Standard implementation: 3000–5000 tokens
-  - Complex feature: 7000–10000 tokens
-- **Multiple libraries**: do separate Context7 calls per library (don’t combine)
-
-### Troubleshooting
-
-- **No docs found**:
-  - Try 2–3 name variants (e.g. `nextjs` vs `next.js`)
-  - Verify library exists
-  - Then fall back to `web_search` with a specific query and cite sources
-- **Docs seem outdated**:
-  - Try a versioned ID `/org/project/version` if available
-  - Otherwise use `web_search` for latest official docs
+**Token sizing**: Simple (1-2k), Standard (3-5k), Complex (7-10k)
 
 ## 🎯 Agent Skills (Domain Expertise)
 
@@ -507,6 +445,35 @@ Subagents are **parallel workers** that speed up command execution. The main age
 - **3+ independent sub-tasks** → Parallelize
 - **1-2 items** → Just do it sequentially
 - **Tasks share dependencies** → Don't parallelize
+
+### Hallucination Chain Prevention
+
+When spawning subagents or receiving their output, prevent hallucination chains:
+
+**Validation Between Agents**:
+- **Never trust** subagent output without verification
+- **Deterministic checks** between agents where possible (e.g., file exists, tests pass)
+- **Cross-validate** critical outputs with different approaches or tools
+
+**Anti-Patterns to Avoid**:
+- ❌ Agent A generates code → Agent B builds on it without checking if it compiles
+- ❌ Researcher claims a library has a feature → Coder implements without checking docs
+- ❌ Multiple agents referencing hallucinated files/functions from earlier in chain
+
+**Verification Strategies**:
+| Subagent Output | Verification |
+|-----------------|--------------|
+| File paths/names | Check file exists with `read_file` or `list_dir` |
+| API/library usage | Verify with Context7 or official docs |
+| Code correctness | Run linter/compiler/tests |
+| Research findings | Cross-check with `web_search` or second source |
+
+**Error Gate Pattern**: For multi-phase workflows, insert verification gates:
+```
+Phase 1 (Agent A) → [GATE: Verify output] → Phase 2 (Agent B) → [GATE: Verify] → Phase 3
+```
+
+If verification fails at any gate, stop and diagnose with `/speck-debug` rather than propagating errors.
 
 ### Command-Specific Instructions
 
@@ -1042,103 +1009,37 @@ Use verb-led prefixes for clear intent:
 
 ## 🤖 Model Selection (IMPORTANT!)
 
-Different LLMs excel at different tasks. Always instruct the user to switch to the right model for the job.
+Different LLMs excel at different tasks. Prompt the user to switch models when task characteristics indicate a better choice.
 
-**Reference**: `.cursor/rules/speck/patterns/model-selection.mdc` for full details.
+**Full Details**: `.cursor/rules/speck/patterns/model-selection.mdc`
 
-### Quick Model Selection Guide
+### Quick Reference
 
-| Task Type | Recommended Model | Why |
-|-----------|------------------|-----|
-| Complex architecture/domain | **Opus 4.5** | Deep reasoning, multi-system understanding |
+| Task Type | Model | Why |
+|-----------|-------|-----|
+| Complex architecture | **Opus 4.5** | Deep reasoning |
 | Critical code review | **Opus 4.5** | Highest accuracy |
-| Security-sensitive code | **GPT-5.2 Extra High** | Lowest vulnerability rate (16/MLOC) |
-| Standard development | **Sonnet 4.5** | Best balance (0% edit error rate) |
-| **Story implementation (Cursor)** | **Composer 1** | 4x faster, native Cursor integration |
-| Multi-file editing (Cursor) | **Composer 1** | Parallel tool execution |
-| UI/Frontend work | **Gemini 3 Flash** | Excels at "vibe coding" and visual polish |
-| Interactive/quick fixes | **Gemini 3 Flash** | Speed for flow state |
-| Real-time agentic pipelines | **Grok Code** | Fastest (455 tok/s), cheapest |
-| Mathematical/algorithmic | **GPT-5.2 Extra High** | 100% AIME 2025, superior reasoning |
-| Budget-constrained | **Gemini 3 Flash** | Best price/performance ($0.50/M) |
-| Validation | **Different model** | Cross-validation catches blind spots |
+| Security-sensitive | **GPT-5.2 Extra High** | Lowest vulns |
+| Standard development | **Sonnet 4.5** | Best balance |
+| Story implementation | **Composer 1** | 4x faster in Cursor |
+| UI/Frontend "vibe" | **Gemini 3 Flash** | Speed + visual polish |
+| Budget-constrained | **Gemini 3 Flash** | Best price/performance |
+| Validation | **Different model** | Cross-validation |
 
-### MAX Mode (Cursor) - Use Deliberately!
+### When to Prompt for Switch
 
-MAX mode unlocks extended context (up to 1M tokens for Gemini) and 200 tool calls, but at **significant cost**.
+**Upgrade to Opus 4.5**: Complex architecture, deep domain (`/project-domain`, `/project-architecture`), critical review  
+**Use Composer 1**: `/story-implement`, multi-file editing, rapid prototyping  
+**Use Gemini 3 Flash**: Interactive work, quick fixes, budget concerns  
+**Cross-validate**: Architecture finalized, security code, pre-deployment
 
-**USE MAX mode for**:
+### MAX Mode Warning
+
+MAX mode costs $5-$60+ per complex request. Use only for:
 - Project-wide refactoring
-- Large codebase navigation
-- Multi-file coordinated changes requiring >25 tool calls
-- Background agents on complex tasks
+- Large codebase navigation (>25 tool calls)
 
-**AVOID MAX mode for**:
-- Single-file edits (explicitly include relevant files instead)
-- Small feature implementations
-- Bug fixes in specific modules
-- Most normal development tasks
-
-**Cost reality**: Single MAX requests can cost $5-$60+. Background agents can exhaust $20/month budget in one session.
-
-**Default to normal mode** + explicit context management. See `model-selection-pattern.md` for decision framework.
-
-### Command-Specific Recommendations
-
-**Use Opus 4.5 for**:
-- `/project-domain` - Deep domain understanding
-- `/project-architecture` - Complex system design
-- `/project-constitution` - Principle extraction
-- Critical validation tasks
-
-**Use Sonnet 4.5 for**:
-- Most `/project-*` commands
-- Most `/epic-*` commands
-- `/story-plan` (reasoning needed)
-- Tasks with vague/ambiguous requirements
-
-**Use Composer 1 for** (when using Cursor):
-- `/story-implement` - 4x faster, native Cursor integration
-- `/story-tasks` - Fast, structured output
-- Multi-file editing and refactoring
-- Zero-to-one project building
-- Rapid prototyping
-
-**Use Gemini 3 Flash for**:
-- UI/frontend "vibe coding"
-- High-volume, budget-sensitive work
-- When not using Cursor IDE
-
-### When to Suggest Model Switches
-
-**Suggest upgrading to Opus 4.5** when:
-- Task involves complex architectural reasoning
-- Multiple systems need to be understood together
-- Mission-critical code review is needed
-- User is struggling with a complex problem
-
-**Suggest Gemini 3 Flash / GPT-5.2** when:
-- User needs fast responses for interactive work
-- Simple fixes or quick iterations
-- Budget is a concern
-
-**Always suggest cross-validation** when:
-- Architecture decisions are finalized
-- Security-sensitive code is written
-- Production deployment is imminent
-
-### Cross-Validation Pattern
-
-For critical artifacts, recommend review by a different model:
-
-```
-💡 This architecture was designed with Sonnet 4.5. For additional 
-   confidence, consider having Opus 4.5 review it before proceeding.
-```
-
-### ⚠️ Avoid Gemini 3 Pro
-
-Current reliability issues (code deletion, context loss) make it unsuitable for production code without constant oversight.
+**Avoid** for single-file edits, small features, bug fixes.
 
 ## 📚 Key Reference Files
 
@@ -1240,36 +1141,6 @@ Commands contain detailed execution steps - follow them closely.
 **Greenfield** (new project):
 - Flow: specify → clarify → [domain] → [ux] → context → [constitution] → architecture → [design-system] → plan → [roadmap]
 - Create from vision rather than extract from code
-
-## 🚀 Follow These Key Principles
-
-### Always Write Spec First
-Apply this sequence:
-1. Write spec before code
-2. Clarify before planning
-3. Plan before implementing
-4. Validate after implementing
-
-### Always Run Foundation Before Planning
-Remember this order:
-- UX strategy MUST come before PRD
-- Context MUST come before PRD
-- Constitution SHOULD come before PRD (if complex project)
-- PRD uses these as essential inputs!
-
-### Understand Cascading Retrospectives
-Know how learnings flow:
-- Story retros mine raw data (.learning.log, commits)
-- Epic retros validate patterns across stories (2+ = validated)
-- Project retros validate patterns across epics
-- Each level improves processes below it
-
-### Default to Simplicity
-Apply these rules:
-- Default to <100 lines of new code
-- Require evidence before adding complexity
-- Prefer boring, proven tech
-- Apply 10-minute understandability rule (split if longer)
 
 ## 🔍 When to Create Spec vs Code Directly
 
