@@ -44,6 +44,10 @@ Command source of truth:
 - `.claude/commands/` is mirrored for Claude Code compatibility
 - Sync manually with: `bash .speck/scripts/bash/sync-claude-commands.sh`
 
+Instruction source of truth:
+- `AGENTS.md` is the single instruction source for both Cursor and Claude Code
+- We intentionally avoid `CLAUDE.md` to reduce instruction drift risk
+
 ### Recommended: MCP Setup
 
 For the best experience, configure MCP servers for research and documentation:

@@ -355,6 +355,15 @@ jobs:
 
           echo "✅ Cursor and Claude command directories are in sync"
 
+      - name: Enforce single instruction source (no CLAUDE.md)
+        run: |
+          set -euo pipefail
+          if [ -f "CLAUDE.md" ]; then
+            echo "❌ CLAUDE.md detected. Use AGENTS.md as the single instruction source to avoid drift."
+            exit 1
+          fi
+          echo "✅ No CLAUDE.md present (AGENTS.md remains single source of truth)"
+
       - name: Guard against deprecated artifact names (methodology drift)
         run: |
           set -euo pipefail
