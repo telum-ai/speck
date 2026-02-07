@@ -39,14 +39,27 @@ This sets up:
 - Validation hooks (`.cursor/hooks/`)
 - Update workflows (`.github/workflows/`)
 
-Command source of truth:
-- Canonical command source is `.cursor/commands/`
-- `.claude/commands/` is mirrored for Claude Code compatibility
-- Sync manually with: `bash .speck/scripts/bash/sync-claude-commands.sh`
+Runtime source of truth:
+- Canonical runtime source is `.cursor/commands/` + `.cursor/agents/`
+- `.claude/commands/` + `.claude/agents/` are mirrored for Claude Code compatibility
+- Sync manually with: `bash .speck/scripts/bash/sync-claude-runtime.sh`
 
 Instruction source of truth:
 - `AGENTS.md` is the single instruction source for both Cursor and Claude Code
 - We intentionally avoid `CLAUDE.md` to reduce instruction drift risk
+
+### Claude Code advanced setup (recommended)
+
+To leverage Claude-native features beyond Cursor:
+- Subagents via `.claude/agents/` (mirrored from Speck agent definitions)
+- Agent teams (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`)
+- Claude settings baseline at `.claude/settings.json.example`
+- Claude hooks/settings scopes (project/user/local) via `.claude/settings*.json`
+
+Start from:
+```bash
+cp .claude/settings.json.example .claude/settings.json
+```
 
 ### Recommended: MCP Setup
 

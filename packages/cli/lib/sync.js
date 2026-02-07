@@ -18,12 +18,12 @@ const ALWAYS_OVERWRITE = [
   '.speck/README.md',
   '.speck/VERSION',
   '.cursor/commands',
-  '.claude/commands',
   '.cursor/agents',
   '.cursor/hooks/hooks',
   '.cursor/hooks/VALIDATION.md',
   '.cursor/MCP-SETUP.md',
   '.cursor/rules/speck',
+  '.claude/settings.json.example',
   '.github/workflows/speck-orchestrator.yml',
   '.github/workflows/speck-update-check.yml',
   '.github/workflows/speck-validation.yml',
@@ -360,26 +360,26 @@ function copyDir(src, dest, baseDir = null) {
 }
 
 /**
- * Mirror Cursor slash commands into Claude Code command directory.
+ * Mirror Cursor runtime directories into Claude Code runtime directories.
  *
  * Why copy instead of symlink/hardlink?
  * - Works consistently across platforms, archives, and git clients.
  * - Keeps downstream Speck init/upgrade behavior predictable.
  */
-function mirrorClaudeCommands(targetDir) {
-  const cursorCommands = join(targetDir, '.cursor', 'commands');
-  const claudeCommands = join(targetDir, '.claude', 'commands');
+function mirrorCursorDirToClaude(targetDir, relativeDir) {
+  const sourceDir = join(targetDir, '.cursor', relativeDir);
+  const destDir = join(targetDir, '.claude', relativeDir);
 
-  if (!existsSync(cursorCommands) || !statSync(cursorCommands).isDirectory()) {
-    return { action: 'skip', reason: 'missing .cursor/commands' };
+  if (!existsSync(sourceDir) || !statSync(sourceDir).isDirectory()) {
+    return { action: 'skip', reason: `missing .cursor/${relativeDir}` };
   }
 
-  if (existsSync(claudeCommands)) {
-    rmSync(claudeCommands, { recursive: true, force: true });
+  if (existsSync(destDir)) {
+    rmSync(destDir, { recursive: true, force: true });
   }
 
-  copyDir(cursorCommands, claudeCommands);
-  return { action: 'sync', path: '.claude/commands/' };
+  copyDir(sourceDir, destDir);
+  return { action: 'sync', path: `.claude/${relativeDir}/` };
 }
 
 /**
@@ -543,17 +543,19 @@ export function smartSync(sourceDir, targetDir, options = {}) {
     }
   }
   
-  // 4. Mirror Cursor commands to Claude Code commands for runtime parity
-  try {
-    const mirrorResult = mirrorClaudeCommands(targetDir);
-    if (mirrorResult.action === 'sync') {
-      results.updated.push(mirrorResult.path);
-      if (verbose) {
-        console.log(`  ✅ Synced: ${mirrorResult.path} (from .cursor/commands/)`);
+  // 4. Mirror Cursor runtime directories to Claude Code for runtime parity
+  for (const relativeDir of ['commands', 'agents']) {
+    try {
+      const mirrorResult = mirrorCursorDirToClaude(targetDir, relativeDir);
+      if (mirrorResult.action === 'sync') {
+        results.updated.push(mirrorResult.path);
+        if (verbose) {
+          console.log(`  ✅ Synced: ${mirrorResult.path} (from .cursor/${relativeDir}/)`);
+        }
       }
+    } catch (error) {
+      results.errors.push({ file: `.claude/${relativeDir}`, error: error.message });
     }
-  } catch (error) {
-    results.errors.push({ file: '.claude/commands', error: error.message });
   }
 
   // 5. Remove files that were deleted from Speck

@@ -33,7 +33,7 @@ The CLI uses intelligent merging to preserve your customizations during updates:
 | **README.md** | Skipped if you customized it |
 | **copilot-setup-steps.yml** | Skipped if you customized it |
 | **Methodology files** | Always updated (commands, templates, patterns, workflows) |
-| **.claude/commands** | Auto-mirrored from `.cursor/commands` during init/upgrade |
+| **.claude/commands + .claude/agents** | Auto-mirrored from `.cursor/commands` + `.cursor/agents` during init/upgrade |
 
 ## Commands
 

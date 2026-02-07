@@ -244,6 +244,7 @@ jobs:
             ".speck/scripts/bash/get-context.sh"
             ".speck/scripts/bash/merge-mcp-config.sh"
             ".speck/scripts/bash/sync-claude-commands.sh"
+            ".speck/scripts/bash/sync-claude-runtime.sh"
             ".speck/scripts/bash/validate-artifact-docs.sh"
             
             # Cursor configuration
@@ -251,6 +252,8 @@ jobs:
             ".cursor/mcp.json.example"
             ".cursor/commands/speck.md"
             ".claude/commands/speck.md"
+            ".claude/agents/speck-coder.md"
+            ".claude/settings.json.example"
             ".cursor/hooks/hooks.json"
             ".cursor/hooks/VALIDATION.md"
             ".cursor/hooks/hooks/after-file-edit.sh"
@@ -329,31 +332,35 @@ jobs:
 
           echo "✅ All command references resolve"
 
-      - name: Verify Cursor/Claude command parity
+      - name: Verify Cursor/Claude runtime parity
         run: |
           set -euo pipefail
-          echo "🔁 Verifying .claude/commands mirrors .cursor/commands..."
 
-          if [ ! -d ".cursor/commands" ]; then
-            echo "❌ Missing .cursor/commands"
-            exit 1
-          fi
+          check_parity() {
+            local name="$1"
+            if [ ! -d ".cursor/$name" ]; then
+              echo "❌ Missing .cursor/$name"
+              exit 1
+            fi
+            if [ ! -d ".claude/$name" ]; then
+              echo "❌ Missing .claude/$name"
+              exit 1
+            fi
 
-          if [ ! -d ".claude/commands" ]; then
-            echo "❌ Missing .claude/commands"
-            exit 1
-          fi
+            diff_output="$(diff -ru ".cursor/$name" ".claude/$name" || true)"
+            if [ -n "$diff_output" ]; then
+              echo "❌ Runtime directories are out of sync for: $name"
+              echo "Run: bash .speck/scripts/bash/sync-claude-runtime.sh"
+              echo ""
+              echo "$diff_output"
+              exit 1
+            fi
 
-          diff_output="$(diff -ru .cursor/commands .claude/commands || true)"
-          if [ -n "$diff_output" ]; then
-            echo "❌ Command directories are out of sync."
-            echo "Run: bash .speck/scripts/bash/sync-claude-commands.sh"
-            echo ""
-            echo "$diff_output"
-            exit 1
-          fi
+            echo "✅ .claude/$name mirrors .cursor/$name"
+          }
 
-          echo "✅ Cursor and Claude command directories are in sync"
+          check_parity commands
+          check_parity agents
 
       - name: Enforce single instruction source (no CLAUDE.md)
         run: |
