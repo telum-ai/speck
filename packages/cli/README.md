@@ -18,6 +18,9 @@ npx github:telum-ai/speck check
 
 # Show current version
 npx github:telum-ai/speck version
+
+# Generate one lean JTBD incubation bet from recent repo signals
+npx github:telum-ai/speck incubate --days 30
 ```
 
 ## Smart Merging
@@ -76,6 +79,17 @@ Show the current Speck version.
 ```bash
 npx github:telum-ai/speck version
 ```
+
+### `incubate`
+
+Propose one lean JTBD bet by mining recent git churn and TODO/FIXME signals.
+
+```bash
+npx github:telum-ai/speck incubate [--days 21]
+```
+
+Options:
+- `--days` - Number of days of git history to inspect (default: 21)
 
 ## Private Repositories
 

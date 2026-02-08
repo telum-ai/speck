@@ -26,6 +26,7 @@ import { init } from '../lib/commands/init.js';
 import { upgrade } from '../lib/commands/upgrade.js';
 import { check } from '../lib/commands/check.js';
 import { showVersion } from '../lib/commands/version.js';
+import { incubate } from '../lib/commands/incubate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -43,18 +44,21 @@ COMMANDS
   upgrade [version] Upgrade to latest (or specified) version
   check             Check for available updates
   version           Show current and latest versions
+  incubate          Propose one lean JTBD bet from recent repo signals
   help              Show this help message
 
 OPTIONS
   --dry-run         Show what would change without making changes
   --force           Overwrite existing files without prompting
   --ignore <glob>   Additional patterns to ignore (can be repeated)
+  --days <n>        Days of git history to mine for incubate (default: 21)
 
 EXAMPLES
   npx github:telum-ai/speck init
   npx github:telum-ai/speck upgrade
   npx github:telum-ai/speck upgrade v2.1.0
   npx github:telum-ai/speck check
+  npx github:telum-ai/speck incubate --days 30
   npx github:telum-ai/speck upgrade --dry-run
 
 ACCESS CONTROL
@@ -83,6 +87,12 @@ async function main() {
     }
   }
   
+  // Parse --days option
+  const daysIndex = args.indexOf('--days');
+  if (daysIndex !== -1 && args[daysIndex + 1]) {
+    options.days = Number(args[daysIndex + 1]);
+  }
+
   // Get version argument for upgrade command
   const versionArg = args.find(a => a.startsWith('v') && !a.startsWith('--'));
   
@@ -104,6 +114,10 @@ async function main() {
       case '-v':
       case '--version':
         await showVersion(process.cwd());
+        break;
+
+      case 'incubate':
+        await incubate(process.cwd(), options);
         break;
         
       case 'help':
