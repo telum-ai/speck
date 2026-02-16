@@ -228,6 +228,42 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
    - Check off each item during validation
    - Unchecked items become validation issues
    
+   **Aesthetic Quality Gate** (REQUIRED for all UI stories):
+   
+   Beyond token compliance — judge the DESIGN QUALITY of the implementation:
+   
+   Load from `design-system.md`:
+   - **Design Philosophy** (core principle, emotional keywords, anti-patterns)
+   - **Bold Choices (Non-Negotiable)** (the personality-defining rules)
+   - **What Success Looks Like** (the feel test)
+   
+   Evaluate each screen/component against:
+   
+   | Dimension | Question | Rating |
+   |-----------|----------|--------|
+   | Design Philosophy | Does the UI express the project's core design principle? | ✅/⚠️/❌ |
+   | Bold Choices | Are ALL non-negotiable design rules honored? (Check each) | ✅/⚠️/❌ |
+   | Feel Test | Would this pass the "What Success Looks Like" description? | ✅/⚠️/❌ |
+   | Visual Personality | Is this intentionally designed or generic/boilerplate? | ✅/⚠️/❌ |
+   | Typography Hierarchy | Is it dramatic/intentional or flat/boring? | ✅/⚠️/❌ |
+   | Negative Space | Active and deliberate or cramped/random? | ✅/⚠️/❌ |
+   | Interactive States | Do hover/focus/active feel designed or browser-default? | ✅/⚠️/❌ |
+   | Motion | Matches the motion philosophy or random/jarring/missing? | ✅/⚠️/❌ |
+   | Texture & Depth | Does the UI have surface quality or is it flat/lifeless? | ✅/⚠️/❌ |
+   | Component Character | Do buttons/cards/inputs have personality or feel generic? | ✅/⚠️/❌ |
+   
+   **Aesthetic Grade**:
+   - **BEAUTIFUL** — Exceeds design system expectations, feels polished and intentional
+   - **ACCEPTABLE** — Honors design system, no major aesthetic issues
+   - **NEEDS_WORK** — Functionally correct but aesthetically weak in specific areas
+   - **UGLY** — Generic, boilerplate, or actively violates design personality
+   
+   **If NEEDS_WORK or UGLY**: Flag as validation issue with:
+   - Specific dimensions that failed (from table above)
+   - Concrete improvement suggestions (not vague "make it better")
+   - Reference to the Bold Choices or Design Philosophy rules being violated
+   - This MUST be treated as a validation failure — functionally correct is NOT done
+   
    **Store Screenshots**:
    - Create `{STORY_DIR}/screenshots/` directory
    - Save screenshots with convention: `{screen}-{breakpoint|state|device}.png`
@@ -236,6 +272,8 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
    - Include in validation-report.md:
      * Screenshot gallery with annotations
      * Design token compliance percentage
+     * **Aesthetic Quality Grade** with dimension-by-dimension ratings
+     * Bold Choices compliance (each rule checked individually)
      * Accessibility audit results
      * Voice/tone compliance notes
      * ui-spec.md checklist status
