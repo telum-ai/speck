@@ -4,7 +4,7 @@ You are working in a **Speck** project. Read `AGENTS.md` for the complete method
 
 ## Story Command Flow
 
-Commands are in `.cursor/commands/story-*.md`. Execute in order:
+Commands are in `.cursor/skills/story-*/SKILL.md`. Execute in order:
 
 ### Discovery & Specification
 | Command | Purpose | Output | Required |

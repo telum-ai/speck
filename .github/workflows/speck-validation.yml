@@ -250,9 +250,7 @@ jobs:
             # Cursor configuration
             ".cursor/MCP-SETUP.md"
             ".cursor/mcp.json.example"
-            ".cursor/commands/speck.md"
-            ".claude/commands/speck.md"
-            ".claude/agents/speck-coder.md"
+            ".cursor/skills/speck/SKILL.md"
             ".claude/settings.json.example"
             ".cursor/hooks/hooks.json"
             ".cursor/hooks/VALIDATION.md"
@@ -308,16 +306,16 @@ jobs:
 
           missing=""
 
-          # Templates referenced by commands
-          template_paths="$(grep -RhoE '\.speck/templates/[A-Za-z0-9_./-]+\.md' .cursor/commands | sort -u || true)"
+          # Templates referenced by skills
+          template_paths="$(grep -RhoE '\.speck/templates/[A-Za-z0-9_./-]+\.md' .cursor/skills | sort -u || true)"
           for p in $template_paths; do
             if [ ! -f "$p" ]; then
               missing="$missing\n  - $p"
             fi
           done
 
-          # Scripts referenced by commands
-          script_paths="$(grep -RhoE '\.speck/scripts/bash/[A-Za-z0-9_./-]+\.sh' .cursor/commands | sort -u || true)"
+          # Scripts referenced by skills
+          script_paths="$(grep -RhoE '\.speck/scripts/bash/[A-Za-z0-9_./-]+\.sh' .cursor/skills | sort -u || true)"
           for p in $script_paths; do
             if [ ! -f "$p" ]; then
               missing="$missing\n  - $p"
@@ -325,42 +323,56 @@ jobs:
           done
 
           if [ -n "$missing" ]; then
-            echo "❌ Missing files referenced by commands:"
+            echo "❌ Missing files referenced by skills:"
             echo -e "$missing"
             exit 1
           fi
 
-          echo "✅ All command references resolve"
+          echo "✅ All skill references resolve"
 
-      - name: Verify Cursor/Claude runtime parity
+      - name: Verify Cursor/Claude/Codex runtime parity (symlinks)
         run: |
           set -euo pipefail
 
-          check_parity() {
-            local name="$1"
-            if [ ! -d ".cursor/$name" ]; then
-              echo "❌ Missing .cursor/$name"
+          # Verify .cursor/skills and .cursor/agents exist
+          for dir in skills agents; do
+            if [ ! -d ".cursor/$dir" ]; then
+              echo "❌ Missing .cursor/$dir"
               exit 1
             fi
-            if [ ! -d ".claude/$name" ]; then
-              echo "❌ Missing .claude/$name"
+          done
+
+          # Verify .claude/skills and .claude/agents are symlinks pointing to .cursor
+          for dir in skills agents; do
+            if [ ! -L ".claude/$dir" ]; then
+              echo "❌ .claude/$dir is not a symlink"
               exit 1
             fi
-
-            diff_output="$(diff -ru ".cursor/$name" ".claude/$name" || true)"
-            if [ -n "$diff_output" ]; then
-              echo "❌ Runtime directories are out of sync for: $name"
-              echo "Run: bash .speck/scripts/bash/sync-claude-runtime.sh"
-              echo ""
-              echo "$diff_output"
+            if [ ! -e ".claude/$dir" ]; then
+              echo "❌ .claude/$dir symlink is broken"
               exit 1
             fi
+            target="$(readlink -f ".claude/$dir")"
+            expected="$(readlink -f ".cursor/$dir")"
+            if [ "$target" != "$expected" ]; then
+              echo "❌ .claude/$dir should point to .cursor/$dir (got: $target)"
+              exit 1
+            fi
+            echo "✅ .claude/$dir symlink OK"
+          done
 
-            echo "✅ .claude/$name mirrors .cursor/$name"
-          }
-
-          check_parity commands
-          check_parity agents
+          # Verify .codex/skills and .codex/agents are symlinks to .cursor
+          for dir in skills agents; do
+            if [ ! -L ".codex/$dir" ]; then
+              echo "❌ .codex/$dir is not a symlink"
+              exit 1
+            fi
+            if [ ! -e ".codex/$dir" ]; then
+              echo "❌ .codex/$dir symlink is broken"
+              exit 1
+            fi
+            echo "✅ .codex/$dir symlink OK"
+          done
 
       - name: Enforce single instruction source (no CLAUDE.md)
         run: |
@@ -378,7 +390,7 @@ jobs:
 
           # We intentionally do NOT scan specs/** because product repos (and this repo)
           # may contain legacy content. This guard is for the template methodology only.
-          targets=(AGENTS.md .cursor/commands .speck)
+          targets=(AGENTS.md .cursor/skills .speck)
 
           # Add patterns here when renaming artifacts. Keep this list tight.
           banned_patterns=(

@@ -103,7 +103,7 @@
 
 ## Next Steps
 
-1. Use the just-in-time research pattern (`.cursor/rules/speck/patterns/just-in-time-research.mdc`) to address Priority 1 questions
+1. Use the just-in-time research pattern (`.cursor/skills/just-in-time-research/SKILL.md`) to address Priority 1 questions
 2. Then run `/epic-plan` to generate `epic-tech-spec.md`
 
 ---

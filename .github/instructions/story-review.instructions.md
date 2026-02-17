@@ -1,6 +1,6 @@
 # Story Code Review Instructions
 
-When reviewing code in a Speck story PR, follow the validation methodology from `.cursor/commands/story-validate.md`.
+When reviewing code in a Speck story PR, follow the validation methodology from `.cursor/skills/story-validate/SKILL.md`.
 
 ## Validation Checklist
 

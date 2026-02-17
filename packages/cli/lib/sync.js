@@ -2,7 +2,7 @@
  * Core sync logic for Speck files with smart merging
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync, copyFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync, copyFileSync, symlinkSync } from 'fs';
 import { join, dirname, relative } from 'path';
 import { execSync } from 'child_process';
 import { tmpdir } from 'os';
@@ -17,12 +17,11 @@ const ALWAYS_OVERWRITE = [
   '.speck/scripts',
   '.speck/README.md',
   '.speck/VERSION',
-  '.cursor/commands',
+  '.cursor/skills',
   '.cursor/agents',
   '.cursor/hooks/hooks',
   '.cursor/hooks/VALIDATION.md',
   '.cursor/MCP-SETUP.md',
-  '.cursor/rules/speck',
   '.claude/settings.json.example',
   '.github/workflows/speck-orchestrator.yml',
   '.github/workflows/speck-update-check.yml',
@@ -97,6 +96,10 @@ const REMOVE_FILES = [
   '.speck/templates/context/project-context.md',
   '.speckignore',
   '.templatesyncignore',
+  // v5.0.0: Commands migrated to skills, rules migrated to skills
+  '.cursor/commands',
+  '.cursor/rules/speck',
+  '.claude/commands',
 ];
 
 // ============================================================
@@ -360,26 +363,27 @@ function copyDir(src, dest, baseDir = null) {
 }
 
 /**
- * Mirror Cursor runtime directories into Claude Code runtime directories.
+ * Create a relative symlink from a target runtime directory back to .cursor/.
  *
- * Why copy instead of symlink/hardlink?
- * - Works consistently across platforms, archives, and git clients.
- * - Keeps downstream Speck init/upgrade behavior predictable.
+ * Uses symlinks for zero-drift cross-tool compatibility (Cursor, Claude Code, Codex).
+ * Git tracks symlinks natively; archives preserve them on Unix.
  */
-function mirrorCursorDirToClaude(targetDir, relativeDir) {
+function symlinkCursorDir(targetDir, runtimeDir, relativeDir) {
   const sourceDir = join(targetDir, '.cursor', relativeDir);
-  const destDir = join(targetDir, '.claude', relativeDir);
+  const destDir = join(targetDir, runtimeDir, relativeDir);
 
   if (!existsSync(sourceDir) || !statSync(sourceDir).isDirectory()) {
     return { action: 'skip', reason: `missing .cursor/${relativeDir}` };
   }
 
+  mkdirSync(join(targetDir, runtimeDir), { recursive: true });
+
   if (existsSync(destDir)) {
     rmSync(destDir, { recursive: true, force: true });
   }
 
-  copyDir(sourceDir, destDir);
-  return { action: 'sync', path: `.claude/${relativeDir}/` };
+  symlinkSync(join('..', '.cursor', relativeDir), destDir);
+  return { action: 'sync', path: `${runtimeDir}/${relativeDir}/` };
 }
 
 /**
@@ -543,18 +547,20 @@ export function smartSync(sourceDir, targetDir, options = {}) {
     }
   }
   
-  // 4. Mirror Cursor runtime directories to Claude Code for runtime parity
-  for (const relativeDir of ['commands', 'agents']) {
-    try {
-      const mirrorResult = mirrorCursorDirToClaude(targetDir, relativeDir);
-      if (mirrorResult.action === 'sync') {
-        results.updated.push(mirrorResult.path);
-        if (verbose) {
-          console.log(`  ✅ Synced: ${mirrorResult.path} (from .cursor/${relativeDir}/)`);
+  // 4. Symlink Cursor runtime directories into .claude and .codex for cross-tool parity
+  for (const runtimeDir of ['.claude', '.codex']) {
+    for (const relativeDir of ['skills', 'agents']) {
+      try {
+        const symlinkResult = symlinkCursorDir(targetDir, runtimeDir, relativeDir);
+        if (symlinkResult.action === 'sync') {
+          results.updated.push(symlinkResult.path);
+          if (verbose) {
+            console.log(`  ✅ Symlinked: ${symlinkResult.path} → .cursor/${relativeDir}/`);
+          }
         }
+      } catch (error) {
+        results.errors.push({ file: `${runtimeDir}/${relativeDir}`, error: error.message });
       }
-    } catch (error) {
-      results.errors.push({ file: `.claude/${relativeDir}`, error: error.message });
     }
   }
 
@@ -592,8 +598,9 @@ export function isSpeckInitialized(targetDir) {
   const markers = [
     join(targetDir, '.speck', 'VERSION'),
     join(targetDir, '.speck', 'README.md'),
+    join(targetDir, '.cursor', 'skills', 'speck', 'SKILL.md'),
+    // Legacy markers for pre-v5 installations
     join(targetDir, '.cursor', 'commands', 'speck.md'),
-    join(targetDir, '.claude', 'commands', 'speck.md'),
   ];
   return markers.some(path => existsSync(path));
 }

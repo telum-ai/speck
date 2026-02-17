@@ -1,0 +1,303 @@
+---
+name: oauth-implementation
+description: Load when implementing OAuth 2.0 and OpenID Connect authentication. Applies when building social login, SSO, PKCE flows, or integrating with OAuth providers like Google, GitHub, Apple.
+---
+
+
+## OAuth 2.0 Flows
+
+### Flow Selection
+
+| Flow | Use Case | Security |
+|------|----------|----------|
+| **Authorization Code + PKCE** | SPAs, mobile apps | Best |
+| **Authorization Code** | Server-side apps | Good |
+| **Client Credentials** | Machine-to-machine | N/A (no user) |
+| ~~Implicit~~ | Deprecated | Avoid |
+
+### PKCE (Proof Key for Code Exchange)
+
+Required for public clients (SPAs, mobile). Prevents authorization code interception.
+
+```typescript
+// 1. Generate code verifier (random string)
+function generateCodeVerifier(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return base64UrlEncode(array);
+}
+
+// 2. Create code challenge (SHA-256 hash)
+async function generateCodeChallenge(verifier: string): Promise<string> {
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  return base64UrlEncode(new Uint8Array(hash));
+}
+
+// 3. Store verifier in session, send challenge to auth server
+const codeVerifier = generateCodeVerifier();
+const codeChallenge = await generateCodeChallenge(codeVerifier);
+sessionStorage.setItem('code_verifier', codeVerifier);
+
+// Authorization URL
+const authUrl = `https://auth.provider.com/authorize?
+  response_type=code&
+  client_id=${clientId}&
+  redirect_uri=${redirectUri}&
+  scope=openid profile email&
+  state=${generateState()}&
+  code_challenge=${codeChallenge}&
+  code_challenge_method=S256`;
+```
+
+---
+
+## Token Exchange
+
+### Exchange Code for Tokens
+
+```typescript
+async function exchangeCodeForTokens(code: string): Promise<TokenResponse> {
+  const codeVerifier = sessionStorage.getItem('code_verifier');
+  
+  const response = await fetch('https://auth.provider.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+      client_id: clientId,
+      code_verifier: codeVerifier!, // PKCE
+    }),
+  });
+  
+  return response.json();
+}
+
+interface TokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  id_token?: string;  // OpenID Connect
+  token_type: 'Bearer';
+  expires_in: number;
+}
+```
+
+---
+
+## Token Refresh
+
+### Refresh Before Expiry
+
+```typescript
+class TokenManager {
+  private accessToken: string;
+  private refreshToken: string;
+  private expiresAt: number;
+  
+  async getValidToken(): Promise<string> {
+    // Refresh if expires within 5 minutes
+    if (Date.now() >= this.expiresAt - 5 * 60 * 1000) {
+      await this.refresh();
+    }
+    return this.accessToken;
+  }
+  
+  private async refresh(): Promise<void> {
+    const response = await fetch('https://auth.provider.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: this.refreshToken,
+        client_id: clientId,
+      }),
+    });
+    
+    const tokens = await response.json();
+    this.accessToken = tokens.access_token;
+    this.expiresAt = Date.now() + tokens.expires_in * 1000;
+    
+    if (tokens.refresh_token) {
+      this.refreshToken = tokens.refresh_token; // Rotation
+    }
+  }
+}
+```
+
+### Refresh Token Rotation
+
+Some providers rotate refresh tokens on each use. Always store the new refresh token.
+
+---
+
+## State Parameter (CSRF Protection)
+
+```typescript
+// Generate cryptographically random state
+function generateState(): string {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return base64UrlEncode(array);
+}
+
+// Store before redirect
+const state = generateState();
+sessionStorage.setItem('oauth_state', state);
+
+// Validate on callback
+function validateCallback(urlState: string): boolean {
+  const storedState = sessionStorage.getItem('oauth_state');
+  sessionStorage.removeItem('oauth_state');
+  return urlState === storedState;
+}
+```
+
+---
+
+## OpenID Connect (OIDC)
+
+### ID Token Validation
+
+```typescript
+import jwt from 'jsonwebtoken';
+import jwksClient from 'jwks-rsa';
+
+const client = jwksClient({
+  jwksUri: 'https://auth.provider.com/.well-known/jwks.json',
+});
+
+async function validateIdToken(idToken: string): Promise<IdTokenPayload> {
+  const decoded = jwt.decode(idToken, { complete: true });
+  const key = await client.getSigningKey(decoded.header.kid);
+  
+  return jwt.verify(idToken, key.getPublicKey(), {
+    audience: clientId,
+    issuer: 'https://auth.provider.com',
+    algorithms: ['RS256'],
+  }) as IdTokenPayload;
+}
+
+interface IdTokenPayload {
+  sub: string;      // User ID
+  email: string;
+  email_verified: boolean;
+  name: string;
+  picture?: string;
+  iat: number;
+  exp: number;
+}
+```
+
+---
+
+## Provider-Specific Gotchas
+
+### Google
+
+```typescript
+// Prompt for consent every time (useful for testing)
+const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?
+  ...
+  prompt=consent&
+  access_type=offline`;  // Required for refresh token
+```
+
+**Gotcha**: Google only returns `refresh_token` on first authorization. Use `prompt=consent` to force it again.
+
+### GitHub
+
+**Gotcha**: GitHub access tokens don't expire by default. Consider using GitHub Apps with short-lived tokens.
+
+### Apple
+
+**Gotcha**: Apple only sends user info (name, email) on FIRST login. Store it immediately.
+
+```typescript
+// Apple returns user info in POST body, not in ID token
+const { user } = req.body; // { name: { firstName, lastName }, email }
+```
+
+### Microsoft/Azure AD
+
+**Gotcha**: Different endpoints for personal vs. work accounts:
+- Personal: `https://login.microsoftonline.com/consumers`
+- Work: `https://login.microsoftonline.com/{tenant}`
+- Both: `https://login.microsoftonline.com/common`
+
+---
+
+## Token Storage
+
+### Where to Store Tokens
+
+| Token | Storage | Notes |
+|-------|---------|-------|
+| Access Token | Memory | Short-lived, OK in memory |
+| Refresh Token | HttpOnly Cookie | Never expose to JS |
+| ID Token | Memory or localStorage | Verify signature before use |
+
+### Backend Token Proxy Pattern
+
+```typescript
+// Frontend never sees tokens
+// Backend stores tokens, proxies API calls
+
+// POST /api/auth/callback
+app.post('/api/auth/callback', async (req, res) => {
+  const tokens = await exchangeCode(req.body.code);
+  
+  // Store tokens server-side
+  await saveTokens(req.session.userId, tokens);
+  
+  res.json({ success: true });
+});
+
+// POST /api/proxy/github
+app.post('/api/proxy/github', async (req, res) => {
+  const tokens = await getTokens(req.session.userId);
+  
+  const response = await fetch('https://api.github.com' + req.body.path, {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
+  
+  res.json(await response.json());
+});
+```
+
+---
+
+## Common Gotchas
+
+### Redirect URI Mismatch
+Must match exactly (including trailing slashes, http vs https).
+
+### Scope Changes
+If you request new scopes, user must re-consent. Some providers require `prompt=consent`.
+
+### Token Expiry Race Conditions
+Multiple concurrent requests might all try to refresh. Use a mutex or single refresh queue.
+
+### CORS on Token Endpoint
+Token endpoint often doesn't support CORS. Exchange tokens server-side.
+
+### Silent Refresh Failures
+Use hidden iframe for silent refresh, but handle third-party cookie blocks gracefully.
+
+---
+
+## Quick Reference
+
+| Task | Pattern |
+|------|---------|
+| PKCE flow | Generate verifier → hash to challenge → exchange with verifier |
+| CSRF protection | Random state → store → validate on callback |
+| Token refresh | Refresh 5 min before expiry |
+| Store refresh token | HttpOnly cookie or server-side |
+| Validate ID token | Check signature, aud, iss, exp |
+
+## References
+
+- [OAuth 2.0 RFC](https://oauth.net/2/)
+- [PKCE RFC](https://oauth.net/2/pkce/)
+- [OpenID Connect](https://openid.net/connect/)

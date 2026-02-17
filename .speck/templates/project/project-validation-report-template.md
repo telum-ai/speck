@@ -91,7 +91,7 @@
 
 ### Cursor Rules Compliance
 
-**Rules Directory**: `.cursor/rules/` [exists/not found]  
+**Skills Directory**: `.cursor/skills/` [exists/not found]  
 **Total Project Rules**: [X]  
 **Epics Evaluated**: [Y]  
 **Total Stories Evaluated**: [Z]

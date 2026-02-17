@@ -510,7 +510,7 @@ The agent should **automatically suggest or create commits** at natural completi
 
 ## 🔬 Just-In-Time Research Pattern
 
-Research happens during command execution, not as a separate phase. Commands use the pattern defined in `.cursor/rules/patterns/just-in-time-research.mdc`.
+Research happens during command execution, not as a separate phase. Commands use the pattern defined in `.cursor/skills/just-in-time-research/SKILL.md`.
 
 ### How Research Works
 
@@ -578,7 +578,7 @@ architecture.md includes:
 ✅ **Efficient** - Web search covers 90% of needs, deep research for complex cases
 ✅ **Self-documenting** - Research trail always visible in artifacts
 
-**See `.cursor/rules/patterns/just-in-time-research.mdc` for complete pattern details.**
+**See `.cursor/skills/just-in-time-research/SKILL.md` for complete pattern details.**
 
 ## 🎯 Agent Skills
 
@@ -595,7 +595,7 @@ Skills are **domain-specific expertise packages** that AI agents load automatica
 
 ### Available Skills
 
-**External Services** (`.cursor/rules/speck/external-services/`):
+**External Services** (`.cursor/skills/`):
 - `stripe-integration.mdc` - Payments, subscriptions, webhooks
 - `supabase-integration.mdc` - Database, auth, real-time, RLS
 - `clerk-authentication.mdc` - Authentication for Next.js/React
@@ -606,20 +606,20 @@ Skills are **domain-specific expertise packages** that AI agents load automatica
 - `posthog-integration.mdc` - Product analytics, feature flags
 - `revenuecat-integration.mdc` - In-app purchases, subscriptions
 
-**Technologies** (`.cursor/rules/speck/technologies/`):
+**Technologies** (`.cursor/skills/`):
 - `progressive-web-apps.mdc` - Progressive Web App patterns
 - `tanstack-query.mdc` - Server state with TanStack Query
 - `websocket-implementation.mdc` - Real-time communication
 - `docker-containerization.mdc` - Containerization patterns
 - `github-actions-cicd.mdc` - CI/CD pipelines
 
-**Domains** (`.cursor/rules/speck/domains/`):
+**Domains** (`.cursor/skills/`):
 - `saas-billing-patterns.mdc` - Subscription state machines, dunning
 - `multi-tenancy-patterns.mdc` - Tenant isolation, RBAC
 - `oauth-implementation.mdc` - OAuth 2.0, PKCE flows
 - `gdpr-compliance.mdc` - Consent, data rights
 
-**Architectures** (`.cursor/rules/speck/architectures/`):
+**Architectures** (`.cursor/skills/`):
 - `serverless-architecture.mdc` - FaaS patterns, cold starts
 - `offline-first-architecture.mdc` - Sync, conflict resolution
 
@@ -633,7 +633,7 @@ When a recipe recommends Stripe for payments, the Stripe skill provides:
 - Common gotchas (idempotency, signature verification)
 - Code patterns for checkout, subscriptions
 
-**See `.cursor/rules/speck/` for complete details.**
+**See `.cursor/skills/` for complete details.**
 
 ---
 
@@ -1223,7 +1223,7 @@ Different LLMs excel at different tasks. Switch models strategically:
 - **Speed/iteration** (quick fixes, prototyping): Use Gemini 3 Flash or GPT-5.2
 - **Cross-validation**: Always use a different model to review critical decisions
 
-See `.speck/patterns/model-selection-pattern.md` for detailed guidance.
+See `.cursor/skills/model-selection/SKILL.md` for detailed guidance.
 
 ### 3. Work Top-Down
 - Start with project vision
@@ -1418,7 +1418,7 @@ Speck integrates with **Cursor Background Agents** and **GitHub Copilot Coding A
 
 ### Core Principle
 
-**All runtimes execute the same commands from `.cursor/commands/`.**
+**All runtimes execute the same skills from `.cursor/skills/`.**
 
 The methodology is defined in `AGENTS.md`. Both Cursor and Copilot read it and follow the command flow.
 

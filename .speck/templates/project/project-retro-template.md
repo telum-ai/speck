@@ -248,7 +248,7 @@ Instead, capture validated improvements here so they can be upstreamed to the te
 
 <!-- SPECK_FEEDBACK:START -->
 ### Proposed change: [Short title]
-- **Target**: [Template-managed path, e.g. `.cursor/commands/story-plan.md`]
+- **Target**: [Template-managed path, e.g. `.cursor/skills/story-plan/SKILL.md`]
 - **Type**: Command / Template / Script / Docs / Workflow
 - **Evidence**: [List epics/stories + links to retro sections]
 - **Why**: [What this fixes / improves]

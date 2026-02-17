@@ -71,19 +71,21 @@ copy_file "$REPO_ROOT/AGENTS.md" "$OUT_DIR/AGENTS.md"
 # Speck methodology
 copy_dir "$REPO_ROOT/.speck" "$OUT_DIR/.speck"
 
-# Cursor commands + hooks (exclude project rules)
+# Cursor skills, agents, hooks
 mkdir -p "$OUT_DIR/.cursor"
-copy_dir "$REPO_ROOT/.cursor/commands" "$OUT_DIR/.cursor/commands"
+copy_dir "$REPO_ROOT/.cursor/skills" "$OUT_DIR/.cursor/skills"
+copy_dir "$REPO_ROOT/.cursor/agents" "$OUT_DIR/.cursor/agents"
 copy_dir "$REPO_ROOT/.cursor/hooks" "$OUT_DIR/.cursor/hooks"
 copy_file "$REPO_ROOT/.cursor/MCP-SETUP.md" "$OUT_DIR/.cursor/MCP-SETUP.md"
 copy_file "$REPO_ROOT/.cursor/mcp.json.example" "$OUT_DIR/.cursor/mcp.json.example"
 copy_file "$REPO_ROOT/.cursor/mcp.project.json.example" "$OUT_DIR/.cursor/mcp.project.json.example"
 
-# Cursor Agent Skills (Cursor reads these from `.cursor/rules/speck`)
-if [[ -d "$REPO_ROOT/.cursor/rules/speck" ]]; then
-  mkdir -p "$OUT_DIR/.cursor/rules"
-  copy_dir "$REPO_ROOT/.cursor/rules/speck" "$OUT_DIR/.cursor/rules/speck"
-fi
+# Cross-tool symlinks (.claude and .codex point to .cursor)
+for runtime_dir in .claude .codex; do
+  mkdir -p "$OUT_DIR/$runtime_dir"
+  ln -s ../.cursor/skills "$OUT_DIR/$runtime_dir/skills"
+  ln -s ../.cursor/agents "$OUT_DIR/$runtime_dir/agents"
+done
 
 # Workflows (methodology-only)
 mkdir -p "$OUT_DIR/.github/workflows"
@@ -104,7 +106,7 @@ cat > "$OUT_DIR/README.md" <<'EOF'
 # Speck 🥓 Template
 
 Speck is a spec-driven development methodology for building digital products via:
-- **Commands** (`.cursor/commands/`)
+- **Skills** (`.cursor/skills/`)
 - **Templates** (`.speck/templates/`)
 - **Automation hooks** (`.cursor/hooks/`)
 - **Validation workflows** (`.github/workflows/`)
@@ -112,7 +114,7 @@ Speck is a spec-driven development methodology for building digital products via
 ## Getting Started
 
 In Cursor, start with:
-- `/speck [describe what you want to build]`
+- `/speck` or `@speck` followed by what you want to build
 
 Speck will route you through **project → epic → story** levels.
 

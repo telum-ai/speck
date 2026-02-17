@@ -34,15 +34,15 @@ npx github:telum-ai/speck init
 ```
 
 This sets up:
-- Command files (`.cursor/commands/` and `.claude/commands/`)
+- Skill files (`.cursor/skills/` and `.claude/skills/`)
 - Templates (`.speck/templates/`)
 - Validation hooks (`.cursor/hooks/`)
 - Update workflows (`.github/workflows/`)
 
 Runtime source of truth:
-- Canonical runtime source is `.cursor/commands/` + `.cursor/agents/`
-- `.claude/commands/` + `.claude/agents/` are mirrored for Claude Code compatibility
-- Sync manually with: `bash .speck/scripts/bash/sync-claude-runtime.sh`
+- Canonical runtime source is `.cursor/skills/` + `.cursor/agents/`
+- `.claude/skills/` + `.claude/agents/` are symlinked from `.cursor/` for Claude Code compatibility
+- Sync manually with: `bash .speck/scripts/bash/sync-claude-runtime.sh` (manages symlinks)
 
 Instruction source of truth:
 - `AGENTS.md` is the single instruction source for both Cursor and Claude Code
@@ -51,7 +51,7 @@ Instruction source of truth:
 ### Claude Code advanced setup (recommended)
 
 To leverage Claude-native features beyond Cursor:
-- Subagents via `.claude/agents/` (mirrored from Speck agent definitions)
+- Subagents via `.claude/agents/` (symlinked from `.cursor/agents/`)
 - Agent teams (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`)
 - Claude settings baseline at `.claude/settings.json.example`
 - Claude hooks/settings scopes (project/user/local) via `.claude/settings*.json`
@@ -123,7 +123,7 @@ specs/projects/[project-id]/
 ## 📚 Documentation
 
 **Full documentation**: See `.speck/README.md` for:
-- Complete command reference
+- Complete skill reference
 - Workflow examples
 - Best practices
 - Troubleshooting

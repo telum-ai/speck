@@ -8,7 +8,7 @@ You are working in a project using **Speck 🥓**, a multi-level methodology for
 
 **When user asks to build something**: Always start with `/speck [description]` - it routes you to the right level  
 **When you need methodology details**: Read @.speck/README.md
-**When you need command instructions**: Check `.cursor/commands/[level]-[command].md` (or `.claude/commands/...` in Claude Code)
+**When you need skill instructions**: Check `.cursor/skills/[level]-[command]/SKILL.md` (or `.claude/skills/...` in Claude Code)
 **When you need templates**: Use files in `.speck/templates/[level]/`
 
 ## 🏗️ How to Navigate Speck Structure
@@ -131,7 +131,7 @@ User triggers commands, you follow instructions inside each command.
 visual_testing:
   platform: [web|mobile-flutter|mobile-rn|desktop-electron|desktop-tauri|extension|api|cli]
   strategy: [browser-mcp|golden-tests|maestro|playwright|playwright-electron|webdriverio|puppeteer|none]
-  # Varies by platform (see `.cursor/rules/speck/patterns/visual-testing/`), e.g.:
+  # Varies by platform (see `.cursor/skills/visual-testing-*/`), e.g.:
   # - web: "visual-testing/web.mdc"
   # - mobile-flutter: "visual-testing/mobile-flutter.mdc"
   # - mobile-rn: "visual-testing/mobile-react-native.mdc"
@@ -144,16 +144,16 @@ visual_testing:
 ```
 
 - `/story-validate` loads this config and executes platform-specific visual testing
-- Platform patterns in `.cursor/rules/speck/patterns/visual-testing/` provide detailed guidance
+- Platform patterns in `.cursor/skills/visual-testing-*/` provide detailed guidance
 - Results feed into validation-report.md and story retrospectives
 
-### Command Files Reference
-Commands are markdown files in `.cursor/commands/`:
-- **Project**: `project-*.md`
-- **Epic**: `epic-*.md`
-- **Story**: `story-*.md`
+### Skill Files Reference
+Skills are in `.cursor/skills/` with `SKILL.md` in each directory:
+- **Project**: `project-*/SKILL.md`
+- **Epic**: `epic-*/SKILL.md`
+- **Story**: `story-*/SKILL.md`
 
-Each command file contains step-by-step instructions for you to execute when user triggers that command.
+Each skill file contains step-by-step instructions for you to execute when user triggers that skill.
 
 ## 🔗 How Commands Connect (Read This Carefully!)
 
@@ -229,7 +229,7 @@ Each command file contains step-by-step instructions for you to execute when use
 - Architecture and design-system come BEFORE plan (design before organization)
 - All commands consume: user input + import/scan data + existing Speck docs + upstream artifacts (never downstream)
 
-*Project commands: `project-*.md` in `.cursor/commands/`*
+*Project skills: `project-*/SKILL.md` in `.cursor/skills/`*
 
 ### Epic-Level Command Flow
 
@@ -259,7 +259,7 @@ Each command file contains step-by-step instructions for you to execute when use
 | Performance-critical with specific targets | Clear implementation path |
 | Security-critical epic | UI-only changes |
 
-*Epic commands: `epic-*.md` in `.cursor/commands/`*
+*Epic skills: `epic-*/SKILL.md` in `.cursor/skills/`*
 
 ### Story-Level Command Flow
 
@@ -287,7 +287,7 @@ Each command file contains step-by-step instructions for you to execute when use
 
 **Note**: `story-analyze` is REQUIRED, not optional. It catches issues before implementation.
 
-*Story commands: `story-*.md` in `.cursor/commands/`*
+*Story skills: `story-*/SKILL.md` in `.cursor/skills/`*
 
 ### Critical Command Dependencies (What NEEDS What)
 
@@ -350,7 +350,7 @@ Speck recommends configuring **Perplexity MCP** for automated deep research:
 - **Epic** (Tactical): Integration, performance, security
 - **Story** (Operational): API usage, edge cases, testing
 
-For details, see `.cursor/rules/speck/patterns/just-in-time-research.mdc`.
+For details, see `.cursor/skills/just-in-time-research/SKILL.md`.
 
 ## 🔧 Recommended MCP Servers
 
@@ -394,7 +394,7 @@ All optional but recommended. Speck works without them via fallbacks.
 
 Skills are **agent-decided** expertise packages - automatically loaded when relevant to the current task.
 
-**Location**: `.cursor/rules/speck/`
+**Location**: `.cursor/skills/`
 
 | Category | Examples | When Loaded |
 |----------|----------|-------------|
@@ -407,7 +407,7 @@ Skills are **agent-decided** expertise packages - automatically loaded when rele
 
 **Enabling Skills**: Cursor Settings → Rules → Import Settings → Toggle "Agent Skills" on.
 
-See `.cursor/rules/speck/` for details.
+See `.cursor/skills/` for details.
 
 ## 🤖 Subagents (Intra-Command Parallelization)
 
@@ -431,7 +431,7 @@ Subagents are **parallel workers** that speed up command execution. The main age
 
 ### Skills vs Subagents
 
-| Aspect | Skills (`.cursor/rules/speck/`) | Subagents (`.cursor/agents/`) |
+| Aspect | Skills (`.cursor/skills/`) | Subagents (`.cursor/agents/`) |
 |--------|---------------------------|-------------------------------|
 | **What** | Knowledge loaded into context | Parallel workers with own context |
 | **When** | Auto-loaded when relevant | Spawned for parallel execution |
@@ -477,7 +477,7 @@ If verification fails at any gate, stop and diagnose with `/speck-debug` rather 
 
 ### Command-Specific Instructions
 
-Each command file in `.cursor/commands/` contains its own "Subagent Parallelization" section with specific instructions for that command. Check the command file for details.
+Each skill in `.cursor/skills/` contains its own "Subagent Parallelization" section with specific instructions for that skill. Check the skill file for details.
 
 ## 🔄 Guide Users Through the Process
 
@@ -1011,7 +1011,7 @@ Use verb-led prefixes for clear intent:
 
 Different LLMs excel at different tasks. Prompt the user to switch models when task characteristics indicate a better choice.
 
-**Full Details**: `.cursor/rules/speck/patterns/model-selection.mdc`
+**Full Details**: `.cursor/skills/model-selection/SKILL.md`
 
 ### Quick Reference
 
@@ -1046,24 +1046,24 @@ MAX mode costs $5-$60+ per complex request. Use only for:
 **Methodology**:
 - @.speck/README.md - Complete Speck guide (includes Spec-Driven Development philosophy)
 
-**Patterns** (`.cursor/rules/speck/patterns/`):
-- `visual-testing.mdc` - Autonomous visual testing across platforms
-- `model-selection.mdc` - LLM selection guide
-- `just-in-time-research.mdc` - Research integration pattern
-- `visual-testing/web.mdc` - Web platform visual testing
-- `visual-testing/mobile-flutter.mdc` - Flutter visual testing
-- `visual-testing/mobile-react-native.mdc` - React Native visual testing
-- `visual-testing/desktop-electron.mdc` - Electron visual testing
-- `visual-testing/desktop-tauri.mdc` - Tauri visual testing
-- `visual-testing/extension.mdc` - Browser extension visual testing
+**Patterns** (`.cursor/skills/`):
+- `visual-testing/` - Autonomous visual testing across platforms
+- `model-selection/` - LLM selection guide
+- `just-in-time-research/` - Research integration pattern
+- `visual-testing-web/` - Web platform visual testing
+- `visual-testing-mobile-flutter/` - Flutter visual testing
+- `visual-testing-mobile-react-native/` - React Native visual testing
+- `visual-testing-desktop-electron/` - Electron visual testing
+- `visual-testing-desktop-tauri/` - Tauri visual testing
+- `visual-testing-extension/` - Browser extension visual testing
 
 **Learned Patterns** (project-specific):
 - `.speck/patterns/learned/` - Patterns validated through retrospectives
 
-**Commands**:
-- `.cursor/commands/` - Project-level commands
-- `.cursor/commands/` - Epic-level commands
-- `.cursor/commands/` - Story-level commands
+**Skills**:
+- `.cursor/skills/` - Project-level skills
+- `.cursor/skills/` - Epic-level skills
+- `.cursor/skills/` - Story-level skills
 
 **Templates**:
 - `.speck/templates/project/` - Project templates
@@ -1273,13 +1273,13 @@ See `.cursor/hooks/VALIDATION.md` for details.
 
 Speck supports **autonomous development** through both **Cursor Background Agents** and **GitHub Copilot Coding Agent**.
 
-**Core Principle**: All runtimes execute the **same commands** from `.cursor/commands/`. 
+**Core Principle**: All runtimes execute the **same skills** from `.cursor/skills/`. 
 
 **When executing commands autonomously**:
 1. Read this file (`AGENTS.md`) for methodology
 2. Navigate to the story directory
 3. Follow the Story-Level Command Flow
-4. Execute each command from `.cursor/commands/story-*.md` step-by-step
+4. Execute each skill from `.cursor/skills/story-*/SKILL.md` step-by-step
 5. Story is complete when `validation-report.md` exists with PASS status
 
 **Dependency Management**:
@@ -1308,7 +1308,7 @@ blocks: [S005]            # Stories waiting on this one (informational)
 ## 📖 Where to Find Information
 
 **Speck Methodology**: @.speck/README.md (complete guide)  
-**Command Instructions**: `.cursor/commands/[level]-[command].md`  
+**Skill Instructions**: `.cursor/skills/[level]-[command]/SKILL.md`  
 **Templates**: `.speck/templates/[level]/`  
 **Project Cursor Rules (optional)**: `.cursor/rules/*.mdc`
 
@@ -1322,10 +1322,10 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 4.1.1  
-**Updated**: 2026-01-04  
+**Speck Version**: 5.0.0  
+**Updated**: 2026-02-17  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 
-**When you have questions**: Ask to explain @.speck/README.md or specific commands from `.cursor/commands/`.
+**When you have questions**: Ask to explain @.speck/README.md or specific skills from `.cursor/skills/`.
 
 <!-- SPECK:END -->

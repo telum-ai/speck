@@ -36,7 +36,7 @@ export async function init(targetDir, options = {}) {
     console.log('  • .gitignore: Your entries merged with Speck defaults');
     console.log('  • .cursor/hooks/hooks.json: Your hooks merged with Speck hooks');
     console.log('  • .cursor/mcp.json: Your config takes precedence');
-    console.log('  • .claude/commands + .claude/agents: Claude runtime mirrors synced');
+    console.log('  • .claude + .codex: Runtime symlinks to .cursor/skills + .cursor/agents');
     console.log('  • README.md: Skipped if customized');
     console.log('  • copilot-setup-steps.yml: Skipped if customized');
     console.log('  • Everything else: Always updated\n');

@@ -1,0 +1,400 @@
+---
+name: github-actions-cicd
+description: Load when using GitHub Actions for CI/CD pipelines. Applies when creating workflows for testing, building, deploying, or automating repository tasks.
+---
+
+
+## Workflow Structure
+
+### Basic CI Workflow
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build
+        run: npm run build
+```
+
+---
+
+## Caching
+
+### Dependency Caching
+
+```yaml
+- name: Cache node_modules
+  uses: actions/cache@v4
+  with:
+    path: ~/.npm
+    key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+    restore-keys: |
+      ${{ runner.os }}-node-
+
+# Or use built-in cache in setup-node
+- uses: actions/setup-node@v4
+  with:
+    node-version: '20'
+    cache: 'npm'
+```
+
+### Build Artifact Caching
+
+```yaml
+- name: Cache build
+  uses: actions/cache@v4
+  with:
+    path: |
+      .next/cache
+      dist
+    key: ${{ runner.os }}-build-${{ github.sha }}
+    restore-keys: |
+      ${{ runner.os }}-build-
+```
+
+---
+
+## Matrix Builds
+
+### Test Across Versions
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+        os: [ubuntu-latest, macos-latest]
+      fail-fast: false  # Continue other jobs if one fails
+    
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm test
+```
+
+---
+
+## Secrets & Environment Variables
+
+### Using Secrets
+
+```yaml
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  
+steps:
+  - name: Deploy
+    env:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+    run: ./deploy.sh
+```
+
+### Environment-Specific Secrets
+
+```yaml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production  # Uses secrets from 'production' environment
+    
+    steps:
+      - name: Deploy
+        env:
+          API_KEY: ${{ secrets.API_KEY }}  # From production environment
+        run: ./deploy.sh
+```
+
+---
+
+## Job Dependencies
+
+### Sequential Jobs
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: dist/
+
+  deploy:
+    needs: build  # Wait for build to complete
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: dist/
+      - run: ./deploy.sh
+```
+
+### Conditional Execution
+
+```yaml
+jobs:
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+```
+
+---
+
+## Common Patterns
+
+### Pull Request Checks
+
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run lint
+      
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm test
+```
+
+### Deploy on Tag
+
+```yaml
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run build
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+```
+
+### Scheduled Runs
+
+```yaml
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+
+jobs:
+  maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./cleanup-old-data.sh
+```
+
+---
+
+## Docker Builds
+
+### Build and Push
+
+```yaml
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: myuser/myapp:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+```
+
+---
+
+## Database in Tests
+
+### PostgreSQL Service
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/test
+    
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm test
+```
+
+---
+
+## Reusable Workflows
+
+### Define Reusable Workflow
+
+```yaml
+# .github/workflows/deploy-reusable.yml
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+    secrets:
+      deploy_key:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./deploy.sh
+        env:
+          DEPLOY_KEY: ${{ secrets.deploy_key }}
+```
+
+### Use Reusable Workflow
+
+```yaml
+# .github/workflows/production.yml
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      environment: production
+    secrets:
+      deploy_key: ${{ secrets.PRODUCTION_DEPLOY_KEY }}
+```
+
+---
+
+## Common Gotchas
+
+### Secrets in Forks
+Secrets are not available in workflows triggered by forks. Use `pull_request_target` with caution.
+
+### Concurrency Control
+Prevent multiple deployments:
+
+```yaml
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+### Path Filtering
+Only run when specific files change:
+
+```yaml
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'package.json'
+```
+
+### Expression Syntax
+Use `${{ }}` for expressions, not environment variables directly in `if`:
+
+```yaml
+if: ${{ github.event_name == 'push' }}
+```
+
+---
+
+## Quick Reference
+
+| Task | Pattern |
+|------|---------|
+| Cache deps | `actions/cache@v4` or `cache: 'npm'` in setup |
+| Matrix build | `strategy.matrix` |
+| Job dependency | `needs: [job1, job2]` |
+| Conditional | `if: github.ref == 'refs/heads/main'` |
+| Service container | `services.postgres` |
+| Artifact upload | `actions/upload-artifact@v4` |
+| Reusable workflow | `workflow_call` trigger |
+
+## References
+
+- [GitHub Actions Docs](https://docs.github.com/en/actions)
+- [Workflow Syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
+

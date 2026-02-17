@@ -35,8 +35,8 @@ The CLI uses intelligent merging to preserve your customizations during updates:
 | **.cursor/mcp.json** | Your config takes precedence over Speck defaults |
 | **README.md** | Skipped if you customized it |
 | **copilot-setup-steps.yml** | Skipped if you customized it |
-| **Methodology files** | Always updated (commands, templates, patterns, workflows) |
-| **.claude/commands + .claude/agents** | Auto-mirrored from `.cursor/commands` + `.cursor/agents` during init/upgrade |
+| **Methodology files** | Always updated (skills, templates, patterns, workflows) |
+| **.claude/skills + .claude/agents** | Auto-symlinked from `.cursor/skills` + `.cursor/agents` during init/upgrade |
 
 ## Commands
 

@@ -1,0 +1,336 @@
+---
+name: docker-containerization
+description: Load when using Docker for containerizing applications. Applies when creating Dockerfiles, docker-compose setups, multi-stage builds, or optimizing container images.
+---
+
+
+## Multi-Stage Builds
+
+### Node.js Application
+
+```dockerfile
+# Stage 1: Build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Stage 2: Production
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 appuser
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+
+USER appuser
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
+```
+
+### Python Application
+
+```dockerfile
+# Stage 1: Build
+FROM python:3.12-slim AS builder
+WORKDIR /app
+RUN pip install --no-cache-dir poetry
+COPY pyproject.toml poetry.lock ./
+RUN poetry export -f requirements.txt > requirements.txt
+RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+
+# Stage 2: Production
+FROM python:3.12-slim AS runner
+WORKDIR /app
+
+RUN useradd --create-home appuser
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache /wheels/*
+
+COPY . .
+USER appuser
+EXPOSE 8000
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0"]
+```
+
+---
+
+## Layer Caching
+
+### Optimize Build Order
+
+```dockerfile
+# GOOD: Dependencies change less often than code
+COPY package*.json ./
+RUN npm ci                # Cached if package.json unchanged
+COPY . .                   # Only this layer rebuilds on code change
+RUN npm run build
+
+# BAD: Code change invalidates npm install cache
+COPY . .
+RUN npm ci
+RUN npm run build
+```
+
+### Use .dockerignore
+
+```
+# .dockerignore
+node_modules
+npm-debug.log
+dist
+.git
+.env
+*.md
+.DS_Store
+```
+
+---
+
+## Docker Compose
+
+### Development Stack
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build: 
+      context: .
+      target: builder  # Use builder stage for dev
+    volumes:
+      - .:/app
+      - /app/node_modules  # Don't override node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/app
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+### Production Override
+
+```yaml
+# docker-compose.prod.yml
+version: '3.8'
+
+services:
+  app:
+    build:
+      target: runner  # Use production stage
+    volumes: []       # No code mounting
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+```
+
+```bash
+# Development
+docker-compose up
+
+# Production
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+---
+
+## Health Checks
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+```
+
+```yaml
+# docker-compose.yml
+services:
+  app:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
+
+---
+
+## Security Best Practices
+
+### Run as Non-Root
+
+```dockerfile
+RUN addgroup --system --gid 1001 appgroup && \
+    adduser --system --uid 1001 appuser
+
+USER appuser
+```
+
+### Read-Only Filesystem
+
+```yaml
+services:
+  app:
+    read_only: true
+    tmpfs:
+      - /tmp
+```
+
+### Minimal Base Images
+
+```dockerfile
+# Prefer
+FROM node:20-alpine       # ~50MB
+FROM python:3.12-slim     # ~120MB
+
+# Avoid for production
+FROM node:20              # ~1GB
+FROM ubuntu:22.04         # ~70MB + your deps
+```
+
+### Scan for Vulnerabilities
+
+```bash
+# Using Docker Scout
+docker scout cves myimage:latest
+
+# Using Trivy
+trivy image myimage:latest
+```
+
+---
+
+## Common Patterns
+
+### Wait for Dependencies
+
+```yaml
+services:
+  app:
+    depends_on:
+      db:
+        condition: service_healthy
+```
+
+Or use a script:
+
+```bash
+#!/bin/sh
+# wait-for-db.sh
+until pg_isready -h db -U postgres; do
+  echo "Waiting for database..."
+  sleep 2
+done
+exec "$@"
+```
+
+### Environment Variables
+
+```yaml
+services:
+  app:
+    environment:
+      - DATABASE_URL=${DATABASE_URL}  # From .env file
+    env_file:
+      - .env.local
+```
+
+### Secrets Management
+
+```yaml
+services:
+  app:
+    secrets:
+      - db_password
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+```
+
+---
+
+## Common Gotchas
+
+### PID 1 Signal Handling
+Use `exec` form of CMD or use `tini`:
+
+```dockerfile
+# GOOD: exec form receives signals properly
+CMD ["node", "dist/index.js"]
+
+# Or use tini
+RUN apk add --no-cache tini
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "dist/index.js"]
+```
+
+### node_modules in Volumes
+Anonymous volume prevents host node_modules from overriding:
+
+```yaml
+volumes:
+  - .:/app
+  - /app/node_modules  # Anonymous volume
+```
+
+### Build Context Size
+Large contexts slow builds. Use `.dockerignore`.
+
+### Layer Order Matters
+Less frequently changed files first → better cache utilization.
+
+---
+
+## Quick Reference
+
+| Task | Command/Pattern |
+|------|-----------------|
+| Build | `docker build -t myapp .` |
+| Run | `docker run -p 3000:3000 myapp` |
+| Compose up | `docker-compose up -d` |
+| View logs | `docker-compose logs -f app` |
+| Shell access | `docker exec -it container_name sh` |
+| Clean up | `docker system prune -a` |
+| Multi-stage | `FROM base AS builder` ... `COPY --from=builder` |
+
+## References
+
+- [Dockerfile Best Practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+- [Docker Compose Docs](https://docs.docker.com/compose/)
+

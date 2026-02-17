@@ -95,7 +95,7 @@
 
 ### Cursor Rules Compliance
 
-**Rules Directory**: `.cursor/rules/` [exists/not found]  
+**Skills Directory**: `.cursor/skills/` [exists/not found]  
 **Total Rules Evaluated**: [X]  
 **Epic-Wide Rules Applied**: [Y]
 
