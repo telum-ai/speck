@@ -359,7 +359,7 @@ specs/
                 ├── epic-breakdown.md       # EXECUTION: Story mapping + ordering
                 ├── user-journey.md         # UX journey map (optional)
                 ├── wireframes.md           # Visual designs (optional)
-                ├── epic-retro.md           # LEARNING: Epic retrospective (optional)
+                ├── epic-retro.md           # LEARNING: Epic retrospective (required)
                 ├── epic-*-research-prompt-*.md # RESEARCH: Prompts (optional)
                 ├── epic-*-research-report-*.md # RESEARCH: Reports (manual or generated)
                 └── stories/
@@ -369,10 +369,10 @@ specs/
                         ├── tasks.md                # EXECUTION: Implementation checklist
                         ├── data-model.md           # PROPOSAL: Entities + schemas (optional)
                         ├── contracts/              # PROPOSAL: API/event contracts (optional)
-                        ├── quickstart.md           # VERIFICATION: Test scenarios + manual steps
+                        ├── quickstart.md           # VERIFICATION: Test scenarios + manual steps (required for user-facing)
                         ├── ui-spec.md              # PROPOSAL: UI spec (required for UI-heavy)
-                        ├── validation-report.md    # VERIFICATION: What actually changed (optional)
-                        ├── story-retro.md          # LEARNING: Story retrospective (optional)
+                        ├── validation-report.md    # VERIFICATION: What actually changed (required)
+                        ├── story-retro.md          # LEARNING: Story retrospective (required)
                         ├── outline.md              # PROPOSAL: Research/decision outline (optional)
                         ├── codebase-scan-*.md      # BROWNFIELD: Story code analysis (optional)
                         ├── story-*-research-prompt-*.md # RESEARCH: Prompts (optional)
@@ -384,6 +384,19 @@ specs/
 - **Story directories**: `S###-story-name` (e.g., `S001-login-form`, `S002-password-reset`)
 - **Backwards compatibility**: Directories without E/S prefix (e.g., `001-epic-name`) are still supported
 - **Shorthand**: Use `E001` or `S001` when referring in discussions
+
+**Artifact Completeness Tiers**:
+
+| Tier | Artifacts | When Required |
+|------|-----------|---------------|
+| **Core** (always) | `spec.md`, `plan.md`, `tasks.md`, `validation-report.md`, `story-retro.md` | Every story |
+| **Conditional** | `quickstart.md` (user-facing stories), `ui-spec.md` (UI-heavy stories) | When applicable |
+| **Optional** | `data-model.md`, `contracts/`, `outline.md`, `codebase-scan-*.md`, research files | As needed |
+
+- A story is **not complete** until all Core artifacts exist.
+- `/story-validate` should check for and flag missing Core artifacts.
+- Epic-level: `epic.md`, `epic-tech-spec.md`, `epic-breakdown.md`, `epic-validation-report.md`, and `epic-retro.md` are all required for epic completion.
+- Use `scripts/audit.sh` to check artifact completeness across a project.
 
 **Truth vs Proposal Model**:
 - **Project-level docs** (`project.md`, `PRD.md`, `architecture.md`, etc.) = **Current production state**
