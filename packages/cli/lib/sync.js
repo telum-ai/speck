@@ -23,12 +23,14 @@ const ALWAYS_OVERWRITE = [
   '.cursor/hooks/VALIDATION.md',
   '.cursor/MCP-SETUP.md',
   '.claude/settings.json.example',
-  '.github/workflows/speck-orchestrator.yml',
+  // REMOVED (v4.3.0): orchestrator disabled
+  // '.github/workflows/speck-orchestrator.yml',
   '.github/workflows/speck-update-check.yml',
   '.github/workflows/speck-validation.yml',
   '.github/copilot-instructions.md',
   '.github/instructions',
-  '.github/ISSUE_TEMPLATE/speck-story.yml',
+  // REMOVED (v4.3.0): orchestrator disabled
+  // '.github/ISSUE_TEMPLATE/speck-story.yml',
   '.github/pull_request_template.md',
 ];
 
@@ -60,7 +62,8 @@ const SMART_MERGE_FILES = {
  */
 const SKIP_IF_CUSTOMIZED = {
   'README.md': isReadmeCustomized,
-  '.github/workflows/copilot-setup-steps.yml': isCopilotSetupCustomized,
+  // REMOVED (v4.3.0): orchestrator disabled
+  // '.github/workflows/copilot-setup-steps.yml': isCopilotSetupCustomized,
 };
 
 /**
@@ -83,6 +86,10 @@ function shouldSkipFile(filePath) {
  * Files that were removed from Speck and should be deleted during upgrade
  */
 const REMOVE_FILES = [
+  // v4.3.0: Orchestrator disabled — remove from projects on upgrade
+  '.github/workflows/speck-orchestrator.yml',
+  '.github/workflows/copilot-setup-steps.yml',
+  '.github/ISSUE_TEMPLATE/speck-story.yml',
   '.github/workflows/speck-retrospective.yml',
   '.github/workflows/speck-template-feedback.yml',
   '.github/workflows/speck-update-action/action.yml',

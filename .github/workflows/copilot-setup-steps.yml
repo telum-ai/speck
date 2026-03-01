@@ -1,13 +1,8 @@
-name: "Copilot Setup Steps"
+name: "Copilot Setup Steps (disabled)"
 
 on:
+  # DISABLED (v4.3.0): Orchestrator disabled
   workflow_dispatch:
-  push:
-    paths:
-      - .github/workflows/copilot-setup-steps.yml
-  pull_request:
-    paths:
-      - .github/workflows/copilot-setup-steps.yml
 
 jobs:
   copilot-setup-steps:

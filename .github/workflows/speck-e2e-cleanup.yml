@@ -10,19 +10,19 @@
 # 4. Closes the related issue
 # 5. Deletes the copilot branch
 
-name: E2E Test Cleanup
+name: E2E Test Cleanup (disabled)
 
 on:
-  push:
-    branches:
-      - 'copilot/**'
-    paths:
-      - '.e2e-test-complete'
-  
-  # Backup: scheduled cleanup for any orphaned test artifacts
-  schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
-  
+  # DISABLED (v4.3.0): Orchestrator disabled
+  # push:
+  # branches:
+  # - 'copilot/**'
+  # paths:
+  # - '.e2e-test-complete'
+  # # Backup: scheduled cleanup for any orphaned test artifacts
+  # schedule:
+  # - cron: '0 */6 * * *'  # Every 6 hours
+  # workflow_dispatch:
   workflow_dispatch:
 
 permissions:

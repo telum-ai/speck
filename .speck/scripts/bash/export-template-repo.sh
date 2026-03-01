@@ -90,7 +90,8 @@ done
 # Workflows (methodology-only)
 mkdir -p "$OUT_DIR/.github/workflows"
 copy_file "$REPO_ROOT/.github/workflows/speck-validation.yml" "$OUT_DIR/.github/workflows/speck-validation.yml"
-copy_file "$REPO_ROOT/.github/workflows/speck-orchestrator.yml" "$OUT_DIR/.github/workflows/speck-orchestrator.yml"
+# DISABLED (v4.3.0): orchestrator disabled
+# copy_file "$REPO_ROOT/.github/workflows/speck-orchestrator.yml" "$OUT_DIR/.github/workflows/speck-orchestrator.yml"
 copy_file "$REPO_ROOT/.github/workflows/speck-update-check.yml" "$OUT_DIR/.github/workflows/speck-update-check.yml"
 copy_file "$REPO_ROOT/.github/workflows/copilot-setup-steps.yml" "$OUT_DIR/.github/workflows/copilot-setup-steps.yml"
 

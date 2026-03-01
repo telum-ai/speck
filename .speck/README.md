@@ -1427,7 +1427,9 @@ Updates use smart merging to preserve your customizations:
 
 ## 🤖 Autonomous Development
 
-Speck integrates with **Cursor Background Agents** and **GitHub Copilot Coding Agent** for autonomous story execution.
+> **⚠️ DEPRECATED (v4.3.0):** The GitHub Actions orchestrator has been disabled to reduce Actions credit consumption. Orchestration is now handled externally (e.g., OpenClaw cron jobs, Claude Code / Codex CLI). The workflows remain in the repo for reference but are no longer synced to projects. Running `speck upgrade` will remove orchestrator files from your project.
+
+Speck previously integrated with **Cursor Background Agents** and **GitHub Copilot Coding Agent** for autonomous story execution.
 
 ### Core Principle
 

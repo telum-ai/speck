@@ -1,23 +1,24 @@
 # Speck Orchestrator
 #
-# Continuous orchestration of story work. Creates issues and assigns to Copilot.
-# Drives stories through the ENTIRE Speck flow up to and including story-validate.
+# DISABLED (v4.3.0): The orchestrator consumed excessive GitHub Actions credits.
+# Orchestration is now handled externally (e.g., OpenClaw cron jobs, Claude Code CLI).
+# Kept for reference. Re-enable by uncommenting the push trigger below.
 #
-# SCOPE: All commands from story-specify through story-validate
-# COMPLETION: Story is complete when validation-report.md exists with PASS status
+# Original purpose: Continuous orchestration of story work. Creates issues and
+# assigns to Copilot. Drives stories through the ENTIRE Speck flow.
 
-name: Speck Orchestrator
+name: Speck Orchestrator (disabled)
 
 on:
-  # Trigger on spec changes
-  push:
-    paths:
-      - 'specs/**/epic-breakdown.md'
-      - 'specs/**/stories/**'
-    branches:
-      - main
+  # DISABLED: push trigger removed to stop automatic runs
+  # push:
+  #   paths:
+  #     - 'specs/**/epic-breakdown.md'
+  #     - 'specs/**/stories/**'
+  #   branches:
+  #     - main
   
-  # Manual trigger
+  # Manual trigger only (for testing if needed)
   workflow_dispatch:
     inputs:
       epic_path:

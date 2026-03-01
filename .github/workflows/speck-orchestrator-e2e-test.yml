@@ -10,17 +10,18 @@
 # 4. Verify Copilot was assigned (if token available)
 # 5. Clean up all test issues and branches
 
-name: Orchestrator E2E Test
+name: Orchestrator E2E Test (disabled)
 
 on:
-  push:
-    paths:
-      - '.github/workflows/speck-orchestrator.yml'
-      - '.github/workflows/speck-orchestrator-e2e-test.yml'
-      - '.speck/scripts/orchestrate.sh'
-      - 'tests/fixtures/orchestrator-test/**'
-    branches:
-      - main
+  # DISABLED (v4.3.0): Orchestrator disabled
+  # push:
+  #   paths:
+  #     - '.github/workflows/speck-orchestrator.yml'
+  #     - '.github/workflows/speck-orchestrator-e2e-test.yml'
+  #     - '.speck/scripts/orchestrate.sh'
+  #     - 'tests/fixtures/orchestrator-test/**'
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 permissions:

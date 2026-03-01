@@ -9,23 +9,9 @@
 name: Orchestrator Integration Test
 
 on:
-  push:
-    paths:
-      - '.github/workflows/speck-orchestrator.yml'
-      - '.github/workflows/speck-orchestrator-test.yml'
-      - '.speck/scripts/orchestrate.sh'
-      - 'tests/fixtures/orchestrator-test/**'
-    branches:
-      - main
-      - develop
-      - 'feat/**'
-  pull_request:
-    paths:
-      - '.github/workflows/speck-orchestrator.yml'
-      - '.github/workflows/speck-orchestrator-test.yml'
-      - '.speck/scripts/orchestrate.sh'
-      - 'tests/fixtures/orchestrator-test/**'
+  # DISABLED (v4.3.0): Orchestrator disabled
   workflow_dispatch:
+
 
 jobs:
   test-orchestrator:
