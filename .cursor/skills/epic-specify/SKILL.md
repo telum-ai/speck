@@ -16,6 +16,13 @@ $ARGUMENTS
 
 The text the user typed after `/epic-specify` in the triggering message should contain the epic description. Parse any context hints from the arguments.
 
+## Play Level Check
+
+Read `.speck/project.json` (if it exists) for `play_level`.
+
+- **Sprint**: Epics don't exist at Sprint level. Tell the user: "Sprint projects don't use epics — the Build Plan in your PRD.md is enough. If this project is growing beyond a sprint, run `/project-promote` to move to Build level, then come back here."
+- **Build** or **Platform**: Proceed normally below.
+
 ## Context Detection (NEW)
 
 First, check if we're already in an epic context:

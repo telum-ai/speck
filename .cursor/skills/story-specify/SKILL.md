@@ -16,6 +16,14 @@ $ARGUMENTS
 
 The text the user typed after `/story-specify` in the triggering message **is** the story description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
 
+## Play Level Check
+
+Read `.speck/project.json` (if it exists) for `play_level`.
+
+- **Sprint**: Sprint projects don't use stories — just ship it. Tell the user: "Sprint projects skip formal story specs. Just build what's in your PRD.md Build Plan. If the project is growing, run `/project-promote` to move to Build level."
+- **Build**: Proceed with a lightweight spec (spec.md + plan.md only). Skip tasks.md, validation-report.md, and story-retro.md from next-step recommendations unless the user asks.
+- **Platform**: Full story workflow, proceed normally below.
+
 ## Context-Aware Story Creation
 
 Since commands can't rely on directory context, establish hierarchy:

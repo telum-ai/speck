@@ -49,6 +49,30 @@ Project Level (Strategic)
 - **Epic**: Feature sets that deliver specific value
 - **Story**: Individual implementable tasks
 
+### Play Levels (v6.0.0)
+
+Speck adapts its rigor to match your project's stage. Play levels are **agent-detected** from conversation context — you never declare them manually.
+
+| Level | When | PRD | Epics | Stories | Audit |
+|-------|------|-----|-------|---------|-------|
+| **Sprint** | 1-2 week bets, experiments, simple tools | One-page PRD + sprint-log | ✗ | ✗ | PRD exists |
+| **Build** | Products with subscriptions, dashboards, teams | Full PRD + context.md | ✓ | spec + plan | spec + plan |
+| **Platform** | Enterprise, marketplace, multi-system | Full flow | ✓ | Full artifacts | All artifacts |
+
+**Sprint** signals: "this weekend", "48 hours", "quick", "simple tool", "calculator", "ship it"
+**Build** signals: "subscription", "dashboard", "expand this", multi-user features
+**Platform** signals: Scale 3-4, "enterprise", "marketplace", complex architecture
+
+**Promote** between levels as your project grows:
+```
+/project-promote          # agent-guided conversation
+speck promote --to build  # CLI escape hatch
+```
+
+No project.json = Platform (backward compatible with all existing Speck projects).
+
+---
+
 ### Spec-Driven Development (SDD) Philosophy
 
 Speck follows **spec-driven development**:

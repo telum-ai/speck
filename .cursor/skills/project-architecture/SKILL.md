@@ -14,6 +14,16 @@ $ARGUMENTS
 
 The text the user typed after `/project-architecture` in the triggering message. Parse any architecture focus areas or constraints.
 
+## Play Level Check
+
+Read `.speck/project.json` (if it exists) for `play_level`.
+
+- **Sprint**: Tell the user: "Sprint projects skip formal architecture. Build it, see if it works. Run `/project-promote` when you're ready for more structure."
+- **Build**: Architecture is optional. Only run if the tech choices are genuinely uncertain. Proceed if the user confirms.
+- **Platform** (or no project.json): Architecture is recommended/required before planning. Full flow below.
+
+---
+
 ## Context Requirements
 
 This command requires:

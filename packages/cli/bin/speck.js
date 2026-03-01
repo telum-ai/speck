@@ -27,6 +27,7 @@ import { upgrade } from '../lib/commands/upgrade.js';
 import { check } from '../lib/commands/check.js';
 import { showVersion } from '../lib/commands/version.js';
 import { incubate } from '../lib/commands/incubate.js';
+import { promote } from '../lib/commands/promote.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -44,6 +45,7 @@ COMMANDS
   upgrade [version] Upgrade to latest (or specified) version
   check             Check for available updates
   version           Show current and latest versions
+  promote           Bump play level (--to sprint|build|platform)
   incubate          Propose one lean JTBD bet from recent repo signals
   help              Show this help message
 
@@ -52,12 +54,15 @@ OPTIONS
   --force           Overwrite existing files without prompting
   --ignore <glob>   Additional patterns to ignore (can be repeated)
   --days <n>        Days of git history to mine for incubate (default: 21)
+  --to <level>      Target play level for promote command (sprint|build|platform)
 
 EXAMPLES
   npx github:telum-ai/speck init
   npx github:telum-ai/speck upgrade
   npx github:telum-ai/speck upgrade v2.1.0
   npx github:telum-ai/speck check
+  npx github:telum-ai/speck promote --to build
+  npx github:telum-ai/speck promote --to platform
   npx github:telum-ai/speck incubate --days 30
   npx github:telum-ai/speck upgrade --dry-run
 
@@ -115,6 +120,14 @@ async function main() {
       case '--version':
         await showVersion(process.cwd());
         break;
+
+      case 'promote': {
+        // Parse --to flag
+        const toIndex = args.indexOf('--to');
+        const toLevel = toIndex !== -1 ? args[toIndex + 1] : undefined;
+        await promote(process.cwd(), { ...options, to: toLevel });
+        break;
+      }
 
       case 'incubate':
         await incubate(process.cwd(), options);

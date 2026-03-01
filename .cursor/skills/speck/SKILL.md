@@ -72,6 +72,45 @@ AI: 🍳 I found a matching recipe: "react-fastapi-postgres"
 **Recipe index**:
 - See `.speck/recipes/README.md` for the full recipe list and intended use cases
 
+## Play Level Detection
+
+Play levels are **agent-detected from conversation context** — never declared with flags.
+
+After pre-routing checks, infer the play level before routing:
+
+### Sprint signals (route to lightweight sprint flow)
+- Time-bounded: "this weekend", "48 hours", "in a day", "quick experiment"
+- Tiny scope: "simple tool", "calculator", "one-page app", "landing page"
+- Ship-first intent: "ship it", "just get it out", "hack together", "prototype"
+- No revenue complexity: "free tool", "scratch my own itch", "fun side project"
+
+→ Sprint: Use `sprint-prd-template.md`, create `sprint-log.md`, skip epics/stories.
+→ Tell the user: "This sounds like a Sprint — a focused 1–2 week bet. I'll keep the planning lightweight."
+
+### Build signals (route to standard build flow)
+- Subscription or payment: "subscription", "paid plan", "stripe", "pricing"
+- Dashboard or admin: "dashboard", "admin panel", "user management"
+- Expansion from existing: "expand this", "add more features", "v2", "grow it"
+- Multi-user: "teams", "organizations", "multi-tenant"
+
+→ Build: Standard PRD + context.md + COMMERCIAL.md. Epic structure. No constitution/design-system required.
+→ Tell the user: "This sounds like a Build — a structured product with epics and stories."
+
+### Platform signals (use existing Level 3-4 routing)
+- Architecture complexity: "microservices", "distributed", "enterprise", "platform"
+- Scale: "millions of users", "global", "marketplace"
+- Already at Level 3-4 per scale analysis
+
+→ Platform: Full Speck flow unchanged.
+
+### Promotion signals
+- "getting traction", "this is working", "users are paying", "promote to build/platform"
+- "it's bigger than I thought", "we need more structure"
+
+→ Route to: `/project-promote` with current play level context.
+
+---
+
 ## Clear Level Separation (No Overlaps)
 
 Each level has distinct responsibilities:

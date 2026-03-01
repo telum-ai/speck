@@ -18,6 +18,36 @@ The text the user typed after `/project-specify` in the triggering message **is*
 
 ## Interactive Project Specification Process
 
+### Step -1: Detect Play Level
+
+Before anything else, infer the play level from conversation context (same signals as the Speck router):
+
+- **Sprint**: "this weekend", "48 hours", "quick", "simple tool", "ship it", "prototype"
+- **Build**: "subscription", "dashboard", "expand this", "v2", multi-user features
+- **Platform**: architecture complexity, "enterprise", "marketplace", or explicit Level 3-4 scope
+
+If Sprint detected:
+1. Tell the user: "This sounds like a Sprint. I'll use the one-page PRD and skip heavy upfront planning."
+2. Load `.speck/templates/sprint/sprint-prd-template.md` instead of the standard PRD template
+3. Create only: `PRD.md` (from sprint template) + `sprint-log.md` (from sprint-log-template)
+4. Create `.speck/project.json` with `{"play_level": "sprint"}`
+5. Skip Steps 0.5 through 4 below — go straight to creating the sprint artifacts and sprint-log
+6. Next steps: ship something, fill in the sprint-log daily, run `/project-promote` if it gets traction
+
+If Build detected:
+1. Tell the user: "This sounds like a Build. I'll create a PRD + context and structure for epics."
+2. Use standard `prd-template.md`
+3. Create: `PRD.md`, `context.md`, `COMMERCIAL.md`
+4. Create `.speck/project.json` with `{"play_level": "build"}`
+5. Skip constitution and design-system from next-steps recommendations
+6. Continue with the standard flow below
+
+If Platform detected (or unclear):
+1. Create `.speck/project.json` with `{"play_level": "platform"}`
+2. Full standard flow below
+
+---
+
 ### Step 0: Detect Mode (Greenfield vs Brownfield)
 
 Check for brownfield indicators in the active project directory:

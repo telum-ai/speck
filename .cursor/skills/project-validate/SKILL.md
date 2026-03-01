@@ -14,6 +14,16 @@ User input:
 
 $ARGUMENTS
 
+## Play Level Check
+
+Read `.speck/project.json` (if it exists) for `play_level`.
+
+- **Sprint**: Tell the user: "Sprint validation is simple — did you hit your Success Metric? Check your `sprint-log.md` outcome section. If yes and it's growing, run `/project-promote`."
+- **Build**: Validate PRD requirements, epic completion, and core quality gates. Skip constitution compliance and design-system coverage sections.
+- **Platform** (or no project.json): Full validation flow below.
+
+---
+
 Comprehensive validation of project completion, ensuring all goals are met and the system is ready for production.
 
 ## Subagent Parallelization

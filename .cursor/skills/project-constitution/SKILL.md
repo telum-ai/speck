@@ -14,6 +14,16 @@ User input:
 
 $ARGUMENTS
 
+## Play Level Check
+
+Read `.speck/project.json` (if it exists) for `play_level`.
+
+- **Sprint**: Tell the user: "Sprint projects don't need a constitution. Ship first, structure later. If you're growing to Platform, run `/project-promote` and come back."
+- **Build**: Constitution is optional for Build. Only proceed if the user confirms they want it.
+- **Platform** (or no project.json): Full flow below — constitution is recommended.
+
+---
+
 Define project-specific principles and constraints that will guide all development within this project.
 
 **When to use this command:**

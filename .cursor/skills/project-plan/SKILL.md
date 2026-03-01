@@ -14,6 +14,16 @@ User input:
 
 $ARGUMENTS
 
+## Play Level Check
+
+Read `.speck/project.json` (if it exists) for `play_level`.
+
+- **Sprint**: Tell the user: "Sprint projects use the one-page PRD in `sprint-prd-template.md`, not a full project plan. If the project is growing, run `/project-promote` to Build level first, then return here."
+- **Build**: Proceed, but skip constitution/design-system prerequisites. Epics are supported; recommend context.md but not architecture.md unless the project warrants it.
+- **Platform** (or no project.json): Full flow below.
+
+---
+
 Generate a Product Requirements Document (PRD) and identify epics based on project specification and upstream artifacts.
 
 **Research Approach**: If planning needs market/business research, uses just-in-time research pattern (`.cursor/skills/just-in-time-research/SKILL.md`)

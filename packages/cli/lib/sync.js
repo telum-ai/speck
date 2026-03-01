@@ -12,6 +12,7 @@ import { tmpdir } from 'os';
  */
 const ALWAYS_OVERWRITE = [
   '.speck/templates',
+  '.speck/templates/sprint',  // v6.0.0: Sprint play level templates
   '.speck/patterns',
   '.speck/recipes',
   '.speck/scripts',

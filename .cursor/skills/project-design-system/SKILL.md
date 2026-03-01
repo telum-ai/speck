@@ -14,6 +14,16 @@ User input:
 
 $ARGUMENTS
 
+## Play Level Check
+
+Read `.speck/project.json` (if it exists) for `play_level`.
+
+- **Sprint**: Tell the user: "Sprint projects don't need a design system. Ship with whatever CSS you know. Run `/project-promote` when you're ready to grow."
+- **Build**: Design system is optional for Build. Only proceed if the user has a strong UI consistency need.
+- **Platform** (or no project.json): Recommended. Full flow below.
+
+---
+
 Develop a detailed design system that will ensure consistency across the entire project.
 
 ## Context Requirements & Mode Detection
