@@ -131,6 +131,10 @@ specs/projects/[project-id]/
 
 **Quick reference**: Just use `/speck` and follow the prompts!
 
+## 🛠️ Development
+
+For contributing to Speck itself (CLI, sync system, versioning, releases), see **[DEVELOPMENT.md](DEVELOPMENT.md)**.
+
 ## 🤝 Contributing Methodology Insights
 
 After running retrospective commands (`/story-retrospective`, `/epic-retrospective`, `/project-retrospective`), you can opt-in to share methodology insights with the Speck team. Only process improvements are shared—no project-specific data.
