@@ -188,27 +188,7 @@ User triggers commands, you follow instructions inside each command.
 
 **Recipe Metadata**: When a recipe is selected, `_active_recipe: [name]` is stored in project.md for downstream commands to use.
 
-**Visual Testing Configuration**: Each recipe includes a `visual_testing:` section that configures autonomous visual validation:
-
-```yaml
-visual_testing:
-  platform: [web|mobile-flutter|mobile-rn|desktop-electron|desktop-tauri|extension|api|cli]
-  strategy: [browser-mcp|golden-tests|maestro|playwright|playwright-electron|webdriverio|puppeteer|none]
-  # Varies by platform (see `.cursor/skills/visual-testing-*/`), e.g.:
-  # - web: "visual-testing/web.mdc"
-  # - mobile-flutter: "visual-testing/mobile-flutter.mdc"
-  # - mobile-rn: "visual-testing/mobile-react-native.mdc"
-  pattern_file: "visual-testing/web.mdc"
-  breakpoints: {mobile: 375, tablet: 768, desktop: 1024, wide: 1280}
-  devices: {ios: [...], android: [...]}
-  tools: {primary: ..., visual_regression: ...}
-  agent_commands: {screenshot: ..., audit_a11y: ..., playwright_test: ...}
-  ci_integration: {on_pr: true, block_on_diff: true}
-```
-
-- `/story-validate` loads this config and executes platform-specific visual testing
-- Platform patterns in `.cursor/skills/visual-testing-*/` provide detailed guidance
-- Results feed into validation-report.md and story retrospectives
+**Visual Testing Configuration**: Each recipe includes a `visual_testing:` section (platform, strategy, breakpoints, devices). `/story-validate` reads this config and loads the appropriate visual-testing skill. See `.cursor/skills/visual-testing/SKILL.md` and platform-specific skills (`visual-testing-web`, `visual-testing-mobile-flutter`, etc.) for details.
 
 ### Skill Files Reference
 Skills are in `.cursor/skills/` with `SKILL.md` in each directory:
@@ -553,33 +533,6 @@ If verification fails at any gate, stop and diagnose with `/speck-debug` rather 
 
 Each skill in `.cursor/skills/` contains its own "Subagent Parallelization" section with specific instructions for that skill. Check the skill file for details.
 
-## 🔄 Guide Users Through the Process
-
-### Unified Flow (Both Greenfield and Brownfield)
-Typical flow: 
-```
-specify → clarify → [domain (+ research)] → [ux (+ research)] → context (+ research) → [constitution (+ research)] → architecture (+ research) → [design-system (+ research)] → plan (+ research) → [roadmap] → analyze → validate
-```
-
-### For Greenfield (New Projects)
-Start with: `/project-specify`
-- Commands ask questions, build artifacts from scratch
-- Same flow as above
-
-### For Brownfield (Existing Code)  
-Start with: `/project-import` → `/project-scan` → then same flow
-- Import/scan extract data first
-- Commands pre-fill from extracted data, then follow same guidance process
-- Architecture documented before planning
-
-### Key Guidance Points
-- Suggest `/speck` when user unsure where to start
-- Foundation (ux, context) comes BEFORE planning
-- Architecture and design-system come BEFORE planning (design decisions inform planning!)
-- Retrospectives after each story/epic/project
-- Commands contain detailed execution instructions
-- All commands are context-aware and adapt for brownfield projects
-
 ## 🎯 Detect the Right Level (Guide User to Appropriate Command)
 
 When user makes a request, determine the appropriate level and suggest:
@@ -627,19 +580,6 @@ At project level **(Sprint)**:
 ```
 Run: project-specify (creates PRD + sprint-log) → ship it
 Why: No planning overhead — just capture the idea and start building
-```
-
-At epic level, run architecture before tech spec:
-```
-Run: clarify → architecture → plan → breakdown
-Why: tech spec USES architecture design
-```
-
-At story level, run plan before tasks:
-```
-Run: clarify → [outline] → [scan] → plan → [ui-spec] → tasks → analyze → implement → validate
-Why: tasks USES plan's technical design, analyze catches issues before implementation
-Optional: [outline]=research mapping, [scan]=brownfield code, [ui-spec]=UI-heavy stories
 ```
 
 ### Understand Context Inheritance
@@ -736,34 +676,13 @@ Follow design system rules (if project has them):
 
 ### Design Context Loading (CRITICAL for UI Work!)
 
-Before planning or implementing UI work at ANY level, ALWAYS load project design context:
+Before planning or implementing any UI work, ALWAYS load:
+- `specs/projects/[PROJECT_ID]/design-system.md` → tokens, components, patterns
+- `specs/projects/[PROJECT_ID]/ux-strategy.md` → UX principles, voice/tone
 
-**Required Documents**:
-```
-specs/projects/[PROJECT_ID]/design-system.md  → Tokens, components, patterns
-specs/projects/[PROJECT_ID]/ux-strategy.md    → UX principles, voice/tone
-```
+If either is missing: warn the user and suggest `/project-design-system` or `/project-ux` first.
 
-**Epic-Level Loading** (for `/epic-journey`, `/epic-wireframes`):
-- [ ] Load ux-strategy.md for personas, emotional goals, accessibility standards
-- [ ] Load design-system.md for components, tokens, interaction patterns
-- [ ] Apply voice/tone from ux-strategy.md to journey touchpoints and wireframe content
-- [ ] Use design tokens in wireframe specifications
-
-**Story-Level Loading** (for `/story-plan`, `/story-ui-spec`):
-- [ ] Extract design tokens (colors, typography, spacing) from design-system.md
-- [ ] Note available components before creating new ones
-- [ ] Apply voice/tone from ux-strategy.md to copy/microcopy
-- [ ] Reference accessibility standards from ux-strategy.md
-
-**If Missing**: Warn user and suggest running `/project-design-system` or `/project-ux` first.
-
-**Anti-Patterns to Avoid**:
-- ❌ Creating custom button when Button exists in design-system.md
-- ❌ Using `color: #3B82F6` instead of `color: var(--primary-500)`
-- ❌ Writing generic "Loading..." when ux-strategy.md specifies friendly voice
-- ❌ Designing wireframes without referencing design-system.md grid/spacing
-- ❌ Creating journey maps without ux-strategy.md emotional goals
+**Never**: create custom components that already exist in design-system.md, use hardcoded colour values instead of tokens, or design without referencing the grid/spacing/voice from these docs.
 
 ## 📊 Learning Capture System (CRITICAL for Retrospectives!)
 
@@ -929,171 +848,21 @@ docs(story): validate [story-name] completion
 
 ## 🎯 Jobs-to-Be-Done (JTBD) Framework
 
-Integrate JTBD theory (Ulwick/Christensen) into specs to focus on **what users are trying to accomplish**.
+Integrate JTBD theory into specs to focus on **what users are trying to accomplish**, not how the system works. At each level:
+- **Project**: Document the core functional job and desired outcomes
+- **Epic**: Identify which project job this addresses, list outcome metrics
+- **Story**: Frame user story around the job context, define measurable success
 
-### Job Statement Format
-```
-[Action verb] + [object of action] + [contextual clarifier]
-```
-Example: "Manage project deadlines across distributed teams"
+Spec format details (Gherkin, OpenSpec-style requirements, normative language) are in the story-specify skill and spec templates.
 
-### Outcome Statement Format (ODI)
-```
-[Direction] + [unit of measure] + [object of control] + [contextual clarifier]
-```
-Directions: Minimize, Maximize, Increase, Reduce
-Example: "Minimize the time it takes to identify which tasks are at risk"
+## 🎨 Simplicity-First Principles
 
-### Apply JTBD at Each Level
-- **Project**: Document core functional job, related jobs, emotional/social jobs
-- **Epic**: Identify which project job this addresses, list desired outcomes
-- **Story**: Include job context in user story, define outcome-based success metrics
+Default to simple solutions; require **evidence** before adding complexity:
+- **Performance evidence**: Measured slowness, not "might be slow at scale"
+- **Scale evidence**: Concrete user/load numbers, not "should be scalable"
+- **Abstraction evidence**: 3+ existing use cases, not "might reuse someday"
 
-## 📝 Spec Format Conventions
-
-### User Stories (JTBD Enhanced)
-```markdown
-**Job Context**: When [situation/trigger], I'm trying to [core job]...
-
-**User Story**: As a [user type], I want to [action] so that I can [outcome statement].
-
-**Success Metrics** (Outcome-Driven):
-- [ ] Minimizes time to [specific activity] by [target]
-- [ ] Reduces likelihood of [negative outcome]
-```
-
-### Acceptance Criteria (Gherkin + Outcomes)
-```markdown
-Given [context]
-When [action]
-Then [outcome - phrased as measurable result]
-```
-
-### Requirements (Adopt OpenSpec-style)
-```markdown
-### Requirement: [Name]
-System SHALL [normative statement].
-
-#### Scenario: [Name]
-- **GIVEN** [initial state]
-- **WHEN** [trigger/action]
-- **THEN** [expected outcome]
-- **AND** [additional outcomes]
-```
-
-### Normative Language (Use Precise Requirements)
-
-Use RFC 2119-style normative language for clarity:
-
-- **SHALL** / **MUST** = Mandatory requirement (must be tested and verified)
-  - Example: "System SHALL respond within 200ms"
-  - Example: "Users MUST be authenticated"
-  
-- **SHOULD** / **RECOMMENDED** = Best practice (can deviate with documented reason)
-  - Example: "API SHOULD return JSON"
-  - Example: "Errors SHOULD include error codes"
-  
-- **MAY** / **OPTIONAL** = Truly optional behavior
-  - Example: "Response MAY include metadata"
-  - Example: "UI MAY show loading spinner"
-
-**Default to SHALL/MUST** for all requirements unless explicitly optional.  
-Avoid vague language like "might", "could", "would be nice" - use precise normative terms.
-
-## 🎨 Simplicity-First Principles (Enforce These!)
-
-From OpenSpec inspiration - default to simple solutions, require evidence for complexity.
-
-### Default Solution
-- **<100 lines** of new code per story
-- **Single file** until proven insufficient
-- **Standard library** over custom framework
-- **Boring, proven tech** over cutting-edge
-
-### Complexity Triggers (REQUIRE EVIDENCE)
-
-Only add complexity when you have:
-
-**1. Performance Evidence**:
-- Measurements showing current approach too slow
-- Example: "Query takes 500ms, target is <100ms"
-- NOT acceptable: "Might be slow at scale"
-
-**2. Scale Evidence**:
-- Concrete requirements with data
-- Example: "Must support 10,000 concurrent users"
-- NOT acceptable: "Should be scalable"
-
-**3. Abstraction Evidence**:
-- 3+ proven use cases already exist
-- Example: "Same validation logic in 5 forms across 3 stories"
-- NOT acceptable: "We might reuse this someday"
-
-### Enforcement in Commands
-
-- `/story-plan` must ask: "Does this need complexity? Show evidence."
-- `/story-analyze` flags: Unjustified abstractions, premature optimizations
-- `/epic-retrospective` reviews: Were complexity decisions validated?
-
-### Examples
-
-**✅ APPROVED**:
-```
-Added Redis cache for contact hash lookups
-Evidence: Measured 200ms avg, target <50ms  
-Result: 10ms with Redis
-```
-
-**❌ REJECTED**:
-```
-Created abstract caching framework
-Reason: "For future flexibility"
-Evidence: None - only 1 use case currently
-Action: Use simple dict cache, extract when 3+ use cases exist
-```
-
-**✅ APPROVED**:
-```
-Extracted validation into shared module
-Evidence: Same validation in 5 forms across 3 stories
-Complexity: 50 lines, single file
-```
-
-**❌ REJECTED**:
-```
-Built validation framework with plugins
-Evidence: Used in 2 forms
-Action: Wait until 3+ use cases, then extract
-```
-
-### 10-Minute Understandability Rule
-
-**Story Level**: Must be explainable in <5 minutes
-- If needs "AND" in description → Split into multiple stories
-- Example: "Add login AND registration" → Two stories!
-
-**Epic Level**: Must be explainable in <10 minutes
-- If needs extensive context to understand → Too broad, split it
-- Example: "Authentication AND user management AND admin" → Three epics!
-
-**Test**: Can you explain this to a new teammate in the time limit? If not, split it.
-
-### Verb-Led Naming Convention
-
-Use verb-led prefixes for clear intent:
-
-**Story Names**:
-- `add-login-form/` - Adding new capability
-- `update-auth-flow/` - Modifying existing
-- `remove-legacy-endpoint/` - Removing feature
-- `refactor-validation-service/` - Restructuring without behavior change
-- `fix-timezone-bug/` - Bug fixes (if separate story)
-
-**Common Prefixes**: `add-`, `update-`, `remove-`, `refactor-`, `fix-`, `optimize-`, `migrate-`
-
-**Why**: Verb shows intent, makes change lists scannable, consistent structure
-
-**Note**: This is a guideline, not enforced. Existing stories can keep their names.
+`/story-plan` challenges complexity. `/story-analyze` flags unjustified abstractions. Story names use verb-led prefixes (`add-`, `update-`, `fix-`, `refactor-`). Stories must be explainable in <5 minutes — if it needs "AND", split it.
 
 ## 🚦 Decision Gates
 
@@ -1268,35 +1037,7 @@ Different LLMs excel at different tasks. Prompt the user to switch models when t
 
 ### Updating Project-Level Truth
 
-After story/epic validation, update these project-level documents to reflect current reality:
-
-**When to Update**:
-- After `/story-validate` passes for significant features
-- After `/epic-validate` completes
-- During `/epic-retrospective` or `/project-retrospective`
-
-**What to Update**:
-- `project.md` → If project vision/scope evolved
-- `PRD.md` → If new features delivered or requirements changed
-- `architecture.md` → If architectural patterns added/modified
-- `context.md` → If new constraints discovered
-- `design-system.md` → If new UI patterns established
-- `ux-strategy.md` → If UX principles evolved
-
-**How to Update**:
-1. Read validation-report.md to see what actually changed
-2. Update relevant sections in project-level docs
-3. Add "(Updated after Epic XXX)" or "(Added in Story YYY)" for traceability
-4. Update "Last Updated" timestamps
-5. Commit with clear message explaining what truth was updated
-
-**Why This Matters**:
-- Project-level docs remain **single source of truth** for current state
-- New team members read project docs to understand "what exists now"
-- Epic/story specs remain as historical **proposals** (what was planned)
-- Validation reports capture **deltas** (what actually changed)
-
-Commands contain detailed execution steps - follow them closely.
+After validation passes, update project-level docs (project.md, PRD.md, architecture.md, context.md, design-system.md, ux-strategy.md) to reflect what actually changed. Project-level docs are the single source of truth for "what exists now" — story/epic specs are historical proposals. The `/story-validate` skill prompts you through this step.
 
 ## 🔄 Brownfield vs Greenfield Approach
 
@@ -1389,26 +1130,9 @@ Each level has validation requirements (detailed in validation commands):
 
 Always run retrospectives after validation passes.
 
-## 🎓 How Learnings Improve the System
+## 🎓 How Learnings Cascade
 
-**Story retros** can update:
-- Future story specs (non-meta)
-- Epic docs (non-meta)
-- Flag for epic validation (meta)
-
-**Epic retros** can update:
-- Future epic specs (non-meta)
-- Project docs (non-meta)
-- Story/Epic commands (meta)
-- Cursor rules (meta - validated patterns only)
-
-**Project retros** can update:
-- Anything (meta - most powerful)
-- Speck methodology itself
-- Commands/templates at ALL levels
-- Guidelines for next project
-
-Remember: Each project makes Speck better. Capture learnings and suggest retrospectives.
+Story retros → epic retros → project retros. Each level can update the next: story retros flag patterns for epic validation; epic retros can update project docs and Cursor rules; project retros can evolve the Speck methodology itself. Run retrospectives — each project makes Speck better.
 
 ## 🔗 Integration Points to Know
 
@@ -1490,7 +1214,7 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 6.1.0  
+**Speck Version**: 6.1.1  
 **Updated**: 2026-03-22  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 
