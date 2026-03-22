@@ -65,9 +65,23 @@ The "full Platform flow" described throughout this document (`domain → ux → 
 ### Play Level Signals (for NEW projects where `project.json` doesn't exist yet)
 - **Sprint**: "this weekend", "48 hours", "quick", "simple tool", "ship it", "prototype"
 - **Build**: "subscription", "dashboard", "expand this", multi-user features, v2
-- **Platform**: architecture complexity, "enterprise", "marketplace", explicit Scale 3-4 scope
+- **Platform** (play level): enterprise, marketplace, multi-system, or explicit request for full governance / full foundation flow — *not* the same as "complexity Level 3–4" (see table above)
 
 **Promote** between levels as your project grows: `/project-promote`
+
+### Complexity scale vs play level (two different axes)
+
+Do **not** conflate these — they answer different questions:
+
+| | **Complexity scale (0–4)** | **Play level (Sprint / Build / Platform)** |
+|---|---|---|
+| **Answers** | How big is the request? **Where** in Speck to work (story vs epic vs project). | How much rigor and which artifacts? **How** to run the methodology. |
+| **Stored** | Not persisted — a routing hint from `/speck` and scale analysis. | **`play_level` in `.speck/project.json`** — affects every command. |
+| **Examples** | "Add a button" → complexity **1** → story. "Build a SaaS MVP" → complexity **3** → project. | Same SaaS might be **Build** (lighter docs) or **Platform** (full foundation) depending on signals. |
+
+**Important**: Complexity **Level 4** (multi-product ecosystem *scope*) is **not** the same word as play level **`platform`** (full Speck rigor in `project.json`). A complexity **3** full product can still be play level **Build**; the Build **4+ epic gate** then tightens required artifacts.
+
+**Heuristic** (not a rule): Sprint play ↔ tiny scope; Build play ↔ most products; Platform play ↔ enterprise / multi-system / explicit full-governance intent — often overlaps with complexity **3–4**, but **routing is not the same as rigor**.
 
 ---
 
@@ -535,13 +549,15 @@ Each skill in `.cursor/skills/` contains its own "Subagent Parallelization" sect
 
 ## 🎯 Detect the Right Level (Guide User to Appropriate Command)
 
-When user makes a request, determine the appropriate level and suggest:
-- **Level 0 (Atomic)**: Fix typo, change color → Suggest `/speck` routing to story
-- **Level 1 (Small)**: Add form, create page → Suggest `/speck` routing to story within epic
-- **Level 2 (Feature)**: Auth system, shopping cart → Suggest `/speck` routing to epic
-- **Level 3-4 (Platform)**: Full product, e-commerce site → Suggest `/speck` routing to project
+Use the **complexity scale (0–4)** below to decide **where** to route (story vs epic vs project). Use **play level** (section at top) for **artifact rigor** — they are independent; see **Complexity scale vs play level** under Play Levels above.
 
-When unsure, guide user to use `/speck [description]` first - it auto-detects and routes appropriately!
+When user makes a request, determine the appropriate **Speck hierarchy** level and suggest:
+- **Complexity 0 (Atomic)**: Fix typo, change color → Route to story
+- **Complexity 1 (Small)**: Add form, create page → Route to story (within epic)
+- **Complexity 2 (Feature set)**: Auth system, shopping cart → Route to epic
+- **Complexity 3–4 (Major product / ecosystem)**: Full product, e-commerce site, multi-product ecosystem → Route to project
+
+When unsure, guide user to use `/speck [description]` first — it auto-detects and routes appropriately!
 
 ### Project Complexity Scale (Standardized)
 
@@ -551,12 +567,16 @@ When unsure, guide user to use `/speck [description]` first - it auto-detects an
 | **1** | Single story | Form, button, endpoint | 1-3 days | 1 |
 | **2** | Epic/Feature | Auth system, CRUD module | 1-4 weeks | 1-3 |
 | **3** | Full product | Complete MVP, SaaS app | 1-3 months | 2-5 |
-| **4** | Platform | Multi-product ecosystem | 3-12 months | 5+ |
+| **4** | Ecosystem scale | Multi-product ecosystem | 3-12 months | 5+ |
+
+**Note**: Level **4** here = *scope* of the work. It is **not** `play_level: platform` in `.speck/project.json` (that is the *rigor* tier).
 
 This scale is used by:
-- `/speck` router for level detection
+- `/speck` router for **routing** (which hierarchy level)
 - Recipe `complexity.level_range` field
 - `/project-specify` for complexity assessment
+
+**Play level** is set separately in `project-specify` (conversation signals) and stored in `.speck/project.json`.
 
 ## 💡 Remember These Critical Patterns
 
@@ -1214,7 +1234,7 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 6.1.1  
+**Speck Version**: 6.1.2  
 **Updated**: 2026-03-22  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 

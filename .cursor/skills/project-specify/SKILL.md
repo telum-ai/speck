@@ -21,7 +21,7 @@ Before anything else, infer the play level from conversation context (same signa
 
 - **Sprint**: "this weekend", "48 hours", "quick", "simple tool", "ship it", "prototype"
 - **Build**: "subscription", "dashboard", "expand this", "v2", multi-user features
-- **Platform**: architecture complexity, "enterprise", "marketplace", or explicit Level 3-4 scope
+- **Platform** (play level): enterprise, marketplace, multi-system, explicit full-governance intent — *not* the same as complexity scale 3–4 (large projects can stay **Build**; see AGENTS.md “Complexity scale vs play level”)
 
 If Sprint detected:
 1. Tell the user: "This sounds like a Sprint. I'll use the one-page PRD and skip heavy upfront planning."

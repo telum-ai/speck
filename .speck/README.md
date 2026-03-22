@@ -1275,7 +1275,7 @@ See `.cursor/skills/model-selection/SKILL.md` for detailed guidance.
 - Validation: analyze → validate
 
 ### 5. Architecture When Appropriate
-- For Level 3-4 projects: Run full flow including architecture
+- For **complexity scale 3–4** (major product / ecosystem scope): Run architecture before plan when design decisions inform the PRD (also respect **play level** in `.speck/project.json` — Build streamlines some steps; see AGENTS.md)
 - For complex epics: Use `/epic-architecture`
 - For simple projects: Skip optional commands
 

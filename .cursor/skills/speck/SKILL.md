@@ -1,6 +1,6 @@
 ---
 name: speck
-description: Universal entry point — load when the user starts with /speck [description] or isn't sure which command to use. Detects play level, current project state, and routes to the right workflow (project/epic/story). Always start here when intent or current phase is unclear.
+description: Universal entry point — load when the user starts with /speck [description] or isn't sure which command to use. Routes by complexity scale (0–4) to story/epic/project; play level (Sprint/Build/Platform) is separate and lives in .speck/project.json. Detects current project state and next command. Always start here when intent or current phase is unclear.
 disable-model-invocation: false
 ---
 
@@ -69,6 +69,19 @@ AI: 🍳 I found a matching recipe: "react-fastapi-postgres"
 **Recipe index**:
 - See `.speck/recipes/README.md` for the full recipe list and intended use cases
 
+## Complexity scale vs play level (read this first)
+
+Two different concepts — do not merge them:
+
+| | **Complexity scale (0–4)** | **Play level** (`sprint` / `build` / `platform` in `.speck/project.json`) |
+|---|---|---|
+| **Purpose** | **Routing**: how big is the request? Story vs epic vs project. | **Rigor**: which artifacts and how much upfront planning? |
+| **When set** | During `/speck` scale analysis (ephemeral). | During `/project-specify` (persisted). |
+
+A **complexity 3** “full product” project can still be **play level Build**. **Complexity 4** (ecosystem scope) ≠ **`play_level: platform`** (full methodology tier). Use play signals (enterprise, marketplace, full governance) for Platform play; use scale for where to route.
+
+---
+
 ## Play Level Detection
 
 Play levels are **agent-detected from conversation context** — never declared with flags.
@@ -93,12 +106,13 @@ After pre-routing checks, infer the play level before routing:
 → Build: Standard PRD + context.md + COMMERCIAL.md. Epic structure. No constitution/design-system required.
 → Tell the user: "This sounds like a Build — a structured product with epics and stories."
 
-### Platform signals (use existing Level 3-4 routing)
-- Architecture complexity: "microservices", "distributed", "enterprise", "platform"
-- Scale: "millions of users", "global", "marketplace"
-- Already at Level 3-4 per scale analysis
+### Platform play-level signals (full rigor — not the same as complexity scale)
+- Architecture complexity: "microservices", "distributed", "enterprise", "regulated", "multi-region"
+- Governance: explicit request for full foundation, constitution, or “we need everything documented”
+- Scale language: "millions of users", "global", "marketplace" (often **correlates** with complexity 3–4 but does not **define** play level)
 
-→ Platform: Full Speck flow unchanged.
+→ **`play_level: platform`**: Full Speck foundation flow (see AGENTS.md).  
+→ **Do not** set Platform play level **only** because scale analysis said complexity 3–4 — a large Build project uses Build + the 4+ epic gate instead unless user wants full rigor.
 
 ### Promotion signals
 - "getting traction", "this is working", "users are paying", "promote to build/platform"
@@ -179,7 +193,7 @@ Input: "/speck Add OAuth to the authentication epic"
 ### No Context (New Work)
 ```
 Input: "/speck Build a task management system"
-→ Runs scale analysis (Level 3-4 detected)
+→ Runs scale analysis (complexity 3–4 / project-scale detected)
 → Recommends: /project-specify
 → Allows override if user prefers different level
 ```
@@ -203,14 +217,14 @@ AI: Let me check your current work state...
 Current work in progress:
 - Project: 001-my-app (75% complete)
   - PRD: ✅ Complete
-  - Architecture: ⚠️ Not created (Level 3 project)
+  - Architecture: ⚠️ Not created (complexity-scale 3 project)
   - Epic: Authentication (3/5 stories done)
     - Active story: Password reset flow
   - Epic: User Management (not started)
 
 What would you like to do?
 1. Continue with password reset flow (/story-implement)
-2. Create system architecture (/project-architecture) [Recommended for Level 3]
+2. Create system architecture (/project-architecture) [Recommended when project-scale / complexity 3–4]
 3. Start the user management epic (/epic-specify)
 4. View project roadmap (/project-roadmap)
 5. Review epic progress (/epic-validate)
@@ -275,9 +289,9 @@ You can jump in at ANY level based on your needs:
 - Know the feature you want? → Start at epic level  
 - Ready to implement? → Start at story level
 
-Architecture is handled based on scale (and comes *before* planning whenever planning depends on design decisions):
-- Level 0-1 → Usually skip `/project-architecture` (or keep it very lightweight) and work at epic/story level
-- Level 2-4 → Run `/project-architecture` before `/project-plan` so the PRD incorporates the chosen design
+Architecture is handled based on **complexity scale** (and comes *before* planning whenever planning depends on design decisions):
+- Complexity 0–1 → Usually skip `/project-architecture` (or keep it very lightweight) and work at epic/story level
+- Complexity 2–4 → Run `/project-architecture` before `/project-plan` so the PRD incorporates the chosen design (unless play level is Sprint and scope is explicitly tiny — then follow play-level rules)
 - Complex epics → Run `/epic-architecture` before `/epic-plan` and before implementation
 - Brownfield projects → `/project-architecture` primarily extracts the as-is architecture from code (and can propose a to-be) before `/project-plan`
 
@@ -394,12 +408,12 @@ This is perfectly fine for MVPs and prototypes!
 → Route to: `/epic-specify`
 → Architecture: Optional `/epic-architecture` for complex epics
 
-**Level 3-4 (Major/Platform)**
+**Complexity 3–4 (Major product / ecosystem)**
 - "Create social media platform"
 - "Build e-commerce site"
 - "Develop project management tool"
 → Route to: `/project-specify`
-→ Architecture: Run `/project-architecture` before `/project-plan` (planning depends on design decisions)
+→ Architecture: Run `/project-architecture` before `/project-plan` when planning depends on design decisions (also respect **play level** from `project.json` / project-specify — Build may defer some steps until the 4+ epic gate)
 
 ## Brownfield Architecture Handling
 
@@ -493,7 +507,8 @@ Based on context, provide helpful hints:
 - After context → "Optional: /project-constitution → then /project-architecture"
 - After architecture → "Optional: /project-design-system → then /project-plan"
 - After plan → "Optional: /project-roadmap → then /project-analyze → /project-validate"
-- Level 3-4 project → "Full flow: domain → ux → context → constitution → architecture → design-system → plan → roadmap"
+- **Play `platform`** or default (no `project.json`) **and** complexity 3–4 → suggest full foundation flow: domain → ux → context → [constitution] → architecture → [design-system] → plan → [roadmap]
+- **Play `build`** at complexity 3–4 → suggest Build flow + remind that 4+ epics trigger architecture + ux-strategy (AGENTS.md); do not assume full Platform play flow unless user promotes
 - Brownfield import → "Flow: import → scan → specify/clarify → domain → ux → context → architecture → plan"
 
 **Epic Level**:
@@ -513,7 +528,7 @@ After routing decision:
 
 Context:
 - Scope: [detected scope]
-- Scale: Level [0-4]
+- Complexity scale: [0-4]
 - Location: [current context]
 
 Executing: /[command] "[original arguments]"
@@ -523,26 +538,23 @@ Executing: /[command] "[original arguments]"
 
 ## Architecture-Aware Routing Example
 
-**Level 4 Platform Project**
+**Complexity 4 (ecosystem-scale) — example**
 ```
 User: /speck Build a comprehensive e-learning platform
 
 AI: 🔍 Analyzing request...
 
-This is a Level 4 platform-scale project requiring:
-- Multiple subsystems (content, users, payments, analytics)
-- Complex integrations
-- Scalability planning
-- Security architecture
+This is **complexity scale 4** (ecosystem-scale scope): multiple subsystems, integrations, scalability, security.  
+`/project-specify` will set **play level** (Build vs Platform) from your signals — **not** the same as this scale label.
 
-I'll guide you through the complete workflow:
+I'll guide you through the workflow (full foundation if play level is Platform; Build streamlines some steps):
 
 1. Project specification (/project-specify)
 2. Clarification (/project-clarify)
 3. UX strategy (optional) (/project-ux)
 4. Context & constraints (/project-context)
 5. Constitution (optional) (/project-constitution)
-6. System architecture (/project-architecture) ← Critical for Level 4
+6. System architecture (/project-architecture) ← Critical at this scope
 7. Design system (optional) (/project-design-system)
 8. Planning & PRD (/project-plan)
 9. Project validation (/project-validate)
