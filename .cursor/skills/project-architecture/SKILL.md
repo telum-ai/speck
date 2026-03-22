@@ -1,11 +1,11 @@
 ---
 name: project-architecture
-description: Design comprehensive system architecture that serves as the technical blueprint for the entire project
+description: Load (required for Platform, optional for Build) to design the system architecture before project-plan. Produces architecture.md — run after project-context and before project-plan. Never run /project-plan before this on Platform projects.
 disable-model-invocation: false
 ---
 
 ---
-description: Design comprehensive system architecture that serves as the technical blueprint for the entire project.
+description: Load (required for Platform, optional for Build) to design the system architecture before project-plan. Produces architecture.md — run after project-context and before project-plan. Never run /project-plan before this on Platform projects.
 ---
 
 User input:

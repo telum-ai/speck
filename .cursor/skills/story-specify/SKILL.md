@@ -1,11 +1,11 @@
 ---
 name: story-specify
-description: Create or update the story specification from a natural language story description within an epic context
+description: Load when starting a new story — either detailing a placeholder from epic-breakdown, or creating a story from scratch. Use when user says 'let's work on story X', 'specify [feature detail]', or picks up a story from the breakdown. Produces spec.md — required before all other story commands.
 disable-model-invocation: false
 ---
 
 ---
-description: Create or update the story specification from a natural language story description within an epic context.
+description: Load when starting a new story — either detailing a placeholder from epic-breakdown, or creating a story from scratch. Use when user says 'let's work on story X', 'specify [feature detail]', or picks up a story from the breakdown. Produces spec.md — required before all other story commands.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

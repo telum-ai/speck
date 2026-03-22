@@ -1,11 +1,11 @@
 ---
 name: project-promote
-description: Promote or downgrade a project between Sprint, Build, and Platform play levels with conversational guidance
+description: Load when a project has outgrown its current play level (Sprint→Build or Build→Platform) or needs to be scaled back. Use when user says 'this is bigger than a sprint now' or 'we need to treat this as a real product'. Updates .speck/project.json and adapts artifacts.
 disable-model-invocation: false
 ---
 
 ---
-description: Conversational transition between Sprint, Build, and Platform play levels — preserving existing work.
+description: Load when a project has outgrown its current play level (Sprint→Build or Build→Platform) or needs to be scaled back. Use when user says 'this is bigger than a sprint now' or 'we need to treat this as a real product'. Updates .speck/project.json and adapts artifacts.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

@@ -1,11 +1,11 @@
 ---
 name: speck-debug
-description: Diagnose and resolve any error by structured analysis, treating errors as learning opportunities
+description: Load when any error, test failure, unexpected behavior, or broken workflow occurs during Speck execution. Provides structured root-cause analysis and treats errors as learning opportunities captured in .learning.log.
 disable-model-invocation: false
 ---
 
 ---
-description: Diagnose and resolve any error by structured analysis, treating errors as learning opportunities.
+description: Load when any error, test failure, unexpected behavior, or broken workflow occurs during Speck execution. Provides structured root-cause analysis and treats errors as learning opportunities captured in .learning.log.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

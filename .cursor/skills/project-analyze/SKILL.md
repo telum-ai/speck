@@ -1,11 +1,11 @@
 ---
 name: project-analyze
-description: Perform comprehensive analysis of project plan, PRD, and epic structure to identify issues before execution begins
+description: Load after project-plan produces PRD.md and the epic structure — quality check for consistency, completeness, and issues before execution begins. Run before E000 or any feature epic is started.
 disable-model-invocation: false
 ---
 
 ---
-description: Perform comprehensive analysis of project plan, PRD, and epic structure to identify issues before execution begins.
+description: Load after project-plan produces PRD.md and the epic structure — quality check for consistency, completeness, and issues before execution begins. Run before E000 or any feature epic is started.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

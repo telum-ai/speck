@@ -1,11 +1,11 @@
 ---
 name: project-constitution
-description: Create or update project-specific principles that define technical standards and governance for this project
+description: Load (Platform play level only) to define technical principles and architectural guardrails for the project. Produces constitution.md — optional but valuable when a team needs explicit coding standards, governance rules, or non-negotiable constraints.
 disable-model-invocation: false
 ---
 
 ---
-description: Create or update project-specific principles that define technical standards and governance for this project.
+description: Load (Platform play level only) to define technical principles and architectural guardrails for the project. Produces constitution.md — optional but valuable when a team needs explicit coding standards, governance rules, or non-negotiable constraints.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

@@ -1,11 +1,11 @@
 ---
 name: story-extract
-description: Extract story specifications from existing code implementations, creating detailed documentation for implemented features
+description: Load when code exists but no spec does — reverse-engineering story documentation from an existing implementation. Use for brownfield stories, code written before Speck was adopted, or when a feature was built without going through the spec flow.
 disable-model-invocation: false
 ---
 
 ---
-description: Extract story specifications from existing code implementations, creating detailed documentation for implemented features.
+description: Load when code exists but no spec does — reverse-engineering story documentation from an existing implementation. Use for brownfield stories, code written before Speck was adopted, or when a feature was built without going through the spec flow.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

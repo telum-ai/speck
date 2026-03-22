@@ -1,11 +1,11 @@
 ---
 name: epic-outline
-description: Analyze epic specification to identify technical decisions and research needs before creating tech spec
+description: Load before epic-plan when the epic involves unfamiliar technology, complex integrations, or has significant unknowns that need research. Optional — skip when the implementation path is clear and existing project patterns already apply.
 disable-model-invocation: false
 ---
 
 ---
-description: Analyze epic specification to identify technical decisions and research needs before creating tech spec.
+description: Load before epic-plan when the epic involves unfamiliar technology, complex integrations, or has significant unknowns that need research. Optional — skip when the implementation path is clear and existing project patterns already apply.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

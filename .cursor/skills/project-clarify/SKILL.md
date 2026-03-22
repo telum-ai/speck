@@ -1,11 +1,11 @@
 ---
 name: project-clarify
-description: Identify underspecified areas in the project spec through strategic Q&A, then determine what needs deeper research beyond simple clarification
+description: Load after project.md exists to fill gaps through targeted Q&A. Use when project goals, target users, or scope feel underspecified. Run before project-context or project-architecture to prevent rework downstream.
 disable-model-invocation: false
 ---
 
 ---
-description: Identify underspecified areas in the project spec through strategic Q&A, then determine what needs deeper research beyond simple clarification.
+description: Load after project.md exists to fill gaps through targeted Q&A. Use when project goals, target users, or scope feel underspecified. Run before project-context or project-architecture to prevent rework downstream.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

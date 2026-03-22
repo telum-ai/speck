@@ -1,11 +1,11 @@
 ---
 name: project-brainstorm
-description: Transform loose ideas, inspirations, and problems into structured project concepts ready for specification
+description: Load when a user has a vague idea, problem, or inspiration but isn't sure what to build. Use before /project-specify when the project concept needs crystallizing from loose thoughts into something concrete.
 disable-model-invocation: false
 ---
 
 ---
-description: Transform loose ideas, inspirations, and problems into structured project concepts ready for specification.
+description: Load when a user has a vague idea, problem, or inspiration but isn't sure what to build. Use before /project-specify when the project concept needs crystallizing from loose thoughts into something concrete.
 ---
 
 User input:

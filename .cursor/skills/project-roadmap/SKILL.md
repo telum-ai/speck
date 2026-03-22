@@ -1,11 +1,11 @@
 ---
 name: project-roadmap
-description: Create an epic execution timeline showing sequencing, dependencies, and resource allocation for project delivery
+description: Load after project-plan to sequence epics into a delivery timeline with dependencies and resource allocation. Produces project-roadmap.md — optional, most useful for multi-team or multi-quarter projects.
 disable-model-invocation: false
 ---
 
 ---
-description: Create an epic execution timeline showing sequencing, dependencies, and resource allocation for project delivery.
+description: Load after project-plan to sequence epics into a delivery timeline with dependencies and resource allocation. Produces project-roadmap.md — optional, most useful for multi-team or multi-quarter projects.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

@@ -1,11 +1,11 @@
 ---
 name: project-ux
-description: Define the overall user experience strategy and design principles for the project
+description: Load to define UX strategy and design principles before architecture and planning. Produces ux-strategy.md — use when the product's UX is a key differentiator, involves multiple user roles, or when design consistency needs to be established early.
 disable-model-invocation: false
 ---
 
 ---
-description: Define the overall user experience strategy and design principles for the project.
+description: Load to define UX strategy and design principles before architecture and planning. Produces ux-strategy.md — use when the product's UX is a key differentiator, involves multiple user roles, or when design consistency needs to be established early.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

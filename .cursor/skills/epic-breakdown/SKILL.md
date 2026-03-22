@@ -1,11 +1,11 @@
 ---
 name: epic-breakdown
-description: Create story mapping showing all stories within the epic, their dependencies, and parallelization opportunities
+description: Load after epic-tech-spec.md exists to create the story map, dependencies, and implementation order (epic-breakdown.md). Required before starting any individual story in the epic. Use when user says 'break this into stories' or 'what stories do we need?'.
 disable-model-invocation: false
 ---
 
 ---
-description: Create story mapping showing all stories within the epic, their dependencies, and parallelization opportunities.
+description: Load after epic-tech-spec.md exists to create the story map, dependencies, and implementation order (epic-breakdown.md). Required before starting any individual story in the epic. Use when user says 'break this into stories' or 'what stories do we need?'.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

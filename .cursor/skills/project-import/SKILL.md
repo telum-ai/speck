@@ -1,11 +1,11 @@
 ---
 name: project-import
-description: Create Speck structure for an existing codebase, preparing it for detailed analysis
+description: Load at the very start of a brownfield project to extract non-code context (goals, team, constraints, history) from existing documentation. Run before project-scan and project-specify on brownfield projects.
 disable-model-invocation: false
 ---
 
 ---
-description: Create Speck structure for an existing codebase, preparing it for detailed analysis.
+description: Load at the very start of a brownfield project to extract non-code context (goals, team, constraints, history) from existing documentation. Run before project-scan and project-specify on brownfield projects.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

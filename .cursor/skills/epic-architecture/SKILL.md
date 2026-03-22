@@ -1,11 +1,11 @@
 ---
 name: epic-architecture
-description: Design the technical architecture for a specific epic within the project's system architecture
+description: Load before epic-plan when the epic crosses service boundaries, introduces new architectural patterns, or involves complex third-party integrations. Skip for simple CRUD epics that follow existing project patterns. Produces epic-architecture.md used by epic-plan.
 disable-model-invocation: false
 ---
 
 ---
-description: Design the technical architecture for a specific epic within the project's system architecture.
+description: Load before epic-plan when the epic crosses service boundaries, introduces new architectural patterns, or involves complex third-party integrations. Skip for simple CRUD epics that follow existing project patterns. Produces epic-architecture.md used by epic-plan.
 ---
 
 User input:

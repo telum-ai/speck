@@ -1,11 +1,11 @@
 ---
 name: story-tasks
-description: Generate an actionable, dependency-ordered tasks.md for the story based on available design artifacts
+description: Load after plan.md (and optional ui-spec.md) to generate the step-by-step implementation checklist (tasks.md). Required before story-implement. Use when user says 'create tasks', 'break this into steps', or moves from planning to implementation.
 disable-model-invocation: false
 ---
 
 ---
-description: Generate an actionable, dependency-ordered tasks.md for the story based on available design artifacts.
+description: Load after plan.md (and optional ui-spec.md) to generate the step-by-step implementation checklist (tasks.md). Required before story-implement. Use when user says 'create tasks', 'break this into steps', or moves from planning to implementation.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

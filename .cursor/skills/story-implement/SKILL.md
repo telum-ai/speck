@@ -1,11 +1,11 @@
 ---
 name: story-implement
-description: Execute the implementation plan by processing and executing all tasks defined in tasks.md
+description: Load after tasks.md exists and story-analyze passes. Executes the actual code implementation by working through tasks.md step by step. Use when user says 'implement this', 'write the code', 'build it', or all planning artifacts are in place and reviewed.
 disable-model-invocation: false
 ---
 
 ---
-description: Execute the implementation plan by processing and executing all tasks defined in tasks.md
+description: Load after tasks.md exists and story-analyze passes. Executes the actual code implementation by working through tasks.md step by step. Use when user says 'implement this', 'write the code', 'build it', or all planning artifacts are in place and reviewed.
 ---
 
 The user input can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

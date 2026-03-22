@@ -1,11 +1,11 @@
 ---
 name: epic-plan
-description: Create technical specification for epic implementation based on epic spec, research, and code analysis
+description: Load after epic.md exists (and optional architecture/journey/wireframes) to produce epic-tech-spec.md with the full technical design. Required before epic-breakdown. Use when user says 'plan this epic' or 'write the tech spec'.
 disable-model-invocation: false
 ---
 
 ---
-description: Create technical specification for epic implementation based on epic spec, research, and code analysis.
+description: Load after epic.md exists (and optional architecture/journey/wireframes) to produce epic-tech-spec.md with the full technical design. Required before epic-breakdown. Use when user says 'plan this epic' or 'write the tech spec'.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

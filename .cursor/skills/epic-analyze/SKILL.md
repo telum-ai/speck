@@ -1,11 +1,11 @@
 ---
 name: epic-analyze
-description: Analyze epic plan, tech spec, and task breakdown for consistency and completeness before implementation
+description: Load after epic-tech-spec.md and epic-breakdown.md exist — quality check for consistency and completeness before any story work begins. Catches spec drift and missing coverage between the tech spec and story breakdown.
 disable-model-invocation: false
 ---
 
 ---
-description: Analyze epic plan, tech spec, and task breakdown for consistency and completeness before implementation.
+description: Load after epic-tech-spec.md and epic-breakdown.md exist — quality check for consistency and completeness before any story work begins. Catches spec drift and missing coverage between the tech spec and story breakdown.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

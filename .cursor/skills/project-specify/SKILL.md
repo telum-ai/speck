@@ -1,11 +1,11 @@
 ---
 name: project-specify
-description: Create or update the project specification from a natural language project description
+description: Load at the very start of a new project when the user describes what they want to build, or to update an existing project.md. Produces project.md — must run before project-clarify, project-context, and all downstream project commands.
 disable-model-invocation: false
 ---
 
 ---
-description: Create or update the project specification from a natural language project description.
+description: Load at the very start of a new project when the user describes what they want to build, or to update an existing project.md. Produces project.md — must run before project-clarify, project-context, and all downstream project commands.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

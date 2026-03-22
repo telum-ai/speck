@@ -1,11 +1,11 @@
 ---
 name: project-validate
-description: Validate entire project implementation against original vision, PRD, and success metrics
+description: Load when all epics are complete to verify the project meets its original vision and PRD success metrics. Produces project validation report — required before project-retrospective.
 disable-model-invocation: false
 ---
 
 ---
-description: Validate entire project implementation against original vision, PRD, and success metrics.
+description: Load when all epics are complete to verify the project meets its original vision and PRD success metrics. Produces project validation report — required before project-retrospective.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

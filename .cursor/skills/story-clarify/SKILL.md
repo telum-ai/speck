@@ -1,11 +1,11 @@
 ---
 name: story-clarify
-description: Identify underspecified areas in the current story spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec
+description: Load after spec.md exists but requirements are vague, acceptance criteria are missing, or scope is unclear. Run before story-plan to surface ambiguities before technical decisions are made. Encodes answers directly back into spec.md.
 disable-model-invocation: false
 ---
 
 ---
-description: Identify underspecified areas in the current story spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec.
+description: Load after spec.md exists but requirements are vague, acceptance criteria are missing, or scope is unclear. Run before story-plan to surface ambiguities before technical decisions are made. Encodes answers directly back into spec.md.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

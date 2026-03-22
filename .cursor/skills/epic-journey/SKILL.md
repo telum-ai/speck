@@ -1,11 +1,11 @@
 ---
 name: epic-journey
-description: Map the user journey for a specific epic, identifying touchpoints, emotions, and opportunities
+description: Load for UX-heavy epics to map user touchpoints, emotions, and flow before planning. Use when the epic significantly changes how users interact with the product. Run before epic-wireframes and epic-plan.
 disable-model-invocation: false
 ---
 
 ---
-description: Map the user journey for a specific epic, identifying touchpoints, emotions, and opportunities.
+description: Load for UX-heavy epics to map user touchpoints, emotions, and flow before planning. Use when the epic significantly changes how users interact with the product. Run before epic-wireframes and epic-plan.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

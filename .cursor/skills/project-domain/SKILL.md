@@ -1,11 +1,11 @@
 ---
 name: project-domain
-description: Capture subject matter expertise and domain knowledge that will inform all product decisions - the ubiquitous language, domain rules, and principles from the field
+description: Load for specialized domains (healthcare, fitness, finance, legal, e-commerce, etc.) to capture subject matter expertise before architecture decisions are made. Produces domain-model.md — use when domain terminology or rules would otherwise be guessed incorrectly.
 disable-model-invocation: false
 ---
 
 ---
-description: Capture subject matter expertise and domain knowledge that will inform all product decisions - the ubiquitous language, domain rules, and principles from the field.
+description: Load for specialized domains (healthcare, fitness, finance, legal, e-commerce, etc.) to capture subject matter expertise before architecture decisions are made. Produces domain-model.md — use when domain terminology or rules would otherwise be guessed incorrectly.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

@@ -1,11 +1,11 @@
 ---
 name: story-plan
-description: Execute the implementation planning workflow using the plan template to generate design artifacts
+description: Load after spec.md (and optional clarify/outline/scan) to produce plan.md with the technical design, data model, contracts, and test strategy. Required before story-tasks. Use when user says 'plan this story', 'how should we build this?', or moves from spec to planning.
 disable-model-invocation: false
 ---
 
 ---
-description: Execute the implementation planning workflow using the plan template to generate design artifacts.
+description: Load after spec.md (and optional clarify/outline/scan) to produce plan.md with the technical design, data model, contracts, and test strategy. Required before story-tasks. Use when user says 'plan this story', 'how should we build this?', or moves from spec to planning.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

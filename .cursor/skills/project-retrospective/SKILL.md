@@ -1,11 +1,11 @@
 ---
 name: project-retrospective
-description: Synthesize epic retrospectives, validate cross-epic patterns, evolve Speck methodology based on project-wide insights
+description: Load after project-validate passes to synthesize all epic retrospectives, validate cross-project patterns, and evolve the Speck methodology. Run once at project completion.
 disable-model-invocation: false
 ---
 
 ---
-description: Synthesize epic retrospectives, validate cross-epic patterns, evolve Speck methodology based on project-wide insights.
+description: Load after project-validate passes to synthesize all epic retrospectives, validate cross-project patterns, and evolve the Speck methodology. Run once at project completion.
 ---
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
