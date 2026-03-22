@@ -11,6 +11,51 @@ You are working in a project using **Speck 🥓**, a multi-level methodology for
 **When you need skill instructions**: Check `.cursor/skills/[level]-[command]/SKILL.md` (or `.claude/skills/...` in Claude Code)
 **When you need templates**: Use files in `.speck/templates/[level]/`
 
+## 🎚️ Play Levels (READ THIS FIRST — Affects Everything Downstream!)
+
+Speck adapts its rigor to match your project's stage. **Before starting any task in an existing project, check the play level** — it determines which artifacts are required, optional, or skipped entirely.
+
+### How to Detect the Play Level
+
+**Read `.speck/project.json`** in the workspace root:
+
+```json
+{ "play_level": "sprint" }   // or "build" or "platform"
+```
+
+| Level | When | Required Artifacts | What to Skip |
+|-------|------|--------------------|--------------|
+| **Sprint** | 1-2 week experiments, simple tools | `PRD.md` (sprint template) + `sprint-log.md` | context, constitution, architecture, design-system, epics, stories |
+| **Build** | Products with subscriptions, dashboards, teams | `PRD.md` + `context.md` | constitution, design-system; architecture is optional |
+| **Platform** | Enterprise, marketplace, multi-system | Full flow — everything | Nothing |
+
+**⚠️ No `project.json` = Platform** (backward compatible with all pre-6.0 Speck projects)
+
+### Why This Matters for Reading the Rest of AGENTS.md
+
+The "full Platform flow" described throughout this document (`domain → ux → context → constitution → architecture → design-system → plan`) is **NOT required for Sprint or Build projects**. Whenever AGENTS.md says "REQUIRED" or "CRITICAL", interpret it through the lens of the current play level:
+
+| Claim in docs | Sprint | Build | Platform |
+|---------------|--------|-------|----------|
+| `architecture.md` REQUIRED before plan | ✗ Skip | Optional | ✓ Required |
+| `constitution.md` recommended | ✗ Skip | ✗ Skip | Optional |
+| `design-system.md` recommended | ✗ Skip | ✗ Skip | Optional |
+| Full epic + story artifacts required | ✗ Skip | spec + plan | Full artifacts |
+
+**Abbreviated flows by play level**:
+- **Sprint**: `project-specify` → ship it → `project-promote` if it gets traction
+- **Build**: `specify → clarify → context → [architecture] → plan → epics → stories`
+- **Platform**: Everything described in the sections below
+
+### Play Level Signals (for NEW projects where `project.json` doesn't exist yet)
+- **Sprint**: "this weekend", "48 hours", "quick", "simple tool", "ship it", "prototype"
+- **Build**: "subscription", "dashboard", "expand this", multi-user features, v2
+- **Platform**: architecture complexity, "enterprise", "marketplace", explicit Scale 3-4 scope
+
+**Promote** between levels as your project grows: `/project-promote`
+
+---
+
 ## 🏗️ How to Navigate Speck Structure
 
 ### Understand the Three-Level Hierarchy
@@ -94,10 +139,13 @@ specs/projects/[project-id]/
 User triggers commands, you follow instructions inside each command.
 
 ### Phase Flow
+
+> **This is the Platform-level full flow.** Sprint and Build skip significant portions — see the [Play Levels section](#️-play-levels-read-this-first--affects-everything-downstream) above.
+
 1. **Ideation** (optional): brainstorm → loose ideas crystallized into project concepts
 2. **Discovery**: specify → clarify
-3. **Foundation**: [domain (+ research)] → [ux (+ research)] → context (+ research) → [constitution (+ research)]
-4. **Technical Design**: architecture (+ research) → [design-system (+ research)]
+3. **Foundation** *(Platform only)*: [domain (+ research)] → [ux (+ research)] → context (+ research) → [constitution (+ research)]
+4. **Technical Design** *(Platform; optional for Build)*: architecture (+ research) → [design-system (+ research)]
 5. **Planning**: plan (+ research) → [roadmap]
 6. **Infrastructure Epic** (E000): Developer Infrastructure (testing, CI/CD, linting, error tracking)
 7. **Epic Work**: specify → clarify → [architecture (+ research)] → plan (+ research) → breakdown
@@ -535,10 +583,24 @@ This scale is used by:
 
 ### Always Run Foundation BEFORE Planning
 
-At project level, follow this order strictly:
+> **Play level matters here.** This section describes the Platform-level requirements. Sprint skips all of this. Build skips constitution and design-system (architecture is optional).
+
+At project level, follow this order strictly **(Platform)**:
 ```
 Run: [domain] → [ux] → context → [constitution] → architecture → [design-system] → plan
 Why: plan USES these as inputs, and architecture decisions inform planning
+```
+
+At project level **(Build)**:
+```
+Run: context → [architecture] → plan
+Why: context is always needed; architecture helps but isn't blocking for Build
+```
+
+At project level **(Sprint)**:
+```
+Run: project-specify (creates PRD + sprint-log) → ship it
+Why: No planning overhead — just capture the idea and start building
 ```
 
 At epic level, run architecture before tech spec:
@@ -575,14 +637,26 @@ For brownfield projects, also read:
 
 ### Know What PRD Needs
 
-Before running `/project-plan`, ensure these artifacts exist:
-- `architecture.md` → REQUIRED: Provides architectural decisions and constraints
+Before running `/project-plan`, ensure the appropriate artifacts exist for the project's **play level**:
+
+**Platform** (all of the below):
+- `architecture.md` → **REQUIRED**: Provides architectural decisions and constraints
 - `ux-strategy.md` → Provides UX principles and user journeys (optional)
 - `context.md` → Provides constraints and non-functional requirements
 - `design-system.md` → Provides design tokens and patterns (optional)
 - `constitution.md` → Provides technical principles (optional)
 
-**CRITICAL**: Never run `/project-plan` before `architecture.md` - design decisions must inform planning!
+**Build** (streamlined):
+- `context.md` → **REQUIRED**: Provides constraints
+- `architecture.md` → Optional but recommended for complex projects
+- (ux-strategy, design-system, constitution → skip)
+
+**Sprint** (no pre-plan artifacts needed):
+- `project-specify` creates PRD + sprint-log directly — there is no separate plan phase
+
+**CRITICAL (Platform only)**: Never run `/project-plan` before `architecture.md` — design decisions must inform planning!
+
+**Note**: For Build and Sprint, skipping architecture.md before plan is intentional and correct.
 
 ## 🔧 Follow These Development Standards
 
@@ -1033,12 +1107,6 @@ Different LLMs excel at different tasks. Prompt the user to switch models when t
 **Use Gemini 3 Flash**: Interactive work, quick fixes, budget concerns  
 **Cross-validate**: Architecture finalized, security code, pre-deployment
 
-### MAX Mode Warning
-
-MAX mode costs $5-$60+ per complex request. Use only for:
-- Project-wide refactoring
-- Large codebase navigation (>25 tool calls)
-
 **Avoid** for single-file edits, small features, bug fixes.
 
 ## 📚 Key Reference Files
@@ -1080,10 +1148,11 @@ MAX mode costs $5-$60+ per complex request. Use only for:
 
 ## 🎯 Before Starting Any Task
 
-1. **Determine level**: Project? Epic? Story? (check directory or ask)
-2. **Fetch rules**: If the project defines Cursor rules (recommended), read them (commonly under `.cursor/rules/`)
-3. **Read artifacts**: spec.md, plan.md, context.md at appropriate level
-4. **Verify understanding**: Check all dependencies clear
+1. **Detect play level**: Read `.speck/project.json` → get `play_level` ("sprint", "build", or "platform"). If missing, default to Platform. This determines which artifacts are required vs. skippable — see the [Play Levels section](#️-play-levels-read-this-first--affects-everything-downstream) at the top of this document.
+2. **Determine level**: Project? Epic? Story? (check directory or ask)
+3. **Fetch rules**: If the project defines Cursor rules (recommended), read them (commonly under `.cursor/rules/`)
+4. **Read artifacts**: spec.md, plan.md, context.md at appropriate level
+5. **Verify understanding**: Check all dependencies clear
 
 ## 💻 During Execution
 
@@ -1192,7 +1261,7 @@ When user makes a request, determine if they need a spec or can code directly:
 ## ⚠️ Never Do These Things When Executing Commands
 
 **NEVER**:
-- ❌ Execute `/project-plan` if context.md doesn't exist (PRD NEEDS constraints!)
+- ❌ Execute `/project-plan` if context.md doesn't exist and play_level is Build or Platform (PRD NEEDS constraints!)
 - ❌ Skip asking clarification questions (ambiguity causes rework)
 - ❌ Modify specs without reading current versions first
 - ❌ Generate commits without learning tags when patterns discovered
@@ -1322,8 +1391,8 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 5.0.0  
-**Updated**: 2026-02-17  
+**Speck Version**: 6.0.1  
+**Updated**: 2026-03-22  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 
 **When you have questions**: Ask to explain @.speck/README.md or specific skills from `.cursor/skills/`.
