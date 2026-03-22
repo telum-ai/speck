@@ -4,9 +4,6 @@ description: Load to define team constraints, compliance requirements, tech stac
 disable-model-invocation: false
 ---
 
----
-description: Load to define team constraints, compliance requirements, tech stack boundaries, and non-functional requirements. Produces context.md — required for Build and Platform play levels before /project-plan. Run after project-clarify.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

@@ -4,9 +4,6 @@ description: Load when any error, test failure, unexpected behavior, or broken w
 disable-model-invocation: false
 ---
 
----
-description: Load when any error, test failure, unexpected behavior, or broken workflow occurs during Speck execution. Provides structured root-cause analysis and treats errors as learning opportunities captured in .learning.log.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

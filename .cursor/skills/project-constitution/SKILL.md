@@ -4,9 +4,6 @@ description: Load (Platform play level only) to define technical principles and 
 disable-model-invocation: false
 ---
 
----
-description: Load (Platform play level only) to define technical principles and architectural guardrails for the project. Produces constitution.md — optional but valuable when a team needs explicit coding standards, governance rules, or non-negotiable constraints.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

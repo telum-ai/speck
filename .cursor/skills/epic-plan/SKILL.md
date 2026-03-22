@@ -4,9 +4,6 @@ description: Load after epic.md exists (and optional architecture/journey/wirefr
 disable-model-invocation: false
 ---
 
----
-description: Load after epic.md exists (and optional architecture/journey/wireframes) to produce epic-tech-spec.md with the full technical design. Required before epic-breakdown. Use when user says 'plan this epic' or 'write the tech spec'.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

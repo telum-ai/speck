@@ -4,9 +4,6 @@ description: Load when a user has a vague idea, problem, or inspiration but isn'
 disable-model-invocation: false
 ---
 
----
-description: Load when a user has a vague idea, problem, or inspiration but isn't sure what to build. Use before /project-specify when the project concept needs crystallizing from loose thoughts into something concrete.
----
 
 User input:
 

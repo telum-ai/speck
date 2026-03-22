@@ -4,9 +4,6 @@ description: Load after project.md exists to fill gaps through targeted Q&A. Use
 disable-model-invocation: false
 ---
 
----
-description: Load after project.md exists to fill gaps through targeted Q&A. Use when project goals, target users, or scope feel underspecified. Run before project-context or project-architecture to prevent rework downstream.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

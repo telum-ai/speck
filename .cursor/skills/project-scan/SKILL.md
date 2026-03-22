@@ -4,9 +4,6 @@ description: Load for brownfield projects to quickly survey the existing codebas
 disable-model-invocation: false
 ---
 
----
-description: Load for brownfield projects to quickly survey the existing codebase architecture and identify potential epic areas. Run after project-import and before project-specify — provides directional code landscape for downstream commands.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

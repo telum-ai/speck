@@ -4,9 +4,6 @@ description: Load after foundation artifacts exist (context.md for Build; archit
 disable-model-invocation: false
 ---
 
----
-description: Load after foundation artifacts exist (context.md for Build; architecture.md for Platform) to create PRD.md and the full epic structure. The central planning command — run before any epic work begins. Use when user says 'plan the project' or 'what are the epics?'.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

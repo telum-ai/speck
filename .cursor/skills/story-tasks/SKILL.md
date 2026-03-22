@@ -4,9 +4,6 @@ description: Load after plan.md (and optional ui-spec.md) to generate the step-b
 disable-model-invocation: false
 ---
 
----
-description: Load after plan.md (and optional ui-spec.md) to generate the step-by-step implementation checklist (tasks.md). Required before story-implement. Use when user says 'create tasks', 'break this into steps', or moves from planning to implementation.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

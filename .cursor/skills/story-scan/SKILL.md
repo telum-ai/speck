@@ -4,9 +4,6 @@ description: Load for brownfield stories where existing code must be understood 
 disable-model-invocation: false
 ---
 
----
-description: Load for brownfield stories where existing code must be understood before planning. Use when a story extends, modifies, or integrates with significant existing functionality. Produces codebase-scan.md — skip for fully greenfield stories.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

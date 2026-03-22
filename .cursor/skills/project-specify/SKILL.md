@@ -4,9 +4,6 @@ description: Load at the very start of a new project when the user describes wha
 disable-model-invocation: false
 ---
 
----
-description: Load at the very start of a new project when the user describes what they want to build, or to update an existing project.md. Produces project.md — must run before project-clarify, project-context, and all downstream project commands.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

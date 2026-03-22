@@ -4,9 +4,6 @@ description: Load after epic.md exists but scope, boundaries, or technical appro
 disable-model-invocation: false
 ---
 
----
-description: Load after epic.md exists but scope, boundaries, or technical approach are ambiguous. Use when acceptance criteria are missing or the epic could be interpreted multiple ways. Run before epic-outline or epic-plan to prevent rework.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

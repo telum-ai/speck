@@ -4,9 +4,6 @@ description: Load (required for Platform, optional for Build) to design the syst
 disable-model-invocation: false
 ---
 
----
-description: Load (required for Platform, optional for Build) to design the system architecture before project-plan. Produces architecture.md — run after project-context and before project-plan. Never run /project-plan before this on Platform projects.
----
 
 User input:
 

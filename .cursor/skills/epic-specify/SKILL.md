@@ -4,9 +4,6 @@ description: Load when starting work on an epic — either enhancing a placehold
 disable-model-invocation: false
 ---
 
----
-description: Load when starting work on an epic — either enhancing a placeholder created by project-plan, or creating a new epic from scratch. Use when user says 'let's work on [epic name]' or 'start the [feature] epic'. Produces epic.md — required before all other epic commands.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

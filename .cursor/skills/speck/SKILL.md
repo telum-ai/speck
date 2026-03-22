@@ -4,9 +4,6 @@ description: Universal entry point — load when the user starts with /speck [de
 disable-model-invocation: false
 ---
 
----
-description: Universal entry point — load when the user starts with /speck [description] or isn't sure which command to use. Detects play level, current project state, and routes to the right workflow (project/epic/story). Always start here when intent or current phase is unclear.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

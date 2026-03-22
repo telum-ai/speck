@@ -4,9 +4,6 @@ description: Load for brownfield epics to analyze existing code patterns and imp
 disable-model-invocation: false
 ---
 
----
-description: Load for brownfield epics to analyze existing code patterns and implementations relevant to this epic's domain before planning. Use when the epic modifies or extends significant existing functionality. Skip for fully greenfield epics.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

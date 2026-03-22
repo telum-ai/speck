@@ -4,9 +4,6 @@ description: Load before story-plan when a story involves unfamiliar technology,
 disable-model-invocation: false
 ---
 
----
-description: Load before story-plan when a story involves unfamiliar technology, needs research, or has significant unknowns about the right approach. Optional — skip for stories with a clear, proven implementation path already established in the project.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

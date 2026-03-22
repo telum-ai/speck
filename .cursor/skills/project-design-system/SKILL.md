@@ -4,9 +4,6 @@ description: Load to create design tokens, component patterns, and visual standa
 disable-model-invocation: false
 ---
 
----
-description: Load to create design tokens, component patterns, and visual standards before planning. Produces design-system.md — use when visual consistency is critical or when the project lacks an established design system. Run before project-plan.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

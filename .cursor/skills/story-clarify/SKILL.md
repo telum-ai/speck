@@ -4,9 +4,6 @@ description: Load after spec.md exists but requirements are vague, acceptance cr
 disable-model-invocation: false
 ---
 
----
-description: Load after spec.md exists but requirements are vague, acceptance criteria are missing, or scope is unclear. Run before story-plan to surface ambiguities before technical decisions are made. Encodes answers directly back into spec.md.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

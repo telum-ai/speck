@@ -4,9 +4,6 @@ description: REQUIRED before story-implement — never skip. Load after tasks.md
 disable-model-invocation: false
 ---
 
----
-description: REQUIRED before story-implement — never skip. Load after tasks.md is generated to cross-check spec.md, plan.md, and tasks.md for consistency, gaps, and issues. Catches problems before any code is written — a non-destructive quality gate.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

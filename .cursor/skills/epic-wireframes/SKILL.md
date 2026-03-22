@@ -4,9 +4,6 @@ description: Load for UX-heavy epics after epic-journey to create screen-by-scre
 disable-model-invocation: false
 ---
 
----
-description: Load for UX-heavy epics after epic-journey to create screen-by-screen wireframes for all states. Produces wireframes.md — input for epic-plan. Skip for backend-only or API epics.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

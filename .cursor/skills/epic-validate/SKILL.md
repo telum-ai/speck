@@ -4,9 +4,6 @@ description: Load after all stories in an epic are individually validated to ver
 disable-model-invocation: false
 ---
 
----
-description: Load after all stories in an epic are individually validated to verify the epic's goals were achieved as a whole. Produces epic validation report — required before epic-retrospective.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

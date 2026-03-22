@@ -4,9 +4,6 @@ description: Load when an epic has unique technical principles that extend or ov
 disable-model-invocation: false
 ---
 
----
-description: Load when an epic has unique technical principles that extend or override the project constitution. Produces epic-level constitution.md — optional, skip when the project constitution is sufficient for this epic's concerns.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

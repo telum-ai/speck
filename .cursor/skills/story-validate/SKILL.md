@@ -4,9 +4,6 @@ description: Load after implementation is complete to verify spec compliance, ex
 disable-model-invocation: false
 ---
 
----
-description: Load after implementation is complete to verify spec compliance, execute acceptance tests, and produce validation-report.md. Required before story-retrospective. Use when user says 'is this done?', 'validate', 'test this', or implementation is marked complete.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

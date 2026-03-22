@@ -4,9 +4,6 @@ description: Load for brownfield projects where epics haven't been defined yet. 
 disable-model-invocation: false
 ---
 
----
-description: Load for brownfield projects where epics haven't been defined yet. Analyzes existing code and documentation to discover natural epic boundaries. Use before epic-specify on brownfield projects with no existing epic structure.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

@@ -4,9 +4,6 @@ description: Load after epic-validate passes to synthesize all story-retro.md fi
 disable-model-invocation: false
 ---
 
----
-description: Load after epic-validate passes to synthesize all story-retro.md files, validate cross-story patterns, and produce epic-retro.md. Feeds the project retrospective — run after every completed epic.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

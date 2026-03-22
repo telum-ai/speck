@@ -4,9 +4,6 @@ description: Load when a story has significant UI work — multiple components, 
 disable-model-invocation: false
 ---
 
----
-description: Load when a story has significant UI work — multiple components, interaction states, animations, or complex layouts. Run after story-plan and before story-tasks. Produces ui-spec.md with exact styling, component hierarchy, and interaction details. Required for UI-heavy stories; skip for backend/API-only stories.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

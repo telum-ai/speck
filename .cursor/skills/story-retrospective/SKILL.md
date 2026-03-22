@@ -4,9 +4,6 @@ description: Load after story-validate produces a PASS result to mine .learning.
 disable-model-invocation: false
 ---
 
----
-description: Load after story-validate produces a PASS result to mine .learning.log and git commits and produce story-retro.md. Run after every completed story — essential for feeding learnings into the epic retrospective and improving future stories.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 

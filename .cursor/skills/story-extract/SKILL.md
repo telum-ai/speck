@@ -4,9 +4,6 @@ description: Load when code exists but no spec does — reverse-engineering stor
 disable-model-invocation: false
 ---
 
----
-description: Load when code exists but no spec does — reverse-engineering story documentation from an existing implementation. Use for brownfield stories, code written before Speck was adopted, or when a feature was built without going through the spec flow.
----
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 
