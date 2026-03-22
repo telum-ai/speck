@@ -288,6 +288,38 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
    - If accessibility issues found → Add to story-retro.md as GOTCHA
    - If visual test command failed → Document in commit as GOTCHA tag
 
+10.7. **User Reachability Check** (REQUIRED for stories with any UI):
+
+   **This prevents the "feature exists but nobody can use it" problem.**
+
+   SKIP ONLY if: story is pure backend, API-only, CLI-only, migration, or infrastructure.
+
+   | Check | Question | How to Verify | FAIL if |
+   |-------|----------|---------------|---------|
+   | **Discoverability** | Can a user find this feature from navigation? | Trace the path from app entry/home to this feature | No navigation path exists to the feature |
+   | **Auth** | Can a user authenticate to reach this? | Check if real auth flow (login page, session) exists | Feature requires dev-mode headers, hardcoded tokens, or UUIDs |
+   | **Scaffolding** | Are dev shortcuts still in the UI? | Inspect inputs, forms, API calls | UUID text fields, debug headers, x-user-id inputs remain |
+   | **End-to-end** | Can a user complete this workflow? | Attempt the user story from spec.md as a real user | Workflow requires developer knowledge to operate |
+   | **Feedback** | Does every action have user feedback? | Check success/error/loading states | Silent failures, missing confirmations, no loading states |
+
+   **Generate User Reachability Section** in validation-report.md:
+   ```
+   ## User Reachability
+
+   | Check | Status | Evidence |
+   |-------|--------|----------|
+   | Navigation path exists | ✅/❌ | [How user reaches this feature] |
+   | Real auth (no dev shortcuts) | ✅/❌ | [Auth method used] |
+   | No scaffolding in UI | ✅/❌ | [Any dev-mode elements found] |
+   | User can complete workflow | ✅/❌ | [End-to-end result] |
+   | Action feedback present | ✅/❌ | [Loading/success/error states] |
+
+   **Reachability**: [REACHABLE / PARTIAL / UNREACHABLE]
+   ```
+
+   **If UNREACHABLE**: Validation is **FAIL** — the feature works but users can't use it.
+   **If PARTIAL**: Validation is **CONDITIONAL_PASS** — list what's missing.
+
 11. Code audit (manual, REQUIRED — "meets requirements" is not enough):
    - Identify the change surface:
      * List changed files (prefer: `git diff --name-only` and `git diff` for the story’s branch)

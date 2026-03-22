@@ -214,4 +214,98 @@ Each auditor returns PASS | FAIL | PARTIAL with evidence.
    [If CONDITIONAL]: Complete conditions, then deploy
    ```
 
-Note: This is the final gate before production deployment. Be thorough and honest about readiness.
+---
+
+## Full JTBD Smoke Test (REQUIRED — Product-Level Coherence)
+
+**This is the ultimate composition check** — verifying the product works as a whole, not just as a collection of validated epics.
+
+### Step A: Core JTBD End-to-End Walkthrough
+
+1. Read `project.md` and identify the **primary job the user hired this product to do**
+2. Start from scratch — open the app as a brand-new user would
+3. Attempt to complete the core JTBD without any developer knowledge:
+   - No dev-mode headers
+   - No hardcoded UUIDs or API keys
+   - No terminal commands or direct API calls
+   - No "you need to go to the other platform for this"
+4. Record every step, every dead end, every moment of confusion
+
+### Step B: Cross-Epic Flow Verification
+
+For each dependency arrow in `epics.md`:
+- Test the actual data/auth/navigation flow between epics
+- Verify a user can move between features from different epics seamlessly
+- Check that context (auth, org, user) carries through the entire product
+
+### Step C: Platform Coherence
+
+If the project spans multiple platforms (web + mobile, desktop + API, etc.):
+- Each platform MUST deliver a usable version of the core JTBD
+- "Use the other platform for this" is acceptable for secondary features only
+- Primary features must be reachable on every supported platform
+
+### Step D: No Dead Ends
+
+- Every reachable feature has a way back
+- Every user action has feedback (success, error, loading)
+- No features require dev knowledge to operate
+- No scaffolding (UUID inputs, debug headers) remains in production UI
+
+### Step E: Generate JTBD Smoke Test Section
+
+Include in `project-validation-report.md`:
+
+```markdown
+## Product Coherence — JTBD Smoke Test
+
+**Primary JTBD**: [From project.md — what the user hired this product to do]
+**Test Date**: [When performed]
+**Platforms Tested**: [Web, Mobile, etc.]
+
+### Core Journey
+
+| Step | User Action | Expected | Actual | Status |
+|------|-------------|----------|--------|--------|
+| 1 | First visit / signup | [Expected] | [Actual] | ✅/❌ |
+| 2 | [Next action] | [Expected] | [Actual] | ✅/❌ |
+| ... | ... | ... | ... | ... |
+
+**JTBD Completion**: [COMPLETE / PARTIAL / BLOCKED]
+
+### Cross-Epic Flows
+
+| Flow | Epics Involved | Status | Issues |
+|------|---------------|--------|--------|
+| [User journey spanning epics] | E001 → E003 | ✅/❌ | [Details] |
+| ... | ... | ... | ... |
+
+### Platform Coherence
+
+| Platform | Core JTBD Completable? | Missing Features | Status |
+|----------|----------------------|------------------|--------|
+| Web | Y/N | [List] | ✅/❌ |
+| Mobile | Y/N | [List] | ✅/❌ |
+
+### Dead Ends Found
+
+- [List any features that are unreachable, have no navigation, or require dev knowledge]
+
+### Scaffolding Remaining
+
+- [List any dev-mode shortcuts still in production UI]
+```
+
+### Step F: JTBD Status Overrides Project Status
+
+| JTBD Smoke Test | Project Status |
+|-----------------|----------------|
+| COMPLETE | GO (if all other checks pass) |
+| PARTIAL | CONDITIONAL — list missing pieces |
+| BLOCKED | NO-GO — product cannot deliver its core value |
+
+**CRITICAL**: A project with all epics validated but a BLOCKED JTBD is a NO-GO.
+
+---
+
+Note: This is the final gate before production deployment. Be thorough and honest about readiness. Check both bottom-up (all specs met) AND top-down (product actually works for users).

@@ -225,4 +225,90 @@ Each auditor returns PASS | FAIL | PARTIAL with evidence.
    - epic-punch-list.md
    ```
 
-Note: Epic validation ensures the feature set works as a cohesive whole.
+---
+
+## JTBD Walkthrough (REQUIRED — Top-Down Product Coherence)
+
+**This section prevents the composition fallacy** — where each story passes individually but the epic doesn't work as a product.
+
+After all bottom-up validation passes (steps 1-10), perform a **top-down walkthrough** of the epic's core JTBD:
+
+### Step A: Identify the Epic's Core JTBD
+
+Read `epic.md` and extract:
+- What workflow does this epic enable?
+- What is the user trying to accomplish?
+- What does success look like from the user's perspective?
+
+### Step B: Walk the Journey End-to-End
+
+Starting from the app's entry point (login page, home screen, etc.):
+1. Attempt to complete the epic's core workflow as a real user would
+2. Do NOT use dev shortcuts, hardcoded UUIDs, or API headers
+3. Do NOT assume knowledge of internal IDs or system internals
+4. Record every step, noting what works and what doesn't
+
+### Step C: Check Composition
+
+| Check | Question | FAIL if |
+|-------|----------|---------|
+| Discoverability | Can a user find every feature in this epic? | Features exist but aren't reachable from navigation |
+| Auth continuity | Does authentication work through the entire flow? | Dev-mode headers, hardcoded tokens, or missing login |
+| Scaffolding | Are any dev shortcuts still in the UI? | UUID text fields, debug panels, placeholder auth |
+| Connected flow | Do the stories connect into a coherent journey? | Stories are isolated islands with no navigation between them |
+| Platform coverage | If multi-platform, does each platform deliver usable experience? | "Use the other platform for this" for core features |
+
+### Step D: Cross-Epic Integration (if dependencies exist)
+
+Read `epics.md` or `epic-breakdown.md` for this epic's dependencies:
+- For each upstream epic: verify data/auth/context flows correctly into this epic
+- For each downstream epic: verify this epic exposes what dependents need
+- Test navigation between features from different epics
+- Verify shared state (auth tokens, user context, org context) carries through
+
+### Step E: Generate JTBD Walkthrough Section
+
+Include in `epic-validation-report.md`:
+
+```markdown
+## JTBD Walkthrough
+
+**Core Job**: [What the user is trying to accomplish]
+**Entry Point**: [Where the user starts — e.g., login page, home dashboard]
+**Date**: [When walkthrough was performed]
+
+### Journey Steps
+
+| Step | User Action | Expected Result | Actual Result | Status |
+|------|-------------|-----------------|---------------|--------|
+| 1 | Open app | See login/home | [What happened] | ✅/❌ |
+| 2 | Navigate to [feature] | Find via [nav element] | [What happened] | ✅/❌ |
+| ... | ... | ... | ... | ... |
+
+### Composition Assessment
+
+- **JTBD Completion**: [COMPLETE / PARTIAL / BLOCKED]
+- **Blocking Issues**: [List if not COMPLETE]
+- **Scaffolding Remaining**: [List any dev shortcuts still in UI]
+- **Platform Coverage**: [Which platforms deliver this workflow]
+
+### Cross-Epic Integration
+
+- **Upstream Dependencies Tested**: [List epics and results]
+- **Downstream Interfaces Verified**: [List epics and results]
+- **Shared State**: [Auth/context carries through? Y/N]
+```
+
+### Step F: Determine Final Status
+
+**CRITICAL**: If JTBD completion is BLOCKED or PARTIAL, the epic validation is **FAIL** — regardless of whether all individual story validations passed. Each part working is not enough; the whole must work.
+
+| JTBD Status | Epic Validation |
+|-------------|-----------------|
+| COMPLETE | PASS (if all other checks also pass) |
+| PARTIAL | CONDITIONAL_PASS — list what's missing, create punch-list items |
+| BLOCKED | FAIL — users cannot accomplish the core job |
+
+---
+
+Note: Epic validation ensures the feature set works as a cohesive whole — both bottom-up (spec compliance) AND top-down (product coherence).

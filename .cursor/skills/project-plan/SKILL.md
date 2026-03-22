@@ -16,8 +16,33 @@ $ARGUMENTS
 Read `.speck/project.json` (if it exists) for `play_level`.
 
 - **Sprint**: Tell the user: "Sprint projects use the one-page PRD in `sprint-prd-template.md`, not a full project plan. If the project is growing, run `/project-promote` to Build level first, then return here."
-- **Build**: Proceed, but skip constitution/design-system prerequisites. Epics are supported; recommend context.md but not architecture.md unless the project warrants it.
+- **Build**: Proceed, but skip constitution/design-system prerequisites. Epics are supported; recommend context.md but not architecture.md unless the project warrants it. **HOWEVER**: After drafting epics, check the epic count — see "Build Complexity Gate" below.
 - **Platform** (or no project.json): Full flow below.
+
+### Build Complexity Gate (CRITICAL)
+
+If `play_level` is "build" and the plan produces **4 or more epics**, STOP and warn the user:
+
+```
+⚠️ Build Complexity Gate Triggered
+
+This project has [N] epics — that's a full product, not a lightweight Build.
+Build-level shortcuts are not appropriate at this scale.
+
+The following artifacts are now REQUIRED before continuing:
+- architecture.md — How do these [N] epics connect as a system?
+- ux-strategy.md — How does a user navigate between [N] sets of features?
+
+Without these, each epic will be designed in isolation and the product
+will suffer from the composition fallacy (each part works, whole doesn't).
+
+Options:
+1. Run /project-promote to Platform level (recommended for 6+ epics)
+2. Run /project-architecture + /project-ux before continuing (minimum for 4-5 epics)
+3. Reduce scope to 3 or fewer epics (simplify the product)
+```
+
+If the user chooses option 2 or insists on continuing: require `architecture.md` and `ux-strategy.md` before producing the final PRD. The gate is non-negotiable for 4+ epics.
 
 ---
 

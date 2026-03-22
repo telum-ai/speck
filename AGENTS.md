@@ -31,20 +31,35 @@ Speck adapts its rigor to match your project's stage. **Before starting any task
 
 **⚠️ No `project.json` = Platform** (backward compatible with all pre-6.0 Speck projects)
 
+### Build Complexity Gate (CRITICAL)
+
+**Build-level shortcuts are NOT appropriate for large projects.** If a Build project has **4+ epics**, the following artifacts become **mandatory** (same as Platform):
+
+| Artifact | Why |
+|----------|-----|
+| `architecture.md` | 4+ epics = multi-system — how do epics connect? Without this, each epic is designed in isolation. |
+| `ux-strategy.md` | 4+ epics with UI = real product — how does the user navigate between features? Without this, each epic builds its own disconnected UI. |
+
+**`/project-plan` enforces this**: If play_level is "build" and the plan produces 4+ epics, it MUST warn the user and require architecture.md and ux-strategy.md before proceeding. Otherwise the project risks the **composition fallacy** — each epic passes validation individually, but the product doesn't work as a whole.
+
+**Promote instead**: If a Build project hits 4+ epics, seriously consider `/project-promote` to Platform level rather than patching Build with extra requirements.
+
 ### Why This Matters for Reading the Rest of AGENTS.md
 
 The "full Platform flow" described throughout this document (`domain → ux → context → constitution → architecture → design-system → plan`) is **NOT required for Sprint or Build projects**. Whenever AGENTS.md says "REQUIRED" or "CRITICAL", interpret it through the lens of the current play level:
 
-| Claim in docs | Sprint | Build | Platform |
-|---------------|--------|-------|----------|
-| `architecture.md` REQUIRED before plan | ✗ Skip | Optional | ✓ Required |
-| `constitution.md` recommended | ✗ Skip | ✗ Skip | Optional |
-| `design-system.md` recommended | ✗ Skip | ✗ Skip | Optional |
-| Full epic + story artifacts required | ✗ Skip | spec + plan | Full artifacts |
+| Claim in docs | Sprint | Build (1-3 epics) | Build (4+ epics) | Platform |
+|---------------|--------|-------------------|-------------------|----------|
+| `architecture.md` REQUIRED before plan | ✗ Skip | Optional | ✓ Required | ✓ Required |
+| `ux-strategy.md` recommended | ✗ Skip | Optional | ✓ Required (if UI) | Optional |
+| `constitution.md` recommended | ✗ Skip | ✗ Skip | ✗ Skip | Optional |
+| `design-system.md` recommended | ✗ Skip | ✗ Skip | ✗ Skip | Optional |
+| Full epic + story artifacts required | ✗ Skip | spec + plan | spec + plan | Full artifacts |
 
 **Abbreviated flows by play level**:
 - **Sprint**: `project-specify` → ship it → `project-promote` if it gets traction
-- **Build**: `specify → clarify → context → [architecture] → plan → epics → stories`
+- **Build (1-3 epics)**: `specify → clarify → context → [architecture] → plan → epics → stories`
+- **Build (4+ epics)**: `specify → clarify → context → ux-strategy → architecture → plan → epics → stories`
 - **Platform**: Everything described in the sections below
 
 ### Play Level Signals (for NEW projects where `project.json` doesn't exist yet)
@@ -289,14 +304,25 @@ Each skill file contains step-by-step instructions for you to execute when user 
 3. [OPTIONAL: epic-architecture.md → Creates epic-architecture.md (technical design)]
    → RECOMMENDED when: Cross-cutting concerns, new patterns, complex integrations
    → SKIP when: Simple CRUD, follows existing patterns, single-concern epic
-4. epic-plan.md → Creates epic-tech-spec.md (USES: architecture if available)
-   [UX-HEAVY: epic-journey.md + epic-wireframes.md → Before plan]
+4. [IF USER-FACING UI: epic-journey.md + epic-wireframes.md → REQUIRED before plan]
+   → Maps the user path through this epic — prevents "each story builds disconnected UI"
+   → SKIP ONLY for: backend-only, API-only, CLI-only, infra/devops epics
+5. epic-plan.md → Creates epic-tech-spec.md (USES: architecture if available)
    [COMPLEX: /epic-constitution → Creates `constitution.md` (epic principles)]
-5. epic-breakdown.md → Creates epic-breakdown.md (USES: tech-spec)
-6. epic-analyze.md → Quality check
-7. epic-validate.md → Completion verification
+6. epic-breakdown.md → Creates epic-breakdown.md (USES: tech-spec)
+7. epic-analyze.md → Quality check
+8. epic-validate.md → Completion verification + JTBD walkthrough (see Product Coherence)
    [AFTER EPIC: epic-retrospective.md → Reads story retros, validates patterns]
 ```
+
+**⚠️ UX Commands Are REQUIRED for UI Epics — Not Optional**
+
+For any epic with user-facing UI, `/epic-journey` and `/epic-wireframes` are **required** before `/epic-plan`. Without them:
+- No user journey is mapped → features exist but aren't connected
+- No wireframes exist → each story invents its own UI independently
+- The epic passes validation but users can't complete the workflow
+
+This is a hard gate, not a suggestion. Skip only for genuinely non-UI epics.
 
 **Epic Architecture Decision Criteria**:
 | Include `/epic-architecture` When | Skip When |
@@ -326,12 +352,12 @@ Each skill file contains step-by-step instructions for you to execute when user 
 8. story-retrospective.md → Mines .learning.log + commits → Creates story-retro.md
 ```
 
-**Decision Gates for Optional Commands**:
-| Command | Include When |
-|---------|--------------|
-| `story-outline` | Complex tech decisions, unfamiliar stack, needs research |
-| `story-scan` | Brownfield - extending existing codebase |
-| `story-ui-spec` | UI-heavy with multiple components/states/animations |
+**Decision Gates for Optional/Required Commands**:
+| Command | When |
+|---------|------|
+| `story-outline` | Optional — complex tech decisions, unfamiliar stack, needs research |
+| `story-scan` | Optional — brownfield, extending existing codebase |
+| `story-ui-spec` | **REQUIRED if story has any user-facing UI.** Skip only for pure backend/API/CLI stories |
 
 **Note**: `story-analyze` is REQUIRED, not optional. It catches issues before implementation.
 
@@ -1077,9 +1103,80 @@ Use verb-led prefixes for clear intent:
 - Production deployment (after `/project-validate`)
 
 ### Validation Gates
-- Story: `/story-validate` (requirements, tests, performance, constitution)
-- Epic: `/epic-validate` (all stories complete, integration verified)
-- Project: `/project-validate` (comprehensive go/no-go decision)
+- Story: `/story-validate` (requirements, tests, performance, constitution, **user-reachability**)
+- Epic: `/epic-validate` (all stories complete, integration verified, **JTBD walkthrough**, **cross-epic integration**)
+- Project: `/project-validate` (comprehensive go/no-go decision, **end-to-end JTBD completion**)
+
+## 🧪 Product Coherence Validation (CRITICAL — Prevents the Composition Fallacy)
+
+**The Composition Fallacy**: Each story/epic passes validation individually, but the product doesn't work as a whole. Every API returns 200, every component renders, but no user can complete a workflow.
+
+### The Fix: Top-Down JTBD Walkthrough
+
+**Bottom-up validation** (spec compliance) is necessary but insufficient. Speck also requires **top-down validation** — actually attempting to complete the core JTBD from a user's perspective.
+
+### Story-Level: User Reachability Check
+
+After verifying spec compliance, `/story-validate` MUST also check:
+
+> **"Can a real user reach and use this feature?"**
+
+| Check | Question | FAIL if |
+|-------|----------|---------|
+| Discoverability | Is this feature reachable from navigation/UI? | Feature exists but has no entry point |
+| Auth | Can a user authenticate to reach this? | Feature requires dev-mode headers or hardcoded UUIDs |
+| Scaffolding | Are any dev shortcuts still in the UI? | UUID text fields, debug headers, placeholder auth |
+| End-to-end | Can a user complete the story's workflow without developer knowledge? | Workflow requires knowing internal IDs or API details |
+
+If any check fails, validation status is **CONDITIONAL_PASS** at best — the code works but the feature isn't usable.
+
+### Epic-Level: JTBD Walkthrough
+
+After all story validations pass, `/epic-validate` MUST perform a **top-down JTBD walkthrough**:
+
+1. **Identify the epic's core JTBD** from `epic.md` — what workflow does this epic enable?
+2. **Walk the journey end-to-end** — start from app entry, attempt to complete the full workflow
+3. **Check composition** — do the stories connect into a coherent flow, or are they isolated islands?
+4. **Verify navigation** — can a user find and move between all features in this epic?
+5. **Check auth continuity** — does authentication carry through the entire flow?
+
+**Output**: Include a "JTBD Walkthrough" section in `epic-validation-report.md`:
+```
+## JTBD Walkthrough
+
+Core Job: [What the user is trying to accomplish]
+Entry Point: [Where the user starts]
+Path: [Step-by-step journey through the epic's features]
+
+| Step | Action | Result | Status |
+|------|--------|--------|--------|
+| 1 | Open app | See [what?] | ✅/❌ |
+| 2 | Navigate to [feature] | Can find it via [how?] | ✅/❌ |
+| ... | ... | ... | ... |
+
+JTBD Completion: [COMPLETE / PARTIAL / BLOCKED]
+Blocking Issues: [List if not COMPLETE]
+```
+
+**If JTBD completion is BLOCKED or PARTIAL**: Epic validation is **FAIL** regardless of individual story results.
+
+### Epic-Level: Cross-Epic Integration Check
+
+For epics that depend on or are depended on by other epics (per `epics.md` dependency map):
+
+1. **Test the arrows** — if Epic A produces data that Epic B consumes, verify the handoff works end-to-end
+2. **Check shared state** — auth tokens, user context, org context carry between epics
+3. **Verify navigation** — can users move between features from different epics?
+4. **Platform coverage** — if features span web + mobile, verify both platforms connect
+
+### Project-Level: Full JTBD Smoke Test
+
+`/project-validate` MUST include:
+
+1. **Core JTBD walkthrough** — complete the primary job from the project's `project.md`
+2. **Cross-epic flow verification** — user journeys that span multiple epics
+3. **Platform coherence** — if multi-platform, verify each platform delivers a usable experience
+4. **No dead ends** — every reachable feature has a way back, every action has feedback
 
 ## 🤖 Model Selection (IMPORTANT!)
 
@@ -1284,9 +1381,11 @@ When user makes a request, determine if they need a spec or can code directly:
 ## 📊 Validate Before Marking Complete
 
 Each level has validation requirements (detailed in validation commands):
-- **Story**: Requirements implemented, tests pass, performance met, constitution compliant
-- **Epic**: All stories validated, epic goals achieved, integration verified
-- **Project**: All epics complete, project goals achieved, end-to-end validated
+- **Story**: Requirements implemented, tests pass, performance met, constitution compliant, **user can reach and use the feature** (no dev shortcuts)
+- **Epic**: All stories validated, epic goals achieved, integration verified, **JTBD walkthrough passes** (user can complete the full workflow), **cross-epic integration tested**
+- **Project**: All epics complete, project goals achieved, end-to-end validated, **core JTBD smoke test passes** (user can complete the product's primary job from scratch)
+
+**CRITICAL**: Bottom-up validation (spec compliance) is necessary but NOT sufficient. Top-down validation (can users actually use this?) is equally required. See the [Product Coherence Validation](#-product-coherence-validation-critical--prevents-the-composition-fallacy) section.
 
 Always run retrospectives after validation passes.
 
@@ -1391,7 +1490,7 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 6.0.3  
+**Speck Version**: 6.1.0  
 **Updated**: 2026-03-22  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 
