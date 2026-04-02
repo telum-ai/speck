@@ -212,12 +212,12 @@ graph TD
     epicPlan -.-> epicConstitution
     epicConstitution --> epicBreakdown
     
-    epicBreakdown --> validateEpic{Validation}
-    
-    validateEpic --> epicAnalyze
-    epicAnalyze --> epicValidate
-    epicValidate --> |GO| stories["Start Story Development"]
-    epicValidate --> |NO-GO| epicSpecify
+    epicBreakdown --> epicAnalyze
+    epicAnalyze --> |GO| stories["Story Development<br/>(specify→plan→implement→validate per story)"]
+    epicAnalyze --> |NO-GO| epicSpecify
+    stories --> epicValidate
+    epicValidate --> |PASS| epicRetro["/epic-retrospective"]
+    epicValidate --> |FAIL| stories
     
     epicSpecify["/epic-specify"]
     epicDiscover["/epic-discover"]
@@ -228,16 +228,18 @@ graph TD
     epicWireframes["/epic-wireframes"]
     epicConstitution["/epic-constitution"]
     epicBreakdown["/epic-breakdown"]
-    epicAnalyze["/epic-analyze"]
-    epicValidate["/epic-validate"]
+    epicAnalyze["/epic-analyze<br/>(pre-impl quality gate)"]
+    epicValidate["/epic-validate<br/>(post-impl, after all stories pass)"]
     
     style epicSpecify fill:#e1f5e1
     style epicClarify fill:#e1f5e1
     style epicArchitecture fill:#e1f5e1
     style epicPlan fill:#e1f5e1
     style epicBreakdown fill:#e1f5e1
-    style validateEpic fill:#ffe1e1
+    style epicAnalyze fill:#fff3e0
     style stories fill:#e1e1ff
+    style epicValidate fill:#ffe1e1
+    style epicRetro fill:#f3e5f5
 ```
 
 ### Story-Level Command Flow

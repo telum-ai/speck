@@ -304,8 +304,12 @@ Each skill file contains step-by-step instructions for you to execute when user 
 5. epic-plan.md → Creates epic-tech-spec.md (USES: architecture if available)
    [COMPLEX: /epic-constitution → Creates `constitution.md` (epic principles)]
 6. epic-breakdown.md → Creates epic-breakdown.md (USES: tech-spec)
-7. epic-analyze.md → Quality check
-8. epic-validate.md → Completion verification + JTBD walkthrough (see Product Coherence)
+7. epic-analyze.md → **Pre-implementation quality gate** on planning artifacts (spec + breakdown)
+   → Run BEFORE starting any story work; catches spec drift and missing coverage early
+8. **[STORY WORK]** → For each story: specify → clarify → plan → [ui-spec] → tasks → analyze → implement → validate → retrospective
+9. epic-validate.md → **Post-implementation** completion verification + JTBD walkthrough
+   → Run AFTER ALL stories are implemented and their `validation-report.md` shows PASS
+   → NOT a planning step — requires working software to validate against
    [AFTER EPIC: epic-retrospective.md → Reads story retros, validates patterns]
 ```
 
@@ -1234,7 +1238,7 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 6.1.4  
+**Speck Version**: 6.1.5  
 **Updated**: 2026-03-22  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 

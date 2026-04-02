@@ -207,8 +207,11 @@ This command benefits from parallel execution:
    1. Review tech spec with team
    2. Required: /epic-breakdown (generate story mapping and dependencies)
    3. Optional: /epic-constitution (if complex governance needed)
-   4. Validation: /epic-analyze then /epic-validate
-   5. Then: Start story development with /story-specify
+   4. Required: /epic-analyze (pre-implementation quality gate on spec + breakdown — run before ANY story work)
+   5. Then: Start story development with /story-specify for each story in the breakdown
+   
+   ⚠️  /epic-validate is NOT a planning step. Run it only AFTER all stories
+       are implemented and every story's validation-report.md shows PASS.
    ```
 
 Note: This tech spec becomes the blueprint for all story implementation within the epic.
