@@ -295,6 +295,14 @@ This command benefits from parallel execution:
      * Initial scope from PRD
      * Dependencies identified
      * Placeholder sections for details
+   - **CRITICAL — Lifecycle state for placeholder files**:
+     Set `**Current State**: Draft (Placeholder)` and mark the lifecycle checkboxes as:
+     ```
+     - [x] **Draft** - Placeholder created by `/project-plan` (not yet specified)
+     - [ ] **Specified** - epic.md created by `/epic-specify`
+     ```
+     **NEVER set `**Current State**: Specified` on a placeholder** — that would falsely signal
+     that `/epic-specify` has already been run and can be skipped.
    - Ready for /epic-specify to enhance
 
 9. Validation and review:

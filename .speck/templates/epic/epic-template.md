@@ -34,9 +34,15 @@ epic-clarify → epic-architecture → epic-plan → epic-breakdown → stories
 
 ## Epic Lifecycle State Tracking
 
+<!-- 
+  STATE RULES:
+  - /project-plan creates placeholders → set "Draft (Placeholder)", check only Draft box
+  - /epic-specify completes the spec   → set "Specified", check Draft + Specified boxes
+-->
 **Current State**: Specified
 
-- [x] **Specified** - epic.md created
+- [ ] **Draft** - Placeholder created by `/project-plan` (not yet specified)
+- [x] **Specified** - epic.md created by `/epic-specify`
 - [ ] **Clarified** - Ambiguities resolved (`/epic-clarify` complete)
 - [ ] **Architected** - epic-architecture.md created (`/epic-architecture` complete)
 - [ ] **Planned** - epic-tech-spec.md created (`/epic-plan` complete)

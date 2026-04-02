@@ -47,6 +47,10 @@ If epic.md exists (created by /project-plan):
    - Parse any pre-filled information
    - Extract epic name, ID, initial scope
    - Note which sections are placeholders
+   - **Check `**Current State**`**: If it reads `Draft (Placeholder)` or `Draft`, this is a
+     `/project-plan` placeholder — proceed with full enhance flow below.
+     If it already reads `Specified`, warn the user that `/epic-specify` appears to have been
+     run already and ask if they want to re-specify or refine.
 
 2. **Identify gaps**:
    - Which sections need completion?
@@ -62,6 +66,10 @@ If epic.md exists (created by /project-plan):
    - Keep epic ID and directory structure
    - Maintain any dependencies noted
    - Respect pre-defined scope boundaries
+
+5. **After completing the epic.md** (ENHANCE mode):
+   - Update `**Current State**: Specified`
+   - Mark lifecycle checkboxes: `- [x] **Draft**` (keep checked), `- [x] **Specified**`
 
 ## Mode 2: Create New Epic
 
@@ -206,7 +214,14 @@ Create epic directory:
    
    If epic seems too complex, suggest splitting and ask user approval.
 
-8. Save epic.md in epic directory
+8. Save epic.md in epic directory, ensuring:
+   - `**Current State**: Specified` is set in the lifecycle section
+   - The lifecycle checkboxes read:
+     ```
+     - [ ] **Draft** - Placeholder created by `/project-plan` (not yet specified)
+     - [x] **Specified** - epic.md created by `/epic-specify`
+     ```
+     (For ENHANCE mode where a Draft existed: check both Draft and Specified)
 
 9. Report completion based on mode:
 
