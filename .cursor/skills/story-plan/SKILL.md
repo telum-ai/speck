@@ -160,6 +160,19 @@ This command benefits from parallel execution:
    **IF neither exists AND story has UI requirements**:
    - WARN: "No project design documents found. Consider running `/project-ux` and `/project-design-system` for UI consistency."
    - Proceed but note in plan.md that design decisions may need alignment later
+
+   **Load Epic-Level UX Artifacts** (for UI stories — travel up to the EPIC_DIR):
+   - Determine EPIC_DIR by walking up from STORY_DIR (parent of `stories/`)
+   - `[EPIC_DIR]/user-journey.md` (from `/epic-journey`) — if present:
+     * Identify which journey stage this story implements
+     * Note the emotional target and pain points for that stage — these inform
+       UX quality requirements and error-handling UX in the plan
+   - `[EPIC_DIR]/wireframes.md` (from `/epic-wireframes`) — if present:
+     * Identify which screen(s) this story implements
+     * Note layout, interaction patterns, and responsive requirements
+     * Note in plan.md: "See wireframes.md [screen name] for visual spec — run `/story-ui-spec`
+       to translate these wireframes into implementation-ready UI spec before tasks"
+   - These are soft loads — do not block planning if absent, but DO use them when present
    
    **UI Component Detection** (for downstream guidance):
    - Check if this story has UI requirements by looking for:

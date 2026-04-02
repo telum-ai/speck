@@ -4,7 +4,34 @@
 **Project**: [Project Name]  
 **Created**: [Date]  
 **Status**: Draft  
-**Input**: `epic.md` (+ optional: `epic-architecture.md`, scans, research reports)
+**Input**: `epic.md` (+ optional: `epic-architecture.md`, `user-journey.md`, `wireframes.md`, scans, research reports)
+
+---
+
+## UX Design Context
+
+*Fill this section only if `user-journey.md` and/or `wireframes.md` exist for this epic.
+If neither exists for a UI epic, note "No UX artifacts — consider running /epic-journey and /epic-wireframes."*
+
+### Journey Stage → Story Mapping
+
+| Journey Stage | User Goal | Pain Point Addressed | Stories |
+|--------------|-----------|----------------------|---------|
+| [Stage name from user-journey.md] | [What user is trying to do] | [Pain point this epic resolves] | S001, S002 |
+
+### Screen Inventory (from wireframes.md)
+
+| Screen | Journey Stage | Responsive? | Implementing Story |
+|--------|--------------|-------------|-------------------|
+| [Screen name] | [Stage] | Y/N | S00X |
+
+### UX Quality Requirements
+
+Derived from emotional targets and pain points in `user-journey.md`:
+
+- **[Stage]**: [Emotional target] → Implementation requirement (e.g., "Reduce anxiety at checkout → inline validation, no page reload on error")
+- **Accessibility**: [Standards from ux-strategy.md]
+- **Performance perception**: [Any latency/feedback requirements driven by UX expectations]
 
 ---
 

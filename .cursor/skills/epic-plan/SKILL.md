@@ -39,6 +39,27 @@ This command benefits from parallel execution:
    - Related epic tech specs for consistency
    - If epic.md missing: ERROR "Run /epic-specify first"
 
+   **Load UX Design Artifacts (CRITICAL if UI epic)**:
+   - `[EPIC_DIR]/user-journey.md` → User journey map (from `/epic-journey`)
+     * If present: Extract stage names, touchpoints, pain points, emotional targets, and
+       opportunity areas. These directly shape story boundaries, UX quality requirements,
+       and the E2E section of the testing strategy.
+     * If absent on a UI epic: WARN "No user journey found. Consider running `/epic-journey`
+       before planning — the tech spec will lack UX-grounded story structure."
+   - `[EPIC_DIR]/wireframes.md` → Screen-by-screen wireframes (from `/epic-wireframes`)
+     * If present: Extract screen inventory, layout decisions, interaction patterns, and
+       responsive requirements. Map each screen to the story that implements it.
+     * If absent on a UI epic: WARN "No wireframes found. Consider running `/epic-wireframes`
+       before planning — otherwise story UI boundaries will be guessed during implementation."
+   - `specs/projects/[PROJECT_ID]/ux-strategy.md` → UX principles and accessibility standards
+   - `specs/projects/[PROJECT_ID]/design-system.md` → Design tokens and component patterns
+   
+   **Incorporate UX artifacts into the tech spec** (not just load them — USE them):
+   - Surface journey stages as story groupings (e.g., "Onboarding flow → S001–S003")
+   - Surface wireframe screen inventory as the UI story list in "Stories & Breakdown Guidance"
+   - Surface pain points and emotional targets as UX quality requirements
+   - Add a "UX Design Context" section to the generated epic-tech-spec.md
+
 2. **Architecture Decision Gate** (From OpenSpec: Only create detailed architecture when needed):
 
    Evaluate if this epic needs comprehensive architectural planning:

@@ -44,7 +44,9 @@ epic-clarify → epic-architecture → epic-plan → epic-breakdown → stories
 - [ ] **Draft** - Placeholder created by `/project-plan` (not yet specified)
 - [x] **Specified** - epic.md created by `/epic-specify`
 - [ ] **Clarified** - Ambiguities resolved (`/epic-clarify` complete)
-- [ ] **Architected** - epic-architecture.md created (`/epic-architecture` complete)
+- [ ] **Architected** - epic-architecture.md created (`/epic-architecture` complete) *(optional — skip for simple CRUD epics)*
+- [ ] **Journey Mapped** - user-journey.md created (`/epic-journey` complete) *(optional — required for UI epics)*
+- [ ] **Wireframes Designed** - wireframes.md created (`/epic-wireframes` complete) *(optional — required for UI epics)*
 - [ ] **Planned** - epic-tech-spec.md created (`/epic-plan` complete)
 - [ ] **Stories Mapped** - epic-breakdown.md created (`/epic-breakdown` complete)
 - [ ] **In Progress** - Stories being implemented

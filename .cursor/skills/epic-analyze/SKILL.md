@@ -23,6 +23,10 @@ Validate epic planning artifacts to identify issues before story implementation 
    
    **Note**: Research is now embedded in epic-tech-spec.md - no separate research.md to validate.
 
+   **Load UX artifacts (if present)**:
+   - `[EPIC_DIR]/user-journey.md` — check if journey stages are reflected in tech spec
+   - `[EPIC_DIR]/wireframes.md` — check if screen inventory maps to story breakdown
+
 2. Multi-aspect analysis:
 
    **A. Requirement Coverage**
@@ -54,6 +58,14 @@ Validate epic planning artifacts to identify issues before story implementation 
    - Documentation planned?
    - Security addressed?
    - Performance validated?
+
+   **F. UX Artifact Integration** (if `user-journey.md` or `wireframes.md` exist)
+   - Does epic-tech-spec.md have a "UX Design Context" section?
+   - Are journey stages reflected in story groupings in epic-breakdown.md?
+   - Does every wireframe screen map to at least one story in epic-breakdown.md?
+   - Are UX quality requirements (from emotional targets / pain points) captured as NFRs?
+   - If journey/wireframes exist but tech spec has no UX section: FLAG as WARNING
+     "UX artifacts present but not incorporated in tech spec — re-run /epic-plan"
 
 3. Deep analysis checks:
 
