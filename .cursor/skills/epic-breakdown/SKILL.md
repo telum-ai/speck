@@ -65,37 +65,37 @@ Create a comprehensive story breakdown that maps all user stories within the epi
 
    Write output to: `[EPIC_DIR]/epic-breakdown.md`
 
-5. Create story directories with parallel spec drafting:
+5. Create story directories with placeholder specs:
 
    **Subagent Parallelization** - Spawn speck-scribe for each story spec:
    ```
-   ├── [Parallel] speck-scribe: Draft S001 spec-draft.md from epic-tech-spec.md
-   ├── [Parallel] speck-scribe: Draft S002 spec-draft.md from epic-tech-spec.md
-   ├── [Parallel] speck-scribe: Draft S003 spec-draft.md from epic-tech-spec.md
+   ├── [Parallel] speck-scribe: Draft S001 spec.md (Draft state) from epic-tech-spec.md
+   ├── [Parallel] speck-scribe: Draft S002 spec.md (Draft state) from epic-tech-spec.md
+   ├── [Parallel] speck-scribe: Draft S003 spec.md (Draft state) from epic-tech-spec.md
    └── [Wait] → Create all story directories with drafted specs
    ```
-   
+
    Each speck-scribe receives:
    - Story requirements from epic-breakdown.md
    - Technical context from epic-tech-spec.md
    - Template from .speck/templates/story/story-template.md
    - **Dependencies from epic-breakdown.md** (for YAML frontmatter)
-   
-   **Speedup**: Nx (where N = number of stories)
-   
-   **IMPORTANT**: Drafts are saved as `spec-draft.md` (NOT `spec.md`).
-   This ensures the orchestrator won't treat them as fully specified stories.
-   The `/story-specify` command will upgrade `spec-draft.md` → `spec.md`.
 
-   **CRITICAL — Lifecycle state for spec-draft.md files**:
+   **Speedup**: Nx (where N = number of stories)
+
+   **IMPORTANT**: Placeholder specs are saved as `spec.md` with lifecycle state `Draft (Placeholder)`.
+   The **lifecycle state** — not the filename — is what signals that `/story-specify` still needs to run.
+   This eliminates the `spec-draft.md` vs `spec.md` confusion: there is always exactly one file.
+
+   **CRITICAL — Lifecycle state for placeholder spec.md files**:
    Set `**Current State**: Draft (Placeholder)` and mark lifecycle checkboxes as:
    ```
-   - [x] **Draft** - Placeholder spec-draft.md created by `/epic-breakdown` (not yet specified)
-   - [ ] **Specified** - spec.md created by `/story-specify`
+   - [x] **Draft** - Placeholder spec.md created by `/epic-breakdown` (not yet specified)
+   - [ ] **Specified** - spec.md enhanced by `/story-specify`
    ```
-   **NEVER set `**Current State**: Specified` in a spec-draft.md** — that falsely signals
+   **NEVER set `**Current State**: Specified` in a placeholder** — that falsely signals
    that `/story-specify` has already been run and can be skipped.
-   
+
    **CRITICAL**: Include dependencies in YAML frontmatter:
    ```yaml
    ---
@@ -103,18 +103,17 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    blocks: [S006]      # From Inter-Story Dependencies table
    ---
    ```
-   
-   The orchestrator reads `depends_on` from spec-draft.md/spec.md to determine
-   which stories are blocked. This is the primary source of dependency truth.
+
+   The orchestrator reads `depends_on` from `spec.md` to determine which stories are blocked.
 
    Create story directories:
    ```
    [EPIC_DIR]/
    └── stories/
        ├── S001-technical-setup/
-       │   └── spec-draft.md (with depends_on: [] in frontmatter)
+       │   └── spec.md (lifecycle: Draft, depends_on: [] in frontmatter)
        ├── S005-story-name/
-       │   └── spec-draft.md (with depends_on: [S004] in frontmatter)
+       │   └── spec.md (lifecycle: Draft, depends_on: [S004] in frontmatter)
        └── .../
    ```
 
@@ -137,16 +136,16 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    Critical Path Length: [Duration]
    
    Story Directories Created: [Count]
-   Draft Specs Created: [Count] (as spec-draft.md)
-   
+   Placeholder specs created: [Count] (spec.md with lifecycle: Draft — awaiting /story-specify)
+
    Next Steps:
    1. Review story breakdown with team
-   2. Run /story-specify on Phase 1 stories to upgrade drafts to full specs
+   2. Run /story-specify on Phase 1 stories to complete the draft specs
    3. Stories marked [P] can be specified/implemented in parallel
    4. Or run /epic-analyze for validation first
-   
-   Note: Draft specs (spec-draft.md) need /story-specify to become
-   proper specs (spec.md) before the orchestrator will process them.
+
+   Note: Placeholder specs have lifecycle state "Draft (Placeholder)" in their spec.md.
+   /story-specify reads this state and fills in the full specification in-place.
    ```
 
-Note: This breakdown organizes stories for planning and coordination. Each story will generate its own concrete implementation tasks via /story-tasks. Draft specs provide a starting point but require /story-specify to validate and refine them.
+Note: This breakdown organizes stories for planning and coordination. Each story will generate its own concrete implementation tasks via /story-tasks. Placeholder specs provide a starting point but require /story-specify to reach "Specified" state before planning or implementation.

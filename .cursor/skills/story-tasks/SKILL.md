@@ -90,7 +90,7 @@ $ARGUMENTS
    **Extract story dependencies from epic-breakdown.md**:
    - Read `{EPIC_DIR}/epic-breakdown.md` if exists
    - Find this story's entry and extract "Depends on:" field
-   - Ensure these are present in `spec.md` (or `spec-draft.md`) YAML frontmatter as `depends_on:`
+   - Ensure these are present in `spec.md` YAML frontmatter as `depends_on:`
    - Also check for stories that depend on THIS story (for `blocks:` field)
    - **Do NOT** put `depends_on`/`blocks` in `tasks.md` frontmatter — `tasks.md` frontmatter is reserved for `status: pending|in_progress|completed`
 

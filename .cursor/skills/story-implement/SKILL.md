@@ -17,9 +17,9 @@ $ARGUMENTS
    - Preferred: user is already in the story directory (or a subfolder like `contracts/`)
    - Walk up from current directory until you find `spec.md`
    - If NO `spec.md` found anywhere in the directory tree:
-     * Check if only `spec-draft.md` exists → ERROR "A draft spec exists but `/story-specify` has not been run yet. Run `/story-specify` to create a proper spec before implementation."
-     * If nothing exists → ERROR "No story spec found. Run `/story-specify` first to define what to build, then `/story-plan` → `/story-tasks` → `/story-analyze` before implementing."
-     * **NEVER use `spec-draft.md` as a substitute for `spec.md`** — drafts are placeholders, not specifications.
+     * ERROR "No story spec found. Run `/story-specify` first to define what to build, then `/story-plan` → `/story-tasks` → `/story-analyze` before implementing."
+   - If `spec.md` found but lifecycle state is `Draft (Placeholder)`:
+     * ERROR "This story's spec.md is still a Draft placeholder — `/story-specify` has not been run yet. Complete the specification before implementing."
 
    **Step B — Verify the full prerequisite chain**:
    - `{STORY_DIR}/spec.md` — REQUIRED (ERROR if missing: "Run `/story-specify` first")

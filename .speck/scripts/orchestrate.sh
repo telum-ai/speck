@@ -192,14 +192,11 @@ check_blocked() {
   local deps=""
   
   # Priority 1: spec.md YAML frontmatter (primary source of truth)
+  # Note: spec.md is always the canonical file — epic-breakdown creates it with
+  # lifecycle state "Draft (Placeholder)" and story-specify upgrades it to "Specified".
   deps="$(extract_depends_on "$story_dir/spec.md")"
 
-  # Priority 2: spec-draft.md (early in flow, before story-specify)
-  if [ -z "$deps" ]; then
-    deps="$(extract_depends_on "$story_dir/spec-draft.md")"
-  fi
-
-  # Priority 3: tasks.md (legacy/backwards compatibility)
+  # Priority 2: tasks.md (legacy/backwards compatibility)
   if [ -z "$deps" ]; then
     deps="$(extract_depends_on "$story_dir/tasks.md")"
   fi

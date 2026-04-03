@@ -46,37 +46,31 @@ find specs/projects -name "project.md" -exec dirname {} \; | xargs -I {} basenam
 ls specs/projects/[PROJECT_ID]/epics/
 ```
 
-### Step 2: Detect Draft Spec (From Epic Breakdown)
+### Step 2: Detect Placeholder Spec (From Epic Breakdown)
 
-Check if a draft spec exists from `/epic-breakdown`:
+Check if a `spec.md` already exists for this story (created as a placeholder by `/epic-breakdown`):
 
 ```bash
-# Find draft spec in story directory (supports `S###-story-name/` dirs)
-DRAFT_SPEC=$(ls -1 specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-*/spec-draft.md 2>/dev/null | head -1 || true)
-if [ -n "$DRAFT_SPEC" ]; then
-  echo "Draft spec found at $DRAFT_SPEC - will upgrade to full spec"
-fi
+SPEC=$(ls -1 specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-*/spec.md 2>/dev/null | head -1 || true)
 ```
 
-**If `spec-draft.md` exists**:
-1. Load the draft as a starting point
-2. **Preserve YAML frontmatter** (especially `depends_on` and `blocks`)
-3. Display to user: "Found draft spec from epic breakdown. I'll use this as a starting point."
-   - **Check `**Current State**`**: If it reads `Draft (Placeholder)` or `Draft`, proceed with
-     the enhance flow below — this is a normal `/epic-breakdown` placeholder.
-     If it already reads `Specified`, warn the user that `/story-specify` appears to have been
-     run already and ask if they want to re-specify or refine.
-4. Validate and enhance through interactive Q&A (Steps 4-8)
-5. Save the finalized version as `spec.md` with preserved frontmatter
-6. **Update lifecycle state** in the saved `spec.md`:
-   - Set `**Current State**: Specified`
-   - Mark checkboxes: `- [x] **Draft**` (keep checked if upgrading from draft), `- [x] **Specified**`
-7. Keep `spec-draft.md` for reference, or delete after successful upgrade
+**If `spec.md` exists, check its lifecycle state**:
+- Read the `**Current State**` line in the file
+- If state is `Draft (Placeholder)` or `Draft`:
+  - This is a `/epic-breakdown` placeholder — proceed with the enhance flow below
+  - Display to user: "Found a draft placeholder spec from epic breakdown. I'll fill it in."
+  - **Preserve the YAML frontmatter** (especially `depends_on` and `blocks`)
+  - Validate and enhance through interactive Q&A (Steps 4-8)
+  - Save the completed version back to the same `spec.md`
+  - Update lifecycle state to `Specified`
+- If state is already `Specified`:
+  - Warn: "This story's spec.md already shows 'Specified' — `/story-specify` appears to have already run. Do you want to re-specify or refine?"
+  - Wait for user confirmation before overwriting
 
-**CRITICAL**: The `depends_on` field in the YAML frontmatter is read by the
-orchestrator to determine story blocking. Always preserve it when upgrading.
+**CRITICAL**: The `depends_on` field in the YAML frontmatter is read by the orchestrator to determine story blocking. Always preserve it.
 
-**If no draft exists**: Continue with normal interactive specification flow.
+**If no spec.md exists**: Continue with normal interactive specification flow (create from scratch).
+
 
 ### Step 3: Pre-Validation Checklist (Prevent Duplication)
 
@@ -134,7 +128,7 @@ If mismatch: "This story seems outside the epic scope. Would you like to:
 
 If minimal description (or upgrading from draft), gather/validate details:
 
-**If upgrading from `spec-draft.md`**:
+**If upgrading from a Draft placeholder spec.md**:
 - Show draft content to user
 - Ask: "Does this draft capture your intent? What would you change?"
 - Focus on gaps and refinements rather than starting from scratch
@@ -176,16 +170,17 @@ Note: Speck stories live in the hierarchical structure under:
 
 The template is self-documenting - follow all sections and guidelines within it.
 
-**Output**: Save as `spec.md` (this is the canonical spec, distinct from any `spec-draft.md`).
+**Output**: Save as `spec.md` with lifecycle state updated to `Specified`.
 
 **Lifecycle state** — always set in the saved `spec.md`:
 - `**Current State**: Specified`
 - Checkboxes:
   ```
-  - [ ] **Draft** - Placeholder spec-draft.md created by `/epic-breakdown` (not yet specified)
-  - [x] **Specified** - spec.md created by `/story-specify`
+  - [x] **Draft** - Placeholder spec.md created by `/epic-breakdown` (check if was a draft)
+  - [x] **Specified** - spec.md completed by `/story-specify`
   ```
-  (If upgrading from a draft: check both Draft and Specified to show the full progression.)
+  (If the spec was previously a Draft placeholder, check both boxes to show full progression.
+  If created fresh from scratch, only the Specified box is checked.)
 
 ### Step 9: Apply 10-Minute Understandability Rule
 

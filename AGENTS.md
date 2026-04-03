@@ -894,7 +894,7 @@ Default to simple solutions; require **evidence** before adding complexity:
 
 ### Approval Required Before:
 - **Starting implementation**: ALL of the following must exist in the story directory:
-  1. `spec.md` — created by `/story-specify` (a `spec-draft.md` does NOT count)
+  1. `spec.md` with lifecycle state `Specified` — created/completed by `/story-specify` (a Draft placeholder does NOT count)
   2. `plan.md` — created by `/story-plan`
   3. `tasks.md` — created by `/story-tasks`
   4. `analysis-report.md` with no unresolved CRITICALs — created by `/story-analyze`
@@ -1214,7 +1214,7 @@ Speck supports **autonomous development** through both **Cursor Background Agent
 
 **Dependency Management**:
 
-Stories declare dependencies in `spec.md` (or `spec-draft.md`) YAML front matter:
+Stories declare dependencies in `spec.md` YAML front matter:
 
 ```yaml
 ---
@@ -1252,7 +1252,7 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 6.1.11  
+**Speck Version**: 6.1.12  
 **Updated**: 2026-03-22  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 

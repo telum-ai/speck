@@ -52,13 +52,14 @@ clarify → plan → tasks → implement → validate → retrospective
 
 <!--
   STATE RULES:
-  - /epic-breakdown creates spec-draft.md → set "Draft (Placeholder)", check only Draft box
-  - /story-specify creates/upgrades to spec.md → set "Specified", check Draft + Specified boxes
+  - /epic-breakdown creates spec.md with "Draft (Placeholder)" state → check only Draft box
+  - /story-specify completes the spec in-place → set "Specified", check Draft (if was draft) + Specified boxes
+  There is only ever ONE file: spec.md. Lifecycle state is the discriminator, not the filename.
 -->
 **Current State**: Specified
 
-- [ ] **Draft** - Placeholder spec-draft.md created by `/epic-breakdown` (not yet specified)
-- [x] **Specified** - spec.md created by `/story-specify`
+- [ ] **Draft** - Placeholder spec.md created by `/epic-breakdown` (not yet specified)
+- [x] **Specified** - spec.md completed by `/story-specify`
 - [ ] **Clarified** - Ambiguities resolved (`/story-clarify` complete)
 - [ ] **Planned** - plan.md created (`/story-plan` complete)
 - [ ] **Tasked** - tasks.md created (`/story-tasks` complete)

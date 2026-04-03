@@ -1464,7 +1464,7 @@ GitHub Copilot Agent limit: ~2-3 concurrent sessions. Use `speck:queued` label a
 
 ### Dependency Management
 
-Dependencies declared in `spec.md` (or `spec-draft.md`) front matter:
+Dependencies declared in `spec.md` front matter:
 
 ```yaml
 ---
