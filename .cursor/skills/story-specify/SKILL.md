@@ -62,9 +62,16 @@ fi
 1. Load the draft as a starting point
 2. **Preserve YAML frontmatter** (especially `depends_on` and `blocks`)
 3. Display to user: "Found draft spec from epic breakdown. I'll use this as a starting point."
+   - **Check `**Current State**`**: If it reads `Draft (Placeholder)` or `Draft`, proceed with
+     the enhance flow below — this is a normal `/epic-breakdown` placeholder.
+     If it already reads `Specified`, warn the user that `/story-specify` appears to have been
+     run already and ask if they want to re-specify or refine.
 4. Validate and enhance through interactive Q&A (Steps 4-8)
 5. Save the finalized version as `spec.md` with preserved frontmatter
-6. Keep `spec-draft.md` for reference, or delete after successful upgrade
+6. **Update lifecycle state** in the saved `spec.md`:
+   - Set `**Current State**: Specified`
+   - Mark checkboxes: `- [x] **Draft**` (keep checked if upgrading from draft), `- [x] **Specified**`
+7. Keep `spec-draft.md` for reference, or delete after successful upgrade
 
 **CRITICAL**: The `depends_on` field in the YAML frontmatter is read by the
 orchestrator to determine story blocking. Always preserve it when upgrading.
@@ -170,6 +177,15 @@ Note: Speck stories live in the hierarchical structure under:
 The template is self-documenting - follow all sections and guidelines within it.
 
 **Output**: Save as `spec.md` (this is the canonical spec, distinct from any `spec-draft.md`).
+
+**Lifecycle state** — always set in the saved `spec.md`:
+- `**Current State**: Specified`
+- Checkboxes:
+  ```
+  - [ ] **Draft** - Placeholder spec-draft.md created by `/epic-breakdown` (not yet specified)
+  - [x] **Specified** - spec.md created by `/story-specify`
+  ```
+  (If upgrading from a draft: check both Draft and Specified to show the full progression.)
 
 ### Step 9: Apply 10-Minute Understandability Rule
 

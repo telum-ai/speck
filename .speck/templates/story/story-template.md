@@ -50,9 +50,15 @@ clarify → plan → tasks → implement → validate → retrospective
 
 ## Story Lifecycle State Tracking
 
+<!--
+  STATE RULES:
+  - /epic-breakdown creates spec-draft.md → set "Draft (Placeholder)", check only Draft box
+  - /story-specify creates/upgrades to spec.md → set "Specified", check Draft + Specified boxes
+-->
 **Current State**: Specified
 
-- [x] **Specified** - spec.md created
+- [ ] **Draft** - Placeholder spec-draft.md created by `/epic-breakdown` (not yet specified)
+- [x] **Specified** - spec.md created by `/story-specify`
 - [ ] **Clarified** - Ambiguities resolved (`/story-clarify` complete)
 - [ ] **Planned** - plan.md created (`/story-plan` complete)
 - [ ] **Tasked** - tasks.md created (`/story-tasks` complete)

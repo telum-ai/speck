@@ -86,6 +86,15 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    **IMPORTANT**: Drafts are saved as `spec-draft.md` (NOT `spec.md`).
    This ensures the orchestrator won't treat them as fully specified stories.
    The `/story-specify` command will upgrade `spec-draft.md` → `spec.md`.
+
+   **CRITICAL — Lifecycle state for spec-draft.md files**:
+   Set `**Current State**: Draft (Placeholder)` and mark lifecycle checkboxes as:
+   ```
+   - [x] **Draft** - Placeholder spec-draft.md created by `/epic-breakdown` (not yet specified)
+   - [ ] **Specified** - spec.md created by `/story-specify`
+   ```
+   **NEVER set `**Current State**: Specified` in a spec-draft.md** — that falsely signals
+   that `/story-specify` has already been run and can be skipped.
    
    **CRITICAL**: Include dependencies in YAML frontmatter:
    ```yaml
