@@ -1,6 +1,6 @@
 ---
 name: story-implement
-description: Load ONLY when ALL four prerequisites exist — spec.md, plan.md, tasks.md, and analysis-report.md (story-analyze passed). Executes code by working through tasks.md step by step. If the user says 'implement this', 'write the code', or 'build it' but any prerequisite is missing, DO NOT load this skill — route to the missing step first (story-specify → story-plan → story-tasks → story-analyze → story-implement).
+description: Load when user says 'implement this', 'write the code', 'build it', or all planning artifacts are in place and reviewed. PREREQUISITE GATE — before executing, verify all four artifacts exist in the story directory: spec.md (from /story-specify), plan.md (from /story-plan), tasks.md (from /story-tasks), and analysis-report.md with no unresolved CRITICALs (from /story-analyze). If any are missing, do NOT implement — route to the missing step first (story-specify → story-plan → story-tasks → story-analyze → story-implement).
 disable-model-invocation: false
 ---
 
