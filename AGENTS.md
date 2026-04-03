@@ -894,9 +894,15 @@ Default to simple solutions; require **evidence** before adding complexity:
 ## 🚦 Decision Gates
 
 ### Approval Required Before:
-- Starting implementation (after `/story-plan`)
-- Starting epic work (after `/epic-plan`)
-- Production deployment (after `/project-validate`)
+- **Starting implementation**: ALL of the following must exist in the story directory:
+  1. `spec.md` — created by `/story-specify` (a `spec-draft.md` does NOT count)
+  2. `plan.md` — created by `/story-plan`
+  3. `tasks.md` — created by `/story-tasks`
+  4. `analysis-report.md` with no unresolved CRITICALs — created by `/story-analyze`
+  
+  If a user asks to "implement", "build", or "write the code" for a story and any of these are missing, route to the missing step — never skip ahead to implementation.
+- **Starting epic work** (after `/epic-plan` + `/epic-breakdown` + `/epic-analyze`)
+- **Production deployment** (after `/project-validate`)
 
 ### Validation Gates
 - Story: `/story-validate` (requirements, tests, performance, constitution, **user-reachability**)
@@ -1098,6 +1104,12 @@ When user makes a request, determine if they need a spec or can code directly:
 
 **Decision Rule**: If it changes user-facing behavior or system architecture → Create spec. If it fixes bugs or polishes existing → Code directly.
 
+**⚠️ Stories always require the full pipeline — no exceptions**:
+Even if a story sounds simple or obvious ("just add a button", "add a login form"), it still requires:
+`/story-specify` → `/story-plan` → `/story-tasks` → `/story-analyze` → `/story-implement`
+
+"Code Directly" **never** applies to new stories or features. It only applies to the maintenance tasks listed above. If a user asks to "implement story X" or "build feature Y" without a `spec.md`, always route to `/story-specify` first.
+
 ## 🔍 How to Respond to User Questions
 
 **"I want to build something"**: 
@@ -1241,7 +1253,7 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 6.1.7  
+**Speck Version**: 6.1.8  
 **Updated**: 2026-03-22  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 

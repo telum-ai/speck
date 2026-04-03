@@ -1,6 +1,6 @@
 ---
 name: story-implement
-description: Load after tasks.md exists and story-analyze passes. Executes the actual code implementation by working through tasks.md step by step. Use when user says 'implement this', 'write the code', 'build it', or all planning artifacts are in place and reviewed.
+description: Load ONLY when ALL four prerequisites exist — spec.md, plan.md, tasks.md, and analysis-report.md (story-analyze passed). Executes code by working through tasks.md step by step. If the user says 'implement this', 'write the code', or 'build it' but any prerequisite is missing, DO NOT load this skill — route to the missing step first (story-specify → story-plan → story-tasks → story-analyze → story-implement).
 disable-model-invocation: false
 ---
 
@@ -11,17 +11,29 @@ User input:
 
 $ARGUMENTS
 
-1. Locate the active story directory (STORY_DIR):
+1. Locate the active story directory (STORY_DIR) and verify ALL prerequisites exist:
+
+   **Step A — Find the story directory**:
    - Preferred: user is already in the story directory (or a subfolder like `contracts/`)
-   - Determine STORY_DIR by walking up from current directory until you find `spec.md`
-   - If no `spec.md` found: instruct user to `cd` into the story directory or run `/speck` to route
-   - Require `{STORY_DIR}/tasks.md` and `{STORY_DIR}/plan.md` (if missing: ERROR "Run /story-plan and /story-tasks first")
+   - Walk up from current directory until you find `spec.md`
+   - If NO `spec.md` found anywhere in the directory tree:
+     * Check if only `spec-draft.md` exists → ERROR "A draft spec exists but `/story-specify` has not been run yet. Run `/story-specify` to create a proper spec before implementation."
+     * If nothing exists → ERROR "No story spec found. Run `/story-specify` first to define what to build, then `/story-plan` → `/story-tasks` → `/story-analyze` before implementing."
+     * **NEVER use `spec-draft.md` as a substitute for `spec.md`** — drafts are placeholders, not specifications.
+
+   **Step B — Verify the full prerequisite chain**:
+   - `{STORY_DIR}/spec.md` — REQUIRED (ERROR if missing: "Run `/story-specify` first")
+   - `{STORY_DIR}/plan.md` — REQUIRED (ERROR if missing: "Run `/story-plan` first")
+   - `{STORY_DIR}/tasks.md` — REQUIRED (ERROR if missing: "Run `/story-tasks` first")
+   - `{STORY_DIR}/analysis-report.md` — REQUIRED (ERROR if missing: "Run `/story-analyze` first — it is non-negotiable")
+
+   All four must exist before a single line of implementation code is written.
 
    **⚠️ PRE-IMPLEMENTATION CHECK**:
-   Ask user: "Have you run `/story-analyze` to verify artifact quality?"
-   - If user says no or is unsure: RECOMMEND running `/story-analyze` first
-   - story-analyze catches issues BEFORE implementation, saving rework
-   - This is a REQUIRED step in the Speck methodology
+   Verify `analysis-report.md` has no CRITICAL issues unresolved. If it does:
+   - List the CRITICAL issues
+   - Refuse to proceed: "Fix the CRITICAL issues in analysis-report.md before implementing"
+   - story-analyze catches spec/plan/task conflicts BEFORE implementation — never skip it
 
 2. Load and analyze the implementation context:
    - **REQUIRED**: Read tasks.md for the complete task list and execution plan
