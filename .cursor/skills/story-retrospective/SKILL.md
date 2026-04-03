@@ -1,6 +1,6 @@
 ---
 name: story-retrospective
-description: Load after story-validate produces a PASS result to mine .learning.log and git commits and produce story-retro.md. Run after every completed story — essential for feeding learnings into the epic retrospective and improving future stories.
+description: Load after story-validate produces a PASS result to mine git commits and produce story-retro.md. Run after every completed story — essential for feeding learnings into the epic retrospective and improving future stories.
 disable-model-invocation: false
 ---
 
@@ -19,7 +19,6 @@ This command benefits from parallel data mining:
 
 **Data Mining Phase** - Spawn parallel speck-explorer:
 ```
-├── [Parallel] speck-explorer: Parse .learning.log for edit events
 ├── [Parallel] speck-explorer: Mine git commits for learning tags
 ├── [Parallel] speck-explorer: Read validation-report.md
 ├── [Parallel] speck-explorer: Find future story specs in epic
@@ -31,7 +30,6 @@ This command benefits from parallel data mining:
 ## Critical Understanding
 
 **Story retrospective is the ONLY level that consumes raw data**:
-- ✅ Reads .learning.log files
 - ✅ Mines git commit tags (PATTERN:, GOTCHA:, PERF:, ARCH:, RULE:, DEBT:)
 - ✅ Reads validation-report.md
 
@@ -49,25 +47,7 @@ This command benefits from parallel data mining:
 
 ### Step 1: Mine Raw Data Sources
 
-**A. Find and Parse .learning.log File**
-
-Look for `.learning.log` in story directory:
-```bash
-find [STORY_DIR] -name ".learning.log" -type f
-```
-
-Parse log file for:
-- Total edit events
-- Files edited with frequency count
-- High-iteration files (>5 edits) - planning accuracy indicators
-- Change timestamps (work duration indicators)
-
-Calculate:
-- Actual effort from timestamps (first edit to last edit)
-- Iteration density (edits per file)
-- Files that stabilized quickly vs needed rework
-
-**B. Mine Git Commits for Learning Tags**
+**A. Mine Git Commits for Learning Tags**
 
 Get commits for story:
 ```bash
@@ -86,7 +66,7 @@ Extract and categorize tags:
 - **RULE:** tags → Cursor rule updates needed list
 - **DEBT:** tags → Technical debt items list
 
-**C. Read Validation Report**
+**B. Read Validation Report**
 
 Load `validation-report.md` and extract:
 - Specification accuracy (requirements matched/deviated)
@@ -100,10 +80,10 @@ Load `validation-report.md` and extract:
   * ui-spec.md checklist gaps → Note unchecked items
   * Screenshot notes → Any visual anomalies or platform-specific issues
 
-**D. Calculate Effort Variance**
+**C. Calculate Effort Variance**
 
 - Estimated effort: From tasks.md or spec.md estimate
-- Actual effort: From .learning.log timestamps or git commit times
+- Actual effort: From git commit timestamps (first to last commit on the story)
 - Variance percentage and direction
 
 ### Step 2: Consolidate into Template
@@ -205,7 +185,6 @@ Story: [Name]
 Duration: [Actual vs estimated with variance]
 
 Data Sources Mined:
-- .learning.log: [X edit events across Y files]
 - Git commits: [Z commits with learning tags]
 - Validation report: [Spec accuracy, performance data]
 

@@ -42,7 +42,6 @@ This command benefits from parallel data loading and analysis:
 - ✅ Reads `epic-retro.md` files (structured summaries from epic retros)
 - ✅ Reads project-level artifacts (project.md, PRD.md, architecture.md)
 - ❌ Does NOT read story-retro.md files (already synthesized in epic retros)
-- ❌ Does NOT read `.learning.log` (story retros already mined it)
 - ⚠️ MAY optionally mine git commit learning tags if epic retros are missing signal
 
 **Produces strategic output**:

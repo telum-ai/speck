@@ -255,7 +255,6 @@ jobs:
             ".cursor/hooks/hooks.json"
             ".cursor/hooks/VALIDATION.md"
             ".cursor/hooks/hooks/after-file-edit.sh"
-            ".cursor/hooks/hooks/log-file-edit.sh"
             ".cursor/hooks/hooks/validate-template.sh"
             ".cursor/hooks/hooks/validators/validate-story-spec.sh"
             ".cursor/hooks/hooks/validators/validate-epic-spec.sh"

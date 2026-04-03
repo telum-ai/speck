@@ -24,7 +24,6 @@ After every file edit, Cursor calls:
 `after-file-edit.sh` runs Speck’s stable hooks and then dispatches validation via `validate-template.sh`.
 
 **Speck hooks (stable):**
-- `log-file-edit.sh` → learning capture
 - `validate-template.sh` → routes to validators (below)
 
 **Project extensions (optional):**
@@ -239,7 +238,6 @@ If validation is too noisy during drafting:
 # Comment out in hooks.json
 {
   "afterFileEdit": [
-    { "command": "./hooks/log-file-edit.sh" }
     // { "command": "./hooks/validate-template.sh" }
   ]
 }
@@ -306,7 +304,6 @@ Validation complements command validation:
 .cursor/hooks/
 ├── hooks.json                        # Hook configuration
 └── hooks/
-    ├── log-file-edit.sh              # Learning capture
     ├── validate-template.sh          # Router
     └── validators/
         ├── validate-story-spec.sh    # Story spec validation

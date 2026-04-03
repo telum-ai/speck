@@ -350,7 +350,7 @@ This is a hard gate, not a suggestion. Skip only for genuinely non-UI epics.
 5. story-analyze.md → ⚠️ REQUIRED Quality check before implementation
 6. story-implement.md → Writes code (FOLLOWS: tasks.md)
 7. story-validate.md → Creates validation-report.md (checks spec compliance)
-8. story-retrospective.md → Mines .learning.log + commits → Creates story-retro.md
+8. story-retrospective.md → Mines git commits → Creates story-retro.md
 ```
 
 **Decision Gates for Optional/Required Commands**:
@@ -385,7 +385,7 @@ epic-breakdown.md → NEEDS: epic-tech-spec.md (from plan)
 story-tasks.md → NEEDS: plan.md + data-model.md + contracts/ + [codebase-scan-*.md]
 story-implement.md → NEEDS: tasks.md
 story-validate.md → NEEDS: spec.md + implementation complete
-story-retrospective.md → NEEDS: validation-report.md + .learning.log + git commits
+story-retrospective.md → NEEDS: validation-report.md + git commits
 ```
 
 **Handling Optional Artifacts**:
@@ -716,10 +716,9 @@ If either is missing: warn the user and suggest `/project-design-system` or `/pr
 ### Why This Matters
 **Retrospectives are only as good as the learnings captured**. Story retrospectives mine commits to extract patterns, gotchas, and insights. Without tagged commits, retrospectives miss valuable learnings!
 
-### Three Data Sources
-1. **Cursor Hook**: Automatically logs file edits to `.learning.log`
-2. **Commit Message Tags**: You manually add to commits (see below)
-3. **Validation Reports**: Captures spec vs reality gaps
+### Two Data Sources
+1. **Commit Message Tags**: You add to commits (see below)
+2. **Validation Reports**: Captures spec vs reality gaps
 
 ### Commit Learning Tags (Add These When Committing!)
 
@@ -779,7 +778,7 @@ RULE: Update project testing rule - Add overlap testing pattern
 
 ### Cascading Retrospectives Mine These Tags
 
-- **Story retros** mine commits + .learning.log → produce story-retro.md
+- **Story retros** mine commits → produce story-retro.md
 - **Epic retros** read story-retro.md (validate patterns) → produce epic-retro.md
 - **Project retros** read epic-retro.md (validate cross-epic) → evolve Speck methodology
 
@@ -1176,7 +1175,7 @@ Story retros → epic retros → project retros. Each level can update the next:
 ## 🔗 Integration Points to Know
 
 - **Git hooks**: May have pre-commit (formatting, linting) and pre-push (tests)
-- **Cursor hooks**: Logs file edits to .learning.log automatically + **validates templates**
+- **Cursor hooks**: Validates spec/plan/task templates on save (see `.cursor/hooks/VALIDATION.md`)
 - **CI/CD**: Check `.github/workflows/` or similar for automation
 
 ### Cursor Hook Validation
@@ -1253,7 +1252,7 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 6.1.9  
+**Speck Version**: 6.1.10  
 **Updated**: 2026-03-22  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 

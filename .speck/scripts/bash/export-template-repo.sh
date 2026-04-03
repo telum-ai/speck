@@ -144,9 +144,6 @@ cat > "$OUT_DIR/.gitignore" <<'EOF'
 # Cursor local MCP config may include secrets
 .cursor/mcp.json
 
-# Speck learning capture logs are not committed
-**/.learning.log
-
 # Logs
 logs/
 *.log

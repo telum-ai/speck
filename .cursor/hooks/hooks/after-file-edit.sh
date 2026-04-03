@@ -45,7 +45,6 @@ run_dir() {
 run_dir "$HOOKS_DIR/hooks.d/afterFileEdit/pre"
 
 # Speck hooks (stable)
-run_hook "$HOOKS_DIR/log-file-edit.sh"
 run_hook "$HOOKS_DIR/validate-template.sh"
 
 # Project post-hooks (optional)

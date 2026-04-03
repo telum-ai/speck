@@ -10,11 +10,10 @@
 ## Execution Metrics
 
 - **Estimated Effort**: [X hours from tasks.md]
-- **Actual Effort**: [Y hours calculated from git commits]
+- **Actual Effort**: [Y hours calculated from git commit timestamps]
 - **Variance**: [+/-Z%] [(Faster/Slower/On-target)]
 - **Specification Accuracy**: [Matched/Had-Gaps/Major-Deviation]
 - **Files Changed**: [X files]
-- **High-Iteration Files**: [Y files with >5 edits - indicates planning gaps]
 
 ---
 
@@ -35,7 +34,7 @@
 
 ## Gotchas Encountered
 
-> **Source**: GOTCHA: tags from git commits + .learning.log high-iteration indicators
+> **Source**: GOTCHA: tags from git commits
 
 ### Gotcha 1: [Gotcha Title]
 - **What Happened**: [Clear description of the surprise/pitfall]
@@ -74,18 +73,6 @@
 - **For Epic Retro**: [Validate this decision across other stories in epic]
 
 [Repeat for significant architectural choices - 0-2 typically]
-
----
-
-## Change Pattern Analysis
-
-> **Source**: .learning.log file iteration analysis
-
-**Planning Accuracy Indicators**:
-- [File/section] had [X] iterations: [Indicates: good refinement / planning gap / requirements changed]
-- [File/section] was one-shot: [Indicates: good planning]
-
-**Insight**: [What change patterns reveal about specification quality]
 
 ---
 

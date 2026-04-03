@@ -439,12 +439,7 @@ Speck includes a built-in learning capture and retrospective system that makes t
 
 ### How Learning is Captured
 
-**1. Cursor Hook (Automatic)**
-- Logs all file edits to `.learning.log` files
-- Tracks change patterns and iteration
-- Processed by retrospectives, not committed to git
-
-**2. Git Commit Tags (Manual)**
+**Git Commit Tags**
 - Add learning tags to commit messages:
   - `PATTERN:` Reusable code patterns
   - `GOTCHA:` Surprises and pitfalls

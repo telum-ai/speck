@@ -41,8 +41,7 @@ This command benefits from parallel data loading and validation:
 **Epic retrospective consumes ONLY synthesized data (NOT raw)**:
 - ✅ Reads `story-retro.md` files (structured summaries from story retros)
 - ✅ Reads epic-level artifacts (epic.md, epic-architecture.md, etc.)
-- ❌ Does NOT read .learning.log files (already processed by story retros)
-- ❌ Does NOT mine git commits (already extracted in story retros)
+- ❌ Does NOT mine git commits directly (already extracted in story retros)
 
 **Produces structured output**:
 - Creates `epic-retro.md` using template

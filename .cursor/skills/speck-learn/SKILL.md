@@ -102,15 +102,7 @@ Gather the following:
 GOTCHA: Timezone must be normalized before comparison - PostgreSQL stores in UTC
 ```
 
-**Option B: Story Retro Pre-seed** (for learnings that should appear in retrospective):
-
-Add to `.learning.log` or create quick note:
-```
-[TIMESTAMP] [TYPE]: [Summary]
-Details: [Full explanation]
-```
-
-**Option C: Direct Rule Update** (for RULE types with user approval):
+**Option B: Direct Rule Update** (for RULE types with user approval):
 - Update the specific .mdc file
 - Commit with: `chore(rules): [description of rule update]`
 
@@ -135,7 +127,7 @@ Related Work Notified:
 ## Integration with Retrospectives
 
 Learnings captured via `/speck-learn`:
-- Will be picked up by `/story-retrospective` from .learning.log or commit tags
+- Will be picked up by `/story-retrospective` from commit tags
 - Contribute to pattern validation (2+ occurrences = validated pattern)
 - Flow up through epic → project retrospectives
 
