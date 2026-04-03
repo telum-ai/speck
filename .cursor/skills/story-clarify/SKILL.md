@@ -140,30 +140,45 @@ Execution steps:
 
 7. Write the updated spec back to `{STORY_DIR}/spec.md`.
 
-8. Report completion (after questioning loop ends or early termination):
+8. Report completion and re-evaluate optional steps:
+
+   Output coverage summary:
    ```
    ✅ Story Clarification Complete!
-   
+
    Questions Asked: [X] of 5
    Spec Updated: [Path]
-   
+
    Coverage Summary:
    - Functional Scope: [Clear/Resolved/Deferred]
    - Technical Constraints: [Clear/Resolved/Deferred]
    - Data Requirements: [Clear/Resolved/Deferred]
    - Integration Points: [Clear/Resolved/Deferred]
    - UI/UX Details: [Clear/Resolved/Deferred]
-   
-   Next Steps:
-   - Default: /story-plan (create technical design)
-   - If technical unknowns: /story-outline, then follow the just-in-time research pattern
-     (`.cursor/skills/just-in-time-research/SKILL.md`) for the outline’s open questions/queries,
-     then proceed to /story-plan
-   - If UI-heavy: run /story-plan, then /story-ui-spec before /story-tasks
-   - If deferred items remain: Consider another /story-clarify after research
-   
-   Note: Clarification reduces rework by resolving ambiguities early.
-   The clearer the spec, the smoother the implementation.
+   ```
+
+   Then immediately run an **Optional Step Evaluation** based on the *updated* `spec.md` (clarifications often reveal new signals about complexity and UI):
+
+   | Step | 🔴 Required when | ⚠️ Recommended when | ⬜ Skip when |
+   |------|-----------------|---------------------|------------|
+   | `/story-outline` | Unfamiliar technology; TBD sections remain; multiple competing implementation approaches | Minor unknowns after clarification | Path clear, follows established patterns |
+   | `/story-scan` | Story extends or modifies existing code; brownfield context confirmed | Story touches existing functionality | Fully greenfield |
+   | `/story-ui-spec` | Any mention of UI, screens, forms, components, layout, UX | Minor UI elements alongside backend work | Pure backend / API / CLI |
+
+   Output:
+   ```
+   ## Optional Step Evaluation (post-clarification)
+
+   | Step | Recommendation | Evidence from spec.md |
+   |------|---------------|----------------------|
+   | /story-outline | ⬜ / ⚠️ / 🔴 | "[observation]" |
+   | /story-scan    | ⬜ / ⚠️ / 🔴 | "[observation]" |
+   | /story-ui-spec | ⬜ / 🔴       | "[observation]" |
+
+   Recommended path to /story-plan:
+   → [only Required/Recommended steps] → /story-plan → [/story-ui-spec if needed] → /story-tasks → /story-analyze → /story-implement
+
+   Shall I proceed with [first recommended step]?
    ```
 
 Behavior rules:

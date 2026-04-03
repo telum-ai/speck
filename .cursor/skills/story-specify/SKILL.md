@@ -213,25 +213,40 @@ If story seems too complex, suggest splitting and ask user approval.
 
 Add story to epic's story list with status "specified"
 
-### Step 11: Guide Next Steps
+### Step 11: Optional Step Evaluation + Guide Next Steps
+
+After saving `spec.md`, scan its content and evaluate each optional step. Output a recommendation table with **specific text or observations from spec.md** that drove each decision — not generic advice.
+
+**Evaluation criteria**:
+
+| Step | 🔴 Required when | ⚠️ Recommended when | ⬜ Skip when |
+|------|-----------------|---------------------|------------|
+| `/story-clarify` | Acceptance criteria vague or missing; scope boundary unclear; edge cases unaddressed; [NEEDS CLARIFICATION] markers | Some scenarios lack explicit success criteria | All criteria are specific and testable; scope is unambiguous |
+| `/story-outline` | Technology not used elsewhere in project; TBD/unknown sections; multiple competing implementation approaches mentioned | One or two minor unknowns; would benefit from a quick research pass | Implementation path clear; follows well-established project patterns |
+| `/story-scan` | Story extends, modifies, or refactors existing code modules; brownfield context | Story touches code that exists but isn't deeply modified | Fully greenfield story with no existing code to understand |
+| `/story-ui-spec` | Any mention of: UI, screen, form, modal, component, button, layout, page, design, front-end, UX | Story has minor UI concerns alongside backend work | Pure backend, API-only, or CLI-only story |
+
+**Output format** (fill from actual spec content — no placeholders):
 
 ```
-✅ Story Specification Created!
+## Optional Step Evaluation
 
-Next Steps:
-- Recommended: /story-clarify (resolve any ambiguities)
-- If already clear: /story-plan (create technical design)
-- If complex tech: /story-outline, then follow the just-in-time research pattern
-  (`.cursor/skills/just-in-time-research/SKILL.md`) for the outline's open questions/queries,
-  then proceed to /story-plan
-- If extracting patterns: /story-scan (analyze existing code)
+| Step | Recommendation | Evidence from spec.md |
+|------|---------------|----------------------|
+| /story-clarify | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
+| /story-outline | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
+| /story-scan    | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
+| /story-ui-spec | ⬜ / 🔴       | "[specific quote or observation]" |
 
-After /story-plan:
-- ⚠️ If UI-heavy: /story-ui-spec is REQUIRED before /story-tasks
-- Then: /story-tasks → /story-analyze → /story-implement → /story-validate
+Recommended path to /story-plan:
+→ [only Required/Recommended steps in flow order] → /story-plan → [/story-ui-spec if needed] → /story-tasks → /story-analyze → /story-implement
 
-Note: /story-plan is the gateway to implementation - it generates the technical
-blueprint that /story-tasks will break down into executable steps.
+Shall I proceed with [first recommended step]?
 ```
+
+**Flow order**: `/story-clarify` → `/story-outline` → `/story-scan` → `/story-plan` → `/story-ui-spec` → `/story-tasks` → `/story-analyze` → `/story-implement`
+
+**If `/story-ui-spec` is 🔴 Required**, note it clearly after `/story-plan`:
+> "This story has UI components — run `/story-ui-spec` after `/story-plan` and before `/story-tasks`. Skipping it means the implementation will guess at layout, states, and design token usage."
 
 Note: If your team uses a branch-based workflow, create a branch for this story (e.g. `[STORY_ID]-[story-name]`) before implementation.

@@ -228,42 +228,61 @@ Create epic directory:
    **For ENHANCE mode:**
    ```
    ✅ Epic Specification Enhanced!
-   
+
    Epic: [Name]
    Path: [Path]
-   
-   Sections Completed:
-   - [List of sections that were placeholders]
-   
-   Sections Preserved:
-   - [List of sections that already had content]
-   
-   Next Steps:
-   - Recommended: /epic-clarify (resolve ambiguities)
-   - If already clear: /epic-plan (create tech spec)
-   - If complex tech: /epic-outline, then follow the just-in-time research pattern
-     (`.cursor/skills/just-in-time-research/SKILL.md`) for the outline’s open questions/queries,
-     then proceed to /epic-plan
-   - If UX-heavy: /epic-journey then /epic-wireframes
+
+   Sections Completed: [List]
+   Sections Preserved: [List]
    ```
 
    **For CREATE mode:**
    ```
    ✅ Epic Specification Created!
-   
+
    Epic: [Name]
    Path: [Path]
    Estimated Stories: [X]
    Dependencies: [List]
-   
-   Next Steps:
-   - Recommended: /epic-clarify (resolve ambiguities)
-   - If already clear: /epic-plan (create tech spec)
-   - If complex tech: /epic-outline, then follow the just-in-time research pattern
-     (`.cursor/skills/just-in-time-research/SKILL.md`) for the outline’s open questions/queries,
-     then proceed to /epic-plan
-   - If UX-heavy: /epic-journey then /epic-wireframes
    ```
+
+10. **Optional Step Evaluation** (REQUIRED — run immediately after every epic-specify)
+
+    Scan the content of the just-saved `epic.md` and evaluate each optional step. Output a recommendation table with the **specific text or observation from epic.md** that drove each decision — not generic advice.
+
+    **Evaluation criteria**:
+
+    | Step | 🔴 Required when | ⚠️ Recommended when | ⬜ Skip when |
+    |------|-----------------|---------------------|------------|
+    | `/epic-clarify` | Acceptance criteria missing or vague; scope boundary unclear; [NEEDS CLARIFICATION] markers remain | Some user stories lack explicit success criteria | All stories have clear, testable acceptance criteria and scope is explicit |
+    | `/epic-constitution` | Regulated domain (healthcare, finance, legal, payment, GDPR, HIPAA, SOC2); epic defines an API boundary other epics depend on; multi-team coordination required | Epic introduces domain-specific rules not covered by project constitution | Simple product feature with no compliance or cross-team concerns |
+    | `/epic-architecture` | Touches 2+ services/systems; introduces new infrastructure; explicit latency/throughput targets; complex third-party integration not yet used in project | Significantly modifies existing API contracts; introduces new architectural patterns | Simple CRUD following existing project patterns; single-service concern with clear path |
+    | `/epic-journey` + `/epic-wireframes` | Any mention of: UI, screen, page, dashboard, form, modal, user flow, navigation, front-end, UX, design | Epic mixes backend and light UI concerns | Explicitly backend-only, API-only, CLI-only, or infra/devops |
+    | `/epic-outline` | Unfamiliar technology not in architecture.md; TBD/unknown sections present; multiple competing technical approaches | Minor unknowns that could benefit from a research pass | Implementation path clear; follows established patterns |
+
+    **Output format** (fill from actual epic content — no placeholders):
+
+    ```
+    ## Optional Step Evaluation
+
+    | Step | Recommendation | Evidence from epic.md |
+    |------|---------------|----------------------|
+    | /epic-clarify              | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
+    | /epic-constitution         | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
+    | /epic-architecture         | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
+    | /epic-journey + /wireframes| ⬜ / 🔴       | "[specific quote or observation]" |
+    | /epic-outline              | ⬜ / ⚠️       | "[specific quote or observation]" |
+
+    Recommended path to /epic-plan:
+    → [only Required/Recommended steps in flow order] → /epic-plan
+
+    Shall I proceed with [first recommended step]?
+    ```
+
+    **Flow order**: `/epic-clarify` → `/epic-constitution` → `/epic-architecture` → `/epic-journey` → `/epic-wireframes` → `/epic-outline` → `/epic-plan`
+
+    **If `/epic-journey` or `/epic-wireframes` is 🔴 Required**, add this warning explicitly:
+    > "This epic has user-facing UI — journey mapping and wireframes are required before planning. Skipping them means each story invents its own UI independently, producing a disconnected product."
 
 ## Example Workflows
 
