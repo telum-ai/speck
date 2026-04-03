@@ -11,6 +11,11 @@ You are working in a project using **Speck 🥓**, a multi-level methodology for
 **When you need skill instructions**: Check `.cursor/skills/[level]-[command]/SKILL.md` (or `.claude/skills/...` in Claude Code)
 **When you need templates**: Use files in `.speck/templates/[level]/`
 
+**When executing any Speck command that generates an artifact** (spec.md, plan.md, tasks.md, epic.md, etc.):
+1. **Load the skill file** — read `SKILL.md` with the Read tool before taking any action
+2. **Read the template file** — listed in the skill as "Step 0" or "CRITICAL: Load and follow the template" — read it NOW before Q&A, before context loading, before writing anything
+Skipping either step produces structurally incorrect output. This is not optional for any model.
+
 ## 🎚️ Play Levels (READ THIS FIRST — Affects Everything Downstream!)
 
 Speck adapts its rigor to match your project's stage. **Before starting any task in an existing project, check the play level** — it determines which artifacts are required, optional, or skipped entirely.
@@ -1145,6 +1150,8 @@ Even if a story sounds simple or obvious ("just add a button", "add a login form
 - ❌ Create non-idempotent migrations (production risk)
 - ❌ Skip tests for convenience (only for TDD - not yet implemented)
 - ❌ Start coding without reading spec
+- ❌ Generate any Speck artifact (spec.md, plan.md, tasks.md, epic.md, analysis-report.md, validation-report.md, etc.) without first reading its template file — generating from memory produces wrong structure
+- ❌ Execute a Speck command without loading the corresponding SKILL.md first — skills contain required steps, gates, and template paths that cannot be reconstructed from training data
 
 ## ✅ Always Do These Things When User Triggers Commands
 
@@ -1155,6 +1162,7 @@ Even if a story sounds simple or obvious ("just add a button", "add a login form
 - ✅ Suggest retrospectives after completion
 - ✅ Follow TDD workflow (tests first)
 - ✅ Run validation before considering work complete
+- ✅ Load the SKILL.md AND read the template before generating any artifact — in that order, before any other action
 - ✅ Include learning tags in generated commits
 
 ## 📊 Validate Before Marking Complete
@@ -1252,8 +1260,8 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 6.1.12  
-**Updated**: 2026-03-22  
+**Speck Version**: 6.1.13  
+**Updated**: 2026-04-02  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 
 **When you have questions**: Ask to explain @.speck/README.md or specific skills from `.cursor/skills/`.

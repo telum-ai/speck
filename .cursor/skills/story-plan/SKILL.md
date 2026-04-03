@@ -1,6 +1,6 @@
 ---
 name: story-plan
-description: Load after spec.md (and optional clarify/outline/scan) to produce plan.md with the technical design, data model, contracts, and test strategy. Required before story-tasks. Use when user says 'plan this story', 'how should we build this?', or moves from spec to planning.
+description: Load after spec.md (and optional clarify/outline/scan) to produce plan.md with the technical design, data model, contracts, and test strategy. Required before story-tasks. Use when user says 'plan this story', 'how should we build this?', or moves from spec to planning. FIRST ACTION after loading: read template at .speck/templates/story/plan-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -12,6 +12,16 @@ User input:
 $ARGUMENTS
 
 Given the implementation details provided as an argument, do this:
+
+## ⚠️ Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/story/plan-template.md
+```
+The template defines required sections and formatting for `plan.md`. Reading it first tells you what to extract from spec.md and what the research and design phases need to produce. Generating `plan.md` from memory without reading this template produces structurally incorrect output.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 **Research Approach**: Uses just-in-time research pattern (`.cursor/skills/just-in-time-research/SKILL.md`) for implementation patterns, code examples, and API usage
 

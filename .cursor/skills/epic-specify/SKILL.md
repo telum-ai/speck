@@ -1,6 +1,6 @@
 ---
 name: epic-specify
-description: Load when starting work on an epic — either enhancing a placeholder created by project-plan, or creating a new epic from scratch. Use when user says 'let's work on [epic name]' or 'start the [feature] epic'. Produces epic.md — required before all other epic commands.
+description: Load when starting work on an epic — either enhancing a placeholder created by project-plan, or creating a new epic from scratch. Use when user says 'let's work on [epic name]' or 'start the [feature] epic'. Produces epic.md — required before all other epic commands. FIRST ACTION after loading: read template at .speck/templates/epic/epic-template.md before any Q&A or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -12,6 +12,16 @@ User input:
 $ARGUMENTS
 
 The text the user typed after `/epic-specify` in the triggering message should contain the epic description. Parse any context hints from the arguments.
+
+## ⚠️ Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/epic/epic-template.md
+```
+The template defines required sections and formatting for `epic.md`. Reading it first shapes your Q&A — you'll know exactly what information to gather (JTBD, success criteria, dependencies, scope boundaries, etc.). Generating `epic.md` from memory without reading this template produces structurally incorrect output.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Play Level Check.
 
 ## Play Level Check
 

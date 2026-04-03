@@ -1,6 +1,6 @@
 ---
 name: epic-plan
-description: Load after epic.md exists (and optional architecture/journey/wireframes) to produce epic-tech-spec.md with the full technical design. Required before epic-breakdown. Use when user says 'plan this epic' or 'write the tech spec'.
+description: Load after epic.md exists (and optional architecture/journey/wireframes) to produce epic-tech-spec.md with the full technical design. Required before epic-breakdown. Use when user says 'plan this epic' or 'write the tech spec'. FIRST ACTION after loading: read template at .speck/templates/epic/epic-tech-spec-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,16 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/epic/epic-tech-spec-template.md
+```
+The template defines required sections and formatting for `epic-tech-spec.md`. Reading it first tells you what the research, architecture analysis, and design phases need to produce, and what the story breakdown will consume. Generating `epic-tech-spec.md` from memory without reading this template produces structurally incorrect output.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Generate a comprehensive technical specification that bridges epic requirements to implementable stories.
 
