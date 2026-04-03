@@ -23,6 +23,11 @@ Validate epic planning artifacts to identify issues before story implementation 
    
    **Note**: Research is now embedded in epic-tech-spec.md - no separate research.md to validate.
 
+   **Load Constitution Chain (if present)**:
+   - `[EPIC_DIR]/constitution.md` — epic-level principles
+   - `specs/projects/[PROJECT_ID]/constitution.md` — project-level principles
+   Apply combined rule set as the authority for compliance checks below.
+
    **Load UX artifacts (if present)**:
    - `[EPIC_DIR]/user-journey.md` — check if journey stages are reflected in tech spec
    - `[EPIC_DIR]/wireframes.md` — check if screen inventory maps to story breakdown
@@ -59,7 +64,14 @@ Validate epic planning artifacts to identify issues before story implementation 
    - Security addressed?
    - Performance validated?
 
-   **F. UX Artifact Integration** (if `user-journey.md` or `wireframes.md` exist)
+   **F. Constitution Compliance** (if `constitution.md` exists at epic or project level)
+   - Does the tech spec's architecture section respect all MUST rules in the constitution?
+   - Do API contract conventions follow constitution-mandated patterns?
+   - Do data ownership / boundary rules align with constitution-defined epic interfaces?
+   - Are testing requirements at or above the constitution's quality floor?
+   - If violations found: FLAG as CRITICAL with exact constitution principle and offending section.
+
+   **G. UX Artifact Integration** (if `user-journey.md` or `wireframes.md` exist)
    - Does epic-tech-spec.md have a "UX Design Context" section?
    - Are journey stages reflected in story groupings in epic-breakdown.md?
    - Does every wireframe screen map to at least one story in epic-breakdown.md?

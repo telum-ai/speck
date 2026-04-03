@@ -200,6 +200,9 @@ graph TD
     epicSpecify --> epicClarify
     epicClarify --> epicPlan
     
+    epicClarify -.-> epicConstitution
+    epicConstitution -.-> epicPlan
+    
     epicClarify -.-> epicJourney
     epicJourney --> epicWireframes
     epicWireframes --> epicPlan
@@ -208,9 +211,6 @@ graph TD
     epicArchitecture --> epicPlan
     
     epicPlan --> epicBreakdown
-    
-    epicPlan -.-> epicConstitution
-    epicConstitution --> epicBreakdown
     
     epicBreakdown --> epicAnalyze
     epicAnalyze --> |GO| stories["Story Development<br/>(specify→plan→implement→validate per story)"]

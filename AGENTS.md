@@ -295,22 +295,25 @@ Each skill file contains step-by-step instructions for you to execute when user 
 1. epic-specify.md → Creates/enhances epic.md (from project-plan placeholder)
 2. epic-clarify.md → Resolves ambiguities
    [OPTIONAL: epic-outline.md → Maps research needs, uses JIT research pattern]
-3. [OPTIONAL: epic-architecture.md → Creates epic-architecture.md (technical design)]
+3. [OPTIONAL: epic-constitution.md → Creates constitution.md (epic-specific principles)]
+   → USE WHEN: Complex domain/compliance rules, multi-team boundaries, special security/perf requirements
+   → SKIP WHEN: Simple epics that follow project constitution without additional constraints
+   → **MUST run BEFORE epic-plan** — the tech spec must be written knowing the rules, not the other way around
+4. [OPTIONAL: epic-architecture.md → Creates epic-architecture.md (technical design)]
    → RECOMMENDED when: Cross-cutting concerns, new patterns, complex integrations
    → SKIP when: Simple CRUD, follows existing patterns, single-concern epic
-4. [IF USER-FACING UI: epic-journey.md + epic-wireframes.md → REQUIRED before plan]
+5. [IF USER-FACING UI: epic-journey.md + epic-wireframes.md → REQUIRED before plan]
    → Maps the user path through this epic — prevents "each story builds disconnected UI"
    → SKIP ONLY for: backend-only, API-only, CLI-only, infra/devops epics
-5. epic-plan.md → Creates epic-tech-spec.md (USES: architecture if available)
-   [COMPLEX: /epic-constitution → Creates `constitution.md` (epic principles)]
-6. epic-breakdown.md → Creates epic-breakdown.md (USES: tech-spec)
-7. epic-analyze.md → **Pre-implementation quality gate** on planning artifacts (spec + breakdown)
+6. epic-plan.md → Creates epic-tech-spec.md (USES: constitution.md + architecture if available)
+7. epic-breakdown.md → Creates epic-breakdown.md (USES: tech-spec + constitution if present)
+8. epic-analyze.md → **Pre-implementation quality gate** on planning artifacts (spec + breakdown)
    → Run BEFORE starting any story work; catches spec drift and missing coverage early
-8. **[STORY WORK]** → For each story: specify → clarify → plan → [ui-spec] → tasks → analyze → implement → validate → retrospective
-9. epic-validate.md → **Post-implementation** completion verification + JTBD walkthrough
-   → Run AFTER ALL stories are implemented and their `validation-report.md` shows PASS
-   → NOT a planning step — requires working software to validate against
-   [AFTER EPIC: epic-retrospective.md → Reads story retros, validates patterns]
+9. **[STORY WORK]** → For each story: specify → clarify → plan → [ui-spec] → tasks → analyze → implement → validate → retrospective
+10. epic-validate.md → **Post-implementation** completion verification + JTBD walkthrough
+    → Run AFTER ALL stories are implemented and their `validation-report.md` shows PASS
+    → NOT a planning step — requires working software to validate against
+    [AFTER EPIC: epic-retrospective.md → Reads story retros, validates patterns]
 ```
 
 **⚠️ UX Commands Are REQUIRED for UI Epics — Not Optional**
@@ -1238,7 +1241,7 @@ blocks: [S005]            # Stories waiting on this one (informational)
 
 ---
 
-**Speck Version**: 6.1.5  
+**Speck Version**: 6.1.6  
 **Updated**: 2026-03-22  
 **Methodology**: Speck (Multi-Level with Retrospectives)
 

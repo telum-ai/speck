@@ -39,6 +39,17 @@ This command benefits from parallel execution:
    - Related epic tech specs for consistency
    - If epic.md missing: ERROR "Run /epic-specify first"
 
+   **Load Epic Constitution (if present)**:
+   - `[EPIC_DIR]/constitution.md` (from `/epic-constitution`) — if present:
+     * Extract all MUST/SHOULD principles, boundary rules, and measurable standards
+     * These are non-negotiable constraints on the tech spec — every architectural decision,
+       API contract, data handling pattern, and testing requirement must comply
+     * Note any deviations in the tech spec as "Deviation from constitution: [reason]"
+   - `specs/projects/[PROJECT_ID]/constitution.md` (project-level) — if present:
+     * Epic constitution extends (never contradicts) the project constitution
+     * Load both and treat combined rule set as the authority
+   - If no constitution exists at either level: proceed, architecture is unconstrained by explicit rules
+
    **Load UX Design Artifacts (CRITICAL if UI epic)**:
    - `[EPIC_DIR]/user-journey.md` → User journey map (from `/epic-journey`)
      * If present: Extract stage names, touchpoints, pain points, emotional targets, and
@@ -206,9 +217,12 @@ This command benefits from parallel execution:
    Next Steps:
    1. Review tech spec with team
    2. Required: /epic-breakdown (generate story mapping and dependencies)
-   3. Optional: /epic-constitution (if complex governance needed)
-   4. Required: /epic-analyze (pre-implementation quality gate on spec + breakdown — run before ANY story work)
-   5. Then: Start story development with /story-specify for each story in the breakdown
+   3. Required: /epic-analyze (pre-implementation quality gate on spec + breakdown — run before ANY story work)
+   4. Then: Start story development with /story-specify for each story in the breakdown
+   
+   ⚠️  /epic-constitution must be run BEFORE /epic-plan (not after) — the tech spec
+       must be written knowing the rules. If you realise you need a constitution now,
+       run /epic-constitution, then re-run /epic-plan so the spec incorporates the rules.
    
    ⚠️  /epic-validate is NOT a planning step. Run it only AFTER all stories
        are implemented and every story's validation-report.md shows PASS.

@@ -20,6 +20,12 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    - Project constraints from PRD
    - If tech spec missing: ERROR "Run /epic-plan first"
    
+   **Load Constitution Chain (if present)**:
+   - `[EPIC_DIR]/constitution.md` — epic-level principles governing story boundaries, interfaces,
+     and quality standards. Use when deciding how to slice stories (e.g., data ownership rules
+     might force a story boundary; API versioning rules might require a dedicated contract story).
+   - `specs/projects/[PROJECT_ID]/constitution.md` — project-level principles to honour across all stories.
+   
    **Brownfield Adaptation**: If epic-codebase-scan.md exists, use it to identify existing code that needs refactoring or enhancement as part of story breakdown.
    
    **Note**: Research is now embedded in epic-tech-spec.md - no separate research.md file to load.

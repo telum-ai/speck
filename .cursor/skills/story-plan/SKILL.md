@@ -21,7 +21,8 @@ This command benefits from parallel execution:
 
 **Context Loading** - Load multiple docs in parallel:
 ```
-├── [Parallel] Load constitution.md
+├── [Parallel] Load project constitution.md (specs/projects/[PROJECT_ID]/constitution.md)
+├── [Parallel] Load epic constitution.md ({EPIC_DIR}/constitution.md if present)
 ├── [Parallel] Load domain-model.md
 ├── [Parallel] Load ux-strategy.md
 ├── [Parallel] Load design-system.md
@@ -130,7 +131,13 @@ This command benefits from parallel execution:
    - Note: "No codebase scans found. Planning will proceed without existing pattern references"
    - Still valid for greenfield projects or new domains
 
-6. Read the project constitution at `specs/projects/[PROJECT_ID]/constitution.md` if it exists to understand constitutional requirements.
+6. Load the full constitution chain (both levels, if they exist):
+   - **Project**: `specs/projects/[PROJECT_ID]/constitution.md` — universal principles for the project
+   - **Epic**: `{EPIC_DIR}/constitution.md` — domain-specific extensions for this epic
+   
+   The epic constitution inherits from and specializes the project constitution — never contradicts it.
+   Apply the combined rule set when making implementation decisions in the plan.
+   Epic-level MUST rules take precedence over project defaults within this epic's domain.
 
 7. **Load Project Context Documents** (CRITICAL for consistency):
    
