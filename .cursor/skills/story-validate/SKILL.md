@@ -1,6 +1,6 @@
 ---
 name: story-validate
-description: Load after implementation is complete to verify spec compliance, execute acceptance tests, and produce validation-report.md. Required before story-retrospective. Use when user says 'is this done?', 'validate', 'test this', or implementation is marked complete.
+description: Load after implementation is complete to verify spec compliance, execute acceptance tests, and produce validation-report.md. Required before story-retrospective. Use when user says 'is this done?', 'validate', 'test this', or implementation is marked complete. FIRST ACTION after loading: read template at .speck/templates/story/validation-report-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,16 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/story/validation-report-template.md
+```
+The template defines required sections and formatting for `validation-report.md`, including pass/fail criteria, evidence fields, and the user-reachability check. Reading it first ensures your validation findings are captured in the structure downstream tools expect.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Goal: Comprehensively validate that the implementation fulfills the specification, meets non-functional requirements, adheres to constitutional principles, and is ready for review/deployment.
 

@@ -1,6 +1,6 @@
 ---
 name: story-retrospective
-description: Load after story-validate produces a PASS result to mine git commits and produce story-retro.md. Run after every completed story — essential for feeding learnings into the epic retrospective and improving future stories.
+description: Load after story-validate produces a PASS result to mine git commits and produce story-retro.md. Run after every completed story — essential for feeding learnings into the epic retrospective and improving future stories. FIRST ACTION after loading: read template at .speck/templates/story/story-retro-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,16 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/story/story-retro-template.md
+```
+The template defines required sections and formatting for `story-retro.md`, including pattern extraction, effort variance, and what gets flagged to the epic retro. Reading it first tells you what data to mine from commits.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Mine raw learning data from story implementation and consolidate into structured summary. Apply immediate learnings to current epic, flag patterns for epic retrospective validation.
 

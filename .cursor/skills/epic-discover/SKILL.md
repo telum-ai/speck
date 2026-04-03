@@ -1,6 +1,6 @@
 ---
 name: epic-discover
-description: Load for brownfield projects where epics haven't been defined yet. Analyzes existing code and documentation to discover natural epic boundaries. Use before epic-specify on brownfield projects with no existing epic structure.
+description: Load for brownfield projects where epics haven't been defined yet. Analyzes existing code and documentation to discover natural epic boundaries. Use before epic-specify on brownfield projects with no existing epic structure. FIRST ACTION after loading: read template at .speck/templates/epic/epic-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,16 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/epic/epic-template.md
+```
+The template defines required sections and formatting for `epic.md`. Reading it first shapes what you look for when scanning the codebase — you'll know what information each epic document needs to contain.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Discover epic boundaries from existing code and documentation.
 

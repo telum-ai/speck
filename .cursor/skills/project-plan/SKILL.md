@@ -1,6 +1,6 @@
 ---
 name: project-plan
-description: Load after foundation artifacts exist (context.md for Build; architecture.md for Platform) to create PRD.md and the full epic structure. The central planning command — run before any epic work begins. Use when user says 'plan the project' or 'what are the epics?'.
+description: Load after foundation artifacts exist (context.md for Build; architecture.md for Platform) to create PRD.md and the full epic structure. The central planning command — run before any epic work begins. Use when user says 'plan the project' or 'what are the epics?'. FIRST ACTION after loading: read templates at .speck/templates/project/prd-template.md and .speck/templates/project/epics-list-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,17 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ Step 0: Read Templates First
+
+**Before any other action** — read BOTH templates now using the Read tool:
+```
+.speck/templates/project/prd-template.md
+.speck/templates/project/epics-list-template.md
+```
+This skill produces two primary artifacts. Reading both templates first tells you what the PRD and epic index need to contain, shaping what you extract from architecture.md, context.md, and upstream artifacts.
+
+**Checkpoint**: After reading both, note each template's top-level sections. Then continue to Play Level Check.
 
 ## Play Level Check
 

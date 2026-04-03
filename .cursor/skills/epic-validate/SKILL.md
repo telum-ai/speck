@@ -1,6 +1,6 @@
 ---
 name: epic-validate
-description: Load after all stories in an epic are individually validated to verify the epic's goals were achieved as a whole. Produces epic validation report — required before epic-retrospective.
+description: Load after all stories in an epic are individually validated to verify the epic's goals were achieved as a whole. Produces epic validation report — required before epic-retrospective. FIRST ACTION after loading: read templates at .speck/templates/epic/epic-validation-report-template.md and .speck/templates/epic/epic-punch-list-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,17 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ Step 0: Read Templates First
+
+**Before any other action** — read BOTH templates now using the Read tool:
+```
+.speck/templates/epic/epic-validation-report-template.md
+.speck/templates/epic/epic-punch-list-template.md
+```
+This skill produces two artifacts. Read both templates now so your validation findings and punch list land in the structure the project retrospective expects.
+
+**Checkpoint**: After reading both, note each template's top-level sections. Then continue to Step 1.
 
 Comprehensive validation that the epic delivers on its promises and integrates properly with the system.
 

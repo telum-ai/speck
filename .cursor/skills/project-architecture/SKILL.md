@@ -1,6 +1,6 @@
 ---
 name: project-architecture
-description: Load (required for Platform, optional for Build) to design the system architecture before project-plan. Produces architecture.md — run after project-context and before project-plan. Never run /project-plan before this on Platform projects.
+description: Load (required for Platform, optional for Build) to design the system architecture before project-plan. Produces architecture.md — run after project-context and before project-plan. Never run /project-plan before this on Platform projects. FIRST ACTION after loading: read template at .speck/templates/project/architecture-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,16 @@ User input:
 $ARGUMENTS
 
 The text the user typed after `/project-architecture` in the triggering message. Parse any architecture focus areas or constraints.
+
+## ⚠️ Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/project/architecture-template.md
+```
+The template defines required sections and formatting for `architecture.md`. Reading it first shapes what you extract from context.md and what the research phases need to evaluate.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Play Level Check.
 
 ## Play Level Check
 

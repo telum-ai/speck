@@ -1,6 +1,6 @@
 ---
 name: project-specify
-description: Load at the very start of a new project when the user describes what they want to build, or to update an existing project.md. Produces project.md — must run before project-clarify, project-context, and all downstream project commands.
+description: Load at the very start of a new project when the user describes what they want to build, or to update an existing project.md. Produces project.md — must run before project-clarify, project-context, and all downstream project commands. FIRST ACTION after loading: read template at .speck/templates/project/project-template.md before any Q&A or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -12,6 +12,16 @@ User input:
 $ARGUMENTS
 
 The text the user typed after `/project-specify` in the triggering message **is** the project description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
+
+## ⚠️ Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/project/project-template.md
+```
+The template defines required sections and formatting for `project.md`. Reading it first shapes your discovery Q&A — you'll know what information each section needs. Generating `project.md` from memory produces structurally incorrect output.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 ## Interactive Project Specification Process
 

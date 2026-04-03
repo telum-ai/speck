@@ -1,6 +1,6 @@
 ---
 name: project-analyze
-description: Load after project-plan produces PRD.md and the epic structure — quality check for consistency, completeness, and issues before execution begins. Run before E000 or any feature epic is started.
+description: Load after project-plan produces PRD.md and the epic structure — quality check for consistency, completeness, and issues before execution begins. Run before E000 or any feature epic is started. FIRST ACTION after loading: read template at .speck/templates/project/project-analysis-report-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,16 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/project/project-analysis-report-template.md
+```
+The template defines required sections and formatting for `project-analysis-report.md`. Reading it first ensures your findings land in the structure that downstream project-validate expects.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Analyze project planning artifacts for consistency, completeness, and feasibility before moving to epic-level work.
 

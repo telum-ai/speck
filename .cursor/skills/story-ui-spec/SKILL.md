@@ -1,6 +1,6 @@
 ---
 name: story-ui-spec
-description: Load when a story has significant UI work — multiple components, interaction states, animations, or complex layouts. Run after story-plan and before story-tasks. Produces ui-spec.md with exact styling, component hierarchy, and interaction details. Required for UI-heavy stories; skip for backend/API-only stories.
+description: Load when a story has significant UI work — multiple components, interaction states, animations, or complex layouts. Run after story-plan and before story-tasks. Produces ui-spec.md with exact styling, component hierarchy, and interaction details. Required for UI-heavy stories; skip for backend/API-only stories. FIRST ACTION after loading: read template at .speck/templates/story/ui-spec-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,16 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/story/ui-spec-template.md
+```
+The template defines required sections and formatting for `ui-spec.md`, including component hierarchy, state matrix, design token usage, and interaction spec. Reading it first shapes what you extract from plan.md and what you document for each screen/component. Generating ui-spec.md from memory produces wrong structure.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Generate precise UI specifications that developers can implement directly.
 
