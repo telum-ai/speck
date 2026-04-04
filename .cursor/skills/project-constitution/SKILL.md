@@ -1,6 +1,6 @@
 ---
 name: project-constitution
-description: Load (Platform play level only) to define technical principles and architectural guardrails for the project. Produces constitution.md — optional but valuable when a team needs explicit coding standards, governance rules, or non-negotiable constraints. FIRST ACTION after loading: read template at .speck/templates/project/constitution-template.md before any context loading or artifact generation.
+description: Load (Platform play level only) to define technical principles and architectural guardrails for the project. Produces constitution.md — optional but valuable when a team needs explicit coding standards, governance rules, or non-negotiable constraints.
 disable-model-invocation: false
 ---
 
@@ -10,16 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/project/constitution-template.md
-```
-The template defines required sections and formatting for `constitution.md`, including principle categories, rationale format, and constraint declarations. Generating it from memory produces structurally incorrect output.
-
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Play Level Check.
 
 ## Play Level Check
 

@@ -1,6 +1,6 @@
 ---
 name: story-extract
-description: Load when code exists but no spec does — reverse-engineering story documentation from an existing implementation. Use for brownfield stories, code written before Speck was adopted, or when a feature was built without going through the spec flow. FIRST ACTION after loading: read both templates — .speck/templates/story/story-template.md and .speck/templates/story/codebase-scan-template.md — before any context loading or artifact generation.
+description: Load when code exists but no spec does — reverse-engineering story documentation from an existing implementation. Use for brownfield stories, code written before Speck was adopted, or when a feature was built without going through the spec flow.
 disable-model-invocation: false
 ---
 
@@ -10,17 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Templates First
-
-**Before any other action** — read BOTH templates now using the Read tool:
-```
-.speck/templates/story/story-template.md
-.speck/templates/story/codebase-scan-template.md
-```
-This skill produces two artifacts. The first template defines `spec.md` structure; the second defines `codebase-scan-extracted.md` structure. Reading both first shapes what you extract from the existing code.
-
-**Checkpoint**: After reading both, note each template's top-level sections. Then continue to Step 1.
 
 Extract story-level specifications from existing code.
 

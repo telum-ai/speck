@@ -1,6 +1,6 @@
 ---
 name: project-retrospective
-description: Load after project-validate passes to synthesize all epic retrospectives, validate cross-project patterns, and evolve the Speck methodology. Run once at project completion. FIRST ACTION after loading: read template at .speck/templates/project/project-retro-template.md before any context loading or artifact generation.
+description: Load after project-validate passes to synthesize all epic retrospectives, validate cross-project patterns, and evolve the Speck methodology. Run once at project completion.
 disable-model-invocation: false
 ---
 
@@ -10,16 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/project/project-retro-template.md
-```
-The template defines required sections and formatting for `project-retro.md`, including cross-epic pattern validation and methodology evolution proposals.
-
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Aggregate epic retrospectives, validate project-wide patterns, and propose methodology evolution for Speck based on strategic project insights.
 

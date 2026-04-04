@@ -1,6 +1,6 @@
 ---
 name: story-scan
-description: Load for brownfield stories where existing code must be understood before planning. Use when a story extends, modifies, or integrates with significant existing functionality. Produces codebase-scan.md — skip for fully greenfield stories. FIRST ACTION after loading: read template at .speck/templates/story/codebase-scan-template.md before any context loading or artifact generation.
+description: Load for brownfield stories where existing code must be understood before planning. Use when a story extends, modifies, or integrates with significant existing functionality. Produces codebase-scan.md — skip for fully greenfield stories.
 disable-model-invocation: false
 ---
 
@@ -10,16 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/story/codebase-scan-template.md
-```
-The template defines required sections and formatting for `codebase-scan.md`, including how to document existing patterns, file references, and copy-paste-adapt examples. Reading it first ensures your scan findings land in the structure story-plan expects.
-
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 **Deep dive** into codebase to find **specific implementations** to guide this story's development.
 

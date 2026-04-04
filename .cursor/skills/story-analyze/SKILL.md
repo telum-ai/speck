@@ -1,6 +1,6 @@
 ---
 name: story-analyze
-description: REQUIRED before story-implement — never skip. Load after tasks.md is generated to cross-check spec.md, plan.md, and tasks.md for consistency, gaps, and issues. Catches problems before any code is written — a non-destructive quality gate. FIRST ACTION after loading: read template at .speck/templates/story/analysis-report-template.md before any context loading or artifact generation.
+description: REQUIRED before story-implement — never skip. Load after tasks.md is generated to cross-check spec.md, plan.md, and tasks.md for consistency, gaps, and issues. Catches problems before any code is written — a non-destructive quality gate.
 disable-model-invocation: false
 ---
 
@@ -10,16 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/story/analysis-report-template.md
-```
-The template defines required sections and formatting for `analysis-report.md`. Reading it first ensures your cross-artifact analysis produces findings in the expected structure. Generating this report from memory produces wrong output.
-
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Goal: Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `/story-tasks` has successfully produced a complete `tasks.md`.
 

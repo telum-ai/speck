@@ -1,6 +1,6 @@
 ---
 name: epic-analyze
-description: Load after epic-tech-spec.md and epic-breakdown.md exist — quality check for consistency and completeness before any story work begins. Catches spec drift and missing coverage between the tech spec and story breakdown. FIRST ACTION after loading: read template at .speck/templates/epic/epic-analysis-report-template.md before any context loading or artifact generation.
+description: Load after epic-tech-spec.md and epic-breakdown.md exist — quality check for consistency and completeness before any story work begins. Catches spec drift and missing coverage between the tech spec and story breakdown.
 disable-model-invocation: false
 ---
 
@@ -10,16 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/epic/epic-analysis-report-template.md
-```
-The template defines required sections and formatting for `epic-analysis-report.md`. Reading it first ensures your cross-artifact analysis produces findings in the expected structure.
-
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Validate epic planning artifacts to identify issues before story implementation begins.
 

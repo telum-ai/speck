@@ -1,6 +1,6 @@
 ---
 name: epic-retrospective
-description: Load after epic-validate passes to synthesize all story-retro.md files, validate cross-story patterns, and produce epic-retro.md. Feeds the project retrospective — run after every completed epic. FIRST ACTION after loading: read template at .speck/templates/epic/epic-retro-template.md before any context loading or artifact generation.
+description: Load after epic-validate passes to synthesize all story-retro.md files, validate cross-story patterns, and produce epic-retro.md. Feeds the project retrospective — run after every completed epic.
 disable-model-invocation: false
 ---
 
@@ -10,16 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/epic/epic-retro-template.md
-```
-The template defines required sections and formatting for `epic-retro.md`, including pattern validation, cross-story insights, and what escalates to the project retro.
-
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Aggregate story retrospectives, validate patterns, apply immediate learnings to current project, and propose process improvements for Speck methodology.
 

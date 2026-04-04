@@ -1,6 +1,6 @@
 ---
 name: project-validate
-description: Load when all epics are complete to verify the project meets its original vision and PRD success metrics. Produces project validation report — required before project-retrospective. FIRST ACTION after loading: read templates at .speck/templates/project/project-validation-report-template.md, .speck/templates/project/project-validation-summary-template.md, and .speck/templates/project/project-punch-list-template.md before any context loading or artifact generation.
+description: Load when all epics are complete to verify the project meets its original vision and PRD success metrics. Produces project validation report — required before project-retrospective.
 disable-model-invocation: false
 ---
 
@@ -10,18 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Templates First
-
-**Before any other action** — read ALL THREE templates now using the Read tool:
-```
-.speck/templates/project/project-validation-report-template.md
-.speck/templates/project/project-validation-summary-template.md
-.speck/templates/project/project-punch-list-template.md
-```
-This skill produces three artifacts. Reading all templates first ensures your validation evidence, executive summary, and punch list land in the expected structure.
-
-**Checkpoint**: After reading all three, note each template's top-level sections. Then continue to Play Level Check.
 
 ## Play Level Check
 

@@ -1,6 +1,6 @@
 ---
 name: epic-scan
-description: Load for brownfield epics to analyze existing code patterns and implementations relevant to this epic's domain before planning. Use when the epic modifies or extends significant existing functionality. Skip for fully greenfield epics. FIRST ACTION after loading: read template at .speck/templates/epic/epic-codebase-scan-template.md before any context loading or artifact generation.
+description: Load for brownfield epics to analyze existing code patterns and implementations relevant to this epic's domain before planning. Use when the epic modifies or extends significant existing functionality. Skip for fully greenfield epics.
 disable-model-invocation: false
 ---
 
@@ -10,16 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/epic/epic-codebase-scan-template.md
-```
-The template defines required sections and formatting for `epic-codebase-scan.md`. Reading it first ensures your scan findings land in the structure epic-plan expects.
-
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Analyze codebase for existing patterns, similar implementations, and reusable components **specifically relevant to this epic's scope**.
 

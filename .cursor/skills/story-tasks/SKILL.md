@@ -1,6 +1,6 @@
 ---
 name: story-tasks
-description: Load after plan.md (and optional ui-spec.md) to generate the step-by-step implementation checklist (tasks.md). Required before story-implement. Use when user says 'create tasks', 'break this into steps', or moves from planning to implementation. FIRST ACTION after loading: read template at .speck/templates/story/tasks-template.md before any context loading or artifact generation.
+description: Load after plan.md (and optional ui-spec.md) to generate the step-by-step implementation checklist (tasks.md). Required before story-implement. Use when user says 'create tasks', 'break this into steps', or moves from planning to implementation.
 disable-model-invocation: false
 ---
 
@@ -10,16 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/story/tasks-template.md
-```
-The template defines required task format, ordering rules, parallel-marker syntax, and TDD structure for `tasks.md`. Without reading it, generated tasks will have wrong format. The template contains ALL formatting rules — do not reconstruct them from memory.
-
-**Checkpoint**: After reading, note the required task format and any parallel markers. Then continue to Step 1.
 
 1. Locate the active story directory (STORY_DIR):
    - Preferred: user is already in the story directory (or a subfolder like `contracts/`)

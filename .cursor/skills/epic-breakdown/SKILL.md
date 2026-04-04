@@ -1,6 +1,6 @@
 ---
 name: epic-breakdown
-description: Load after epic-tech-spec.md exists to create the story map, dependencies, and implementation order (epic-breakdown.md). Required before starting any individual story in the epic. Use when user says 'break this into stories' or 'what stories do we need?'. FIRST ACTION after loading: read template at .speck/templates/epic/breakdown-template.md before any context loading or artifact generation.
+description: Load after epic-tech-spec.md exists to create the story map, dependencies, and implementation order (epic-breakdown.md). Required before starting any individual story in the epic. Use when user says 'break this into stories' or 'what stories do we need?'.
 disable-model-invocation: false
 ---
 
@@ -10,16 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/epic/breakdown-template.md
-```
-The template defines required sections and formatting for `epic-breakdown.md`, including story table format, dependency mapping, parallel markers, and phase grouping. Without reading it, generated breakdowns have wrong structure. Also note: placeholder `spec.md` files created here must use lifecycle state `Draft (Placeholder)` — the template documents this.
-
-**Checkpoint**: After reading, note the story table format and dependency notation. Then continue to Step 1.
 
 Create a comprehensive story breakdown that maps all user stories within the epic, showing dependencies, parallelization opportunities, and suggested implementation order. This is NOT about concrete development tasks - it's about story organization and sequencing.
 

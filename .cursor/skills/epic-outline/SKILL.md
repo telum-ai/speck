@@ -1,6 +1,6 @@
 ---
 name: epic-outline
-description: Load before epic-plan when the epic involves unfamiliar technology, complex integrations, or has significant unknowns that need research. Optional — skip when the implementation path is clear and existing project patterns already apply. FIRST ACTION after loading: read template at .speck/templates/epic/outline-template.md before any context loading or artifact generation.
+description: Load before epic-plan when the epic involves unfamiliar technology, complex integrations, or has significant unknowns that need research. Optional — skip when the implementation path is clear and existing project patterns already apply.
 disable-model-invocation: false
 ---
 
@@ -10,16 +10,6 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/epic/outline-template.md
-```
-The template defines required sections and formatting for `epic-outline.md`. Reading it first tells you what research gaps and decision points to document.
-
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Create a technical outline that identifies key architectural decisions and research areas needed for epic implementation.
 

@@ -1,6 +1,6 @@
 ---
 name: story-specify
-description: Load when starting a new story — either detailing a placeholder from epic-breakdown, or creating a story from scratch. Use when user says 'let's work on story X', 'specify [feature detail]', or picks up a story from the breakdown. Produces spec.md — required before all other story commands. FIRST ACTION after loading: read template at .speck/templates/story/story-template.md before any Q&A or artifact generation.
+description: Load when starting a new story — either detailing a placeholder from epic-breakdown, or creating a story from scratch. Use when user says 'let's work on story X', 'specify [feature detail]', or picks up a story from the breakdown. Produces spec.md — required before all other story commands.
 disable-model-invocation: false
 ---
 
@@ -12,16 +12,6 @@ User input:
 $ARGUMENTS
 
 The text the user typed after `/story-specify` in the triggering message **is** the story description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/story/story-template.md
-```
-The template defines required sections and formatting for `spec.md`. Reading it first shapes your Q&A — you'll know exactly what information you need to gather. Generating `spec.md` from memory without reading this template produces structurally incorrect output.
-
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 ## Play Level Check
 
