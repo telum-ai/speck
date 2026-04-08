@@ -6,11 +6,21 @@
   "bin": {
     "speck": "./packages/cli/bin/speck.js"
   },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "jest"
+  },
   "engines": {
     "node": ">=18"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/telum-ai/speck.git"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }

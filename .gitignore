@@ -7,3 +7,8 @@ logs/
 
 # OS
 .DS_Store
+
+# E2E Test artifacts
+node_modules/
+package-lock.json
+.e2e-test-complete
