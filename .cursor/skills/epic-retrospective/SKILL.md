@@ -3,6 +3,10 @@ name: epic-retrospective
 description: Load after epic-validate passes to synthesize all story-retro.md files, validate cross-story patterns, and produce epic-retro.md. Feeds the project retrospective — run after every completed epic. FIRST ACTION after loading: read template at .speck/templates/epic/epic-retro-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
+## Learnings register propagation
+
+When synthesizing an epic retrospective, update the project-local `learnings-register.md` with validated patterns, gotchas, and next verification targets that should shape upcoming stories or epics.
+
 
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

@@ -100,3 +100,8 @@ This ensures only **truly validated** patterns make it into the library.
 **Version**: 1.0  
 **Updated**: 2025-12-20
 
+
+
+## Relationship to project-local learnings
+
+Project retrospectives and `/speck-learn` should first update the project-local `learnings-register.md`. Patterns graduate into this library only after they prove reusable beyond a single story or isolated incident.

@@ -130,6 +130,13 @@
 
 ---
 
+## Promotion to Learnings Register
+
+Update the project-local `learnings-register.md` with:
+- validated patterns that showed up across stories
+- systemic gotchas the next epic must not repeat
+- retired learnings that no longer apply
+
 ## Immediate Actions (Non-Meta - Applied to Current Project)
 
 > **These updates were made during this retrospective**

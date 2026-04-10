@@ -76,6 +76,13 @@
 
 ---
 
+## Promotion to Learnings Register
+
+Update `learnings-register.md` for the parent project with:
+- any pattern worth intentionally reusing in the next story
+- any gotcha worth guarding against immediately
+- one hypothesis or learning that should be tested next
+
 ## Immediate Actions (Non-Meta - Applied to Current Epic)
 
 > **These updates were made during this retrospective**
