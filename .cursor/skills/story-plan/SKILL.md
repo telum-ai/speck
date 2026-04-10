@@ -3,6 +3,10 @@ name: story-plan
 description: Load after spec.md (and optional clarify/outline/scan) to produce plan.md with the technical design, data model, contracts, and test strategy. Required before story-tasks. Use when user says 'plan this story', 'how should we build this?', or moves from spec to planning. FIRST ACTION after loading: read template at .speck/templates/story/plan-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
+## Review gauntlet requirement
+
+When generating or updating `plan.md`, explicitly fill the **Review Gauntlet**, **Deferred Scope Register**, and **Review Readiness Dashboard** sections. The story plan should show why it is ready for `/story-tasks`, not merely describe the code shape.
+
 
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

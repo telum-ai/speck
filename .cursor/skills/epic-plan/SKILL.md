@@ -3,6 +3,10 @@ name: epic-plan
 description: Load after epic.md exists (and optional architecture/journey/wireframes) to produce epic-tech-spec.md with the full technical design. Required before epic-breakdown. Use when user says 'plan this epic' or 'write the tech spec'. FIRST ACTION after loading: read template at .speck/templates/epic/epic-tech-spec-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
+## Review gauntlet requirement
+
+When generating or updating `epic-tech-spec.md`, explicitly fill the **Review Gauntlet**, **Deferred Scope Register**, and **Review Readiness Dashboard** sections. The epic is not ready for story breakdown until those lanes are addressed.
+
 
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

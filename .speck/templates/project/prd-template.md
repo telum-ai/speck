@@ -99,6 +99,45 @@ Epic development (each epic references relevant sections)
 5. **Value Realization**: [When they see benefit]
 6. **Advocacy**: [How they share success]
 
+## Review Gauntlet
+
+### 1. Product / Scope Review
+
+- **Core user pain**: [What specific pain is sharp enough that this project deserves to exist?]
+- **Narrowest valuable wedge**: [What is the smallest version that still feels like the real product?]
+- **Why this now**: [Why should this be built now, not later?]
+- **Scope expansions considered**: [Expansion ideas considered during planning]
+- **Decision**: [Accepted / Deferred / Rejected with rationale]
+
+### 2. UX / Design Review
+
+- **Primary user journey**: [What must feel obvious and high-trust?]
+- **Critical states covered**: [Empty, loading, error, success, handoff, fallback]
+- **Design risk**: [Where could this become generic, confusing, or AI-sloppy?]
+- **Decision**: [What UX/design calls are locked before epic planning starts?]
+
+### 3. Engineering / Reliability Review
+
+- **System shape**: [What must already be true about architecture, integrations, data, auth, jobs, etc.?]
+- **Operational risk**: [Failure modes, rollout risk, migrations, external dependencies]
+- **Testing posture**: [How the project will prove correctness]
+- **Decision**: [What technical constraints shape the plan?]
+
+### 4. Validation / GTM Review
+
+- **Validation evidence**: [What evidence exists that this should be built?]
+- **Fastest learning loop**: [What should be tested in the market before expanding scope?]
+- **Ship gate**: [What would make the first release feel worth using or paying for?]
+- **Decision**: [What commercial/validation assumptions are carrying this plan?]
+
+## Deferred Scope Register
+
+Capture ideas that came up during planning but should NOT enter the first execution pass.
+
+| Idea | Why it came up | Why it is deferred now | Revisit trigger |
+|------|----------------|------------------------|-----------------|
+| [Feature / expansion] | [Reason] | [Scope, risk, sequencing, validation, etc.] | [Condition that would justify revisiting] |
+
 ## Functional Requirements
 
 ### Core Features
@@ -246,6 +285,21 @@ Epic development (each epic references relevant sections)
 - **Review Cycle**: [How often metrics reviewed]
 
 ## Risk Analysis
+
+## Review Readiness Dashboard
+
+Use this to make "how done is the plan?" explicit before implementation begins.
+
+| Review Lane | Status | Evidence / Artifact | Blocking? |
+|-------------|--------|---------------------|-----------|
+| Product / Scope | [CLEAR / NEEDS WORK / N/A] | [Section, doc, or decision note] | [Yes/No] |
+| UX / Design | [CLEAR / NEEDS WORK / N/A] | [Section, doc, or decision note] | [Yes/No] |
+| Engineering / Reliability | [CLEAR / NEEDS WORK / N/A] | [Section, doc, or decision note] | [Yes/No] |
+| Validation / GTM | [CLEAR / NEEDS WORK / N/A] | [Section, doc, or decision note] | [Yes/No] |
+
+**Verdict**: [READY FOR EPIC PLANNING / HOLD]
+
+**Why**: [One paragraph on why the project should proceed now or what must be fixed first]
 
 ### Risk Matrix
 
