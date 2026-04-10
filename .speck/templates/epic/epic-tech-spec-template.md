@@ -50,6 +50,33 @@ Derived from emotional targets and pain points in `user-journey.md`:
 
 ---
 
+## Review Gauntlet
+
+### 1. User Value / Scope Review
+
+- **Epic promise**: [What user-visible value this epic must deliver]
+- **Minimum lovable scope**: [What belongs in this epic vs what should wait]
+- **Scope expansions considered**: [Ideas surfaced during planning]
+- **Decision**: [Accepted / Deferred / Rejected with rationale]
+
+### 2. UX / Journey Review
+
+- **Critical user flow**: [What journey this epic owns]
+- **High-risk interaction states**: [Empty/loading/error/edge states that must be designed intentionally]
+- **Decision**: [What UX assumptions are locked before story breakdown]
+
+### 3. Engineering / Reliability Review
+
+- **Architectural pressure points**: [Boundaries, dependencies, failure modes]
+- **Operational risk**: [Data, jobs, migrations, auth, performance, rollback]
+- **Decision**: [What technical constraints or bets drive the approach]
+
+## Deferred Scope Register
+
+| Idea | Why it came up | Why it is deferred from this epic | Revisit trigger |
+|------|----------------|-----------------------------------|-----------------|
+| [Feature / expansion] | [Reason] | [Why not now] | [Condition] |
+
 ## Technical Approach
 
 Describe the end-to-end implementation approach for this epic:
@@ -136,6 +163,18 @@ This section guides `/epic-breakdown`:
 2. [Story name] — [Goal]
 
 ---
+
+## Review Readiness Dashboard
+
+| Review Lane | Status | Evidence / Artifact | Blocking? |
+|-------------|--------|---------------------|-----------|
+| User Value / Scope | [CLEAR / NEEDS WORK / N/A] | [Section, decision, or artifact] | [Yes/No] |
+| UX / Journey | [CLEAR / NEEDS WORK / N/A] | [Section, journey, or artifact] | [Yes/No] |
+| Engineering / Reliability | [CLEAR / NEEDS WORK / N/A] | [Section, architecture note, or artifact] | [Yes/No] |
+
+**Verdict**: [READY FOR STORY BREAKDOWN / HOLD]
+
+**Why**: [One paragraph on whether the epic is ready to break into stories]
 
 ## Open Questions / Risks
 

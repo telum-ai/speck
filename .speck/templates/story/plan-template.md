@@ -41,6 +41,33 @@
 
 ---
 
+## Review Gauntlet
+
+### 1. User Outcome / Scope Review
+
+- **Story promise**: [What becomes true for the user after this story ships]
+- **Minimum correct scope**: [What is in vs out for this story]
+- **Scope expansions considered**: [Ideas surfaced while planning]
+- **Decision**: [Accepted / Deferred / Rejected with rationale]
+
+### 2. UX / Interaction Review
+
+- **Critical state coverage**: [Empty, loading, error, success, edge states]
+- **High-risk UX detail**: [What could feel cheap, confusing, or brittle]
+- **Decision**: [What UX details must be preserved during implementation]
+
+### 3. Engineering / Reliability Review
+
+- **Failure modes**: [What can break and how the design contains it]
+- **Test posture**: [How this story proves correctness]
+- **Decision**: [What technical guardrails or constraints matter most]
+
+## Deferred Scope Register
+
+| Idea | Why it came up | Why it is deferred from this story | Revisit trigger |
+|------|----------------|------------------------------------|-----------------|
+| [Change / improvement] | [Reason] | [Why not now] | [Condition] |
+
 ## Technical Approach
 [Describe HOW this story will be implemented at a high level: main components touched, key patterns reused, and key decisions/trade-offs. Keep this 3–8 sentences.]
 
@@ -392,6 +419,18 @@ directories captured above]
 **Phase 3**: Task generation (/story-tasks command creates tasks.md)  
 **Phase 4**: Implementation (/story-implement executes tasks.md)  
 **Phase 5**: Validation (/story-validate runs tests, validates requirements, generates reports)
+
+## Review Readiness Dashboard
+
+| Review Lane | Status | Evidence / Artifact | Blocking? |
+|-------------|--------|---------------------|-----------|
+| User Outcome / Scope | [CLEAR / NEEDS WORK / N/A] | [Section, spec link, or note] | [Yes/No] |
+| UX / Interaction | [CLEAR / NEEDS WORK / N/A] | [Section, ui-spec, or note] | [Yes/No] |
+| Engineering / Reliability | [CLEAR / NEEDS WORK / N/A] | [Section, tests, or note] | [Yes/No] |
+
+**Verdict**: [READY FOR /story-tasks / HOLD]
+
+**Why**: [One paragraph on whether planning is strong enough to move into tasks]
 
 ## Complexity Tracking
 *Fill ONLY if Constitution Check has violations that must be justified*
