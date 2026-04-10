@@ -3,6 +3,10 @@ name: project-retrospective
 description: Load after project-validate passes to synthesize all epic retrospectives, validate cross-project patterns, and evolve the Speck methodology. Run once at project completion. FIRST ACTION after loading: read template at .speck/templates/project/project-retro-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
+## Learnings register propagation
+
+When synthesizing a project retrospective, update `specs/projects/[project-id]/learnings-register.md` alongside the retrospective. Promote stable cross-epic lessons there before proposing upstream methodology changes.
+
 
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

@@ -115,6 +115,7 @@ Your Speck project artifacts live under:
 specs/projects/[project-id]/
 ├── project.md          # Project vision & goals
 ├── PRD.md              # Product requirements
+├── learnings-register.md # Project-local learnings and validated gotchas
 ├── architecture.md     # System design
 └── epics/              # Epic specifications
     └── stories/        # Story specifications

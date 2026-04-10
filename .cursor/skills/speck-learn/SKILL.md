@@ -3,6 +3,10 @@ name: speck-learn
 description: Load to capture a quick learning, pattern, or insight outside the formal retrospective process. Use for mid-story discoveries, surprising gotchas, or performance insights that shouldn't wait until story completion.
 disable-model-invocation: false
 ---
+## Learnings register propagation
+
+`/speck-learn` should update the project-local `learnings-register.md` first. Only promote a learning into broader pattern libraries after it has evidence beyond a single isolated event.
+
 
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

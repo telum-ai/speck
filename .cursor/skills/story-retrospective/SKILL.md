@@ -3,6 +3,10 @@ name: story-retrospective
 description: Load after story-validate produces a PASS result to mine git commits and produce story-retro.md. Run after every completed story — essential for feeding learnings into the epic retrospective and improving future stories. FIRST ACTION after loading: read template at .speck/templates/story/story-retro-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
+## Learnings register propagation
+
+When synthesizing a story retrospective, update the project-local `learnings-register.md` with any pattern, gotcha, or hypothesis worth carrying into the next story. Keep one-off noise out; capture durable signal.
+
 
 
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).

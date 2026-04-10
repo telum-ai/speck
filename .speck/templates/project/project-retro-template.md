@@ -169,6 +169,13 @@ specify → clarify → [ux] → context → [constitution] → architecture →
 
 ---
 
+## Promotion to Learnings Register
+
+Reconcile this retrospective against `learnings-register.md`:
+- promote durable project-local patterns
+- retire invalidated assumptions
+- identify which learnings should graduate into `.speck/patterns/learned/`
+
 ## Knowledge Base Built
 
 **Pattern Library Created**:
