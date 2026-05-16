@@ -25,10 +25,13 @@ PROMISE          BUILD            PROVE
 
 ## 🚦 First Actions on Any Engagement
 
-1. **Read `specs/projects/<PROJECT_ID>/project-state.md`** if it exists (always your first read — single page, current state, open questions, locked decisions, known issues, next action).
-2. **Detect play level** from `.speck/project.json` → `play_level` (sprint/build/platform). No file = platform.
-3. **Detect engagement gap**. If `project-state.md` is missing, stale (>2 weeks), or you're a new agent picking up: route to `/recheck` before any new feature work.
-4. **Then proceed** with whatever the user asked for.
+Run these checks **in order**. Stop at the first hit, run the indicated skill, then resume the list.
+
+1. **Catch-up needed?** Check `.speck/.migration-needs-catchup`. If the file exists OR any of `product-contract.md`, `evidence-contract.md`, `project-state.md` contains the literal text `<!-- v7 MIGRATION SCAFFOLD -->` → run `/speck-catch-up` BEFORE anything else. The project was just migrated from v6 and the artifacts are empty scaffolds. No feature work, no implementations, no validation gates until catch-up is done.
+2. **Read `specs/projects/<PROJECT_ID>/project-state.md`** if it exists (single page, current state, open questions, locked decisions, known issues, next action). This is always your first read once catch-up is clear.
+3. **Detect play level** from `.speck/project.json` → `play_level` (sprint/build/platform). No file = platform.
+4. **Detect engagement gap**. If `project-state.md` is missing, stale (>2 weeks), or you're a new agent picking up: route to `/recheck` before any new feature work.
+5. **Then proceed** with whatever the user asked for.
 
 ## 🎚️ Play Levels (affects rigor, not discipline)
 
@@ -195,6 +198,7 @@ These apply at every play level, in every command, on every project:
 
 | Discipline | When | What |
 |------------|------|------|
+| **Catch-up first** | After v6 → v7 migration | If `.speck/.migration-needs-catchup` exists OR truth artifacts still carry the `v7 MIGRATION SCAFFOLD` banner → run `/speck-catch-up` BEFORE any feature work |
 | **First-read state** | Every engagement | Read `project-state.md` before anything else |
 | **Engagement-gap recheck** | >2 weeks since last verified-against-runtime stamp OR new agent | Run `/recheck` to detect drift before new feature work |
 | **Decision-lock log** | Every phase boundary | Enumerate decisions, log SHA + alternatives in `project-decisions-log.md` |

@@ -115,9 +115,10 @@ scaffold() {
   # Prepend a banner
   TMPFILE=$(mktemp)
   cat > "$TMPFILE" <<EOF
-<!-- v7 MIGRATION SCAFFOLD —  filled in by skill: $description -->
-<!-- This file was scaffolded on $DATE from a v6 → v7 migration.   -->
-<!-- Run the corresponding skill to populate it from your v6 docs. -->
+<!-- v7 MIGRATION SCAFFOLD — DO NOT TREAT AS REAL TRUTH UNTIL FILLED IN.    -->
+<!-- This file was scaffolded on $DATE from a v6 → v7 migration.            -->
+<!-- Primary path:  /speck-catch-up    (brownfield reconstruction)          -->
+<!-- Manual path:   $description                              -->
 
 EOF
   cat "$target" >> "$TMPFILE"
@@ -211,11 +212,24 @@ $STAMPED files stamped with current HEAD.
 
 ## Next actions for the agent
 
-Run these skills in order to populate the scaffolded v7 artifacts:
+**This project needs a catch-up pass.** Migration only scaffolded empty templates — it didn't fill them, didn't audit existing implementations, didn't downgrade over-optimistic v6 status claims. Run:
+
+\`\`\`
+/speck-catch-up
+\`\`\`
+
+This brownfield skill:
+1. Backfills product-contract.md from project.md + PRD.md + ux-strategy.md + …
+2. Backfills evidence-contract.md from the active recipe's defaults
+3. Reconstructs project-decisions-log.md from git history
+4. Honesty-pass on existing stories: downgrades unsupported PASS claims to IMPL-GREEN
+5. Writes project-catch-up-plan.md with prioritized remediation work
+
+After catch-up, run \`/project-state\` to regenerate the engagement-pickup view.
+
+### Skills you can also run individually (if catch-up was already done)
 
 $(printf '%s\n' "${NEEDS_AGENT[@]:-(none)}" | sed 's/^/1. /')
-
-Then run \`/project-state\` to regenerate the engagement-pickup view.
 
 ## v6 artifacts (preserved, still valid)
 
@@ -232,7 +246,35 @@ EOF
 
 bash "$SCRIPTS/stamp-truth.sh" "$REPORT" 2>/dev/null || true
 
+# Drop a marker so engagement-time agents detect that catch-up is needed.
+# The marker lives at workspace root (not project root) because the agent
+# checks for it on every engagement, before touching any project.
+MARKER="$WORKSPACE_ROOT/.speck/.migration-needs-catchup"
+if [[ ! -f "$MARKER" ]]; then
+  cat > "$MARKER" <<MARKEREOF
+# Speck v6 → v7 migration marker
+#
+# This file signals that one or more projects were migrated from v6 → v7
+# and still need a catch-up pass to:
+#   - Backfill product-contract.md + evidence-contract.md from v6 docs
+#   - Reconstruct project-decisions-log.md from git history
+#   - Downgrade unsupported PASS claims on existing stories
+#   - Emit project-catch-up-plan.md
+#
+# Agents that read this file on engagement MUST run /speck-catch-up
+# before any new feature work. Delete this file only after catch-up
+# has completed for every migrated project.
+#
+# Created: $DATE
+# Projects in scope: appended below as migrations run
+MARKEREOF
+fi
+
+echo "$PROJECT_DIR" >> "$MARKER"
+
 echo ""
-echo "✅ Migration complete"
+echo "✅ Migration scaffolding complete"
 echo "  Report: $REPORT"
-echo "  Next: run the skills listed in the report to populate v7 artifacts"
+echo "  ⚠️  CATCH-UP REQUIRED: run /speck-catch-up to actually fill the scaffolded artifacts"
+echo "      and downgrade over-optimistic v6 status claims to v7-honest readiness states."
+echo "  (Marker written: $MARKER)"

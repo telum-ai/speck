@@ -127,8 +127,25 @@ export async function upgrade(targetDir, version, options = {}) {
 🔁 Auto-migrated ${migrationSummary.projects.length} project(s) to v${migrationSummary.targetMajor}:
 ${migrationSummary.projects.map(p => `   • ${p.path}: ${p.created} new artifact(s) scaffolded`).join('\n')}
 
-   Open each project and run /project-state to see the engagement-pickup view.
-   See <project>/migration-report.md for details.`);
+⚠️  CATCH-UP REQUIRED — this is a brownfield upgrade.
+
+   The migration only scaffolded empty templates. It did NOT:
+   • Fill product-contract.md / evidence-contract.md from your v6 docs
+   • Reconstruct project-decisions-log.md from git history
+   • Re-audit already-shipped stories or downgrade unsupported PASS claims
+   • Build a remediation plan against the seven v6 failure modes
+
+   Open each migrated project and run:
+       /speck-catch-up
+
+   This is the brownfield-aware skill that backfills the artifacts AND honestly
+   downgrades any over-optimistic v6 status. It writes project-catch-up-plan.md
+   with prioritized remediation work. Without this step the project carries v6
+   debt under v7 paint.
+
+   See <project>/migration-report.md for details. The next agent that engages
+   any of these projects will detect .speck/.migration-needs-catchup and run
+   /speck-catch-up automatically — but doing it now keeps things explicit.`);
   }
 
   console.log(`

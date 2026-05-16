@@ -1,5 +1,45 @@
 # Speck Changelog
 
+## v7.1.0 — 2026-05-16 — Brownfield catch-up + cleanup
+
+The first follow-up to v7.0.0. Targets one specific gap: when a v6 project upgrades to v7, the migration script only scaffolds **empty** template artifacts. The project itself still carries v6 debt — over-optimistic PASS claims with no runtime evidence, surrogate proof from old validation reports, scattered specs that haven't been consolidated, decisions buried in git history rather than logged. v7.0.0 left it to the user to know they should run the seven individual filler skills.
+
+v7.1.0 makes the brownfield catch-up **canonical and automatic**.
+
+### Added
+
+- **`/speck-catch-up`** — A new brownfield reconstruction skill. Treats a freshly-migrated project as a brownfield import and:
+  1. Backfills `product-contract.md` from `project.md` + `PRD.md` + `ux-strategy.md` + `domain-model.md` + `constitution.md`
+  2. Backfills `evidence-contract.md` from the active recipe's `evidence_contract:` defaults
+  3. Reconstructs `project-decisions-log.md` from git history (architecture / design-system / plan commits + learning tags)
+  4. Backfills `experience-chain.md` for each existing UI epic
+  5. **Honesty pass** — for each existing story marked PASS in v6: cross-references with `evidence-contract.md`, downgrades unsupported claims to `IMPL-GREEN`, flags surrogate proof
+  6. Regenerates `project-state.md` to reflect the post-honesty-pass reality
+  7. Writes `project-catch-up-plan.md` with prioritized P0–P3 remediation work
+- **`.speck/.migration-needs-catchup`** marker file — written by `.speck/scripts/migrate.sh` whenever it runs. Lists every project that needs catch-up.
+- **AGENTS.md "First Actions" rule #1** — agents now check for the marker / scaffold banner on every engagement and run `/speck-catch-up` BEFORE any feature work
+- **CLI `upgrade` output** — when v6 → v7 migration runs, the CLI's final banner now spells out exactly what catch-up does and why it's required, instead of pretending the scaffolds are sufficient
+
+### Changed
+
+- `.speck/scripts/migrate.sh` — scaffold banners now name `/speck-catch-up` as the primary path; the individual skills are the manual fallback
+- `.speck/README.md` — "Migrating from v6" section rewritten as a two-step process (scaffolding then catch-up)
+- Symlinks confirmed canonical: `.claude/{skills,agents}` and `.codex/{skills,agents}` are already symlinks to `.cursor/{skills,agents}` (git mode `120000`) — no work needed here, just confirmed during this release
+
+### Removed
+
+- `.speck/field-test-protocol.md` — internal release-prep doc that shouldn't have been distributed as part of Speck. Per-project field-testing is the user's responsibility, not something Speck prescribes globally.
+
+### Migration
+
+There is no migration required from v7.0.0 to v7.1.0. The new behavior kicks in:
+- On the next `npx github:telum-ai/speck upgrade` (which syncs the new skill + updated migrate.sh + updated AGENTS.md)
+- On the next engagement where an agent sees a v6 project being upgraded — the marker is detected, catch-up runs automatically
+
+If you upgraded to v7.0.0 already and have lingering scaffold-banner artifacts, run `/speck-catch-up` directly.
+
+---
+
 ## v7.0.0 — 2026-05-16 — Promise → Build → Prove
 
 The biggest release in Speck's history. Speck shifts from *spec-driven development* (write specs, then code) to **evidence-driven specification** (every spec assertion compiles to evidence; every claim ties to runtime proof; every truth artifact is SHA-stamped against current HEAD).
@@ -96,10 +136,6 @@ The biggest release in Speck's history. Speck shifts from *spec-driven developme
 - Recipes are backward-compatible; the new `evidence_contract:` block is additive
 - `speck_version` in `.speck/project.json` defaults to `7.0.0` for new projects; v6 projects get bumped automatically on upgrade
 
-### Field-test status
-
-v7 is shipped as a **Release Candidate** until a real product is run end-to-end on it. See `.speck/field-test-protocol.md` for the acceptance criteria. v7 graduates to GA once the field test confirms it actually prevents the seven recurring v6 failure modes documented in the six original v6 retrospectives.
-
 ---
 
 ## v6.x
@@ -108,4 +144,4 @@ See git history. v6 was the spec-driven development era. v7 is the evidence-driv
 
 ---
 
-*[as of SHA `efa97de` | verified 2026-05-16 | speck v7.0.0]*
+*[as of SHA `df17138` | verified 2026-05-16 | speck v7.1.0]*

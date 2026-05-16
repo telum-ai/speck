@@ -403,19 +403,39 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-## 🔄 Migrating from v6
+## 🔄 Migrating from v6 — a two-step process
 
-`/speck-migrate` is an **additive** migration. It:
+Migration is **automatic on `npx github:telum-ai/speck upgrade`** when crossing the v6 → v7 boundary, but it has two distinct phases:
 
-1. Detects v6 project.json (or absence)
-2. Creates `product-contract.md` from existing project.md + PRD.md + ux-strategy.md + constitution.md
-3. Creates `evidence-contract.md` with sensible per-recipe defaults
-4. Creates initial `project-state.md` by surveying truth artifacts
-5. Adds `speck_version: 7.0` to project.json
-6. Stamps existing truth artifacts with "needs verification" markers (running `/recheck` clears them)
-7. Does NOT delete any v6 content
+### Step 1 — Scaffolding (automatic, runs by the CLI)
 
-v6 commands (`/story-analyze`, etc.) continue to work via shims that route to v7 equivalents (with deprecation warnings).
+`bash .speck/scripts/migrate.sh <project-dir>` (invoked automatically per project):
+
+1. Adds `speck_version: 7.0.0` to `.speck/project.json`
+2. Scaffolds **empty** templates: `product-contract.md`, `evidence-contract.md`, `project-decisions-log.md`, `project-state.md`, `design-system/primitives.md` (each with a `<!-- v7 MIGRATION SCAFFOLD -->` banner)
+3. SHA-stamps existing v6 truth artifacts (`project.md`, `PRD.md`, `architecture.md`, etc.) with current HEAD
+4. Writes a `migration-report.md` per project
+5. Drops a `.speck/.migration-needs-catchup` marker at workspace root
+6. **Does NOT delete any v6 content**
+
+### Step 2 — Catch-up (brownfield reconstruction — `/speck-catch-up`)
+
+This is where the actual work happens. The next time any agent engages the project, AGENTS.md's first-action rule detects the marker and runs `/speck-catch-up` automatically. The skill:
+
+1. **Backfills `product-contract.md`** from `project.md` + `PRD.md` + `ux-strategy.md` + `domain-model.md` + `constitution.md`
+2. **Backfills `evidence-contract.md`** from the active recipe's `evidence_contract:` block (every recipe ships per-platform defaults)
+3. **Reconstructs `project-decisions-log.md`** from git history (architecture / design-system / plan commits + commit learning tags)
+4. **Backfills `experience-chain.md`** for each existing UI epic from `user-journey.md` + `wireframes.md` + story specs
+5. **Honesty pass** — for each existing story marked PASS in v6: cross-references with `evidence-contract.md`, downgrades unsupported claims to `IMPL-GREEN`, flags surrogate proof
+6. **Regenerates `project-state.md`** with the post-honesty-pass reality
+7. **Writes `project-catch-up-plan.md`** with prioritized remediation work (P0–P3)
+8. Removes the `.speck/.migration-needs-catchup` marker
+
+**Without `/speck-catch-up`, a migrated project carries v6 debt under v7 paint.** The scaffolded templates are empty, the old PASS claims still stand, and the seven v6 failure modes are still latent. The skill is mandatory for any project that wasn't built v7-native from day one.
+
+### v6 command compatibility
+
+v6 commands (`/story-analyze`, `/epic-outline`, `/story-outline`, `/project-scan`, etc.) continue to work via shims that route to v7 equivalents (with deprecation warnings in their description).
 
 ---
 

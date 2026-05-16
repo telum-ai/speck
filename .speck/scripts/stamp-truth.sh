@@ -29,7 +29,21 @@ fi
 
 CURRENT_SHA=$(git -C "$(dirname "$TARGET")" rev-parse --short HEAD 2>/dev/null || echo "unstamped")
 TODAY=$(date +%Y-%m-%d)
-STAMP="*[as of SHA \`$CURRENT_SHA\` | verified $TODAY | speck v7.0.0]*"
+
+# Resolve Speck version dynamically from the framework so stamps always
+# reflect the version that produced them. Search up from the target's
+# directory for the nearest .speck/VERSION file.
+SPECK_VERSION="unknown"
+SEARCH="$(cd "$(dirname "$TARGET")" 2>/dev/null && pwd)"
+while [[ -n "$SEARCH" && "$SEARCH" != "/" ]]; do
+  if [[ -f "$SEARCH/.speck/VERSION" ]]; then
+    SPECK_VERSION="$(cat "$SEARCH/.speck/VERSION" | tr -d '[:space:]')"
+    break
+  fi
+  SEARCH="$(dirname "$SEARCH")"
+done
+
+STAMP="*[as of SHA \`$CURRENT_SHA\` | verified $TODAY | speck v$SPECK_VERSION]*"
 
 # Strip any existing stamp at the end (last 1-3 lines if matching)
 TMP=$(mktemp)
