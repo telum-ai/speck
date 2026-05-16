@@ -1,5 +1,143 @@
 # Speck Changelog
 
+## v7.2.0 — 2026-05-16 — Splang field-test response
+
+Speck v7.2.0 is the first version shaped by **real field-test feedback** from a v6 → v7 upgrade on a 21-UI-epic, 12-ship-round brownfield project (Splang). The feedback was high quality and identified 10 concrete friction points that broke the v7.1.0 model at scale. v7.2.0 addresses every one of them.
+
+### Recipe composition (F2 — biggest leverage)
+
+Recipes can now compose. A recipe declares `extends: <parent-recipe>` and `overlay:` blocks; the loader walks the chain and shallow-merges the parent, then applies the overlay. List fields use `_additional` suffix to indicate append semantics.
+
+- **New recipe**: `capacitor-wrapped-web` — `extends: react-fastapi-postgres` with iOS + Android native-shell evidence rules, store-launch epics, and native-shell bootstrap epic
+- **Updated docs**: `.speck/recipes/README.md` now explains composition with worked examples
+- Hybrid stacks (React + FastAPI + Postgres + Capacitor, e.g.) no longer require manual evidence-contract surgery
+
+### Phased catch-up (F3 — makes large brownfield usable)
+
+`/speck-catch-up` now accepts `--phase=<name>`:
+
+```
+/speck-catch-up --phase=triage         (Phase 0 only — produces migration-estimate.md)
+/speck-catch-up --phase=contracts      (Phases 1+2)
+/speck-catch-up --phase=decisions      (Phase 3)
+/speck-catch-up --phase=epic-artifacts (Phase 4)
+/speck-catch-up --phase=honesty        (Phase 5 — auto-detects 5a/5b/5c)
+/speck-catch-up --phase=state          (Phase 6)
+/speck-catch-up --phase=plan           (Phase 7)
+/speck-catch-up --phase=finalize       (Phase 8)
+/speck-catch-up --phase=all            (default — runs everything)
+```
+
+Large brownfield projects (10+ epics) can checkpoint and commit between phases instead of doing one giant change.
+
+### Auto-detected Phase 5 honesty pass (F1)
+
+Phase 5 now auto-detects which sub-mode applies based on what's on disk:
+
+- **Mode 5a** — story-level `validation-report.md` files exist → per-story walk, downgrades unsupported PASS claims
+- **Mode 5b** — only ship docs (`docs/archive/ship/SHIP_R*.md` etc.) exist → feature-area floor at IMPL-GREEN + per-magic-moment LARP requirements in catch-up plan
+- **Mode 5c** — no prior readiness claims → no-op
+
+Splang-shaped projects (ship-doc-only readiness records) now have a real honesty path instead of catch-up silently no-op-ing.
+
+### REPLACE_BEFORE_SHIP markers (F4)
+
+Templates now use the literal token `REPLACE_BEFORE_SHIP: <hint>` for placeholders that MUST be filled. Easy to grep, impossible to miss.
+
+- New script: `.speck/scripts/check-replace-markers.sh` — exit code 1 if any token remains
+- `/speck-recheck` now runs this scanner in its drift detection
+- Any artifact carrying a `REPLACE_BEFORE_SHIP:` token cannot claim a readiness state above `IMPL-GREEN`
+- The catch-up skill is required to replace every token in artifacts it fills
+
+### Canonical retroactive caveat (F5)
+
+The decisions-log template now ships with a `<!-- CATCH-UP-ONLY -->` caveat block that `/speck-catch-up` uncomments when reconstructing the log from git history. No more agents inventing their own retroactive-hypothesis language. Per-entry `Reconstructed: true` flag makes retroactive entries searchable.
+
+### User-review surface (F6)
+
+`project-state.md` now includes auto-populated appendices:
+
+- **Sections Awaiting User Review** — every `[NEEDS USER REVIEW]` marker across truth artifacts, in one place
+- **Outstanding REPLACE_BEFORE_SHIP markers** — every incomplete token, in one place
+
+The user no longer has to grep for ambiguous sections — they show up on the first read.
+
+### Feedback command (F7)
+
+```bash
+npx github:telum-ai/speck feedback --topic catchup
+```
+
+Drafts a `.speck/feedback/<date>-<topic>.md` file with auto-collected (non-source) context: workspace version, repo HEAD, projects detected, friction signals (e.g., un-filled scaffold banners, `REPLACE_BEFORE_SHIP:` token counts, `[NEEDS USER REVIEW]` counts, large catch-up plans).
+
+**No network calls. No telemetry.** The file is yours. You decide whether to submit it as a GitHub issue. Topics: `catchup | migration | recipe | methodology | cli | docs | other`.
+
+### Two-step upgrade messaging (F8)
+
+The `npx speck upgrade` banner and `migration-report.md` now explicitly say:
+
+1. This was step 1 (scaffolding)
+2. **Do NOT commit yet**
+3. Run `/speck-catch-up` on a `speck-v7-migration` staging branch
+4. Bundle scaffolding + catch-up into one commit (or one PR for review)
+
+No more confusing the user into committing scaffolded-template state to main.
+
+### Migration estimate before commitment (F9)
+
+`/speck-catch-up --phase=triage` now writes `migration-estimate.md` listing:
+
+- Engagement triage table (what was found)
+- Phase 5 mode (5a/5b/5c) and why
+- Per-phase effort estimate (minutes/hours)
+- Post-catch-up remediation backlog estimate (deferred to project-catch-up-plan.md)
+
+Set realistic expectations before starting the long-running work.
+
+### Brownfield experience-chain exemption (F10)
+
+UI epics that pre-date v7 no longer block catch-up on `experience-chain.md`. Instead:
+
+- New template: `.speck/templates/epic/experience-chain-historical-template.md` (`brownfield_exempt: true`)
+- Catch-up Phase 4 generates one historical stub per pre-v7 UI epic from story specs + git history
+- `/epic-plan` accepts the historical marker (won't refuse to run)
+- `/epic-validate` generates the FULL `experience-chain.md` on the fly when the epic is next re-validated (deferred-generation pattern)
+- New epics still require a real upfront chain — exemption is one-time, per-epic
+
+Removes "20-hour silent debt" of v7 migration on UI-heavy brownfield projects.
+
+### Other improvements
+
+- `migrate.sh` marker append is now idempotent (re-runs don't duplicate)
+- `stamp-truth.sh` reads version dynamically from `.speck/VERSION`
+- CLI banner includes `feedback` command and links the staging-branch pattern
+
+### Files added
+
+- `.cursor/skills/speck-catch-up/SKILL.md` (rewritten for phases + auto-detection)
+- `.speck/scripts/check-replace-markers.sh`
+- `.speck/templates/epic/experience-chain-historical-template.md`
+- `.speck/recipes/capacitor-wrapped-web/recipe.yaml`
+- `packages/cli/lib/commands/feedback.js`
+
+### Files updated
+
+- Five templates (product-contract, evidence-contract, experience-chain, decisions-log, project-state) — `REPLACE_BEFORE_SHIP:` convention
+- `.cursor/skills/speck-recheck/SKILL.md` — marker scanning
+- `.speck/recipes/README.md` — composition primitive docs
+- `.speck/scripts/migrate.sh` — staging-branch guidance + idempotent marker
+- `packages/cli/bin/speck.js`, `packages/cli/lib/commands/upgrade.js` — feedback command + two-step messaging
+
+### Migration from v7.1.0
+
+No data migration. The new behavior kicks in on the next `npx speck upgrade`. If you upgraded to v7.0.0 or v7.1.0 already and have lingering scaffold-banner artifacts, run `/speck-catch-up --phase=triage` to see what needs filling.
+
+### Acknowledgment
+
+Thanks to the Splang field test for the high-quality feedback that shaped this release. The `SPECK_V7_UPGRADE_FEEDBACK.md` from that project is the template for how feedback should look. `npx speck feedback` exists to make that kind of feedback easier to produce going forward.
+
+---
+
 ## v7.1.0 — 2026-05-16 — Brownfield catch-up + cleanup
 
 The first follow-up to v7.0.0. Targets one specific gap: when a v6 project upgrades to v7, the migration script only scaffolds **empty** template artifacts. The project itself still carries v6 debt — over-optimistic PASS claims with no runtime evidence, surrogate proof from old validation reports, scattered specs that haven't been consolidated, decisions buried in git history rather than logged. v7.0.0 left it to the user to know they should run the seven individual filler skills.
@@ -144,4 +282,4 @@ See git history. v6 was the spec-driven development era. v7 is the evidence-driv
 
 ---
 
-*[as of SHA `df17138` | verified 2026-05-16 | speck v7.1.0]*
+*[as of SHA `6cdfad8` | verified 2026-05-16 | speck v7.2.0]*

@@ -1,0 +1,132 @@
+# Capacitor-Wrapped Web Recipe
+# A React + FastAPI + Postgres web app that ALSO ships as a native iOS / Android
+# app via Capacitor. Inherits everything from react-fastapi-postgres and adds
+# native-platform evidence rules so v7 validation works for both legs.
+#
+# Speck v7.2+ recipe composition: this recipe declares `extends:` and `overlay:`
+# blocks. The recipe loader walks the chain and shallow-merges the parent's
+# fields, then applies this overlay on top.
+
+name: capacitor-wrapped-web
+display_name: "Capacitor-Wrapped Web (React + FastAPI + iOS/Android)"
+description: "Web-first React + FastAPI + PostgreSQL app distributed as native iOS/Android via Capacitor"
+version: "1.0.0"
+
+# v7.2+ recipe composition
+extends: react-fastapi-postgres
+
+# Keywords supplement (merged with parent's keywords)
+keywords:
+  - capacitor
+  - capacitor ios
+  - capacitor android
+  - hybrid mobile
+  - web view app
+  - ionic capacitor
+  - wrapped web app
+  - PWA + native shell
+  - react native shell
+
+# Stack overlay — adds frontend.native section to the parent's stack
+overlay:
+  stack:
+    frontend:
+      native_wrapper:
+        framework: capacitor
+        version: "6+"
+        platforms:
+          - ios
+          - android
+        ios_min_version: "15.0"
+        android_min_sdk: 24
+        local_notifications: capacitor-local-notifications
+        push_notifications: capacitor-push-notifications
+        secure_storage: capacitor-secure-storage-plugin
+
+  # Add ideal-for entries (merged with parent's list)
+  ideal_for:
+    - "Web-first product that also wants App Store / Play Store distribution"
+    - "B2B SaaS where mobile is secondary but required"
+    - "Products that need IAP / native auth but don't need 60fps native rendering"
+
+  # Add anti-recommendations
+  not_ideal_for:
+    - "Apps requiring 60fps native graphics (use expo-fastapi or flutter-firebase)"
+    - "Apps with heavy device integration (camera AR, ML on device — use native)"
+
+  # CRITICAL: evidence-contract overlay — this is the whole reason for this recipe.
+  # The parent only knows about web evidence; this overlay adds the native rules.
+  evidence_contract:
+    # Override platform to multi-platform
+    platform: web+ios+android
+
+    # Add iOS-specific valid + invalid proof
+    valid_proof_sources_additional:
+      - "iOS standalone simulator screenshot from the Capacitor-built .app (not Safari, not web view in browser)"
+      - "iOS AXe screenshot + accessibility tree from the simulator running the built bundle"
+      - "iOS device console showing zero redbox / zero unhandled crash"
+      - "TestFlight build evidence for billing / auth flows that require Apple-issued IDs"
+      - "Android emulator screenshot from the Capacitor-built APK"
+      - "Android logcat showing zero ANR / zero unhandled crash"
+      - "adb-captured screenshot from a connected device running the release build"
+
+    invalid_proof_sources_additional:
+      - "Safari mobile emulation (Chrome devtools) screenshot for iOS claims — wrong runtime"
+      - "Web build screenshot for iOS App Store readiness — wrong shell"
+      - "Capacitor-served-from-localhost screenshot for ship claims — must be the built bundle"
+      - "Single-platform screenshot for cross-platform claims (must have both iOS and Android)"
+
+    # Add native-specific LARP requirements
+    required_larp_scope_additional:
+      ux_rc: "Per-platform Capacitor LARP: primary user flow recorded against the iOS simulator AND the Android emulator running production-config builds"
+      ship_rc: "TestFlight build LARP for iOS, internal-test track build LARP for Android, with real auth + real backend; plus the parent's web ship_rc"
+
+    required_static_evidence_additional:
+      - "iOS bundle identifier matches `com.<project>.app` (not the dev bundle)"
+      - "Android applicationId matches release config (not the debug applicationId)"
+      - "Capacitor config.ts shows release server URL, not localhost"
+      - "Sentry events captured separately from iOS, Android, and web environments (verifies environment separation)"
+
+    required_live_service_evidence_additional:
+      - "iOS deep link / universal link tested against the live domain"
+      - "Push notification delivery verified through APNs (iOS) and FCM (Android)"
+      - "App Store sandbox IAP tested (if billing in scope)"
+      - "App Store Connect TestFlight build distributed to at least 1 internal tester"
+
+# Visual testing overlay — Capacitor needs platform-specific tooling
+visual_testing_overlay:
+  additional_platforms:
+    - platform: ios
+      tooling:
+        - "@capacitor/cli + xcodebuild for simulator builds"
+        - "AXe for iOS accessibility snapshots"
+        - "xcrun simctl for simulator screenshots"
+      breakpoints:
+        - "iPhone 15 Pro (3x)"
+        - "iPhone SE 2nd gen (smallest supported)"
+        - "iPad Pro 12.9 (largest)"
+      visual_skill: visual-testing-mobile-flutter  # closest skill until visual-testing-capacitor exists
+    - platform: android
+      tooling:
+        - "Capacitor + Gradle for release builds"
+        - "adb for emulator screenshots"
+      breakpoints:
+        - "Pixel 7 (3x)"
+        - "Pixel 4a (smallest popular)"
+        - "Pixel Tablet"
+      visual_skill: visual-testing-mobile-react-native  # closest skill
+
+# Suggested epics: add native-shell-specific concerns to the parent's list
+suggested_epics_additional:
+  - id: E001-native-shell-bootstrap
+    name: "Native Shell Bootstrap (iOS + Android)"
+    priority: 1
+    phase: foundation
+    description: "Capacitor config, bundle IDs, push notification setup, App Store / Play Store accounts, signing"
+    dependencies: [E000-infrastructure]
+  - id: E_N-app-store-launch
+    name: "App Store + Play Store Launch"
+    priority: 9
+    phase: launch
+    description: "Store listings, TestFlight + internal test, screenshots, app review submission"
+    dependencies: "all UX-RC epics complete"

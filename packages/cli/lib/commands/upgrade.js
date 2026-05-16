@@ -127,33 +127,47 @@ export async function upgrade(targetDir, version, options = {}) {
 🔁 Auto-migrated ${migrationSummary.projects.length} project(s) to v${migrationSummary.targetMajor}:
 ${migrationSummary.projects.map(p => `   • ${p.path}: ${p.created} new artifact(s) scaffolded`).join('\n')}
 
-⚠️  CATCH-UP REQUIRED — this is a brownfield upgrade.
+⚠️  TWO-STEP UPGRADE — DO NOT COMMIT YET.
 
-   The migration only scaffolded empty templates. It did NOT:
-   • Fill product-contract.md / evidence-contract.md from your v6 docs
-   • Reconstruct project-decisions-log.md from git history
-   • Re-audit already-shipped stories or downgrade unsupported PASS claims
-   • Build a remediation plan against the seven v6 failure modes
+   This was step 1 (scaffolding). The migration only created EMPTY template
+   artifacts and dropped a .speck/.migration-needs-catchup marker. The project
+   still carries every v6 debt: unsupported PASS claims, scattered specs,
+   decisions buried in git history, surrogate-proof in old validation reports.
 
-   Open each migrated project and run:
-       /speck-catch-up
+   Step 2 is brownfield reconstruction. Recommended pattern (staging branch):
 
-   This is the brownfield-aware skill that backfills the artifacts AND honestly
-   downgrades any over-optimistic v6 status. It writes project-catch-up-plan.md
-   with prioritized remediation work. Without this step the project carries v6
-   debt under v7 paint.
+     git checkout -b speck-v7-migration
+     # already done: speck CLI synced files + ran migrate.sh
+     # now run catch-up:
+     /speck-catch-up                    (or --phase=triage for large projects)
+     # ...iterate phases if large project...
+     git add -A
+     git commit -m "chore: upgrade Speck to ${targetVersion} + brownfield catch-up"
+     # open as a PR against main for review BEFORE merging
 
-   See <project>/migration-report.md for details. The next agent that engages
-   any of these projects will detect .speck/.migration-needs-catchup and run
-   /speck-catch-up automatically — but doing it now keeps things explicit.`);
+   On smaller projects you can also bundle into a single commit on main if
+   you trust the result. The important rule: scaffolded-template state should
+   NEVER reach main. Either catch-up first, or revert.
+
+   Large project tip: /speck-catch-up supports --phase=triage|contracts|
+   decisions|epic-artifacts|honesty|state|plan|finalize so you can commit
+   between phases instead of doing one giant change.
+
+   See <project>/migration-report.md for what was scaffolded. The next agent
+   that engages any of these projects will detect the marker and start
+   catch-up automatically.`);
+  } else {
+    console.log(`
+Review the changes and commit when ready:
+  git add -A
+  git commit -m "chore: upgrade Speck to ${targetVersion}"`);
   }
 
   console.log(`
-Review the changes and commit when ready:
-  git add -A
-  git commit -m "chore: upgrade Speck to ${targetVersion}"
-
 To check for future updates:
   npx github:telum-ai/speck check
+
+To share feedback on this upgrade (no telemetry, you submit the file yourself):
+  npx github:telum-ai/speck feedback --topic migration
 `);
 }

@@ -57,14 +57,23 @@ Required artifacts to check:
 
 ```
 ├── [Parallel] shell: Run .speck/scripts/staleness-check.sh
+├── [Parallel] shell: Run .speck/scripts/check-replace-markers.sh specs/projects/<id>/
 ├── [Parallel] speck-scanner: Spec-vs-code reconciliation — for each truth assertion in product-contract.md / PRD.md / architecture.md, find supporting code or flag as ungrounded
 ├── [Parallel] speck-auditor: Third-party integration risk surface scan — for each external service in context.md/architecture.md, verify auth model, ToS posture, data residency, worst-case story
 ├── [Parallel] speck-auditor: Constitution principle compliance scan — for each principle in constitution.md (or product-contract.md principles section), verify enforcement mechanism is current
 ├── [Parallel] speck-auditor: Banned-language scan via .speck/scripts/banned-language-lint.sh
+├── [Parallel] shell: grep -rln "\[NEEDS USER REVIEW\]" specs/projects/<id>/   (surface to project-state.md)
 └── [Wait] → Synthesize drift report
 ```
 
 Each subagent returns: FRESH | STALE | DRIFTED | MISSING with evidence.
+
+**REPLACE_BEFORE_SHIP markers** (added in Speck v7.2+):
+- Any truth artifact carrying a `REPLACE_BEFORE_SHIP:` token is **incomplete**
+- The artifact CANNOT support a readiness state claim above `IMPL-GREEN` while tokens remain
+- Treat as **P0 drift** if the artifact is referenced by an active `UX-RC` or higher claim
+- Treat as **P1 drift** otherwise (a scaffolded artifact that hasn't been filled)
+- The catch-up flow (`/speck-catch-up`) is the standard remediation path
 
 ### 3. Run persona LARP cold-start
 
@@ -125,10 +134,11 @@ Report summary fields per claude skill.
 ## Behavior Rules
 
 - NEVER skip persona LARP cold-start
-- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh`
+- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh`
+- NEVER mark a truth artifact "fresh" while it still contains `REPLACE_BEFORE_SHIP:` or `[NEEDS USER REVIEW]` tokens
 - ALWAYS write a dated report (even if green)
 - ALWAYS re-stamp truth artifacts on green (with fresh `verified` date)
-- ALWAYS update `project-state.md` regardless of verdict
+- ALWAYS update `project-state.md` regardless of verdict (including the new "Sections Awaiting User Review" and "Outstanding REPLACE_BEFORE_SHIP markers" appendices)
 - BLOCK new feature work on P0 findings
 
 ## Integration Points

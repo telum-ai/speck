@@ -28,6 +28,7 @@ import { check } from '../lib/commands/check.js';
 import { showVersion } from '../lib/commands/version.js';
 import { incubate } from '../lib/commands/incubate.js';
 import { promote } from '../lib/commands/promote.js';
+import { feedback } from '../lib/commands/feedback.js';
 import { migrateToV7 } from '../lib/migrate.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -49,6 +50,7 @@ COMMANDS
   version           Show current and latest versions
   promote           Bump play level (--to sprint|build|platform)
   incubate          Propose one lean JTBD bet from recent repo signals
+  feedback          Draft a feedback note (catchup/recipe/methodology/etc.) for review/submission
   help              Show this help message
 
 OPTIONS
@@ -57,6 +59,9 @@ OPTIONS
   --ignore <glob>   Additional patterns to ignore (can be repeated)
   --days <n>        Days of git history to mine for incubate (default: 21)
   --to <level>      Target play level for promote command (sprint|build|platform)
+  --topic <name>    Feedback topic: catchup|migration|recipe|methodology|cli|docs|other
+  --message "<s>"   Inline feedback message (skips interactive prompt)
+  --auto            Non-interactive mode for feedback (writes file with placeholders)
 
 EXAMPLES
   npx github:telum-ai/speck init
@@ -145,7 +150,11 @@ async function main() {
         }
         break;
       }
-        
+
+      case 'feedback':
+        await feedback(process.cwd(), { ...options, _args: args });
+        break;
+
       case 'help':
       case '-h':
       case '--help':

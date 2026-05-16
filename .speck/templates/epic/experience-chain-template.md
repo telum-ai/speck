@@ -16,11 +16,19 @@ like "seven different apps stitched together."
 If your epic has user-facing UI and no experience-chain.md, /epic-plan refuses to run.
 
 Skip ONLY for: backend-only, API-only, CLI-only, infrastructure/devops epics.
+
+For BROWNFIELD epics that pre-date v7, see experience-chain-historical-template.md
+(scaffolded by /speck-catch-up). Those use a lighter exemption marker — the
+canonical chain is reverse-engineered on re-validation, not authored upfront.
+
+PLACEHOLDER CONVENTION (Speck v7.2+):
+  Tokens marked  REPLACE_BEFORE_SHIP: <hint>  MUST be filled before this artifact
+  can claim ship-readiness. /speck-recheck greps for them.
 -->
 
-**Epic**: [E### - Name]
-**Project**: `[PROJECT_ID]`
-**Last Updated**: [YYYY-MM-DD]
+**Epic**: REPLACE_BEFORE_SHIP: E### - Name
+**Project**: `REPLACE_BEFORE_SHIP: project-id`
+**Last Updated**: REPLACE_BEFORE_SHIP: YYYY-MM-DD
 
 ---
 

@@ -21,13 +21,18 @@ treating "tests pass" as launch-ready, treating dev-server LARP as production-re
 This contract makes those failures impossible.
 
 200-line target.
+
+PLACEHOLDER CONVENTION (Speck v7.2+):
+  Tokens marked  REPLACE_BEFORE_SHIP: <hint>  MUST be filled before this artifact
+  can claim ship-readiness. /speck-recheck greps for them. Other [bracketed]
+  hints are guidance for the agent but don't gate ship.
 -->
 
-**Project**: [PROJECT_NAME]
-**Project ID**: `[PROJECT_ID]`
-**Play Level**: [build | platform]
+**Project**: REPLACE_BEFORE_SHIP: PROJECT_NAME
+**Project ID**: `REPLACE_BEFORE_SHIP: project-id`
+**Play Level**: REPLACE_BEFORE_SHIP: build | platform
 **Speck Version**: 7.0.0
-**Last Updated**: [YYYY-MM-DD]
+**Last Updated**: REPLACE_BEFORE_SHIP: YYYY-MM-DD
 
 ---
 
@@ -37,10 +42,13 @@ This contract makes those failures impossible.
 
 | Platform | Build artifact | Distribution |
 |----------|----------------|--------------|
-| [e.g., iOS native] | Standalone simulator/TestFlight build with `com.<project>.app` bundle | App Store |
-| [e.g., Android native] | APK/AAB from Gradle release build | Play Store |
-| [e.g., Web] | Production bundle behind reverse proxy at <domain> | <hosting> |
-| [e.g., Desktop] | Code-signed installer for macOS/Windows/Linux | <distribution> |
+| REPLACE_BEFORE_SHIP: platform-1 | REPLACE_BEFORE_SHIP: build-artifact-1 | REPLACE_BEFORE_SHIP: distribution-1 |
+
+*Examples — delete rows that don't apply, add the ones that do:*
+*- iOS native | Standalone simulator/TestFlight build with `com.<project>.app` bundle | App Store*
+*- Android native | APK/AAB from Gradle release build | Play Store*
+*- Web | Production bundle behind reverse proxy at <domain> | <hosting>*
+*- Desktop | Code-signed installer for macOS/Windows/Linux | <distribution>*
 
 ---
 

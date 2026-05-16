@@ -212,20 +212,39 @@ $STAMPED files stamped with current HEAD.
 
 ## Next actions for the agent
 
-**This project needs a catch-up pass.** Migration only scaffolded empty templates — it didn't fill them, didn't audit existing implementations, didn't downgrade over-optimistic v6 status claims. Run:
+**This project needs a catch-up pass.** Migration only scaffolded empty templates — it didn't fill them, didn't audit existing implementations, didn't downgrade over-optimistic v6 status claims.
+
+### Recommended workflow (staging branch)
 
 \`\`\`
-/speck-catch-up
+git checkout -b speck-v7-migration
+/speck-catch-up                                  # or --phase=triage for large projects
+# ...iterate phases as needed (see catch-up skill for --phase=...) ...
+git add -A
+git commit -m "chore: speck v7 migration + brownfield catch-up"
+# open PR against main for review BEFORE merging
 \`\`\`
 
-This brownfield skill:
-1. Backfills product-contract.md from project.md + PRD.md + ux-strategy.md + …
-2. Backfills evidence-contract.md from the active recipe's defaults
-3. Reconstructs project-decisions-log.md from git history
-4. Honesty-pass on existing stories: downgrades unsupported PASS claims to IMPL-GREEN
-5. Writes project-catch-up-plan.md with prioritized remediation work
+Scaffolded-template state should NEVER reach main without catch-up. Either fill it via \`/speck-catch-up\`, or revert.
 
-After catch-up, run \`/project-state\` to regenerate the engagement-pickup view.
+### What \`/speck-catch-up\` does
+
+Speck v7.2+ runs catch-up in 9 phases. Default \`--phase=all\` runs everything:
+
+1. **Triage** — engagement inventory + writes \`migration-estimate.md\` (effort estimate before committing to the work)
+2. **Backfill product-contract.md** from project.md + PRD.md + ux-strategy.md + domain-model.md + constitution.md
+3. **Backfill evidence-contract.md** from the active recipe's defaults (extends-aware in v7.2+)
+4. **Reconstruct project-decisions-log.md** from git history with retroactive caveat
+5. **Backfill experience-chain-historical.md** for each pre-v7 UI epic (brownfield exemption; full chain deferred to re-validation time)
+6. **Honesty pass** — auto-detects mode:
+   - **5a** if story-level validation reports exist → downgrades unsupported PASS claims
+   - **5b** if only ship docs exist → floors feature areas at IMPL-GREEN, lists per-magic-moment LARP work
+   - **5c** if no prior readiness claims → no-op
+7. **Regenerate project-state.md** with post-honesty-pass reality
+8. **Write project-catch-up-plan.md** with prioritized P0–P3 remediation
+9. **Finalize** — remove the marker, re-run /recheck
+
+For large brownfield projects (10+ epics): use \`--phase=triage\` first to scope the work, then run individual phases as separate commits.
 
 ### Skills you can also run individually (if catch-up was already done)
 
@@ -270,7 +289,10 @@ if [[ ! -f "$MARKER" ]]; then
 MARKEREOF
 fi
 
-echo "$PROJECT_DIR" >> "$MARKER"
+# Idempotent append: only add this project path if not already present
+if ! grep -qxF "$PROJECT_DIR" "$MARKER" 2>/dev/null; then
+  echo "$PROJECT_DIR" >> "$MARKER"
+fi
 
 echo ""
 echo "✅ Migration scaffolding complete"

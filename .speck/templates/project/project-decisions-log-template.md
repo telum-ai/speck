@@ -15,10 +15,14 @@ the decisions that locked at this boundary. This is unconditional discipline —
 dependent on play level or human hands-on intensity.
 
 Format: one decision per H3 (###) section with frontmatter-style metadata.
+
+PLACEHOLDER CONVENTION (Speck v7.2+):
+  Tokens marked  REPLACE_BEFORE_SHIP: <hint>  MUST be filled before this artifact
+  can claim ship-readiness. /speck-recheck greps for them.
 -->
 
-**Project**: [PROJECT_NAME]
-**Project ID**: `[PROJECT_ID]`
+**Project**: REPLACE_BEFORE_SHIP: PROJECT_NAME
+**Project ID**: `REPLACE_BEFORE_SHIP: project-id`
 **Speck Version**: 7.0.0
 
 ---
@@ -30,6 +34,32 @@ Format: one decision per H3 (###) section with frontmatter-style metadata.
 3. Each decision gets a unique ID: `DEC-<NNNN>`
 4. To revisit a decision: add a NEW entry that supersedes the old one (`Supersedes: DEC-XXXX`)
 5. Never edit a locked entry — append the supersession
+
+---
+
+<!-- CATCH-UP-ONLY: Retroactive Reconstruction Caveat
+This block is COMMENTED OUT by default. /speck-catch-up uncomments it when the
+log is being reconstructed from git history rather than logged at decision time.
+Leave commented for greenfield projects.
+
+## ⚠️ Retroactive Reconstruction Caveat
+
+This log was reconstructed during `/speck-catch-up` (v6 → v7 migration). Entries
+marked `Reconstructed: true` were not logged at the time the decision was made;
+they were mined from git history (commit messages, learning tags, PR descriptions).
+
+For each retroactive entry:
+
+- The **chosen option** reflects what was actually shipped (verified from code state)
+- The **alternatives listed** are plausible reconstructions of what a reasonable
+  team would have weighed at the time — NOT a record of what was actually discussed
+- The **rationale** is inferred from commit messages and contemporaneous context
+- Treat each retroactive entry as a **hypothesis about past intent**, not as history
+
+Going forward, new decisions are logged at decision time and do not carry this
+caveat. The retroactive entries remain in place as a starting point for any
+future revisit / supersession.
+-->
 
 ---
 
@@ -45,15 +75,16 @@ Format: one decision per H3 (###) section with frontmatter-style metadata.
 
 ## Decisions
 
-### DEC-0001 — [Decision Title]
+### DEC-0001 — REPLACE_BEFORE_SHIP: Decision Title
 
-- **Phase**: [project-specify / product-contract / evidence-contract / project-plan / epic-plan / etc.]
-- **Date**: YYYY-MM-DD
-- **SHA at decision time**: `abc1234`
-- **Status**: LOCKED | SUPERSEDED-BY-[ID] | OPEN
-- **Owner**: [AI agent / human / both]
+- **Phase**: REPLACE_BEFORE_SHIP: project-specify / product-contract / evidence-contract / project-plan / epic-plan / etc.
+- **Date**: REPLACE_BEFORE_SHIP: YYYY-MM-DD
+- **SHA at decision time**: `REPLACE_BEFORE_SHIP: abc1234`
+- **Status**: REPLACE_BEFORE_SHIP: LOCKED | SUPERSEDED-BY-<ID> | OPEN
+- **Owner**: REPLACE_BEFORE_SHIP: AI agent / human / both
+- **Reconstructed**: false  *(set to `true` and add `**Reconstructed from**: <git refs>` ONLY if /speck-catch-up wrote this entry)*
 
-**Question**: [What was being decided?]
+**Question**: REPLACE_BEFORE_SHIP: What was being decided?
 
 **Alternatives considered**:
 

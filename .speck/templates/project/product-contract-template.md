@@ -23,13 +23,20 @@ Banned language here is enforced by .speck/scripts/banned-language-lint.sh.
 If you find yourself wanting to write a value-judgment in another doc (what's "premium," what's "on-brand," what users would "pay for"), that judgment lives HERE — once — and is referenced elsewhere.
 
 200-line target. If you can't say it in 200 lines, your contract is too vague.
+
+PLACEHOLDER CONVENTION (Speck v7.2+):
+  Any value that MUST be replaced before this artifact can claim ship-readiness
+  is marked  REPLACE_BEFORE_SHIP: <hint>
+  Generic [bracketed] hints elsewhere are guidance — agents fill them in but they
+  don't gate ship. The REPLACE_BEFORE_SHIP markers ARE gates: /speck-recheck
+  greps for them and refuses to mark the artifact "real" while any remain.
 -->
 
-**Project**: [PROJECT_NAME]
-**Project ID**: `[PROJECT_ID]`
-**Play Level**: [build | platform]
+**Project**: REPLACE_BEFORE_SHIP: PROJECT_NAME
+**Project ID**: `REPLACE_BEFORE_SHIP: project-id`
+**Play Level**: REPLACE_BEFORE_SHIP: build | platform
 **Speck Version**: 7.0.0
-**Last Updated**: [YYYY-MM-DD]
+**Last Updated**: REPLACE_BEFORE_SHIP: YYYY-MM-DD
 
 ---
 
@@ -37,7 +44,7 @@ If you find yourself wanting to write a value-judgment in another doc (what's "p
 
 *The single sentence that describes what the user is paying for. Not what we built — what they experience. This is the bar every downstream decision is measured against.*
 
-**Promise**: [Single sentence. Specific. Outcome-focused. Not a feature list.]
+**Promise**: REPLACE_BEFORE_SHIP: Single sentence. Specific. Outcome-focused. Not a feature list.
 
 *Example: "An adaptive AI coach that reasons from first principles about my body and adapts every session locally — so I trust it more after every workout."*
 
@@ -63,7 +70,7 @@ If you find yourself wanting to write a value-judgment in another doc (what's "p
 
 *The wedge that makes this product not interchangeable. One sentence.*
 
-**Core differentiator**: [One sentence. The thing that's true of THIS product and not its alternatives.]
+**Core differentiator**: REPLACE_BEFORE_SHIP: One sentence. The thing that's true of THIS product and not its alternatives.
 
 *Example: "Most fitness apps prescribe templates; Streb adapts the dose locally per exercise based on your last set's response."*
 
@@ -108,19 +115,19 @@ Story validation fails if a user-facing story has no evidence for at least the f
 
 *The surfaces where the user would say "wow, this gets me." The product earns its price here. List 3-7. Each must be testable in runtime LARP.*
 
-### Magic Moment 1: [Name]
-- **Surface**: [Screen / interaction / output]
-- **Trigger**: [What action / context creates the moment]
-- **Content beats**: [What happens in sequence to land the moment]
-- **Target emotional response**: [User thinks: "<quoted internal reaction>"]
-- **Validation step**: [Specific LARP scenario that proves the moment lands]
+### Magic Moment 1: REPLACE_BEFORE_SHIP: Name
+- **Surface**: REPLACE_BEFORE_SHIP: Screen / interaction / output
+- **Trigger**: REPLACE_BEFORE_SHIP: What action / context creates the moment
+- **Content beats**: REPLACE_BEFORE_SHIP: What happens in sequence to land the moment
+- **Target emotional response**: REPLACE_BEFORE_SHIP: User thinks "<quoted internal reaction>"
+- **Validation step**: REPLACE_BEFORE_SHIP: Specific LARP scenario that proves the moment lands
 
-### Magic Moment 2: [Name]
-- **Surface**:
-- **Trigger**:
-- **Content beats**:
-- **Target emotional response**:
-- **Validation step**:
+### Magic Moment 2: REPLACE_BEFORE_SHIP: Name
+- **Surface**: REPLACE_BEFORE_SHIP
+- **Trigger**: REPLACE_BEFORE_SHIP
+- **Content beats**: REPLACE_BEFORE_SHIP
+- **Target emotional response**: REPLACE_BEFORE_SHIP
+- **Validation step**: REPLACE_BEFORE_SHIP
 
 *(repeat for each magic moment)*
 

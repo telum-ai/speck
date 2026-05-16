@@ -26,10 +26,53 @@ See [External Services Reference](#external-services-reference) for detailed rec
 ## How Recipes Work
 
 1. **Detection**: The `/speck` router detects when a user's request matches a recipe
-   - Matching is based on the recipe’s `keywords:` list in `.speck/recipes/<recipe>/recipe.yaml` (case-insensitive phrase matching)
+   - Matching is based on the recipe's `keywords:` list in `.speck/recipes/<recipe>/recipe.yaml` (case-insensitive phrase matching)
 2. **Suggestion**: User is offered the matching recipe as a starting point
 3. **Customization**: Recipe templates are filled with user-specific details
 4. **Generation**: Creates project.md, architecture.md, and suggested epics
+
+## 🧩 Recipe Composition (Speck v7.2+)
+
+Real products usually combine more than one canonical stack — e.g., a React + FastAPI + Postgres app *also* shipped as iOS/Android via Capacitor. v7.2+ supports lightweight recipe composition so you don't have to pick a single closest match.
+
+### `extends:` — chain inheritance
+
+A recipe can declare `extends: <parent-recipe-name>` at the top level. The loader:
+
+1. Reads the parent recipe in full
+2. Walks the parent's `extends:` chain recursively (multi-level inheritance OK; cycles fail loudly)
+3. Shallow-merges the parent's fields into the child
+4. **Then** applies the child's own fields + `overlay:` block on top
+
+### `overlay:` — additive blocks
+
+A child recipe's `overlay:` block declares fields that are *added to* (not replaced) the parent's corresponding fields. Use `_additional` suffix on list fields to indicate append semantics, e.g.:
+
+```yaml
+overlay:
+  evidence_contract:
+    valid_proof_sources_additional:
+      - "iOS simulator screenshot from the Capacitor-built .app"
+```
+
+The loader merges `valid_proof_sources_additional` into the parent's `valid_proof_sources` list.
+
+For object fields (e.g., `stack.frontend`), the overlay does a shallow merge — the child adds new keys without disturbing the parent's keys unless the child explicitly sets them.
+
+### When to compose vs author from scratch
+
+| Situation | Approach |
+|-----------|----------|
+| Single canonical stack (e.g., pure Next.js + Supabase) | Use the existing recipe directly |
+| Recognizable variant of a canonical stack (e.g., wrapped in Capacitor) | Compose: `extends: <parent>` + `overlay:` |
+| Stack the existing library doesn't cover at all | Author a new recipe from scratch |
+| Hybrid of two unrelated stacks (e.g., web + native + ML) | Author a new recipe (composition gets messy past 1 parent) |
+
+### Currently composed recipes
+
+| Composed recipe | Extends | What it adds |
+|-----------------|---------|--------------|
+| [capacitor-wrapped-web](#capacitor-wrapped-web) | `react-fastapi-postgres` | iOS + Android native-shell evidence rules, store-launch epics, native-shell bootstrap epic |
 
 ## Available Recipes
 
