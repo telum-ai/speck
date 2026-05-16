@@ -1,6 +1,6 @@
 ---
 name: epic-validate
-description: Load after all stories in an epic are individually validated to verify the epic's goals were achieved as a whole. Produces epic validation report — required before epic-retrospective. FIRST ACTION after loading: read templates at .speck/templates/epic/epic-validation-report-template.md and .speck/templates/epic/epic-punch-list-template.md before any context loading or artifact generation.
+description: Load after all stories in an epic are individually validated and /audit has run for the epic. Verifies the epic's goals were achieved as a whole. Performs end-to-end JTBD walkthrough via /larp. Declares a readiness state for the epic. Produces epic-validation-report.md — required before epic-retrospective. FIRST ACTION after loading is read templates at .speck/templates/epic/epic-validation-report-template.md, .speck/templates/story/validation-report-template.md (for readiness state guidance), and .speck/templates/epic/epic-punch-list-template.md.
 disable-model-invocation: false
 ---
 
@@ -13,14 +13,52 @@ $ARGUMENTS
 
 ## ⚠️ Step 0: Read Templates First
 
-**Before any other action** — read BOTH templates now using the Read tool:
+**Before any other action** — read templates now:
 ```
 .speck/templates/epic/epic-validation-report-template.md
+.speck/templates/story/validation-report-template.md   # readiness state structure (epic uses same taxonomy)
 .speck/templates/epic/epic-punch-list-template.md
 ```
-This skill produces two artifacts. Read both templates now so your validation findings and punch list land in the structure the project retrospective expects.
 
-**Checkpoint**: After reading both, note each template's top-level sections. Then continue to Step 1.
+**Checkpoint**: After reading, note the v7 readiness states (`NO-SHIP`, `IMPL-GREEN`, `UX-RC`, `COMMERCIAL-RC`, `SHIP-RC`, `SHIP`) and the v7 gate criteria.
+
+---
+
+## 🚦 Pre-Validate Gates (v7 — Mandatory)
+
+Before doing ANY epic-level validation work, verify:
+
+1. **Every story in the epic has its own `validation-report.md` with verified state >= IMPL-GREEN**
+   - If any story is still NO-SHIP: STOP. Tell user "Story <id> is at NO-SHIP. Fix and re-validate before epic-validate."
+
+2. **`/audit --epic <id>` was run** producing `audit-report.md` at the epic level
+   - If missing: STOP. Tell user "Run `/audit --epic <id>` first — epic-validate requires the cross-story audit."
+   - If P0 findings: STOP. Resolve before proceeding.
+
+3. **For UI epics: full-flow `/larp` was run** for every persona per evidence-contract
+   - Captures the JTBD walkthrough end-to-end across stories (not just per-story segments)
+   - If missing: STOP. Tell user "Run `/larp` for each persona's full epic flow first."
+
+4. **`evidence-contract.md` exists**
+   - If missing: STOP.
+
+If any pre-gate fails: refuse to proceed. Surface what's missing.
+
+---
+
+## 🎯 v7 Epic Validation Algorithm
+
+1. Read every story's `validation-report.md` — extract verified states + evidence paths
+2. The epic's MAX claimable state = MIN(story states)
+3. Read `audit-report.md` — any P0 lowers max claimable state
+4. Read epic-level `larp-recordings/` — full JTBD walkthrough must PASS for UX-RC+
+5. Cross-epic integration check: any seams to other epics tested?
+6. Run banned-phrase self-check on this report's own language before publishing
+7. Apply SHA stamp; trigger `/project-state` regeneration
+
+The legacy v6 epic validation algorithm follows below (use for cross-story integration details, but verdict MUST be a readiness state).
+
+---
 
 Comprehensive validation that the epic delivers on its promises and integrates properly with the system.
 

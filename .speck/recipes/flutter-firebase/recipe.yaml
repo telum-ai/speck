@@ -121,3 +121,29 @@ external_services:
     alternatives: [mapbox]
     reason: "Best Flutter widget support"
 
+# v7 Evidence Contract defaults — Flutter
+evidence_contract:
+  platform: mobile-flutter
+  valid_proof_sources:
+    - "Native iOS Simulator screenshot via xcrun simctl io booted screenshot"
+    - "Native Android emulator screenshot via adb shell screencap"
+    - "Golden test output (widget rendering) with current SHA"
+    - "integration_test E2E with screenshots"
+    - "TestFlight / Internal Testing build manual LARP"
+  invalid_proof_sources:
+    - "Flutter web preview screenshot (different renderer)"
+    - "DartPad screenshot (sandbox)"
+    - "Flutter Inspector screenshot (debug overlay)"
+    - "Hot-reload mid-state screenshot"
+  required_larp_scope:
+    impl_green: "Unit + golden tests pass"
+    ux_rc: "integration_test flow covering primary persona path with simulator screenshots"
+    commercial_rc: "IAP test purchase via RevenueCat sandbox or Apple/Google sandbox"
+    ship_rc: "TestFlight + Internal Testing builds installed; manual LARP recorded"
+    ship: "App Store / Play Store live, post-release crash rate <1%"
+  required_static_evidence:
+    - "flutter analyze: 0 warnings"
+    - "Release builds succeed for iOS + Android"
+  required_live_service_evidence:
+    - "Firebase backend reachable from device build"
+    - "Push notifications delivered (FCM/APNs)"

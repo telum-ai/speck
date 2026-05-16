@@ -28,6 +28,7 @@ import { check } from '../lib/commands/check.js';
 import { showVersion } from '../lib/commands/version.js';
 import { incubate } from '../lib/commands/incubate.js';
 import { promote } from '../lib/commands/promote.js';
+import { migrateToV7 } from '../lib/migrate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -42,7 +43,8 @@ USAGE
 
 COMMANDS
   init              Initialize Speck in current directory
-  upgrade [version] Upgrade to latest (or specified) version
+  upgrade [version] Upgrade to latest (or specified) version (auto-migrates v6→v7 projects)
+  migrate           Manually re-run v7 migration on every project (idempotent)
   check             Check for available updates
   version           Show current and latest versions
   promote           Bump play level (--to sprint|build|platform)
@@ -132,6 +134,17 @@ async function main() {
       case 'incubate':
         await incubate(process.cwd(), options);
         break;
+
+      case 'migrate': {
+        const summary = migrateToV7(process.cwd(), { verbose: true });
+        if (summary.projects.length === 0) {
+          console.log('✅ Nothing to migrate — no projects found under specs/projects/, or already on v7.');
+        } else {
+          const scaffolded = summary.projects.reduce((n, p) => n + p.created, 0);
+          console.log(`\n✅ Migration complete: ${summary.projects.length} project(s), ${scaffolded} artifact(s) scaffolded.`);
+        }
+        break;
+      }
         
       case 'help':
       case '-h':

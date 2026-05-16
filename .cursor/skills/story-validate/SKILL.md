@@ -1,6 +1,6 @@
 ---
 name: story-validate
-description: Load after implementation is complete to verify spec compliance, execute acceptance tests, and produce validation-report.md. Required before story-retrospective. Use when user says 'is this done?', 'validate', 'test this', or implementation is marked complete. FIRST ACTION after loading: read template at .speck/templates/story/validation-report-template.md before any context loading or artifact generation.
+description: Load after /audit has completed to verify spec compliance, execute acceptance tests, run runtime LARP, declare a readiness state (NO-SHIP/IMPL-GREEN/UX-RC/COMMERCIAL-RC/SHIP-RC/SHIP), and produce validation-report.md. Required before story-retrospective. Use when user says 'is this done?', 'validate', 'test this', or implementation is marked complete. FIRST ACTION after loading is read template at .speck/templates/story/validation-report-template.md.
 disable-model-invocation: false
 ---
 
@@ -11,17 +11,65 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ Step 0: Read Template First
+## ⚠️ Step 0: Read v7 Template First
 
-**Before any other action** — read this template now using the Read tool:
+**Before any other action** — read this template now:
 ```
 .speck/templates/story/validation-report-template.md
 ```
-The template defines required sections and formatting for `validation-report.md`, including pass/fail criteria, evidence fields, and the user-reachability check. Reading it first ensures your validation findings are captured in the structure downstream tools expect.
 
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
+The v7 template centers on **readiness state declaration**. Validation does NOT produce PASS/FAIL — it produces one of:
+- `NO-SHIP` — blockers remain
+- `IMPL-GREEN` — tests/lint/types pass
+- `UX-RC` — primary flows pass in target runtime with LARP evidence
+- `COMMERCIAL-RC` — billing/entitlements/legal pass (paid products)
+- `SHIP-RC` — all gates pass against launch build
+- `SHIP` — post-deploy proof complete
 
-Goal: Comprehensively validate that the implementation fulfills the specification, meets non-functional requirements, adheres to constitutional principles, and is ready for review/deployment.
+**Checkpoint**: After reading, note the v7 frontmatter fields (`readiness_state_claimed`, `readiness_state_verified`, `build_sha`, `build_artifact`, `audit_report`, `larp_evidence`).
+
+---
+
+## 🚦 Pre-Validate Gates (v7 — Mandatory)
+
+Before doing ANY validation work, verify:
+
+1. **`/audit` was run for this story and produced `audit-report.md`** (in story dir)
+   - If missing: STOP. Tell user "Run `/audit` first — story-validate requires the audit report as input."
+   - If `audit-report.md` shows P0 findings: STOP. Tell user "P0 findings in audit-report.md must be fixed before validation."
+
+2. **For UI stories: `/larp` was run** producing `larp-recordings/<sha>-<persona>-findings.md`
+   - If missing: STOP. Tell user "Run `/larp [persona]` first — UI story validation requires LARP evidence per evidence-contract.md."
+   - If LARP findings show FAIL: lower the maximum claimable state.
+
+3. **`evidence-contract.md` exists at the project root**
+   - If missing: STOP. Tell user "Run `/project-evidence-contract` first — validation needs the gate criteria definition."
+
+4. **The user (or skill caller) has declared a claimed readiness state**
+   - Default: claim the highest state where evidence supports
+   - User can pass `--claim IMPL-GREEN` / `--claim UX-RC` / etc.
+
+If any pre-gate fails: refuse to proceed. Surface what's missing.
+
+---
+
+## 🎯 v7 Validation Algorithm
+
+1. Read `audit-report.md` — if any P0, mark as BLOCKED for the claimed state
+2. Read `evidence-contract.md` gate criteria for the claimed state
+3. For each gate criterion at the claimed state and ALL LOWER states:
+   - Find the supporting evidence (test output, LARP findings, lint output, build log)
+   - Mark ✅ / ⚠️ / ❌
+4. If any required-at-claimed-state gate is ❌: lower the verified state to the highest state where all gates pass
+5. Run the banned-phrase self-check on the report's own language before publishing
+6. Apply SHA stamp to the report
+7. Trigger `/project-state` regeneration
+
+The legacy v6 validation algorithm follows below (use it for tests/lint/quality details, but the verdict MUST be a readiness state, not PASS/FAIL).
+
+---
+
+Goal: Comprehensively validate that the implementation fulfills the specification, meets non-functional requirements, adheres to constitutional principles, AND is verified at the claimed readiness state per evidence-contract.md.
 
 ## Subagent Parallelization
 

@@ -1,6 +1,6 @@
 ---
 name: project-ux
-description: Load to define UX strategy and design principles before architecture and planning. Produces ux-strategy.md — use when the product's UX is a key differentiator, involves multiple user roles, or when design consistency needs to be established early.
+description: Define UX strategy and design principles before architecture and planning. In Speck v7, this is OPTIONAL at Build (with 1-3 epics) — UX content lives inside product-contract.md by default. REQUIRED at Build if 4+ epics expected, REQUIRED at Platform. Produces ux-strategy.md when run. Load when the product's UX is a key differentiator, when the user-facing surface area is large, or when Platform-level governance demands a standalone artifact.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,16 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ v7 Play Level Guard
+
+Read `.speck/project.json` → `play_level`. If missing, default to Platform.
+
+- **Sprint**: Tell the user "Sprint projects don't need a standalone ux-strategy.md. Keep UX intuition in your PRD and ship." STOP.
+- **Build (1-3 epics)**: Tell the user "At Build (1-3 epics), UX strategy content lives inside `product-contract.md` (Section 6 Public Language, Section 5 Magic Moments, Section 10 Trust Moments). Running this skill produces a standalone `ux-strategy.md` only if you want governance overhead. Proceed? Y/N." If N: STOP and direct to `/project-product-contract`.
+- **Build (4+ epics)** or **Platform**: PROCEED with full flow below. (At 4+ epics, the composition fallacy gate triggers — ux-strategy is mandatory.)
+
+---
 
 Create a comprehensive UX strategy that will guide all design decisions throughout the project.
 

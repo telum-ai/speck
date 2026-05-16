@@ -100,3 +100,25 @@ visual_testing:
     chromatic: "npx chromatic --project-token=xxx"
   ci_integration:
     requires_xvfb: true  # Headed browser required on CI
+# v7 Evidence Contract defaults — Browser extension
+evidence_contract:
+  platform: browser-extension
+  valid_proof_sources:
+    - "Packaged extension (.zip) loaded as unpacked + tested"
+    - "Puppeteer/Playwright test on extension popup + content script context"
+    - "Screenshots of popup, options page, content script-modified DOM"
+    - "Store-published build (Chrome Web Store / AMO) install + LARP"
+  invalid_proof_sources:
+    - "Vite/webpack dev server preview (extension isn't loaded as extension)"
+    - "Component-level screenshot without browser context"
+    - "Manifest preview without actual install"
+  required_larp_scope:
+    impl_green: "Unit + integration tests pass; manifest valid"
+    ux_rc: "Unpacked extension LARP: popup + options + content script behavior recorded with screenshots"
+    commercial_rc: "License/auth flow tested if paid; permissions justified in manifest"
+    ship_rc: "Store-review build uploaded; pre-publish LARP confirms identical behavior"
+    ship: "Published in store, install count tracked, no critical reviews"
+  required_static_evidence:
+    - "Manifest v3 valid"
+    - "Store-required assets (icons, screenshots) present"
+    - "Privacy policy URL valid"

@@ -1,6 +1,6 @@
 ---
 name: project-domain
-description: Load for specialized domains (healthcare, fitness, finance, legal, e-commerce, etc.) to capture subject matter expertise before architecture decisions are made. Produces domain-model.md — use when domain terminology or rules would otherwise be guessed incorrectly.
+description: Capture subject-matter expertise for specialized domains (healthcare, fitness, finance, legal, e-commerce, etc.) so terminology and rules aren't guessed wrong. In Speck v7, this is OPTIONAL at Build — domain terminology + invariants live inside product-contract.md Section 6 (Public Language) by default. REQUIRED at Platform when domain regulation/terminology is non-trivial. Produces domain-model.md when run. Load when the product operates in a specialized domain AND deserves a standalone document.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,16 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ v7 Play Level Guard
+
+Read `.speck/project.json` → `play_level`. If missing, default to Platform.
+
+- **Sprint**: Tell the user "Sprint projects don't need a standalone domain-model.md. Capture critical terms inline in your PRD." STOP.
+- **Build**: Tell the user "At Build, domain terminology lives in `product-contract.md` Section 6 (Public Language) and Section 8 (AI Behavior Contract if AI is user-visible). Running this skill produces a standalone `domain-model.md` only if you have substantial domain rules/invariants that don't fit elsewhere. Proceed? Y/N." If N: STOP and direct to `/project-product-contract`.
+- **Platform**: PROCEED with full flow below.
+
+---
 
 Create or update the domain model that captures subject matter expertise for this project.
 

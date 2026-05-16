@@ -1,6 +1,6 @@
 ---
 name: epic-outline
-description: Load before epic-plan when the epic involves unfamiliar technology, complex integrations, or has significant unknowns that need research. Optional — skip when the implementation path is clear and existing project patterns already apply. FIRST ACTION after loading: read template at .speck/templates/epic/outline-template.md before any context loading or artifact generation.
+description: DEPRECATED in Speck v7. Use /speck-skeptical-review + /speck-decision-log instead — they replace the outline pattern with structured tradeoff enumeration and lockable decisions. The v6 epic-outline pattern (research mapping) is now embedded in /epic-plan's just-in-time research step. This skill remains for v6 compatibility but redirects new invocations to the v7 equivalents.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,20 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ v7 Deprecation Notice
+
+This skill is **deprecated in Speck v7**. The v6 epic-outline was a separate research-mapping step; in v7 that work is folded into:
+
+- `/speck-skeptical-review` — for enumerating alternatives at the epic's technical approach
+- `/speck-decision-log` — for locking the chosen approach with rationale and SHA stamp
+- `/epic-plan` — performs just-in-time research as needed (per the v7 just-in-time research pattern)
+
+**Recommended v7 path**: `/epic-clarify` → `/speck-skeptical-review` (if approach unclear) → `/epic-plan`
+
+This skill continues to work for v6 projects (back-compat). For new v7 work, prefer the path above.
+
+---
 
 ## ⚠️ Step 0: Read Template First
 

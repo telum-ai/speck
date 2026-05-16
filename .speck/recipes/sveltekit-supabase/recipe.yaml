@@ -73,3 +73,35 @@ visual_testing:
   ci_integration:
     on_pr: true
     block_on_diff: true
+# v7 Evidence Contract defaults — what counts as proof for this platform.
+# Override per-project in evidence-contract.md.
+evidence_contract:
+  platform: web
+  valid_proof_sources:
+    - "Production build (npm run build && start) screenshot via Playwright/Browser MCP"
+    - "Production build accessibility tree via axe-playwright"
+    - "Lighthouse run against production build"
+    - "Live deployed URL screenshot + HAR"
+    - "Network trace (HAR) showing real API responses"
+  invalid_proof_sources:
+    - "next dev / vite dev server screenshot (dev-mode evidence ≠ ship evidence)"
+    - "Storybook screenshot (component evidence ≠ integrated evidence)"
+    - "Screenshot from localhost without HAR"
+    - "Curl of API without browser render"
+    - "Screenshot of editor preview"
+  required_larp_scope:
+    impl_green: "Unit + integration tests pass"
+    ux_rc: "Production build LARP: primary user flow recorded end-to-end with screenshots + AX tree at each step"
+    commercial_rc: "Stripe checkout / paywall flow exercised against test mode, webhook delivery verified"
+    ship_rc: "Live preview URL LARP recorded with HAR; auth flow on real provider"
+    ship: "Production URL smoke screenshots checked in post-deploy"
+  required_static_evidence:
+    - "tests passing in CI"
+    - "Lighthouse score >=85 for performance, accessibility"
+    - "axe-core 0 critical, 0 serious"
+    - "Sentry test event roundtrip"
+  required_live_service_evidence:
+    - "Production deploy URL responding 200"
+    - "Auth callback flow against real OAuth provider"
+    - "Email sending verified (test inbox)"
+    - "Stripe webhook delivery verified (if billing in scope)"

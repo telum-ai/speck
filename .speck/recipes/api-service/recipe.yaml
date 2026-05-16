@@ -200,3 +200,30 @@ visual_testing:
     - "OpenAPI schema validation for response structure"
     - "Contract tests for API consumer compatibility"
     - "Swagger/ReDoc UI is auto-generated, no custom visual testing needed"
+# v7 Evidence Contract defaults — API service (backend-only)
+evidence_contract:
+  platform: api-service
+  valid_proof_sources:
+    - "HTTP request/response logs from deployed environment"
+    - "Postman/Bruno collection run against deployed URL with assertions"
+    - "Integration test hitting deployed API"
+    - "Load test results (k6/Artillery) against deployed environment"
+    - "OpenAPI spec verified against actual responses"
+  invalid_proof_sources:
+    - "Local server (npm run dev / uvicorn) request/response"
+    - "Mocked test response (unit tests are signal, not proof)"
+    - "Swagger UI screenshot without actual call"
+  required_larp_scope:
+    impl_green: "Unit + integration tests pass against local server"
+    ux_rc: "Postman/Bruno collection passes against staging deployment"
+    commercial_rc: "Rate limiting + auth tested against live IdP; billing webhooks exercised"
+    ship_rc: "Production deployment smoke tests pass; load test meets target"
+    ship: "Production responding, monitoring dashboards green for 24h"
+  required_static_evidence:
+    - "API tests passing in CI"
+    - "OpenAPI spec valid and matches behavior"
+    - "Error responses follow documented schema"
+  required_live_service_evidence:
+    - "Production health endpoint 200"
+    - "Database migrations applied to production"
+    - "Sentry / observability backend receiving events from prod"

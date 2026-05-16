@@ -9,6 +9,7 @@ import {
   saveVersion, 
   getCurrentVersion 
 } from '../sync.js';
+import { runPostUpgradeMigrations } from '../migrate.js';
 
 export async function upgrade(targetDir, version, options = {}) {
   console.log('🥓 Upgrading Speck...\n');
@@ -101,7 +102,17 @@ export async function upgrade(targetDir, version, options = {}) {
   
   // Save new version
   saveVersion(targetDir, targetVersion);
-  
+
+  // Run any post-upgrade migrations (e.g. v6 → v7 project artifact scaffolding).
+  // This is silent and idempotent — runs only when actually needed.
+  let migrationSummary = null;
+  try {
+    migrationSummary = runPostUpgradeMigrations(targetDir, currentVersion, targetVersion, { verbose: true });
+  } catch (err) {
+    console.log(`⚠️  Post-upgrade migration encountered an error: ${err.message}`);
+    console.log('   The upgrade itself succeeded. Run `bash .speck/scripts/migrate.sh <project>` manually if needed.');
+  }
+
   console.log(`
 ✅ Upgraded from ${currentVersion} to ${targetVersion}!
 
@@ -109,8 +120,18 @@ export async function upgrade(targetDir, version, options = {}) {
 📝 Updated: ${results.updated.length} files
 🔀 Merged:  ${results.merged.length} files
 🗑️  Removed: ${results.removed.length} files
-⏭️  Skipped: ${results.skipped.length} files
+⏭️  Skipped: ${results.skipped.length} files`);
 
+  if (migrationSummary && migrationSummary.projects.length > 0) {
+    console.log(`
+🔁 Auto-migrated ${migrationSummary.projects.length} project(s) to v${migrationSummary.targetMajor}:
+${migrationSummary.projects.map(p => `   • ${p.path}: ${p.created} new artifact(s) scaffolded`).join('\n')}
+
+   Open each project and run /project-state to see the engagement-pickup view.
+   See <project>/migration-report.md for details.`);
+  }
+
+  console.log(`
 Review the changes and commit when ready:
   git add -A
   git commit -m "chore: upgrade Speck to ${targetVersion}"

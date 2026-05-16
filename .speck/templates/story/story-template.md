@@ -1,284 +1,182 @@
 ---
-# Story dependency declaration for autonomous orchestration
-# The orchestrator reads this to determine execution order
-depends_on: []  # e.g., [S001, S003] - stories that must be validated first
-blocks: []      # e.g., [S005] - stories waiting on this one (informational)
+speck_version: 7.0
+depends_on: []         # e.g., [S001, S003]
+blocks: []             # e.g., [S005]
+persona: [persona-id]  # primary persona this story serves
+readiness_target: [IMPL-GREEN | UX-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
 ---
 
-# Story Specification: [STORY NAME]
+# Story: [STORY NAME]
 
-**Story ID**: `S###-story-name`  
-**Branch** (optional): `S###-story-name`  
-**Created**: [DATE]  
-**Status**: Draft  
-**Input**: [User description from /story-specify command]
-
----
-
-## 📊 Information Sources
-
-**Traceability**: This story specification was created from the following sources:
-
-- **Required Inputs**:
-  - User description (from command input)
-  - `epic.md` → Epic context and user stories
-- **Recommended Inputs**:
-  - `epic-tech-spec.md` → Technical implementation approach
-  - `project.md` → Project vision and constraints (inherited)
-- **Domain Context** (for specialized domains):
-  - `domain-model.md` → Domain terminology, entities, rules, and principles
-  - Use glossary terms consistently in story descriptions
-  - Validate against domain invariants
-- **Design Context** (for UI/UX stories):
-  - `ux-strategy.md` → UX principles, voice/tone, emotional goals
-  - `design-system.md` → Design tokens, components, patterns
-  - If missing: Mark as [NEEDS DESIGN CONTEXT] and suggest `/project-ux` or `/project-design-system`
-- **Brownfield** (if applicable):
-  - `codebase-scan-*.md` → Existing code analysis
-  - Approach: Refactor/enhance existing code when overlap detected
-
-**Information Flow**:
-```
-User input + epic.md + [epic-tech-spec/codebase-scan-*]
-  ↓
-spec.md (this document)
-  ↓
-clarify → plan → tasks → implement → validate → retrospective
-```
+**Story ID**: `S###-story-name`
+**Created**: [DATE]
+**Status**: Specified
+**Input**: [User description]
 
 ---
 
-## Story Lifecycle State Tracking
+## 1. Experience (What the user lives)
 
-<!--
-  STATE RULES:
-  - /epic-breakdown creates spec.md with "Draft (Placeholder)" state → check only Draft box
-  - /story-specify completes the spec in-place → set "Specified", check Draft (if was draft) + Specified boxes
-  There is only ever ONE file: spec.md. Lifecycle state is the discriminator, not the filename.
--->
-**Current State**: Specified
+*This section comes first because the user lives in the experience, not in the data model.*
 
-- [ ] **Draft** - Placeholder spec.md created by `/epic-breakdown` (not yet specified)
-- [x] **Specified** - spec.md completed by `/story-specify`
-- [ ] **Clarified** - Ambiguities resolved (`/story-clarify` complete)
-- [ ] **Planned** - plan.md created (`/story-plan` complete)
-- [ ] **Tasked** - tasks.md created (`/story-tasks` complete)
-- [ ] **Approved** - Explicit go-ahead to implement (team review)
-- [ ] **In Progress** - Implementation started (`/story-implement` running)
-- [ ] **Implemented** - Code complete, all tasks marked [x]
-- [ ] **Validated** - validation-report.md shows PASS (`/story-validate` complete)
-- [ ] **Retrospective** - story-retro.md created (`/story-retrospective` complete)
-- [ ] **Archived** - Ready for archive with date prefix
+### 1a. JTBD Context
 
-Update state checkboxes as story progresses through workflow.
+**When** [situation/trigger], the [persona-id] wants to [job], **so that** they can [outcome statement: direction + measure + object].
 
----
+Cross-reference: `product-contract.md` — primary persona + magic moments.
 
-## Purpose
+### 1b. Primary User Story
 
-[Describe the user problem and the value delivered in 1–3 sentences. Include who benefits and what “done” means. Keep this between 50–300 characters.]
+As a [persona-id], I want to [action] so that I can [outcome].
+
+### 1c. Felt Quality (How the user feels)
+
+| Surface | Entry emotional state | Target felt outcome | Banned feelings |
+|---------|----------------------|--------------------|--------------------|
+| [screen/step name] | [What they bring in] | [What they leave with] | [Feelings the experience must NOT produce] |
+
+### 1d. Magic Moments Tied to This Story
+
+*Which magic moments from `product-contract.md` does this story deliver? Each gets a verification step.*
+
+- [ ] Magic Moment: [Name from product-contract.md]
+  - Surface: [Where it lands]
+  - Verification: [LARP step that proves it]
 
 ---
 
-## Execution Flow (main)
-```
-1. Parse user description from Input
-   → If empty: ERROR "No feature description provided"
-2. Extract key concepts from description
-   → Identify: actors, actions, data, constraints
-3. For each unclear aspect:
-   → Mark with [NEEDS CLARIFICATION: specific question]
-4. Fill User Scenarios & Testing section
-   → If no clear user flow: ERROR "Cannot determine user scenarios"
-5. Generate Functional Requirements
-   → Each requirement must be testable
-   → Mark ambiguous requirements
-6. Identify Key Entities (if data involved)
-7. Run Review Checklist
-   → If any [NEEDS CLARIFICATION]: WARN "Spec has uncertainties"
-   → If implementation details found: ERROR "Remove tech details"
-8. Return: SUCCESS (spec ready for planning)
-```
+## 2. Acceptance LARP (How we prove the experience works)
 
----
+*The acceptance criteria are LARP-shaped. Each scenario is captured against the running build, not against the spec.*
 
-## ⚡ Quick Guidelines
-- ✅ Focus on WHAT users need and WHY
-- ❌ Avoid HOW to implement (no tech stack, APIs, code structure)
-- 👥 Written for business stakeholders, not developers
+### 2a. Required Personas to LARP
 
-### Section Requirements
-- **Mandatory sections**: Must be completed for every feature
-- **Optional sections**: Include only when relevant to the feature
-- When a section doesn't apply, remove it entirely (don't leave as "N/A")
+| Persona | Flow | Build artifact | Evidence required |
+|---------|------|----------------|-------------------|
+| [persona-id] | [flow name] | [per evidence-contract.md] | screenshots, AX tree, taste notes |
 
-### For AI Generation
-When creating this spec from a user prompt:
-1. **Mark all ambiguities**: Use [NEEDS CLARIFICATION: specific question] for any assumption you'd need to make
-2. **Don't guess**: If the prompt doesn't specify something (e.g., "login system" without auth method), mark it
-3. **Think like a tester**: Every vague requirement should fail the "testable and unambiguous" checklist item
-4. **Common underspecified areas**:
-   - User types and permissions
-   - Data retention/deletion policies  
-   - Performance targets and scale
-   - Error handling behaviors
-   - Integration requirements
-   - Security/compliance needs
-   - Accessibility expectations (WCAG 2.1 AA) and UX consistency
-
----
-
-## User Scenarios & Testing *(mandatory)*
-
-### Job Context (JTBD)
-
-**Core Job Being Addressed**:
-When [situation/trigger], I'm trying to [job statement: action verb + object + context].
-
-*Example: "When reviewing project status, I'm trying to identify at-risk tasks before they become blockers."*
-
-### Primary User Story (JTBD Enhanced)
-
-As a [user type], I want to [action] so that I can [outcome statement: direction + measure + object].
-
-*Traditional format is acceptable, but prefer outcome-focused "so that" clauses:*
-- ❌ "so that I have a dashboard" (solution-focused)
-- ✅ "so that I can minimize the time it takes to identify at-risk tasks" (outcome-focused)
-
-### Success Metrics (Outcome-Driven)
-
-Define how we'll measure if this story achieves the desired outcome:
-
-- [ ] **[Metric 1]**: [Direction] the [measure] of [object] by [target/baseline]
-- [ ] **[Metric 2]**: [Direction] the likelihood of [outcome]
-- [ ] **[Metric 3]**: [Qualitative outcome if not measurable]
-
-*Examples:*
-- *Minimize the time to complete checkout by 30% vs current flow*
-- *Reduce the likelihood of abandoned carts due to payment errors*
-- *Users report feeling confident about their purchase (qualitative)*
-
-### Acceptance Scenarios
-
-Use structured GIVEN/WHEN/THEN format for all scenarios:
+### 2b. Acceptance Scenarios
 
 #### Scenario: [Primary success path]
-- **GIVEN** [initial state or context]
-- **WHEN** [user action or trigger]
-- **THEN** [expected outcome]
-- **AND** [additional outcomes if any]
-
-#### Scenario: [Alternative path or variation]
-- **GIVEN** [different initial state]
+- **GIVEN** [initial state in the actual runtime — not abstract "data exists" but "the running build, with X user, in Y state"]
 - **WHEN** [user action]
-- **THEN** [expected outcome]
+- **THEN** [expected outcome — visible in screenshot/AX tree/transcript]
+- **AND** [additional outcomes]
+- **EVIDENCE** [screenshot path or AX-tree path or transcript line]
 
-#### Scenario: [Edge case or error handling]
-- **GIVEN** [boundary condition]
-- **WHEN** [error condition occurs]
-- **THEN** [system handles gracefully]
-- **AND** [user receives clear feedback]
+#### Scenario: [Alternative path]
+- **GIVEN** ...
+- **WHEN** ...
+- **THEN** ...
+- **EVIDENCE** ...
 
-**Note**: Each scenario should be independently testable. If you need "AND" for actions, consider if it's actually multiple scenarios.
-
-## Requirements *(mandatory)*
-
-### Functional Requirements
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
-
-*Example of marking unclear requirements:*
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
-
-### Key Entities *(include if feature involves data)*
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
-
-## Non-Functional Requirements *(mandatory)*
-
-### Performance Targets
-
-*Define project-specific performance requirements. Reference context.md or constitution.md if they exist.*
-
-- [CUSTOMIZE: Define latency targets, e.g., "System response: < 200ms p95"]
-- [CUSTOMIZE: Define throughput targets, e.g., "Support 100 concurrent users"]
-- [CUSTOMIZE: Define availability targets, e.g., "99.9% uptime"]
-- State rationale if targets differ from project-level standards
-
-### Security & Privacy
-
-- [CUSTOMIZE: Define data privacy requirements for this feature]
-- [CUSTOMIZE: Specify who can access what data]
-- [CUSTOMIZE: Define data retention and deletion policies]
-
-### Accessibility & UX
-
-- WCAG 2.1 AA conformance required
-- [CUSTOMIZE: Define UX principles from ux-strategy.md]
-- [CUSTOMIZE: Define copy/tone guidelines from design-system.md]
+#### Scenario: [Recovery from error]
+- **GIVEN** ...
+- **WHEN** ...
+- **THEN** ...
+- **EVIDENCE** ...
 
 ---
 
-## Review & Acceptance Checklist
-*GATE: Automated checks run during main() execution*
+## 3. Evidence Required
+
+*What artifacts must `/larp` and `/audit` produce for this story to advance through readiness states?*
+
+| Evidence type | Required for state | Path / convention |
+|---------------|--------------------|--------------------|
+| Screenshot at primary screen | UX-RC | `screenshots/<sha>-primary.png` |
+| AX tree of primary screen | UX-RC | `ax-trees/<sha>-primary.xml` |
+| Persona LARP findings | UX-RC | `larp-recordings/<sha>-<persona>-findings.md` |
+| Adversarial probe results | SHIP-RC | `audit-report.md` adversarial section |
+| Banned-language scan output | UX-RC | `audit-report.md` banned-language section |
+
+---
+
+## 4. Adversarial Cases (What must NOT happen)
+
+*Inverts the spec. For every "should do X", list "must never do not-X under Y conditions". Audit uses this directly.*
+
+| Condition | Must NOT happen | Probe used to verify |
+|-----------|-----------------|----------------------|
+| Malformed input | Crash | Send malformed input, assert clear error |
+| Network drop mid-flow | Partial write | Inject drop at write point, assert atomicity |
+| Concurrent same-user update | Silent data loss | Run 2 writes concurrently, assert deterministic outcome |
+| Banned term reaches user | UI shows banned word | `banned-language-lint.sh` against captured copy |
+
+---
+
+## 5. Failure-Modes Handled
+
+*For each external dependency: how does this story behave when it fails?*
+
+| Dependency | Failure mode | Behavior | Verified by |
+|------------|--------------|----------|-------------|
+| [e.g., Auth service] | Down | [User sees X, can do Y] | [test/LARP] |
+| [e.g., AI API] | Timeout | [Fail-open / fail-closed per policy] | [test/LARP] |
+| [e.g., DB] | Connection drop | [Atomic rollback + retry] | [test] |
+
+---
+
+## 6. Related Tables / Surfaces (Cascade)
+
+*For every data write: what related tables / surfaces / caches must update? Critical for GDPR / consistency.*
+
+| Write target | Related tables | Cascade behavior | Verified |
+|--------------|----------------|-------------------|----------|
+| [e.g., users] | sessions, audit_log, user_settings, profile_avatars | DELETE CASCADE for delete; UPDATE timestamp for write | [test path] |
+
+---
+
+## 7. Performance + Non-Functional Targets
+
+*Reference `context.md` for project defaults. Override only with rationale.*
+
+- Performance: [e.g., "First meaningful paint <1.2s; primary action latency <300ms p95"]
+- Accessibility: WCAG 2.1 AA (per UX-RC gate)
+- Security/privacy: [if not covered by project default]
+- Observability: [errors logged, events emitted]
+
+---
+
+## 8. Data + API (Last, not first)
+
+*This used to be the first section in v6 specs. It's last in v7 because the experience drives the design — not the other way around. Keep it brief; details belong in `plan.md`.*
+
+### Key Entities (if data involved)
+- **[Entity]**: [What it represents, key attributes — without implementation]
+
+### API Surface (if any)
+- **[Endpoint or interface name]**: [Purpose, request/response shape — without implementation]
+
+---
+
+## 9. Implementation Hint (Optional)
+
+*Only include if the team needs a nudge in a specific direction. Otherwise leave blank — `plan.md` is the place for technical approach.*
+
+[Brief note. Example: "Use existing `useSubscription` hook from src/hooks/. Don't reinvent."]
+
+---
+
+## Acceptance Checklist
 
 ### Content Quality
-- [ ] No implementation details (languages, frameworks, APIs)
-- [ ] Focused on user value and business needs
-- [ ] Written for non-technical stakeholders
-- [ ] All mandatory sections completed
+- [ ] Experience (Section 1) is the longest section in this spec
+- [ ] Felt quality is named per surface (not vague)
+- [ ] Magic moments tied to product-contract.md
+- [ ] Banned language NOT present in any user-visible copy in this story
 
-### Requirement Completeness
-- [ ] No [NEEDS CLARIFICATION] markers remain
-- [ ] Requirements are testable and unambiguous  
-- [ ] Success criteria are measurable
-- [ ] Scope is clearly bounded
-- [ ] Dependencies and assumptions identified
-- [ ] Performance targets align with project requirements (from context.md)
-- [ ] Security/privacy requirements specified
-- [ ] UX criteria align with project UX strategy (from ux-strategy.md)
-- [ ] Accessibility included (WCAG 2.1 AA minimum)
+### Verifiability
+- [ ] Every acceptance scenario specifies EVIDENCE (screenshot path, AX tree, transcript line)
+- [ ] Every dependency has a failure-mode-handled row
+- [ ] Related tables / surfaces enumerated
+- [ ] Adversarial cases match the spec's positive claims
 
----
-
-## Project Documentation Updates
-*Complete after `/story-validate` passes to update project-level truth*
-
-After validation, determine which project-level documents need updates to reflect new reality:
-
-**Check for Updates**:
-- [ ] `project.md` → If story expanded/changed project scope or vision
-- [ ] `PRD.md` → If story delivered new features or changed requirements
-- [ ] `architecture.md` → If story introduced architectural patterns or changes
-- [ ] `context.md` → If story revealed new constraints or changed existing ones
-- [ ] `design-system.md` → If story added UI patterns, components, or tokens
-- [ ] `ux-strategy.md` → If story validated/changed UX principles
-
-**Update Instructions**:
-1. Read `validation-report.md` for actual changes vs spec
-2. For each document needing update:
-   - Add new sections showing current state
-   - Mark superseded sections with "(Updated after Story [ID])"
-   - Update "Last Updated" timestamp
-3. Commit changes explaining truth update
-
-**Why**: Project-level docs = single source of truth for "what exists now". Stories are proposals; after validation, project docs must reflect new reality.
+### Cross-Reference
+- [ ] Primary persona matches `personas/<id>.md`
+- [ ] Magic moments match `product-contract.md`
+- [ ] Evidence requirements align with `evidence-contract.md` gate criteria for `readiness_target`
 
 ---
 
-## Execution Status
-*Updated by main() during processing*
-
-- [ ] User description parsed
-- [ ] Key concepts extracted
-- [ ] Ambiguities marked
-- [ ] User scenarios defined
-- [ ] Requirements generated
-- [ ] Entities identified
-- [ ] Review checklist passed
-
----
+*[as of SHA `<git_sha_short>` | verified `<date>` | speck v7.0.0]*

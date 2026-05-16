@@ -1,6 +1,6 @@
 ---
 name: story-analyze
-description: REQUIRED before story-implement — never skip. Load after tasks.md is generated to cross-check spec.md, plan.md, and tasks.md for consistency, gaps, and issues. Catches problems before any code is written — a non-destructive quality gate. FIRST ACTION after loading: read template at .speck/templates/story/analysis-report-template.md before any context loading or artifact generation.
+description: DEPRECATED in Speck v7 as a standalone step. The v6 story-analyze (pre-implementation cross-check of spec/plan/tasks) is now split into two v7 mechanisms — (1) the final pass at the tail of /story-tasks that validates consistency before implementation begins, and (2) the adversarial pass in /audit that runs AFTER implementation and verifies actual behavior vs spec. This skill remains for v6 compatibility and will route the pre-impl checks; the adversarial cross-check is now in /audit. For new v7 work, use /story-tasks (consistency) and /audit (adversarial).
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,19 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ v7 Deprecation Notice
+
+This skill is **split in Speck v7**:
+
+- **Pre-implementation consistency check** (the original `/story-analyze` purpose: "does spec/plan/tasks line up?") is now part of `/story-tasks` final pass
+- **Adversarial cross-check** (what the implementation actually does vs what spec claims) is now `/audit`, run between `/story-implement` and `/story-validate`
+
+**Recommended v7 path**: `/story-plan` → `/story-tasks` (includes consistency check at tail) → `/story-implement` → `/audit` (adversarial) → `/story-validate`
+
+This skill continues to work for v6 projects (back-compat). For new v7 work, prefer the path above.
+
+---
 
 ## ⚠️ Step 0: Read Template First
 

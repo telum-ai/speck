@@ -153,3 +153,25 @@ visual_testing:
     - "Validate terminal output format in functional tests"
     - "Use snapshot testing for complex table/report output"
     - "Test color/formatting with Rich or Chalk mocks"
+# v7 Evidence Contract defaults — CLI tool
+evidence_contract:
+  platform: cli
+  valid_proof_sources:
+    - "Binary built and invoked via shell — recorded transcript (asciinema or plain log)"
+    - "Exit code + stdout/stderr captured for each documented command"
+    - "Integration test running compiled binary via subprocess"
+    - "Installed via published package (npm/cargo/brew) and re-tested"
+  invalid_proof_sources:
+    - "node src/cli.ts or cargo run --bin without packaging"
+    - "Output from inside test harness only"
+    - "REPL screenshot (different invocation context)"
+  required_larp_scope:
+    impl_green: "Unit + integration tests pass; binary builds"
+    ux_rc: "Documented primary use case recorded as asciinema with annotated steps"
+    commercial_rc: "License key validation if paid; telemetry/analytics opt-in respected"
+    ship_rc: "Binary installed via published package, re-LARP confirms identical behavior"
+    ship: "Published; install count and bug reports tracked"
+  required_static_evidence:
+    - "Binary builds for all target platforms"
+    - "--help output matches documented commands"
+    - "Exit codes documented and tested"

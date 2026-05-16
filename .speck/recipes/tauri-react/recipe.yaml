@@ -81,3 +81,23 @@ visual_testing:
   ci_integration:
     platforms: [ubuntu-latest, windows-latest, macos-latest]
     platform_baselines: true  # Must be true for Tauri
+# v7 Evidence Contract defaults — Tauri
+evidence_contract:
+  platform: desktop-tauri
+  valid_proof_sources:
+    - "Packaged Tauri build screenshot (.dmg/.msi/.deb installed)"
+    - "WebdriverIO + tauri-driver run on packaged build"
+    - "Code-signed build install on each target OS"
+  invalid_proof_sources:
+    - "tauri dev screenshot"
+    - "DevTools open in screenshot"
+    - "WebView preview without native shell"
+  required_larp_scope:
+    impl_green: "Unit + WebdriverIO tests pass"
+    ux_rc: "Packaged build LARP recorded with screenshots"
+    commercial_rc: "License/auth flow tested against real backend"
+    ship_rc: "Signed build installed on clean OS; LARP recorded"
+    ship: "Auto-updater confirmed; crash reports clean"
+  required_static_evidence:
+    - "Tauri build succeeds for all target platforms"
+    - "Code signing succeeds"

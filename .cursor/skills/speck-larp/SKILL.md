@@ -1,0 +1,152 @@
+---
+name: speck-larp
+description: First-class persona-based runtime LARP (Live-Action Role Play). Cold-starts the actual target build (not dev server), drives it as a named persona through the JTBD flow, captures screenshots + AX trees + timings + taste notes, validates magic moments, and produces checked-in evidence. Recipe-driven via visual_testing config — supports iOS (AXe), Android (Maestro), Web (Playwright/Browser MCP), Desktop (WebdriverIO/Playwright Electron), Flutter (golden tests). Load when validating UI stories/epics, when /recheck runs persona cold-start, or when user says "LARP this", "test as a user", "use the app as a real user", "is this real".
+disable-model-invocation: false
+---
+
+The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
+
+User input:
+
+$ARGUMENTS
+
+---
+
+## ⚠️ Step 0: Read Template First
+
+Before any other action, read:
+```
+.speck/templates/story/persona-larp-template.md
+```
+
+The template defines the LARP script structure (setup, steps, magic moments, taste rubric, evidence convention).
+
+---
+
+## Purpose
+
+`/larp` is first-class in Speck v7 because v6's six retrospectives independently said the same thing: **runtime LARP is what closes the spec-to-reality gap.** It's not a late add-on.
+
+LARP:
+- Uses the actual target build artifact (not dev server)
+- Cold-starts from fresh state per persona
+- Captures screenshots, AX trees, timings, transcripts
+- Validates magic moments (per product-contract.md)
+- Writes taste-judgment notes per screen
+- Produces checked-in evidence with SHA stamps
+
+This evidence is what story-validate, epic-validate, project-validate consume.
+
+## When to Run
+
+| Trigger | What to do |
+|---------|------------|
+| `/story-validate` for UI story | Run LARP for the story's persona(s) |
+| `/epic-validate` for UI epic | Run full JTBD walkthrough per persona |
+| `/recheck` (every persona) | Cold-start LARP for drift detection |
+| `/project-validate` | End-to-end JTBD smoke test across all personas |
+| User says "LARP this" | Run with provided persona |
+| Before claiming SHIP-RC | Run against launch build (not dev) |
+
+## Prerequisites
+
+- `personas/<persona-id>.md` exists (LARP script)
+- `evidence-contract.md` exists (defines valid proof sources)
+- Active recipe with `visual_testing:` config (defines tooling)
+- Built artifact exists (per evidence-contract — NOT dev server)
+
+If launch-build doesn't exist: STOP and report. Tell user "LARP requires the target build. Run [build command] first."
+
+## Execution Steps
+
+### 1. Locate project, persona, and tooling
+
+Find `specs/projects/<PROJECT_ID>/`.
+
+Read inputs:
+- `personas/<persona-id>.md` — LARP script
+- `evidence-contract.md` — valid proof sources
+- `product-contract.md` — magic moments + banned language
+- `.speck/recipes/<active>/recipe.yaml` → `visual_testing:` section
+
+If persona-id not specified, ask user which persona or run all per evidence-contract requirements.
+
+### 2. Verify the target build exists
+
+Map the evidence-contract's valid proof source to a concrete artifact:
+
+| Platform | Target build check |
+|----------|--------------------|
+| iOS | `.app` exists in ios/build OR TestFlight build registered |
+| Android | `.apk`/`.aab` exists in android/app/build OR Play Console build |
+| Web | `dist/` or `out/` exists AND is being served behind reverse-proxy-lookalike |
+| Desktop | Packaged installer exists |
+| CLI | Release binary exists at `target/release/<name>` or equivalent |
+
+If invalid (e.g., user is trying to LARP against dev server for an iOS app): STOP and refuse. Tell user "Per evidence-contract.md, dev-server screenshots don't count as valid proof for this platform. Build the launch artifact first: [exact command]."
+
+### 3. Load the platform-specific visual testing skill
+
+Per `visual_testing.pattern_file` in recipe — load the matching `.cursor/skills/visual-testing-*/SKILL.md`.
+
+### 4. Cold-start the target
+
+Execute setup from `personas/<persona-id>.md`:
+- Clean install / clear storage / new account
+- Set locale (if multilingual product)
+- Reset to viewport / device per persona
+- Confirm no logged-in user
+
+Record the **build SHA** that's actually running (not just current HEAD — they should match for fresh evidence).
+
+### 5. Execute the LARP script step-by-step
+
+For each step:
+1. Take the action (tap, type, swipe, etc.) using platform-specific tooling
+2. Capture per the persona script (screenshot, AX tree, timing, transcript)
+3. Write the captured-state file to `<story-or-epic-dir>/larp-recordings/<sha>-<persona>-<step>.{png,xml,json,md}`
+4. Compare against expected emotional state / PASS criterion / FAIL criterion
+5. If FAIL: record finding (P0-P3), continue (don't abort)
+
+### 6. Validate magic moments
+
+For each magic moment relevant to this persona (per `product-contract.md`):
+- Confirm the surface, trigger, content beats fire as expected
+- Compare actual content to "target emotional response"
+- Write taste judgment using the rubric in the persona template
+
+### 7. Run the backtracking / error scenarios
+
+- Backtracking, hesitation, error states, skip optional fields — per template
+
+### 8. Write findings note
+
+Per the template's findings format. Save to `<story-or-epic-dir>/larp-recordings/<sha>-<persona>-findings.md`.
+
+### 9. Apply SHA stamp
+
+```
+.speck/scripts/stamp-truth.sh <story-or-epic-dir>/larp-recordings/<sha>-<persona>-findings.md
+```
+
+### 10. Report
+
+Standard report format per claude skill.
+
+## Behavior Rules
+
+- NEVER LARP against dev server when evidence-contract requires built artifact
+- NEVER skip taste-judgment rubric
+- NEVER claim PASS if banned-language lint finds violations
+- ALWAYS capture from target runtime
+- ALWAYS write evidence with SHA-prefixed filenames
+- ALWAYS run backtracking + error scenarios
+
+## Integration Points
+
+- Reads: `personas/<persona-id>.md`, `evidence-contract.md`, `product-contract.md`, recipe.yaml, platform visual-testing skill
+- Writes: `<dir>/larp-recordings/<sha>-<persona>-*` evidence files, findings note
+- Invokes: `banned-language-lint.sh`, `stamp-truth.sh`
+- Feeds into: `/story-validate`, `/epic-validate`, `/project-validate`, `/recheck`
+
+## Context: $ARGUMENTS

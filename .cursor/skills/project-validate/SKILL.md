@@ -1,6 +1,6 @@
 ---
 name: project-validate
-description: Load when all epics are complete to verify the project meets its original vision and PRD success metrics. Produces project validation report — required before project-retrospective. FIRST ACTION after loading: read templates at .speck/templates/project/project-validation-report-template.md, .speck/templates/project/project-validation-summary-template.md, and .speck/templates/project/project-punch-list-template.md before any context loading or artifact generation.
+description: Load when all epics are validated and /audit has run for the project. Verifies the project meets its original vision and product-contract.md paid promise. Runs end-to-end JTBD smoke test via /larp across all personas. Declares a project-level readiness state. Produces project-validation-report.md — required before project-retrospective. FIRST ACTION after loading is read templates at .speck/templates/project/project-validation-report-template.md, .speck/templates/story/validation-report-template.md, .speck/templates/project/project-validation-summary-template.md, and .speck/templates/project/project-punch-list-template.md.
 disable-model-invocation: false
 ---
 
@@ -13,15 +13,65 @@ $ARGUMENTS
 
 ## ⚠️ Step 0: Read Templates First
 
-**Before any other action** — read ALL THREE templates now using the Read tool:
+**Before any other action** — read templates now:
 ```
 .speck/templates/project/project-validation-report-template.md
+.speck/templates/story/validation-report-template.md   # readiness state structure
 .speck/templates/project/project-validation-summary-template.md
 .speck/templates/project/project-punch-list-template.md
 ```
-This skill produces three artifacts. Reading all templates first ensures your validation evidence, executive summary, and punch list land in the expected structure.
 
-**Checkpoint**: After reading all three, note each template's top-level sections. Then continue to Play Level Check.
+**Checkpoint**: After reading, note the v7 readiness states and the v7 gate criteria.
+
+---
+
+## 🚦 Pre-Validate Gates (v7 — Mandatory)
+
+Before doing ANY project-level validation, verify:
+
+1. **Every epic has `epic-validation-report.md` with verified state >= UX-RC** (or higher per project ambition)
+   - If any epic is still IMPL-GREEN or lower: STOP. Tell user "Epic <id> needs to reach UX-RC before project-validate. Run `/larp` + `/epic-validate` first."
+
+2. **`/recheck` was run within the last 7 days**
+   - If missing or stale: STOP. Tell user "Run `/recheck` first — project-validate requires fresh drift detection."
+
+3. **`evidence-contract.md` and `product-contract.md` exist**
+   - If missing: STOP.
+
+4. **Full JTBD walkthrough captured for every named persona** in `evidence-contract.md`
+   - For each persona: latest `<persona>-findings.md` from `/larp` against launch build
+   - If missing for any persona: STOP. Tell user "Run `/larp <persona>` for [list]."
+
+If any pre-gate fails: refuse to proceed.
+
+---
+
+## 🎯 v7 Project Validation Algorithm
+
+1. Read every epic's `epic-validation-report.md` — extract verified states
+2. The project's MAX claimable state = MIN(epic states)
+3. Read `audit-report.md` files — any P0 lowers max claimable state
+4. Read `/recheck` report — drift lowers max claimable state
+5. End-to-end JTBD smoke test per persona (cross-epic walkthrough)
+6. Cross-platform coherence check (if multi-platform per evidence-contract)
+7. No dead ends check: every reachable feature has a way back, every action has feedback
+8. Banned-phrase self-check on this report's own language
+9. Apply SHA stamp; trigger `/project-state` regeneration
+10. Re-stamp all truth artifacts with fresh `verified` date
+
+The legacy v6 project validation algorithm follows below (use for governance details, but verdict MUST be a readiness state).
+
+---
+
+## Play Level Check
+
+Read `.speck/project.json` (if it exists) for `play_level`.
+
+- **Sprint**: Tell the user: "Sprint validation is simple — did you hit your Success Metric? Check your `sprint-log.md` outcome section. If yes and it's growing, run `/project-promote`."
+- **Build**: Validate PRD requirements, epic completion, product-contract delivery, and v7 readiness state gates. Skip constitution compliance and design-system coverage sections.
+- **Platform** (or no project.json): Full validation flow below.
+
+---
 
 ## Play Level Check
 

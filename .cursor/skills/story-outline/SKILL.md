@@ -1,6 +1,6 @@
 ---
 name: story-outline
-description: Load before story-plan when a story involves unfamiliar technology, needs research, or has significant unknowns about the right approach. Optional — skip for stories with a clear, proven implementation path already established in the project.
+description: DEPRECATED in Speck v7. Use /speck-skeptical-review + /speck-decision-log instead — they replace outline-style research mapping with structured alternative enumeration and decision locking. /story-plan now performs just-in-time research inline. This skill remains for v6 compatibility but redirects new invocations to the v7 equivalents.
 disable-model-invocation: false
 ---
 
@@ -10,6 +10,20 @@ The user input to you can be provided directly by the agent or as a command argu
 User input:
 
 $ARGUMENTS
+
+## ⚠️ v7 Deprecation Notice
+
+This skill is **deprecated in Speck v7**. The v6 story-outline was a separate research-mapping step; in v7 that work is folded into:
+
+- `/speck-skeptical-review` — for enumerating implementation approach alternatives
+- `/speck-decision-log` — for locking the chosen approach
+- `/story-plan` — performs just-in-time research inline
+
+**Recommended v7 path**: `/story-clarify` → (optional `/speck-skeptical-review`) → `/story-plan`
+
+This skill continues to work for v6 projects (back-compat). For new v7 work, prefer the path above.
+
+---
 
 1. Locate the active story directory (STORY_DIR):
    - Preferred: user is already in the story directory (or a subfolder like `contracts/`)

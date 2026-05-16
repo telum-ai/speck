@@ -248,3 +248,32 @@ visual_testing:
   ci_integration:
     on_pr: true
     block_on_diff: true
+# v7 Evidence Contract defaults — React Native / Expo
+evidence_contract:
+  platform: mobile-react-native
+  valid_proof_sources:
+    - "Native iOS Simulator screenshot via xcrun simctl io booted screenshot"
+    - "Native Android emulator screenshot via adb shell screencap"
+    - "Maestro recorded flow on real device or simulator"
+    - "Detox test run on simulator with screenshot capture"
+    - "TestFlight build install + manual LARP"
+  invalid_proof_sources:
+    - "Expo Go screenshot (sandbox runtime ≠ ship runtime)"
+    - "Browser-based Expo web preview (different runtime)"
+    - "Metro bundler error screen"
+    - "React Native dev menu open in screenshot"
+    - "Screenshot from Snack/web preview"
+  required_larp_scope:
+    impl_green: "Jest unit + Detox integration tests pass"
+    ux_rc: "Maestro flow recorded on simulator covering primary persona path; native screenshots at each step"
+    commercial_rc: "IAP test purchase via RevenueCat sandbox, receipt validation verified"
+    ship_rc: "TestFlight (iOS) and Internal Testing (Android) builds installed + manual LARP recorded"
+    ship: "App Store / Play Store live, post-release crash rate <1%"
+  required_static_evidence:
+    - "Bundle builds with no warnings"
+    - "Native build (Xcode/Gradle) succeeds for release config"
+    - "TestFlight / Internal Testing upload succeeds"
+  required_live_service_evidence:
+    - "Firebase/Supabase backend reachable from device build"
+    - "Push notifications delivered via FCM/APNs"
+    - "Deep links open in installed build"

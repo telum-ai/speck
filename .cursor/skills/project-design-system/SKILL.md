@@ -1,6 +1,6 @@
 ---
 name: project-design-system
-description: Load to create design tokens, component patterns, and visual standards before planning. Produces design-system.md — use when visual consistency is critical or when the project lacks an established design system. Run before project-plan.
+description: Create design tokens, component patterns, and visual standards before planning. In Speck v7, this is OPTIONAL at Build — visual identity lives inside product-contract.md (voice + magic moments) and `design-system/primitives.md` (registered UI primitives) by default. REQUIRED at Platform. Produces design-system.md when run. Load when visual consistency is critical AND Platform-level governance is in force. Always produces or updates `design-system/primitives.md` (the primitive registry) regardless.
 disable-model-invocation: false
 ---
 
@@ -11,13 +11,19 @@ User input:
 
 $ARGUMENTS
 
-## Play Level Check
+## ⚠️ v7 Play Level Guard
 
-Read `.speck/project.json` (if it exists) for `play_level`.
+Read `.speck/project.json` (if it exists) for `play_level`. If missing, default to Platform.
 
-- **Sprint**: Tell the user: "Sprint projects don't need a design system. Ship with whatever CSS you know. Run `/project-promote` when you're ready to grow."
-- **Build**: Design system is optional for Build. Only proceed if the user has a strong UI consistency need.
+- **Sprint**: Tell the user: "Sprint projects don't need a design system. Ship with whatever CSS you know. Run `/project-promote` when you're ready to grow." STOP.
+- **Build**: Tell the user "At Build, the standalone `design-system.md` is optional. The required artifact for any UI project is `design-system/primitives.md` (the live primitive registry) — that prevents inline UI re-implementations from drifting. Run this skill ONLY if you want a full design-system.md AND keep primitives.md as the live registry. Otherwise, run `/speck-primitives-init` to bootstrap just the registry."
 - **Platform** (or no project.json): Recommended. Full flow below.
+
+**Always**, on any run, also create or update `design-system/primitives.md` using `.speck/templates/project/primitives-registry-template.md`.
+
+---
+
+## Play Level Check (Legacy heading, retained for compatibility)
 
 ---
 

@@ -77,3 +77,26 @@ visual_testing:
   ci_integration:
     platforms: [ubuntu-latest, windows-latest, macos-latest]
     platform_baselines: false  # Electron bundles Chromium - consistent rendering
+# v7 Evidence Contract defaults — Electron
+evidence_contract:
+  platform: desktop-electron
+  valid_proof_sources:
+    - "Packaged app screenshot (.dmg/.exe installed and run)"
+    - "Playwright Electron API screenshot of packaged app"
+    - "Auto-updater test run with old version → new version"
+    - "Code-signed + notarized build install (macOS) / signed install (Windows)"
+  invalid_proof_sources:
+    - "electron-forge start / npm run dev screenshot (dev mode)"
+    - "DevTools open in screenshot"
+    - "Unpacked app screenshot"
+    - "Unsigned build screenshot (signing matters for entitlements)"
+  required_larp_scope:
+    impl_green: "Unit + integration tests pass; packaged build succeeds for target OS"
+    ux_rc: "Packaged app LARP recorded; primary flow with screenshots"
+    commercial_rc: "License key validation tested against live licensing backend"
+    ship_rc: "Signed + notarized build installed on clean OS; LARP recorded"
+    ship: "Auto-updater confirmed working; post-deploy crash reports clean"
+  required_static_evidence:
+    - "Code signing succeeds"
+    - "Notarization succeeds (macOS)"
+    - "Installer/uninstaller flow works"
