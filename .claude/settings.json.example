@@ -17,5 +17,39 @@
       "Read(./.env.*)",
       "Read(./secrets/**)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat specs/projects/*/project-state.md 2>/dev/null || echo 'No active project-state.md found. Run /speck or /recheck to initialize project state.'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/after-file-edit.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Verify if the current story tasks are fully documented. Ensure tasks.md status reflects completion in YAML frontmatter. If any critical phase decisions were locked, check that they are logged in project-decisions-log.md. If everything is in order, respond with {\"ok\": true}. Otherwise, return {\"ok\": false, \"reason\": \"List what remains before exiting\"}."
+          }
+        ]
+      }
+    ]
   }
 }

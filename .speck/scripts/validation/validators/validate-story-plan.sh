@@ -191,7 +191,7 @@ else
 - Unit tests: [What to test]
 - Integration tests: [What to test]
 - Contract tests: [What to validate]
-See Speck docs in `.speck/README.md` (or your project’s `.cursor/rules/` if you maintain one)."
+See Speck docs in \`.speck/README.md\` (or your project’s \`.cursor/rules/\` if you maintain one)."
 fi
 
 # === OUTPUT RESULTS ===
@@ -222,4 +222,3 @@ if [ "$strict" = true ] && [ "$errors" -gt 0 ]; then
 fi
 
 exit 0
-

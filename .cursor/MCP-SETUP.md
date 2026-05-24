@@ -4,10 +4,13 @@ Speck works best with these MCP servers configured. All are optional but recomme
 
 ## Quick Setup
 
-1. (Optional) Add team-shared MCP additions (no secrets): create/edit `.cursor/mcp.project.json.example`
-2. Generate your local config: `bash .speck/scripts/bash/merge-mcp-config.sh`
-3. Add your API keys / tokens in `.cursor/mcp.json` (local, git-ignored)
-4. Restart Cursor
+1. (Optional) Add team-shared MCP additions (no secrets): create/edit `.speck/mcp/project.example.json` (or `.cursor/mcp.project.json.example`)
+2. Generate your local configs (produces both `.cursor/mcp.json` and `.mcp.json`):
+   ```bash
+   bash .speck/scripts/bash/merge-mcp-config.sh
+   ```
+3. Add your API keys / tokens in your generated local configs (both are local and git-ignored)
+4. Restart your host (Cursor or Claude Code)
 
 ## Recommended Servers
 
@@ -68,6 +71,6 @@ See `.claude/skills/external-services/*/SKILL.md` for detailed setup instruction
 
 ## Template Sync Notes
 
-- Speck-managed baseline: `.cursor/mcp.json.example`
-- Project-managed overlay (committed): `.cursor/mcp.project.json.example`
-- Local merged config (git-ignored): `.cursor/mcp.json`
+- Speck-managed baseline (canonical): `.speck/mcp/servers.example.json`
+- Project-managed overlay (committed): `.speck/mcp/project.example.json` (falls back to `.cursor/mcp.project.json.example`)
+- Local merged configs (git-ignored): `.cursor/mcp.json` (Cursor) and `.mcp.json` (Claude Code)

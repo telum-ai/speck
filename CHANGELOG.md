@@ -1,5 +1,38 @@
 # Speck Changelog
 
+## v7.4.0 — 2026-05-24 — Speck v7 Claude-First Compatibility & Advanced Orchestration
+
+Speck v7.4.0 is a major upgrade leveraging modern Claude Code automation, scheduled loops, and specialized agent teams, while establishing a robust, host-agnostic validation core that guarantees zero regressions and flawless compatibility for Cursor and Codex.
+
+### 1. Unified Validation Core & Single Source of Truth
+*   **Behavior Before**: Template validators (e.g. `validate-story-spec.sh`, `validate-story-tasks.sh`) lived in Cursor-specific directories under `.cursor/hooks/hooks/validators/`. This made validation logic unavailable to other environments unless manually duplicated, causing spec-checking behavior to diverge across tools.
+*   **Behavior After**: Centralized all template validation rules into a unified, host-agnostic bash core under `.speck/scripts/validation/validators/`, reducing duplicate code by over 1,100 lines. All hosts (Claude Code, Cursor, Codex, and CI) now call the exact same validation engine.
+
+### 2. Claude-Native Hooks and settings.json Safeguards
+*   **Behavior Before**: Non-interactive template validation was only available on Cursor via `afterFileEdit` hooks, while Claude Code had no automated spec enforcement or session safeguards.
+*   **Behavior After**: Overhauled `.claude/settings.json.example` to declare narrow, safe Claude hooks:
+    *   **`PostToolUse` (Edit|Write)**: Intercepts file edits via a custom adapter at `.claude/hooks/after-file-edit.sh` to validate markdown specs on the fly.
+    *   **`SessionStart` (Compaction Reminders)**: Automatically re-injects `project-state.md` into the LLM context at start and compaction, preventing context-rot during long turns.
+    *   **`Stop` (Exit Gates)**: Intercepts exit prompts to verify task completion and decision log status before allowing the session to close.
+
+### 3. Dynamic Dual-Host MCP Config Merger
+*   **Behavior Before**: MCP server setup and template sync guides were Cursor-exclusive, forcing Claude Code users to manually copy configurations and manage separate environments.
+*   **Behavior After**: Created `.speck/mcp/servers.example.json` as the unified baseline source. Extended `.speck/scripts/bash/merge-mcp-config.sh` to generate local configs for BOTH Cursor (`.cursor/mcp.json`) and Claude Code (`.mcp.json`) simultaneously, with both safely gitignored to avoid secret leaks.
+
+### 4. Specialized Checked-In Subagents
+*   **Behavior Before**: Orchestrator commands only ran sequentially in the main conversation. Spawning specialized perspectives or running concurrent task teams was not structurally supported.
+*   **Behavior After**: Checked in five custom subagents (`speck-scribe`, `speck-planner`, `speck-coder`, `speck-auditor`, `speck-validator`) under `.cursor/agents/` (cleanly symlinked to `.claude/agents/` and `.codex/agents/` via sync script). 
+    *   **Worktree Isolation**: The `@speck-coder` is configured with `isolation: worktree` so it automatically implements tasks in a dedicated, conflict-free checkout of the codebase.
+    *   **Agent Teams**: Users can now spin up parallel peer reviews or dual-implementations using Claude's teammate mode with custom roles (e.g. "@speck-coder" + "@speck-auditor").
+
+### 5. Speck Maintenance Loops (`loop.md`)
+*   **Behavior Before**: Spec drift, staleness, and scaffolding tokens could only be caught by manually triggering `/recheck` or waiting until a final validation command.
+*   **Behavior After**: Checked in `.claude/loop.md` to establish a scheduled workspace guard. Running `/loop 1h` now automates staleness-checks, replace-marker scans, and lints dynamically in the background.
+
+### 6. Host Capability Matrix & Fallbacks
+*   **Behavior Before**: No explicit documentation outlining feature differences across platforms.
+*   **Behavior After**: Added a dedicated **Host Capability Matrix** to `AGENTS.md` and updated key process skills (`speck-larp`, `speck-recheck`, `story-validate`) with clear fallbacks. If running on a host without subagents, the agent is directed to execute the same checklist items sequentially in the main context, maintaining complete procedural parity.
+
 ## v7.3.0 — 2026-05-16 — Speck v7 Generalization Tightening
 
 Speck v7.3.0 introduces a major evolutionary step, transitioning Speck from a SaaS-focused web/mobile methodology into a **universally generalized, always-on development framework**. It resolves key cross-primitive orchestration gaps, enforces strict gate discipline, and introduces first-class project archetypes so that infrastructure, backends, internal tools, and client products are all spec-driven and validated with equal rigor.

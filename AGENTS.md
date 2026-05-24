@@ -247,6 +247,51 @@ Context rot is real — old decisions get deprioritized as tokens accumulate. Sp
 
 See `.cursor/MCP-SETUP.md` for setup.
 
+## 🎛️ Host Capability Matrix
+
+Speck is designed to run seamlessly across all major AI coding environments. Core behavioral expectations, artifact rules, and evidence requirements are identical, while each environment offers different optional accelerators.
+
+| Capability | Claude Code | Cursor | Codex |
+|------------|-------------|--------|-------|
+| **Core Process Commands** | ✅ Supported (via `.claude/skills/`) | ✅ Supported (via `.cursor/skills/`) | ✅ Supported (via `.codex/skills/`) |
+| **Local MCP Config** | `.mcp.json` (root) | `.cursor/mcp.json` | Host-specific config |
+| **Automatic Template Linting** | ✅ `PostToolUse` edit hooks | ✅ `afterFileEdit` hooks | Manual or CI-driven checks |
+| **Structured Workflows** | ✅ `/loop` maintenance, `/goal` | Manual or scheduled CI | Manual or scheduled CI |
+| **Custom Agent Roles** | ✅ `speck-*` subagents checked in | Optional `.cursor/rules/` | Optional skills guidelines |
+| **Isolated Implementations** | ✅ `isolation: worktree` | Fallback to main branch | Fallback to main branch |
+
+### Portability Guarantees & Fallbacks
+1. **Shared Validation Engine**: All validation hooks (`validate-template.sh`) route to a unified, host-agnostic bash core inside `.speck/scripts/validation/`.
+2. **Subagents Fallback**: Spawning parallel subagents (e.g. `speck-auditor`, `speck-scanner`) is a Claude-specific optimization. When executing on Cursor or Codex, checklists run sequentially in the main conversation.
+3. **CI Backstop**: Regardless of local host hooks or capabilities, the ultimate validation gate is portable and runs in your standard CI pipeline (`.github/workflows/speck-validation.yml`).
+
+## 🦾 Claude-First Autonomous & Agentic Workflows
+
+When running Speck with Claude Code, the methodology provides first-class autonomous features to dramatically accelerate development loops without sacrificing rigor.
+
+### 🎭 Specialized Subagents
+Speck defines five custom subagents in `.claude/agents/` that can be invoked via `@-mentions` or deployed as peer reviewers on an agent team:
+* **`@speck-scribe`**: Drafts and refines `spec.md` and `epic.md` using precise normative language (`SHALL/MUST`).
+* **`@speck-planner`**: technical planning (`plan.md`, `epic-tech-spec.md`) and task lists (`tasks.md`) enforcing simplicity-first principles and TDD.
+* **`@speck-coder`**: Implements code in isolated, conflict-free environments using git worktrees (`isolation: worktree`).
+* **`@speck-auditor`**: Conducts adversarial audits and drafts `audit-report.md`.
+* **`@speck-validator`**: Validates readiness, executes persona LARP, and stamps evidence files.
+
+### 🚀 Agent Teams
+Leverage Claude's session orchestration to run multi-perspective teammate sessions (e.g. peer review / dual implementation) concurrently:
+```text
+Create an agent team to design and build story S005. Assign one teammate as a @speck-coder to implement the service and another as a @speck-auditor to review edge-cases.
+```
+
+### 🔄 Speck Maintenance Loops
+You can start a scheduled workspace babysitting or maintenance loop. This executes `.claude/loop.md` to run test suites, check for spec drift, and scan for scaffolding tokens dynamically:
+```text
+/loop 1h
+```
+
+### 🎯 Exit/Stop Verification Gates
+Our `Stop` hooks act as deterministic safeguards. Whenever you instruct Claude to finish or stop, a background validation is triggered to ensure tasks are completed, lints are green, and decisions log boundaries are fully respected before allowing the session to exit.
+
 ## 🧪 Agent Skills
 
 Skills are agent-decided expertise packages — auto-loaded when relevant.
@@ -331,7 +376,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 7.0.0  
+**Speck Version**: 7.4.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

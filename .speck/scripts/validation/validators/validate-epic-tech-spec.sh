@@ -177,4 +177,3 @@ if [ "$strict" = true ] && [ "$errors" -gt 0 ]; then
 fi
 
 exit 0
-

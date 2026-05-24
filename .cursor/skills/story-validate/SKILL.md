@@ -523,3 +523,18 @@ Error handling:
 
 Context: $ARGUMENTS
 
+## Cross-Host Portability & Compatibility
+
+This process skill is fully supported across all primary AI runtimes (Claude, Cursor, Codex) with identical evidence requirements.
+
+| Capability | Claude Code | Cursor | Codex |
+|------------|-------------|--------|-------|
+| **Execution** | Interactive skill command | Interactive skill command | Interactive skill command |
+| **Automation** | Full lifecycle hooks, `/goal` | `afterFileEdit` hooks | Manual or CI-driven checks |
+| **Parallelization** | Spawns parallel `speck-auditor` | Fallback to sequential main context | Fallback to sequential main context |
+
+### Fallbacks & Adaptations
+- **Subagents**: Spawning subagents (`speck-auditor` / `speck-scanner`) is a Claude-only feature. If running on Cursor or Codex, execute the checklist sequentially in your main context.
+- **Hook-based Gates**: If your host doesn't support pre-edit blocks or stop gates, rely on manual `/story-validate` executions and portable CI workflows (`.github/workflows/speck-validation.yml`) to enforce gates.
+
+

@@ -150,3 +150,24 @@ Report summary fields per claude skill.
 - Updates: `project-state.md` blocking issues, next action
 
 ## Context: $ARGUMENTS
+
+### Live Workspace Gaps (Claude-Only Pre-Injection)
+```!
+bash .speck/scripts/v7/staleness-check.sh 2>/dev/null || true
+bash .speck/scripts/check-replace-markers.sh specs/projects/ 2>/dev/null || true
+```
+
+
+## Cross-Host Portability & Compatibility
+
+This process skill is fully supported across all primary AI runtimes (Claude, Cursor, Codex) with identical evidence requirements.
+
+| Capability | Claude Code | Cursor | Codex |
+|------------|-------------|--------|-------|
+| **Execution** | Interactive skill command | Interactive skill command | Interactive skill command |
+| **Automation** | /loop scheduling, background monitors | manual or scheduled CI run | manual or scheduled CI run |
+| **Parallelization** | Spawns parallel `speck-scanner` & `speck-auditor` | Fallback to sequential main context | Fallback to sequential main context |
+
+### Fallbacks & Adaptations
+- **Subagents**: Spawning subagents (`speck-scanner` / `speck-auditor`) is a Claude-only feature. If running on Cursor or Codex, execute the staleness-check, replace-markers-check, and banned-language-lint checks sequentially using the core scripts in your main context.
+

@@ -3,9 +3,11 @@ set -euo pipefail
 
 # Speck MCP config merger.
 #
-# Speck provides a baseline example:      .cursor/mcp.json.example
-# Projects can add a committed overlay:   .cursor/mcp.project.json.example
-# This script merges both into a local:   .cursor/mcp.json
+# Speck provides a baseline example:      .speck/mcp/servers.example.json (falls back to .cursor/mcp.json.example)
+# Projects can add a committed overlay:   .speck/mcp/project.example.json (falls back to .cursor/mcp.project.json.example)
+# This script merges both into:
+#   - Cursor:       .cursor/mcp.json
+#   - Claude Code:  .mcp.json
 #
 # - Project overlay wins on key conflicts.
 # - `mcpServers` is deep-merged; other top-level keys are shallow-merged.
@@ -13,9 +15,22 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
-BASE_PATH="$REPO_ROOT/.cursor/mcp.json.example"
-PROJECT_PATH="$REPO_ROOT/.cursor/mcp.project.json.example"
-OUT_PATH="$REPO_ROOT/.cursor/mcp.json"
+# Resolve base example path (prefer new .speck/mcp, fallback to old .cursor)
+if [[ -f "$REPO_ROOT/.speck/mcp/servers.example.json" ]]; then
+  BASE_PATH="$REPO_ROOT/.speck/mcp/servers.example.json"
+else
+  BASE_PATH="$REPO_ROOT/.cursor/mcp.json.example"
+fi
+
+# Resolve project overlay path (prefer new .speck/mcp, fallback to old .cursor)
+if [[ -f "$REPO_ROOT/.speck/mcp/project.example.json" ]]; then
+  PROJECT_PATH="$REPO_ROOT/.speck/mcp/project.example.json"
+else
+  PROJECT_PATH="$REPO_ROOT/.cursor/mcp.project.json.example"
+fi
+
+# Set OUT_PATH to default sentinel (writes to both .cursor/mcp.json and .mcp.json)
+OUT_PATH="DEFAULT"
 JSON_MODE=false
 DRY_RUN=false
 
@@ -25,13 +40,13 @@ Usage:
   bash .speck/scripts/bash/merge-mcp-config.sh [--base <path>] [--project <path>] [--out <path>] [--dry-run] [--json]
 
 Defaults:
-  --base    .cursor/mcp.json.example
-  --project .cursor/mcp.project.json.example (if present)
-  --out     .cursor/mcp.json
+  --base    .speck/mcp/servers.example.json (falls back to .cursor/mcp.json.example)
+  --project .speck/mcp/project.example.json (falls back to .cursor/mcp.project.json.example)
+  --out     Writes to BOTH .cursor/mcp.json and .mcp.json
 
 Notes:
-  - `.cursor/mcp.json` is typically git-ignored because it can contain secrets.
-  - Commit project-wide additions in `.cursor/mcp.project.json.example`.
+  - Output files are typically git-ignored because they can contain secrets.
+  - Commit project-wide additions in .speck/mcp/project.example.json or .cursor/mcp.project.json.example.
 EOF
 }
 
@@ -56,11 +71,11 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-python3 - "$BASE_PATH" "$PROJECT_PATH" "$OUT_PATH" "$DRY_RUN" "$JSON_MODE" <<'PY'
+python3 - "$BASE_PATH" "$PROJECT_PATH" "$OUT_PATH" "$DRY_RUN" "$JSON_MODE" "$REPO_ROOT" <<'PY'
 import json, os, sys
 from typing import Any, Dict
 
-base_path, project_path, out_path, dry_run, json_mode = sys.argv[1:6]
+base_path, project_path, out_path, dry_run, json_mode, repo_root = sys.argv[1:7]
 dry_run = dry_run.lower() == "true"
 json_mode = json_mode.lower() == "true"
 
@@ -96,15 +111,24 @@ if "mcpServers" not in result or not isinstance(result["mcpServers"], dict):
 
 payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
 
+# Resolve output targets
+targets = []
+if out_path == "DEFAULT":
+    targets.append(os.path.join(repo_root, ".cursor", "mcp.json"))
+    targets.append(os.path.join(repo_root, ".mcp.json"))
+else:
+    targets.append(out_path)
+
 if not dry_run:
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(payload)
+    for target in targets:
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        with open(target, "w", encoding="utf-8") as f:
+            f.write(payload)
 
 meta = {
     "base": base_path,
     "project": project_path if os.path.isfile(project_path) else "",
-    "out": out_path,
+    "outputs": targets,
     "dry_run": dry_run,
     "merged_servers": sorted(list(result["mcpServers"].keys())),
 }
@@ -112,13 +136,15 @@ meta = {
 if json_mode:
     print(json.dumps(meta, indent=2))
 else:
-    print("✅ MCP config merged")
+    print("✅ MCP configs merged")
     print(f"- Base:    {meta['base']}")
     if meta["project"]:
         print(f"- Project: {meta['project']}")
     else:
         print("- Project: (none)")
-    print(f"- Output:  {meta['out']}{' (dry-run)' if dry_run else ''}")
+    print("- Outputs:")
+    for target in targets:
+        rel_path = os.path.relpath(target, repo_root)
+        print(f"    - {rel_path}{' (dry-run)' if dry_run else ''}")
     print(f"- Servers: {', '.join(meta['merged_servers']) if meta['merged_servers'] else '(none)'}")
 PY
-

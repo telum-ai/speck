@@ -1,5 +1,6 @@
-# Cursor local MCP config may include secrets
+# Local MCP configs may include secrets
 .cursor/mcp.json
+.mcp.json
 
 # Logs
 logs/

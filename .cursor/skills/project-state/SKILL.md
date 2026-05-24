@@ -187,3 +187,14 @@ This skill is called automatically by:
 Other skills should never write to `project-state.md` directly — they trigger this skill instead.
 
 ## Context: $ARGUMENTS
+
+## Cross-Host Dynamic Context Injection (Claude-Only Accelerator)
+
+When running on Claude Code, the repository state below is automatically pre-injected into context before execution:
+
+### Live Git Context
+```!
+git status --short
+git log --oneline -3
+```
+

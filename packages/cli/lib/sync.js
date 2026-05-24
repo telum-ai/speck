@@ -24,6 +24,9 @@ const ALWAYS_OVERWRITE = [
   '.cursor/hooks/VALIDATION.md',
   '.cursor/MCP-SETUP.md',
   '.claude/settings.json.example',
+  '.claude/hooks',
+  '.claude/loop.md',
+  '.speck/mcp',
   // REMOVED (v4.3.0): orchestrator disabled
   // '.github/workflows/speck-orchestrator.yml',
   '.github/workflows/speck-update-check.yml',
