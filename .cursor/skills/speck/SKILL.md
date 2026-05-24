@@ -304,7 +304,7 @@ The system provides intelligent recommendations:
 "Add email validation to signup"
 → Detected: Story-level (specific validation)
 → Context needed: Which epic has signup?
-→ Route to: /story-specify in auth epic
+→ Route to: /story [STORY_ID] continue (which boots story-specify)
 ```
 
 **Cross-Cutting Feature**
@@ -312,7 +312,7 @@ The system provides intelligent recommendations:
 "Add real-time notifications"  
 → Detected: Epic-level (affects multiple areas)
 → Suggest: New epic in current project
-→ Route to: /epic-specify with project context
+→ Route to: /epic [EPIC_ID] continue (which boots epic-specify)
 ```
 
 **Major Enhancement**
@@ -320,7 +320,7 @@ The system provides intelligent recommendations:
 "Convert to microservices architecture"
 → Detected: Project-level transformation
 → Suggest: New project or major epic
-→ Route to: /project-specify or /epic-specify
+→ Route to: /project-specify or /epic [EPIC_ID] continue
 ```
 
 ## Interactive Flow Example
@@ -335,12 +335,12 @@ Scale Analysis:
 - Estimated: 8-12 stories across 1 epic
 - Confidence: High
 
-Recommendation: Start with epic-level specification
+Recommendation: Start with stateful epic orchestrator
 
 Options:
-a) Continue with epic workflow (/epic-specify) [Recommended]
+a) Continue with stateful epic orchestrator (/epic E001 continue) [Recommended]
 b) Start with project level (/project-specify)
-c) Break down to single story (/story-specify)
+c) Break down to single story (/story S001 continue)
 d) Get more details about each option
 
 Your choice [a]: 
@@ -500,16 +500,16 @@ Based on context, provide helpful hints:
 - Matching recipe found → "I found a recipe that matches! Use it for faster setup"
 - After recipe selection → "Recipe applied! Customizing for your specific needs..."
 
-**Project Level**:
-- After specify/clarify → "Run /project-domain for specialized domains, /project-ux for UX-heavy products, or /project-context to define constraints"
-- After domain → "Run /project-ux for UX strategy (uses domain terminology), or /project-context to define technical constraints"
-- After UX → "Run /project-context to define technical constraints"
-- After context → "Optional: /project-constitution → then /project-architecture"
-- After architecture → "Optional: /project-design-system → then /project-plan"
-- After plan → "Optional: /project-roadmap → then /project-analyze → /project-validate"
-- **Play `platform`** or default (no `project.json`) **and** complexity 3–4 → suggest full foundation flow: domain → ux → context → [constitution] → architecture → [design-system] → plan → [roadmap]
-- **Play `build`** at complexity 3–4 → suggest Build flow + remind that 4+ epics trigger architecture + ux-strategy (AGENTS.md); do not assume full Platform play flow unless user promotes
-- Brownfield import → "Flow: import → scan → specify/clarify → domain → ux → context → architecture → plan"
+**Project Level (CRITICAL ORDERING RULE: ALWAYS consult `AGENTS.md` under `## 📋 The Speck Command Phases` for canonical flow by Play Level)**:
+- After specify → "Canonical next step is `/project-clarify` (unless Sprint)"
+- After clarify → "Run `/project-product-contract` then `/project-evidence-contract` (required for Build and Platform)"
+- After contracts are done → "Run `/project-context` (or Platform foundation commands `/project-domain`, `/project-ux` if Platform play level)"
+- After context → "Optional: `/project-constitution` → `/project-architecture` (required if Platform or Build with 4+ epics)"
+- After architecture → "Optional: `/project-design-system` → `/project-plan`"
+- After plan → "Optional: `/project-roadmap` → `/project-analyze` (or `/recheck`) → `/project-validate`"
+- **Play `platform`** or default (no `project.json`) **and** complexity 3–4 → suggest Platform flow: `/project-specify` → `/project-clarify` → `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-evidence-contract` → `/project-plan`
+- **Play `build`** → suggest Build flow: `/project-specify` → `/project-clarify` → `/project-product-contract` → `/project-evidence-contract` → `/project-context` → `[/project-architecture if cross-system]` → `/project-plan` (and remind that 4+ epics trigger required architecture + ux-strategy)
+- Brownfield import → Follow the unified flow starting with `/project-import` → `/speck-scan` → `/project-specify` → then follow Play Level phases.
 
 **Epic Level**:
 - Complex epic after clarify → "Run /epic-architecture before tech spec"

@@ -75,17 +75,18 @@ Each subagent returns: FRESH | STALE | DRIFTED | MISSING with evidence.
 - Treat as **P1 drift** otherwise (a scaffolded artifact that hasn't been filled)
 - The catch-up flow (`/speck-catch-up`) is the standard remediation path
 
-### 3. Run persona LARP cold-start
+### 3. Run persona LARP cold-start / Integration stress-test sanity check
 
-For each persona in `personas/<id>.md`:
-- Cold-start the app from a fresh state (no logged-in user, clean storage, etc.)
-- Execute the LARP script for the persona's primary JTBD
-- Capture screenshots, AX trees, timings
-- Compare against `product-contract.md` magic moments
+- **WHEN: consumer_product / b2b_saas / internal_tool**:
+  - For each persona in `personas/<id>.md`, run persona LARP cold-start.
+  - Cold-start the app from a fresh state (no logged-in user, clean storage, etc.).
+  - Execute the LARP script for the persona's primary JTBD; capture screenshots, AX trees, timings, and compare against `product-contract.md` magic moments.
+  - Use the `/larp` skill for the actual execution; `/recheck` orchestrates and aggregates.
+- **WHEN: infra_service / backend_api**:
+  - Run the integration / stress-test scenarios (from Option B in `evidence-contract.md`).
+  - Warm up the system, send concurrent mock client requests, and verify latency histograms, error-code stability, connection pooling recovery, and DB-isolation invariants.
 
-Use the `/larp` skill for the actual execution; `/recheck` orchestrates and aggregates.
-
-If any persona LARP fails: drift detected (P0).
+If any check fails: drift detected (P0).
 
 ### 4. Compute the drift report
 

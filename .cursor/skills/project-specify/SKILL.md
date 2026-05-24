@@ -25,6 +25,19 @@ The template defines required sections and formatting for `project.md`. Reading 
 
 ## Interactive Project Specification Process
 
+### Step -0.5: Detect Project Archetype
+
+Before play level detection, infer or ask for the **Project Archetype** from the project's description or conversation context:
+- **consumer_product**: End-user B2C products (e.g. mobile apps, public consumer webs).
+- **b2b_saas**: Business-to-business products, multi-tenant portal platforms, dashboards.
+- **internal_tool**: Internal back-office tools, admin panels, utility webapps used inside an organization.
+- **infra_service**: Developer infrastructure, databases, CI/CD, queue/worker nodes, operational tools.
+- **backend_api**: Headless backend APIs, microservices, protocol-level data endpoints.
+
+If unclear, ask: "Which archetype best describes this project's target architecture? (consumer_product | b2b_saas | internal_tool | infra_service | backend_api)"
+
+Write the archetype to `.speck/project.json` under `project_archetype`.
+
 ### Step -1: Detect Play Level
 
 Before anything else, infer the play level from conversation context (same signals as the Speck router):
@@ -37,7 +50,7 @@ If Sprint detected:
 1. Tell the user: "This sounds like a Sprint. I'll use the one-page PRD and skip heavy upfront planning."
 2. Load `.speck/templates/sprint/sprint-prd-template.md` instead of the standard PRD template
 3. Create only: `PRD.md` (from sprint template) + `sprint-log.md` (from sprint-log-template)
-4. Create `.speck/project.json` with `{"play_level": "sprint"}`
+4. Create `.speck/project.json` with `{"play_level": "sprint", "project_archetype": "[ARCHETYPE]"}` (replace with detected archetype)
 5. Skip Steps 0.5 through 4 below — go straight to creating the sprint artifacts and sprint-log
 6. Next steps: ship something, fill in the sprint-log daily, run `/project-promote` if it gets traction
 
@@ -45,12 +58,12 @@ If Build detected:
 1. Tell the user: "This sounds like a Build. I'll create a PRD + context and structure for epics."
 2. Use standard `prd-template.md`
 3. Create: `PRD.md`, `context.md`, `COMMERCIAL.md`
-4. Create `.speck/project.json` with `{"play_level": "build"}`
+4. Create `.speck/project.json` with `{"play_level": "build", "project_archetype": "[ARCHETYPE]"}` (replace with detected archetype)
 5. Skip constitution and design-system from next-steps recommendations
 6. Continue with the standard flow below
 
 If Platform detected (or unclear):
-1. Create `.speck/project.json` with `{"play_level": "platform"}`
+1. Create `.speck/project.json` with `{"play_level": "platform", "project_archetype": "[ARCHETYPE]"}` (replace with detected archetype)
 2. Full standard flow below
 
 ---
@@ -163,11 +176,8 @@ Show what was created:
 - "The project appears to be [scale] complexity"
 
 Guide to next steps:
-- Recommended: `/project-clarify` (resolve ambiguities & identify research needs)
-- If domain expertise required: `/project-domain` (capture subject matter knowledge)
-- Then: `/project-ux` or `/project-context`
-
-**Note**: `/project-clarify` is strongly recommended to ensure specification completeness before planning. For specialized domains (healthcare, fitness, finance, etc.), `/project-domain` captures critical subject matter expertise.
+- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
+- For most non-Sprint flows, the next canonical step after specification is `/project-clarify` to resolve ambiguities before contracts are locked.
 
 ---
 
@@ -233,11 +243,8 @@ Show what was created:
 - "Strategic areas completed through Q&A: [list]"
 
 Guide to next steps:
-- Recommended: `/project-clarify` (focus on non-discoverable aspects)
-- If domain expertise required: `/project-domain` (capture/document domain knowledge)
-- Then: `/project-context` (pre-fills tech from scan, asks for team constraints)
-
-**Note**: Even in brownfield mode, `/project-clarify` helps focus on strategy and future direction, not just documenting what exists. For specialized domains, `/project-domain` captures the subject matter expertise that may be implicit in the existing codebase.
+- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
+- For most non-Sprint flows, the next canonical step after specification is `/project-clarify` to resolve ambiguities before contracts are locked.
 
 ---
 

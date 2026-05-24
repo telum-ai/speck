@@ -30,6 +30,14 @@ Read `.speck/project.json` (if it exists) for `play_level`.
 - **Sprint**: Epics don't exist at Sprint level. Tell the user: "Sprint projects don't use epics — the Build Plan in your PRD.md is enough. If this project is growing beyond a sprint, run `/project-promote` to move to Build level, then come back here."
 - **Build** or **Platform**: Proceed normally below.
 
+## Pre-Specify Check (v7 — Mandatory Gate)
+
+Read `project-state.md` (or list `specs/projects/<PROJECT_ID>/epics/` directory and check validation reports).
+If there is an existing epic in the project that has completed implementation (all stories implemented) but has NOT yet passed `/epic-validate` (i.e. does not have an `epic-validation-report.md` claiming a verified readiness state of `UX-RC` / `API-RC` or higher, or is still listed as unvalidated):
+- **STOP**. You are NOT allowed to specify or start work on a new epic (unless creating the Infrastructure epic `E000`) while a prior active epic's validation is outstanding.
+- **Exception**: If the user provides `--force` with an explicit, logged rationale.
+- **Rationale**: To prevent the composition fallacy, we must validate that each completed epic is fully integrated and usable before shifting the team's context to a new one.
+
 ## Context Detection (NEW)
 
 First, check if we're already in an epic context:

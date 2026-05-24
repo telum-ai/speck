@@ -22,6 +22,7 @@ Three-minute read budget. If this doc exceeds 200 lines, compress.
 
 **Project**: [PROJECT_NAME]
 **Project ID**: `[PROJECT_ID]`
+**Project Archetype**: [consumer_product | b2b_saas | internal_tool | infra_service | backend_api]
 **Play Level**: [sprint | build | platform]
 **Speck Version**: 7.0.0
 **Generated**: [YYYY-MM-DD HH:MM]

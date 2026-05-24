@@ -53,11 +53,25 @@ This skill produces the contract that prevents all of those.
 
 ## Execution Steps
 
-### 1. Detect project + play level
+### 1. Detect project, play level, and archetype
 
-Find `specs/projects/<PROJECT_ID>/`. Read `.speck/project.json` → `play_level`.
+Find `specs/projects/<PROJECT_ID>/`. Read `.speck/project.json` → `play_level` and `project_archetype`. (If `project_archetype` is missing, default to `consumer_product` or infer from stack/context).
 
 If play level is `sprint`: tell the user "Sprint-level products don't require product-contract.md. Refine `PRD.md` instead. If this is growing into a real product, run `/project-promote` first."
+
+**Archetype Adaptation**:
+Adapt your writing of the template sections based on the detected `project_archetype` (see `product-contract-template.md` for explicit WHEN/SKIP criteria):
+- **For `infra_service` / `backend_api` (Non-UI / Systems work)**:
+  - Replace Section 1 with the "Operational SLA / Capability Promise".
+  - Replace Section 2 with the "Primary Consumer / Client Service" operational JTBD.
+  - Replace Section 4 with the "Operational Invariants Scorecard" (Latency, Throughput, Durability, Resiliency, Security).
+  - Replace Section 5 with "Operational Milestones".
+  - Replace Section 6 with "API & System Taxonomy" (endpoint names, JSON schemas, protocol rules).
+  - Replace Section 7 with "Banned System Anti-Patterns" (forbidden code behaviors/payload structures).
+  - Skip Section 8 (AI Contract) and Section 9 (Longitudinal Axes) unless specifically AI/adaptation related.
+  - Skip Section 10 (Trust Moments).
+- **For `consumer_product` / `b2b_saas` / `internal_tool` (UI/Human-facing products)**:
+  - Write standard human-centered value promise, primary persona, JTBD scorecard, magic moments, public/banned copy guidelines, and trust moments.
 
 ### 2. Read prerequisites (subagent parallelization)
 

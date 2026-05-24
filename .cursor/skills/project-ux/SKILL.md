@@ -223,10 +223,8 @@ Present what was created:
 - "Design personality: [summary]"
 
 Guide to next steps:
-- Need refinement → "Review and let me know what needs adjustment"
-- Ready to continue → `/project-context` (define technical constraints)
-- If UX validation needed → apply the just-in-time research pattern
-  (`.cursor/skills/just-in-time-research/SKILL.md`) and embed findings in ux-strategy.md
+- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
+- Based on the canonical project flow in `AGENTS.md`, the next step is typically `/project-context` (or contracts/architecture depending on play level and scope).
 
 Note: UX strategy provides essential inputs for PRD creation in /project-plan
 

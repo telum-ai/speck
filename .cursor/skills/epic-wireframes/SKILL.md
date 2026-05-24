@@ -85,9 +85,8 @@ Validate completeness:
 - "Should we add more states (error, empty)?"
 
 Guide to next steps:
-- Need detailed specs → `/story-ui-spec` for each screen
-- Ready for development → `/story-specify` to break down
-- Want prototypes → Consider external prototyping tools
+- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
+- Based on the canonical epic flow in `AGENTS.md`, after UX design is complete, the flow typically moves to `/epic-plan` (to create the epic tech spec) and `/epic-breakdown` (story mapping).
 
 The template contains complete wireframe structures and examples.
 

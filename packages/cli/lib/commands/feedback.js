@@ -56,6 +56,7 @@ function detectProjects(cwd) {
         path: path.join('specs', 'projects', d),
         recipe: pj._active_recipe || pj.recipe || null,
         play_level: pj.play_level || null,
+        project_archetype: pj.project_archetype || null,
         speck_version: pj.speck_version || null,
       };
     });
@@ -110,8 +111,9 @@ function frictionSignals(cwd, projects) {
 function summarizeProject(p) {
   const r = p.recipe || '(none)';
   const pl = p.play_level || '(unset)';
+  const pa = p.project_archetype || '(unset)';
   const v = p.speck_version || '(unstamped)';
-  return `- **${p.id}**: recipe=\`${r}\`, play_level=\`${pl}\`, speck_version=\`${v}\``;
+  return `- **${p.id}**: recipe=\`${r}\`, play_level=\`${pl}\`, archetype=\`${pa}\`, speck_version=\`${v}\``;
 }
 
 function generateFeedbackBody({ cwd, topic, message, projects, signals, workspaceVersion, git }) {

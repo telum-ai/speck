@@ -30,6 +30,7 @@ PLACEHOLDER CONVENTION (Speck v7.2+):
 
 **Project**: REPLACE_BEFORE_SHIP: PROJECT_NAME
 **Project ID**: `REPLACE_BEFORE_SHIP: project-id`
+**Project Archetype**: REPLACE_BEFORE_SHIP: consumer_product | b2b_saas | internal_tool | infra_service | backend_api
 **Play Level**: REPLACE_BEFORE_SHIP: build | platform
 **Speck Version**: 7.0.0
 **Last Updated**: REPLACE_BEFORE_SHIP: YYYY-MM-DD
@@ -103,9 +104,12 @@ PLACEHOLDER CONVENTION (Speck v7.2+):
 
 ---
 
-## 4. Required Runtime LARP
+## 4. Required Runtime LARP / Integration Stress Tests
 
-*The persona-based LARP flows that must be recorded as evidence at each readiness state.*
+* **WHEN: consumer_product / b2b_saas / internal_tool**: Persona-based LARP flows recorded as evidence at each readiness state.
+* **WHEN: infra_service / backend_api**: Integration / Stress-test scenarios under concurrent simulated load.
+
+### Option A: Human Persona-Based LARP (for UI/Human-facing products)
 
 ### LARP Required for UX-RC
 
@@ -125,6 +129,22 @@ All UX-RC LARPs **plus**:
 | [Privacy-conscious user] | Account / data review | Screenshots showing data residency, deletion paths |
 
 LARP scripts live in: `specs/projects/<PROJECT_ID>/personas/<persona-id>.md`
+
+### Option B: Integration / Stress-Test Scenarios (for Infra/Backend)
+
+### Stress Tests Required for API-RC (equivalent to UX-RC)
+
+| Consumer Profile | Simulated Flow | Metrics / Evidence Required |
+|------------------|----------------|-----------------------------|
+| [Peak Concurrent Caller] | 500 concurrent requests over 1 min | Latency histogram (P95/P99), total successful ops, zero DB lock timeouts |
+| [Malformed Operator] | Send 100 random malformed payloads | Confirm stable error codes (e.g. 400), zero database exception leaks, zero 500 crashes |
+
+### Stress Tests Required for OPERATIONAL-RC (equivalent to SHIP-RC)
+
+| Scenario | Simulated Disruptions | Integrity / Failover Evidence Required |
+|----------|-----------------------|----------------------------------------|
+| [Database Disconnect] | Restart DB container during active writes | Connection pooled retry success, zero partial writes (rollback complete), graceful 503 response |
+| [Unresponsive Auth Provider] | Mock auth provider response latency >= 5s | Request timeout trigger within 1s, fail-closed/cached response validity, client receives expected timeout error |
 
 ---
 
@@ -170,41 +190,62 @@ For every validation report at UX-RC or higher:
 - [ ] No `expect().toBe(<wrong-value>)` with "BUG:" / "TODO:" / "fix later" / "should be" comments
 - [ ] Builds without warnings/errors
 
-### UX-RC
-- [ ] All IMPL-GREEN criteria
-- [ ] Persona LARP recorded against built artifact (not dev server) for every named UX-RC persona
-- [ ] Reachability check: user can complete primary JTBD without dev shortcuts
-- [ ] No scaffolding in UI (no UUID inputs, no debug headers, no x-user-id pickers)
-- [ ] Automation language invisible to users (no "QA", "test mode", "fixture", "preview data")
-- [ ] Banned language lint passes against all user-visible surfaces
-- [ ] Magic moments validated in LARP — each lands per its trigger / content beats / target response
+### UX-RC / API-RC
+
+* **WHEN: consumer_product / b2b_saas / internal_tool (UX-RC)**:
+  - [ ] All IMPL-GREEN criteria
+  - [ ] Persona LARP recorded against built artifact (not dev server) for every named UX-RC persona
+  - [ ] Reachability check: user can complete primary JTBD without dev shortcuts
+  - [ ] No scaffolding in UI (no UUID inputs, no debug headers, no x-user-id pickers)
+  - [ ] Automation language invisible to users (no "QA", "test mode", "fixture", "preview data")
+  - [ ] Banned language lint passes against all user-visible surfaces
+  - [ ] Magic moments validated in LARP — each lands per its trigger / content beats / target response
+* **WHEN: infra_service / backend_api (API-RC)**:
+  - [ ] All IMPL-GREEN criteria
+  - [ ] All API endpoint contracts verified with strict schema checks (Pydantic / OpenAPI schema tests)
+  - [ ] DX Verification: developer-facing documentation / quickstart is accurate and working
+  - [ ] Operational stress-test (under Option B) recorded with acceptable latency metrics
 
 ### COMMERCIAL-RC *(paid products only)*
-- [ ] All UX-RC criteria
-- [ ] Real sandbox purchase + restore + manage + entitlement state in DB
-- [ ] Real fallback states (network down, payment fail, restore fail) tested
-- [ ] Support path accessible BEFORE purchase
-- [ ] Privacy + Terms accessible BEFORE purchase, with plain-language copy
-- [ ] Analytics events fire for purchase funnel
-- [ ] Webhook sync verified
 
-### SHIP-RC
-- [ ] All COMMERCIAL-RC criteria (or all UX-RC if free product)
-- [ ] Runtime LARP against the LAUNCH build (not dev, not preview)
-- [ ] Full JTBD walkthrough per persona passes
-- [ ] Cross-epic integration tested (the seams between epics)
-- [ ] Production environment config verified (no dev keys, no test secrets)
-- [ ] Environment separation verified (bundle IDs, schemes, Sentry environments)
-- [ ] Adversarial probe passes (malformed input, oversized payload, dep-down behavior)
-- [ ] GDPR cascade verification (if applicable): user deletion removes all related rows
+* **WHEN: consumer_product / b2b_saas / internal_tool (or paid APIs)**:
+  - [ ] All UX-RC / API-RC criteria
+  - [ ] Real sandbox purchase + restore + manage + entitlement state in DB (or metered API billing verified)
+  - [ ] Real fallback states (network down, payment fail, restore fail) tested
+  - [ ] Support / Contact path accessible BEFORE purchase
+  - [ ] Privacy + Terms accessible BEFORE purchase, with plain-language copy
+  - [ ] Analytics events fire for purchase funnel
+  - [ ] Webhook sync verified
+* **WHEN: internal_tool / infra_service / free products**:
+  - [ ] (SKIP - Auto-passed. Proceed directly to SHIP-RC / OPERATIONAL-RC)
+
+### SHIP-RC / OPERATIONAL-RC
+
+* **WHEN: consumer_product / b2b_saas / internal_tool (SHIP-RC)**:
+  - [ ] All COMMERCIAL-RC criteria (or all UX-RC if free product)
+  - [ ] Runtime LARP against the LAUNCH build (not dev, not preview)
+  - [ ] Full JTBD walkthrough per persona passes
+  - [ ] Cross-epic integration tested (the seams between epics)
+  - [ ] Production environment config verified (no dev keys, no test secrets)
+  - [ ] Environment separation verified (bundle IDs, schemes, Sentry environments)
+  - [ ] Adversarial probe passes (malformed input, oversized payload, dep-down behavior)
+  - [ ] GDPR cascade verification (if applicable): user deletion removes all related rows
+* **WHEN: infra_service / backend_api (OPERATIONAL-RC)**:
+  - [ ] All API-RC criteria
+  - [ ] Integration / Failover / Resilience stress tests under disruption (Option B) pass
+  - [ ] Production environment config verified (no dev keys, no test secrets)
+  - [ ] Adversarial probe passes (malformed input, concurrent write race-conditions, injection attempts)
+  - [ ] Downstream epic unblock check: calling epics/services can successfully compile / link / boot against this release
 
 ### SHIP
-- [ ] All SHIP-RC criteria
-- [ ] Deployment ran without errors
-- [ ] Post-deploy healthcheck returns ok
-- [ ] First real user signal observed (signup / payment / etc.)
-- [ ] Sentry shows zero new errors in first 24h
-- [ ] Monitoring shows expected baseline metrics
+
+* **ALL ARCHETYPES**:
+  - [ ] All SHIP-RC / OPERATIONAL-RC criteria
+  - [ ] Deployment ran without errors
+  - [ ] Post-deploy healthcheck / smoke-test returns ok
+  - [ ] First real user/consumer signal observed (signup / payment / active service request)
+  - [ ] Sentry / Log monitoring shows zero new errors in first 24h
+  - [ ] Monitoring shows expected baseline metrics
 
 ---
 

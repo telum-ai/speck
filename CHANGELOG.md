@@ -1,5 +1,41 @@
 # Speck Changelog
 
+## v7.3.0 — 2026-05-16 — Speck v7 Generalization Tightening
+
+Speck v7.3.0 introduces a major evolutionary step, transitioning Speck from a SaaS-focused web/mobile methodology into a **universally generalized, always-on development framework**. It resolves key cross-primitive orchestration gaps, enforces strict gate discipline, and introduces first-class project archetypes so that infrastructure, backends, internal tools, and client products are all spec-driven and validated with equal rigor.
+
+### 1. Canonical Ordering Authority (`AGENTS.md`)
+*   **Behavior Before**: Individual skill files (e.g. `project-specify`, `speck`, `story-ui-spec`) had their own ad-hoc "next steps" and "Smart Suggestions" sections. Agents reading these files would frequently diverge from the canonical phases in `AGENTS.md`, resulting in flow "split-brain" where they skipped required contract or context phases.
+*   **Behavior After**: `AGENTS.md` is established as the **only** canonical ordering authority. All individual skills have had their ad-hoc suggestions normalized or stripped; they now explicitly redirect agents to `AGENTS.md`'s `## 📋 The Speck Command Phases` for phase transitions, while skills focus strictly on their own executional step.
+
+### 2. First-Class Archetype Axis & System Proof Profile (PROMISE/BUILD/PROVE)
+*   **Behavior Before**: Product contracts, evidence contracts, and validation checkpoints heavily overfit B2C/SaaS UI-heavy assumptions. Infrastructure, API, and pure backend epics were forced to include fake human personas, user-facing "banned words", and UI-based "magic moments", or bypass validation entirely.
+*   **Behavior After**: Introduced `project_archetype` in `.speck/project.json` (values: `consumer_product`, `b2b_saas`, `internal_tool`, `infra_service`, `backend_api`). All core templates and skills adapt dynamically:
+    *   **The Promise**: Under `infra_service` or `backend_api`, Section 1 ("Paid Promise") becomes the **Operational SLA**, Section 2 ("Primary Persona") becomes the **Primary Consumer/Client Service**, Section 4 ("JTBD Scorecard") becomes the **Operational Invariants Scorecard** (Latency, Throughput, Durability, Resiliency, Security), and Section 5 ("Magic Moments") becomes **Operational Milestones**. Section 6/7 transform into **API & System Taxonomy** and **Banned System Anti-Patterns**.
+    *   **The Prove**: Pre-validation gates (`story-validate`, `epic-validate`, `/recheck`) automatically bypass human `/larp` for non-UI archetypes, requiring **System Operational Scenario Walkthroughs** (Options B stress-testing, schema conformance, concurrency race-condition lints, and connection pooling tests) instead.
+
+### 3. Hard-Enforced Mandatory-Next Gates
+*   **Behavior Before**: Agents could finish `story-implement` and immediately jump into editing or specifying a completely different story, leaving implementation un-audited or un-validated, propagating spec/code drift.
+*   **Behavior After**: Stateful, hard-coded checks now block drift:
+    *   `story-implement` completion strictly requires `/audit` then `/story-validate` next. Transitioning to another story's tasks or code is blocked until validation passes.
+    *   Starting or specifying a new epic via `/epic-specify` is blocked if any prior completed epic in the workspace is outstanding validation (unless it is the Infrastructure `E000` epic).
+
+### 4. First-Time Comprehension Gate & Evaluative Change Explanation
+*   **Behavior Before**: Validation reports passed if components rendered and tests succeeded, completely ignoring whether a first-time user actually understood what they were looking at, why it mattered, or what to do next.
+*   **Behavior After**:
+    *   All UI validation gates (`story-validate` and `epic-validate`) now enforce a **First-Time User Comprehension Rubric** (What am I seeing? Why does it matter? What do I do next?). If user comprehension is blocked or has friction (scoring ❌ on visual clutter or clear calls-to-action), the UI validation **fails**, and the verified state is hard-capped at `IMPL-GREEN`.
+    *   Any evaluative step (`/story-validate`, `/epic-validate`, `/recheck`) that changes or overrides a previous verdict/rating is required to write an explicit `### Evaluative Drift / Change Explanation` section documenting the exact reasoning.
+
+### 5. New Orchestration Wrapper Commands (`/epic`, `/story`)
+*   **Behavior Before**: Users and agents had to manually invoke separate, granular phase commands (specify → clarify → plan → tasks → implement → validate) sequentially, leading to execution lag and high command overhead.
+*   **Behavior After**: Created two stateful wrapper skills (`/epic` and `/story`) that act as deterministic orchestrators. They automatically scan the workspace, detect the active item's current lifecycle state, resume the sequence, and execute downstream commands step-by-step, halting only on genuine decision-gates (unlocked questions) or P0 quality/drift findings.
+
+### 6. Minimalist Scaffolding Bootstrap
+*   **Behavior Before**: Initializing a new project generated placeholder templates for all nine possible documents (`PRD.md`, `architecture.md`, `ux-strategy.md`, etc.) immediately. This cluttered the directory and confused state engines, making it appear that those phases were complete when they were actually empty stubs.
+*   **Behavior After**: The `create-new-project.sh` script is strictly stripped back. It now scaffolds only the folder boundaries and `project.md`. All other artifacts are created and populated on demand by their corresponding canonical command phases (e.g. `/project-context` creates `context.md` only when run), keeping the workspace clean and honest.
+
+---
+
 ## v7.2.0 — 2026-05-16 — Splang field-test response
 
 Speck v7.2.0 is the first version shaped by **real field-test feedback** from a v6 → v7 upgrade on a 21-UI-epic, 12-ship-round brownfield project (Splang). The feedback was high quality and identified 10 concrete friction points that broke the v7.1.0 model at scale. v7.2.0 addresses every one of them.

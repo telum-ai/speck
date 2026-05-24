@@ -35,9 +35,12 @@ Before doing ANY epic-level validation work, verify:
    - If missing: STOP. Tell user "Run `/audit --epic <id>` first — epic-validate requires the cross-story audit."
    - If P0 findings: STOP. Resolve before proceeding.
 
-3. **For UI epics: full-flow `/larp` was run** for every persona per evidence-contract
-   - Captures the JTBD walkthrough end-to-end across stories (not just per-story segments)
-   - If missing: STOP. Tell user "Run `/larp` for each persona's full epic flow first."
+3. **Check Project Archetype & UI Presence**:
+   - Read `.speck/project.json` → `project_archetype` (and `play_level`).
+   - If `project_archetype` is `infra_service` or `backend_api`, or if the epic has no user-facing UI components: **Bypass human `/larp` requirement**. Proceed directly.
+   - For all UI-facing epics (archetypes `consumer_product`, `b2b_saas`, `internal_tool` with user-facing interfaces): **full-flow `/larp` MUST have been run** for every persona per evidence-contract
+     - Captures the JTBD walkthrough end-to-end across stories (not just per-story segments)
+     - If missing: STOP. Tell user "Run `/larp` for each persona's full epic flow first."
 
 4. **`evidence-contract.md` exists**
    - If missing: STOP.
@@ -51,10 +54,14 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
 1. Read every story's `validation-report.md` — extract verified states + evidence paths
 2. The epic's MAX claimable state = MIN(story states)
 3. Read `audit-report.md` — any P0 lowers max claimable state
-4. Read epic-level `larp-recordings/` — full JTBD walkthrough must PASS for UX-RC+
-5. Cross-epic integration check: any seams to other epics tested?
-6. Run banned-phrase self-check on this report's own language before publishing
-7. Apply SHA stamp; trigger `/project-state` regeneration
+4. For UI-facing epics: Read epic-level `larp-recordings/` — full JTBD walkthrough must PASS for UX-RC+
+   - Run the **First-Time User Comprehension Rubric** on the walkthrough (What am I seeing? Why does it matter? What do I do next?).
+   - If first-time user comprehension is blocked or fails on any primary screen/step, cap the maximum verified state at `IMPL-GREEN` and flag the overall status as CONDITIONAL or FAILED.
+5. For non-UI epics (e.g. `infra_service` / `backend_api`): Validate the core system transaction flow via the Option B "System Operational Scenario Walkthrough". Verify all performance, load-handling, and failover invariants hold under disruption.
+6. Cross-epic integration check: any seams to other epics tested?
+7. If any previous rating, state, or recommendation has changed, write the `### Evaluative Drift / Change Explanation` section with detailed logical rationale.
+8. Run banned-phrase self-check on this report's own language before publishing
+9. Apply SHA stamp; trigger `/project-state` regeneration
 
 The legacy v6 epic validation algorithm follows below (use for cross-story integration details, but verdict MUST be a readiness state).
 

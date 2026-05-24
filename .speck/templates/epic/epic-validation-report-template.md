@@ -200,6 +200,51 @@
 
 ---
 
+---
+
+## JTBD Walkthrough & First-Time Comprehension
+
+*This section is the top-down validation proof of user experience. Bottom-up validation (tests passing) is necessary but insufficient. We must walk the core JTBD of this epic end-to-end to verify that it composes into a coherent product and that a first-time user can immediately comprehend it.*
+
+* **WHEN: infra_service / backend_api**: Replace this with an **Operational Scenario stress-test Walkthrough** (how the API handles a full client workflow under network disconnect / concurrent client disruptions).
+
+### Option A: Human JTBD Walkthrough (for UI/Human-facing epics)
+
+**Core Job**: [What the user is trying to accomplish — from epic.md]
+**Entry Point**: [Where the user starts in the app]
+**Path**: [Step-by-step screens/views traversed]
+
+| Step | User Action | Expected Result | Actual Result | Comprehension PASS/FAIL | Status (✅/❌) |
+|------|-------------|-----------------|---------------|-------------------------|----------------|
+| 1 | [e.g. Open App] | [Sees screen X] | [Matches] | [Yes/No] | [✅] |
+| 2 | [e.g. Press button Y] | [Navigates to Z] | [Matches] | [Yes/No] | [✅] |
+
+**First-Time User Comprehension Rubric (Aggregated)**:
+1. **What am I seeing?** (Understand screen context within 2 seconds of landing) -> [PASS / FAIL]
+2. **Why does it matter?** (Value matches user's active JTBD) -> [PASS / FAIL]
+3. **What do I do next?** (Primary continuation action is obvious with zero hunting) -> [PASS / FAIL]
+
+*Overall First-Time Comprehension Verdict*: [PASS / FAIL] (If FAIL, epic validation is FAIL regardless of story-level results, and maximum verified state is capped at IMPL-GREEN).
+
+### Option B: System Operational Scenario Walkthrough (for Infra/Backend epics)
+
+**Core System Operation**: [The transactional/data flow being validated]
+**Entry Point**: [The calling client endpoint / queue trigger]
+**Expected Guarantees**: [Latency, throughput, durability bounds]
+
+| Step | Disruption / Load Trigger | Expected System Behavior | Actual Behavior | Invariants Preserved (Yes/No) | Status (✅/❌) |
+|------|---------------------------|--------------------------|-----------------|-------------------------------|----------------|
+| 1 | [e.g. 500 rps write burst] | [Sub-50ms latency] | [Matches] | [Yes] | [✅] |
+| 2 | [e.g. DB container restart]| [ROLLBACK completed] | [Matches] | [Yes] | [✅] |
+
+---
+
+## Evaluative Change Explanation (If applicable)
+
+*If this evaluation changes a previous rating, state, or recommendation (or overrides a previous assessment), you MUST detail exactly what changed in the codebase or context, and the logical reasons for the new verdict.*
+
+---
+
 ## Deviations from Plan
 
 | Area | Planned | Actual | Reason |

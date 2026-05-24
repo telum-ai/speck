@@ -38,16 +38,19 @@ Before doing ANY validation work, verify:
    - If missing: STOP. Tell user "Run `/audit` first — story-validate requires the audit report as input."
    - If `audit-report.md` shows P0 findings: STOP. Tell user "P0 findings in audit-report.md must be fixed before validation."
 
-2. **For UI stories: `/larp` was run** producing `larp-recordings/<sha>-<persona>-findings.md`
-   - If missing: STOP. Tell user "Run `/larp [persona]` first — UI story validation requires LARP evidence per evidence-contract.md."
-   - If LARP findings show FAIL: lower the maximum claimable state.
+2. **Check Project Archetype & UI Presence**:
+   - Read `.speck/project.json` → `project_archetype` (and `play_level`).
+   - If `project_archetype` is `infra_service` or `backend_api`, or if the story is backend-only / non-UI: **Bypass `/larp` requirement**. Proceed directly.
+   - For all UI-facing stories (archetypes `consumer_product`, `b2b_saas`, `internal_tool` with active UI components): **`/larp` MUST have been run** producing `larp-recordings/<sha>-<persona>-findings.md`
+     - If missing: STOP. Tell user "Run `/larp [persona]` first — UI story validation requires LARP evidence per evidence-contract.md."
+     - If LARP findings show FAIL: lower the maximum claimable state.
 
 3. **`evidence-contract.md` exists at the project root**
    - If missing: STOP. Tell user "Run `/project-evidence-contract` first — validation needs the gate criteria definition."
 
 4. **The user (or skill caller) has declared a claimed readiness state**
-   - Default: claim the highest state where evidence supports
-   - User can pass `--claim IMPL-GREEN` / `--claim UX-RC` / etc.
+   - Default: claim the highest state where evidence supports (e.g. `IMPL-GREEN` or `OPERATIONAL-RC` for infra/backend; `SHIP-RC` / `SHIP` for release candidates).
+   - User can pass `--claim IMPL-GREEN` / `--claim UX-RC` / `--claim API-RC` / `--claim OPERATIONAL-RC` / etc.
 
 If any pre-gate fails: refuse to proceed. Surface what's missing.
 
@@ -312,18 +315,38 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
    | Motion | Matches the motion philosophy or random/jarring/missing? | ✅/⚠️/❌ |
    | Texture & Depth | Does the UI have surface quality or is it flat/lifeless? | ✅/⚠️/❌ |
    | Component Character | Do buttons/cards/inputs have personality or feel generic? | ✅/⚠️/❌ |
+
+   **First-Time User Comprehension Rubric** (REQUIRED for all UI stories):
+   
+   Evaluate whether a first-time user can instantly understand and navigate this view:
+   
+   1. **What am I seeing?** (Understand screen context within 2 seconds of landing)
+   2. **Why does it matter?** (Value matches user's active JTBD)
+   3. **What do I do next?** (Primary continuation action is obvious with zero hunting)
+   
+   | Dimension | Question | Rating | Evidential Rationale |
+   |-----------|----------|--------|----------------------|
+   | Clutter | Is the screen free of technical jargon, system details, or redundant elements? | ✅/⚠️/❌ | |
+   | Visual Dominance | Is there a single, clear visual focal point on landing? | ✅/⚠️/❌ | |
+   | Direct Value Signal | Does the screen display a concrete, immediate signal of value? | ✅/⚠️/❌ | |
+   | Obvious Handoff | Is the primary call to action (or continuation path) clear and distinct? | ✅/⚠️/❌ | |
+
+   *If any First-Time Comprehension dimension is ❌: First-Time Comprehension is **FAIL**.*
    
    **Aesthetic Grade**:
-   - **BEAUTIFUL** — Exceeds design system expectations, feels polished and intentional
-   - **ACCEPTABLE** — Honors design system, no major aesthetic issues
-   - **NEEDS_WORK** — Functionally correct but aesthetically weak in specific areas
-   - **UGLY** — Generic, boilerplate, or actively violates design personality
+   - **BEAUTIFUL** — Exceeds design system expectations, passes first-time comprehension with flying colors, feels polished and intentional.
+   - **ACCEPTABLE** — Honors design system, comprehension is clear, no major aesthetic issues.
+   - **NEEDS_WORK** — Functionally correct, but aesthetically weak OR fails First-Time Comprehension in specific areas.
+   - **UGLY** — Generic, boilerplate, violates design personality, or first-time comprehension is completely blocked.
    
-   **If NEEDS_WORK or UGLY**: Flag as validation issue with:
-   - Specific dimensions that failed (from table above)
+   **If NEEDS_WORK or UGLY**: Flag as validation issue and **CAP maximum verified state at `IMPL-GREEN`** (refuse to grant `UX-RC` or higher):
+   - Specific dimensions that failed (from tables above)
    - Concrete improvement suggestions (not vague "make it better")
-   - Reference to the Bold Choices or Design Philosophy rules being violated
-   - This MUST be treated as a validation failure — functionally correct is NOT done
+   - Reference to the Bold Choices, Design Philosophy, or Comprehension rules being violated
+   - This MUST be treated as a validation failure — functionally correct is NOT done.
+
+   **Evaluative Change Explanation (If applicable)**:
+   If this evaluation changes a previous rating, state, or recommendation, you **MUST** include an explicit section detailing exactly what changed, what has been updated in code or specifications, and the logical reasons for the new verdict.
    
    **Store Screenshots**:
    - Create `{STORY_DIR}/screenshots/` directory

@@ -34,35 +34,40 @@ PLACEHOLDER CONVENTION (Speck v7.2+):
 
 **Project**: REPLACE_BEFORE_SHIP: PROJECT_NAME
 **Project ID**: `REPLACE_BEFORE_SHIP: project-id`
+**Project Archetype**: REPLACE_BEFORE_SHIP: consumer_product | b2b_saas | internal_tool | infra_service | backend_api
 **Play Level**: REPLACE_BEFORE_SHIP: build | platform
 **Speck Version**: 7.0.0
 **Last Updated**: REPLACE_BEFORE_SHIP: YYYY-MM-DD
 
 ---
 
-## 1. The Paid Promise
+## 1. The Paid Promise / Operational SLA
 
-*The single sentence that describes what the user is paying for. Not what we built — what they experience. This is the bar every downstream decision is measured against.*
+*The single sentence that describes what the user gets or pays for. Not what we built — what they experience or can rely on. This is the bar every downstream decision is measured against.*
 
-**Promise**: REPLACE_BEFORE_SHIP: Single sentence. Specific. Outcome-focused. Not a feature list.
+* **WHEN: consumer_product / b2b_saas / internal_tool**: Write the **Value Promise** (what user pays for/experiences).
+* **WHEN: infra_service / backend_api**: Write the **Operational SLA / Capability Promise** (what calling services can guarantee from this service).
 
-*Example: "An adaptive AI coach that reasons from first principles about my body and adapts every session locally — so I trust it more after every workout."*
+**Promise**: REPLACE_BEFORE_SHIP: Single sentence. Specific. Outcome-focused or service-boundary SLA. Not a feature list.
 
-*Anti-example (too vague): "An AI fitness app."*
-*Anti-example (feature list): "An app that generates workouts and tracks progress."*
+*Example (Value): "An adaptive AI coach that reasons from first principles about my body and adapts every session locally — so I trust it more after every workout."*
+*Example (SLA): "To guarantee sub-50ms query latency and transaction-level durability for all booking transactions under peak concurrent load (10k ops/sec)."*
 
 ---
 
-## 2. Primary Persona
+## 2. Primary Persona / Consumer
 
-**Who pays**: [Specific persona. Demographics, life context, urgency, current alternative.]
+* **WHEN: consumer_product / b2b_saas / internal_tool**: The paying or active human user.
+* **WHEN: infra_service / backend_api**: The primary consumer of this service (e.g., the platform developer, downstream calling services, or system operator).
 
-**JTBD they hire this product for**:
-> When [situation], I want to [job], so that I can [outcome].
+**Who pays / consumes**: [Specific persona or service. Life/operational context, urgency, alternatives.]
 
-**Current alternatives they're "firing"**: [What they're using today that this replaces]
+**JTBD they hire this product / service for**:
+> When [situation/system state], I/the service want to [job/operation], so that [outcome/guarantee].
 
-**Willingness to pay**: [Price tier — explicit number if known, "premium" / "freemium" / "free" otherwise]
+**Current alternatives they're "firing"**: [What they're using/doing today that this replaces/optimizes]
+
+**Willingness to pay / Cost of Failure**: [Price tier / Resource budget or Cost of Downtime]
 
 ---
 
@@ -95,9 +100,12 @@ PLACEHOLDER CONVENTION (Speck v7.2+):
 
 ---
 
-## 4. JTBD Scorecard
+## 4. JTBD Scorecard / Operational Invariants Scorecard
 
-*Every important user flow must satisfy ALL five dimensions. Functional alone is not enough for paid products.*
+* **WHEN: consumer_product / b2b_saas / internal_tool**: Fill out the **JTBD Scorecard**. Every important user flow must satisfy ALL five dimensions. Functional alone is not enough for premium experiences.
+* **WHEN: infra_service / backend_api**: Fill out the **Operational Invariants Scorecard**.
+
+### Option A: JTBD Scorecard (for UI/Human-facing products)
 
 | Dimension | Definition | How this product delivers it |
 |-----------|------------|------------------------------|
@@ -109,33 +117,51 @@ PLACEHOLDER CONVENTION (Speck v7.2+):
 
 Story validation fails if a user-facing story has no evidence for at least the functional + emotional + commercial dimensions.
 
+### Option B: Operational Invariants Scorecard (for Infra/Backend)
+
+| Dimension | Definition | How this service guarantees it |
+|-----------|------------|--------------------------------|
+| **Latency** | What is the latency boundary under load? | [e.g., P99 <= 50ms under peak 5k rps] |
+| **Throughput** | What is the throughput capacity? | [e.g., Handles up to 10k rps write volume] |
+| **Durability / Integrity**| What guarantees transaction success? | [e.g., PostgreSQL WAL sync + zero partial-write leakages] |
+| **Resiliency / Failover** | How does it behave when dependencies fail? | [e.g., Circuit-breakers to fallbacks within 200ms] |
+| **Security / Compliance** | What are the absolute access rules? | [e.g., Strict Row-Level Security + zero credentials in logs] |
+
 ---
 
-## 5. Magic Moments
+## 5. Magic Moments / Operational Milestones
 
-*The surfaces where the user would say "wow, this gets me." The product earns its price here. List 3-7. Each must be testable in runtime LARP.*
+*The surfaces where the system demonstrates exceptional capability, premium feel, or bulletproof execution.*
 
-### Magic Moment 1: REPLACE_BEFORE_SHIP: Name
-- **Surface**: REPLACE_BEFORE_SHIP: Screen / interaction / output
-- **Trigger**: REPLACE_BEFORE_SHIP: What action / context creates the moment
-- **Content beats**: REPLACE_BEFORE_SHIP: What happens in sequence to land the moment
-- **Target emotional response**: REPLACE_BEFORE_SHIP: User thinks "<quoted internal reaction>"
-- **Validation step**: REPLACE_BEFORE_SHIP: Specific LARP scenario that proves the moment lands
+* **WHEN: consumer_product / b2b_saas / internal_tool**: List the **Magic Moments** where the user says "wow, this gets me." Each must be testable in runtime LARP.
+* **WHEN: infra_service / backend_api**: List the **Operational Milestones** (e.g., graceful recovery from DB disconnect, sub-millisecond hot-path caching hits, exact rate-limiting blocks).
 
-### Magic Moment 2: REPLACE_BEFORE_SHIP: Name
-- **Surface**: REPLACE_BEFORE_SHIP
+### Magic Moment / Milestone 1: REPLACE_BEFORE_SHIP: Name
+- **Surface / System Boundary**: REPLACE_BEFORE_SHIP: Screen / interaction / endpoint / system action
+- **Trigger**: REPLACE_BEFORE_SHIP: What action / context / load state creates this moment
+- **Content / Execution beats**: REPLACE_BEFORE_SHIP: What happens in sequence to land this moment/milestone
+- **Target Response**: REPLACE_BEFORE_SHIP: User thinks "<reaction>" OR Operator logs verify "<exact behavior>"
+- **Validation step**: REPLACE_BEFORE_SHIP: Specific LARP scenario or integration stress test that proves it works
+
+### Magic Moment / Milestone 2: REPLACE_BEFORE_SHIP: Name
+- **Surface / System Boundary**: REPLACE_BEFORE_SHIP
 - **Trigger**: REPLACE_BEFORE_SHIP
-- **Content beats**: REPLACE_BEFORE_SHIP
-- **Target emotional response**: REPLACE_BEFORE_SHIP
+- **Content / Execution beats**: REPLACE_BEFORE_SHIP
+- **Target Response**: REPLACE_BEFORE_SHIP
 - **Validation step**: REPLACE_BEFORE_SHIP
 
 *(repeat for each magic moment)*
 
 ---
 
-## 6. Public Language
+## 6. Public Language / API & System Taxonomy
 
-*The user-visible vocabulary. Internal/implementation names may differ; user-facing copy MUST use these terms.*
+*The canonical vocabulary and style guidelines. Internal/implementation names may differ, but consuming layers/users must interact with these terms.*
+
+* **WHEN: consumer_product / b2b_saas / internal_tool**: Fill this out as **Public Language** (user-visible terminology, voice, and copy).
+* **WHEN: infra_service / backend_api**: Fill this out as **API & System Taxonomy** (naming conventions of endpoints, payload fields, DB columns, and system entities).
+
+### Option A: Public Language (for UI/Human-facing products)
 
 ### Canonical Domain Terms
 
@@ -155,16 +181,33 @@ Story validation fails if a user-facing story has no evidence for at least the f
 - **Error state voice**: [e.g., "Honest, specific, with a clear recovery path"]
 - **Empty state voice**: [e.g., "Invitational, never blaming the user"]
 
+### Option B: API & System Taxonomy (for Infra/Backend)
+
+### Canonical System Terms
+
+| Concept / Domain | API Payload Key | DB Table/Column | Protocol / Serialization rules |
+|------------------|-----------------|-----------------|--------------------------------|
+| [e.g. Booking] | `booking_id` (snake_case) | `bookings.id` (UUID) | ISO 8601 strings for timestamps |
+
+### Endpoint Naming Style
+
+- **Conventions**: [e.g., RESTful resource pluralization, lower-kebab-case URLs. E.g., `GET /v1/user-profiles`]
+- **Standard Error Shape**: [e.g., `{ "error": { "code": "INVALID_STATE", "message": "Short description", "details": {} } }`]
+
 ---
 
-## 7. Banned Language
+## 7. Banned Language / System Anti-Patterns
 
-*Words and phrases that MUST NEVER appear in user-visible copy. Enforced by `banned-language-lint.sh`. Each term gets a reason and a preferred replacement.*
+*Absolute prohibitions. For UI products, these are forbidden user-visible terms. For backend/infra, these are strict system/code anti-patterns.*
+
+* **WHEN: consumer_product / b2b_saas / internal_tool**: Fill this out as **Banned Language** (user-visible terms, enforced by `banned-language-lint.sh`).
+* **WHEN: infra_service / backend_api**: Fill this out as **Banned System Anti-Patterns / Anti-Conventions** (forbidden architecture/payload practices, e.g., camelCase payload keys when snake_case is required, leaking DB error stacks, or raw SQL queries).
+
+### Option A: Banned Language (for UI/Human-facing products)
 
 | Banned Term | Where it appears | Why it's banned | Use instead |
 |-------------|-------------------|-----------------|-------------|
 | [Term] | [UI / AI prompts / fallbacks] | [Reason — e.g., "drifts toward generic SaaS pitch"] | [Replacement term] |
-| [Term] | [Where] | [Why] | [Replacement] |
 
 ### Banned Phrase Classes (categorical)
 
@@ -175,7 +218,20 @@ Story validation fails if a user-facing story has no evidence for at least the f
 - ❌ Over-explaining trust instead of earning it ("rest assured your data is safe...")
 - ❌ Placeholder/roadmap language ("coming soon", "TBD")
 
-Add product-specific bans here as they're discovered.
+### Option B: Banned System Anti-Patterns (for Infra/Backend)
+
+| Prohibited Practice / Pattern | Scope / Where | Why it's banned | Use instead / Safe practice |
+|--------------------------------|---------------|-----------------|-----------------------------|
+| Leaking DB raw exceptions | API error responses | Security vulnerability & bad DX | Map to sanitized REST error codes |
+| camelCase payload attributes | JSON serialize/deserialize | Violates snake_case schema convention | Convert using Pydantic or custom marshaller |
+| Unbounded raw queries | Repository layer | Performance risk; database locks | Always enforce limit/offset / pagination |
+
+### Categorical System Bans
+
+- ❌ Direct DB mutations without migrations
+- ❌ Hardcoded environment credentials (use SSM / Vault / Vault Secret injected env)
+- ❌ Shared state / singleton concurrency blocks in stateless API tasks
+- ❌ Un-versioned API endpoints on public interfaces (always prefix e.g., `/v1/`)
 
 ---
 

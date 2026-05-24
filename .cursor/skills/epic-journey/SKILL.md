@@ -92,9 +92,7 @@ Present what was created:
 - "Opportunities for delight: [list]"
 
 Guide to next steps based on journey:
-- Many touchpoints → `/epic-wireframes`
-- Complex interactions → `/epic-interaction` (if exists)
-- Ready for stories → `/story-specify` for individual touchpoints
-- "The journey map will guide all design decisions for this epic"
+- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
+- If this UI epic requires layout design, the canonical next step is `/epic-wireframes`. For simpler or well-defined UIs, /epic-experience-chain is the core UI transition gate before planning.
 
 The template contains the complete structure and guidance for journey documentation.

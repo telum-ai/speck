@@ -148,19 +148,23 @@ $ARGUMENTS
    Tasks Completed: [X] of [Y]
    Files Created/Modified: [List]
    Tests Status: [Passing/Failing]
+   UI Self-Review Grade: [BEAUTIFUL/ACCEPTABLE/NEEDS_WORK]
    
-   Next Steps:
-   1. Review implementation changes
-   2. Required: /story-validate (comprehensive validation)
-   3. If validation fails: Fix issues and re-run /story-implement
-   4. If validation passes: Ready for PR/merge
+   CRITICAL CANONICAL ORDERING RULE (Speck v7.3):
+   You are NOT allowed to bypass the v7 validation gate. To-dos or other story work cannot begin until this story is fully proved.
    
-   Note: /story-validate will check:
+   The hard-enforced next steps are:
+   1. Run `/audit` (skeptical audit) to generate `audit-report.md` in this story directory.
+   2. Run `/story-validate` (evidence-backed validation) to generate `validation-report.md`.
+   3. Run `/story-retrospective` to capture learnings.
+   
+   Note: `/story-validate` will verify:
+   - Presence of `audit-report.md` with zero critical/P0 issues.
    - Requirements traceability (all FRs implemented)
    - Test results (all tests passing)
    - Performance targets (if specified)
    - Constitution compliance
-   - Generate validation-report.md
+   - Appropriate Project Archetype proof rules from `evidence-contract.md` (Option A LARP or Option B stress tests).
    ```
 
 Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/story-tasks` first to regenerate the task list.

@@ -51,11 +51,20 @@ Without this contract, validation reports drift into "tests pass therefore done"
 
 ## Execution Steps
 
-### 1. Detect project + recipe + platform
+### 1. Detect project, play level, and archetype
 
-Find `specs/projects/<PROJECT_ID>/`. Read `_active_recipe` field from `project.md` frontmatter.
+Find `specs/projects/<PROJECT_ID>/`. Read `.speck/project.json` → `play_level` and `project_archetype`. (If `project_archetype` is missing, default to `consumer_product` or infer from stack/context).
+Read `_active_recipe` field from `project.md` frontmatter.
 
 If recipe exists, load `.speck/recipes/<recipe>/recipe.yaml` → `evidence_contract:` section (defaults per recipe).
+
+**Archetype Adaptation**:
+Adapt your writing of the template sections based on the detected `project_archetype` (see `evidence-contract-template.md` for explicit WHEN/SKIP criteria):
+- **For `infra_service` / `backend_api` (Non-UI / Systems work)**:
+  - In Section 4 (LARP), write the "Integration / Stress-Test Scenarios" (Option B).
+  - In Section 7 (Readiness State Gate Criteria), map to API-RC, metered billing, and OPERATIONAL-RC.
+- **For `consumer_product` / `b2b_saas` / `internal_tool` (UI/Human-facing products)**:
+  - Write standard Option A human-persona-based LARP and standard UX-RC/SHIP-RC gate checklists.
 
 ### 2. Read prerequisites (parallel)
 

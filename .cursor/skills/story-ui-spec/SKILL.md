@@ -124,10 +124,12 @@ Validate completeness:
 - "Want me to generate CSS utility classes?"
 
 Guide to next steps:
-- Required: `/story-tasks` (generate implementation tasks)
-- ⚠️ REQUIRED: `/story-analyze` (quality check - DO NOT SKIP)
-- Then: `/story-implement`
-- Finally: `/story-validate`
-- Want component story → Consider Storybook
+- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
+- Based on the canonical story flow in `AGENTS.md`, the typical sequence is:
+  1. `/story-tasks` (generate implementation tasks)
+  2. `/story-implement` (implement the tasks)
+  3. `/audit` (skeptical audit between implement and validate)
+  4. `/story-validate` (evidence-backed validation)
+  5. `/story-retrospective` (retrospective extraction)
 
 The template contains comprehensive sections for all UI specification needs.
