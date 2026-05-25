@@ -140,7 +140,7 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 ## 8. Data + API (Last, not first)
 
-*This used to be the first section in v6 specs. It's last in v7 because the experience drives the design — not the other way around. Keep it brief; details belong in `plan.md`.*
+*Document data and APIs last — the user experience drives the design, not the schema. Keep it brief; implementation detail belongs in `plan.md`.*
 
 ### Key Entities (if data involved)
 - **[Entity]**: [What it represents, key attributes — without implementation]
@@ -179,4 +179,4 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 ---
 
-*[as of SHA `<git_sha_short>` | verified `<date>` | speck v7.0.0]*
+*[as of SHA `<git_sha_short>` | verified `<date>` | speck]*

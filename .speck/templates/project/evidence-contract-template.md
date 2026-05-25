@@ -16,13 +16,12 @@ The evidence-contract.md defines:
 - Where runtime evidence lives in the repo
 - Who or what can mark a gate passed
 
-Six v6 projects independently failed by treating browser screenshots as native-iOS proof,
-treating "tests pass" as launch-ready, treating dev-server LARP as production-ready.
-This contract makes those failures impossible.
+Common failure modes this contract prevents: browser screenshots passed off as native-app proof,
+"tests pass" treated as launch-ready, dev-server LARP treated as production-ready.
 
 200-line target.
 
-PLACEHOLDER CONVENTION (Speck v7.2+):
+PLACEHOLDER CONVENTION:
   Tokens marked  REPLACE_BEFORE_SHIP: <hint>  MUST be filled before this artifact
   can claim ship-readiness. /speck-recheck greps for them. Other [bracketed]
   hints are guidance for the agent but don't gate ship.
@@ -32,7 +31,7 @@ PLACEHOLDER CONVENTION (Speck v7.2+):
 **Project ID**: `REPLACE_BEFORE_SHIP: project-id`
 **Project Archetype**: REPLACE_BEFORE_SHIP: consumer_product | b2b_saas | internal_tool | infra_service | backend_api
 **Play Level**: REPLACE_BEFORE_SHIP: build | platform
-**Speck Version**: 7.0.0
+**Speck Version**: REPLACE_BEFORE_SHIP: Speck version
 **Last Updated**: REPLACE_BEFORE_SHIP: YYYY-MM-DD
 
 ---
@@ -276,7 +275,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 ## 9. Who Can Mark a Gate Passed
 
-*The Speck v7 default: the AI agent runs the gates and records evidence. The human reviews the recorded evidence and may override.*
+*The default verification model: the AI agent runs the gates and records evidence. The human reviews the recorded evidence and may override.*
 
 | Gate | Who claims pass | Who can override pass | Who must approve SHIP |
 |------|-----------------|------------------------|-----------------------|
@@ -339,4 +338,4 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 ---
 
-*[as of SHA `<git_sha_short>` | verified `<date>` | speck v7.0.0]*
+*[as of SHA `<git_sha_short>` | verified `<date>` | speck]*

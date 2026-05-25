@@ -9,13 +9,8 @@ play_levels: [build, platform]
 <!--
 THIS IS THE CENTER OF GRAVITY FOR PROMISE.
 
-In Speck v7, the product-contract.md replaces what v6 scattered across:
-- project.md (vision)
-- ux-strategy.md (voice/tone)
-- constitution.md (principles)
-- domain-model.md (terminology)
-- tone-of-voice.md (banned phrases — was bespoke in v6)
-- magic-moments.md (was bespoke in v6)
+Consolidates what may otherwise be scattered across project vision, UX strategy,
+constitution, domain terminology, tone-of-voice, and magic moments into one contract.
 
 Every downstream artifact (epic, story, validation, audit) MUST reference this contract.
 Banned language here is enforced by .speck/scripts/banned-language-lint.sh.
@@ -24,7 +19,7 @@ If you find yourself wanting to write a value-judgment in another doc (what's "p
 
 200-line target. If you can't say it in 200 lines, your contract is too vague.
 
-PLACEHOLDER CONVENTION (Speck v7.2+):
+PLACEHOLDER CONVENTION:
   Any value that MUST be replaced before this artifact can claim ship-readiness
   is marked  REPLACE_BEFORE_SHIP: <hint>
   Generic [bracketed] hints elsewhere are guidance — agents fill them in but they
@@ -36,7 +31,7 @@ PLACEHOLDER CONVENTION (Speck v7.2+):
 **Project ID**: `REPLACE_BEFORE_SHIP: project-id`
 **Project Archetype**: REPLACE_BEFORE_SHIP: consumer_product | b2b_saas | internal_tool | infra_service | backend_api
 **Play Level**: REPLACE_BEFORE_SHIP: build | platform
-**Speck Version**: 7.0.0
+**Speck Version**: REPLACE_BEFORE_SHIP: Speck version
 **Last Updated**: REPLACE_BEFORE_SHIP: YYYY-MM-DD
 
 ---
@@ -343,4 +338,4 @@ For each user-visible AI surface:
 
 ---
 
-*[as of SHA `<git_sha_short>` | verified `<date>` | speck v7.0.0]*
+*[as of SHA `<git_sha_short>` | verified `<date>` | speck]*

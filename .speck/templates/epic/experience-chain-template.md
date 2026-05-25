@@ -17,11 +17,11 @@ If your epic has user-facing UI and no experience-chain.md, /epic-plan refuses t
 
 Skip ONLY for: backend-only, API-only, CLI-only, infrastructure/devops epics.
 
-For BROWNFIELD epics that pre-date v7, see experience-chain-historical-template.md
+For legacy brownfield epics without an upfront chain, see experience-chain-historical-template.md
 (scaffolded by /speck-catch-up). Those use a lighter exemption marker — the
 canonical chain is reverse-engineered on re-validation, not authored upfront.
 
-PLACEHOLDER CONVENTION (Speck v7.2+):
+PLACEHOLDER CONVENTION:
   Tokens marked  REPLACE_BEFORE_SHIP: <hint>  MUST be filled before this artifact
   can claim ship-readiness. /speck-recheck greps for them.
 -->
@@ -166,4 +166,4 @@ The walkthrough script:
 
 ---
 
-*[as of SHA `<git_sha_short>` | verified `<date>` | speck v7.0.0]*
+*[as of SHA `<git_sha_short>` | verified `<date>` | speck]*

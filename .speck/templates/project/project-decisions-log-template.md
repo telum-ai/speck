@@ -16,14 +16,14 @@ dependent on play level or human hands-on intensity.
 
 Format: one decision per H3 (###) section with frontmatter-style metadata.
 
-PLACEHOLDER CONVENTION (Speck v7.2+):
+PLACEHOLDER CONVENTION:
   Tokens marked  REPLACE_BEFORE_SHIP: <hint>  MUST be filled before this artifact
   can claim ship-readiness. /speck-recheck greps for them.
 -->
 
 **Project**: REPLACE_BEFORE_SHIP: PROJECT_NAME
 **Project ID**: `REPLACE_BEFORE_SHIP: project-id`
-**Speck Version**: 7.0.0
+**Speck Version**: REPLACE_BEFORE_SHIP: Speck version
 
 ---
 
@@ -44,7 +44,7 @@ Leave commented for greenfield projects.
 
 ## ⚠️ Retroactive Reconstruction Caveat
 
-This log was reconstructed during `/speck-catch-up` (v6 → v7 migration). Entries
+This log was reconstructed during `/speck-catch-up` (methodology import/migration). Entries
 marked `Reconstructed: true` were not logged at the time the decision was made;
 they were mined from git history (commit messages, learning tags, PR descriptions).
 
@@ -133,4 +133,4 @@ When superseding:
 
 ---
 
-*[as of SHA `<git_sha_short>` | verified `<date>` | speck v7.0.0]*
+*[as of SHA `<git_sha_short>` | verified `<date>` | speck]*
