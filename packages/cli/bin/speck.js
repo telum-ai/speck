@@ -29,6 +29,7 @@ import { showVersion } from '../lib/commands/version.js';
 import { incubate } from '../lib/commands/incubate.js';
 import { promote } from '../lib/commands/promote.js';
 import { feedback } from '../lib/commands/feedback.js';
+import { reconcileSettingsCommand } from '../lib/commands/reconcile-settings.js';
 import { migrateToV7 } from '../lib/migrate.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,6 +52,7 @@ COMMANDS
   promote           Bump play level (--to sprint|build|platform)
   incubate          Propose one lean JTBD bet from recent repo signals
   feedback          Draft a feedback note (catchup/recipe/methodology/etc.) for review/submission
+  reconcile-settings  Sync Speck-managed Claude hook blocks from settings.json.example
   help              Show this help message
 
 OPTIONS
@@ -153,6 +155,10 @@ async function main() {
 
       case 'feedback':
         await feedback(process.cwd(), { ...options, _args: args });
+        break;
+
+      case 'reconcile-settings':
+        await reconcileSettingsCommand(process.cwd(), options);
         break;
 
       case 'help':

@@ -5,6 +5,7 @@
 import { getLatestRelease } from '../github.js';
 import { extractRelease, smartSync, saveVersion, isSpeckInitialized } from '../sync.js';
 import { runReadmeRegen } from '../readme.js';
+import { runSettingsReconcile } from '../claude-settings.js';
 
 export async function init(targetDir, options = {}) {
   console.log('🥓 Initializing Speck...\n');
@@ -39,6 +40,7 @@ export async function init(targetDir, options = {}) {
     console.log('  • .cursor/mcp.json: Your config takes precedence');
     console.log('  • .claude + .codex: Runtime symlinks to .cursor/skills + .cursor/agents');
     console.log('  • README.md: Project skeleton (or footer merge only — never Speck marketing)');
+    console.log('  • .claude/settings.json: Created/reconciled from settings.json.example');
     console.log('  • copilot-setup-steps.yml: Skipped if customized');
     console.log('  • Everything else: Always updated\n');
     console.log('Run without --dry-run to apply changes.');
@@ -65,6 +67,13 @@ export async function init(targetDir, options = {}) {
   const readmeResult = runReadmeRegen(targetDir);
   if (readmeResult.ok) {
     console.log(`   README: ${readmeResult.message}`);
+  }
+
+  const settingsResult = runSettingsReconcile(targetDir);
+  if (settingsResult.created) {
+    console.log('   Claude settings: created from example');
+  } else if (settingsResult.applied && settingsResult.changes?.length > 0) {
+    console.log(`   Claude settings: reconciled ${settingsResult.changes.length} block(s)`);
   }
 
   console.log(`

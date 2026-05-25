@@ -63,6 +63,7 @@ Required artifacts to check:
 ├── [Parallel] speck-auditor: Constitution principle compliance scan — for each principle in constitution.md (or product-contract.md principles section), verify enforcement mechanism is current
 ├── [Parallel] speck-auditor: Banned-language scan via .speck/scripts/banned-language-lint.sh
 ├── [Parallel] shell: PROFILE drift — run .speck/scripts/profile-drift-check.sh; classify P1/P2/P3; refresh placeholders via regenerate-project-readme.sh if P3 only
+├── [Parallel] shell: SETTINGS drift — run .speck/scripts/settings-drift-check.sh; classify SETTINGS_DRIFT.P0; suggest `npx github:telum-ai/speck reconcile-settings`
 ├── [Parallel] shell: grep -rln "\[NEEDS USER REVIEW\]" specs/projects/<id>/   (surface to project-state.md)
 └── [Wait] → Synthesize drift report
 ```
@@ -93,7 +94,7 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3
+- Type: SPEC_VS_CODE | TRUTH_STALE | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix
@@ -136,7 +137,7 @@ Report summary fields per claude skill.
 ## Behavior Rules
 
 - NEVER skip persona LARP cold-start
-- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh`
+- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh` AND `settings-drift-check.sh` (when `.claude/settings.json` exists)
 - NEVER mark a truth artifact "fresh" while it still contains `REPLACE_BEFORE_SHIP:` or `[NEEDS USER REVIEW]` tokens
 - ALWAYS write a dated report (even if green)
 - ALWAYS re-stamp truth artifacts on green (with fresh `verified` date)

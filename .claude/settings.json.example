@@ -1,5 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_speck_managed": {
+    "version": "7.8.0",
+    "blocks": [
+      "hooks.Stop",
+      "hooks.SessionStart",
+      "hooks.PostToolUse"
+    ]
+  },
   "alwaysThinkingEnabled": true,
   "teammateMode": "auto",
   "outputStyle": "Default",
@@ -45,8 +53,8 @@
       {
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Verify task completion and decision logging state before exit. Guidelines:\n1. Under Speck v7, `tasks.md` is strictly a STORY-LEVEL artifact. NEVER create or require `tasks.md` at the project level or workspace root.\n2. If you are actively working inside a story directory (`specs/projects/*/epics/E###-*/stories/S###-*/`), verify that story's `tasks.md` status matches the completion state in its YAML frontmatter.\n3. If you are working at the project level, check for `project-punch-list.md` (or `sprint-log.md` if on Sprint level) rather than `tasks.md`.\n4. If any critical phase decisions were locked during this session, verify they are captured in `project-decisions-log.md`.\n\nIf everything aligns, return {\"ok\": true}. Otherwise, return {\"ok\": false, \"reason\": \"List what remains before exiting\"}."
+            "type": "command",
+            "command": "bash .claude/hooks/stop-gate.sh"
           }
         ]
       }

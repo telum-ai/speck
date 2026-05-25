@@ -304,7 +304,7 @@ You can start a scheduled workspace babysitting or maintenance loop. This execut
 ```
 
 ### 🎯 Exit/Stop Verification Gates
-Our `Stop` hooks act as deterministic safeguards. Whenever you instruct Claude to finish or stop, a background validation is triggered to ensure tasks are completed, lints are green, and decisions log boundaries are fully respected before allowing the session to exit.
+Claude Code `Stop` hooks use **command-type** lifecycle gates (`.claude/hooks/stop-gate.sh`) — not prompt-type loops. Story-level `tasks.md` checks apply only inside story directories; epic/project sessions never gate on `tasks.md`. Speck-managed hook blocks in `.claude/settings.json` reconcile from `settings.json.example` on `speck upgrade` / `speck reconcile-settings`. Drift surfaces as `SETTINGS_DRIFT.P0` on `/recheck`.
 
 ## 🧪 Agent Skills
 
@@ -390,7 +390,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 7.7.0  
+**Speck Version**: 7.8.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

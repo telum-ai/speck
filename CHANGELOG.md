@@ -1,5 +1,28 @@
 # Speck Changelog
 
+## v7.8.0 — 2026-05-25 — Claude settings sync + lifecycle Stop hook
+
+Fixes Stop-hook infinite loops on epic/project sessions and closes the silent-drift gap for `.claude/settings.json`.
+
+### Stop hook (H1)
+- **`.claude/hooks/stop-gate.sh`** — command-type Stop gate; lifecycle-scoped by directory walk
+- Story directories: informational `tasks.md` / YAML status checks only
+- Epic/project/workspace: never gates on `tasks.md` — eliminates prompt-loop token waste
+
+### Settings reconciliation (H2 + H4)
+- **`_speck_managed`** sentinel in `settings.json.example` — Speck owns `hooks.Stop`, `hooks.SessionStart`, `hooks.PostToolUse`
+- **`packages/cli/lib/claude-settings.js`** — drift detection + reconcile preserving user `permissions`, `env`, custom hooks
+- **`speck reconcile-settings`** CLI command (`--dry-run` supported)
+- **`speck upgrade` / `speck init`** auto-reconcile Speck-managed blocks after sync
+
+### Drift detection (H3)
+- **`.speck/scripts/settings-drift-check.sh`** — `SETTINGS_DRIFT.P0` for managed-block diffs + legacy prompt Stop hooks
+- **`/recheck`** skill runs settings drift in parallel with PROFILE drift
+- **`speck feedback`** surfaces SETTINGS friction signals
+
+### Upstream (H5)
+- Documented ask: Claude Code Stop hooks could support `cwd_matcher`, `max_iterations`, and prompt-type exit semantics — filed as coordination need in feedback channel
+
 ## v7.7.0 — 2026-05-25 — PROFILE pillar enforcement
 
 Completes PROFILE as a structurally enforced fourth pillar (validators, readiness gates, graded drift, multi-surface hooks).

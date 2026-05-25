@@ -109,6 +109,21 @@ function frictionSignals(cwd, projects) {
     }
   }
 
+  if (fs.existsSync(path.join(cwd, '.speck/scripts/settings-drift-check.sh'))) {
+    try {
+      execSync('bash .speck/scripts/settings-drift-check.sh', {
+        cwd,
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+    } catch (err) {
+      const out = err.stdout?.toString?.() || '';
+      if (out.includes('SETTINGS_DRIFT.P0') || err.status === 1) {
+        signals.push('SETTINGS: Claude settings drift P0 — run `npx github:telum-ai/speck reconcile-settings`');
+      }
+    }
+  }
+
   for (const p of projects) {
     const projectPath = path.join(cwd, p.path);
 

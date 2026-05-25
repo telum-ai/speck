@@ -11,6 +11,7 @@ import {
 } from '../sync.js';
 import { runPostUpgradeMigrations } from '../migrate.js';
 import { runReadmeRegen } from '../readme.js';
+import { runSettingsReconcile } from '../claude-settings.js';
 
 export async function upgrade(targetDir, version, options = {}) {
   console.log('🥓 Upgrading Speck...\n');
@@ -80,6 +81,7 @@ export async function upgrade(targetDir, version, options = {}) {
     console.log('  • .cursor/mcp.json: Your config takes precedence');
     console.log('  • .claude + .codex: Runtime symlinks to .cursor/skills + .cursor/agents');
     console.log('  • README.md: Project skeleton, footer merge, or Speck-marketing auto-repair');
+    console.log('  • .claude/settings.json: Speck-managed hook blocks reconciled from example');
     console.log('  • copilot-setup-steps.yml: Skipped if customized');
     console.log('  • Everything else: Always updated');
     console.log('  • Removed files: Files deleted from Speck will be removed from your project\n');
@@ -126,6 +128,19 @@ export async function upgrade(targetDir, version, options = {}) {
     console.log(`\n✅ ${readmeResult.message}`);
   }
 
+  const settingsResult = runSettingsReconcile(targetDir, { verbose: false });
+  if (settingsResult.hadDrift) {
+    console.log('\n⚠️  Claude settings drift detected (Speck-managed hook blocks):');
+    for (const d of settingsResult.driftBefore) {
+      console.log(`   • ${d.path}: ${d.summary}`);
+    }
+  }
+  if (settingsResult.applied && settingsResult.changes?.length > 0) {
+    console.log(`\n✅ Claude settings reconciled: ${settingsResult.changes.join(', ')}`);
+  } else if (settingsResult.created) {
+    console.log('\n✅ Created .claude/settings.json from example');
+  }
+
   const crossedProfileEnforcement =
     parseFloat(String(currentVersion).replace(/^v/, '')) < 7.7 &&
     parseFloat(String(targetVersion).replace(/^v/, '')) >= 7.7;
@@ -133,6 +148,15 @@ export async function upgrade(targetDir, version, options = {}) {
     console.log(`
 📋 PROFILE enforcement (v7.7+): Run /speck-catch-up --phase=profile on existing projects
    to backfill PROFILE gates in evidence-contract.md and project.md.`);
+  }
+
+  const crossedSettingsSync =
+    parseFloat(String(currentVersion).replace(/^v/, '')) < 7.8 &&
+    parseFloat(String(targetVersion).replace(/^v/, '')) >= 7.8;
+  if (crossedSettingsSync) {
+    console.log(`
+🔧 Claude settings (v7.8+): Stop hook is now command-type (stop-gate.sh). Legacy prompt-type
+   hooks are reconciled automatically. Run \`speck reconcile-settings\` if drift persists.`);
   }
 
   console.log(`
