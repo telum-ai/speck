@@ -300,7 +300,7 @@ Validation complements command validation:
 
 ## Scope
 
-Validation applies to **`specs/**/*.md` only**. Root `README.md` is a PROFILE artifact (public face), not a spec — it is not validated by pre-commit or afterFileEdit hooks. Use `/project-readme` to keep it aligned with truth artifacts.
+Validation applies to **`specs/**/*.md`** and **root `README.md` when staged**. PROFILE validation uses `validate-readme.sh` / `profile-drift-check.sh` (v7.7+).
 
 ## Files
 

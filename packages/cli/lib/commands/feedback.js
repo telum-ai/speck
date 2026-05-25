@@ -91,6 +91,21 @@ function frictionSignals(cwd, projects) {
       signals.push('PROFILE: root README.md still has legacy Speck marketing content (run speck upgrade or /project-readme)');
     } else if (!readme.includes('<!-- SPECK:START -->')) {
       signals.push('PROFILE: root README.md lacks SPECK markers (footer not managed by Speck)');
+    } else if (fs.existsSync(path.join(cwd, '.speck/scripts/profile-drift-check.sh'))) {
+      try {
+        const drift = execSync('bash .speck/scripts/profile-drift-check.sh', {
+          cwd,
+          encoding: 'utf-8',
+          stdio: ['ignore', 'pipe', 'ignore'],
+        });
+        if (drift.includes('PROFILE_DRIFT.P1')) {
+          signals.push('PROFILE: README one-liner drift P1 vs product-contract (SHIP-RC blocker)');
+        } else if (drift.includes('PROFILE_DRIFT.P2')) {
+          signals.push('PROFILE: README one-liner partial drift P2 — run /project-readme');
+        }
+      } catch {
+        signals.push('PROFILE: profile-drift-check failed or P1 drift detected');
+      }
     }
   }
 

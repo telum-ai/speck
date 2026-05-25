@@ -33,7 +33,7 @@ The CLI uses intelligent merging to preserve your customizations during updates:
 | **.gitignore** | Your entries merged with Speck defaults |
 | **.cursor/hooks/hooks.json** | Your hooks merged with Speck hooks |
 | **.cursor/mcp.json** | Your config takes precedence over Speck defaults |
-| **README.md** | Project skeleton on init; footer merge on upgrade; auto-repair legacy Speck marketing |
+| **README.md** | Project skeleton on init; footer merge + auto-regen on upgrade |
 | **copilot-setup-steps.yml** | Skipped if you customized it |
 | **Methodology files** | Always updated (skills, templates, patterns, workflows) |
 | **.claude/skills + .claude/agents** | Auto-symlinked from `.cursor/skills` + `.cursor/agents` during init/upgrade |

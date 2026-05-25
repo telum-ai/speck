@@ -62,7 +62,7 @@ Required artifacts to check:
 ├── [Parallel] speck-auditor: Third-party integration risk surface scan — for each external service in context.md/architecture.md, verify auth model, ToS posture, data residency, worst-case story
 ├── [Parallel] speck-auditor: Constitution principle compliance scan — for each principle in constitution.md (or product-contract.md principles section), verify enforcement mechanism is current
 ├── [Parallel] speck-auditor: Banned-language scan via .speck/scripts/banned-language-lint.sh
-├── [Parallel] shell: PROFILE drift — compare root README one-liner vs product-contract.md Section 1; run .speck/scripts/regenerate-project-readme.sh if placeholders remain
+├── [Parallel] shell: PROFILE drift — run .speck/scripts/profile-drift-check.sh; classify P1/P2/P3; refresh placeholders via regenerate-project-readme.sh if P3 only
 ├── [Parallel] shell: grep -rln "\[NEEDS USER REVIEW\]" specs/projects/<id>/   (surface to project-state.md)
 └── [Wait] → Synthesize drift report
 ```
@@ -93,7 +93,7 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | PROFILE_DRIFT
+- Type: SPEC_VS_CODE | TRUTH_STALE | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix

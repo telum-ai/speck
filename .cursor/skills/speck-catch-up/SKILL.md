@@ -36,7 +36,8 @@ Parse `$ARGUMENTS` for `--phase=<name>`. Default is `--phase=all`.
 | `--phase=state` | Phase 6 — regenerate project-state.md | refreshed project-state | 2 min |
 | `--phase=plan` | Phase 7 — write project-catch-up-plan.md | the remediation plan | 5 min |
 | `--phase=finalize` | Phase 8 — clean up marker + re-recheck | marker removed | 1 min |
-| `--phase=all` (default) | All phases 0 → 8 | everything | varies |
+| `--phase=profile` | PROFILE backfill — project.md surfaces + evidence-contract PROFILE gates + README regen | PROFILE sections appended | 5–10 min |
+| `--phase=all` (default) | All phases 0 → 8 (+ profile if v7.7+) | everything | varies |
 
 **Recommended flow for large brownfield projects** (e.g., 10+ epics, multi-platform):
 
@@ -382,6 +383,19 @@ SHA-stamp this file.
 2. **Run `/project-readme`** — repair legacy Speck-marketing README if present and populate from backfilled contracts
 3. Re-run `/recheck` to confirm the project is no longer in scaffold state
 4. Update `project-state.md` final paragraph: "Catch-up complete. Resume normal v7 workflow."
+
+### Phase PROFILE — v7.6→v7.7 PROFILE backfill (idempotent)
+
+Run when `--phase=profile` or as part of `--phase=all` on v7.7+ projects missing PROFILE integration.
+
+1. If `project.md` lacks `## PROFILE surfaces`, append table from [project-template.md](.speck/templates/project/project-template.md) marked `[FROM PROFILE CATCH-UP]`
+2. If `evidence-contract.md` lacks `PROFILE Gate Criteria`, append subsection from [evidence-contract-template.md](.speck/templates/project/evidence-contract-template.md) marked `[FROM PROFILE CATCH-UP]`
+3. Log decision via `/speck-decision-log` — "PROFILE pillar backfilled for v7.7 enforcement"
+4. Run `.speck/scripts/regenerate-project-readme.sh` + `.speck/scripts/validation/validate-readme.sh`
+5. Run `.speck/scripts/profile-drift-check.sh` — add P1/P2 findings to `project-state.md` blocking issues
+6. Trigger `/project-state` regeneration
+
+Skip any step where target section already exists.
 
 ### Phase 9 — Report
 

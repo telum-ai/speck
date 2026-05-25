@@ -23,6 +23,20 @@
 
 ---
 
+## PROFILE surface impact
+
+Does this story touch a declared PROFILE surface (see `project.md` PROFILE surfaces table)?
+
+- [ ] Yes — specify surface(s): ___________
+- [ ] No
+
+If **Yes**:
+- Surfaces touched: ___________
+- Drift check: `bash .speck/scripts/regenerate-project-readme.sh --check` (paste output or link)
+- Copy aligned with `product-contract.md` Section 1: [ ] Reviewer sign-off
+
+---
+
 ## 📦 Component Overview
 
 **Component Name**: [Name]  

@@ -20,6 +20,16 @@ See [architecture.md](specs/projects/PROJECT_ID/architecture.md).
 
 See [product-contract.md](specs/projects/PROJECT_ID/product-contract.md).
 
+## Recently validated
+
+_Auto-updated when epics pass validation._
+
+## Magic moments (auto-updated)
+
+| Moment | Status | Last validated |
+|--------|--------|----------------|
+| REPLACE_BEFORE_SHIP: populate on first epic-validate PASS | pending | — |
+
 ---
 
 <!-- SPECK:START -->

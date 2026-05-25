@@ -62,6 +62,7 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
 7. If any previous rating, state, or recommendation has changed, write the `### Evaluative Drift / Change Explanation` section with detailed logical rationale.
 8. Run banned-phrase self-check on this report's own language before publishing
 9. Apply SHA stamp; trigger `/project-state` regeneration
+10. **If readiness >= UX-RC:** run `.speck/scripts/regenerate-project-readme.sh --epic-validated <E###>` to update README magic-moments / recently-validated sections
 
 The legacy v6 epic validation algorithm follows below (use for cross-story integration details, but verdict MUST be a readiness state).
 

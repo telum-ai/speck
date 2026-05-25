@@ -4,6 +4,7 @@
 
 import { getLatestRelease } from '../github.js';
 import { extractRelease, smartSync, saveVersion, isSpeckInitialized } from '../sync.js';
+import { runReadmeRegen } from '../readme.js';
 
 export async function init(targetDir, options = {}) {
   console.log('🥓 Initializing Speck...\n');
@@ -60,7 +61,12 @@ export async function init(targetDir, options = {}) {
   
   // Save version
   saveVersion(targetDir, release.tag_name);
-  
+
+  const readmeResult = runReadmeRegen(targetDir);
+  if (readmeResult.ok) {
+    console.log(`   README: ${readmeResult.message}`);
+  }
+
   console.log(`
 ✅ Speck ${release.tag_name} initialized!
 

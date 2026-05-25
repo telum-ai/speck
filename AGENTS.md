@@ -24,9 +24,9 @@ PROMISE          BUILD            PROVE
 | **PROMISE** | What product are we building? Who pays? What's banned? What's magic? | `product-contract.md` |
 | **BUILD** | Implement evidence-producing slices | `spec.md`, `tasks.md`, `experience-chain.md` |
 | **PROVE** | Runtime evidence that promise = reality | `project-state.md`, `evidence-contract.md`, runtime LARP |
-| **PROFILE** | How the project presents itself to outsiders (GitHub, npm, first-time contributors) | Root `README.md` (managed footer + workflow-driven scaffold) |
+| **PROFILE** | How the project presents itself to outsiders (GitHub, npm, contributors) — **enforced from v7.7+** via `validate-readme.sh`, `profile-drift-check.sh`, evidence-contract PROFILE gates | Root `README.md` + declared surfaces in `project.md` |
 
-> Every spec assertion compiles to evidence. Every evidence claim ties to runtime proof. Every truth artifact is SHA-stamped against current HEAD. PROFILE surfaces derive from PROMISE + PROVE — drift between README and contracts is externally embarrassing; `/recheck` flags it.
+> Every spec assertion compiles to evidence. Every evidence claim ties to runtime proof. Every truth artifact is SHA-stamped against current HEAD. PROFILE derives from PROMISE + PROVE; `PROFILE_DRIFT.P1` blocks SHIP-RC+ claims.
 
 ## 🚦 First Actions on Any Engagement
 
@@ -390,7 +390,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 7.6.0  
+**Speck Version**: 7.7.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

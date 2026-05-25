@@ -17,7 +17,7 @@ $ARGUMENTS
 ```
 .speck/templates/story/ui-spec-template.md
 ```
-The template defines required sections and formatting for `ui-spec.md`, including component hierarchy, state matrix, design token usage, and interaction spec. Reading it first shapes what you extract from plan.md and what you document for each screen/component. Generating ui-spec.md from memory produces wrong structure.
+The template defines required sections and formatting for `ui-spec.md`, including **PROFILE surface impact** (v7.7+), component hierarchy, state matrix, design token usage, and interaction spec.
 
 **Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 

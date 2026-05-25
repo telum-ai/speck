@@ -246,6 +246,27 @@ For every validation report at UX-RC or higher:
   - [ ] Sentry / Log monitoring shows zero new errors in first 24h
   - [ ] Monitoring shows expected baseline metrics
 
+### PROFILE Gate Criteria (v7.7+)
+
+*Public-face drift must not block release silently. See `project.md` PROFILE surfaces table.*
+
+| State | PROFILE requirement |
+|-------|---------------------|
+| IMPL-GREEN | README footer matches `.speck/VERSION`; no orphan README placeholders |
+| UX-RC | README one-liner token-overlap with product-contract Section 1 ≥ 60% |
+| COMMERCIAL-RC | All declared PROFILE surfaces within drift threshold |
+| SHIP-RC | Zero `PROFILE_DRIFT.P1` at `/recheck`; GitHub repo description aligned (manual attestation) |
+| SHIP | SHIP-RC + `validate-readme.sh --strict` green in CI |
+
+Per declared PROFILE surface (from `project.md`):
+
+| Surface | Source of truth | Drift check | Refresh |
+|---------|-----------------|-------------|---------|
+| Root README | product-contract §1 | `profile-drift-check.sh` | `/project-readme` |
+| package.json description | README one-liner | `regenerate-project-readme.sh --surface=package` | `/project-readme --surface=package` |
+| GitHub repo description | README one-liner | manual `/recheck` | `gh repo edit --description` |
+| Landing hero (if declared) | product-contract §1 + ui-spec | `--surface=landing` (check-only) | story validate gate |
+
 ---
 
 ## 8. Evidence Storage
@@ -335,6 +356,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 - [ ] Adversarial Probe Suite is populated (at least the standard 10)
 - [ ] Evidence storage paths are defined
 - [ ] Stale-proof and Surrogate-proof rules are in force
+- [ ] PROFILE Gate Criteria populated (v7.7+ projects)
 
 ---
 

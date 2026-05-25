@@ -23,6 +23,8 @@ The template defines required sections and formatting for `epic-retro.md`, inclu
 
 Aggregate story retrospectives, validate patterns, apply immediate learnings to current project, and propose process improvements for Speck methodology.
 
+**After epic-retrospective completes:** if epic reached UX-RC+, run `.speck/scripts/regenerate-project-readme.sh --epic-validated <E###>` to refresh README validated-epic sections.
+
 ## Subagent Parallelization
 
 This command benefits from parallel data loading and validation:

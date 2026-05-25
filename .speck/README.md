@@ -47,9 +47,9 @@ Every Speck project lives in this loop:
 | **PROMISE** | What product are we building? Who pays? What's banned? What's magic? | `product-contract.md` |
 | **BUILD** | Implement evidence-producing slices | `spec.md`, `tasks.md`, `experience-chain.md` |
 | **PROVE** | Runtime evidence that promise = reality | `project-state.md`, `evidence-contract.md`, runtime LARP |
-| **PROFILE** | How the project presents itself to outsiders | Root `README.md` (via `/project-readme`) |
+| **PROFILE** | How the project presents itself to outsiders | Root `README.md` + declared surfaces — **enforced v7.7+** via validators and readiness gates |
 
-The loop closes via drift detection: when PROVE finds gaps, PROMISE artifacts update; never the other way around. PROFILE derives from PROMISE + PROVE — when your GitHub README says "Speck methodology" instead of your product name, that's PROFILE drift.
+The loop closes via drift detection. PROFILE derives from PROMISE + PROVE; `validate-readme.sh` and `profile-drift-check.sh` enforce it at commit and SHIP-RC gates.
 
 ---
 
@@ -466,5 +466,5 @@ v6 commands (`/story-analyze`, `/epic-outline`, `/story-outline`, `/project-scan
 
 ---
 
-**Speck Version**: 7.6.0
+**Speck Version**: 7.7.0
 **Methodology**: Promise → Build → Prove + Profile (evidence-driven specification)

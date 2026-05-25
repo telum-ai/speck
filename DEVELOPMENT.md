@@ -122,6 +122,7 @@ The sync system controls what happens when a project runs `speck init` or `speck
 | `SMART_MERGE_FILES` | Custom merge function preserves project content | `AGENTS.md` (Speck controls `SPECK:START..END`), `.gitignore`, `hooks.json`, `mcp.json` |
 | `SKIP_IF_CUSTOMIZED` | Skipped if the project has modified the file | One-time setup files (v7.6.0: README handled separately — see below) |
 | **Project README** | Dedicated handler in `syncProjectReadme()` | Root `README.md` — skeleton on init, footer merge on upgrade, auto-repair legacy Speck marketing |
+| **PROFILE validation** | `validate-readme.sh` + `profile-drift-check.sh` | Staged README on pre-commit; SHIP-RC gates in validate skills |
 | `SKIP_PATTERNS` | Never synced to projects | Test files, internal tooling |
 | `REMOVE_FILES` | **Deleted from projects** on upgrade | Deprecated files, removed features |
 

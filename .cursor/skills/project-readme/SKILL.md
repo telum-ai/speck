@@ -21,25 +21,38 @@ Before any other action, read:
 
 ## Purpose
 
-Root `README.md` is the **PROFILE pillar** artifact — the public face GitHub visitors see first. It derives from PROMISE (`product-contract.md`, `project.md`) and PROVE (`project-state.md`) but is not a substitute for either.
+Root `README.md` is the **PROFILE pillar** center-of-gravity artifact (enforced from v7.7+). It derives from PROMISE + PROVE.
 
 Speck manages:
-- **Footer only** (`<!-- SPECK:START -->` … `<!-- SPECK:END -->`) — always refreshed
-- **Scaffold sections** — auto-filled only while they still match template placeholders
-- **User-edited sections** — read-only; never overwritten
+- **Footer** (`<!-- SPECK:START -->` … `<!-- SPECK:END -->`) — always refreshed
+- **AUTO-SYNC blocks** — always overwritten from declared source
+- **Scaffold placeholders** — auto-filled while still matching template text
+- **User-edited sections** — read-only outside AUTO-SYNC blocks
+
+### AUTO-SYNC opt-in (v7.7+)
+
+```markdown
+<!-- PROFILE:AUTO-SYNC source=product-contract.md section=1 -->
+> Paid promise copy here — always refreshed from contract Section 1
+<!-- /PROFILE:AUTO-SYNC -->
+```
 
 ## When to Run
 
-| Trigger | Action |
-|---------|--------|
-| After `/project-specify` creates `project.md` | First populate title + PROJECT_ID links |
-| After `/project-product-contract` locks contract | Refresh elevator pitch from paid promise |
-| After `/project-state` regeneration | Refresh status line + footer |
-| `/recheck` detects README drift | Flag drift; refresh placeholder sections only |
-| `/speck-catch-up --phase=finalize` | Repair legacy Speck-marketing README + populate |
-| User invokes `/project-readme` | Full regen pass |
+| Trigger | Command |
+|---------|---------|
+| After `/project-specify` | `regenerate-project-readme.sh` |
+| After `/project-product-contract` | `regenerate-project-readme.sh` |
+| After `/project-state` | `regenerate-project-readme.sh` |
+| `/epic-validate` PASS (UX-RC+) | `regenerate-project-readme.sh --epic-validated E###` |
+| `/recheck` | `profile-drift-check.sh` (+ regen if P3 only) |
+| `/speck-catch-up --phase=profile` | backfill + regen |
+| Package description sync | `regenerate-project-readme.sh --surface=package` |
+| Landing hero drift check | `regenerate-project-readme.sh --surface=landing` (check-only) |
+| Story validate (PROFILE UI) | `regenerate-project-readme.sh --check` |
+| Drift check only | `regenerate-project-readme.sh --check` |
 
-**This skill is invoked automatically by upstream skills — do not wait for the user to ask.**
+**Invoked automatically by upstream skills — do not wait for the user to ask.**
 
 ## Execution Steps
 
@@ -47,24 +60,27 @@ Speck manages:
 
 Find `specs/projects/<PROJECT_ID>/` from cwd or `.speck/project.json` `_active_project`.
 
-If no project: ERROR "No Speck project detected. Run `/project-specify` first."
+### 2. Run script with appropriate flags
 
-### 2. Run regeneration script
+Parse `$ARGUMENTS` for `--surface=`, `--check`, `--epic-validated=`.
 
 ```bash
-.speck/scripts/regenerate-project-readme.sh [PROJECT_ID]
+.speck/scripts/regenerate-project-readme.sh [flags] [PROJECT_ID]
 ```
 
-Exit code handling:
-- `0` — success; continue to report
-- `1` — no project; stop with error
-- `2` — README lacks SPECK markers; tell user to run `speck upgrade` first, then retry
+Validation (separate):
+```bash
+.speck/scripts/validation/validate-readme.sh [--strict]
+.speck/scripts/profile-drift-check.sh
+```
 
-### 3. Drift check (when invoked from `/recheck`)
+### 3. Drift grading (from `/recheck`)
 
-Compare README one-liner (`> ...` blockquote) against `product-contract.md` Section 1 paid promise:
-- If both exist and diverge materially → flag **P1 PROFILE drift** in recheck report
-- Do NOT overwrite user-edited one-liner; surface the drift for human decision
+| Finding | Severity | Action |
+|---------|----------|--------|
+| `PROFILE_DRIFT.P1` | SHIP-RC blocker | Surface to user; do not overwrite user one-liner without consent |
+| `PROFILE_DRIFT.P2` | UX-RC warning | Recommend regen or AUTO-SYNC block |
+| `PROFILE_DRIFT.P3` | Informational | Safe to auto-refresh footer / placeholders |
 
 ### 4. Report
 
@@ -73,27 +89,24 @@ Compare README one-liner (`> ...` blockquote) against `product-contract.md` Sect
 
 Path: README.md
 Project: <PROJECT_ID>
-Auto-filled: <list sections still at template placeholders that were updated>
-Preserved: <list user-edited sections left untouched>
-Footer: updated (Speck version + cross-links)
+Auto-filled: ...
+Preserved: ...
+Drift: P1=0 P2=0 P3=0
 
-Optional: align GitHub repo description with one-liner via:
-  gh repo edit --description "<one-liner>"
+Optional: gh repo edit --description "<one-liner>"
 ```
 
 ## Behavior Rules
 
-- NEVER overwrite user-edited README sections (non-placeholder content)
-- NEVER copy Speck marketing content to root README
+- NEVER overwrite user prose outside AUTO-SYNC blocks
 - NEVER skip footer refresh when markers exist
-- ALWAYS run after `/project-state` write completes
-- ALWAYS preserve `<!-- SPECK:START -->` / `<!-- SPECK:END -->` markers
+- ALWAYS run `profile-drift-check.sh` when invoked from `/recheck`
+- ALWAYS run after `/project-state` completes
 
 ## Integration Points
 
-- Invoked by: `/project-specify`, `/project-product-contract`, `/project-state`, `/speck-recheck`, `/speck-catch-up` finalize
-- Script: `.speck/scripts/regenerate-project-readme.sh`
-- Template: `.speck/templates/project/readme-template.md`
-- Sources: `project.md`, `product-contract.md`, `project-state.md`
+- Scripts: `regenerate-project-readme.sh`, `profile-drift-check.sh`, `validate-readme.sh`
+- Surfaces table: `project.md` ## PROFILE surfaces
+- Gates: `evidence-contract.md` ### PROFILE Gate Criteria
 
 ## Context: $ARGUMENTS

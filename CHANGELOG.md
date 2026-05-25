@@ -1,5 +1,26 @@
 # Speck Changelog
 
+## v7.7.0 — 2026-05-25 — PROFILE pillar enforcement
+
+Completes PROFILE as a structurally enforced fourth pillar (validators, readiness gates, graded drift, multi-surface hooks).
+
+### Structural enforcement
+- **`validate-readme.sh`** + **`profile-drift-check.sh`** — P1/P2/P3 graded drift; README validator mirrors product-contract validators
+- **Pre-commit** validates staged root `README.md` via `validate-profile.sh`
+- **`evidence-contract.md`** — PROFILE Gate Criteria subsection under Section 7 readiness gates
+- **SHIP-RC+** blocked on `PROFILE_DRIFT.P1` (story-validate, project-validate, recheck)
+
+### Propagation
+- **`speck upgrade`** auto-runs README footer regen via `runReadmeRegen()`
+- **`regenerate-project-readme.sh`** — `--check`, `--surface=package|landing`, `--epic-validated=E###`, `PROFILE:AUTO-SYNC` markers
+- **Epic validate/retro** updates README magic-moments / recently-validated sections
+- **`/speck-catch-up --phase=profile`** — brownfield backfill for v7.6→v7.7 projects
+
+### Templates + skills
+- `project.md` PROFILE surfaces table; `ui-spec-template.md` PROFILE impact section
+- `readme-template.md` magic-moments + recently-validated tables
+- Updated project-readme, recheck, catch-up, story-validate, project-validate skills
+
 ## v7.6.0 — 2026-05-25 — README ownership + PROFILE pillar
 
 Minor release fixing root README identity confusion and introducing PROFILE as a fourth methodology pillar.

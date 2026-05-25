@@ -129,6 +129,14 @@ else
   log_success "No 'REPLACE_BEFORE_SHIP' placeholders found"
 fi
 
+# 9. PROFILE Gate Criteria (v7.7+)
+if echo "$content" | grep -q "PROFILE Gate Criteria"; then
+  log_success "PROFILE Gate Criteria section found"
+else
+  log_warning "Missing PROFILE Gate Criteria subsection (v7.7+)" \
+    "Add ### PROFILE Gate Criteria under Section 7, or run /speck-catch-up --phase=profile"
+fi
+
 # === OUTPUT RESULTS ===
 
 if [ -f "$validation_log" ]; then

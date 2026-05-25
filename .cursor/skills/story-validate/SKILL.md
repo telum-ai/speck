@@ -66,7 +66,9 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
 4. If any required-at-claimed-state gate is ❌: lower the verified state to the highest state where all gates pass
 5. Run the banned-phrase self-check on the report's own language before publishing
 6. Apply SHA stamp to the report
-7. Trigger `/project-state` regeneration
+7. **Before claiming SHIP-RC or SHIP:** run `bash .speck/scripts/validation/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`. Block SHIP-RC+ if any `PROFILE_DRIFT.P1` finding.
+8. **UI stories touching PROFILE surfaces** (landing, marketing, package.json): run `regenerate-project-readme.sh --check` before UX-RC+ claim.
+9. Trigger `/project-state` regeneration
 
 The legacy v6 validation algorithm follows below (use it for tests/lint/quality details, but the verdict MUST be a readiness state, not PASS/FAIL).
 

@@ -10,6 +10,7 @@ import {
   getCurrentVersion 
 } from '../sync.js';
 import { runPostUpgradeMigrations } from '../migrate.js';
+import { runReadmeRegen } from '../readme.js';
 
 export async function upgrade(targetDir, version, options = {}) {
   console.log('🥓 Upgrading Speck...\n');
@@ -118,6 +119,20 @@ export async function upgrade(targetDir, version, options = {}) {
 🔧 README repaired: replaced legacy Speck marketing content with a project skeleton.
    Run /project-readme (or /project-specify then /project-product-contract) to populate
    from your specs. Your project README is yours — Speck only manages <!-- SPECK:START --> footer.`);
+  }
+
+  const readmeResult = runReadmeRegen(targetDir);
+  if (readmeResult.ok) {
+    console.log(`\n✅ ${readmeResult.message}`);
+  }
+
+  const crossedProfileEnforcement =
+    parseFloat(String(currentVersion).replace(/^v/, '')) < 7.7 &&
+    parseFloat(String(targetVersion).replace(/^v/, '')) >= 7.7;
+  if (crossedProfileEnforcement) {
+    console.log(`
+📋 PROFILE enforcement (v7.7+): Run /speck-catch-up --phase=profile on existing projects
+   to backfill PROFILE gates in evidence-contract.md and project.md.`);
   }
 
   console.log(`

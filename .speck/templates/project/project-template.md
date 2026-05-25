@@ -116,6 +116,17 @@ project-clarify → context → architecture → design-system → plan
    - Success looks like: [Concrete description]
    - Key metric: [How we measure this]
 
+## PROFILE surfaces
+
+*Public face artifacts — how outsiders first encounter this project. Declared per project; enforced from Speck v7.7+.*
+
+| Surface | Path | Source of truth | Refresh skill |
+|---------|------|-----------------|---------------|
+| Root README | `README.md` | `product-contract.md` Section 1 | `/project-readme` |
+| Package description | `package.json` `description` | README one-liner | `/project-readme --surface=package` |
+| GitHub repo description | (remote) | README one-liner | `gh repo edit --description` |
+| Landing page hero | REPLACE_BEFORE_SHIP: path or epic | product-contract §1 + ui-spec | `/project-readme --surface=landing` |
+
 ## 👥 Target Users
 
 ### Primary User Segments
