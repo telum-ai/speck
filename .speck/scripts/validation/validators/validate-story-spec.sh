@@ -52,7 +52,59 @@ log_success() {
   echo -e "${GREEN}✓${NC} $1" >> "$validation_log"
 }
 
+# Detect lifecycle state from spec.md header
+current_state=$(echo "$content" | grep -E '^\*\*Current State\*\*:' | head -1 | sed -E 's/^\*\*Current State\*\*:[[:space:]]*//' | tr -d '`' | xargs || true)
+
+is_placeholder=false
+if [[ "$current_state" == "Draft (Placeholder)" || "$current_state" == "Draft" ]]; then
+  is_placeholder=true
+fi
+
 # === VALIDATION RULES ===
+
+if [[ "$is_placeholder" == true ]]; then
+  # Placeholder specs (from /epic-breakdown) get loose validation — just check
+  # YAML frontmatter + lifecycle scaffolding. Full validation engages once /story-specify
+  # enhances the spec to "Specified" state.
+
+  if echo "$content" | grep -q "^---$" && echo "$content" | sed -n '/^---$/,/^---$/p' | grep -q "depends_on:"; then
+    log_success "YAML frontmatter with dependency tracking found"
+  else
+    log_error "Missing YAML frontmatter with dependency tracking" \
+      "Add YAML frontmatter at the top of spec.md for orchestration:
+---
+depends_on: []
+blocks: []
+---"
+  fi
+
+  if echo "$content" | grep -qE '^- \[x\] \*\*Draft\*\*'; then
+    log_success "Draft lifecycle checkbox marked"
+  else
+    log_error "Missing Draft lifecycle checkbox" \
+      "Placeholder specs must mark Draft as complete:
+- [x] **Draft** - Placeholder spec.md created by /epic-breakdown"
+  fi
+
+  if echo "$content" | grep -qE '^- \[ \] \*\*Specified\*\*'; then
+    log_success "Specified lifecycle checkbox correctly unchecked"
+  elif echo "$content" | grep -qE '^- \[x\] \*\*Specified\*\*'; then
+    log_error "Placeholder spec must not mark Specified as complete" \
+      "Set **Current State**: Draft (Placeholder) and leave Specified unchecked until /story-specify runs."
+  else
+    log_warning "Missing Specified lifecycle checkbox" \
+      "Add lifecycle tracking with Specified unchecked for placeholders."
+  fi
+
+  clarification_markers=$(echo "$content" | grep -c "\[NEEDS CLARIFICATION" || true)
+  if [ "$clarification_markers" -gt 0 ]; then
+    log_warning "Found $clarification_markers [NEEDS CLARIFICATION] marker(s) in placeholder" \
+      "Placeholders should not introduce clarification markers — resolve during /story-specify."
+  fi
+
+  log_success "Placeholder spec validation mode (loose checks only)"
+else
+  # Full validation for Specified or later lifecycle states
 
 # 1. Check for User Story format
 if echo "$content" | grep -q "As a.*I want.*so that"; then
@@ -201,6 +253,8 @@ if echo "$content" | grep -Eq '^[[:space:]]*(import|from)[[:space:]]' \
 Move technical details to plan.md (created during /story-plan).
 Keep spec.md focused on user value and requirements."
 fi
+
+fi  # end full vs placeholder validation branch
 
 # === OUTPUT RESULTS ===
 

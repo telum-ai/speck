@@ -1,6 +1,6 @@
 {
   "name": "speck",
-  "version": "7.9.0",
+  "version": "7.9.1",
   "description": "Speck methodology CLI",
   "type": "module",
   "bin": {
@@ -10,7 +10,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test packages/cli/lib/sync.readme.test.js && bash .speck/scripts/validation/validators/validate-readme.test.sh"
+    "test": "node --test packages/cli/lib/sync.readme.test.js && bash .speck/scripts/validation/validators/validate-readme.test.sh && bash .speck/scripts/validation/validate-template.test.sh"
   },
   "repository": {
     "type": "git",

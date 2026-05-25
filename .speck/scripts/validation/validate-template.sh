@@ -171,12 +171,35 @@ def is_template_bracket(bracket_content):
     return False
 
 
-# Find suspected bracketed placeholders
-matches = re.finditer(r'\\?\[([^\]]+)\]', content)
+# Pre-compute byte ranges of fenced code blocks (```...```). The placeholder
+# scanner should never flag content inside fenced code blocks — that's literal
+# code/JSON/config, not template placeholders.
+CODE_BLOCK_RE = re.compile(r'```.*?```', re.DOTALL)
+code_block_ranges = [(m.start(), m.end()) for m in CODE_BLOCK_RE.finditer(content)]
+
+
+def is_in_code_block(pos):
+    for start, end in code_block_ranges:
+        if start <= pos < end:
+            return True
+    return False
+
+
+# Find suspected bracketed placeholders.
+# Constrain bracket content to a single line so multi-line code blocks
+# (e.g. JSON config arrays, TypeScript array literals) don't get treated
+# as one giant bracket-placeholder — real template placeholders are
+# always single-line.
+matches = re.finditer(r'\\?\[([^\]\n]+)\]', content)
 for m in matches:
     full_match = m.group(0)
     bracket_content = m.group(1).strip()
     line, _ = line_at(content, m.start())
+
+    # Skip matches inside fenced code blocks — those are literal code,
+    # not template placeholders.
+    if is_in_code_block(m.start()):
+        continue
 
     if is_sha_stamp_line(line):
         continue
@@ -219,6 +242,20 @@ generic_id_patterns = [
 
 for pattern, desc in generic_id_patterns:
     for m in re.finditer(pattern, content):
+        # Skip matches inside fenced code blocks — example code may contain
+        # things like "FR-XXX" as a literal pattern reference, not a placeholder.
+        if is_in_code_block(m.start()):
+            continue
+        # Also skip descriptive mentions like "FR-XXX-shaped" or
+        # "(e.g. FR-XXX)" — citation context, not unreplaced placeholder.
+        line, _ = line_at(content, m.start())
+        if any(phrase in line.lower() for phrase in (
+            "(e.g.", "(e.g ", "format", "naming", "convention", "-shaped", "-style",
+            "(see", " per ", "no formal", "appears", "because", "descriptive",
+            "not " + m.group(0).lower(),
+            "no " + m.group(0).lower(),
+        )):
+            continue
         line_num = content[:m.start()].count('\n') + 1
         errors.append(f"Line {line_num}: Found unreplaced {desc} '{m.group(0)}'.")
 

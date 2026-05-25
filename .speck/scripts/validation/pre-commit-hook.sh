@@ -29,13 +29,22 @@ done < <(git diff --cached --name-only --diff-filter=ACM || true)
 
 errors=0
 
-for spec in "${staged_specs[@]}"; do
-  echo -e "${BLUE}🔍 Validating: $spec...${NC}"
-  if ! bash .speck/scripts/validation/validate-template.sh --strict "$spec"; then
-    echo -e "${RED}❌ Validation failed for $spec.${NC}"
-    errors=$((errors + 1))
-  fi
-done
+# Early-exit when nothing staged, before referencing the array (set -u safe)
+if [[ ${#staged_specs[@]} -eq 0 && "$staged_readme" == false ]]; then
+  echo -e "${GREEN}✓ No Speck specifications or README staged for commit.${NC}"
+  exit 0
+fi
+
+# Bash 3+ safe array expansion when the array may be empty under `set -u`
+if [[ ${#staged_specs[@]} -gt 0 ]]; then
+  for spec in "${staged_specs[@]}"; do
+    echo -e "${BLUE}🔍 Validating: $spec...${NC}"
+    if ! bash .speck/scripts/validation/validate-template.sh --strict "$spec"; then
+      echo -e "${RED}❌ Validation failed for $spec.${NC}"
+      errors=$((errors + 1))
+    fi
+  done
+fi
 
 if [[ "$staged_readme" == true ]]; then
   echo -e "${BLUE}🔍 Validating: README.md (PROFILE)...${NC}"
@@ -43,11 +52,6 @@ if [[ "$staged_readme" == true ]]; then
     echo -e "${RED}❌ Validation failed for README.md.${NC}"
     errors=$((errors + 1))
   fi
-fi
-
-if [[ ${#staged_specs[@]} -eq 0 && "$staged_readme" == false ]]; then
-  echo -e "${GREEN}✓ No Speck specifications or README staged for commit.${NC}"
-  exit 0
 fi
 
 if [[ "$errors" -gt 0 ]]; then

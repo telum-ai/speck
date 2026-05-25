@@ -1,5 +1,24 @@
 # Speck Changelog
 
+## v7.9.1 — 2026-05-25 — Validator robustness pass
+
+Fixes five false-positive / lifecycle-blindness classes in the pre-commit validation pipeline reported during a Platform-level E000 session (see `feedback.md`).
+
+### Pre-commit hook (V1)
+- **`pre-commit-hook.sh`** — empty `staged_specs` array no longer fails with `unbound variable` under `set -u`; early-exit before array expansion when no specs or README are staged
+
+### Placeholder scanner (V2–V4)
+- **Multi-line bracket false-positive** — bracket regex constrained to single lines (`[^\]\n]+`) so multi-line TypeScript/JSON/YAML blocks are not treated as one giant placeholder
+- **Fenced code block skip** — Python scanner ignores all content inside ` ``` ` blocks (eliminates substring hits like `[{ "name": "next" }]`)
+- **Generic-ID descriptive references** — `FR-XXX`-style mentions in citation context (`(e.g. FR-XXX)`, `-style`, `no FR-XXX`, `descriptive`, etc.) no longer flagged as unreplaced template tokens
+
+### Story spec lifecycle (V5)
+- **`validate-story-spec.sh`** — `Draft (Placeholder)` specs from `/epic-breakdown` get loose validation (YAML frontmatter + Draft checkbox only); full user-story/FR/Purpose gates engage once `/story-specify` advances to `Specified`
+
+### Regression tests
+- **`.speck/scripts/validation/test-fixtures/`** — known-good fixtures for each false-positive class
+- **`validate-template.test.sh`** — wired into `npm test`
+
 ## v7.9.0 — 2026-05-25 — Visual assets pipeline + autonomous LARP playback
 
 Engine-and-Steering-Wheel release: deterministic CLI engines for LARP playback, context compaction, learning-tag enforcement, and programmatic validation gates — all wired into skills so agents never need to "break the glass."
