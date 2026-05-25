@@ -506,7 +506,7 @@ Based on context, provide helpful hints:
 - After contracts are done → "Run `/project-context` (or Platform foundation commands `/project-domain`, `/project-ux` if Platform play level)"
 - After context → "Optional: `/project-constitution` → `/project-architecture` (required if Platform or Build with 4+ epics)"
 - After architecture → "Optional: `/project-design-system` → `/project-plan`"
-- After plan → "Optional: `/project-roadmap` → `/project-analyze` (or `/recheck`) → `/project-validate`"
+- After plan → "Canonical next step is beginning epic development via `/epic-specify` (Optional planning gates: `/project-roadmap` → `/project-analyze` to inspect plan quality). Do NOT run `/project-validate` yet — it is strictly the final post-implementation release gate."
 - **Play `platform`** or default (no `project.json`) **and** complexity 3–4 → suggest Platform flow: `/project-specify` → `/project-clarify` → `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-evidence-contract` → `/project-plan`
 - **Play `build`** → suggest Build flow: `/project-specify` → `/project-clarify` → `/project-product-contract` → `/project-evidence-contract` → `/project-context` → `[/project-architecture if cross-system]` → `/project-plan` (and remind that 4+ epics trigger required architecture + ux-strategy)
 - Brownfield import → Follow the unified flow starting with `/project-import` → `/speck-scan` → `/project-specify` → then follow Play Level phases.
