@@ -160,6 +160,12 @@ case "$filename" in
   epic-tech-spec.md)
     validation_type="epic-tech-spec"
     ;;
+  product-contract.md)
+    validation_type="product-contract"
+    ;;
+  evidence-contract.md)
+    validation_type="evidence-contract"
+    ;;
   *)
     # Not a tracked template, skip
     exit 0
@@ -188,5 +194,11 @@ case "$validation_type" in
     ;;
   epic-tech-spec)
     bash "$SCRIPT_DIR/validators/validate-epic-tech-spec.sh" $strict_flag "$file_path"
+    ;;
+  product-contract)
+    bash "$SCRIPT_DIR/validators/validate-product-contract.sh" $strict_flag "$file_path"
+    ;;
+  evidence-contract)
+    bash "$SCRIPT_DIR/validators/validate-evidence-contract.sh" $strict_flag "$file_path"
     ;;
 esac

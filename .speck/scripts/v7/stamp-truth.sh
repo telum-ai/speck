@@ -1,0 +1,1 @@
+../stamp-truth.sh

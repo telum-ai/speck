@@ -1,5 +1,20 @@
 # Speck Changelog
 
+## v7.5.0 — 2026-05-25 — Speck v7 Script Consolidation & Contract Validation
+
+Speck v7.5.0 completes our validation coverage by introducing first-class template validators for the project-level contracts (Product Contract and Evidence Contract), while consolidating duplicated v7 scripts to enforce a single source of truth.
+
+### 1. Script Consolidation & Symlink Parity (Single Source of Truth)
+*   **Behavior Before**: Duplicate versions of core methodology scripts (like `stamp-truth.sh`, `staleness-check.sh`, `banned-language-lint.sh`) were maintained under `.speck/scripts/` and `.speck/scripts/v7/`. These versions frequently diverged, leading to silent bugs where older scripts were missing features (like dynamic version parsing).
+*   **Behavior After**: Completely deleted legacy files (`migrate-to-v7.sh` and `add-recipe-evidence-defaults.sh`) and consolidated duplicated files under `.speck/scripts/v7/` into relative symbolic links pointing directly back to their parent folder equivalents. This establishes a clean, unified execution base with zero-drift.
+
+### 2. First-Class Promise & Prove Contract Validators
+*   **Behavior Before**: While story and epic template structures were strictly validated by git and editor hooks, the Product Contract (governing the Paid Promise) and Evidence Contract (governing target platforms and proof sources) were completely unvalidated, allowing incorrect or incomplete contract files to pass through unnoticed.
+*   **Behavior After**: Built two brand new, custom validation scripts under `.speck/scripts/validation/validators/`:
+    *   `validate-product-contract.sh`: Validates YAML frontmatter, enforces the existence of Sections 1 to 7, and strictly blocks unreplaced `REPLACE_BEFORE_SHIP` placeholders.
+    *   `validate-evidence-contract.sh`: Validates YAML frontmatter, enforces the existence of target platforms, valid/invalid proof sources, and sections 1 to 6.
+    *   Updated the central `validate-template.sh` router to automatically parse and dispatch `product-contract.md` and `evidence-contract.md` files to their new validators.
+
 ## v7.4.0 — 2026-05-24 — Speck v7 Claude-First Compatibility & Advanced Orchestration
 
 Speck v7.4.0 is a major upgrade leveraging modern Claude Code automation, scheduled loops, and specialized agent teams, while establishing a robust, host-agnostic validation core that guarantees zero regressions and flawless compatibility for Cursor and Codex.

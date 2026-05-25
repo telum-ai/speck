@@ -1,0 +1,1 @@
+../banned-phrase-detector.sh

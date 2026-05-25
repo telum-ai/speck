@@ -1,0 +1,1 @@
+../banned-language-lint.sh
