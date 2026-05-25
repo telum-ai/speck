@@ -4,7 +4,6 @@
 
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync, statSync } from 'fs';
 import { join, basename, dirname } from 'path';
-import { readlineInteractive } from './feedback.js'; // Helper for CLI prompting if needed
 
 // Standard node readline
 import readline from 'readline';

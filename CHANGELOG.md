@@ -1,5 +1,9 @@
 # Speck Changelog
 
+## v7.9.2 — 2026-05-25 — larp-play import fix
+
+- **`larp-play.js`** — remove unused `readlineInteractive` import from `feedback.js` (would fail at module load if the export is absent)
+
 ## v7.9.1 — 2026-05-25 — Validator robustness pass
 
 Fixes five false-positive / lifecycle-blindness classes in the pre-commit validation pipeline reported during a Platform-level E000 session (see `feedback.md`).
