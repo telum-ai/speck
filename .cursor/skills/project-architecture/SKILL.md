@@ -299,7 +299,7 @@ This command benefits from parallel subagent execution:
    - Review architecture document
    - Validate against current implementation
    - Plan refactoring epics if needed
-   - Continue with epic development and implementation
+   - Continue with /project-validate
    ```
    
    **For GREENFIELD**:
@@ -321,9 +321,9 @@ This command benefits from parallel subagent execution:
    
    Next Steps:
    - Recommended: /project-roadmap (epic timeline and resource allocation)
-   - Then: /project-plan (to synthesize PRD + epics)
-   - Begin epic development (for each epic: /epic-specify → /epic-plan)
-   - Note: Do NOT run /project-validate yet. Under Speck v7, /project-validate is strictly the final post-implementation release gate run only after ALL epics are validated.
+   - Then: /project-validate (architecture and plan review)
+   - If approved: Begin epic development
+   - For each epic: /epic-specify → /epic-architecture → /epic-plan
    ```
 
 ## Architecture Validation
@@ -353,11 +353,8 @@ Phase 3: Technical Design (BEFORE planning!)
 Phase 4: Planning
 /project-plan (creates PRD using foundation + architecture inputs)
 
-Phase 5: Implementation (Epic & Story development)
-per epic: /epic-specify → /epic-plan → stories...
-
-Phase 6: Final Release Validation (POST-IMPLEMENTATION)
-/project-validate (runs end-to-end JTBD smoke test after ALL epics are completed)
+Phase 5: Validation
+/project-validate
 ```
 
 The architecture informs:

@@ -17,7 +17,7 @@ $ARGUMENTS
 ```
 .speck/templates/project/project-analysis-report-template.md
 ```
-The template defines required sections and formatting for `project-analysis-report.md`. Reading it first ensures your findings land in a structured report. Note: /project-analyze is a planning-phase design check. It should NOT be confused with /project-validate, which is the final post-implementation end-to-end release gate.
+The template defines required sections and formatting for `project-analysis-report.md`. Reading it first ensures your findings land in the structure that downstream project-validate expects.
 
 **Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 

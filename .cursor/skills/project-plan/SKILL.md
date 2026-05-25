@@ -347,8 +347,8 @@ This command benefits from parallel execution:
    3. Optional: /project-roadmap (for epic timeline and dependencies)
       - If you intentionally skipped /project-design-system and later decide you need it, run /project-design-system and then update PRD.md accordingly (or re-run /project-plan to re-synthesize PRD + epics with design-system inputs).
    4. Quality gates:
-      - /project-analyze (deep quality analysis of design/plan)
-      - Note: Do NOT run /project-validate yet. Under Speck v7, /project-validate is strictly the final post-implementation release gate run only after ALL epics are validated.
+      - /project-analyze (deep quality analysis)
+      - /project-validate (go/no-go decision)
    5. Begin epic development:
       - cd epics/E001-[epic-name]
       - /epic-specify (enhances the placeholder epic.md)
