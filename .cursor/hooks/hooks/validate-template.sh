@@ -23,7 +23,7 @@ if [[ -z "$file_path" || "$file_path" == "null" ]]; then
   exit 0
 fi
 
-# Run core Speck validation
-bash .speck/scripts/validation/validate-template.sh "$file_path"
+# Run core Speck validation in strict mode
+bash .speck/scripts/validation/validate-template.sh --strict "$file_path"
 
 exit 0

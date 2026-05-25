@@ -16,6 +16,7 @@ const ALWAYS_OVERWRITE = [
   '.speck/patterns',
   '.speck/recipes',
   '.speck/scripts',
+  '.speck/scripts/validation',
   '.speck/README.md',
   '.speck/VERSION',
   '.cursor/skills',
@@ -398,6 +399,75 @@ function symlinkCursorDir(targetDir, runtimeDir, relativeDir) {
 }
 
 /**
+ * Escape regex special characters in a string
+ */
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Install or update the Git pre-commit hook loader safely and non-destructively
+ */
+function installPreCommitHook(targetDir, verbose = false) {
+  const gitDir = join(targetDir, '.git');
+  if (!existsSync(gitDir)) return;
+
+  const hooksDir = join(gitDir, 'hooks');
+  if (!existsSync(hooksDir)) {
+    try {
+      mkdirSync(hooksDir, { recursive: true });
+    } catch (e) {
+      if (verbose) console.log(`  ⚠️  Failed to create Git hooks directory: ${e.message}`);
+      return;
+    }
+  }
+
+  const preCommitPath = join(hooksDir, 'pre-commit');
+  const loaderStart = '# === SPECK HOOK START ===';
+  const loaderEnd = '# === SPECK HOOK END ===';
+  
+  const loaderContent = `${loaderStart}
+if [ -f .speck/scripts/validation/pre-commit-hook.sh ]; then
+  bash .speck/scripts/validation/pre-commit-hook.sh
+fi
+${loaderEnd}`;
+
+  try {
+    let hookContent = '';
+    let isNew = true;
+
+    if (existsSync(preCommitPath)) {
+      hookContent = readFileSync(preCommitPath, 'utf-8');
+      isNew = false;
+    }
+
+    if (hookContent.includes(loaderStart) && hookContent.includes(loaderEnd)) {
+      // Safely replace the old block with the new block (keeps it updated)
+      const regex = new RegExp(`${escapeRegExp(loaderStart)}[\\s\\S]*?${escapeRegExp(loaderEnd)}`);
+      hookContent = hookContent.replace(regex, loaderContent);
+      writeFileSync(preCommitPath, hookContent, { mode: 0o755 });
+      if (verbose) console.log('  ✅ Updated Speck pre-commit Git hook loader');
+    } else {
+      // Append the block to existing hook or write new
+      if (isNew) {
+        hookContent = `#!/usr/bin/env bash\n\n${loaderContent}\n`;
+      } else {
+        hookContent = hookContent.trimEnd() + `\n\n${loaderContent}\n`;
+      }
+      writeFileSync(preCommitPath, hookContent, { mode: 0o755 });
+      if (verbose) console.log('  ✅ Installed Speck pre-commit Git hook loader');
+    }
+    
+    // Ensure it is executable on Unix
+    try {
+      execSync(`chmod +x "${preCommitPath}"`, { stdio: 'ignore' });
+    } catch {}
+  } catch (error) {
+    if (verbose) console.log(`  ⚠️  Failed to install Git pre-commit hook: ${error.message}`);
+  }
+}
+
+/**
  * Plan and execute smart sync
  */
 export function smartSync(sourceDir, targetDir, options = {}) {
@@ -598,6 +668,9 @@ export function smartSync(sourceDir, targetDir, options = {}) {
       results.errors.push({ file: deletedFile, error: error.message });
     }
   }
+  
+  // 6. Install or update Git pre-commit hook loader
+  installPreCommitHook(targetDir, verbose);
   
   return results;
 }
