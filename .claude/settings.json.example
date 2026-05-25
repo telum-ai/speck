@@ -46,7 +46,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Verify if the current story tasks are fully documented. Ensure tasks.md status reflects completion in YAML frontmatter. If any critical phase decisions were locked, check that they are logged in project-decisions-log.md. If everything is in order, respond with {\"ok\": true}. Otherwise, return {\"ok\": false, \"reason\": \"List what remains before exiting\"}."
+            "prompt": "Verify task completion and decision logging state before exit. Guidelines:\n1. Under Speck v7, `tasks.md` is strictly a STORY-LEVEL artifact. NEVER create or require `tasks.md` at the project level or workspace root.\n2. If you are actively working inside a story directory (`specs/projects/*/epics/E###-*/stories/S###-*/`), verify that story's `tasks.md` status matches the completion state in its YAML frontmatter.\n3. If you are working at the project level, check for `project-punch-list.md` (or `sprint-log.md` if on Sprint level) rather than `tasks.md`.\n4. If any critical phase decisions were locked during this session, verify they are captured in `project-decisions-log.md`.\n\nIf everything aligns, return {\"ok\": true}. Otherwise, return {\"ok\": false, \"reason\": \"List what remains before exiting\"}."
           }
         ]
       }

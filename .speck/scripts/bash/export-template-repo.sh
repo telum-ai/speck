@@ -166,8 +166,10 @@ EOF
 
 # Ensure hook scripts are executable in exported repo
 chmod +x "$OUT_DIR/.cursor/hooks/hooks/"*.sh 2>/dev/null || true
-chmod +x "$OUT_DIR/.cursor/hooks/hooks/validators/"*.sh 2>/dev/null || true
+chmod +x "$OUT_DIR/.claude/hooks/"*.sh 2>/dev/null || true
 chmod +x "$OUT_DIR/.speck/scripts/bash/"*.sh 2>/dev/null || true
+chmod +x "$OUT_DIR/.speck/scripts/validation/"*.sh 2>/dev/null || true
+chmod +x "$OUT_DIR/.speck/scripts/validation/validators/"*.sh 2>/dev/null || true
 
 if [[ "$JSON_MODE" = true ]]; then
   if command -v python3 >/dev/null 2>&1; then
