@@ -1,5 +1,13 @@
 # Speck Changelog
 
+## v7.5.2 — 2026-05-25 — Pre-commit placeholder false-positive fix
+
+Patch release tightening the template placeholder scanner so legitimate spec content no longer blocks commits.
+
+### Pre-commit placeholder validation
+- **Behavior Before**: The placeholder scanner (added in v7.5.0) flagged any bracketed text with a space as an unreplaced template token — including SHA stamp footers, prose annotations like `[moved E007]`, and lines that cite template markers in passing.
+- **Behavior After**: Allowlists SHA stamp footers, skips citation-context lines, and only flags brackets that match known template placeholder patterns. Documented `git commit --no-verify` as the intentional bypass in `pre-commit-hook.sh`.
+
 ## v7.5.1 — 2026-05-25 — Methodology ordering fixes and timeless templates
 
 Patch release correcting misleading phase guidance and removing historical version chatter from core templates.
