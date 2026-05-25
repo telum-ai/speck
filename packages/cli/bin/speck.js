@@ -30,6 +30,8 @@ import { incubate } from '../lib/commands/incubate.js';
 import { promote } from '../lib/commands/promote.js';
 import { feedback } from '../lib/commands/feedback.js';
 import { reconcileSettingsCommand } from '../lib/commands/reconcile-settings.js';
+import { larpPlay } from '../lib/commands/larp-play.js';
+import { compressCommand, decompressCommand } from '../lib/commands/compress.js';
 import { migrateToV7 } from '../lib/migrate.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -53,6 +55,9 @@ COMMANDS
   incubate          Propose one lean JTBD bet from recent repo signals
   feedback          Draft a feedback note (catchup/recipe/methodology/etc.) for review/submission
   reconcile-settings  Sync Speck-managed Claude hook blocks from settings.json.example
+  larp-play         Run autonomous persona-based LARP playback / manual walkthrough
+  compress          Compact active story subdirectories of a validated epic into an archive
+  decompress        Restore active story subdirectories of a compacted epic from an archive
   help              Show this help message
 
 OPTIONS
@@ -64,6 +69,9 @@ OPTIONS
   --topic <name>    Feedback topic: catchup|migration|recipe|methodology|cli|docs|other
   --message "<s>"   Inline feedback message (skips interactive prompt)
   --auto            Non-interactive mode for feedback (writes file with placeholders)
+  --persona <id>    Target persona script to run in larp-play
+  --url <url>       Target base URL for larp-play (default: http://localhost:3000)
+  --epic <id>       Target epic directory for context compaction / restoration
 
 EXAMPLES
   npx github:telum-ai/speck init
@@ -105,6 +113,20 @@ async function main() {
   const daysIndex = args.indexOf('--days');
   if (daysIndex !== -1 && args[daysIndex + 1]) {
     options.days = Number(args[daysIndex + 1]);
+  }
+
+  // Parse --persona and --url options
+  const personaIndex = args.indexOf('--persona');
+  if (personaIndex !== -1 && args[personaIndex + 1]) {
+    options.persona = args[personaIndex + 1];
+  }
+  const urlIndex = args.indexOf('--url');
+  if (urlIndex !== -1 && args[urlIndex + 1]) {
+    options.url = args[urlIndex + 1];
+  }
+  const epicIndex = args.indexOf('--epic');
+  if (epicIndex !== -1 && args[epicIndex + 1]) {
+    options.epic = args[epicIndex + 1];
   }
 
   // Get version argument for upgrade command
@@ -159,6 +181,18 @@ async function main() {
 
       case 'reconcile-settings':
         await reconcileSettingsCommand(process.cwd(), options);
+        break;
+
+      case 'larp-play':
+        await larpPlay(process.cwd(), options);
+        break;
+
+      case 'compress':
+        await compressCommand(process.cwd(), options.epic, options);
+        break;
+
+      case 'decompress':
+        await decompressCommand(process.cwd(), options.epic, options);
         break;
 
       case 'help':

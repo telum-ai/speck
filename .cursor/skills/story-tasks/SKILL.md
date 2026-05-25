@@ -77,7 +77,10 @@ The template defines required task format, ordering rules, parallel-marker synta
    - Accessibility requirements and keyboard interactions
    - Design tokens + component usage rules
    - Microcopy/content guidelines
-   - Use these details to generate concrete UI tasks (with exact file paths and acceptance checks)
+   - **Visual Assets Manifest** (Required Assets table) — Extract all declared assets (logos, SVGs, WebP illustrations)
+   - Use these details to generate concrete UI tasks, including:
+     * **Specific Visual Asset Creation / Optimisation Tasks**: If assets are declared in the ui-spec.md table, automatically generate concrete task(s) in the "Setup" or "Core" phase to create, hand-optimize, and verify each declared SVG or WebP file at its target path (e.g., `[ ] T1.x: Create hand-optimized SVG asset ASSET-LOGO at public/assets/logo.svg`).
+     * UI component tasks with exact file paths and acceptance checks
    
    **Load recipe visual testing config** (if UI story; tight feedback loop):
    - Read `specs/projects/[PROJECT_ID]/project.md` frontmatter for `_active_recipe:`

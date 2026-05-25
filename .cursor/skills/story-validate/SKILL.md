@@ -260,6 +260,11 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
    - From `git diff --name-only` + ui-spec/wireframes, list the 1–3 screens/components most impacted
    - For each, capture: default + loading + empty + error (as applicable)
    - Capture at least one interaction state (hover/focus/pressed) if specified in ui-spec.md
+   
+   **LOCAL-FIRST MULTI-MODAL VISUAL REVIEW (CRITICAL FOR AGENTS)**:
+   - If screenshots are captured in `larp-recordings/*.png`, and you are a multi-modal AI agent, **you MUST use the `Read` tool on these image files** to visually inspect the actual rendered UI.
+   - Do NOT just look at the HTML/CSS code; analyze the real visual rendering for typography hierarchy, active negative space, layout consistency, and brand alignment.
+   - Use these visual readings to assign the Aesthetic Grade and First-Time Comprehension rating based on *actual visual evidence*, citing the specific screenshot path you read.
  
    **Execute Platform Pattern (recipe-driven)**:
    - Load `.cursor/skills/visual-testing-web/SKILL.md` (or platform-specific skill) and follow it

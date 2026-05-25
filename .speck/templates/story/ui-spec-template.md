@@ -37,6 +37,24 @@ If **Yes**:
 
 ---
 
+## 🎨 Visual Assets Requirements
+
+Does this story require creating or modifying visual assets (e.g. logos, brand illustrations, icons, custom SVGs, high-fidelity WebP bitmaps)?
+
+- [ ] Yes (declare and list required assets below)
+- [ ] No
+
+### Declared Visual Assets Manifest
+For every asset marked "Yes", you **MUST** declare its attributes here. These will be programmatically validated during `/story-tasks` (generating custom creation tasks) and `/story-validate` (enforcing compile-ready SVGs/WebP files existence).
+
+| Asset ID | Target Path | Format (SVG/WebP) | Dimensions | Visual Intent & Brand Personality Alignment | Alt Text / Aria-Label | Status |
+|----------|-------------|-------------------|------------|---------------------------------------------|-----------------------|--------|
+| ASSET-[ID] | `public/assets/...` | [SVG/WebP] | [WxH] | [Description of how it aligns with the Design Philosophy and Bold Choices] | [Aria label description] | [Pending/Created] |
+
+*All assets must follow the SVG-First rule: no low-quality PNGs or placeholder clip-art for vector graphics. SVGs must be hand-optimized, clean, and use the project's design tokens (colors, curves).*
+
+---
+
 ## 📦 Component Overview
 
 **Component Name**: [Name]  

@@ -22,12 +22,16 @@ $ARGUMENTS
      * ERROR "This story's spec.md is still a Draft placeholder — `/story-specify` has not been run yet. Complete the specification before implementing."
 
    **Step B — Verify the full prerequisite chain**:
+   - Run the deterministic prerequisite check script:
+     ```bash
+     bash .speck/scripts/validation/check-story-prereqs.sh {STORY_DIR}
+     ```
    - `{STORY_DIR}/spec.md` — REQUIRED (ERROR if missing: "Run `/story-specify` first")
    - `{STORY_DIR}/plan.md` — REQUIRED (ERROR if missing: "Run `/story-plan` first")
    - `{STORY_DIR}/tasks.md` — REQUIRED (ERROR if missing: "Run `/story-tasks` first")
    - `{STORY_DIR}/analysis-report.md` — REQUIRED (ERROR if missing: "Run `/story-analyze` first — it is non-negotiable")
 
-   All four must exist before a single line of implementation code is written.
+   All four must exist and the prerequisite script must exit with 0 before a single line of implementation code is written.
 
    **⚠️ PRE-IMPLEMENTATION CHECK**:
    Verify `analysis-report.md` has no CRITICAL issues unresolved. If it does:

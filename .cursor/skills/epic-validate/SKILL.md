@@ -176,10 +176,14 @@ Each auditor returns PASS | FAIL | PARTIAL with evidence.
    - `specs/projects/[PROJECT_ID]/ux-strategy.md` → Voice/tone, accessibility
    
    **Aggregate Story Visual Results**:
-   - Collect screenshots from all `stories/[STORY_ID]/screenshots/`
-   - Check each story's validation-report.md for visual validation section
-   - Aggregate design token compliance percentages
-   - Aggregate accessibility audit results
+   - Collect screenshots from all story `larp-recordings/` and story validation folders.
+   - Check each story's validation-report.md for visual validation section.
+   - Aggregate design token compliance percentages.
+   - Aggregate accessibility audit results.
+   
+   **LOCAL-FIRST MULTI-MODAL VISUAL REVIEW (CRITICAL FOR AGENTS)**:
+   - If screenshots or recordings exist, and you are a multi-modal AI agent, **you MUST use the `Read` tool on these image files** to visually inspect the overall coherence, layouts, spacing, and brand feel of the epic.
+   - Evaluate the screens against the user journey touchpoints to ensure transitions and page flows feel integrated and smooth, citing the specific screenshot path read in your review.
    
    **Wireframe Adherence Check**:
    - Compare implemented screens against wireframes.md layouts

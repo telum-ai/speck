@@ -548,6 +548,24 @@ design-system/
 
 ---
 
+## 🎨 Visual Assets Registry
+
+This section serves as the single source of truth for all custom visual assets used across the product. Every custom illustration, brand logo, icon set, or marketing asset must be registered here before deployment.
+
+### Asset Manifest Rules
+1. **SVG First**: All brand elements, icons, and non-complex illustrations must be implemented as clean, optimized, semantic SVGs (stored in `public/assets/` or `src/assets/`). No generic AI-placeholder PNGs or clip-art.
+2. **WebP for Bitmaps**: High-fidelity photographic illustrations or complex graphics must use WebP with descriptive alt text and properly sized fallback resolutions.
+3. **Registration Requirement**: Every custom visual asset must be declared below with its file path, dimensions, visual style, and semantic meaning.
+
+### Registered Assets
+
+| Asset ID | File Path | Format | Dimensions | Visual Style & Purpose | Alt Text / Semantic Label |
+|----------|-----------|--------|------------|------------------------|---------------------------|
+| ASSET-LOGO | `public/assets/logo.svg` | SVG | 120x32 | Handcrafted, minimal geometric wordmark with custom brand colors. | "Speck brand minimal logo" |
+| ASSET-HERO | `public/assets/hero-illustration.svg` | SVG | 800x600 | Clean vector illustration expressing premium minimalism and generous breathing room. | "Premium, minimalistic developer workspace with warm desk colors" |
+
+---
+
 ## 🔄 Governance
 
 ### Change Process

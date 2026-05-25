@@ -581,6 +581,68 @@ ${loaderEnd}`;
 }
 
 /**
+ * Install or update the Git commit-msg hook loader safely and non-destructively
+ */
+function installCommitMsgHook(targetDir, verbose = false) {
+  const gitDir = join(targetDir, '.git');
+  if (!existsSync(gitDir)) return;
+
+  const hooksDir = join(gitDir, 'hooks');
+  if (!existsSync(hooksDir)) {
+    try {
+      mkdirSync(hooksDir, { recursive: true });
+    } catch (e) {
+      if (verbose) console.log(`  ⚠️  Failed to create Git hooks directory: ${e.message}`);
+      return;
+    }
+  }
+
+  const commitMsgPath = join(hooksDir, 'commit-msg');
+  const loaderStart = '# === SPECK COMMIT-MSG HOOK START ===';
+  const loaderEnd = '# === SPECK COMMIT-MSG HOOK END ===';
+  
+  const loaderContent = `${loaderStart}
+if [ -f .speck/scripts/validation/commit-msg-hook.sh ]; then
+  bash .speck/scripts/validation/commit-msg-hook.sh "$1"
+fi
+${loaderEnd}`;
+
+  try {
+    let hookContent = '';
+    let isNew = true;
+
+    if (existsSync(commitMsgPath)) {
+      hookContent = readFileSync(commitMsgPath, 'utf-8');
+      isNew = false;
+    }
+
+    if (hookContent.includes(loaderStart) && hookContent.includes(loaderEnd)) {
+      // Safely replace the old block with the new block (keeps it updated)
+      const regex = new RegExp(`${escapeRegExp(loaderStart)}[\\s\\S]*?${escapeRegExp(loaderEnd)}`);
+      hookContent = hookContent.replace(regex, loaderContent);
+      writeFileSync(commitMsgPath, hookContent, { mode: 0o755 });
+      if (verbose) console.log('  ✅ Updated Speck commit-msg Git hook loader');
+    } else {
+      // Append the block to existing hook or write new
+      if (isNew) {
+        hookContent = `#!/usr/bin/env bash\n\n${loaderContent}\n`;
+      } else {
+        hookContent = hookContent.trimEnd() + `\n\n${loaderContent}\n`;
+      }
+      writeFileSync(commitMsgPath, hookContent, { mode: 0o755 });
+      if (verbose) console.log('  ✅ Installed Speck commit-msg Git hook loader');
+    }
+    
+    // Ensure it is executable on Unix
+    try {
+      execSync(`chmod +x "${commitMsgPath}"`, { stdio: 'ignore' });
+    } catch {}
+  } catch (error) {
+    if (verbose) console.log(`  ⚠️  Failed to install Git commit-msg hook: ${error.message}`);
+  }
+}
+
+/**
  * Plan and execute smart sync
  */
 export function smartSync(sourceDir, targetDir, options = {}) {
@@ -785,8 +847,9 @@ export function smartSync(sourceDir, targetDir, options = {}) {
     }
   }
   
-  // 7. Install or update Git pre-commit hook loader
+  // 7. Install or update Git pre-commit and commit-msg hook loaders
   installPreCommitHook(targetDir, verbose);
+  installCommitMsgHook(targetDir, verbose);
   
   return results;
 }

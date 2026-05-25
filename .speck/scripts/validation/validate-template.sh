@@ -260,6 +260,12 @@ case "$filename" in
   evidence-contract.md)
     validation_type="evidence-contract"
     ;;
+  ui-spec.md)
+    validation_type="visual-assets"
+    ;;
+  validation-report.md|epic-validation-report.md)
+    validation_type="readiness-evidence"
+    ;;
   *)
     # Not a tracked template, skip
     exit 0
@@ -294,5 +300,11 @@ case "$validation_type" in
     ;;
   evidence-contract)
     bash "$SCRIPT_DIR/validators/validate-evidence-contract.sh" $strict_flag "$file_path"
+    ;;
+  visual-assets)
+    bash "$SCRIPT_DIR/validators/validate-visual-assets.sh" "$file_path" "$strict"
+    ;;
+  readiness-evidence)
+    bash "$SCRIPT_DIR/validators/validate-readiness-evidence.sh" "$(dirname "$file_path")" "$strict"
     ;;
 esac
