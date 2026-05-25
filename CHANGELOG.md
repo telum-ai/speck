@@ -1,5 +1,17 @@
 # Speck Changelog
 
+## v7.5.1 — 2026-05-25 — Methodology ordering fixes and timeless templates
+
+Patch release correcting misleading phase guidance and removing historical version chatter from core templates.
+
+### 1. Project-validate ordering (skills)
+- **Behavior Before**: Several skills (`project-plan`, `project-architecture`, `speck`) suggested running `/project-validate` immediately after planning or `/project-analyze`, before epic implementation — treating it as a design go/no-go gate.
+- **Behavior After**: Skills now state that `/project-analyze` is a planning-phase quality check and `/project-validate` is strictly the final post-implementation release gate (after all epics are validated).
+
+### 2. Timeless template copy (no narrative version labels)
+- **Behavior Before**: Core templates embedded comparative copy (`Speck v7`, `v6`, `v7.2+`) in comments and hardcoded `speck v7.0.0` footer examples, leaking migration history into every new project artifact.
+- **Behavior After**: Sanitized `product-contract`, `evidence-contract`, `project-decisions-log`, `experience-chain`, and `story` templates — version-neutral guidance, `PLACEHOLDER CONVENTION` without version suffixes, and `Speck Version` fields left for `stamp-truth.sh` at verify time.
+
 ## v7.5.0 — 2026-05-25 — Speck v7 Script Consolidation & Contract Validation
 
 Speck v7.5.0 completes our validation coverage by introducing first-class template validators for the project-level contracts (Product Contract and Evidence Contract), while consolidating duplicated v7 scripts to enforce a single source of truth.
