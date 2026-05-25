@@ -1,0 +1,1 @@
+../regenerate-project-readme.sh

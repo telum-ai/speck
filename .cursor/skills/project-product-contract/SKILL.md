@@ -162,6 +162,8 @@ Apply SHA stamp:
 
 Run `/project-state` to regenerate `project-state.md` with the new contract reflected.
 
+**Then automatically invoke `/project-readme`** (run `.speck/scripts/regenerate-project-readme.sh`) to refresh the root README elevator pitch from the paid promise. Do not wait for the user to ask.
+
 ### 8. Report to user
 
 ```
@@ -188,6 +190,7 @@ Next steps:
 - ALWAYS apply SHA stamp on write
 - ALWAYS log decisions to `project-decisions-log.md`
 - ALWAYS trigger `/project-state` regeneration on write
+- ALWAYS trigger `/project-readme` after `/project-state` on write
 
 ## Integration Points
 

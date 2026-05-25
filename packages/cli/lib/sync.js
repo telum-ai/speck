@@ -66,7 +66,7 @@ const SMART_MERGE_FILES = {
  * Files that should be skipped if user has customized them
  */
 const SKIP_IF_CUSTOMIZED = {
-  'README.md': isReadmeCustomized,
+  // v7.6.0: README.md handled by syncProjectReadme() — not copied from Speck repo
   // REMOVED (v4.3.0): orchestrator disabled
   // '.github/workflows/copilot-setup-steps.yml': isCopilotSetupCustomized,
 };
@@ -267,21 +267,134 @@ function copyMcpExample(sourceContent, targetContent) {
 }
 
 // ============================================================
-// Skip-if-customized detection
+// Project README (root) — project identity, not Speck marketing
 // ============================================================
 
+const PROJECT_README_TEMPLATE = '.speck/templates/project/readme-template.md';
+
 /**
- * Check if README.md has been customized from template
+ * Read the project README skeleton template from the target workspace
  */
-function isReadmeCustomized(sourceContent, targetContent) {
-  if (!targetContent) return false;
-  
-  // Compare first line - if different, user customized it
-  const sourceFirstLine = sourceContent.split('\n')[0];
-  const targetFirstLine = targetContent.split('\n')[0];
-  
-  return sourceFirstLine !== targetFirstLine;
+export function readProjectReadmeTemplate(targetDir) {
+  const templatePath = join(targetDir, PROJECT_README_TEMPLATE);
+  if (!existsSync(templatePath)) {
+    return null;
+  }
+  return readFileSync(templatePath, 'utf-8');
 }
+
+/**
+ * Extract the managed footer block (SPECK:START..END) from template content
+ */
+export function extractReadmeFooter(templateContent) {
+  const match = templateContent.match(/<!-- SPECK:START -->[\s\S]*?<!-- SPECK:END -->/);
+  return match ? match[0] : null;
+}
+
+/**
+ * Detect legacy Speck marketing README copied by pre-v7.6 init/upgrade
+ */
+export function isSpeckMarketingReadme(content) {
+  if (!content) return false;
+  const firstLine = content.split('\n')[0].trim();
+  if (!firstLine.startsWith('# Speck')) return false;
+  return (
+    content.includes('Spec-driven development methodology') ||
+    content.includes('npx github:telum-ai/speck init')
+  );
+}
+
+/**
+ * Merge project README — user content before SPECK:START preserved, footer updated
+ */
+export function mergeReadme(templateContent, targetContent) {
+  if (!targetContent) {
+    return { content: templateContent, action: 'create' };
+  }
+
+  const footer = extractReadmeFooter(templateContent);
+  if (!footer) {
+    return { content: targetContent, action: 'skip' };
+  }
+
+  const beforeMatch = targetContent.match(/^([\s\S]*?)<!-- SPECK:START -->/);
+  const userBefore = beforeMatch ? beforeMatch[1].trimEnd() : targetContent.trimEnd();
+
+  const afterMatch = targetContent.match(/<!-- SPECK:END -->([\s\S]*)$/);
+  const userAfter = afterMatch ? afterMatch[1].trim() : '';
+
+  let merged = userBefore ? userBefore + '\n\n' : '';
+  merged += footer;
+  if (userAfter) {
+    merged += '\n\n' + userAfter;
+  }
+  merged += '\n';
+
+  return { content: merged, action: 'merge' };
+}
+
+/**
+ * Sync root README.md — never copy Speck repo marketing README
+ */
+function syncProjectReadme(targetDir, results, verbose = false) {
+  const readmePath = join(targetDir, 'README.md');
+  const templateContent = readProjectReadmeTemplate(targetDir);
+
+  if (!templateContent) {
+    results.errors.push({
+      file: 'README.md',
+      error: `Missing template at ${PROJECT_README_TEMPLATE}`,
+    });
+    return { repaired: false };
+  }
+
+  try {
+    const targetContent = existsSync(readmePath)
+      ? readFileSync(readmePath, 'utf-8')
+      : null;
+
+    if (!targetContent) {
+      mkdirSync(dirname(readmePath), { recursive: true });
+      writeFileSync(readmePath, templateContent);
+      results.created.push('README.md');
+      if (verbose) console.log('  ✅ Created: README.md (project skeleton)');
+      return { repaired: false };
+    }
+
+    if (isSpeckMarketingReadme(targetContent)) {
+      writeFileSync(readmePath, templateContent);
+      results.updated.push('README.md');
+      if (verbose) {
+        console.log('  🔧 Repaired: README.md (replaced Speck marketing with project skeleton)');
+      }
+      return { repaired: true };
+    }
+
+    if (targetContent.includes('<!-- SPECK:START -->') && targetContent.includes('<!-- SPECK:END -->')) {
+      const result = mergeReadme(templateContent, targetContent);
+      if (result.action === 'skip') {
+        results.skipped.push('README.md');
+        if (verbose) console.log('  ⏭️  Skipped: README.md');
+        return { repaired: false };
+      }
+      writeFileSync(readmePath, result.content);
+      results.merged.push('README.md');
+      if (verbose) console.log('  ✅ Merged: README.md (footer only)');
+      return { repaired: false };
+    }
+
+    results.skipped.push('README.md');
+    if (verbose) console.log('  ⏭️  Skipped: README.md (user-owned, no SPECK markers)');
+    return { repaired: false };
+  } catch (error) {
+    results.errors.push({ file: 'README.md', error: error.message });
+    return { repaired: false };
+  }
+}
+
+// ============================================================
+// Skip-if-customized detection
+// ============================================================
 
 /**
  * Check if copilot-setup-steps.yml has been customized
@@ -597,25 +710,24 @@ export function smartSync(sourceDir, targetDir, options = {}) {
   for (const [file, isCustomizedFn] of Object.entries(SKIP_IF_CUSTOMIZED)) {
     const sourcePath = join(sourceDir, file);
     const targetPath = join(targetDir, file);
-    
+
     if (!existsSync(sourcePath)) continue;
-    
+
     try {
       const sourceContent = readFileSync(sourcePath, 'utf-8');
-      const targetContent = existsSync(targetPath) 
-        ? readFileSync(targetPath, 'utf-8') 
+      const targetContent = existsSync(targetPath)
+        ? readFileSync(targetPath, 'utf-8')
         : null;
-      
+
       if (targetContent && isCustomizedFn(sourceContent, targetContent)) {
         results.skipped.push(file);
         if (verbose) console.log(`  ⏭️  Skipped (customized): ${file}`);
         continue;
       }
-      
-      // Not customized or doesn't exist - copy it
+
       mkdirSync(dirname(targetPath), { recursive: true });
       writeFileSync(targetPath, sourceContent);
-      
+
       if (targetContent) {
         results.updated.push(file);
         if (verbose) console.log(`  ✅ Updated: ${file}`);
@@ -627,8 +739,12 @@ export function smartSync(sourceDir, targetDir, options = {}) {
       results.errors.push({ file, error: error.message });
     }
   }
-  
-  // 4. Symlink Cursor runtime directories into .claude and .codex for cross-tool parity
+
+  // 4. Sync project README (never copy Speck repo marketing README)
+  const readmeSync = syncProjectReadme(targetDir, results, verbose);
+  results.readmeRepaired = readmeSync.repaired;
+
+  // 5. Symlink Cursor runtime directories into .claude and .codex for cross-tool parity
   for (const runtimeDir of ['.claude', '.codex']) {
     for (const relativeDir of ['skills', 'agents']) {
       try {
@@ -645,7 +761,7 @@ export function smartSync(sourceDir, targetDir, options = {}) {
     }
   }
 
-  // 5. Remove files that were deleted from Speck
+  // 6. Remove files that were deleted from Speck
   for (const deletedFile of REMOVE_FILES) {
     const targetPath = join(targetDir, deletedFile);
     
@@ -669,7 +785,7 @@ export function smartSync(sourceDir, targetDir, options = {}) {
     }
   }
   
-  // 6. Install or update Git pre-commit hook loader
+  // 7. Install or update Git pre-commit hook loader
   installPreCommitHook(targetDir, verbose);
   
   return results;

@@ -78,7 +78,7 @@ export async function upgrade(targetDir, version, options = {}) {
     console.log('  • .cursor/hooks/hooks.json: Your hooks merged with Speck hooks');
     console.log('  • .cursor/mcp.json: Your config takes precedence');
     console.log('  • .claude + .codex: Runtime symlinks to .cursor/skills + .cursor/agents');
-    console.log('  • README.md: Skipped if customized');
+    console.log('  • README.md: Project skeleton, footer merge, or Speck-marketing auto-repair');
     console.log('  • copilot-setup-steps.yml: Skipped if customized');
     console.log('  • Everything else: Always updated');
     console.log('  • Removed files: Files deleted from Speck will be removed from your project\n');
@@ -111,6 +111,13 @@ export async function upgrade(targetDir, version, options = {}) {
   } catch (err) {
     console.log(`⚠️  Post-upgrade migration encountered an error: ${err.message}`);
     console.log('   The upgrade itself succeeded. Run `bash .speck/scripts/migrate.sh <project>` manually if needed.');
+  }
+
+  if (results.readmeRepaired) {
+    console.log(`
+🔧 README repaired: replaced legacy Speck marketing content with a project skeleton.
+   Run /project-readme (or /project-specify then /project-product-contract) to populate
+   from your specs. Your project README is yours — Speck only manages <!-- SPECK:START --> footer.`);
   }
 
   console.log(`
@@ -169,5 +176,7 @@ To check for future updates:
 
 To share feedback on this upgrade (no telemetry, you submit the file yourself):
   npx github:telum-ai/speck feedback --topic migration
+
+README note: root README.md is your project's public face. Methodology docs: .speck/README.md
 `);
 }

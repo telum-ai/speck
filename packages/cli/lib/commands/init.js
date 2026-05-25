@@ -37,7 +37,7 @@ export async function init(targetDir, options = {}) {
     console.log('  • .cursor/hooks/hooks.json: Your hooks merged with Speck hooks');
     console.log('  • .cursor/mcp.json: Your config takes precedence');
     console.log('  • .claude + .codex: Runtime symlinks to .cursor/skills + .cursor/agents');
-    console.log('  • README.md: Skipped if customized');
+    console.log('  • README.md: Project skeleton (or footer merge only — never Speck marketing)');
     console.log('  • copilot-setup-steps.yml: Skipped if customized');
     console.log('  • Everything else: Always updated\n');
     console.log('Run without --dry-run to apply changes.');
@@ -70,9 +70,10 @@ export async function init(targetDir, options = {}) {
 ⏭️  Skipped: ${results.skipped.length} files
 
 Next steps:
-  1. Review the created files
-  2. Configure MCP servers in .cursor/mcp.json (copy from .cursor/mcp.json.example)
-  3. Run /speck to start your project!
+  1. Review the created files — root README.md is YOUR project identity (not Speck marketing)
+  2. Methodology docs live at .speck/README.md
+  3. Configure MCP servers in .cursor/mcp.json (copy from .cursor/mcp.json.example)
+  4. Run /speck to start your project!
 
 To check for updates later:
   npx github:telum-ai/speck check

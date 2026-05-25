@@ -1,5 +1,25 @@
 # Speck Changelog
 
+## v7.6.0 — 2026-05-25 — README ownership + PROFILE pillar
+
+Minor release fixing root README identity confusion and introducing PROFILE as a fourth methodology pillar.
+
+### Root README ownership (CLI)
+- **Behavior Before**: `speck init` copied Speck marketing content to root `README.md`. `speck upgrade` silently overwrote it whenever the first line still read `# Speck 🥓`.
+- **Behavior After**: Init writes a project skeleton from `.speck/templates/project/readme-template.md`. Upgrade merges only the `<!-- SPECK:START -->` footer, auto-repairs legacy Speck-marketing READMEs, and never copies the Speck repo README to projects.
+
+### `/project-readme` skill + regeneration script
+- New `.speck/scripts/regenerate-project-readme.sh` fills scaffold sections from `project.md`, `product-contract.md`, and `project-state.md` while preserving user-edited content.
+- Wired into `/project-specify`, `/project-product-contract`, `/project-state`, `/recheck`, and `/speck-catch-up` finalize — README evolves with the canonical workflow, not manual-only.
+
+### PROFILE pillar
+- Extended mental model: PROMISE → BUILD → PROVE → **PROFILE** (public face).
+- Root `README.md` is the center-of-gravity PROFILE artifact; drift vs `product-contract.md` flagged on `/recheck`.
+
+### Other
+- `speck feedback`: fixed workspace `.speck/project.json` detection; added PROFILE friction signals.
+- Docs updated for dual-README distinction (root vs `.speck/README.md`).
+
 ## v7.5.2 — 2026-05-25 — Pre-commit placeholder false-positive fix
 
 Patch release tightening the template placeholder scanner so legitimate spec content no longer blocks commits.

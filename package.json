@@ -1,6 +1,6 @@
 {
   "name": "speck",
-  "version": "7.5.2",
+  "version": "7.6.0",
   "description": "Speck methodology CLI",
   "type": "module",
   "bin": {
@@ -8,6 +8,9 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test packages/cli/lib/sync.readme.test.js"
   },
   "repository": {
     "type": "git",

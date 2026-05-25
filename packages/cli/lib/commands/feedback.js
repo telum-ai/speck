@@ -43,23 +43,31 @@ function gitMeta(cwd) {
   }
 }
 
+function isSpeckMarketingReadme(content) {
+  if (!content) return false;
+  const firstLine = content.split('\n')[0].trim();
+  if (!firstLine.startsWith('# Speck')) return false;
+  return (
+    content.includes('Spec-driven development methodology') ||
+    content.includes('npx github:telum-ai/speck init')
+  );
+}
+
 function detectProjects(cwd) {
+  const workspacePj = readJsonSafe(path.join(cwd, '.speck', 'project.json')) || {};
+  const workspaceVersion = readWorkspaceVersion(cwd);
   const specsDir = path.join(cwd, 'specs', 'projects');
   if (!fs.existsSync(specsDir)) return [];
   return fs.readdirSync(specsDir)
     .filter(d => fs.statSync(path.join(specsDir, d)).isDirectory())
-    .map(d => {
-      const pjPath = path.join(specsDir, d, '.speck', 'project.json');
-      const pj = readJsonSafe(pjPath) || {};
-      return {
-        id: d,
-        path: path.join('specs', 'projects', d),
-        recipe: pj._active_recipe || pj.recipe || null,
-        play_level: pj.play_level || null,
-        project_archetype: pj.project_archetype || null,
-        speck_version: pj.speck_version || null,
-      };
-    });
+    .map(d => ({
+      id: d,
+      path: path.join('specs', 'projects', d),
+      recipe: workspacePj._active_recipe || workspacePj.recipe || null,
+      play_level: workspacePj.play_level || null,
+      project_archetype: workspacePj.project_archetype || null,
+      speck_version: workspacePj.speck_version || workspaceVersion,
+    }));
 }
 
 function readWorkspaceVersion(cwd) {
@@ -74,6 +82,16 @@ function frictionSignals(cwd, projects) {
 
   if (fs.existsSync(path.join(cwd, '.speck', '.migration-needs-catchup'))) {
     signals.push('migration-needs-catchup marker present (catch-up not yet run after upgrade)');
+  }
+
+  const readmePath = path.join(cwd, 'README.md');
+  if (fs.existsSync(readmePath)) {
+    const readme = fs.readFileSync(readmePath, 'utf-8');
+    if (isSpeckMarketingReadme(readme)) {
+      signals.push('PROFILE: root README.md still has legacy Speck marketing content (run speck upgrade or /project-readme)');
+    } else if (!readme.includes('<!-- SPECK:START -->')) {
+      signals.push('PROFILE: root README.md lacks SPECK markers (footer not managed by Speck)');
+    }
   }
 
   for (const p of projects) {

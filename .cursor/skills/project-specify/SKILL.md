@@ -246,6 +246,10 @@ Guide to next steps:
 - **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
 - For most non-Sprint flows, the next canonical step after specification is `/project-clarify` to resolve ambiguities before contracts are locked.
 
+### PROFILE refresh (both modes — mandatory)
+
+After `project.md` is written, **automatically invoke `/project-readme`** (run `.speck/scripts/regenerate-project-readme.sh`) to populate the root README scaffold with project title and spec links. Do not wait for the user to ask.
+
 ---
 
 ## Key Differences Summary

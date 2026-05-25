@@ -13,6 +13,10 @@ PROMISE          BUILD            PROVE
 (the contract) → (the work)   →   (the truth)
                        ↑               │
                        └── drift ──────┘
+                              │
+                              ↓
+                          PROFILE
+                     (the public face)
 ```
 
 | Pillar | Purpose | Center-of-gravity artifact |
@@ -20,8 +24,9 @@ PROMISE          BUILD            PROVE
 | **PROMISE** | What product are we building? Who pays? What's banned? What's magic? | `product-contract.md` |
 | **BUILD** | Implement evidence-producing slices | `spec.md`, `tasks.md`, `experience-chain.md` |
 | **PROVE** | Runtime evidence that promise = reality | `project-state.md`, `evidence-contract.md`, runtime LARP |
+| **PROFILE** | How the project presents itself to outsiders (GitHub, npm, first-time contributors) | Root `README.md` (managed footer + workflow-driven scaffold) |
 
-> Every spec assertion compiles to evidence. Every evidence claim ties to runtime proof. Every truth artifact is SHA-stamped against current HEAD.
+> Every spec assertion compiles to evidence. Every evidence claim ties to runtime proof. Every truth artifact is SHA-stamped against current HEAD. PROFILE surfaces derive from PROMISE + PROVE — drift between README and contracts is externally embarrassing; `/recheck` flags it.
 
 ## 🚦 First Actions on Any Engagement
 
@@ -120,6 +125,14 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Brownfield landscape overview | `project-landscape-overview.md` |
 | Methodology learnings to feed back | (don't create file — use `/speck-learn`) |
 
+### Workspace-level (repo root — not under `specs/`)
+
+| Content type | Canonical home |
+|---|---|
+| GitHub / public project identity | Root `README.md` (user-owned body; Speck manages `<!-- SPECK:START -->` footer) |
+| Agent methodology instructions | `AGENTS.md` (Speck manages `<!-- SPECK:START -->` block) |
+| Speck methodology reference | `.speck/README.md` (always methodology — never project identity) |
+
 ### Epic-level (`specs/projects/<id>/epics/E###-name/`)
 
 | Content type | Canonical home |
@@ -171,7 +184,7 @@ If a user requests bespoke docs (e.g., "create a positioning brief", "make a lau
 
 ### Build flow (1-3 epics)
 ```
-/project-specify → /project-clarify → /project-product-contract → /project-evidence-contract
+/project-specify → /project-clarify → /project-product-contract → /project-readme → /project-evidence-contract
   → /project-context → [/project-architecture if cross-system]
   → /project-plan (creates PRD + epics + E000 infrastructure epic)
   → per epic: /epic-specify → /epic-clarify → [/epic-architecture] → [/epic-experience-chain if UI]
@@ -187,7 +200,7 @@ If a user requests bespoke docs (e.g., "create a positioning brief", "make a lau
 Same as Build but `/project-architecture` and `/project-ux` are required before `/project-plan`.
 
 ### Platform flow
-Full flow: includes `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-evidence-contract` → `/project-plan` → `/project-roadmap`.
+Full flow: includes `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-readme` → `/project-evidence-contract` → `/project-plan` → `/project-roadmap`. `/project-state` keeps README status current after validation gates.
 
 ### Reengagement
 On any new session: read `project-state.md`. If missing or stale (>2 weeks since last verified-against-runtime), run `/recheck` before any feature work.
@@ -205,6 +218,7 @@ These apply at every play level, in every command, on every project:
 | **Skeptical-review** | Before any non-trivial proposal locks | Produce N≥3 alternatives + tradeoff scoring + rationale |
 | **Skeptical audit** | Between `implement` and `validate` | Run `/audit` — auditor doesn't trust the implementer's report |
 | **Runtime LARP** | Every UI story/epic validate gate | Run `/larp [persona]` — produces checked-in evidence |
+| **PROFILE drift check** | Every `/recheck` | Compare root README one-liner vs `product-contract.md`; refresh via `/project-readme` when placeholders remain |
 | **Readiness-state declaration** | At every validate | Claim one of IMPL-GREEN / UX-RC / COMMERCIAL-RC / SHIP-RC / SHIP / NO-SHIP |
 | **SHA stamps** | On every truth artifact write | Footer with `[as of SHA <hash> | verified against runtime <date>]` |
 | **Banned-phrase detector** | In every agent self-summary | Phrases like "ready for launch", "outside autonomous reach", "premium polish complete", "should work in production", "tests pass therefore done" trigger re-audit or enumeration |
@@ -376,7 +390,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 7.5.2  
+**Speck Version**: 7.6.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

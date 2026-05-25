@@ -152,6 +152,8 @@ Footer must include the SHA stamp:
 
 Write to `specs/projects/<PROJECT_ID>/project-state.md` (overwrite).
 
+**Mandatory final step:** Run `.speck/scripts/regenerate-project-readme.sh` (or invoke `/project-readme`) to refresh root README status line and footer. Do not skip — PROFILE drift is externally visible on GitHub.
+
 Report to user:
 ```
 ✅ project-state.md regenerated

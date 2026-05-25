@@ -298,6 +298,10 @@ Validation complements command validation:
 - Hooks catch issues early (during writing)
 - Commands catch issues late (before deployment)
 
+## Scope
+
+Validation applies to **`specs/**/*.md` only**. Root `README.md` is a PROFILE artifact (public face), not a spec — it is not validated by pre-commit or afterFileEdit hooks. Use `/project-readme` to keep it aligned with truth artifacts.
+
 ## Files
 
 ```

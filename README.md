@@ -36,8 +36,11 @@ npx github:telum-ai/speck init
 This sets up:
 - Skill files (`.cursor/skills/` and `.claude/skills/`)
 - Templates (`.speck/templates/`)
+- A **project skeleton** `README.md` at repo root (your product identity — not Speck marketing)
 - Validation hooks (`.cursor/hooks/`)
 - Update workflows (`.github/workflows/`)
+
+Methodology docs live at `.speck/README.md`. Speck only manages the `<!-- SPECK:START -->` footer in your root README.
 
 Runtime source of truth:
 - Canonical runtime source is `.cursor/skills/` + `.cursor/agents/`

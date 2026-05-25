@@ -379,8 +379,9 @@ SHA-stamp this file.
 ### Phase 8 — Clean up
 
 1. Remove this project's entry from the marker file: `sed -i.bak "\\|^$PROJECT_DIR$|d" .speck/.migration-needs-catchup` (keep the file if other projects still need catch-up; delete entirely if empty)
-2. Re-run `/recheck` to confirm the project is no longer in scaffold state
-3. Update `project-state.md` final paragraph: "Catch-up complete. Resume normal v7 workflow."
+2. **Run `/project-readme`** — repair legacy Speck-marketing README if present and populate from backfilled contracts
+3. Re-run `/recheck` to confirm the project is no longer in scaffold state
+4. Update `project-state.md` final paragraph: "Catch-up complete. Resume normal v7 workflow."
 
 ### Phase 9 — Report
 

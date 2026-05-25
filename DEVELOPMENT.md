@@ -120,7 +120,8 @@ The sync system controls what happens when a project runs `speck init` or `speck
 |----------|----------|-------------|
 | `ALWAYS_OVERWRITE` | Replaced on every upgrade — project customizations are lost | Methodology files, templates, skills, workflows that must stay current |
 | `SMART_MERGE_FILES` | Custom merge function preserves project content | `AGENTS.md` (Speck controls `SPECK:START..END`), `.gitignore`, `hooks.json`, `mcp.json` |
-| `SKIP_IF_CUSTOMIZED` | Skipped if the project has modified the file | `README.md`, one-time setup files |
+| `SKIP_IF_CUSTOMIZED` | Skipped if the project has modified the file | One-time setup files (v7.6.0: README handled separately — see below) |
+| **Project README** | Dedicated handler in `syncProjectReadme()` | Root `README.md` — skeleton on init, footer merge on upgrade, auto-repair legacy Speck marketing |
 | `SKIP_PATTERNS` | Never synced to projects | Test files, internal tooling |
 | `REMOVE_FILES` | **Deleted from projects** on upgrade | Deprecated files, removed features |
 

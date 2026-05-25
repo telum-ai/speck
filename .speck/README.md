@@ -34,6 +34,10 @@ PROMISE          BUILD            PROVE
 (the contract) → (the work)   →   (the truth)
                        ↑               │
                        └── drift ──────┘
+                              │
+                              ↓
+                          PROFILE
+                     (the public face)
 ```
 
 Every Speck project lives in this loop:
@@ -43,8 +47,22 @@ Every Speck project lives in this loop:
 | **PROMISE** | What product are we building? Who pays? What's banned? What's magic? | `product-contract.md` |
 | **BUILD** | Implement evidence-producing slices | `spec.md`, `tasks.md`, `experience-chain.md` |
 | **PROVE** | Runtime evidence that promise = reality | `project-state.md`, `evidence-contract.md`, runtime LARP |
+| **PROFILE** | How the project presents itself to outsiders | Root `README.md` (via `/project-readme`) |
 
-The loop closes via drift detection: when PROVE finds gaps, PROMISE artifacts update; never the other way around.
+The loop closes via drift detection: when PROVE finds gaps, PROMISE artifacts update; never the other way around. PROFILE derives from PROMISE + PROVE — when your GitHub README says "Speck methodology" instead of your product name, that's PROFILE drift.
+
+---
+
+## 📄 Root README vs `.speck/README.md`
+
+These are **two different audiences** — do not symlink them:
+
+| File | Audience | Content |
+|------|----------|---------|
+| **Root `README.md`** | GitHub visitors, contributors, `ls` | Your **project identity** — what the product is, how to get started |
+| **`.speck/README.md`** | AI agents learning Speck | **Methodology docs** — always updated by `speck upgrade` |
+
+On `speck init`, Speck writes a **project skeleton** README (not Speck marketing). Speck only manages the `<!-- SPECK:START -->` … `<!-- SPECK:END -->` footer on upgrade. The `/project-readme` skill (and `/project-state` regeneration) keeps status and cross-links current.
 
 ---
 
@@ -448,5 +466,5 @@ v6 commands (`/story-analyze`, `/epic-outline`, `/story-outline`, `/project-scan
 
 ---
 
-**Speck Version**: 7.0.0
-**Methodology**: Promise → Build → Prove (evidence-driven specification)
+**Speck Version**: 7.6.0
+**Methodology**: Promise → Build → Prove + Profile (evidence-driven specification)

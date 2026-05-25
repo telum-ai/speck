@@ -142,7 +142,7 @@ jobs:
           - **.gitignore**: Your entries merged with Speck defaults
           - **.cursor/hooks/hooks.json**: Your hooks merged with Speck hooks
           - **.cursor/mcp.json**: Your config takes precedence
-          - **README.md**: Skipped if you customized it
+          - **README.md**: Project skeleton on init; footer merge on upgrade (never Speck marketing)
           - **copilot-setup-steps.yml**: Skipped if you customized it
           PREOF
           
