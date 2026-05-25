@@ -1,5 +1,33 @@
 # Speck Changelog
 
+## v7.9.0 — 2026-05-25 — Visual assets pipeline + autonomous LARP playback
+
+Engine-and-Steering-Wheel release: deterministic CLI engines for LARP playback, context compaction, learning-tag enforcement, and programmatic validation gates — all wired into skills so agents never need to "break the glass."
+
+### Autonomous LARP Player
+- **`speck larp-play`** — headless Playwright playback of persona scripts from `personas/*.md`; guided manual walkthrough fallback when Playwright is unavailable
+- Captures screenshots and accessibility trees to `larp-recordings/` for evidence-backed validation
+
+### Learning-tag commit hook
+- **`.speck/scripts/validation/commit-msg-hook.sh`** — enforces `PATTERN:` / `GOTCHA:` / `PERF:` / `ARCH:` / `RULE:` / `DEBT:` tags on code commits
+- Platform play level: hard block; Build/Sprint: friendly warning
+- Auto-installed via `speck upgrade` / `speck init` sync (`installCommitMsgHook` in `sync.js`)
+
+### Context compaction
+- **`speck compress`** — bundles validated epic story folders into `.speck/archive/<project>-<epic>-stories.tar.gz`; generates `validated-summary.md`
+- **`speck decompress`** — restores story directories on demand
+
+### Visual assets pipeline
+- **`design-system-template.md`** — Visual Assets Registry section
+- **`ui-spec-template.md`** — Declared Visual Assets Manifest table
+- **`story-tasks`** skill — auto-generates asset creation tasks from ui-spec manifest
+- **`validate-visual-assets.sh`** — programmatic SVG/WebP existence and well-formedness checks
+
+### Readiness evidence + pre-impl gates
+- **`validate-readiness-evidence.sh`** — blocks `UX-RC`+ claims without `larp-recordings/` evidence files
+- **`check-story-prereqs.sh`** — deterministic gate before `/story-implement` (spec/plan/tasks/analysis-report)
+- **`story-validate` / `epic-validate`** — local-first multi-modal visual review instructions for agents (Read tool on screenshots)
+
 ## v7.8.0 — 2026-05-25 — Claude settings sync + lifecycle Stop hook
 
 Fixes Stop-hook infinite loops on epic/project sessions and closes the silent-drift gap for `.claude/settings.json`.
