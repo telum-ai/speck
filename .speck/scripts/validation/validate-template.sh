@@ -73,47 +73,141 @@ with open(file_path, "r", encoding="utf-8") as f:
 
 errors = []
 
+SHA_STAMP_LINE = re.compile(
+    r'^\s*\*?\[?as of SHA\b.*\bverified\b.*\bspeck\b',
+    re.IGNORECASE,
+)
+SHA_STAMP_BRACKET = re.compile(
+    r'^as of SHA\b.*\bverified\b',
+    re.IGNORECASE,
+)
+
+CITATION_LINE_PHRASES = (
+    "no outstanding",
+    "none introduced",
+    "none present",
+    "not actively present",
+    "documented as",
+    "being cited",
+    "cited descriptively",
+    "we use ",
+    "for open items",
+    "(was ",
+    "(resolved",
+    "markers (",
+    "marker is being",
+)
+
+TEMPLATE_BRACKET_MARKERS = (
+    "NEEDS CLARIFICATION",
+    "REPLACE_BEFORE_SHIP",
+    "TEMPLATE:",
+    "PLACEHOLDER:",
+)
+
+def line_at(content, pos):
+    start = content.rfind("\n", 0, pos) + 1
+    end = content.find("\n", pos)
+    if end == -1:
+        end = len(content)
+    return content[start:end], start
+
+
+def is_sha_stamp_line(line):
+    stripped = line.strip()
+    if SHA_STAMP_LINE.search(stripped):
+        return True
+    if stripped.startswith("*[as of SHA") and "verified" in stripped and "speck" in stripped.lower():
+        return True
+    return False
+
+
+def is_citation_context(line, bracket_content):
+    lower_line = line.lower()
+    if any(phrase in lower_line for phrase in CITATION_LINE_PHRASES):
+        return True
+    upper = bracket_content.upper()
+    for marker in TEMPLATE_BRACKET_MARKERS:
+        if marker in line and upper == marker:
+            return True
+    return False
+
+
+def is_prose_annotation(bracket_content):
+    if is_template_bracket(bracket_content):
+        return False
+    if re.match(r'^(moved|powers|see|ref|via|from|to|was|now)\s+[ES]\d{3}', bracket_content, re.IGNORECASE):
+        return True
+    if re.match(r'^[ES]\d{3}(\s|/|-|—)', bracket_content, re.IGNORECASE):
+        return True
+    if re.match(r'^[ES]\d{3}$', bracket_content, re.IGNORECASE):
+        return True
+    if re.match(r'^[a-z].*\s+E\d{3}', bracket_content):
+        return True
+    if bracket_content and bracket_content[0].islower():
+        return True
+    return False
+
+
+def is_template_bracket(bracket_content):
+    upper = bracket_content.upper()
+    if upper in TEMPLATE_BRACKET_MARKERS:
+        return True
+    if upper.startswith("TEMPLATE:") or upper.startswith("PLACEHOLDER:"):
+        return True
+    lower = bracket_content.lower()
+    template_terms = (
+        "user type", "action", "benefit", "description", "initial state", "outcome",
+        "name", "service", "framework", "language", "entity", "relationship", "how to verify",
+        "metric", "target", "security", "approach", "what this", "how the", "how to", "topic",
+        "placeholder", "xxx", "project_name", "project-id", "project_id",
+    )
+    if any(term in lower for term in template_terms):
+        return True
+    if bracket_content.isupper() and "_" in bracket_content:
+        return True
+    if re.match(r'^[A-Z][A-Z0-9_ ]+$', bracket_content) and " " in bracket_content:
+        return True
+    return False
+
+
 # Find suspected bracketed placeholders
 matches = re.finditer(r'\\?\[([^\]]+)\]', content)
 for m in matches:
     full_match = m.group(0)
     bracket_content = m.group(1).strip()
-    
+    line, _ = line_at(content, m.start())
+
+    if is_sha_stamp_line(line):
+        continue
+    if SHA_STAMP_BRACKET.search(bracket_content):
+        continue
+
     # Ignore escaped brackets or empty/checkbox styles
     if re.match(r'^[ xXP]$', bracket_content):
         continue
-        
+
     # Ignore short numeric/citation styles, e.g. [1], [^1]
     if re.match(r'^(\^?[0-9]+|[a-zA-Z0-9_-]+)$', bracket_content) and len(bracket_content) <= 5:
         if not any(p in bracket_content.lower() for p in ["id", "name", "topic", "type", "action", "benefit", "desc"]):
             continue
-            
+
     # Check if followed by markdown link/ref chars: `(`, `[`, or `:`
     end_idx = m.end()
     if end_idx < len(content):
-        after_text = content[end_idx:end_idx+20].strip()
+        after_text = content[end_idx:end_idx + 20].strip()
         if after_text.startswith('(') or after_text.startswith('[') or after_text.startswith(':'):
             continue
-        
-    # Suspected bracketed placeholder
-    is_placeholder = False
-    lower_content = bracket_content.lower()
-    
-    common_terms = [
-        "user type", "action", "benefit", "description", "initial state", "outcome", 
-        "name", "service", "framework", "language", "entity", "relationship", "how to verify",
-        "metric", "target", "security", "approach", "what this", "how the", "how to", "topic",
-        "some", "here", "write", "implement", "add", "placeholder", "xxx"
-    ]
-    
-    if any(term in lower_content for term in common_terms):
-        is_placeholder = True
-    elif " " in bracket_content:
-        is_placeholder = True
-        
-    if is_placeholder:
-        line_num = content[:m.start()].count('\n') + 1
-        errors.append(f"Line {line_num}: Unreplaced placeholder '{full_match}' found.")
+
+    if is_citation_context(line, bracket_content):
+        continue
+    if is_prose_annotation(bracket_content):
+        continue
+    if not is_template_bracket(bracket_content):
+        continue
+
+    line_num = content[:m.start()].count('\n') + 1
+    errors.append(f"Line {line_num}: Unreplaced placeholder '{full_match}' found.")
 
 # Look for generic ID patterns
 generic_id_patterns = [

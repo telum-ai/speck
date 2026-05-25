@@ -3,6 +3,9 @@
 # Speck Git Pre-Commit Hook Guard
 # Intercepts git commit and validates all staged markdown specifications.
 # Ensures that no malformed specifications or unreplaced template placeholders ever reach the branch.
+#
+# To skip intentionally: git commit --no-verify (Git prints a bypass warning).
+# Use only for chore commits with known false positives or emergency fixes.
 
 set -euo pipefail
 
