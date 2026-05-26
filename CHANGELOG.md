@@ -1,5 +1,13 @@
 # Speck Changelog
 
+## v7.10.1 — 2026-05-26 — Orchestrator driving pattern correction
+
+**Fixes v7.10.0 regression**: `/story` and `/epic` orchestrators incorrectly documented that sub-skills should NOT be invoked. That was wrong.
+
+### Skills
+- **`/story` and `/epic`** — **REQUIRED** driving pattern: invoke each downstream skill's `SKILL.md` in canonical order; explicit ANTI-PATTERN list for inline artifact authoring without skill invocation
+- Epic orchestrator MUST delegate per-story work to `/story`
+
 ## v7.10.0 — 2026-05-26 — E000 execution feedback (templates, patterns, validators)
 
 Incorporates post-E000 feedback: version-pin freshness, typecheck in verification, orchestrator clarity, feedback round-trip visibility, and validator fixes V6/V7.
@@ -9,7 +17,7 @@ Incorporates post-E000 feedback: version-pin freshness, typecheck in verificatio
 - **`tasks-template.md`** — Phase 5 verification includes explicit **typecheck** step (Vitest/esbuild masks strict TS errors)
 
 ### Skills (P3)
-- **`/story` and `/epic` orchestrators** — driving-pattern clarification: agent drives chain directly; sub-skills are not auto-invoked
+- **`/story` and `/epic` orchestrators** — ~~driving-pattern clarification: agent drives chain directly~~ **superseded by v7.10.1** — orchestrators MUST invoke downstream skills
 
 ### Methodology docs (P5–P6)
 - **`.speck/templates/feedback/template.md`** — canonical feedback file structure (symptom + repro + patch + proposal)

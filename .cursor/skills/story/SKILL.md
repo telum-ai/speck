@@ -10,9 +10,15 @@ $ARGUMENTS
 
 ## Purpose
 
-`/story` is the **story-level stateful orchestrator**. It automates the progression of a single story from specification to validation, executing the required sequence (`/story-specify` → `/story-clarify` → `/story-plan` → `/story-tasks` → `/story-implement` → `/audit` → `/story-validate` → `/larp` → `/story-retrospective`) deterministically.
+`/story` is the **story-level stateful orchestrator**. It automates the progression of a single story from specification to validation by **invoking downstream skills in canonical order** (`/story-specify` → `/story-clarify` → `/story-plan` → `/story-tasks` → `/story-implement` → `/audit` → `/story-validate` → `/larp` → `/story-retrospective`).
 
-**Driving pattern**: This skill orchestrates the chain via direct file-write/edit/bash by the agent. Sub-skills (`/story-specify`, `/story-plan`, etc.) are NOT auto-invoked via a separate Skill reload — the agent follows the transition map in `### 3. Execution Loop`, reads each step's template when needed, and produces artifacts directly. This keeps context efficient while preserving canonical artifact shape.
+**Driving pattern (REQUIRED)**: For each step in `### 3. Execution Loop`, **read and fully execute** the corresponding skill's `SKILL.md` (and its template, per that skill's FIRST ACTION) before advancing. The orchestrator's job is **progression + stop-gate enforcement** — not re-implementing sub-steps from memory.
+
+**ANTI-PATTERN (do NOT do this)**:
+- ❌ Writing `spec.md`, `plan.md`, or `tasks.md` inline without loading `/story-specify`, `/story-plan`, or `/story-tasks`
+- ❌ Skipping `/story-analyze`, `/audit`, or `/story-validate` because the orchestrator "already knows" the outcome
+- ❌ Jumping to code changes without running `/story-implement` (including its prerequisite gates)
+- ❌ Treating the transition map as a checklist of filenames instead of a checklist of **skills to invoke**
 
 ## Usage Syntax
 
@@ -64,6 +70,8 @@ Read `spec.md` and evaluate its state:
 
 ### 3. Execution Loop (The Transition Map)
 
+For **each** transition below: **invoke the listed skill** (read `.cursor/skills/<skill>/SKILL.md`, follow its procedure end-to-end), then evaluate stop conditions before advancing.
+
 Run the appropriate skills in order. After each command completes successfully, evaluate whether a stop condition is met before transitioning.
 
 ```
@@ -111,6 +119,7 @@ Do NOT transition automatically and stop immediately if any of these occur:
 ## Behavior Rules
 
 - **ALWAYS** check that the story's parent epic is currently active and has not been locked out by other outstanding epic validations.
-- **NEVER** let an agent jump directly to `/story-implement` without checking if all prerequisite artifacts (`spec.md`, `plan.md`, `tasks.md`, `analysis-report.md`) exist and are valid.
+- **ALWAYS** invoke downstream skills by reading their `SKILL.md` — never substitute inline artifact authoring for a skipped skill step.
+- **NEVER** let an agent jump directly to `/story-implement` without running `/story-implement` (including `check-story-prereqs.sh` gate).
 - **ALWAYS** regenerate `project-state.md` upon any state transition.
 - Provide a clear progress bar or status line (e.g. `[Tasks 🟢] → [Implementing 🟡] → [Audit ⚪]`) in each reply.

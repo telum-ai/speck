@@ -10,9 +10,15 @@ $ARGUMENTS
 
 ## Purpose
 
-`/epic` is the **epic-level stateful orchestrator**. Instead of requiring the user to invoke individual commands (`/epic-specify`, `/epic-clarify`, `/epic-plan`, `/epic-breakdown`, `/epic-analyze`, `/epic-validate`) sequentially, `/epic` auto-detects the epic's current state and runs the correct step, driving the lifecycle forward deterministically.
+`/epic` is the **epic-level stateful orchestrator**. It auto-detects the epic's current state and **invokes downstream skills in canonical order** (`/epic-specify`, `/epic-clarify`, `/epic-plan`, `/epic-breakdown`, `/epic-analyze`, story work via `/story`, `/audit`, `/epic-validate`, `/epic-retrospective`).
 
-**Driving pattern**: This skill orchestrates the chain via direct file-write/edit/bash by the agent. Sub-skills (`/epic-specify`, `/epic-plan`, etc.) are NOT auto-invoked via a separate Skill reload — the agent follows the transition map in `### 3. Execution Loop`, reads each step's template when needed, and produces artifacts directly. This keeps context efficient while preserving canonical artifact shape.
+**Driving pattern (REQUIRED)**: For each step in `### 3. Execution Loop`, **read and fully execute** the corresponding skill's `SKILL.md` (and its template, per that skill's FIRST ACTION) before advancing. Story work MUST delegate to `/story` (read `.cursor/skills/story/SKILL.md`) — do not implement stories inline from the epic orchestrator.
+
+**ANTI-PATTERN (do NOT do this)**:
+- ❌ Writing `epic-tech-spec.md` or `epic-breakdown.md` inline without loading `/epic-plan` or `/epic-breakdown`
+- ❌ Implementing stories directly from `/epic` without invoking `/story` for each story
+- ❌ Skipping `/epic-analyze`, `/audit`, or `/epic-validate` because the orchestrator "already knows" the outcome
+- ❌ Treating the transition map as a checklist of filenames instead of a checklist of **skills to invoke**
 
 ## Usage Syntax
 
@@ -60,6 +66,8 @@ Read `epic.md` and evaluate its state:
 
 ### 3. Execution Loop (The Transition Map)
 
+For **each** transition below: **invoke the listed skill** (read `.cursor/skills/<skill>/SKILL.md`, follow its procedure end-to-end), then evaluate stop conditions before advancing. Story work uses `/story` per story in `epic-breakdown.md` order.
+
 Run the appropriate skills in order. After each command completes successfully, evaluate whether a stop condition is met before transitioning.
 
 ```
@@ -102,6 +110,8 @@ Do NOT transition automatically and stop immediately if any of these occur:
 ## Behavior Rules
 
 - **ALWAYS** check for the `E000` Developer Infrastructure epic first. Ensure testing and CI patterns are resolved before allowing other epics to specify.
+- **ALWAYS** invoke downstream skills by reading their `SKILL.md` — never substitute inline artifact authoring for a skipped skill step.
+- **ALWAYS** delegate per-story work to `/story`; the epic orchestrator coordinates sequencing, not story implementation.
 - **NEVER** skip a validation check without an explicit `--skip` argument and its corresponding `project-decisions-log.md` rationale.
 - **ALWAYS** regenerate `project-state.md` upon any state transition.
 - Provide a clear progress bar or status line (e.g. `[Specified 🟢] → [Planning 🟡] → [Planned ⚪]`) in each reply.

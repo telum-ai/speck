@@ -37,11 +37,17 @@ export const FEEDBACK_ADDRESSED_BY_RELEASE = [
     ],
   },
   {
+    version: '7.10.1',
+    items: [
+      { id: 'P3-fix', summary: 'Orchestrator driving pattern corrected — /story and /epic MUST invoke downstream skills, not inline artifacts' },
+    ],
+  },
+  {
     version: '7.10.0',
     items: [
       { id: 'P1', summary: 'Version-pin freshness check in epic-tech-spec template' },
       { id: 'P2', summary: 'typecheck in tasks-template verification phase' },
-      { id: 'P3', summary: '/story and /epic orchestrator driving-pattern clarification' },
+      { id: 'P3', summary: '/story and /epic orchestrators MUST invoke downstream skills (anti-pattern fix in v7.10.1)' },
       { id: 'P4', summary: 'Upgrade output lists addressed feedback items' },
       { id: 'P5', summary: 'Feedback file template at .speck/templates/feedback/template.md' },
       { id: 'P6', summary: 'Constitution-as-code pattern doc' },
