@@ -12,6 +12,7 @@ import {
 import { runPostUpgradeMigrations } from '../migrate.js';
 import { runReadmeRegen } from '../readme.js';
 import { runSettingsReconcile } from '../claude-settings.js';
+import { printFeedbackAddressed } from '../upgrade-feedback.js';
 
 export async function upgrade(targetDir, version, options = {}) {
   console.log('🥓 Upgrading Speck...\n');
@@ -167,6 +168,8 @@ export async function upgrade(targetDir, version, options = {}) {
 🔀 Merged:  ${results.merged.length} files
 🗑️  Removed: ${results.removed.length} files
 ⏭️  Skipped: ${results.skipped.length} files`);
+
+  printFeedbackAddressed(currentVersion, targetVersion);
 
   if (migrationSummary && migrationSummary.projects.length > 0) {
     console.log(`

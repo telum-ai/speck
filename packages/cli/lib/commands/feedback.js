@@ -175,6 +175,8 @@ function generateFeedbackBody({ cwd, topic, message, projects, signals, workspac
 **Repo HEAD**: \`${git.sha}\` on branch \`${git.branch}\`
 **Workspace**: \`${fc}\`
 
+> Structure guide: \`.speck/templates/feedback/template.md\` (symptom + reproduction + patch + proposal format)
+
 ---
 
 ## What I want to share

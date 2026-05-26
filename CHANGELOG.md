@@ -1,5 +1,28 @@
 # Speck Changelog
 
+## v7.10.0 — 2026-05-26 — E000 execution feedback (templates, patterns, validators)
+
+Incorporates post-E000 feedback: version-pin freshness, typecheck in verification, orchestrator clarity, feedback round-trip visibility, and validator fixes V6/V7.
+
+### Templates (P1–P2)
+- **`epic-tech-spec-template.md`** — Version-Pin Freshness Check with `npm view` command + verification table
+- **`tasks-template.md`** — Phase 5 verification includes explicit **typecheck** step (Vitest/esbuild masks strict TS errors)
+
+### Skills (P3)
+- **`/story` and `/epic` orchestrators** — driving-pattern clarification: agent drives chain directly; sub-skills are not auto-invoked
+
+### Methodology docs (P5–P6)
+- **`.speck/templates/feedback/template.md`** — canonical feedback file structure (symptom + repro + patch + proposal)
+- **`.speck/patterns/constitution-as-code.md`** — Platform pattern for ESLint/CI mechanical constitution enforcement
+- **`.speck/scripts/banned-language-lint-staged.sh`** — lint-staged wrapper with auto project-dir detection
+
+### CLI (P4)
+- **`speck upgrade`** — prints which prior feedback items (V1–V7, H1–H4, P1–P6) are addressed by the upgrade
+
+### Validators (V6–V7)
+- **`validate-artifact-docs.sh`** — aligned to v7 AGENTS.md routing; deprecated `epic-outline.md`/`outline.md` removed; README gaps advisory only
+- **`validate-recipes.sh`** — validates `extends:` chain integrity (missing parents, cycles); wired into CI
+
 ## v7.9.2 — 2026-05-25 — larp-play import fix
 
 - **`larp-play.js`** — remove unused `readlineInteractive` import from `feedback.js` (would fail at module load if the export is absent)

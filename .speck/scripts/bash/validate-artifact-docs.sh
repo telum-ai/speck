@@ -3,11 +3,12 @@ set -euo pipefail
 
 # Validates that Speck's primary docs enumerate the full artifact set.
 #
-# This prevents drift where commands/templates produce files that are not reflected
-# in AGENTS.md and .speck/README.md directory structure sections.
+# v7 behavior (V6 fix):
+# - AGENTS.md is the strict source of truth (canonical routing table)
+# - .speck/README.md is checked for v7 center-of-gravity artifacts (warnings only)
+# - Deprecated v6 names (epic-outline.md, outline.md) are NOT required
 #
-# Scope:
-# - Checks methodology docs only (not specs/**)
+# Scope: methodology docs only (not specs/** in user projects)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
@@ -19,91 +20,90 @@ if [[ ! -f "$agents_path" ]]; then
   echo "ERROR: Missing AGENTS.md at repo root" >&2
   exit 1
 fi
-if [[ ! -f "$speck_readme_path" ]]; then
-  echo "ERROR: Missing .speck/README.md" >&2
-  exit 1
-fi
 
-missing=0
+errors=0
+warnings=0
 
-check_in_file() {
+check_agents() {
   local needle="$1"
-  local file="$2"
-  if ! grep -Fq "$needle" "$file"; then
-    echo "❌ Missing in $(basename "$file"): $needle"
-    missing=1
+  if ! grep -Fq "$needle" "$agents_path"; then
+    echo "❌ Missing in AGENTS.md: $needle"
+    errors=1
   fi
 }
 
-check_both() {
+check_readme_warn() {
   local needle="$1"
-  check_in_file "$needle" "$agents_path"
-  check_in_file "$needle" "$speck_readme_path"
+  if [[ ! -f "$speck_readme_path" ]]; then
+    return
+  fi
+  if ! grep -Fq "$needle" "$speck_readme_path"; then
+    echo "⚠️  Missing in .speck/README.md (non-blocking): $needle"
+    warnings=1
+  fi
 }
 
-echo "🔍 Validating artifact coverage in AGENTS.md and .speck/README.md..."
+echo "🔍 Validating artifact coverage (AGENTS.md strict, README.md advisory)..."
 
-# Project-level artifacts (explicit)
-check_both "project.md"
-check_both "context.md"
-check_both "constitution.md"
-check_both "architecture.md"
-check_both "PRD.md"
-check_both "epics.md"
-check_both "ux-strategy.md"
-check_both "design-system.md"
-check_both "project-import.md"
-check_both "project-landscape-overview.md"
-check_both "project-roadmap.md"
-check_both "project-analysis-report.md"
-check_both "project-validation-report.md"
-check_both "project-validation-summary.md"
-check_both "project-punch-list.md"
-check_both "project-retro.md"
+# === AGENTS.md — canonical routing table (Speck v7) ===
 
-# Project-level artifacts (patterns)
-check_both "project-*-research-prompt-*.md"
-check_both "project-*-research-report-*.md"
+# Project-level
+for needle in \
+  project.md product-contract.md evidence-contract.md project-state.md project-decisions-log.md \
+  context.md constitution.md architecture.md PRD.md epics.md \
+  ux-strategy.md design-system.md domain-model.md \
+  project-import.md project-landscape-overview.md \
+  project-recheck-report.md project-audit-report.md project-punch-list.md \
+  sprint-log.md project-retro.md project-validation-report.md \
+  "personas/" "design-system/primitives.md"; do
+  check_agents "$needle"
+done
 
-# Epic-level artifacts (explicit)
-check_both "epic.md"
-check_both "epic-outline.md"
-check_both "epic-architecture.md"
-check_both "epic-tech-spec.md"
-check_both "epic-breakdown.md"
-check_both "epic-analysis-report.md"
-check_both "epic-validation-report.md"
-check_both "epic-punch-list.md"
-check_both "epic-retro.md"
-check_both "user-journey.md"
-check_both "wireframes.md"
+check_agents "project-*-research-report-*.md"
 
-# Epic-level artifacts (patterns)
-check_both "epic-codebase-scan*.md"
-check_both "epic-*-research-prompt-*.md"
-check_both "epic-*-research-report-*.md"
+# Epic-level
+for needle in \
+  epic.md epic-architecture.md epic-tech-spec.md epic-breakdown.md experience-chain.md \
+  user-journey.md wireframes.md audit-report.md epic-validation-report.md \
+  epic-analysis-report.md epic-retro.md; do
+  check_agents "$needle"
+done
 
-# Story-level artifacts (explicit)
-check_both "spec.md"
-check_both "outline.md"
-check_both "plan.md"
-check_both "tasks.md"
-check_both "data-model.md"
-check_both "contracts/"
-check_both "quickstart.md"
-check_both "ui-spec.md"
-check_both "validation-report.md"
-check_both "story-retro.md"
+check_agents "epic-codebase-scan*.md"
+check_agents "epic-*-research-report-*.md"
 
-# Story-level artifacts (patterns)
-check_both "codebase-scan-*.md"
-check_both "story-*-research-prompt-*.md"
-check_both "story-*-research-report-*.md"
+# Story-level
+for needle in \
+  spec.md plan.md tasks.md data-model.md "contracts/" ui-spec.md quickstart.md \
+  validation-report.md story-retro.md; do
+  check_agents "$needle"
+done
 
-if [[ "$missing" -eq 1 ]]; then
+check_agents "codebase-scan-*.md"
+check_agents "story-*-research-report-*.md"
+
+# === .speck/README.md — v7 center-of-gravity (warnings only) ===
+for needle in \
+  product-contract.md evidence-contract.md project-state.md experience-chain.md audit-report.md; do
+  check_readme_warn "$needle"
+done
+
+# Deprecated v6 artifacts must NOT be required
+if grep -Fq "epic-outline.md" "$agents_path" && ! grep -Fq "DEPRECATED" "$agents_path"; then
+  echo "⚠️  AGENTS.md still references epic-outline.md without DEPRECATED marker"
+  warnings=1
+fi
+
+if [[ "$errors" -eq 1 ]]; then
   echo ""
-  echo "❌ Artifact doc validation failed. Update AGENTS.md and/or .speck/README.md to include missing artifacts."
+  echo "❌ Artifact doc validation failed. Update AGENTS.md to include missing canonical artifacts."
   exit 1
 fi
 
+if [[ "$warnings" -eq 1 ]]; then
+  echo ""
+  echo "⚠️  Advisory README gaps found — consider updating .speck/README.md directory structure."
+fi
+
 echo "✅ Artifact doc validation passed"
+exit 0

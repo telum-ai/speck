@@ -12,6 +12,8 @@ $ARGUMENTS
 
 `/story` is the **story-level stateful orchestrator**. It automates the progression of a single story from specification to validation, executing the required sequence (`/story-specify` → `/story-clarify` → `/story-plan` → `/story-tasks` → `/story-implement` → `/audit` → `/story-validate` → `/larp` → `/story-retrospective`) deterministically.
 
+**Driving pattern**: This skill orchestrates the chain via direct file-write/edit/bash by the agent. Sub-skills (`/story-specify`, `/story-plan`, etc.) are NOT auto-invoked via a separate Skill reload — the agent follows the transition map in `### 3. Execution Loop`, reads each step's template when needed, and produces artifacts directly. This keeps context efficient while preserving canonical artifact shape.
+
 ## Usage Syntax
 
 ```bash

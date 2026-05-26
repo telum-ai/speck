@@ -390,11 +390,23 @@ useEffect(() => {
 - [ ] T024 Performance validation: all targets from context.md met
 - [ ] T025 [P] Accessibility audit: WCAG 2.1 AA compliance
 - [ ] T026 [P] Security audit: privacy requirements verified
+- [ ] T027 Local verify: install + lint + **typecheck** + test + build green
+
+```bash
+# Adjust package/filter names to match plan.md (monorepo vs single-package)
+pnpm install
+pnpm --filter web typecheck   # tsc --noEmit — Vitest/esbuild masks strict TS errors!
+pnpm --filter web lint
+pnpm --filter web test
+pnpm --filter web build
+```
+
+**Why typecheck explicitly**: Vitest's esbuild loader strips types — strict-mode TS errors (TS5097, TS2345, etc.) only surface at `tsc --noEmit`. Skipping typecheck locally means CI catches what should have been a pre-push fix.
 
 ## Dependencies
 - Tests (T004-T007) before implementation (T008-T014)
 - T008 blocks T009, T015
-- Implementation before polish (T022-T026)
+- Implementation before polish (T022-T027)
 
 ## Parallel Example
 ```

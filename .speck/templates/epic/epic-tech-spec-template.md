@@ -62,11 +62,28 @@ Describe the end-to-end implementation approach for this epic:
 
 ## Technology Stack
 
-- **Frontend**: [Frameworks/libraries]  
-- **Backend**: [Frameworks/libraries]  
+- **Frontend**: [Frameworks/libraries + pinned versions]  
+- **Backend**: [Frameworks/libraries + pinned versions]  
 - **Database**: [Type + migration approach]  
 - **Infra/Deployment**: [Hosting, CI/CD assumptions]  
 - **Observability**: [Logging/metrics/tracing]  
+
+### Version-Pin Freshness Check (REQUIRED before locking this section)
+
+Version pins MUST be validated against live package registries within **7 days** of authoring this tech spec. Training-data snapshots cannot be trusted for fast-moving tooling.
+
+```bash
+# Run for each pinned npm tool BEFORE committing this tech spec:
+for pkg in next typescript @sentry/nextjs vitest @playwright/test eslint; do
+  echo "$pkg: $(npm view "$pkg" version 2>/dev/null || echo 'N/A — use equivalent for non-npm tools')"
+done
+```
+
+Record the command output (or equivalent for non-npm stacks) in your epic-plan decision log. If a pin is >1 major behind `npm view`, update the pin or document the hold + migration plan in `project-decisions-log.md`.
+
+| Tool | Pinned in spec | Verified (`npm view` / equivalent) | Verified date | Notes |
+|------|----------------|-----------------------------------|---------------|-------|
+| [e.g. next] | [15.x] | [16.x] | [YYYY-MM-DD] | [Upgrade now / defer with DEC] |
 
 ---
 

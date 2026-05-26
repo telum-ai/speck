@@ -426,65 +426,8 @@ jobs:
 
       - name: Validate Speck Recipes
         run: |
-          echo "🍳 Validating Speck recipes..."
-          if [ ! -d ".speck/recipes" ]; then
-            echo "❌ Missing .speck/recipes directory"
-            exit 1
-          fi
-
-          shopt -s nullglob
-          recipes=(.speck/recipes/*/recipe.yaml)
-          if [ ${#recipes[@]} -eq 0 ]; then
-            echo "⚠️  No recipes found under .speck/recipes/*/recipe.yaml"
-            echo "    This is allowed, but recipe detection will have nothing to match."
-            exit 0
-          fi
-
-          failed=0
-          required_keys=("name:" "display_name:" "description:" "version:" "keywords:" "stack:")
-
-          for recipe in "${recipes[@]}"; do
-            echo "  Checking: $recipe"
-            dir_name=$(basename "$(dirname "$recipe")")
-
-            for key in "${required_keys[@]}"; do
-              if ! grep -q "^${key}" "$recipe"; then
-                echo "❌ Missing '${key}' in $recipe"
-                failed=1
-              fi
-            done
-
-            # Ensure name matches directory name (simple consistency rule)
-            recipe_name=$(grep -E "^name:" "$recipe" | head -1 | awk '{print $2}' | tr -d '"' | tr -d "'")
-            if [ -n "$recipe_name" ] && [ "$recipe_name" != "$dir_name" ]; then
-              echo "❌ Recipe name mismatch: directory='$dir_name' but name='$recipe_name' in $recipe"
-              failed=1
-            fi
-
-            # Ensure keywords list is non-empty (at least one keyword item)
-            if ! grep -Eq "^keywords:[[:space:]]*$" "$recipe"; then
-              echo "❌ keywords: must exist as a top-level YAML key in $recipe"
-              failed=1
-            else
-              if ! awk '
-                BEGIN{in_keywords=0; ok=0}
-                /^keywords:[[:space:]]*$/ {in_keywords=1; next}
-                in_keywords==1 && /^[^[:space:]]/ {in_keywords=0}
-                in_keywords==1 && /^[[:space:]]*-[[:space:]]+/ {ok=1}
-                END{exit ok?0:1}
-              ' "$recipe"; then
-                echo "❌ keywords list is empty in $recipe (add at least one '- keyword')"
-                failed=1
-              fi
-            fi
-          done
-
-          if [ $failed -eq 1 ]; then
-            echo "❌ Recipe validation failed"
-            exit 1
-          fi
-
-          echo "✅ Recipes look structurally valid"
+          chmod +x .speck/scripts/validation/validators/validate-recipes.sh
+          bash .speck/scripts/validation/validators/validate-recipes.sh
 
       - name: Validate Project Structure
         run: |
