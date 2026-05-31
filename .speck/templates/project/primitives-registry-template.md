@@ -90,6 +90,27 @@ The audit skill greps for these in story implementations and flags them:
 
 ---
 
+## Rendering Gotchas
+
+Rendering recipes that look correct in code/DOM but produce wrong pixels in the target runtime. Unlike component anti-patterns above, these survive unit tests and code review — only screenshots or grep catch them.
+
+`/audit` and the visual-quality pass grep for the **Grep signature** column against changed UI files. Any raw anti-pattern match outside the **Canonical safe form** is a P1 finding.
+
+| Anti-pattern | Why it looks fine but isn't | Canonical safe form | Grep signature |
+|--------------|----------------------------|---------------------|----------------|
+| Raw gradient text (`bg-clip-text` + `text-transparent` + tight line-height) | DOM/classes are correct; descenders (g, p, y, j, Å, Ø) clip unfilled on iOS WKWebView | Project utility e.g. `.gradient-text-safe` bundling clip + padding + `-webkit-` prefixes | `bg-clip-text` |
+| [Add project-specific gotcha] | [Failure mode in target runtime] | [Safe utility or component] | `[regex or literal]` |
+
+**When to add a row**: A bug recurred 2+ times, passed non-visual gates, and has a grep-able anti-pattern signature.
+
+**When adding**:
+1. Add the row here with a working grep signature
+2. Implement the canonical safe form (utility or primitive)
+3. Replace all raw usages in the codebase
+4. Add a unit test asserting the safe form on affected components
+
+---
+
 ## How `/audit` Detects Drift
 
 ```bash

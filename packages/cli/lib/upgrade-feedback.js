@@ -37,6 +37,14 @@ export const FEEDBACK_ADDRESSED_BY_RELEASE = [
     ],
   },
   {
+    version: '7.12.1',
+    items: [
+      { id: 'M1', summary: 'Rendering Gotchas in primitives registry + audit/visual-quality grep for pixel-level anti-patterns' },
+      { id: 'M2', summary: 'Asset single-source norm + asset-drift-check.sh for duplicate SVG geometry (ASSET_DRIFT.P1 on /recheck)' },
+      { id: 'M3', summary: 'Brownfield UI Rubric Mode in /epic-specify — shared Screen Rubric instead of duplicate wireframes' },
+    ],
+  },
+  {
     version: '7.11.0',
     items: [
       { id: 'P1a', summary: 'Quality Judgment loop (Judge -> Fix -> Re-prove) added to evidence-contract' },

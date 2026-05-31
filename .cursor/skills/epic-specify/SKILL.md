@@ -268,6 +268,8 @@ Create epic directory:
 
     Scan the content of the just-saved `epic.md` and evaluate each optional step. Output a recommendation table with the **specific text or observation from epic.md** that drove each decision — not generic advice.
 
+    **Brownfield vs greenfield UI signal**: Check whether `epic-codebase-scan.md` exists in the epic directory. If it exists and lists existing screens/surfaces the epic will modify (not net-new only), treat the epic as **brownfield UI**.
+
     **Evaluation criteria**:
 
     | Step | 🔴 Required when | ⚠️ Recommended when | ⬜ Skip when |
@@ -275,8 +277,20 @@ Create epic directory:
     | `/epic-clarify` | Acceptance criteria missing or vague; scope boundary unclear; [NEEDS CLARIFICATION] markers remain | Some user stories lack explicit success criteria | All stories have clear, testable acceptance criteria and scope is explicit |
     | `/epic-constitution` | Regulated domain (healthcare, finance, legal, payment, GDPR, HIPAA, SOC2); epic defines an API boundary other epics depend on; multi-team coordination required | Epic introduces domain-specific rules not covered by project constitution | Simple product feature with no compliance or cross-team concerns |
     | `/epic-architecture` | Touches 2+ services/systems; introduces new infrastructure; explicit latency/throughput targets; complex third-party integration not yet used in project | Significantly modifies existing API contracts; introduces new architectural patterns | Simple CRUD following existing project patterns; single-service concern with clear path |
-    | `/epic-journey` + `/epic-wireframes` | Any mention of: UI, screen, page, dashboard, form, modal, user flow, navigation, front-end, UX, design | Epic mixes backend and light UI concerns | Explicitly backend-only, API-only, CLI-only, or infra/devops |
+    | `/epic-journey` + `/epic-wireframes` | **Greenfield UI**: any mention of UI, screen, page, dashboard, form, modal, user flow, navigation, front-end, UX, design AND surfaces are net-new or undefined in codebase | Epic mixes backend and light UI concerns (greenfield) | Explicitly backend-only, API-only, CLI-only, or infra/devops |
+    | **Rubric Mode** (brownfield UI alternative) | **Brownfield UI**: `epic-codebase-scan.md` exists AND epic modifies existing screens/surfaces already shipping in code — use instead of per-surface journey + wireframes | — | Greenfield UI (no existing surfaces) OR backend-only epic |
     | `/epic-outline` | Unfamiliar technology not in architecture.md; TBD/unknown sections present; multiple competing technical approaches | Minor unknowns that could benefit from a research pass | Implementation path clear; follows established patterns |
+
+    **Rubric Mode** (sanctioned brownfield UI path — equivalent to 🔴 Required for journey/wireframes):
+
+    When brownfield UI is detected, recommend **Rubric Mode** instead of `/epic-journey` + `/epic-wireframes`:
+
+    1. Encode a one-page **Native Screen Rubric** (principles + screen anatomy) as an enforced standard in `ux-strategy.md` and/or `design-system/primitives.md`.
+    2. Derive FRs from the rubric; apply surface-by-surface to existing screens listed in `epic-codebase-scan.md`.
+    3. Wireframe **only net-new screens** in their story specs (`ui-spec.md` / story-level wireframes) — do not duplicate wireframes for surfaces that already ship.
+    4. Still run `/epic-experience-chain` if the epic changes cross-screen seams (entry/handoff between existing surfaces).
+
+    Rubric Mode prevents per-surface divergence better than N duplicate wireframe docs for screens that already exist.
 
     **Output format** (fill from actual epic content — no placeholders):
 
@@ -288,8 +302,11 @@ Create epic directory:
     | /epic-clarify              | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
     | /epic-constitution         | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
     | /epic-architecture         | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
-    | /epic-journey + /wireframes| ⬜ / 🔴       | "[specific quote or observation]" |
+    | /epic-journey + /wireframes| ⬜ / 🔴       | "[greenfield UI evidence — or N/A if brownfield]" |
+    | Rubric Mode (brownfield UI) | ⬜ / 🔴      | "[epic-codebase-scan surfaces + brownfield signal]" |
     | /epic-outline              | ⬜ / ⚠️       | "[specific quote or observation]" |
+
+    UI path: [Greenfield → journey + wireframes | Brownfield → Rubric Mode | Backend-only → skip UI artifacts]
 
     Recommended path to /epic-plan:
     → [only Required/Recommended steps in flow order] → /epic-plan
@@ -297,10 +314,15 @@ Create epic directory:
     Shall I proceed with [first recommended step]?
     ```
 
-    **Flow order**: `/epic-clarify` → `/epic-constitution` → `/epic-architecture` → `/epic-journey` → `/epic-wireframes` → `/epic-outline` → `/epic-plan`
+    **Flow order (greenfield UI)**: `/epic-clarify` → `/epic-constitution` → `/epic-architecture` → `/epic-journey` → `/epic-wireframes` → `/epic-outline` → `/epic-plan`
 
-    **If `/epic-journey` or `/epic-wireframes` is 🔴 Required**, add this warning explicitly:
+    **Flow order (brownfield UI — Rubric Mode)**: `/epic-clarify` → `/epic-constitution` → `/epic-architecture` → **encode Screen Rubric in ux-strategy.md / primitives.md** → `/epic-outline` → `/epic-plan` (wireframe net-new screens only in story specs)
+
+    **If `/epic-journey` or `/epic-wireframes` is 🔴 Required (greenfield UI)**, add this warning explicitly:
     > "This epic has user-facing UI — journey mapping and wireframes are required before planning. Skipping them means each story invents its own UI independently, producing a disconnected product."
+
+    **If Rubric Mode is 🔴 Required (brownfield UI)**, add this guidance explicitly:
+    > "This epic modifies existing screens — use Rubric Mode: one shared Screen Rubric in ux-strategy/primitives.md, FRs derived from it, applied surface-by-surface. Wireframe only net-new screens in story specs. Do not generate duplicate wireframes for surfaces that already ship."
 
 ## Example Workflows
 

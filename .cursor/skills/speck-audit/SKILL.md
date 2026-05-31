@@ -97,6 +97,19 @@ Run test suite twice (default + random order). Results differ → P0 finding.
 
 Navigation path, no dev shortcuts, real auth flow.
 
+### 10b. Rendering gotchas grep (UI stories)
+
+If `design-system/primitives.md` exists and has a `## Rendering Gotchas` section:
+
+1. Parse the gotchas table — extract **Grep signature** and **Canonical safe form** from each row (skip placeholder/template rows).
+2. For each grep signature, run against changed UI files in the story scope (`rg` or equivalent on `.tsx`, `.jsx`, `.vue`, `.svelte`, `.css`).
+3. For each match, verify the line also contains the canonical safe form (utility class, component name, or documented exception comment).
+4. Raw anti-pattern without safe form → **P1 finding** ("correct code, wrong pixels — survives TDD").
+
+Example: `bg-clip-text` without `.gradient-text-safe` (or project equivalent) on a headline.
+
+Skip this step if no `## Rendering Gotchas` section exists (project has not registered any yet).
+
 ### 11. Banned-language scan
 
 Run `.speck/scripts/banned-language-lint.sh` against changed files.
@@ -129,7 +142,7 @@ Decision:
 
 ## Integration Points
 
-- Reads: `spec.md`, `plan.md`, `tasks.md`, `evidence-contract.md`, `product-contract.md`, code
+- Reads: `spec.md`, `plan.md`, `tasks.md`, `evidence-contract.md`, `product-contract.md`, `design-system/primitives.md` (Rendering Gotchas), code
 - Writes: `<dir>/audit-report.md`
 - Invokes: `banned-language-lint.sh`, `stamp-truth.sh`
 - Required before: `/story-validate`, `/epic-validate`

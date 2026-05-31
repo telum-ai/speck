@@ -18,6 +18,18 @@ Before implementing any UI, load the project's `design-system.md` and extract:
 
 If `design-system.md` doesn't have these sections, flag it — the project needs a design system upgrade.
 
+Also load `design-system/primitives.md` → **`## Rendering Gotchas`** table (if present). These are anti-patterns that look correct in code but break in the target runtime (e.g., gradient text clipping descenders on iOS WKWebView).
+
+## Rendering Gotchas Check (before commit)
+
+If `design-system/primitives.md` has a `## Rendering Gotchas` section:
+
+1. Parse each row's **Grep signature** and **Canonical safe form**.
+2. Grep changed UI files for each signature.
+3. Any match without the canonical safe form → fix before marking UI done (do not rely on unit tests — these bugs are pixel-level).
+
+Skip if the section is absent or empty.
+
 ## Universal Design Quality Principles
 
 Apply these in EVERY UI implementation, adapted to the project's design system:
@@ -104,7 +116,8 @@ If ANY answer is "no" or "not sure" — iterate before marking done.
 
 ## Integration with Speck Workflow
 
-- **story-implement**: Load design-system.md Bold Choices BEFORE implementing any UI task
+- **story-implement**: Load design-system.md Bold Choices AND primitives.md Rendering Gotchas BEFORE implementing any UI task
+- **speck-audit**: Grep Rendering Gotchas signatures against changed UI files (step 10b)
 - **story-validate**: UI must pass the Aesthetic Quality Gate (BEAUTIFUL or ACCEPTABLE grade)
 - **story-ui-spec**: This is where design taste gets injected — never skip for UI stories
 - **Design tokens**: Use them, but tokens alone don't create beauty — personality does

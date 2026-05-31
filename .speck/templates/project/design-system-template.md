@@ -553,9 +553,12 @@ design-system/
 This section serves as the single source of truth for all custom visual assets used across the product. Every custom illustration, brand logo, icon set, or marketing asset must be registered here before deployment.
 
 ### Asset Manifest Rules
-1. **SVG First**: All brand elements, icons, and non-complex illustrations must be implemented as clean, optimized, semantic SVGs (stored in `public/assets/` or `src/assets/`). No generic AI-placeholder PNGs or clip-art.
-2. **WebP for Bitmaps**: High-fidelity photographic illustrations or complex graphics must use WebP with descriptive alt text and properly sized fallback resolutions.
-3. **Registration Requirement**: Every custom visual asset must be declared below with its file path, dimensions, visual style, and semantic meaning.
+1. **Single-Source Rule**: Brand assets (logo, app icon, favicon, OG image, splash) have **ONE authoring source** — typically a React/SVG component or a single `.svg` file. All platform variants (app icon, favicon, OG, splash) are **generated from it**, never re-authored as duplicate geometry in scripts or other files.
+2. **SVG First**: All brand elements, icons, and non-complex illustrations must be implemented as clean, optimized, semantic SVGs (stored in `public/assets/` or `src/assets/`). No generic AI-placeholder PNGs or clip-art.
+3. **WebP for Bitmaps**: High-fidelity photographic illustrations or complex graphics must use WebP with descriptive alt text and properly sized fallback resolutions.
+4. **Registration Requirement**: Every custom visual asset must be declared below with its file path, dimensions, visual style, and semantic meaning.
+
+`/recheck` runs `.speck/scripts/asset-drift-check.sh` to flag when the same SVG path geometry appears in 2+ source files (silent brand inconsistency).
 
 ### Registered Assets
 

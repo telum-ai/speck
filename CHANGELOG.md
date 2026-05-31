@@ -1,5 +1,14 @@
 # Speck Changelog
 
+## v7.12.1 — 2026-05-31 — Rendering Gotchas, Asset Drift, Brownfield Rubric Mode
+
+Splang methodology feedback (2026-05-31): closes gaps in what truth artifacts and drift detectors track.
+
+### Methodology
+- **Rendering Gotchas** — `## Rendering Gotchas` table in `primitives-registry-template.md`; `/audit` step 10b and visual-quality skill grep anti-pattern signatures from `design-system/primitives.md` (correct code, wrong pixels).
+- **Asset single-source** — Single-Source Rule in `design-system-template.md`; new `asset-drift-check.sh` flags duplicate SVG path geometry across 2+ files; wired into `/recheck` as `ASSET_DRIFT.P1`.
+- **Brownfield Rubric Mode** — `/epic-specify` branches greenfield vs brownfield UI: existing surfaces use Rubric Mode (shared Screen Rubric in ux-strategy/primitives.md) instead of per-surface journey + wireframes.
+
 ## v7.11.1 — 2026-05-31 — Unified README (canonical `.speck/README.md` + root symlink)
 
 ### Documentation
