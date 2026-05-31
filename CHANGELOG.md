@@ -1,5 +1,11 @@
 # Speck Changelog
 
+## v7.11.1 — 2026-05-31 — Unified README (canonical `.speck/README.md` + root symlink)
+
+### Documentation
+- **Single canonical README** — Merged root installation/update/contributor sections into `.speck/README.md` (methodology + setup in one place).
+- **Framework repo symlink** — Root `README.md` is now `README.md → .speck/README.md` so GitHub visitors see the full guide; user projects unchanged (CLI still syncs only `.speck/README.md` and preserves project PROFILE README).
+
 ## v7.11.0 — 2026-05-31 — Template-Drift Detection, Numeric JTBD Scoring & Quality-Judgment Loop
 
 Addresses GitHub Issue #60 (methodology — evidence quality and judgment gaps).
