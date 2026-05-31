@@ -86,7 +86,6 @@ export async function upgrade(targetDir, version, options = {}) {
     console.log('  • .claude + .codex: Runtime symlinks to .cursor/skills + .cursor/agents');
     console.log('  • README.md: Project skeleton, footer merge, or Speck-marketing auto-repair');
     console.log('  • .claude/settings.json: Speck-managed hook blocks reconciled from example');
-    console.log('  • copilot-setup-steps.yml: Skipped if customized');
     console.log('  • Everything else: Always updated');
     console.log('  • Removed files: Files deleted from Speck will be removed from your project\n');
     console.log('Run without --dry-run to apply changes.');

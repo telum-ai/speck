@@ -277,7 +277,7 @@ Speck is designed to run seamlessly across all major AI coding environments. Cor
 ### Portability Guarantees & Fallbacks
 1. **Shared Validation Engine**: All validation hooks (`validate-template.sh`) route to a unified, host-agnostic bash core inside `.speck/scripts/validation/`.
 2. **Subagents Fallback**: Spawning parallel subagents (e.g. `speck-auditor`, `speck-scanner`) is a Claude-specific optimization. When executing on Cursor or Codex, checklists run sequentially in the main conversation.
-3. **CI Backstop**: Regardless of local host hooks or capabilities, the ultimate validation gate is portable and runs in your standard CI pipeline (`.github/workflows/speck-validation.yml`).
+3. **Local Validation Backstop**: Run validators with `--strict` via pre-commit hooks or manually when your host lacks edit/stop gates.
 
 ## 🦾 Claude-First Autonomous & Agentic Workflows
 
@@ -390,7 +390,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 7.11.1  
+**Speck Version**: 7.12.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

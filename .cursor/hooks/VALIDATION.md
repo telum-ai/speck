@@ -203,7 +203,7 @@ The validator scripts also support a CI-friendly strict mode:
 - Hooks run validators **without** `--strict` to remain non-blocking during drafting
 - CI runs validators **with** `--strict` to enforce minimum quality gates
 
-**CI Workflow**: See `.github/workflows/speck-validation.yml`
+**Strict mode**: Run validators with `--strict` locally or via pre-commit hooks to enforce minimum quality gates when errors must block progress.
 
 ## How to Use
 

@@ -116,7 +116,6 @@ Updates preserve your customizations:
 - Your `.gitignore` entries
 - Your custom hooks and MCP config
 - Your root `README.md` (project identity — Speck only merges the `<!-- SPECK:START -->` footer)
-- Your `copilot-setup-steps.yml` (if customized)
 
 ---
 

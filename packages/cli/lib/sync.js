@@ -28,15 +28,6 @@ const ALWAYS_OVERWRITE = [
   '.claude/hooks',
   '.claude/loop.md',
   '.speck/mcp',
-  // REMOVED (v4.3.0): orchestrator disabled
-  // '.github/workflows/speck-orchestrator.yml',
-  '.github/workflows/speck-update-check.yml',
-  '.github/workflows/speck-validation.yml',
-  '.github/copilot-instructions.md',
-  '.github/instructions',
-  // REMOVED (v4.3.0): orchestrator disabled
-  // '.github/ISSUE_TEMPLATE/speck-story.yml',
-  '.github/pull_request_template.md',
 ];
 
 /**
@@ -67,8 +58,6 @@ const SMART_MERGE_FILES = {
  */
 const SKIP_IF_CUSTOMIZED = {
   // v7.6.0: README.md handled by syncProjectReadme() — not copied from Speck repo
-  // REMOVED (v4.3.0): orchestrator disabled
-  // '.github/workflows/copilot-setup-steps.yml': isCopilotSetupCustomized,
 };
 
 /**
@@ -93,8 +82,17 @@ function shouldSkipFile(filePath) {
 const REMOVE_FILES = [
   // v4.3.0: Orchestrator disabled — remove from projects on upgrade
   '.github/workflows/speck-orchestrator.yml',
+  '.github/workflows/speck-orchestrator-test.yml',
+  '.github/workflows/speck-orchestrator-e2e-test.yml',
+  '.github/workflows/speck-e2e-cleanup.yml',
   '.github/workflows/copilot-setup-steps.yml',
+  '.github/workflows/speck-validation.yml',
   '.github/ISSUE_TEMPLATE/speck-story.yml',
+  '.speck/scripts/orchestrate.sh',
+  '.github/workflows/speck-update-check.yml',
+  '.github/copilot-instructions.md',
+  '.github/instructions',
+  '.github/pull_request_template.md',
   '.github/workflows/speck-retrospective.yml',
   '.github/workflows/speck-template-feedback.yml',
   '.github/workflows/speck-update-action/action.yml',
@@ -395,25 +393,6 @@ function syncProjectReadme(targetDir, results, verbose = false) {
 // ============================================================
 // Skip-if-customized detection
 // ============================================================
-
-/**
- * Check if copilot-setup-steps.yml has been customized
- */
-function isCopilotSetupCustomized(sourceContent, targetContent) {
-  if (!targetContent) return false;
-  
-  // If user has uncommented any setup steps, they've customized it
-  const setupPatterns = [
-    /^\s*uses:.*setup-node/m,
-    /^\s*uses:.*setup-python/m,
-    /^\s*uses:.*rust-toolchain/m,
-    /^\s*uses:.*setup-go/m,
-    /^\s*run:.*pip install/m,
-    /^\s*run:.*npm ci/m,
-  ];
-  
-  return setupPatterns.some(pattern => pattern.test(targetContent));
-}
 
 // ============================================================
 // Core sync functions

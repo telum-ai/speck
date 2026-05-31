@@ -542,6 +542,6 @@ This process skill is fully supported across all primary AI runtimes (Claude, Cu
 
 ### Fallbacks & Adaptations
 - **Subagents**: Spawning subagents (`speck-auditor` / `speck-scanner`) is a Claude-only feature. If running on Cursor or Codex, execute the checklist sequentially in your main context.
-- **Hook-based Gates**: If your host doesn't support pre-edit blocks or stop gates, rely on manual `/story-validate` executions and portable CI workflows (`.github/workflows/speck-validation.yml`) to enforce gates.
+- **Hook-based Gates**: If your host doesn't support pre-edit blocks or stop gates, rely on manual `/story-validate` executions and local validators (`.speck/scripts/validation/`) run with `--strict`.
 
 

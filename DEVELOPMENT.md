@@ -18,14 +18,9 @@ speck/
 │   ├── templates/                   # Story/epic/project templates
 │   ├── patterns/                    # Design and implementation patterns
 │   ├── recipes/                     # Project quickstart recipes
-│   └── scripts/                     # Utility scripts (audit, orchestrate, etc.)
+│   └── scripts/                     # Utility scripts (validation, audit, etc.)
 ├── .cursor/skills/                  # AI agent skills (synced to projects)
 ├── .claude/                         # Claude Code config (synced to projects)
-├── .github/workflows/               # GitHub Actions workflows
-│   ├── speck-validation.yml         # Spec validation (synced to projects)
-│   ├── speck-update-check.yml       # Update checker (synced to projects)
-│   ├── speck-orchestrator.yml       # Orchestrator (DISABLED v5.2.0, not synced)
-│   └── ...                          # Test/CI workflows (not synced)
 └── tests/                           # Test fixtures and specs
 ```
 
@@ -175,22 +170,11 @@ node bin/speck.js version
 node bin/speck.js upgrade --dry-run /path/to/test-project
 ```
 
-## GitHub Workflows
+## Workflow and Sync Management
 
-### Synced to projects (via `ALWAYS_OVERWRITE`)
-- `speck-validation.yml` — Validates spec artifacts on PR
-- `speck-update-check.yml` — Checks for Speck updates
-
-### Internal only (not synced)
-- `speck-orchestrator.yml` — **Disabled (v5.2.0)** — was the Copilot orchestrator
-- `speck-orchestrator-test.yml` — **Disabled** — orchestrator unit tests
-- `speck-orchestrator-e2e-test.yml` — **Disabled** — orchestrator integration tests
-- `speck-e2e-cleanup.yml` — **Disabled** — E2E test cleanup
-- `copilot-setup-steps.yml` — **Disabled** — Copilot agent environment setup
-
-### Removing a workflow from projects
+### Removing a synced file from projects
 
 Follow the "Removing a synced file" process above. Specifically:
 1. Move from `ALWAYS_OVERWRITE` to `REMOVE_FILES` in `sync.js`
-2. Disable the workflow in this repo (change triggers to `workflow_dispatch:` only)
+2. Delete the file in this repo
 3. Release a new version — projects pick up the removal on `speck upgrade`

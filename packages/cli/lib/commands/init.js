@@ -41,7 +41,6 @@ export async function init(targetDir, options = {}) {
     console.log('  • .claude + .codex: Runtime symlinks to .cursor/skills + .cursor/agents');
     console.log('  • README.md: Project skeleton (or footer merge only — never Speck marketing)');
     console.log('  • .claude/settings.json: Created/reconciled from settings.json.example');
-    console.log('  • copilot-setup-steps.yml: Skipped if customized');
     console.log('  • Everything else: Always updated\n');
     console.log('Run without --dry-run to apply changes.');
     return;

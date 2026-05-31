@@ -34,7 +34,6 @@ The CLI uses intelligent merging to preserve your customizations during updates:
 | **.cursor/hooks/hooks.json** | Your hooks merged with Speck hooks |
 | **.cursor/mcp.json** | Your config takes precedence over Speck defaults |
 | **README.md** | Project skeleton on init; footer merge + auto-regen on upgrade |
-| **copilot-setup-steps.yml** | Skipped if you customized it |
 | **Methodology files** | Always updated (skills, templates, patterns, workflows) |
 | **.claude/skills + .claude/agents** | Auto-symlinked from `.cursor/skills` + `.cursor/agents` during init/upgrade |
 
@@ -98,12 +97,3 @@ If the Speck repository is private, set the `SPECK_GITHUB_TOKEN` environment var
 ```bash
 SPECK_GITHUB_TOKEN=ghp_xxx npx github:telum-ai/speck upgrade
 ```
-
-## Automatic Updates
-
-Projects include a daily update workflow (`.github/workflows/speck-update-check.yml`) that:
-1. Checks for new Speck versions
-2. Runs `npx github:telum-ai/speck upgrade`
-3. Creates a PR with the changes
-
-For private Speck repos, add `SPECK_GITHUB_TOKEN` as a repository secret.
