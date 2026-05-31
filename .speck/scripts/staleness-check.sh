@@ -167,6 +167,23 @@ check_artifact() {
     fi
   fi
 
+  # Check structural template drift
+  local workspace_root
+  workspace_root="$(dirname "$(dirname "$PROJECT_DIR")")"
+  local drift_script="$workspace_root/.speck/scripts/validation/check-artifact-template-drift.sh"
+  if [[ -f "$drift_script" ]]; then
+    local drift_output
+    drift_output=$("$drift_script" "$path" 2>/dev/null || true)
+    if echo "$drift_output" | grep -q "TEMPLATE_DRIFT:"; then
+      local missing_sections
+      missing_sections=$(echo "$drift_output" | grep -A100 "MISSING_SECTIONS:" | tail -n +2 | sed -E 's/^[[:space:]]*- //g' | tr '\n' ',' | sed 's/,$//')
+      echo "⚠️  STRUCTURAL_DRIFT $artifact (missing: $missing_sections)"
+      ANY_STALE=1
+      STALE_COUNT=$((STALE_COUNT + 1))
+      return
+    fi
+  fi
+
   echo "✅ FRESH    $artifact"
   FRESH_COUNT=$((FRESH_COUNT + 1))
 }

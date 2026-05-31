@@ -37,6 +37,20 @@ export const FEEDBACK_ADDRESSED_BY_RELEASE = [
     ],
   },
   {
+    version: '7.11.0',
+    items: [
+      { id: 'P1a', summary: 'Quality Judgment loop (Judge -> Fix -> Re-prove) added to evidence-contract' },
+      { id: 'P1b', summary: 'Numeric 0-10 JTBD scoring with hard caps and anti-inflation rules' },
+      { id: 'P1c', summary: 'Density budget prompt added to experience-chain and ui-spec templates' },
+      { id: 'P1d', summary: 'Signal -> Reaction Ledger added to product-contract' },
+      { id: 'P1e', summary: 'Longitudinal Proof Mode and timeline.jsonl requirements' },
+      { id: 'P2a', summary: 'Human Language Pass guidelines added to product-contract and validation reports' },
+      { id: 'P2b', summary: 'speck validate --active-only and pre-commit reconcile hint for legacy projects' },
+      { id: 'P2c', summary: 'LARP Runway and build fingerprinting efficiency controls' },
+      { id: 'Drift', summary: 'Intra-v7 template-drift detector (manifest + header-diff check) on upgrade & recheck' },
+    ],
+  },
+  {
     version: '7.10.1',
     items: [
       { id: 'P3-fix', summary: 'Orchestrator driving pattern corrected — /story and /epic MUST invoke downstream skills, not inline artifacts' },

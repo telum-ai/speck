@@ -1,5 +1,6 @@
 ---
 speck_version: 7.0
+template_version: "7.11.0"
 artifact_type: persona-larp
 ---
 
@@ -58,6 +59,7 @@ This is an executable script — the /larp skill runs it. Be specific about:
 Platform: [iOS native / Web / Android / Desktop / etc.]
 Tooling: [AXe / Playwright / Maestro / WebdriverIO / Browser MCP]
 Build target: [from evidence-contract.md valid proof sources]
+Build Fingerprint: [App version / Backend API fingerprint]
 ```
 
 **Starting state**:
@@ -95,6 +97,14 @@ Build target: [from evidence-contract.md valid proof sources]
 - [ ] Backend returns 500 at Step [N]. Expected: [user-facing message + recovery path]
 - [ ] User provides invalid input at Step [N]. Expected: [validation + clear next step]
 
+### Longitudinal Proof Mode (if applicable)
+
+*For adaptive/coaching products, define the same-user timeline continuity checks.*
+
+- [ ] **Timeline Log:** Verify `timeline.jsonl` contains the chronological sequence of state mutations.
+- [ ] **Continuity Invariant:** Verify that preferences/signals collected on Day 0 are correctly reflected in Week 1+ states.
+- [ ] **No Disconnected Seeds:** Confirm that the user's progress is validated via continuous state transitions, not isolated mock states.
+
 ---
 
 ## Taste Judgment Rubric
@@ -106,6 +116,8 @@ For each captured screenshot, the LARP runner must write a taste note:
 | Dimension | Question | Rating | Note |
 |-----------|----------|--------|------|
 | First glance (3s) | What does the user understand in 3 seconds? | ✅/⚠️/❌ | [Note] |
+| Surface economy | What repeats or competes on this screen? (Are there redundant labels, competing CTAs?) | ✅/⚠️/❌ | [Note] |
+| Progressive disclosure | What should move one tap deeper to reduce cognitive load? | ✅/⚠️/❌ | [Note] |
 | Visual feel | Calm/intentional/premium OR cramped/random/cheap? | ✅/⚠️/❌ | [Note] |
 | Copy feel | Specific to product OR generic SaaS? | ✅/⚠️/❌ | [Note] |
 | Voice match | Matches product-contract voice principles? | ✅/⚠️/❌ | [Note] |

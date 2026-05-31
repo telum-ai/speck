@@ -1,5 +1,7 @@
 ---
 speck_version: 7.0
+template_version: "7.11.0"
+artifact_type: validation-report
 readiness_state_claimed: [NO-SHIP | IMPL-GREEN | UX-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
 readiness_state_verified: [NO-SHIP | IMPL-GREEN | UX-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
 build_sha: [hash]
@@ -65,6 +67,22 @@ If any required-at-this-state gate is ❌: **Verified state = lower** (drop to h
 
 ---
 
+## 📊 JTBD Quality Scorecard
+
+*Scorecard based on the 5 dimensions from `product-contract.md` §4. Subject to the Quality Judgment & Scoring Protocol in `evidence-contract.md` §5.*
+
+| Dimension | Score (0-10) | Evidence Path | Distinct Skeptical Note (Required for >=9) | Cap Reason (if any) |
+|-----------|--------------|---------------|--------------------------------------------|---------------------|
+| **Functional** | [0-10] | [path] | [Distinct note] | [e.g. Capped at 8 due to active P2 finding] |
+| **Emotional** | [0-10] | [path] | [Distinct note] | |
+| **Social** | [0-10] | [path] | [Distinct note] | |
+| **Trust** | [0-10] | [path] | [Distinct note] | |
+| **Commercial** | [0-10] | [path] | [Distinct note] | |
+
+**Aggregate Quality Score**: [Average of scores]/10
+
+---
+
 ## 📋 Spec Coverage (Requirements Traceability)
 
 *Maps each FR in spec.md to evidence.*
@@ -101,6 +119,16 @@ If any P0 exists: claimed state must be lowered.
 
 **Magic moments validated**: [X / Y]
 **Taste-judgment dimensions failed**: [list]
+
+---
+
+## 🗣️ Human Language Pass
+
+*Review of user-visible copy and AI-generated outputs against the voice principles in `product-contract.md` §6.*
+
+- [ ] **No Cringe:** Could the target user read this aloud without cringing?
+- [ ] **No Jargon Leak:** No internal methodology or technical jargon leaks into the UI.
+- [ ] **AI Output Governed:** AI-generated text is governed by the same voice contract as static UI (no generic AI cheerleading).
 
 ---
 

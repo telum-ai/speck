@@ -58,6 +58,8 @@ if [[ "$errors" -gt 0 ]]; then
   echo -e "\n${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo -e "${RED}ERROR: Commit rejected. Found $errors non-compliant file(s).${NC}"
   echo -e "${YELLOW}Please fix the validation errors shown above before committing.${NC}"
+  echo -e "${BLUE}Note: If this is a migrated project with legacy failures, run:${NC}"
+  echo -e "  ${GREEN}/speck-catch-up --phase=refresh${NC} or use ${GREEN}speck validate --active-only${NC} to isolate active work."
   echo -e "${BLUE}Note: If you need to force-commit (not recommended), use 'git commit --no-verify'.${NC}"
   echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
   exit 1

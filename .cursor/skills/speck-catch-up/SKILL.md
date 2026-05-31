@@ -37,7 +37,8 @@ Parse `$ARGUMENTS` for `--phase=<name>`. Default is `--phase=all`.
 | `--phase=plan` | Phase 7 — write project-catch-up-plan.md | the remediation plan | 5 min |
 | `--phase=finalize` | Phase 8 — clean up marker + re-recheck | marker removed | 1 min |
 | `--phase=profile` | PROFILE backfill — project.md surfaces + evidence-contract PROFILE gates + README regen | PROFILE sections appended | 5–10 min |
-| `--phase=all` (default) | All phases 0 → 8 (+ profile if v7.7+) | everything | varies |
+| `--phase=refresh` | TEMPLATE_DRIFT refresh — reads manifest, appends missing required sections to existing artifacts | missing sections appended as scaffolds | 5–10 min |
+| `--phase=all` (default) | All phases 0 → 8 (+ profile if v7.7+, + refresh if drift found) | everything | varies |
 
 **Recommended flow for large brownfield projects** (e.g., 10+ epics, multi-platform):
 
@@ -396,6 +397,20 @@ Run when `--phase=profile` or as part of `--phase=all` on v7.7+ projects missing
 6. Trigger `/project-state` regeneration
 
 Skip any step where target section already exists.
+
+### Phase REFRESH — TEMPLATE_DRIFT structural refresh (idempotent)
+
+Run when `--phase=refresh` or as part of `--phase=all` on projects with template drift.
+
+1. Scan all markdown files in `specs/projects/<id>/`.
+2. For each file with template drift (detected via `check-artifact-template-drift.sh`):
+   - Read the corresponding template file from `.speck/templates/`.
+   - Identify the missing sections.
+   - Append the missing sections (with their headers and placeholder/guidance text) to the end of the user's file.
+   - Preserve all existing user content and frontmatter.
+   - Re-stamp the file with `stamp-truth.sh`.
+3. Log decision via `/speck-decision-log` — "Structural template drift resolved via catch-up refresh"
+4. Trigger `/project-state` regeneration
 
 ### Phase 9 — Report
 

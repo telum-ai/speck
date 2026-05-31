@@ -1,5 +1,22 @@
 # Speck Changelog
 
+## v7.11.0 — 2026-05-31 — Template-Drift Detection, Numeric JTBD Scoring & Quality-Judgment Loop
+
+Addresses GitHub Issue #60 (methodology — evidence quality and judgment gaps).
+
+### Core Features
+- **Intra-v7 Template-Drift Detection** — Added `template-manifest.json` and `check-artifact-template-drift.sh` to recursively check instantiated artifacts for missing required template sections. Wired into `speck upgrade` output, `/recheck`, and `/speck-catch-up --phase=refresh`.
+- **Numeric JTBD Scoring & Quality-Judgment Loop** — Added canonical 0-10 scoring protocol with hard caps (completeness ceilings, active findings caps) to `evidence-contract-template.md`. Scorecards added to story and epic validation reports.
+- **Anti-Theater Scorecard Validator** — Programmatic validation in `validate-readiness-evidence.sh` to flag reused note inflation and "all 10s" claims with active findings.
+- **`speck validate --active-only`** — Skip historical or excluded legacy artifacts during validation to prevent hook bypass pressure on migrated projects.
+
+### Templates
+- **`product-contract-template.md`** — Added Signal -> Reaction Ledger, Human Language Pass guidelines, and Density Budget prompt.
+- **`evidence-contract-template.md`** — Added Quality Judgment & Scoring Protocol, Longitudinal Proof Mode, and LARP Runway.
+- **`persona-larp-template.md`** — Added +2 taste-rubric rows ("Surface economy" and "Progressive disclosure"), Longitudinal Proof Mode timeline requirements, and Build Fingerprint fields.
+- **`story-template.md` & `validation-report-template.md`** — Added Human Language Pass, JTBD Quality Scorecard, and template versioning.
+- **`epic-validation-report-template.md`** — Added Epic JTBD Quality Scorecard and Human Language Pass.
+
 ## v7.10.1 — 2026-05-26 — Orchestrator driving pattern correction
 
 **Fixes v7.10.0 regression**: `/story` and `/epic` orchestrators incorrectly documented that sub-skills should NOT be invoked. That was wrong.

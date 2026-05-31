@@ -1,0 +1,78 @@
+{
+  "product-contract": {
+    "structure_version": "7.11.0",
+    "required_headers": [
+      "## 1. The Paid Promise / Operational SLA",
+      "## 2. Primary Persona / Consumer",
+      "## 3. The Differentiator",
+      "## 4. JTBD Scorecard / Operational Invariants Scorecard",
+      "## 5. Magic Moments / Operational Milestones",
+      "## 6. Public Language / API & System Taxonomy",
+      "## 7. Banned Language / System Anti-Patterns",
+      "## 9. Longitudinal Axes"
+    ]
+  },
+  "evidence-contract": {
+    "structure_version": "7.11.0",
+    "required_headers": [
+      "## 1. Target Launch Platforms",
+      "## 2. Valid Proof Sources (per platform)",
+      "## 3. Invalid Proof Sources (anti-proof)",
+      "## 4. Required Runtime LARP / Integration Stress Tests",
+      "## 5. Required Static Evidence",
+      "## 6. Required Live-Service Evidence",
+      "## 7. Readiness State Gate Criteria",
+      "## 8. Evidence Storage",
+      "## 9. Who Can Mark a Gate Passed",
+      "## 10. Adversarial Probe Suite",
+      "## 11. Stale-Proof Policy",
+      "## 12. Surrogate Proof Rule"
+    ]
+  },
+  "story-spec": {
+    "structure_version": "7.11.0",
+    "required_headers": [
+      "## 1. Experience (What the user lives)",
+      "## 2. Acceptance LARP (How we prove the experience works)",
+      "## 3. Evidence Required",
+      "## 4. Adversarial Cases (What must NOT happen)"
+    ]
+  },
+  "validation-report": {
+    "structure_version": "7.11.0",
+    "required_headers": [
+      "## 🎯 Readiness State Claim",
+      "## ✅ Gate Criteria Check",
+      "## 📋 Spec Coverage (Requirements Traceability)",
+      "## 🛑 Blocking Issues (from audit-report.md)",
+      "## 🎭 LARP Summary",
+      "## 🔬 Banned-Phrase Detection (Self-Audit)",
+      "## 📊 Next Steps",
+      "## 🧭 Project Documentation Updates"
+    ]
+  },
+  "epic-validation-report": {
+    "structure_version": "7.11.0",
+    "required_headers": [
+      "## Executive Summary",
+      "## Story Completion Status",
+      "## Acceptance Criteria Validation",
+      "## Technical Validation",
+      "## Integration Testing",
+      "## Quality Metrics",
+      "## JTBD Walkthrough & First-Time Comprehension"
+    ]
+  },
+  "persona-larp": {
+    "structure_version": "7.11.0",
+    "required_headers": [
+      "## Who They Are",
+      "## Detection Signals",
+      "## Primary Intent",
+      "## LARP Script",
+      "## Taste Judgment Rubric",
+      "## Evidence Capture Convention",
+      "## Findings Template"
+    ]
+  }
+}

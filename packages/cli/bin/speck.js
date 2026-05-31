@@ -32,6 +32,7 @@ import { feedback } from '../lib/commands/feedback.js';
 import { reconcileSettingsCommand } from '../lib/commands/reconcile-settings.js';
 import { larpPlay } from '../lib/commands/larp-play.js';
 import { compressCommand, decompressCommand } from '../lib/commands/compress.js';
+import { validateCommand } from '../lib/commands/validate.js';
 import { migrateToV7 } from '../lib/migrate.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,6 +57,7 @@ COMMANDS
   feedback          Draft a feedback note (catchup/recipe/methodology/etc.) for review/submission
   reconcile-settings  Sync Speck-managed Claude hook blocks from settings.json.example
   larp-play         Run autonomous persona-based LARP playback / manual walkthrough
+  validate          Run automated template and profile validation
   compress          Compact active story subdirectories of a validated epic into an archive
   decompress        Restore active story subdirectories of a compacted epic from an archive
   help              Show this help message
@@ -71,6 +73,7 @@ OPTIONS
   --auto            Non-interactive mode for feedback (writes file with placeholders)
   --persona <id>    Target persona script to run in larp-play
   --url <url>       Target base URL for larp-play (default: http://localhost:3000)
+  --active-only     Skip historical or excluded legacy artifacts during validation
   --epic <id>       Target epic directory for context compaction / restoration
 
 EXAMPLES
@@ -128,6 +131,7 @@ async function main() {
   if (epicIndex !== -1 && args[epicIndex + 1]) {
     options.epic = args[epicIndex + 1];
   }
+  options.activeOnly = args.includes('--active-only');
 
   // Get version argument for upgrade command
   const versionArg = args.find(a => a.startsWith('v') && !a.startsWith('--'));
@@ -185,6 +189,10 @@ async function main() {
 
       case 'larp-play':
         await larpPlay(process.cwd(), options);
+        break;
+
+      case 'validate':
+        await validateCommand(process.cwd(), options);
         break;
 
       case 'compress':

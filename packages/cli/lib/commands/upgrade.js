@@ -2,6 +2,9 @@
  * Upgrade Speck to a new version with smart merging
  */
 
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
 import { getLatestRelease, getReleaseByTag, getChangelog } from '../github.js';
 import { 
   extractRelease, 
@@ -170,6 +173,7 @@ export async function upgrade(targetDir, version, options = {}) {
 ⏭️  Skipped: ${results.skipped.length} files`);
 
   printFeedbackAddressed(currentVersion, targetVersion);
+  runTemplateDriftCheck(targetDir);
 
   if (migrationSummary && migrationSummary.projects.length > 0) {
     console.log(`
@@ -222,3 +226,57 @@ To share feedback on this upgrade (no telemetry, you submit the file yourself):
 README note: root README.md is your project's public face. Methodology docs: .speck/README.md
 `);
 }
+
+function findMarkdownFiles(dir, files = []) {
+  if (!fs.existsSync(dir)) return files;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      findMarkdownFiles(fullPath, files);
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+function runTemplateDriftCheck(targetDir) {
+  const specsDir = path.join(targetDir, 'specs/projects');
+  if (!fs.existsSync(specsDir)) return;
+
+  const files = findMarkdownFiles(specsDir);
+  const driftScript = path.join(targetDir, '.speck/scripts/validation/check-artifact-template-drift.js');
+  if (!fs.existsSync(driftScript)) return;
+
+  let driftCount = 0;
+  const driftedArtifacts = [];
+
+  for (const file of files) {
+    try {
+      const output = execSync(`node "${driftScript}" "${file}"`, { encoding: 'utf-8' });
+      if (output.includes('TEMPLATE_DRIFT:')) {
+        driftCount++;
+        const relativePath = path.relative(targetDir, file);
+        const missingLines = output.split('\n')
+          .filter(l => l.startsWith('  - '))
+          .map(l => l.trim());
+        driftedArtifacts.push({ path: relativePath, missing: missingLines });
+      }
+    } catch (err) {
+      // Ignore errors running script
+    }
+  }
+
+  if (driftCount > 0) {
+    console.log(`\n⚠️  Detected ${driftCount} artifact(s) with structural template drift:`);
+    for (const art of driftedArtifacts.slice(0, 5)) {
+      console.log(`   • ${art.path} (missing sections: ${art.missing.join(', ')})`);
+    }
+    if (driftCount > 5) {
+      console.log(`   • ... and ${driftCount - 5} more artifact(s)`);
+    }
+    console.log('\n   To fix structural drift, run `/recheck` or `/speck-catch-up --phase=refresh`');
+  }
+}
+

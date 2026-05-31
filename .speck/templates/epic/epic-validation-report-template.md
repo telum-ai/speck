@@ -1,3 +1,8 @@
+---
+template_version: "7.11.0"
+artifact_type: epic-validation-report
+---
+
 # Epic Validation Report: [Epic Name]
 
 **Epic**: [EPIC_ID]  
@@ -200,6 +205,20 @@
 
 ---
 
+## 📊 Epic JTBD Quality Scorecard
+
+*Aggregated quality scorecard across all stories in this epic. Subject to the Quality Judgment & Scoring Protocol in `evidence-contract.md` §5.*
+
+| Dimension | Score (0-10) | Evidence Path | Distinct Skeptical Note (Required for >=9) | Cap Reason (if any) |
+|-----------|--------------|---------------|--------------------------------------------|---------------------|
+| **Functional** | [0-10] | [path] | [Distinct note] | [e.g. Capped at 8 due to active P2 finding] |
+| **Emotional** | [0-10] | [path] | [Distinct note] | |
+| **Social** | [0-10] | [path] | [Distinct note] | |
+| **Trust** | [0-10] | [path] | [Distinct note] | |
+| **Commercial** | [0-10] | [path] | [Distinct note] | |
+
+**Aggregate Epic Quality Score**: [Average of scores]/10
+
 ---
 
 ## JTBD Walkthrough & First-Time Comprehension
@@ -236,6 +255,16 @@
 |------|---------------------------|--------------------------|-----------------|-------------------------------|----------------|
 | 1 | [e.g. 500 rps write burst] | [Sub-50ms latency] | [Matches] | [Yes] | [✅] |
 | 2 | [e.g. DB container restart]| [ROLLBACK completed] | [Matches] | [Yes] | [✅] |
+
+---
+
+## 🗣️ Human Language Pass
+
+*Review of user-visible copy and AI-generated outputs against the voice principles in `product-contract.md` §6.*
+
+- [ ] **No Cringe:** Could the target user read this aloud without cringing?
+- [ ] **No Jargon Leak:** No internal methodology or technical jargon leaks into the UI.
+- [ ] **AI Output Governed:** AI-generated text is governed by the same voice contract as static UI (no generic AI cheerleading).
 
 ---
 

@@ -1,5 +1,6 @@
 ---
 speck_version: 7.0
+template_version: "7.11.0"
 artifact_type: product-contract
 play_levels: [build, platform]
 ---
@@ -170,6 +171,12 @@ Story validation fails if a user-facing story has no evidence for at least the f
 - **Sample-good copy**: [Concrete example of good copy for a typical UI string]
 - **Sample-bad copy**: [Concrete example of bad copy → rewritten as good]
 
+### Human Language Pass Guidelines
+*Static phrase checks are necessary but insufficient. Every screen must pass a human-language review.*
+- **Cringe Test:** Could the target user read this aloud without cringing?
+- **Domain Authenticity:** Does it sound like a practitioner in the domain, or does internal methodology/technical jargon leak into the UI?
+- **AI Copy Governance:** AI-generated user-facing text is **governed product copy** and must respect the exact same voice contract as static UI. No generic AI cheerleading.
+
 ### Magic-moment Copy Rules
 
 - **Loading state voice**: [e.g., "Confident, not apologetic"]
@@ -257,6 +264,14 @@ For each user-visible AI surface:
 ## 9. Longitudinal Axes *(only if product adapts over time)*
 
 *Required for products with learning, adaptation, personalization, habit formation, coaching, analytics, or progress over time.*
+
+### Signal -> Reaction Ledger
+*Every collected user signal must produce a reaction or intentional non-use. Prevents "AI bolted onto a tracker" where data is collected but never used.*
+
+| Signal Collected | Where Captured | Where it Changes Product Behavior | Where User Can See/Edit | Where in Export/Delete | Reason if Intentionally Unused |
+|------------------|----------------|-----------------------------------|-------------------------|------------------------|--------------------------------|
+| [e.g. Skipped workout] | [Activity log] | [AI coach adjusts next workout dose] | [Coach chat transcript] | [Data export JSON] | |
+| [e.g. Pain feedback] | [Post-workout] | [Capped intensity on joint] | [Settings -> Limits] | [Data export JSON] | |
 
 ### Adaptation Axes
 

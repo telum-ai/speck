@@ -132,5 +132,90 @@ if [[ $evidence_count -eq 0 ]]; then
   fi
 else
   echo -e "   ${GREEN}✅ Verified: Found ${evidence_count} evidence files backing state claim '${claimed_state}'!${NC}"
+  
+  # Run scorecard validation using python
+  if command -v python3 >/dev/null 2>&1; then
+    if ! python3 - "$val_report" "$strict" << 'EOF'
+import sys
+import re
+
+val_report = sys.argv[1]
+strict = sys.argv[2].lower() == "true"
+
+with open(val_report, "r", encoding="utf-8") as f:
+    content = f.read()
+
+# 1. Parse JTBD Scorecard table
+# Look for rows like: | **Functional** | 10 | path | distinct note | cap |
+scorecard_rows = []
+for line in content.split("\n"):
+    if re.search(r'\|\s*\*\*(Functional|Emotional|Social|Trust|Commercial)\*\*\s*\|', line):
+        parts = [p.strip() for p in line.split("|")[1:-1]]
+        if len(parts) >= 4:
+            scorecard_rows.append({
+                "dimension": parts[0].replace("**", ""),
+                "score": parts[1],
+                "evidence": parts[2],
+                "note": parts[3],
+                "cap": parts[4] if len(parts) > 4 else ""
+            })
+
+if scorecard_rows:
+    print("📋 Validating JTBD Quality Scorecard...")
+    
+    # Check for identical skeptical notes
+    notes = {}
+    for row in scorecard_rows:
+        try:
+            score = int(row["score"])
+        except ValueError:
+            score = 0
+            
+        note = row["note"].strip()
+        # Skip placeholders
+        if note and not note.startswith("[") and not note.endswith("]"):
+            if score >= 9:
+                if note in notes:
+                    notes[note].append(row["dimension"])
+                else:
+                    notes[note] = [row["dimension"]]
+                    
+    reused_notes_found = False
+    for note, dimensions in notes.items():
+        if len(dimensions) > 1:
+            print(f"\033[0;31mSCORECARD ERROR: Skeptical note reused across dimensions: {', '.join(dimensions)}\033[0m")
+            print(f"  Note: \"{note}\"")
+            print("  Fix: Each dimension >= 9 requires a DISTINCT, non-reused skeptical note.")
+            reused_notes_found = True
+            
+    if reused_notes_found:
+        if strict:
+            sys.exit(1)
+        
+    # Check for "all 10s" / "perfect" inflation
+    all_tens = len(scorecard_rows) > 0 and all(row["score"] == "10" for row in scorecard_rows)
+    if all_tens:
+        # Check if there are active findings
+        has_active_findings = False
+        findings_section = re.search(r'## 🛑 Blocking Issues[\s\S]*?(##|$)', content)
+        if findings_section:
+            findings_text = findings_section.group(0)
+            rows = [line.strip() for line in findings_text.split("\n") if line.strip().startswith("|")]
+            for r in rows:
+                if "audit-report.md" in r and not "-" in r:
+                    has_active_findings = True
+                    break
+                    
+        if has_active_findings:
+            print("\033[0;31mSCORECARD ERROR: Claimed 'all 10s' but active findings are present in the report!\033[0m")
+            print("  Fix: Grade cannot be 10 with active P0/P1/P2 findings.")
+            if strict:
+                sys.exit(1)
+EOF
+    then
+      exit 1
+    fi
+  fi
+
   exit 0
 fi

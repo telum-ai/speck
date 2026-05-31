@@ -1,5 +1,7 @@
 ---
 speck_version: 7.0
+template_version: "7.11.0"
+artifact_type: story-spec
 depends_on: []         # e.g., [S001, S003]
 blocks: []             # e.g., [S005]
 persona: [persona-id]  # primary persona this story serves

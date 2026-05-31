@@ -84,10 +84,13 @@ For each transition, list what would feel redundant or robotic if repeated:
 
 *What does the user see in the first 3 seconds that makes them want to engage with THIS screen now? Not later, not skip, not back.*
 
-| Screen | First-viewport "why now?" |
-|--------|----------------------------|
-| [Screen 1] | [The single thing that earns 3 seconds of attention] |
-| [Screen 2] | [Same — different per screen] |
+**The Density Budget Rule:**
+Every screen must respect the density budget: **one screen, one job, one primary action, one proof point, details one tap deeper.** Do not clutter the first viewport.
+
+| Screen | First-viewport "why now?" | Density Budget Compliance |
+|--------|----------------------------|----------------------------|
+| [Screen 1] | [The single thing that earns 3 seconds of attention] | [Verified: 1 job, 1 CTA, details 1 tap deep] |
+| [Screen 2] | [Same — different per screen] | [Verified] |
 
 ---
 

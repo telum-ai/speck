@@ -1,5 +1,6 @@
 ---
 speck_version: 7.0
+template_version: "7.11.0"
 artifact_type: evidence-contract
 play_levels: [build, platform]
 ---
@@ -110,6 +111,13 @@ PLACEHOLDER CONVENTION:
 
 ### Option A: Human Persona-Based LARP (for UI/Human-facing products)
 
+### Longitudinal Proof Mode (for adaptive products)
+*Distinguishes "snapshot state coverage" from "same-user longitudinal proof" to verify continuity across weeks/months of use.*
+
+- **Requirement:** For products with learning, adaptation, or progress over time, the validation suite **MUST** record same-user timeline continuity.
+- **Evidence:** A `timeline.jsonl` containing state mutations and invariants across the longitudinal chapters (Day 0 -> Week 12+).
+- **Rule:** Disconnected seeded states are valid for debugging, but **NOT** sufficient for claiming longitudinal product excellence.
+
 ### LARP Required for UX-RC
 
 | Persona | Flow | Evidence required |
@@ -147,7 +155,35 @@ LARP scripts live in: `specs/projects/<PROJECT_ID>/personas/<persona-id>.md`
 
 ---
 
-## 5. Required Static Evidence
+## 5. Quality Judgment & Scoring Protocol
+
+*The explicit protocol for evaluating product quality beyond functional completeness. Proves that Promise -> Build -> Prove includes a Judge -> Fix -> Re-prove loop.*
+
+### The Core Principle
+> Green evidence means eligible for judgment, not judged excellent.
+
+All user-facing stories and epics must undergo a skeptical quality judgment. Completing the functional requirements and collecting evidence is only the first step.
+
+### The 0-10 Scoring Scale & Hard Caps
+Every scorecard dimension (Functional, Emotional, Social, Trust, Commercial) must be graded on this scale:
+
+| Score | Meaning | Criteria |
+|-------|---------|----------|
+| **0-4** | Missing / Broken | Core functionality is missing, buggy, or fails basic Gherkin scenarios. |
+| **5-7** | Functional, Unproven | The feature works, but has active P0/P1/P2 findings, or has no qualitative polish. |
+| **8** | Completeness Ceiling | **Hard Cap:** All evidence slots (screenshots, AX trees, logs) are filled, Gherkin scenarios pass, but no distinct skeptical note is provided, or active P2 findings exist. |
+| **9** | High Quality | Score of 8 + a distinct, detailed skeptical note + zero active P0/P1 findings. |
+| **10** | Perfect / Premium | Score of 9 + full evidence (screenshot + AX + transcript/timing/log where relevant) + zero active P0/P1/P2 findings + a distinct, non-reused per-dimension note. |
+
+### Hard Anti-Theater Rules
+1. **No Scoreboard Inflation:** You cannot claim a score of 9 or 10 on any dimension without providing a distinct, detailed skeptical note.
+2. **Reused Note Invalidation:** If the exact same skeptical note is reused across multiple dimensions, any score of 9 or 10 on those dimensions is invalidated and capped at 8.
+3. **Active Findings Cap:** Any active P0 or P1 findings cap the maximum score at 4. Any active P2 findings cap the maximum score at 8.
+4. **Runtime Truth Supremacy:** If a current runtime screenshot or AX tree contradicts an older scorecard claim, the current runtime evidence wins immediately, and the scorecard must be downgraded.
+
+---
+
+## 6. Required Static Evidence
 
 *Evidence captured from running the target build, not the source tree.*
 
@@ -162,7 +198,7 @@ For every validation report at UX-RC or higher:
 
 ---
 
-## 6. Required Live-Service Evidence
+## 7. Required Live-Service Evidence
 
 *For features that depend on live external services.*
 
@@ -177,7 +213,7 @@ For every validation report at UX-RC or higher:
 
 ---
 
-## 7. Readiness State Gate Criteria
+## 8. Readiness State Gate Criteria
 
 *The explicit checklist that must pass to claim each readiness state.*
 
@@ -269,7 +305,7 @@ Per declared PROFILE surface (from `project.md`):
 
 ---
 
-## 8. Evidence Storage
+## 9. Evidence Storage
 
 *Where evidence artifacts live in the repo.*
 
@@ -294,7 +330,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 ---
 
-## 9. Who Can Mark a Gate Passed
+## 10. Who Can Mark a Gate Passed
 
 *The default verification model: the AI agent runs the gates and records evidence. The human reviews the recorded evidence and may override.*
 
@@ -308,7 +344,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 ---
 
-## 10. Adversarial Probe Suite
+## 11. Adversarial Probe Suite
 
 *Standard adversarial checks for SHIP-RC. The `/audit` skill runs these automatically.*
 
@@ -327,7 +363,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 ---
 
-## 11. Stale-Proof Policy
+## 12. Stale-Proof Policy
 
 *Evidence is fresh ONLY when tied to a recent commit.*
 
@@ -337,7 +373,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 ---
 
-## 12. Surrogate Proof Rule
+## 13. Surrogate Proof Rule
 
 *If a validation report uses any evidence from this contract's "Invalid Proof Sources" list, the report MUST:*
 
@@ -345,6 +381,17 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 2. Refuse to claim UX-RC or higher
 3. Link to the canonical proof requirement
 4. Enqueue a follow-up task to gather valid proof
+
+---
+
+## 14. LARP Runway & Efficiency Controls
+
+*Efficiency controls to prevent excessive native rebuilds and optimize test loops.*
+
+- **Build Fingerprint:** Every LARP recording must capture the app version, bundle ID, and backend API fingerprint.
+- **Rebuild Requirements:** A full native rebuild is required only when native dependencies (npm/cocoapods/gradle), environment variables, or native configuration changes.
+- **Freshness Window:** If the build fingerprint has not changed, the agent may reuse the existing build artifact for focused LARP runs.
+- **Focused Reruns:** When polishing UI, the agent should isolate the simulator/device and rerun only the specific affected steps, rather than the full suite.
 
 ---
 

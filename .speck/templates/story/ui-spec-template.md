@@ -211,7 +211,14 @@ Example:
 
 ---
 
-## 📱 Responsive Behavior
+## 📱 Density Budget & Responsive Behavior
+
+### The Density Budget Rule
+Every screen must respect the density budget: **one screen, one job, one primary action, one proof point, details one tap deeper.** Do not clutter the first viewport.
+
+- [ ] Verified: First viewport has exactly one primary CTA/action.
+- [ ] Verified: No competing or redundant labels/headers.
+- [ ] Verified: Secondary/advanced details are hidden behind a tap or disclosure.
 
 ### Breakpoints
 
