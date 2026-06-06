@@ -58,9 +58,13 @@ log_success() {
 if echo "$content" | grep -q "## Overview\|## Purpose\|## Epic Overview"; then
   log_success "Epic overview/purpose section found"
   
-  # Check length
-  overview=$(echo "$content" | sed -n '/^## Overview\|^## Purpose\|^## Epic Overview/,/^##/p' | sed '1d;$d')
-  overview_length=$(echo "$overview" | wc -c | xargs)
+  # Check length (awk avoids BSD sed alternation bugs and header-range overlap)
+  overview=$(echo "$content" | awk '
+    /^## Overview$/ || /^## Purpose$/ || /^## Epic Overview$/ { in_section=1; next }
+    in_section && /^## / { exit }
+    in_section { print }
+  ')
+  overview_length=$(printf '%s' "$overview" | wc -c | xargs)
   
   if [ "$overview_length" -lt 100 ]; then
     log_warning "Epic overview is very brief ($overview_length < 100 chars)" \
@@ -117,8 +121,16 @@ else
   fi
 fi
 
-# 4. Check estimated stories count
-estimated_stories=$(echo "$content" | grep -i "Estimated Stories" | grep -o "[0-9]\+")
+# 4. Check estimated stories count (supports X-Y ranges; uses max for threshold)
+estimate_line=$(echo "$content" | grep -i "Estimated Stories" | head -1)
+estimated_stories=""
+if [ -n "$estimate_line" ]; then
+  if echo "$estimate_line" | grep -qE '[0-9]+[[:space:]]*-[[:space:]]*[0-9]+'; then
+    estimated_stories=$(echo "$estimate_line" | grep -oE '[0-9]+' | sort -n | tail -1)
+  else
+    estimated_stories=$(echo "$estimate_line" | grep -oE '[0-9]+' | head -1)
+  fi
+fi
 if [ -z "$estimated_stories" ]; then
   log_warning "No story count estimate found" \
     "Add estimate: **Estimated Stories**: X-Y

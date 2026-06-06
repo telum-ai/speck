@@ -1,5 +1,20 @@
 # Speck Changelog
 
+## v7.13.2 — 2026-06-06 — Redesign Pivot Refinements (Streb E011→E012 learnings)
+
+Streb redesign-pivot methodology feedback (2026-06-06): closes transformational-product blind spots and validator papercuts.
+
+### Methodology (P1)
+- **Ambition-Aware UI Path** — `/epic-specify` Optional Step Evaluation now loads `product-contract.md` / `ux-strategy.md` and flags **Redesign Ambition** when brownfield code exists but differentiating surfaces require a first-principles redraw. Rubric Mode is prohibited unless founder explicitly confirms surfaces are modality-adequate.
+- **Promise-Coverage Check** — `/epic-analyze` and `/project-analyze` map differentiator pillars + magic moments to stories/FRs; zero coverage flags as **P1 unaddressed-promise gap** (absence detection, not just contradiction).
+
+### Papercuts (P2)
+- **Forbidding-Context Language Guards** — `banned-language-lint.sh` + `filter-forbidding-context.py` ignore hits in `NOT This` / `Banned` / `Avoid` table columns and forbidding blockquotes.
+- **Staged Banned-Language Lint** — `--staged` mode scans only git-staged files; wired into pre-commit hook.
+- **`validate-epic-spec.sh`** — Parses `X-Y` story estimate ranges (uses max); fixes overview-length heuristic (awk instead of BSD sed alternation bug).
+- **Decision Log Index Reconciliation** — `speck-decision-log` scans `### DEC-NNNN` headings as source of truth; auto-rebuilds missing/stale index tables.
+- **Staleness False-DRIFT Fix** — `staleness-check.sh` uses `git rev-list --count` on the artifact; count ≤ 1 = FRESH after normal stamp-then-commit flow.
+
 ## v7.13.1 — 2026-06-06 — Form Validation Matrix, Test Hygiene, Keystone Pattern, /harden flow
 
 Flyt E001 platform-run methodology feedback (2026-06-06): closes gaps between green gates and real human done-ness.

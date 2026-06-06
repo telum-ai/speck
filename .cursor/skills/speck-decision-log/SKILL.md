@@ -42,7 +42,18 @@ Find `specs/projects/<PROJECT_ID>/project-decisions-log.md`. If missing, create 
 
 ### 2. Generate next decision ID
 
-Read the existing log's decision index table. The next ID is `DEC-<NNNN>` (zero-padded, monotonic).
+Scan the log body for `### DEC-NNNN` headings (source of truth — do NOT rely solely on the index table). The next ID is `DEC-<NNNN>` (zero-padded, monotonic max + 1).
+
+If no `DEC-` headings exist yet, start at `DEC-0001`.
+
+### 2b. Reconcile Decision Index table
+
+If `## Decision Index` is missing, out of sync, or has gaps:
+1. Parse all `### DEC-NNNN` entries and their metadata (Date, Phase, Status from entry body).
+2. Rebuild the index table under `## Decision Index` from parsed headings.
+3. Preserve all `## Decisions` body entries unchanged (append-only discipline).
+
+If the index exists and is current, append one row for the new entry only.
 
 ### 3. Validate inputs
 
@@ -67,7 +78,7 @@ Append to `## Decisions` section. Do NOT modify any existing entry (other than u
 
 ### 6. Update the index table
 
-Add a row to the Decision Index table at the top.
+Add a row to the Decision Index table (or rebuild per step 2b if missing/stale).
 
 ### 7. Re-stamp the file
 
@@ -87,7 +98,7 @@ Return to caller:
 - NEVER skip the SHA + date stamping
 - NEVER allow fewer than 3 alternatives to be logged
 - NEVER edit a locked decision; supersede instead
-- ALWAYS update the index table when appending
+- ALWAYS update or rebuild the index table when appending (scan `### DEC-` headings as source of truth)
 - ALWAYS re-stamp the file footer
 
 ## Integration Points

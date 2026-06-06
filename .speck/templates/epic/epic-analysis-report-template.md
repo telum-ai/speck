@@ -38,12 +38,27 @@
 
 ---
 
+## Promise Coverage (Unaddressed-Promise Gap)
+
+*Map each product-contract differentiator pillar and magic moment to epic stories/FRs. Absence ≠ inconsistency — flag zero coverage explicitly.*
+
+| Promise dimension | Source (product-contract) | Covered by story/FR | Status |
+|-------------------|---------------------------|---------------------|--------|
+| Differentiator: [pillar] | §3 | [S### / FR-###] | ✅ / ⚠️ P1 unaddressed |
+| Magic moment: [name] | §5 | [S### / FR-###] | ✅ / ⚠️ P1 unaddressed |
+| Anti-differentiator guard: [item] | §3a | [S### / FR-###] | ✅ / ⚠️ P1 unaddressed |
+
+**Unaddressed-promise gaps (P1)**: [List dimensions with zero coverage, or "None"]
+
+---
+
 ## Issues Found
 
 | ID | Category | Severity | Description | Fix |
 |----|----------|----------|-------------|-----|
-| E1 | Coverage | HIGH | [Issue] | [Fix] |
-| E2 | Dependency | MEDIUM | [Issue] | [Fix] |
+| E1 | unaddressed-promise | P1 | [Differentiator/magic moment with zero story coverage] | [Add story/FR or defer with explicit rationale] |
+| E2 | Coverage | HIGH | [Issue] | [Fix] |
+| E3 | Dependency | MEDIUM | [Issue] | [Fix] |
 
 ---
 

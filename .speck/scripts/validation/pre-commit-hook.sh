@@ -54,6 +54,15 @@ if [[ "$staged_readme" == true ]]; then
   fi
 fi
 
+# Staged-scoped banned-language lint (advisory at pre-commit; full-repo scan remains manual/CI)
+if [[ -f ".speck/scripts/banned-language-lint.sh" ]]; then
+  echo -e "${BLUE}🔍 Running staged banned-language lint...${NC}"
+  if ! bash .speck/scripts/banned-language-lint.sh --staged; then
+    echo -e "${RED}❌ Banned-language violations in staged files.${NC}"
+    errors=$((errors + 1))
+  fi
+fi
+
 if [[ "$errors" -gt 0 ]]; then
   echo -e "\n${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo -e "${RED}ERROR: Commit rejected. Found $errors non-compliant file(s).${NC}"

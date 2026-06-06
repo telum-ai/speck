@@ -64,6 +64,16 @@
 - Medium risks: [Y]
 - Unmitigated: [Z]
 
+### Promise Coverage (Unaddressed-Promise Gap)
+- Differentiator pillars mapped: [X] / [Y total]
+- Magic moments mapped: [A] / [B total]
+- Unaddressed dimensions (P1): [List or "None"]
+
+| Promise dimension | Source | Epic / story coverage | Status |
+|-------------------|--------|----------------------|--------|
+| Differentiator: [pillar] | product-contract §3 | [E### / S###] | ✅ / ⚠️ P1 |
+| Magic moment: [name] | product-contract §5 | [E### / S###] | ✅ / ⚠️ P1 |
+
 ---
 
 ## Detailed Findings

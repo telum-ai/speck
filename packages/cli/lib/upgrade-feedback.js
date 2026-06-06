@@ -6,6 +6,18 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
+    version: '7.13.2',
+    items: [
+      { id: 'S1', summary: 'Ambition-aware UI path in epic-specify — Redesign Ambition blocks Rubric Mode default' },
+      { id: 'S2', summary: 'Promise-coverage (unaddressed-promise gap) check in epic-analyze and project-analyze' },
+      { id: 'S3', summary: 'Forbidding-context filter for banned-language-lint (NOT This / Banned columns)' },
+      { id: 'S4', summary: 'banned-language-lint --staged + pre-commit hook wiring' },
+      { id: 'S5', summary: 'validate-epic-spec X-Y range parse + overview awk fix' },
+      { id: 'S6', summary: 'speck-decision-log index reconciliation from DEC- headings' },
+      { id: 'S7', summary: 'staleness-check false-DRIFT fix via rev-list commit count' },
+    ],
+  },
+  {
     version: '7.13.1',
     items: [
       { id: 'F1', summary: 'Form Validation Matrix in ui-spec-template.md and story-ui-spec' },

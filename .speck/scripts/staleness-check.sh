@@ -134,14 +134,14 @@ check_artifact() {
   local stamp_date
   stamp_date=$(echo "$stamp_line" | sed -nE 's/.*verified ([0-9]{4}-[0-9]{2}-[0-9]{2}).*/\1/p')
 
-  # Check SHA drift
+  # Check SHA drift — use commit count on this file since stamp.
+  # Count <= 1 means only the stamp commit touched the file (normal commit flow) → FRESH.
+  # Count > 1 means substantive content changed after stamp → DRIFT.
   if [[ -n "$stamp_sha" ]] && [[ "$stamp_sha" != "$CURRENT_SHA" ]]; then
-    # Check if the file has been modified since the stamp
-    if ! git -C "$PROJECT_DIR" log "$stamp_sha"..HEAD -- "$artifact" 2>/dev/null | head -1 | grep -q commit; then
-      # File hasn't changed in the SHA range — only stamp itself is old, not the file content
-      :
-    else
-      echo "⚠️  DRIFT    $artifact (stamped $stamp_sha, HEAD is $CURRENT_SHA)"
+    local change_count
+    change_count=$(git -C "$PROJECT_DIR" rev-list --count "${stamp_sha}..HEAD" -- "$artifact" 2>/dev/null || echo "0")
+    if [[ "$change_count" -gt 1 ]]; then
+      echo "⚠️  DRIFT    $artifact (stamped $stamp_sha, HEAD is $CURRENT_SHA, $change_count commits changed file)"
       ANY_STALE=1
       DRIFT_COUNT=$((DRIFT_COUNT + 1))
       return

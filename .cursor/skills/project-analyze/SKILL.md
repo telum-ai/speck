@@ -95,6 +95,12 @@ Analyze project planning artifacts for consistency, completeness, and feasibilit
    - Flag if mismatch
    ```
 
+   **Promise Coverage (Unaddressed-Promise Gap)** — REQUIRED when `product-contract.md` exists
+   - Load `product-contract.md` Section 3 (Differentiator), Section 3a (Anti-Differentiators), and Section 5 (Magic Moments).
+   - Across all epics in `epics.md` + `epic-breakdown.md` files, map each differentiator pillar and magic moment to ≥1 epic/story/FR.
+   - Flag any dimension with **zero project-level coverage** as **P1** ("unaddressed-promise gap").
+   - Record a Promise Coverage matrix in `project-analysis-report.md` (see template).
+
 4. Generate analysis report:
 
    **CRITICAL**: Load and follow the template exactly:

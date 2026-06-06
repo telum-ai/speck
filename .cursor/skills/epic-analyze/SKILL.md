@@ -89,6 +89,13 @@ Validate epic planning artifacts to identify issues before story implementation 
    - If journey/wireframes exist but tech spec has no UX section: FLAG as WARNING
      "UX artifacts present but not incorporated in tech spec — re-run /epic-plan"
 
+   **H. Promise Coverage (Unaddressed-Promise Gap)** — REQUIRED when `product-contract.md` exists
+   - Load `product-contract.md` Section 3 (Differentiator), Section 3a (Anti-Differentiators), and Section 5 (Magic Moments).
+   - For each differentiator pillar and each magic moment (name + surface/boundary), search `epic.md`, `epic-breakdown.md`, and story specs for ≥1 FR/story that explicitly touches it.
+   - Absence is NOT inconsistency — flag unaddressed dimensions as **P1** ("unaddressed-promise gap: differentiator dimension X / magic moment Y has zero story coverage in this epic").
+   - If the epic is backend-only and a magic moment is UI-only, note as deferral — do not silently pass.
+   - Record a Promise Coverage matrix in `epic-analysis-report.md` (see template).
+
 3. Deep analysis checks:
 
    **Story Traceability Matrix**

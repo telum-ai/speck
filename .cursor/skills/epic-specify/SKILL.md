@@ -270,6 +270,13 @@ Create epic directory:
 
     **Brownfield vs greenfield UI signal**: Check whether `epic-codebase-scan.md` exists in the epic directory. If it exists and lists existing screens/surfaces the epic will modify (not net-new only), treat the epic as **brownfield UI**.
 
+    **Ambition-aware UI path signal** (REQUIRED — load before evaluating UI path):
+    1. Read `product-contract.md` Section 3 (Differentiator) and Section 5 (Magic Moments) — note surfaces named in **Surface / System Boundary** fields.
+    2. Read `ux-strategy.md` (if present) — note target experience claims that diverge from what currently ships.
+    3. Cross-check epic scope against those differentiating surfaces.
+    4. If the product claims a **modality / experience differentiator** (new UX paradigm, premium redesign, first-principles redraw) AND this epic touches those differentiating surfaces → flag **Redesign Ambition**.
+    5. **Redesign Ambition overrides brownfield default**: Rubric Mode is NOT auto-selected. `/epic-journey` + `/epic-wireframes` are 🔴 Required unless the founder explicitly confirms existing surfaces are modality-adequate (log as human decision gate — do not proceed silently).
+
     **Evaluation criteria**:
 
     | Step | 🔴 Required when | ⚠️ Recommended when | ⬜ Skip when |
@@ -277,13 +284,14 @@ Create epic directory:
     | `/epic-clarify` | Acceptance criteria missing or vague; scope boundary unclear; [NEEDS CLARIFICATION] markers remain | Some user stories lack explicit success criteria | All stories have clear, testable acceptance criteria and scope is explicit |
     | `/epic-constitution` | Regulated domain (healthcare, finance, legal, payment, GDPR, HIPAA, SOC2); epic defines an API boundary other epics depend on; multi-team coordination required | Epic introduces domain-specific rules not covered by project constitution | Simple product feature with no compliance or cross-team concerns |
     | `/epic-architecture` | Touches 2+ services/systems; introduces new infrastructure; explicit latency/throughput targets; complex third-party integration not yet used in project | Significantly modifies existing API contracts; introduces new architectural patterns | Simple CRUD following existing project patterns; single-service concern with clear path |
-    | `/epic-journey` + `/epic-wireframes` | **Greenfield UI**: any mention of UI, screen, page, dashboard, form, modal, user flow, navigation, front-end, UX, design AND surfaces are net-new or undefined in codebase | Epic mixes backend and light UI concerns (greenfield) | Explicitly backend-only, API-only, CLI-only, or infra/devops |
-    | **Rubric Mode** (brownfield UI alternative) | **Brownfield UI**: `epic-codebase-scan.md` exists AND epic modifies existing screens/surfaces already shipping in code — use instead of per-surface journey + wireframes | — | Greenfield UI (no existing surfaces) OR backend-only epic |
+    | `/epic-journey` + `/epic-wireframes` | **Greenfield UI**: any mention of UI, screen, page, dashboard, form, modal, user flow, navigation, front-end, UX, design AND surfaces are net-new or undefined in codebase; **OR Redesign Ambition**: epic touches differentiating surfaces named in product-contract / ux-strategy | Epic mixes backend and light UI concerns (greenfield) | Explicitly backend-only, API-only, CLI-only, or infra/devops |
+    | **Rubric Mode** (brownfield UI alternative) | **Brownfield UI** (code exists) AND epic modifies existing screens AND **NOT Redesign Ambition** — use instead of per-surface journey + wireframes | — | Greenfield UI, Redesign Ambition, OR backend-only epic |
+    | **Redesign Ambition gate** | Epic modifies a surface named in product-contract differentiator or magic-moment boundaries | — | Surfaces are genuinely modality-adequate (founder confirmed) OR epic is backend-only |
     | `/epic-outline` | Unfamiliar technology not in architecture.md; TBD/unknown sections present; multiple competing technical approaches | Minor unknowns that could benefit from a research pass | Implementation path clear; follows established patterns |
 
-    **Rubric Mode** (sanctioned brownfield UI path — equivalent to 🔴 Required for journey/wireframes):
+    **Rubric Mode** (sanctioned brownfield UI path — only when surfaces are modality-adequate):
 
-    When brownfield UI is detected, recommend **Rubric Mode** instead of `/epic-journey` + `/epic-wireframes`:
+    When brownfield UI is detected **and Redesign Ambition is NOT triggered**, recommend **Rubric Mode** instead of `/epic-journey` + `/epic-wireframes`:
 
     1. Encode a one-page **Native Screen Rubric** (principles + screen anatomy) as an enforced standard in `ux-strategy.md` and/or `design-system/primitives.md`.
     2. Derive FRs from the rubric; apply surface-by-surface to existing screens listed in `epic-codebase-scan.md`.
@@ -302,11 +310,12 @@ Create epic directory:
     | /epic-clarify              | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
     | /epic-constitution         | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
     | /epic-architecture         | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
-    | /epic-journey + /wireframes| ⬜ / 🔴       | "[greenfield UI evidence — or N/A if brownfield]" |
-    | Rubric Mode (brownfield UI) | ⬜ / 🔴      | "[epic-codebase-scan surfaces + brownfield signal]" |
+    | /epic-journey + /wireframes| ⬜ / 🔴       | "[greenfield UI evidence — or Redesign Ambition surfaces from product-contract]" |
+    | Rubric Mode (brownfield UI) | ⬜ / 🔴      | "[epic-codebase-scan surfaces + brownfield signal — only if NOT Redesign Ambition]" |
+    | Redesign Ambition gate     | ⬜ / 🔴 / ✅ founder-confirmed | "[differentiator surfaces touched + product-contract quote]" |
     | /epic-outline              | ⬜ / ⚠️       | "[specific quote or observation]" |
 
-    UI path: [Greenfield → journey + wireframes | Brownfield → Rubric Mode | Backend-only → skip UI artifacts]
+    UI path: [Greenfield → journey + wireframes | Redesign Ambition → journey + wireframes | Brownfield (adequate surfaces) → Rubric Mode | Backend-only → skip UI artifacts]
 
     Recommended path to /epic-plan:
     → [only Required/Recommended steps in flow order] → /epic-plan
@@ -321,8 +330,11 @@ Create epic directory:
     **If `/epic-journey` or `/epic-wireframes` is 🔴 Required (greenfield UI)**, add this warning explicitly:
     > "This epic has user-facing UI — journey mapping and wireframes are required before planning. Skipping them means each story invents its own UI independently, producing a disconnected product."
 
-    **If Rubric Mode is 🔴 Required (brownfield UI)**, add this guidance explicitly:
-    > "This epic modifies existing screens — use Rubric Mode: one shared Screen Rubric in ux-strategy/primitives.md, FRs derived from it, applied surface-by-surface. Wireframe only net-new screens in story specs. Do not generate duplicate wireframes for surfaces that already ship."
+    **If Redesign Ambition is 🔴 Required**, add this warning explicitly:
+    > "This epic touches differentiating surfaces named in product-contract.md but code already exists — that does NOT mean the surfaces are modality-adequate. Run /epic-journey + /epic-wireframes before planning. Rubric Mode is prohibited unless the founder explicitly confirms existing surfaces meet the target experience."
+
+    **If Rubric Mode is 🔴 Required (brownfield UI, NOT Redesign Ambition)**, add this guidance explicitly:
+    > "This epic modifies existing screens that are modality-adequate — use Rubric Mode: one shared Screen Rubric in ux-strategy/primitives.md, FRs derived from it, applied surface-by-surface. Wireframe only net-new screens in story specs. Do not generate duplicate wireframes for surfaces that already ship."
 
 ## Example Workflows
 

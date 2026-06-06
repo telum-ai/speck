@@ -106,7 +106,7 @@ npx github:telum-ai/speck upgrade
 npx github:telum-ai/speck upgrade --dry-run
 
 # Upgrade to specific version
-npx github:telum-ai/speck upgrade v7.13.1
+npx github:telum-ai/speck upgrade v7.13.2
 ```
 
 ### What Gets Updated
@@ -570,5 +570,5 @@ After running retrospective commands (`/story-retrospective`, `/epic-retrospecti
 
 **Need help?** Just type `/speck` and describe what you want to build. Speck will guide you through the rest!
 
-**Speck Version**: 7.13.1
+**Speck Version**: 7.13.2
 **Methodology**: Promise → Build → Prove + Profile (evidence-driven specification)
