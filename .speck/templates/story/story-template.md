@@ -65,18 +65,21 @@ As a [persona-id], I want to [action] so that I can [outcome].
 - **THEN** [expected outcome — visible in screenshot/AX tree/transcript]
 - **AND** [additional outcomes]
 - **EVIDENCE** [screenshot path or AX-tree path or transcript line]
+- **VERIFIABILITY** [agent-LARP | device-walk]
 
 #### Scenario: [Alternative path]
 - **GIVEN** ...
 - **WHEN** ...
 - **THEN** ...
 - **EVIDENCE** ...
+- **VERIFIABILITY** [agent-LARP | device-walk]
 
 #### Scenario: [Recovery from error]
 - **GIVEN** ...
 - **WHEN** ...
 - **THEN** ...
 - **EVIDENCE** ...
+- **VERIFIABILITY** [agent-LARP | device-walk]
 
 ---
 
@@ -84,13 +87,13 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 *What artifacts must `/larp` and `/audit` produce for this story to advance through readiness states?*
 
-| Evidence type | Required for state | Path / convention |
-|---------------|--------------------|--------------------|
-| Screenshot at primary screen | UX-RC | `screenshots/<sha>-primary.png` |
-| AX tree of primary screen | UX-RC | `ax-trees/<sha>-primary.xml` |
-| Persona LARP findings | UX-RC | `larp-recordings/<sha>-<persona>-findings.md` |
-| Adversarial probe results | SHIP-RC | `audit-report.md` adversarial section |
-| Banned-language scan output | UX-RC | `audit-report.md` banned-language section |
+| Evidence type | Required for state | Verifiable by | Path / convention |
+|---------------|--------------------|---------------|--------------------|
+| Screenshot at primary screen | UX-RC | agent-LARP | `screenshots/<sha>-primary.png` |
+| AX tree of primary screen | UX-RC | agent-LARP | `ax-trees/<sha>-primary.xml` |
+| Persona LARP findings | UX-RC | agent-LARP | `larp-recordings/<sha>-<persona>-findings.md` |
+| Adversarial probe results | SHIP-RC | agent-LARP | `audit-report.md` adversarial section |
+| Banned-language scan output | UX-RC | agent-LARP | `audit-report.md` banned-language section |
 
 ---
 
@@ -104,6 +107,7 @@ As a [persona-id], I want to [action] so that I can [outcome].
 | Network drop mid-flow | Partial write | Inject drop at write point, assert atomicity |
 | Concurrent same-user update | Silent data loss | Run 2 writes concurrently, assert deterministic outcome |
 | Banned term reaches user | UI shows banned word | `banned-language-lint.sh` against captured copy |
+| Async close/teardown | Late callbacks/timers fire or re-schedule work after close | Simulate async teardown callbacks (late close, retries, queued timers) and verify no background work is scheduled after resource is closed |
 
 ---
 
@@ -170,6 +174,7 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 ### Verifiability
 - [ ] Every acceptance scenario specifies EVIDENCE (screenshot path, AX tree, transcript line)
+- [ ] Verifiability tier (`Verifiable by: agent-LARP | device-walk`) is declared for each scenario and evidence requirement
 - [ ] Every dependency has a failure-mode-handled row
 - [ ] Related tables / surfaces enumerated
 - [ ] Adversarial cases match the spec's positive claims

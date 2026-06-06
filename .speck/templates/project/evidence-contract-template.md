@@ -102,6 +102,12 @@ PLACEHOLDER CONVENTION:
 - ❌ `cargo run` output for shipping claims (must be release binary)
 - ❌ Tests-pass-locally for cross-platform binary claims
 
+### Universal Test Hygiene & Form-UX Anti-Proof (All Platforms)
+- ❌ Tautological assertions: using empty/unconditional `expect(true).toBe(true)` checks to inflate passing test counts.
+- ❌ Silent skips: using collect-time skips (like `describe.skipIf` evaluated before runtime setups) that silently hide unrun tests. Skips must be runtime skip-with-reason logs.
+- ❌ API-bypassed forms: using direct API/programmatic client calls to audit or validate user stories that primarily focus on interactive forms/inputs. If a human touches the UI, the audit/LARP must drive it through the real UI.
+- ❌ Static mocks for async close: using synchronous/immediate mocks that do not model async callback latency or late-firing close events. Mocks must accurately simulate teardown delays.
+
 ---
 
 ## 4. Required Runtime LARP / Integration Stress Tests
@@ -259,6 +265,8 @@ For every validation report at UX-RC or higher:
 * **WHEN: consumer_product / b2b_saas / internal_tool (SHIP-RC)**:
   - [ ] All COMMERCIAL-RC criteria (or all UX-RC if free product)
   - [ ] Runtime LARP against the LAUNCH build (not dev, not preview)
+  - [ ] Device-walk manual attestation recorded (if story/epic contains device-walk criteria: keyboard avoidance, native hit-testing, biometrics, etc.)
+  - [ ] Keystone Dependencies verified: all founder-provisioned secrets/infra keys are set and active. If a keystone is absent, CI/CD must output a clear skip-with-reason log (never silent) rather than failing the validation suite. Awaiting keystone keys caps maximum verified state at `UX-RC`, but allows lower suites to pass green.
   - [ ] Full JTBD walkthrough per persona passes
   - [ ] Cross-epic integration tested (the seams between epics)
   - [ ] Production environment config verified (no dev keys, no test secrets)
@@ -360,6 +368,9 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 | Rate limit exceeded | 429 with Retry-After header |
 | Auth header missing | 401, never 500 |
 | GDPR delete request | All related-table rows removed or anonymized; verified via integration test |
+| Async close/teardown (Mocks check) | Mocks model late close events, queued timers, or retries after dependency is closed; verify no background work is rescheduled and tests assert "no late callbacks after close" |
+| Test count honesty | Verify no tests use tautologies (e.g. `expect(true).toBe(true)`) to inflate counts, and no collect-time skips hide unrun suites silently |
+| Keystone key landing | Verify that all human-provisioned external services have a clear skip-with-reason logic that auto-runs the moment the key lands |
 
 ---
 

@@ -53,7 +53,7 @@ log_success() {
 }
 
 # Detect lifecycle state from spec.md header
-current_state=$(echo "$content" | grep -E '^\*\*Current State\*\*:' | head -1 | sed -E 's/^\*\*Current State\*\*:[[:space:]]*//' | tr -d '`' | xargs || true)
+current_state=$(echo "$content" | grep -E '^\*\*(Current State|Status)\*\*:' | head -1 | sed -E 's/^\*\*(Current State|Status)\*\*:[[:space:]]*//' | tr -d '`' | xargs || true)
 
 is_placeholder=false
 if [[ "$current_state" == "Draft (Placeholder)" || "$current_state" == "Draft" ]]; then

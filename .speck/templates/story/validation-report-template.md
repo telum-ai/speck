@@ -55,6 +55,8 @@ larp_evidence: [path or "not-run"]
 | Support / Privacy / Terms accessible before purchase | Yes (COMMERCIAL-RC+) | [LARP evidence] | ✅/⚠️/❌ |
 | Analytics events fire for purchase funnel | Yes (COMMERCIAL-RC+) | [dashboard screenshot] | ✅/⚠️/❌ |
 | Runtime LARP against LAUNCH build (not dev/preview) | Yes (SHIP-RC+) | [LARP evidence with launch build SHA] | ✅/⚠️/❌ |
+| Device-walk manual attestation recorded | Yes (SHIP-RC+, if device-walk criteria exist) | `larp-recordings/<sha>-human-attestation.md` | ✅/⚠️/❌ |
+| Keystone dependencies bypassed/verified | Yes (SHIP-RC+, if keystone keys listed) | [CI logs showing skip-with-reason or active keys] | ✅/⚠️/❌ |
 | Full JTBD walkthrough per persona | Yes (SHIP-RC+) | [LARP evidence per persona] | ✅/⚠️/❌ |
 | Cross-epic integration tested | Yes (SHIP-RC+, epic-level only) | [evidence] | ✅/⚠️/❌ |
 | Production env config verified | Yes (SHIP-RC+) | [evidence] | ✅/⚠️/❌ |
@@ -87,11 +89,11 @@ If any required-at-this-state gate is ❌: **Verified state = lower** (drop to h
 
 *Maps each FR in spec.md to evidence.*
 
-| FR | Description | Code | Test | LARP | Status |
-|----|-------------|------|------|------|--------|
-| FR-001 | [text] | `<file:line>` | `<test>` | `<larp-step>` | ✅ |
-| FR-002 | [text] | `<file:line>` | `<test>` | `<larp-step>` | ⚠️ Manual |
-| FR-003 | [text] | — | — | — | ❌ Ungrounded |
+| FR | Description | Verifiable by | Code | Test | LARP | Status |
+|----|-------------|---------------|------|------|------|--------|
+| FR-001 | [text] | agent-LARP | `<file:line>` | `<test>` | `<larp-step>` | ✅ |
+| FR-002 | [text] | device-walk | `<file:line>` | `<test>` | `<larp-step>` | ⚠️ Manual |
+| FR-003 | [text] | agent-LARP | — | — | — | ❌ Ungrounded |
 
 **Coverage**: [X/Y] grounded, [A/B] tested, [C/D] LARP-validated
 
@@ -129,6 +131,16 @@ If any P0 exists: claimed state must be lowered.
 - [ ] **No Cringe:** Could the target user read this aloud without cringing?
 - [ ] **No Jargon Leak:** No internal methodology or technical jargon leaks into the UI.
 - [ ] **AI Output Governed:** AI-generated text is governed by the same voice contract as static UI (no generic AI cheerleading).
+
+---
+
+## 🔬 What this validation did NOT verify / Deferrals (Mandatory)
+
+*To establish high trust and avoid theater, you MUST explicitly disclose what this validation did NOT check or prove. Do not leave blank.*
+
+- **Untested / Unchecked Aspects**: [e.g., "Did not test native Apple Pay callbacks, verified mock flow only. Deferred to physical device walk."]
+- **Deferred / Stale Proofs**: [e.g., "Sentry logging was not verified against active staging event streams because the API keys are not provisioned yet."]
+- **Assumptions Untested**: [e.g., "Assumed the Stripe webhook responds under 1s; did not stress test webhook latency bounds."]
 
 ---
 

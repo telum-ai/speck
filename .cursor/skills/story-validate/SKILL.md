@@ -63,12 +63,22 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
 3. For each gate criterion at the claimed state and ALL LOWER states:
    - Find the supporting evidence (test output, LARP findings, lint output, build log)
    - Mark ✅ / ⚠️ / ❌
-4. If any required-at-claimed-state gate is ❌: lower the verified state to the highest state where all gates pass
-5. Run the banned-phrase self-check on the report's own language before publishing
-6. Apply SHA stamp to the report
-7. **Before claiming SHIP-RC or SHIP:** run `bash .speck/scripts/validation/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`. Block SHIP-RC+ if any `PROFILE_DRIFT.P1` finding.
-8. **UI stories touching PROFILE surfaces** (landing, marketing, package.json): run `regenerate-project-readme.sh --check` before UX-RC+ claim.
-9. Trigger `/project-state` regeneration
+4. Evaluate verifiability tiers (agent-LARP vs. device-walk):
+   - Check if any acceptance scenario or evidence requirement in the spec is marked `device-walk` (or `always-manual`).
+   - If `device-walk` criteria exist, the AI agent CANNOT autonomously verify them; they must be marked as `⚠️ Manual` or `❌ Ungrounded` in the report unless a valid human attestation file exists at `larp-recordings/<sha>-human-attestation.md`.
+   - If `device-walk` criteria are present and `larp-recordings/<sha>-human-attestation.md` is missing, the AI agent MUST cap the verified state at `UX-RC` (agent-verified) and refuse to claim `SHIP-RC` or higher, detailing that the story is "Awaiting human device walk" to complete `SHIP-RC+`.
+4b. Evaluate Keystone dependencies:
+   - Identify any founder-provisioned secrets/keys declared in `evidence-contract.md` or `spec.md`.
+   - If a Keystone dependency is absent, verify that the test output or CI log includes an explicit `skip-with-reason` message (not silent).
+   - If an active Keystone is missing but skip-with-reason logs are recorded, do NOT fail the validation run; instead, mark the gate as `⚠️ Skipped (Awaiting Keystone)` and cap the maximum claimable state at `UX-RC` (allowing the story to pass green for `IMPL-GREEN` and `UX-RC`).
+4c. Verify Deferrals / What this validation did NOT verify section:
+   - Ensure the report explicitly populates `## 🔬 What this validation did NOT verify / Deferrals`. If left blank or containing boilerplate, fail the validation.
+5. If any required-at-claimed-state gate is ❌ (including missing human attestation or missing Keystones for SHIP-RC+): lower the verified state to the highest state where all gates pass
+6. Run the banned-phrase self-check on the report's own language before publishing
+7. Apply SHA stamp to the report
+8. **Before claiming SHIP-RC or SHIP:** run `bash .speck/scripts/validation/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`. Block SHIP-RC+ if any `PROFILE_DRIFT.P1` finding.
+9. **UI stories touching PROFILE surfaces** (landing, marketing, package.json): run `regenerate-project-readme.sh --check` before UX-RC+ claim.
+10. Trigger `/project-state` regeneration
 
 The legacy v6 validation algorithm follows below (use it for tests/lint/quality details, but the verdict MUST be a readiness state, not PASS/FAIL).
 

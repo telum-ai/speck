@@ -173,6 +173,31 @@ Example:
 - Visual: [Border, color, icon]
 - Message: [Where/how displayed]
 
+### Form Validation & UX State Matrix (Required for Forms / Inputs)
+
+For stories containing forms, user inputs, or submission actions, you MUST specify the validation and micro-behavior matrix below. This ensures the user is guided to correct errors, rather than merely rejected.
+
+#### Form-Level States & Safeguards
+- **Submit Pending State**: Visual feedback (spinner, skeleton, or loading text), all form inputs disabled, submit CTA disabled.
+- **Double-Submit Protection**: Submit button MUST be disabled on click/pending, and any subsequent keypress or click prevented until response settles.
+- **Aria-Live / Status Announcements**: Assistive technology alerts (e.g. `aria-live="polite"` or `role="status"`) for pending, success, and error states.
+
+#### Field Validation Matrix
+
+*Verify that every rule has a specific inline message, highlights/marks the specific invalid field, and provides aria validation support.*
+
+- Field name: [e.g. Password]
+  - Validation Rule: [e.g. Minimum 8 characters]
+  - Specific Inline Error Message: [e.g. "Password must be at least 8 characters"]
+  - Marked / Highlighted Element: [e.g. Password input border turns red, error subtext shown underneath]
+  - Accessibility / ARIA attributes: [e.g. `aria-invalid="true"`, `aria-describedby="password-error"`]
+
+- Field name: [e.g. Email]
+  - Validation Rule: [e.g. Valid format]
+  - Specific Inline Error Message: [e.g. "Please enter a valid email address"]
+  - Marked / Highlighted Element: [e.g. Email input border turns red, error subtext shown underneath]
+  - Accessibility / ARIA attributes: [e.g. `aria-invalid="true"`, `aria-describedby="email-error"`]
+
 ### Component-Specific States
 
 [Additional states unique to this component]

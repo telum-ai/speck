@@ -93,9 +93,20 @@ Search commit messages + handoff notes for banned phrases. If found, require enu
 
 Run test suite twice (default + random order). Results differ → P0 finding.
 
+### 9b. Async teardown / late callback mock validation
+
+For any story involving async resources (WebSockets, timers, subscriptions, auto-retrying dependencies, closeable connections):
+
+1. **Verify mock behavior**: Check if unit/integration test mocks synchronously and immediately mark resources closed/disposed, or if they accurately model real async callback latency (e.g. firing close callbacks asynchronously).
+2. **Scan for teardown bugs**: Look at implementation teardowns / cleanup hooks (`useEffect` cleanups, `.close()`, `.destroy()`, `clearInterval`) to verify no background work, retries, or queued timers are scheduled *after* the close call.
+3. **Verify late callback regression tests**: If a fix for a late-firing callback or background re-scheduling exists, assert that the regression test explicitly *simulates* the late callback firing on a closed dependency (rather than just checking synchronous closed state).
+4. Any mock found to be over-simplifying async close behavior or failing to model late events/retries → **P1 finding** ("incomplete async mock — hides post-teardown execution bugs").
+
 ### 10. Reachability + scaffolding check (UI stories)
 
 Navigation path, no dev shortcuts, real auth flow.
+
+**Hard Non-Surrogate Rule**: The audit of a UI surface MUST NOT substitute API/programmatic calls for real UI interaction. If a human enters input and clicks a button, the audit (and subsequent LARPs) must exercise the real input fields and click the real UI elements. Mocking or bypassing UI forms via API client calls is strictly prohibited for UI story validation and is classified as **P0 surrogate-proof drift** if attempted.
 
 ### 10b. Rendering gotchas grep (UI stories)
 
@@ -109,6 +120,31 @@ If `design-system/primitives.md` exists and has a `## Rendering Gotchas` section
 Example: `bg-clip-text` without `.gradient-text-safe` (or project equivalent) on a headline.
 
 Skip this step if no `## Rendering Gotchas` section exists (project has not registered any yet).
+
+### 10c. Form Validation Matrix Check (UI stories)
+
+If `ui-spec.md` exists and contains a **Form Validation Matrix**:
+
+1. Validate that all field-level validation rules declared in the matrix are covered by interactive validation tests or real browser LARPs.
+2. Confirm that invalid inputs are tested by driving the real form and asserting that the *exact* inline validation messages are rendered on their respective fields.
+3. Assert that generic page-level errors (e.g. "Something went wrong") that do not mark/highlight the invalid fields are flagged as **P1 form-UX violations** ("handled but not guided").
+4. Check that Submit Pending states disable all inputs and the submit CTA, and that double-submit protection is implemented (e.g., CTA disabled immediately on click).
+
+### 10d. Pass-Count Honesty & Test Hygiene Check
+
+To prevent test-suite inflation and "false green" theater:
+
+1. **Grep for Tautologies**: Scan the tests in the story scope for meaningless sentinels like unconditional `expect(true).toBe(true)` environment checks used to inflate test counts. Flag these as **P2 informational-only passes**.
+2. **Scan for Silent Skips**: Check for collect-time skip conditions (such as `describe.skipIf` evaluated before runtime setups) that silently skip suites without displaying execution-time skip-with-reason logs in test outputs.
+3. Recommend using runtime skips (`it.skip(reason)`) or context-based skips (`beforeEach((ctx) => ctx.skip(reason))`) over static collect-time skips, so skips are clearly visible in the CI log.
+
+### 10e. Decision-Lock Application Check
+
+Verify that recent locked decisions (`DEC-XXXX`) from `project-decisions-log.md` are applied consistently across all referenced artifacts:
+
+1. Scan `project-decisions-log.md` for decisions locked in the active scope or within the last 14 days.
+2. If a decision specifies application or reconciliation across multiple files (e.g., "reconcile term in primitives.md, spec.md, and context.md"), verify that ALL listed files have been touched and aligned.
+3. Unreconciled drift across documents listed in a locked decision → **P1 finding** ("decision-lock application drift").
 
 ### 11. Banned-language scan
 

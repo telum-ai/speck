@@ -1,5 +1,20 @@
 # Speck Changelog
 
+## v7.13.0 — 2026-06-06 — Form Validation Matrix, Test Hygiene, Keystone Pattern, /harden flow
+
+Flyt E001 platform-run methodology feedback (2026-06-06): closes gaps between green gates and real human done-ness.
+
+### Methodology & Templates
+- **Form Validation Matrix** — Added required `Form Validation & UX State Matrix` to `ui-spec-template.md` (field -> rule -> exact inline message, Submit Pending, Double-Submit Protection, Aria-Live announcements) and updated `story-ui-spec` skill.
+- **Pass-Count Honesty & Test Hygiene** — Added tautologies (`expect(true).toBe(true)`), silent collect-time skips, and API-bypassed forms to `evidence-contract-template.md` Invalid Proof Sources (anti-proof). Enforced in `speck-audit` Step 10d.
+- **Keystone Dependencies Pattern** — Codified human-provisioned credentials skip-with-reason rules in `evidence-contract-template.md` Section 8, and integrated skip caps into `story-validate`.
+- **Primary JTBD Cold-Start LARP** — Elevated cold-start E2E LARP as the mandatory primary gate for `epic-validate`, with graceful degradation rules for parallel subagent watchdog stalls.
+- **Mandatory Deferrals/Not Verified Disclosures** — Added required `What this validation did NOT verify / Deferrals` section to story/epic validation reports.
+- **Resilient Regex Parser** — Updated `validate-story-spec.sh` to gracefully accept both `**Status**:` and `**Current State**:` header tags.
+
+### New Skills & Flows
+- **`/harden` flow** — Introduced lightweight post-validation fix lifecycle skill and template (`harden-template.md`) to capture post-ship defects, root causes, regression guards, and readiness re-assessments without full spec/plan/tasks ceremony.
+
 ## v7.12.1 — 2026-05-31 — Rendering Gotchas, Asset Drift, Brownfield Rubric Mode
 
 Splang methodology feedback (2026-05-31): closes gaps in what truth artifacts and drift detectors track.

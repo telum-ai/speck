@@ -6,6 +6,19 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
+    version: '7.13.0',
+    items: [
+      { id: 'F1', summary: 'Form Validation Matrix in ui-spec-template.md and story-ui-spec' },
+      { id: 'F2', summary: 'Anti-Surrogate Rules in speck-audit (prohibit API bypass of UI)' },
+      { id: 'F3', summary: 'Pass-Count Honesty & Test Hygiene in evidence-contract' },
+      { id: 'F4', summary: 'Keystone Dependencies convention + skip-with-reason rules' },
+      { id: 'F5', summary: 'JTBD cold-start LARP as centerpiece of epic validation' },
+      { id: 'F6', summary: 'Mandatory validation report Deferrals/Not Verified section' },
+      { id: 'F7', summary: 'validate-story-spec resilience to Status vs Current State header' },
+      { id: 'F8', summary: '/harden flow and harden-report template for post-validate fixing' },
+    ],
+  },
+  {
     version: '7.8.0',
     items: [
       { id: 'H1', summary: 'Command-type Stop hook (lifecycle-scoped)' },

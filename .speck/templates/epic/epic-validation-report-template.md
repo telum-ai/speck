@@ -308,6 +308,16 @@ artifact_type: epic-validation-report
 
 ---
 
+## 🔬 What this validation did NOT verify / Deferrals (Mandatory)
+
+*To establish high trust and avoid theater, you MUST explicitly disclose what this validation did NOT check or prove. Do not leave blank.*
+
+- **Untested / Unchecked Aspects**: [e.g., "Did not verify live multi-tenant workspace routing, verified mock single-tenant flow only."]
+- **Deferred / Stale Proofs**: [e.g., "Performance under 10k concurrent users was deferred, tested up to 500 concurrent callers only."]
+- **Assumptions Untested**: [e.g., "Assumed the notification broker handles message queuing atomically; did not simulate broker disconnection."]
+
+---
+
 ## Epic Closure Checklist
 
 - [ ] All stories implemented

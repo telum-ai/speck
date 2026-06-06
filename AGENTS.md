@@ -310,7 +310,7 @@ Claude Code `Stop` hooks use **command-type** lifecycle gates (`.claude/hooks/st
 
 Skills are agent-decided expertise packages — auto-loaded when relevant.
 
-- **Process skills** (`speck-*`): `/speck`, `/recheck`, `/larp`, `/audit`, `/speck-debug`, `/speck-learn`
+- **Process skills** (`speck-*`): `/speck`, `/recheck`, `/larp`, `/audit`, `/harden`, `/speck-debug`, `/speck-learn`
 - **Level commands** (`project-*`, `epic-*`, `story-*`): the Speck workflow
 - **Domain patterns** (`.cursor/skills/patterns/`): Stripe, Clerk, Supabase, Firebase, RevenueCat, etc. — lazy-loaded when implementing those integrations
 
@@ -333,6 +333,8 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Trust historical PASS docs over current runtime proof
 - Allow generic AI cheerleading copy in user-visible surfaces for premium products
 - Hand-wave dev/prod separation as "cleanup work" — it's infrastructure
+- Run costly full-integration CI runs on pure documentation/specification changes (always use path-gated triggers to optimize token and platform budgets)
+- Bypass the real UI DOM/form elements with API calls when auditing or validating UI stories (always drive the actual input fields)
 
 **ALWAYS**:
 - Read `project-state.md` first
@@ -341,6 +343,7 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Surface 3+ alternatives at non-trivial decisions
 - Run `/larp` on UI stories at validate time
 - Run `/audit` between implement and validate
+- Enforce the Form Validation Matrix for any user story involving form submissions or input fields
 - Declare a readiness state at every validate gate
 - Log decisions to `project-decisions-log.md` at phase boundaries
 - Update project truth docs after story validation passes
@@ -390,7 +393,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 7.12.1  
+**Speck Version**: 7.13.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

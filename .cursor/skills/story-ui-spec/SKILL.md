@@ -95,7 +95,8 @@ The UI spec template needs specific details. Ask only what's missing:
 
 Work with the user to define:
 - Visual properties (using design tokens)
-- Interactive states and transitions
+- Interactive states and transitions (including required Form-Level States & Safeguards like Submit Pending, Double-Submit Protection, and Aria-Live status announcements)
+- Form Validation Matrix (if forms/inputs are present, map each field to its rules, specific inline error messages, marked states, and ARIA attributes)
 - Responsive behavior
 - Accessibility requirements
 - Implementation approach

@@ -51,12 +51,23 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
 
 ## 🎯 v7 Epic Validation Algorithm
 
-1. Read every story's `validation-report.md` — extract verified states + evidence paths
-2. The epic's MAX claimable state = MIN(story states)
-3. Read `audit-report.md` — any P0 lowers max claimable state
-4. For UI-facing epics: Read epic-level `larp-recordings/` — full JTBD walkthrough must PASS for UX-RC+
-   - Run the **First-Time User Comprehension Rubric** on the walkthrough (What am I seeing? Why does it matter? What do I do next?).
-   - If first-time user comprehension is blocked or fails on any primary screen/step, cap the maximum verified state at `IMPL-GREEN` and flag the overall status as CONDITIONAL or FAILED.
+1. Read every story's `validation-report.md` — extract verified states + evidence paths.
+2. The epic's MAX claimable state = MIN(story states).
+2b. Evaluate verifiability tiers (agent-LARP vs. device-walk):
+    - Check if any story spec in the epic or the epic spec contains criteria marked `device-walk`.
+    - If `device-walk` criteria exist and no valid human-attestation file is recorded in `larp-recordings/<sha>-human-attestation.md` at the epic level (or linked from the stories), the AI agent's maximum claimable epic state is capped at `UX-RC` (agent-verified) and the agent CANNOT claim `SHIP-RC` or higher, marking the epic as "Awaiting human device walk" to complete `SHIP-RC+`.
+2c. **Parallel-Auditor Graceful Degradation Protocol**:
+    - The `/audit --epic` step uses parallel `speck-auditor` subagents. If any subagent stalls (e.g., reaches maximum timeout or watchdogs on large file reads), the main orchestrator MUST NOT block the entire validation.
+    - Instead, the orchestrator MUST gracefully degrade, take over the stalled subagent's scope, complete the check sequentially or via lighter heuristics, and explicitly disclose in `audit-report.md` and `epic-validation-report.md` that a fallback check was performed.
+3. Read `audit-report.md` — any P0 lowers max claimable state.
+4. **Primary UI Gate — JTBD Cold-Start LARP (Mandatory Centerpiece)**:
+    - Running the individual stories' validations is necessary but completely insufficient to prove a product works, because stories are isolated islands and are vulnerable to the composition fallacy.
+    - For all UI-facing epics, the **JTBD cold-start LARP walkthrough is the absolute centerpiece of validation**. You must execute a complete end-to-end walkthrough starting from a clean, non-seeded, cold-booted target build (no dev shortcuts, real navigation paths, real login flows).
+    - Read epic-level `larp-recordings/` — full JTBD walkthrough must PASS for UX-RC+.
+    - Run the **First-Time User Comprehension Rubric** on the walkthrough (What am I seeing? Why does it matter? What do I do next?).
+    - If the JTBD cold-start LARP walkthrough fails, or if first-time user comprehension is blocked on any primary screen/step (e.g. dead-end placeholders, broken navigation headers, hard 404s), **the epic validation is FAIL regardless of story-level results**, and the maximum claimable/verified state is strictly capped at `IMPL-GREEN`.
+4b. **Verify Deferrals / What this validation did NOT verify**:
+    - Require that the epic validation report populates the `## 🔬 What this validation did NOT verify / Deferrals` section. Failure to declare what was unchecked or untested will fail the validation.
 5. For non-UI epics (e.g. `infra_service` / `backend_api`): Validate the core system transaction flow via the Option B "System Operational Scenario Walkthrough". Verify all performance, load-handling, and failover invariants hold under disruption.
 6. Cross-epic integration check: any seams to other epics tested?
 7. If any previous rating, state, or recommendation has changed, write the `### Evaluative Drift / Change Explanation` section with detailed logical rationale.

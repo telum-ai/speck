@@ -270,11 +270,13 @@ Use structured GIVEN/WHEN/THEN format:
 - **WHEN** [series of user actions through epic features]
 - **THEN** [epic goal is achieved]
 - **AND** [measurable success criteria met]
+- **VERIFIABILITY** [Verifiable by: agent-LARP | device-walk]
 
 #### Scenario: [Integration with other epics]
 - **GIVEN** [dependent epic features exist]
 - **WHEN** [user flows across epic boundaries]
 - **THEN** [seamless integration verified]
+- **VERIFIABILITY** [Verifiable by: agent-LARP | device-walk]
 
 ## ⚠️ Risks & Mitigation
 
