@@ -102,6 +102,15 @@ For any story involving async resources (WebSockets, timers, subscriptions, auto
 3. **Verify late callback regression tests**: If a fix for a late-firing callback or background re-scheduling exists, assert that the regression test explicitly *simulates* the late callback firing on a closed dependency (rather than just checking synchronous closed state).
 4. Any mock found to be over-simplifying async close behavior or failing to model late events/retries → **P1 finding** ("incomplete async mock — hides post-teardown execution bugs").
 
+### 9c. Boundary-crossing try-catch error attribution check
+
+For any user-facing or logged error raised in a block (like a `try-catch`) that spans **two or more trust boundaries** (e.g., calling a third-party SDK like Stytch/Clerk, AND making an internal API/backend sync call, or database operations + external webhooks):
+
+1. **Verify specific error handling**: Assert that the `catch` block does not use a lazy, catch-all error message that incorrectly attributes failure to the wrong boundary (e.g., assuming any failure is "wrong code" or "invalid OTP" when in fact the backend post-verify sync failed due to config or host down).
+2. **Examine boundary separation**: Check that each distinct boundary has explicit, separate error classification (or typed/property checks on the caught error object) to accurately identify and log *which* specific connection or provider failed.
+3. **Assert helpful feedback**: The user-facing error message or detailed debug logs must clearly distinguish network-level/config failures (such as a backend host returning a 502/HTML gateway page) from application-level validation failures (such as an expired token).
+4. Any block spanning multiple boundaries with lazy, unified `catch-all` error messages or logs → **P1 finding** ("lazy error attribution — hides multi-boundary config/network failures").
+
 ### 10. Reachability + scaffolding check (UI stories)
 
 Navigation path, no dev shortcuts, real auth flow.

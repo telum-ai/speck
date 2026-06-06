@@ -6,7 +6,7 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
-    version: '7.13.0',
+    version: '7.13.1',
     items: [
       { id: 'F1', summary: 'Form Validation Matrix in ui-spec-template.md and story-ui-spec' },
       { id: 'F2', summary: 'Anti-Surrogate Rules in speck-audit (prohibit API bypass of UI)' },
@@ -16,6 +16,8 @@ export const FEEDBACK_ADDRESSED_BY_RELEASE = [
       { id: 'F6', summary: 'Mandatory validation report Deferrals/Not Verified section' },
       { id: 'F7', summary: 'validate-story-spec resilience to Status vs Current State header' },
       { id: 'F8', summary: '/harden flow and harden-report template for post-validate fixing' },
+      { id: 'F9', summary: 'Artifact-Config Drift as SHIP-RC only class to prevent false UX-RC claims' },
+      { id: 'F10', summary: 'Boundary-crossing try-catch error attribution check' },
     ],
   },
   {

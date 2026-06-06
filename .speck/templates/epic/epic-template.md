@@ -263,6 +263,8 @@ Rank the outcomes users care most about for this job:
 ### Acceptance Scenarios
 [End-to-end scenarios that prove epic success]
 
+(Verifiability Rules: Choose `agent-LARP` for behaviors verifiable programmatically on a dev server. Choose `device-walk` for native shell behaviors [keyboard-avoidance, native gestures, biometrics] OR artifact-config dependencies [baked environment variables, tokens, API host urls, signing, origin/redirect allowlists]. Since agent-LARP runs on dev servers with injected environments, any behaviors depending on final baked build config MUST be marked `device-walk` to prevent false verification at UX-RC.)
+
 Use structured GIVEN/WHEN/THEN format:
 
 #### Scenario: [Primary end-to-end flow]

@@ -290,6 +290,21 @@ For every validation report at UX-RC or higher:
   - [ ] Sentry / Log monitoring shows zero new errors in first 24h
   - [ ] Monitoring shows expected baseline metrics
 
+### Verifiability Tiering & Artifact-Config Drift (All Platforms)
+
+To guarantee that agent-verified success translates to actual runtime success on a customer's physical device, all acceptance criteria and evidence requirements must be explicitly tiered:
+
+1. **`agent-LARP` (UX-RC Cap)**: Verifies the code, logic, rendering, and *dev-server composition*. This is fully automatable and verifiable by agents in dev or preview environments.
+2. **`device-walk` (SHIP-RC Requirement)**: Verifies the actual *shipped/baked native or client artifact*. Any behavior that depends on **Artifact-Config Drift**—where the local/development server environment differs from the baked production build by construction—MUST be categorized as `device-walk` only.
+
+#### The Artifact-Config Drift Class (SHIP-RC Only):
+- **Baked Environment Variables / Configs**: e.g., `VITE_API_URL` or secret host URL mappings baked into a native bundle (Capacitor, Cordova, React Native, Electron) or static client bundle at build-time.
+- **Third-Party Callback & Redirect Allow-lists**: OAuth login redirects, Deep Linking protocols, or sign-in callback schemes that only function on the signed production bundle.
+- **Signing & Signing Identities**: App Store provisioning profiles, native binary entitlements, push notification certificates, or keychain access groups.
+- **Native Webview Wrappers / Hardware Seams**: Keyboard avoidance behaviors, native hit-testing overlays, native biometrics, or hardware interactions (camera, Bluetooth, file system).
+
+*Rule:* If any of these criteria are present, the agent is structurally incapable of verifying them autonomously (as its sandbox runs on dev/preview targets with mock configs). These MUST be tagged `device-walk`. Attempting to autonomously claim `SHIP-RC` or higher without a valid `larp-recordings/<sha>-human-attestation.md` recorded by a human on a real build is classified as **P0 surrogate-proof drift**.
+
 ### PROFILE Gate Criteria (v7.7+)
 
 *Public-face drift must not block release silently. See `project.md` PROFILE surfaces table.*

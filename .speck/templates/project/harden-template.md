@@ -1,6 +1,6 @@
 ---
 speck_version: 7.0
-template_version: "7.13.0"
+template_version: "7.13.1"
 artifact_type: harden-report
 ---
 
