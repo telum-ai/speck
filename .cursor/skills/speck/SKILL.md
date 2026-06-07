@@ -69,6 +69,17 @@ AI: 🍳 I found a matching recipe: "react-fastapi-postgres"
 **Recipe index**:
 - See `.speck/recipes/README.md` for the full recipe list and intended use cases
 
+### 3. Concurrent Multi-Epic Spawn
+If the user asks to run 2+ epics in parallel (e.g. "spawn E002+E003", "run these epics concurrently"):
+
+1. Read `specs/projects/<PROJECT_ID>/epics.md` → `## Epic Concurrency Waves & Rebase Cadence`
+2. **Wave safety**: every requested epic must be in the **same current wave** and must NOT be an integrator epic (2+ upstream deps not yet merged to `main`). If unsafe → STOP and list blockers.
+3. For each epic: `git worktree add ../<repo>-eNNN -b epic/eNNN origin/main` (or branch from current `main` if worktree already exists)
+4. Tell the user DEC band per epic (`E002` → `DEC-0201+`) and that `project-state.md` regen is **merge-only** on epic branches
+5. Route each epic to `/epic` in its worktree — do not start integrator epics until upstream wave merges
+
+See AGENTS.md **Concurrent multi-epic execution** for migration ownership and daily rebase cadence.
+
 ## Complexity scale vs play level (read this first)
 
 Two different concepts — do not merge them:

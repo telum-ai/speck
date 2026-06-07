@@ -1,5 +1,19 @@
 # Speck Changelog
 
+## v7.13.3 — 2026-06-07 — Concurrent Multi-Epic Execution (Flyt platform learnings)
+
+Flyt concurrent-epic methodology feedback (2026-06-07): first-class doctrine for running 2+ epics in parallel without truth-artifact merge races.
+
+### Methodology (P1)
+- **Concurrent Multi-Epic Execution** — New AGENTS.md doctrine: worktree-per-epic isolation, daily rebase cadence, DEC bands, project-state merge-only regen, migration ownership, and epic concurrency waves.
+- **Epic Concurrency Waves** — `epics-list-template.md` + `/project-plan` require wave assignment (parallel slices vs integrator epics) with rebase cadence for Platform / 4+ epic projects.
+- **project-state merge-only** — `/project-state` skips local overwrite on `epic/*` branches; regeneration deferred to merge-to-main.
+- **Per-epic DEC bands** — `/speck-decision-log` assigns IDs within epic bands (`E002` → `DEC-0201+`) instead of global sequential grab.
+- **Parallel epic spawn** — `/speck` pre-routing validates wave safety and sets up worktrees before routing to `/epic`.
+
+### Papercuts (P2)
+- **Migration ownership rule** — Documented in AGENTS.md + epics template: own-your-tables, freeze foundation/shared tables, mandatory 14-digit UTC migration timestamps.
+
 ## v7.13.2 — 2026-06-06 — Redesign Pivot Refinements (Streb E011→E012 learnings)
 
 Streb redesign-pivot methodology feedback (2026-06-06): closes transformational-product blind spots and validator papercuts.

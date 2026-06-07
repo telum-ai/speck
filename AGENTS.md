@@ -205,6 +205,20 @@ Full flow: includes `/project-domain` → `/project-ux` → `/project-context` �
 ### Reengagement
 On any new session: read `project-state.md`. If missing or stale (>2 weeks since last verified-against-runtime), run `/recheck` before any feature work.
 
+### Concurrent multi-epic execution (Platform / 4+ epics)
+
+When 2+ epics run in parallel (separate sessions or worktrees), shared truth artifacts are contention hotspots. Use this doctrine — do not improvise per-project workarounds.
+
+| Rule | What | How |
+|------|------|-----|
+| **Worktree isolation** | One epic = one branch + optional worktree off *current* `main` | `git worktree add ../<repo>-eNNN -b epic/eNNN origin/main` (or `main`). Rebase off `main` daily: `git fetch && git rebase origin/main`. Never branch parallel epics from a stale pre-foundation base. |
+| **DEC bands** | Prevent `project-decisions-log.md` number races | Project-level: `DEC-0001`–`DEC-0099`. Epic E###: `DEC-{NN}01`…`DEC-{NN}99` where `{NN}` = epic number (`E002` → `DEC-0201+`). Log via `/speck-decision-log` only. |
+| **project-state merge-only** | Single-file full regen clobbers under parallelism | Epic sessions on `epic/*` branches: **read** `project-state.md`, do **not** overwrite. Regenerate on `main` only (merge PR author or post-merge `/project-state`). |
+| **Migration ownership** | Concurrent schema changes collide on shared tables | Each epic owns **new** tables/migrations only. Foundation/shared tables (`studios`, auth, tenancy) are frozen — policy changes route through owning epic or sequential merge. Filenames: **14-digit UTC timestamps** (`YYYYMMDDHHMMSS_name.sql`). Validate ordering on Supabase branch per PR. |
+| **Epic waves** | Integrators must not start before upstreams land | `epics.md` declares concurrency waves (see template). Only epics in the **current wave** may run in parallel. Integrator epics (2+ upstream dependencies) start after upstream merges to `main`. |
+
+**Spawn parallel epics**: User says "run E002+E003 in parallel" → `/speck` validates wave safety from `epics.md`, creates worktrees/branches per epic, assigns DEC bands, and routes each session to `/epic` with branch context. Story implementation may still use `@speck-coder` `isolation: worktree` inside an epic session.
+
 ## ⚖️ Always-On Discipline (unconditional, regardless of human hands-on intensity)
 
 These apply at every play level, in every command, on every project:
@@ -246,7 +260,7 @@ Context rot is real — old decisions get deprioritized as tokens accumulate. Sp
 
 - **Layered loading**: `project-state.md` first (one page). Load deeper docs only when the active skill needs them. **Never** pre-load all foundation docs at task start.
 - **File-size discipline**: This file (AGENTS.md) is the table of contents. SKILL.md files target ~150 lines. Templates are checklists, not narratives.
-- **Auto-regenerated state**: `project-state.md` updates on every truth-affecting command. Replaces ad-hoc handoff docs and human reconstruction.
+- **Auto-regenerated state**: `project-state.md` updates on every truth-affecting command on `main` (merge-only when concurrent epic branches are active). Replaces ad-hoc handoff docs and human reconstruction.
 - **SHA-stamped truth**: Stale truth artifacts revert to "proposal" status and cannot serve as inputs to downstream decisions until re-verified.
 - **Fresh windows per phase**: For large features, break into phases that complete within a fresh context window. Use `project-state.md` as the persistent foundation across resets.
 - **No bespoke docs**: All `specs/` content routes to canonical homes (see table above). No `positioning-brief.md`, no `premium-launch-plan-2026-04-23.md`.
@@ -272,7 +286,7 @@ Speck is designed to run seamlessly across all major AI coding environments. Cor
 | **Automatic Template Linting** | ✅ `PostToolUse` edit hooks | ✅ `afterFileEdit` hooks | Manual or CI-driven checks |
 | **Structured Workflows** | ✅ `/loop` maintenance, `/goal` | Manual or scheduled CI | Manual or scheduled CI |
 | **Custom Agent Roles** | ✅ `speck-*` subagents checked in | Optional `.cursor/rules/` | Optional skills guidelines |
-| **Isolated Implementations** | ✅ `isolation: worktree` | Fallback to main branch | Fallback to main branch |
+| **Isolated Implementations** | ✅ `isolation: worktree` (story) + epic-level worktree doctrine | Epic worktree per Concurrent Multi-Epic rules; story impl on branch | Epic worktree per Concurrent Multi-Epic rules; story impl on branch |
 
 ### Portability Guarantees & Fallbacks
 1. **Shared Validation Engine**: All validation hooks (`validate-template.sh`) route to a unified, host-agnostic bash core inside `.speck/scripts/validation/`.
@@ -380,6 +394,7 @@ These feed retrospectives. Without tags, learnings are lost.
 | "Is this done?" | Run `/larp` against target runtime + `/audit`. Declare a readiness state with evidence. |
 | "What's the status?" | Read `project-state.md`. Surface it. Note staleness if stamps are old. |
 | "Continue from last time" | Read `project-state.md`'s "Next action" field. |
+| "Run epics in parallel" / "spawn E002+E003" | Read `epics.md` concurrency waves. Validate wave safety. Create `epic/eNNN` worktrees off current `main`. Assign DEC bands. Route each to `/epic`. |
 | "Audit / make ship-ready" | Run `/recheck` first. Block new feature work until drift reconciled. |
 
 ## 📚 Where to Find More
@@ -393,7 +408,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 7.13.2  
+**Speck Version**: 7.13.3  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

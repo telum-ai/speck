@@ -16,6 +16,11 @@ dependent on play level or human hands-on intensity.
 
 Format: one decision per H3 (###) section with frontmatter-style metadata.
 
+DEC ID BANDS (concurrent multi-epic execution):
+- Project-level: DEC-0001–DEC-0099
+- Epic E###: DEC-{NN}01–DEC-{NN}99 (E002 → DEC-0201+)
+- Log via /speck-decision-log only — never hand-assign IDs on parallel branches
+
 PLACEHOLDER CONVENTION:
   Tokens marked  REPLACE_BEFORE_SHIP: <hint>  MUST be filled before this artifact
   can claim ship-readiness. /speck-recheck greps for them.

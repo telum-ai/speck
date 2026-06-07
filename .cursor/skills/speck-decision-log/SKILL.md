@@ -42,9 +42,20 @@ Find `specs/projects/<PROJECT_ID>/project-decisions-log.md`. If missing, create 
 
 ### 2. Generate next decision ID
 
-Scan the log body for `### DEC-NNNN` headings (source of truth — do NOT rely solely on the index table). The next ID is `DEC-<NNNN>` (zero-padded, monotonic max + 1).
+**Band selection** (prevents number races under concurrent epic execution):
 
-If no `DEC-` headings exist yet, start at `DEC-0001`.
+| Context | Band | Next ID rule |
+|---------|------|--------------|
+| Project-level phases (`project-specify`, `product-contract`, `evidence-contract`, `project-plan`, `project-architecture`, `recheck`) | `DEC-0001`–`DEC-0099` | Max in `DEC-0001`…`DEC-0099` + 1 |
+| Epic-level phases (`epic-plan`, `epic-architecture`, `epic-specify`, story-plan inside epic) | `DEC-{NN}01`–`DEC-{NN}99` | `{NN}` = epic number from active epic ID (`E002` → `02`); max in band + 1 |
+
+**Detect active epic**: cwd under `epics/E###-*` or caller-provided epic ID in `$ARGUMENTS`. If epic context is clear, use epic band even on `epic/*` branches.
+
+Scan the log body for `### DEC-NNNN` headings in the **target band only** (source of truth — do NOT rely solely on the index table). Next ID = monotonic max in band + 1.
+
+- Project band empty → start `DEC-0001`
+- Epic `E002` band empty → start `DEC-0201` (not `DEC-0002`)
+- Epic band exhausted (`DEC-{NN}99` used) → STOP; escalate — band needs expansion or sequential merge
 
 ### 2b. Reconcile Decision Index table
 
@@ -95,6 +106,7 @@ Return to caller:
 
 ## Behavior Rules
 
+- NEVER assign global sequential DEC IDs when epic context is active — use the epic's band
 - NEVER skip the SHA + date stamping
 - NEVER allow fewer than 3 alternatives to be logged
 - NEVER edit a locked decision; supersede instead

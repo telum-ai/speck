@@ -273,6 +273,35 @@ Set up testing framework, CI/CD pipeline, linting/formatting, error tracking, an
 
 ---
 
+## Epic Concurrency Waves & Rebase Cadence
+
+<!--
+REQUIRED for Platform / 4+ epic Build projects.
+Assign every epic to exactly one wave. Only epics in the CURRENT wave may run in parallel.
+Integrator epics (2+ upstream dependencies) belong in a later wave — never start them until upstreams merge to main.
+-->
+
+| Wave | Epics | May run in parallel? | Starts when | Daily rebase cadence |
+|------|-------|----------------------|-------------|----------------------|
+| 0 | E000 | No (foundation) | Project start | N/A — merge before Wave 1 |
+| 1 | E001, E002, E006 | Yes | E000 merged to `main` | `git fetch && git rebase origin/main` on each `epic/eNNN` branch |
+| 2 | E003, E005 | Yes | All Wave 1 epics merged | Same daily rebase |
+| 3 | E004, E007 | No (integrators) | Wave 2 merged | Rebase before each story batch |
+
+**Worktree setup** (per parallel epic):
+```bash
+git fetch origin
+git worktree add ../<repo>-eNNN -b epic/eNNN origin/main
+```
+
+**Rules**:
+- Branch parallel epics from **current** `main`, not a stale pre-foundation base
+- DEC bands: `E002` → `DEC-0201+` (see AGENTS.md)
+- `project-state.md` regeneration deferred to merge-to-`main` on epic branches
+- Shared DB tables frozen during parallel waves — new tables/migrations only per epic; 14-digit UTC migration timestamps
+
+---
+
 ## Notes
 
 - Epic boundaries may be adjusted based on implementation discoveries

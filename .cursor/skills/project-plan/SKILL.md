@@ -242,6 +242,11 @@ This command benefits from parallel execution:
      * Dependencies
      * Estimated story count
      * Business metrics (if applicable): Revenue impact, CAC/LTV impact, retention impact
+   - **Concurrency waves** (required when 4+ epics OR Platform play level):
+     * Fill `## Epic Concurrency Waves & Rebase Cadence` — assign every epic to exactly one wave
+     * Wave 0 = E000 foundation; parallel waves = independent slices; final waves = integrators (2+ upstream deps)
+     * Document daily rebase cadence (`git fetch && git rebase origin/main`) for each parallel wave
+     * Flag integrator epics that MUST NOT start until upstream wave merges to `main`
 
 5. PRD structure (adaptive by level):
 

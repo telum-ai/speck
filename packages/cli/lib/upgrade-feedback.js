@@ -6,6 +6,17 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
+    version: '7.13.3',
+    items: [
+      { id: 'G1', summary: 'Epic-level worktree isolation + daily rebase cadence documented in AGENTS.md' },
+      { id: 'G2', summary: 'Per-epic DEC bands in speck-decision-log (E002 → DEC-0201+) prevent number races' },
+      { id: 'G3', summary: 'project-state.md merge-only regen on epic/* branches — skip local overwrite' },
+      { id: 'G4', summary: 'Migration ownership rule — own-your-tables, freeze foundation, 14-digit UTC timestamps' },
+      { id: 'G5', summary: 'Epic concurrency waves in epics-list-template + project-plan; integrator gating' },
+      { id: 'G6', summary: '/speck parallel epic spawn affordance with wave-safety validation' },
+    ],
+  },
+  {
     version: '7.13.2',
     items: [
       { id: 'S1', summary: 'Ambition-aware UI path in epic-specify — Redesign Ambition blocks Rubric Mode default' },

@@ -148,11 +148,23 @@ Footer must include the SHA stamp:
 *[as of SHA `<git_sha_short>` | generated `<iso_timestamp>` | speck v7.0.0]*
 ```
 
-### 12. Write and report
+### 12. Pre-write concurrency check
+
+Before overwriting `project-state.md`, detect concurrent epic execution:
+
+1. `BRANCH=$(git branch --show-current)`
+2. If `BRANCH` is `main` or `master` → proceed to step 13 (normal write)
+3. If `BRANCH` matches `epic/e*` or `epic/E*` (case-insensitive) → **skip write**:
+   - Print: `⚠️ Skipped local project-state.md write — deferred to merge-to-main (concurrent epic branch: <branch>)`
+   - Still report computed next action, drift, and blocking issues to the caller
+   - Skip README regen on epic branches (PROFILE refresh happens on merge-to-main)
+   - STOP — do not execute step 13
+
+### 13. Write and report
 
 Write to `specs/projects/<PROJECT_ID>/project-state.md` (overwrite).
 
-**Mandatory final step:** Run `.speck/scripts/regenerate-project-readme.sh` (or invoke `/project-readme`) to refresh root README status line and footer. Do not skip — PROFILE drift is externally visible on GitHub.
+**Mandatory final step (main branch only):** Run `.speck/scripts/regenerate-project-readme.sh` (or invoke `/project-readme`) to refresh root README status line and footer. Do not skip — PROFILE drift is externally visible on GitHub.
 
 Report to user:
 ```
@@ -171,6 +183,7 @@ If line count > 200, refuse and report which section is bloated — compress it 
 
 ## Behavior Rules
 
+- NEVER overwrite `project-state.md` on `epic/*` branches during concurrent execution — defer to merge-to-main
 - NEVER commit to the file system if line count > 200; compress instead
 - NEVER hallucinate readiness states; only mark what's in actual validation reports
 - NEVER claim freshness without checking SHA stamps against HEAD
