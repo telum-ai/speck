@@ -36,6 +36,8 @@ if [[ ${#staged_specs[@]} -eq 0 && "$staged_readme" == false ]]; then
 fi
 
 # Bash 3+ safe array expansion when the array may be empty under `set -u`
+# Note: traceability-matrix.md is covered here too — validate-template.sh routes it to
+# validate-traceability-matrix.sh (default/conservation mode) by filename.
 if [[ ${#staged_specs[@]} -gt 0 ]]; then
   for spec in "${staged_specs[@]}"; do
     echo -e "${BLUE}🔍 Validating: $spec...${NC}"

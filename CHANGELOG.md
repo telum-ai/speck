@@ -1,5 +1,30 @@
 # Speck Changelog
 
+## v7.14.0 — 2026-06-10 — Anti-Simulation, Promise Conservation, Concurrency Hardening (Flyt E002 learnings)
+
+Flyt E002 feedback (Parts 1+2) + GH issues #62/#63. Speck's gates verified *construction quality* but not *skill execution* (Part 1) nor *contract coverage* (Part 2) — both biggest failures were founder-caught, not gate-caught. This release closes both with verifiable delegation and a promise-conservation law backed by a real blocking validator.
+
+### Methodology (P1)
+- **Promise Conservation (the conservation law)** — Every enumerable upstream promise (product-contract §, each FR/NFR, every wireframe screen/element/state, every experience-chain seam) gets a `PRM-NNN` row in the new `traceability-matrix.md` and MUST resolve to a story+AC, a DEC descope, or a visibly-open row. Produced by `/epic-plan` (which now loads `product-contract.md` + `experience-chain.md` — previously a real gap), blocked on by `/epic-analyze` (unmapped row = P1), cited by `/story-validate`, and re-walked with evidence by `/epic-validate`. Enforced by `validate-traceability-matrix.sh` (default + `--require-evidence` modes), wired into pre-commit and `/recheck` (`PROMISE_DRIFT.P1`).
+- **Design docs are promises** — "Wireframes are inspiration" is now banned. A drawn element or stated seam is a commitment: enumerate it into the matrix or DEC it out. Doctrine added to AGENTS.md + wireframes/experience-chain templates.
+- **Anti-simulation: Verify-Skills Gate** — Orchestrators (`/epic`, `/story`) and any conductor MUST verify ≥2 real skill invocations (`speck-audit` + `story-validate` for stories) and template-compliant reports before accepting a delegated result. New sub-agent return contract `{ readiness_state, pass, p0p1, artifact_paths, skills_invoked }`. Never merge on a self-reported verdict; advance on evidence, not file-presence.
+- **Chaining/continuation** — `story-specify`, `epic-specify`, and `speck-audit` closers no longer read as turn boundaries in orchestrated/background runs — proceed to the next step; the menu shows only in interactive single-step mode.
+- **Autonomous-vs-gated UX-RC partition** — `evidence-contract.md` §8 splits UX-RC evidence into AUTONOMOUS (production build + browser/headless LARP + stored axe JSON + JTBD walkthrough — never deferrable) vs HUMAN/CREDS-GATED (live provider sends, human panels, live NFR). Cannot sit at "IMPL-GREEN, UX-RC deferred" while the autonomous portion is undone. Resolves the prior dev-server vs built-artifact tension. `/epic-validate` + `/speck-larp` now drive the real built app and store axe JSON. Validation report templates require each deferral classified `autonomous-not-done` (blocker) vs `human/creds-gated`.
+- **Parallel-epic-execution pattern** — New `.speck/patterns/learned/process/parallel-epic-execution.md` (conductor + durable orchestration-ledger that survives compaction/spend/rate-limit resets, with verify-skills gate and concurrency guards baked in) + `orchestration-ledger-template.md`.
+
+### Concurrency hardening (P1/P2)
+- **Push-before-spawn** — `git push origin main` the planning corpus before spawning any worktree wave (worktrees branch from `origin/main`, not local HEAD) + sub-agent precondition guards.
+- **Worktree disk hygiene** — Mandatory `git worktree remove --force` after each merge; disk is shared cross-session state (E002 hit `ENOSPC` across ~35 worktrees, froze every session).
+- **Migration version coordination** — Require real wall-clock `date -u +%Y%m%d%H%M%S` (not rounded placeholders) + per-epic offset bands (E002 and E003 both picked `…120000`).
+
+### Bug fixes (P2)
+- **#62** `settings-drift-check.sh` — replaced `mapfile` (bash 4+) with a portable read-loop so it runs on macOS default bash 3.2; added a `.speck/scripts` portability lint to the test suite to keep `mapfile`/`readarray` out.
+- **#63** `banned-language-lint.sh` — the §7 extractor now splits column-1 terms on `/` and `,` into individual phrases (so `"exposes" / "reveals"` actually matches prose); dropped `specs/` from the default scan scope (no more self-flagging on product-contract §7); added whole-word (`-w`) matching so `tone` no longer trips on `atone`.
+- `validate-readiness-evidence.sh` — now also scans `screenshots/` and `larp-evidence/` (not only `larp-recordings/`); guarded empty-array expansion that crashed on bash 3.2; rejection text rewritten to guide-not-block.
+- `validate-visual-assets.sh` — SVG-tag check rewritten as robust glob match (was a `=~` regex syntax-error risk).
+- `validate-template.sh` placeholder rejection rewritten to guide-not-block (points agents to invoke the producing skill, not hand-write around the check).
+- Supabase recipe + skill note: bundle secret-scans MUST allowlist public env prefixes (`NEXT_PUBLIC_*` / `PUBLIC_*` / `EXPO_PUBLIC_*`) — the anon key is public by design.
+
 ## v7.13.3 — 2026-06-07 — Concurrent Multi-Epic Execution (Flyt platform learnings)
 
 Flyt concurrent-epic methodology feedback (2026-06-07): first-class doctrine for running 2+ epics in parallel without truth-artifact merge races.

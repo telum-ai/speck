@@ -64,7 +64,7 @@ check_agents "project-*-research-report-*.md"
 # Epic-level
 for needle in \
   epic.md epic-architecture.md epic-tech-spec.md epic-breakdown.md experience-chain.md \
-  user-journey.md wireframes.md audit-report.md epic-validation-report.md \
+  traceability-matrix.md user-journey.md wireframes.md audit-report.md epic-validation-report.md \
   epic-analysis-report.md epic-retro.md; do
   check_agents "$needle"
 done

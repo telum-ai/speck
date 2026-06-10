@@ -176,11 +176,16 @@ Decision:
 
 ### 14. Report (standard format per claude skill)
 
+**Continuation (do NOT treat the report as a stop):**
+- **Orchestrated / background / delegated run**: when the decision gate is CLEAN (or NEEDS_FIXES with no P0), **immediately proceed to `/story-validate` (or `/epic-validate`)** — the audit is a mid-lifecycle step, not a turn boundary. Stopping after the audit silently leaves the unit unvalidated.
+- **Stop only** on a P0 finding (validate must refuse PASS) or when the user must choose how to handle P1–P3 findings in an interactive run.
+
 ## Behavior Rules
 
 - NEVER skip the adversarial probe suite
 - NEVER claim CLEAN without random-order test rerun
 - NEVER take the implementer's word — verify with evidence
+- NEVER end an orchestrated turn at the audit report when CLEAN — chain to validate
 - ALWAYS apply SHA stamp
 - ALWAYS write report even if CLEAN
 - BLOCK validate on P0 findings

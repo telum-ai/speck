@@ -245,9 +245,11 @@ After saving `spec.md`, scan its content and evaluate each optional step. Output
 
 Recommended path to /story-plan:
 → [only Required/Recommended steps in flow order] → /story-plan → [/story-ui-spec if needed] → /story-tasks → /story-analyze → /story-implement
-
-Shall I proceed with [first recommended step]?
 ```
+
+**Continuation (do NOT treat this menu as a stop):**
+- **Orchestrated / background / delegated run** (invoked by `/story` or a conductor): this table is informational — **immediately proceed to the first recommended step**. Do NOT end your turn here; the lifecycle is incomplete until validate. Ending after the menu silently leaves the story half-built.
+- **Interactive single-step run** (a human invoked `/story-specify` directly): end with "Shall I proceed with [first recommended step]?" and wait.
 
 **Flow order**: `/story-clarify` → `/story-outline` → `/story-scan` → `/story-plan` → `/story-ui-spec` → `/story-tasks` → `/story-analyze` → `/story-implement`
 

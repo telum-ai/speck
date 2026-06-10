@@ -64,11 +64,20 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
     - Running the individual stories' validations is necessary but completely insufficient to prove a product works, because stories are isolated islands and are vulnerable to the composition fallacy.
     - For all UI-facing epics, the **JTBD cold-start LARP walkthrough is the absolute centerpiece of validation**. You must execute a complete end-to-end walkthrough starting from a clean, non-seeded, cold-booted target build (no dev shortcuts, real navigation paths, real login flows).
     - Read epic-level `larp-recordings/` — full JTBD walkthrough must PASS for UX-RC+.
+    - **Drive the real built app — do not substitute a code-level reading.** Whenever a browser/preview/simulator tool is available, the agent MUST drive the actual built artifact (browser/operator LARP) and **store the axe-core JSON**, rather than concluding "the stories compose end-to-end" by inspecting code. A code-level composition reading is NOT UX-RC evidence. This autonomous portion (build + browser LARP + stored axe + JTBD walkthrough) is REQUIRED before the epic may sit at "IMPL-GREEN with UX-RC deferred" — only the human/creds-gated portion (live provider sends, human panels, live NFR) is deferrable. See `evidence-contract.md` §8 UX-RC evidence partition.
     - Run the **First-Time User Comprehension Rubric** on the walkthrough (What am I seeing? Why does it matter? What do I do next?).
     - If the JTBD cold-start LARP walkthrough fails, or if first-time user comprehension is blocked on any primary screen/step (e.g. dead-end placeholders, broken navigation headers, hard 404s), **the epic validation is FAIL regardless of story-level results**, and the maximum claimable/verified state is strictly capped at `IMPL-GREEN`.
 4b. **Verify Deferrals / What this validation did NOT verify**:
     - Require that the epic validation report populates the `## 🔬 What this validation did NOT verify / Deferrals` section. Failure to declare what was unchecked or untested will fail the validation.
 5. For non-UI epics (e.g. `infra_service` / `backend_api`): Validate the core system transaction flow via the Option B "System Operational Scenario Walkthrough". Verify all performance, load-handling, and failover invariants hold under disruption.
+
+5b. **Promise Conservation Re-Walk + Evaporation Audit (REQUIRED — gates the readiness state)**:
+   - **Re-walk the matrix with evidence**: run
+     ```
+     bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --require-evidence [EPIC_DIR]
+     ```
+     Every `PRM-NNN` row MUST be `discharged` (a validated story cited it with evidence — see story-validate Spec Coverage) or `descoped` (a DEC). The JTBD walkthrough is necessary but **NOT sufficient** — a passing JTBD sample does not prove the long tail of promised screens/elements/seams exists. **Any open/undischarged row → the epic CANNOT claim any readiness state** (cap at the last clean state, surface the gap).
+   - **Evaporation audit (dead-seam detection)**: grep the shipped data model + code for affordances that exist but are never populated, rendered, or wired — e.g. an `urgent` enum value never set by any writer, a prop-gated button with no caller, a status column no query reads, a route with no link. These are promises that were half-built then abandoned — **descope-by-silence**. Each finding must become either a DEC (intentional descope) or a P1 fix; record them in the report's Promise Conservation section. A drawn-but-dead seam is not "done", it is evaporated.
 6. Cross-epic integration check: any seams to other epics tested?
 7. If any previous rating, state, or recommendation has changed, write the `### Evaluative Drift / Change Explanation` section with detailed logical rationale.
 8. Run banned-phrase self-check on this report's own language before publishing

@@ -84,16 +84,20 @@ fi
 
 echo -e "👉 Claimed Readiness State: ${BLUE}${claimed_state}${NC}"
 
-# Find larp-recordings directories
+# Find runtime-evidence directories. Accept ALL canonical checked-in evidence dirs per
+# AGENTS.md (larp-recordings/, screenshots/, larp-evidence/) — agents previously mis-stored
+# evidence to satisfy a scan that only looked at larp-recordings/.
 recordings_dirs=()
+EVIDENCE_DIRNAMES=(larp-recordings screenshots larp-evidence)
 
-# 1. Look in STORY_DIR/larp-recordings/
-if [[ -d "${TARGET_DIR}/larp-recordings" ]]; then
-  recordings_dirs+=("${TARGET_DIR}/larp-recordings")
-fi
+# 1. Story/epic-level evidence dirs (TARGET_DIR/<dir>)
+for ed in "${EVIDENCE_DIRNAMES[@]}"; do
+  if [[ -d "${TARGET_DIR}/${ed}" ]]; then
+    recordings_dirs+=("${TARGET_DIR}/${ed}")
+  fi
+done
 
-# 2. Look in specs/projects/PROJECT_ID/larp-recordings/
-# Find the project directory
+# 2. Project-level evidence dirs (specs/projects/PROJECT_ID/<dir>)
 project_dir=""
 dir="$TARGET_DIR"
 while [[ "$dir" != "/" && -n "$dir" ]]; do
@@ -104,28 +108,37 @@ while [[ "$dir" != "/" && -n "$dir" ]]; do
   dir=$(dirname "$dir")
 done
 
-if [[ -n "$project_dir" && -d "${project_dir}/larp-recordings" ]]; then
-  recordings_dirs+=("${project_dir}/larp-recordings")
+if [[ -n "$project_dir" ]]; then
+  for ed in "${EVIDENCE_DIRNAMES[@]}"; do
+    if [[ -d "${project_dir}/${ed}" ]]; then
+      recordings_dirs+=("${project_dir}/${ed}")
+    fi
+  done
 fi
 
 # Count files under the recordings directories matching png, json, mp4, etc.
+# Guard the array expansion — on macOS bash 3.2 with `set -u`, "${arr[@]}" on an EMPTY
+# array throws "unbound variable" and crashes the validator (the macOS failure reported).
 evidence_count=0
-for d in "${recordings_dirs[@]}"; do
-  # Count files ending with png, json, or mp4
-  count=$(find "$d" -type f \( -name "*.png" -o -name "*.json" -o -name "*.mp4" -o -name "*.mov" \) 2>/dev/null | wc -l | tr -d ' ' || echo 0)
-  evidence_count=$((evidence_count + count))
-done
+if [[ ${#recordings_dirs[@]} -gt 0 ]]; then
+  for d in "${recordings_dirs[@]}"; do
+    # Count files ending with png, json, or mp4
+    count=$(find "$d" -type f \( -name "*.png" -o -name "*.json" -o -name "*.mp4" -o -name "*.mov" \) 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+    evidence_count=$((evidence_count + count))
+  done
+fi
 
 if [[ $evidence_count -eq 0 ]]; then
   echo -e "\n${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo -e "${RED}EVIDENCE ERROR: Claim of state '${claimed_state}' rejected.${NC}"
-  echo -e "\n${YELLOW}Enforcing Always-On Discipline:${NC}"
-  echo -e "  You claimed a high readiness state (${claimed_state}) but NO verifiable runtime evidence"
-  echo -e "  files (screenshots, accessibility trees, or video captures) were found under"
-  echo -e "  'larp-recordings/'."
-  echo -e "\n${BLUE}To resolve this:${NC}"
-  echo -e "  1. Run ${GREEN}npx speck larp-play${NC} or manual walkthroughs to capture the visual evidence."
-  echo -e "  2. Ensure captured screenshots/AX trees are saved in 'larp-recordings/'."
+  echo -e "${RED}EVIDENCE GAP: state '${claimed_state}' is not yet backed by runtime evidence.${NC}"
+  echo -e "\n${YELLOW}This is NOT a block on writing the report — it means the claimed state is unproven.${NC}"
+  echo -e "  You claimed ${claimed_state} but NO runtime-evidence files (screenshots, AX trees, videos)"
+  echo -e "  were found under larp-recordings/, screenshots/, or larp-evidence/."
+  echo -e "\n${BLUE}The fix is to run the skill that PRODUCES the evidence — not to hand-edit the report:${NC}"
+  echo -e "  1. Run ${GREEN}/larp${NC} (or ${GREEN}npx speck larp-play${NC}) to capture the walkthrough against the built artifact."
+  echo -e "  2. Ensure screenshots/AX trees land in larp-recordings/ (or screenshots/, larp-evidence/)."
+  echo -e "  3. OR lower the claimed state to one the current evidence supports (e.g. IMPL-GREEN)."
+  echo -e "  Seeing this usually means ${YELLOW}/story-validate + /larp did not actually run${NC}."
   echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   if [[ "$strict" == "true" ]]; then
     exit 1

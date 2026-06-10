@@ -258,6 +258,32 @@ artifact_type: epic-validation-report
 
 ---
 
+## 🔗 Promise Conservation (Traceability Re-Walk + Evaporation Audit)
+
+*The JTBD walkthrough proves a sample path works; this proves NOTHING was silently dropped. Required — gates the readiness state.*
+
+**Traceability re-walk** — `validate-traceability-matrix.sh --require-evidence [EPIC_DIR]` result:
+
+- Total PRM rows: [N] | Discharged (validated w/ evidence): [N] | Descoped (DEC): [N] | **Open/undischarged: [N] ← MUST be 0**
+- Validator exit: [0 = conservation holds / 1 = unresolved promises — list below]
+
+| PRM-ID | Promise | Resolution | Evidence (story / AC / DEC) |
+|--------|---------|-----------|-----------------------------|
+| PRM-014 | [promise text] | discharged | S018 / AC-1 — LARP step 3 + axe JSON |
+| PRM-031 | [promise text] | descoped | DEC-0207 |
+
+> Any open/undischarged row → this epic CANNOT claim a readiness state. Cap at the last clean state and list the gap.
+
+**Evaporation audit (dead-seam detection)** — affordances that exist in code/data model but are never populated, rendered, or wired:
+
+| Dead seam (field / enum / prop / route) | Where | Why it's dead | Resolution (DEC descope / P1 fix) |
+|------------------------------------------|-------|---------------|-----------------------------------|
+| [e.g. `priority='urgent'` enum] | [schema] | [no writer ever sets it] | [DEC-0208 descope / fix in S0NN] |
+
+> A drawn-but-dead seam is not "done" — it is an evaporated promise. Each row resolves to a DEC or a P1.
+
+---
+
 ## 🗣️ Human Language Pass
 
 *Review of user-visible copy and AI-generated outputs against the voice principles in `product-contract.md` §6.*
@@ -312,9 +338,18 @@ artifact_type: epic-validation-report
 
 *To establish high trust and avoid theater, you MUST explicitly disclose what this validation did NOT check or prove. Do not leave blank.*
 
-- **Untested / Unchecked Aspects**: [e.g., "Did not verify live multi-tenant workspace routing, verified mock single-tenant flow only."]
-- **Deferred / Stale Proofs**: [e.g., "Performance under 10k concurrent users was deferred, tested up to 500 concurrent callers only."]
+**Classify EVERY deferral.** `autonomous-not-done` deferrals are BLOCKERS — an agent with a build + browser tool could have gathered them (build + browser LARP + stored axe JSON + JTBD walkthrough), so they must be completed, not deferred (they cap the epic at IMPL-GREEN). Only `human/creds-gated` deferrals (live provider sends, human blind panels, live NFR on real infra) are legitimate.
+
+| Deferred item | Class (`autonomous-not-done` / `human/creds-gated`) | Why deferred | Resolve by |
+|---------------|------------------------------------------------------|--------------|-----------|
+| [e.g. built-app browser JTBD LARP + stored axe JSON] | autonomous-not-done → MUST complete | [reason] | [before claiming UX-RC] |
+| [e.g. live 360dialog/Sveve send to a real phone] | human/creds-gated | [creds not provisioned] | [human/keystone] |
+
+- **Untested / Unchecked Aspects**: [e.g., "Did not verify live multi-tenant workspace routing, verified mock single-tenant flow only (human/creds-gated)."]
+- **Deferred / Stale Proofs**: [e.g., "Performance under 10k concurrent users was deferred, tested up to 500 concurrent callers only (human/creds-gated)."]
 - **Assumptions Untested**: [e.g., "Assumed the notification broker handles message queuing atomically; did not simulate broker disconnection."]
+
+> Any `autonomous-not-done` row present → this epic may NOT claim UX-RC; cap at IMPL-GREEN and complete the autonomous portion first.
 
 ---
 

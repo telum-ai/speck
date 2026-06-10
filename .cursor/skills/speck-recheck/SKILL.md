@@ -65,6 +65,7 @@ Required artifacts to check:
 ├── [Parallel] shell: PROFILE drift — run .speck/scripts/profile-drift-check.sh; classify P1/P2/P3; refresh placeholders via regenerate-project-readme.sh if P3 only
 ├── [Parallel] shell: SETTINGS drift — run .speck/scripts/settings-drift-check.sh; classify SETTINGS_DRIFT.P0; suggest `npx github:telum-ai/speck reconcile-settings`
 ├── [Parallel] shell: ASSET drift — run `.speck/scripts/asset-drift-check.sh`; classify `ASSET_DRIFT.P1` when duplicate SVG path geometry appears in 2+ source files (brand dual-encoding)
+├── [Parallel] shell: PROMISE drift — for each epic dir with a `traceability-matrix.md`, run `.speck/scripts/validation/validators/validate-traceability-matrix.sh <EPIC_DIR>` (and `--require-evidence` for epics whose validation claims ≥ UX-RC); classify any unresolved promise as `PROMISE_DRIFT.P1` (evaporated promise — a drawn/stated commitment with no story and no DEC)
 ├── [Parallel] shell: grep -rln "\[NEEDS USER REVIEW\]" specs/projects/<id>/   (surface to project-state.md)
 └── [Wait] → Synthesize drift report
 ```

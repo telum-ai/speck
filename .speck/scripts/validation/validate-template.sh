@@ -260,9 +260,14 @@ for pattern, desc in generic_id_patterns:
         errors.append(f"Line {line_num}: Found unreplaced {desc} '{m.group(0)}'.")
 
 if errors:
-    print(f"\033[0;31mERROR: Placeholder validation failed for {file_path}\033[0m")
+    print(f"\033[0;31mTEMPLATE NOT YET COMPLIANT: {file_path}\033[0m")
     for err in errors:
         print(f"  \033[1;33m- {err}\033[0m")
+    print("\033[0;34mThis is NOT a block on writing files. The artifact still has unfilled template")
+    print("  placeholders. Produce it by invoking the skill that fills this template (e.g.")
+    print("  /story-specify, /story-validate) and replacing every [PLACEHOLDER] with real content —")
+    print("  do not hand-write around the check. If you are seeing this, the producing skill likely")
+    print("  did not run to completion.\033[0m")
     sys.exit(1)
 sys.exit(0)
 EOF
@@ -302,6 +307,9 @@ case "$filename" in
     ;;
   validation-report.md|epic-validation-report.md)
     validation_type="readiness-evidence"
+    ;;
+  traceability-matrix.md)
+    validation_type="traceability-matrix"
     ;;
   *)
     # Not a tracked template, skip
@@ -343,5 +351,9 @@ case "$validation_type" in
     ;;
   readiness-evidence)
     bash "$SCRIPT_DIR/validators/validate-readiness-evidence.sh" "$(dirname "$file_path")" "$strict"
+    ;;
+  traceability-matrix)
+    # Default (conservation) mode here; epic-validate invokes the validator directly with --require-evidence.
+    bash "$SCRIPT_DIR/validators/validate-traceability-matrix.sh" "$file_path"
     ;;
 esac

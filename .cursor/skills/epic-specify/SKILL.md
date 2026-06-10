@@ -319,9 +319,11 @@ Create epic directory:
 
     Recommended path to /epic-plan:
     → [only Required/Recommended steps in flow order] → /epic-plan
-
-    Shall I proceed with [first recommended step]?
     ```
+
+    **Continuation (do NOT treat this menu as a stop):**
+    - **Orchestrated / background / delegated run** (invoked by `/epic` or a conductor): this table is informational — **immediately proceed to the first recommended step**. Do NOT end your turn at the menu; the epic lifecycle is incomplete. A genuine decision gate (a 🔴 Redesign Ambition founder confirmation, unresolved `[NEEDS CLARIFICATION]`) is the ONLY reason to stop here.
+    - **Interactive single-step run** (a human invoked `/epic-specify` directly): end with "Shall I proceed with [first recommended step]?" and wait.
 
     **Flow order (greenfield UI)**: `/epic-clarify` → `/epic-constitution` → `/epic-architecture` → `/epic-journey` → `/epic-wireframes` → `/epic-outline` → `/epic-plan`
 

@@ -6,6 +6,21 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
+    version: '7.14.0',
+    items: [
+      { id: 'E1', summary: 'Promise conservation: traceability-matrix.md + validate-traceability-matrix.sh (epic-plan produces, epic-analyze blocks, story-validate cites, epic-validate re-walks)' },
+      { id: 'E2', summary: 'Design docs are promises — wireframes/experience-chain seams enumerated or DEC-descoped ("wireframes are inspiration" banned)' },
+      { id: 'E3', summary: 'Anti-simulation Verify-Skills Gate + sub-agent return contract (skills_invoked) in /epic + /story; advance-on-evidence not file-presence' },
+      { id: 'E4', summary: 'Chaining/continuation closers in story-specify/epic-specify/speck-audit — orchestrated runs do not stop at the menu' },
+      { id: 'E5', summary: 'UX-RC autonomous-vs-gated partition in evidence-contract; built-app browser LARP + stored axe JSON; deferral classification in report templates' },
+      { id: 'E6', summary: 'Parallel-epic-execution pattern + orchestration-ledger (survives compaction/spend/rate-limit)' },
+      { id: 'E7', summary: 'Push-before-spawn, worktree disk hygiene, real wall-clock migration timestamps (concurrency guards)' },
+      { id: '#62', summary: 'settings-drift-check.sh mapfile → bash-3.2 read-loop + portability lint' },
+      { id: '#63', summary: 'banned-language-lint.sh §7 phrase-splitting + scope (drop specs/) + whole-word matching' },
+      { id: 'E8', summary: 'validate-readiness-evidence scans screenshots/+larp-evidence/; guide-not-block rejection messages; NEXT_PUBLIC bundle-scan allowlist note' },
+    ],
+  },
+  {
     version: '7.13.3',
     items: [
       { id: 'G1', summary: 'Epic-level worktree isolation + daily rebase cadence documented in AGENTS.md' },

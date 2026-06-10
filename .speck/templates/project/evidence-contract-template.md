@@ -241,6 +241,18 @@ For every validation report at UX-RC or higher:
   - [ ] Automation language invisible to users (no "QA", "test mode", "fixture", "preview data")
   - [ ] Banned language lint passes against all user-visible surfaces
   - [ ] Magic moments validated in LARP — each lands per its trigger / content beats / target response
+
+  **UX-RC evidence partition — autonomous vs gated** *(prevents under-driving validation: defer the gated part, NEVER the autonomous part)*:
+  - **Autonomous (REQUIRED — an agent with a build + a browser/headless tool can gather ALL of this; it is NEVER deferrable)**:
+    - [ ] Production build produced (not dev server) and cold-started
+    - [ ] Headless/browser persona LARP recorded against that build (screenshots + AX tree per step)
+    - [ ] axe-core run with the **JSON stored** under `larp-recordings/` (claiming "axe 0/0" with no stored JSON is surrogate proof)
+    - [ ] JTBD walkthrough completed end-to-end on the built artifact
+  - **Human / creds-gated (legitimately deferrable — disclose in Deferrals, classify `human/creds-gated`)**:
+    - Live third-party provider sends to a real account/device (SMS / WhatsApp / email to a real phone)
+    - Formal human blind panels (e.g. ≥3 native-speaker copy review)
+    - Live NFR / load tests on real production infrastructure
+  - **RULE**: You may NOT declare "IMPL-GREEN with UX-RC deferred" while any **autonomous** item above is undone. If a build + browser/preview tool are available, the agent MUST complete the autonomous portion first; only the gated portion may be deferred. Deferring the whole UX-RC tier when part of it is autonomously gatherable under-drives validation and is a finding.
 * **WHEN: infra_service / backend_api (API-RC)**:
   - [ ] All IMPL-GREEN criteria
   - [ ] All API endpoint contracts verified with strict schema checks (Pydantic / OpenAPI schema tests)
@@ -294,7 +306,7 @@ For every validation report at UX-RC or higher:
 
 To guarantee that agent-verified success translates to actual runtime success on a customer's physical device, all acceptance criteria and evidence requirements must be explicitly tiered:
 
-1. **`agent-LARP` (UX-RC Cap)**: Verifies the code, logic, rendering, and *dev-server composition*. This is fully automatable and verifiable by agents in dev or preview environments.
+1. **`agent-LARP` (UX-RC Cap)**: Verifies the code, logic, rendering, and composition. **Runs against a production build whenever one is autonomously producible** — `next dev` / `vite` dev-server evidence does NOT count for UX-RC; dev-server composition is only a fallback when no build can be produced in the sandbox. Fully automatable by agents in build/preview environments.
 2. **`device-walk` (SHIP-RC Requirement)**: Verifies the actual *shipped/baked native or client artifact*. Any behavior that depends on **Artifact-Config Drift**—where the local/development server environment differs from the baked production build by construction—MUST be categorized as `device-walk` only.
 
 #### The Artifact-Config Drift Class (SHIP-RC Only):

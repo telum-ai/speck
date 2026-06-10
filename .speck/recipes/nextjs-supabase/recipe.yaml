@@ -255,3 +255,8 @@ evidence_contract:
     - "Auth callback flow against real OAuth provider"
     - "Email sending verified (test inbox)"
     - "Stripe webhook delivery verified (if billing in scope)"
+  # Public env vars are SUPPOSED to ship in the client bundle. Any "no secret in bundle"
+  # test MUST allowlist these prefixes or it false-positives on the public anon key.
+  secret_scan_allowlist:
+    - "NEXT_PUBLIC_*"  # Next.js public env (e.g. NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    - "SUPABASE_ANON_KEY"  # anon key is public by design — Row-Level Security is the gate, not secrecy

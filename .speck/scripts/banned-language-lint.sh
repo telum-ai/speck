@@ -78,11 +78,20 @@ awk '
     if ($0 ~ /Banned Term/) next
     if ($0 ~ /^\|[ \t-]+\|/) next
     line=$0
-    sub(/^\| */, "", line)
-    sub(/ *\|.*/, "", line)
-    if (line ~ /^\[/) next
+    sub(/^\| */, "", line)      # strip leading "| "
+    sub(/ *\|.*/, "", line)     # keep ONLY column 1 (never the "Use instead" column)
+    if (line ~ /^\[/) next      # skip placeholder rows
     if (line == "") next
-    print line
+    # Column 1 often holds several phrases: "exposes" / "reveals", or "best/worst".
+    # Split on "/" and "," and emit each phrase individually so real prose can match.
+    n = split(line, parts, /[\/,]/)
+    for (i = 1; i <= n; i++) {
+      p = parts[i]
+      gsub(/"/, "", p)             # strip quotes
+      sub(/^[ \t]+/, "", p)        # trim leading ws
+      sub(/[ \t]+$/, "", p)        # trim trailing ws
+      if (p != "" && p !~ /^\[/) print p
+    }
   }
 ' "$PRODUCT_CONTRACT" > "$TMP_TERMS"
 
@@ -123,8 +132,10 @@ if [[ "$STAGED_MODE" == true ]]; then
     exit 0
   fi
 elif [[ $# -eq 0 ]]; then
+  # Scope to user-visible surfaces. Deliberately EXCLUDE specs/ — product-contract.md §7
+  # legitimately lists the banned terms, and decision logs / validation reports discuss them.
   TARGETS=()
-  for p in src app pages components public locales i18n specs; do
+  for p in src app pages components public locales i18n; do
     if [[ -d "$WORKSPACE_ROOT/$p" ]]; then
       TARGETS+=("$WORKSPACE_ROOT/$p")
     fi
@@ -162,12 +173,13 @@ while IFS= read -r term; do
   [[ -z "$term" ]] && continue
   esc_term="$(printf '%s' "$term" | sed -e 's/[.[\*^$()+?{|]/\\&/g')"
 
+  # -w = whole-word match so "tone" does not trip on "atone"/"stones".
   if [[ ${#GREP_INVOKE[@]} -gt 0 ]]; then
-    raw_output=$("${GREP_INVOKE[@]}" -i "$esc_term" "${TARGETS[@]}" 2>/dev/null || true)
+    raw_output=$("${GREP_INVOKE[@]}" -i -w "$esc_term" "${TARGETS[@]}" 2>/dev/null || true)
   else
     raw_output=$(grep -rIn --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=vendor \
       --exclude-dir=dist --exclude-dir=build --exclude-dir=.next --exclude-dir=out --exclude-dir=.cache \
-      -i "$esc_term" "${TARGETS[@]}" 2>/dev/null || true)
+      -i -w "$esc_term" "${TARGETS[@]}" 2>/dev/null || true)
   fi
 
   if [[ -n "$raw_output" ]]; then

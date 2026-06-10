@@ -165,6 +165,7 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
      * If mentioned in quickstart.md → mark for scenario execution
      * If no test coverage → FLAG as "Untested requirement"
    - Generate requirements traceability matrix (RTM)
+   - **Cite discharged PRM rows (promise conservation)**: open the epic's `traceability-matrix.md` and find the `PRM-NNN` rows whose Discharge column names THIS story (e.g. `S0NN / AC-x`). For each, confirm the acceptance criterion actually passed with evidence in this validation, then record the PRM-id + the evidence that discharges it in the report's `## 📋 Spec Coverage (Requirements Traceability)` section (e.g. "Discharges PRM-014, PRM-021 — see LARP step 3 + axe JSON"). If an assigned PRM row's AC did NOT pass, the row stays `mapped` (not `discharged`) and the story cannot claim it. Do not silently drop an assigned promise.
 
 5. Execute quickstart scenarios (if quickstart.md exists):
    - Parse quickstart.md for step-by-step test scenarios

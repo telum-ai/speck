@@ -32,4 +32,24 @@ bash "$ROOT/.speck/scripts/validation/validate-template.sh" --strict "$TMP/specs
 echo "Test: pre-commit hook empty-array expansion is set -u safe"
 bash -c 'set -euo pipefail; staged_specs=(); staged_readme=false; if [[ ${#staged_specs[@]} -eq 0 && "$staged_readme" == false ]]; then exit 0; fi; for spec in "${staged_specs[@]}"; do echo "$spec"; done'
 
+echo "Test: no bash 4+ builtins (mapfile/readarray) in .speck/scripts (macOS bash 3.2 portability)"
+portability_hits=""
+while IFS= read -r candidate; do
+  [[ -z "$candidate" ]] && continue
+  # This test file legitimately names the builtins (in patterns/messages) — skip it.
+  [[ "$candidate" == *"validate-template.test.sh" ]] && continue
+  # Strip comments before matching so backticked mentions in comments don't false-positive;
+  # only flag mapfile/readarray used as an actual command token.
+  if sed 's/#.*//' "$candidate" | grep -qE '(^|[^[:alnum:]_])(mapfile|readarray)[[:space:]]'; then
+    portability_hits="$portability_hits$candidate"$'\n'
+  fi
+done < <(grep -rlE '(mapfile|readarray)' "$ROOT/.speck/scripts" --include='*.sh' 2>/dev/null || true)
+if [[ -n "$portability_hits" ]]; then
+  echo "ERROR: mapfile/readarray used in .speck/scripts — not portable to macOS default bash 3.2:"
+  printf '%s' "$portability_hits"
+  echo "Use a portable read-loop: arr=(); while IFS= read -r l; do arr+=(\"\$l\"); done < <(cmd)"
+  exit 1
+fi
+echo "  ✓ No bash 4+ array builtins found"
+
 echo "All validate-template smoke tests passed"

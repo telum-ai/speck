@@ -77,6 +77,7 @@ specs/projects/<PROJECT_ID>/
     ├── epic.md                 # PROMISE: Epic scope
     ├── experience-chain.md     # BUILD: Required for UI epics (v7)
     ├── epic-tech-spec.md       # BUILD: Approach
+    ├── traceability-matrix.md  # BUILD: Promise conservation ledger (PRM rows) (v7.14)
     ├── epic-breakdown.md       # BUILD: Story mapping
     ├── epic-validation-report.md  # PROVE: JTBD walkthrough included
     └── stories/S###-name/
@@ -142,6 +143,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Epic-specific context (rare) | `context.md` (epic-level) |
 | Epic technical architecture (cross-cutting epics) | `epic-architecture.md` |
 | Epic technical approach (output of epic-plan) | `epic-tech-spec.md` |
+| Promise conservation ledger (every upstream promise → story+AC, DEC, or open) | `traceability-matrix.md` |
 | Story map + ordering | `epic-breakdown.md` |
 | Cross-screen UI flow + emotional state (REQUIRED for UI epics) | `experience-chain.md` |
 | User journey map | `user-journey.md` |
@@ -212,12 +214,34 @@ When 2+ epics run in parallel (separate sessions or worktrees), shared truth art
 | Rule | What | How |
 |------|------|-----|
 | **Worktree isolation** | One epic = one branch + optional worktree off *current* `main` | `git worktree add ../<repo>-eNNN -b epic/eNNN origin/main` (or `main`). Rebase off `main` daily: `git fetch && git rebase origin/main`. Never branch parallel epics from a stale pre-foundation base. |
+| **Push-before-spawn** | Worktrees branch from `origin/main`, NOT local `HEAD` | `git push origin main` the full planning corpus (epic specs, tech-spec, wireframes, DECs) **before** spawning any worktree wave, and after every merge. Unpushed local commits are invisible to worktrees → the first wave builds blind to locked specs. Each sub-agent prompt carries a precondition guard: "verify `<spec path>` exists on this branch, else abort." |
+| **Worktree disk hygiene** | Worktrees are a shared, exhaustible host resource | Each `isolation: worktree` sub-agent runs `pnpm install` + build (~1 GB+). Many parallel worktrees → host `ENOSPC` freezes **every** session on the machine (the harness writes a tmp file per command). **MUST** `git worktree remove --force ../<repo>-eNNN` after each merge. Cap concurrent worktrees to the current wave; treat free disk as cross-session shared state. |
 | **DEC bands** | Prevent `project-decisions-log.md` number races | Project-level: `DEC-0001`–`DEC-0099`. Epic E###: `DEC-{NN}01`…`DEC-{NN}99` where `{NN}` = epic number (`E002` → `DEC-0201+`). Log via `/speck-decision-log` only. |
 | **project-state merge-only** | Single-file full regen clobbers under parallelism | Epic sessions on `epic/*` branches: **read** `project-state.md`, do **not** overwrite. Regenerate on `main` only (merge PR author or post-merge `/project-state`). |
-| **Migration ownership** | Concurrent schema changes collide on shared tables | Each epic owns **new** tables/migrations only. Foundation/shared tables (`studios`, auth, tenancy) are frozen — policy changes route through owning epic or sequential merge. Filenames: **14-digit UTC timestamps** (`YYYYMMDDHHMMSS_name.sql`). Validate ordering on Supabase branch per PR. |
+| **Migration ownership + version coordination** | Concurrent schema changes collide on shared tables AND on identical timestamps | Each epic owns **new** tables/migrations only. Foundation/shared tables (`studios`, auth, tenancy) are frozen — policy changes route through owning epic or sequential merge. Filenames: **real wall-clock 14-digit UTC** (`date -u +%Y%m%d%H%M%S`) — never rounded placeholders like `…120000` (parallel epics keep picking the same round number → collisions). Fallback when scripting stamps: per-epic second/minute offset bands (`E002` → `…NN02`, `E003` → `…NN03`). Validate ordering on a Supabase branch per PR. |
 | **Epic waves** | Integrators must not start before upstreams land | `epics.md` declares concurrency waves (see template). Only epics in the **current wave** may run in parallel. Integrator epics (2+ upstream dependencies) start after upstream merges to `main`. |
 
-**Spawn parallel epics**: User says "run E002+E003 in parallel" → `/speck` validates wave safety from `epics.md`, creates worktrees/branches per epic, assigns DEC bands, and routes each session to `/epic` with branch context. Story implementation may still use `@speck-coder` `isolation: worktree` inside an epic session.
+**Spawn parallel epics**: User says "run E002+E003 in parallel" → `/speck` validates wave safety from `epics.md`, **pushes the planning corpus to `origin/main` first**, creates worktrees/branches per epic, assigns DEC bands, and routes each session to `/epic` with branch context. After each epic merges, `git worktree remove --force` it. Story implementation may still use `@speck-coder` `isolation: worktree` inside an epic session. The conductor keeps a durable **orchestration ledger** (`.speck/templates/project/orchestration-ledger-template.md`) as the one file that survives compaction / spend / rate-limit resets. The full conductor pattern (loop + ledger + verify-skills gate + guards) is in `.speck/patterns/learned/process/parallel-epic-execution.md`.
+
+### Delegated execution: verify skills ran before accepting results
+
+Speck's rigor lives in the **skills** (the adversarial `/audit` probes, honest readiness-state discipline, decision logging). A delegated or background sub-agent can emit template-shaped `spec.md` / `plan.md` / `validation-report.md` with a declared readiness state **without ever invoking those skills** — and it passes every superficial check. Code can be sound while the validation *claims* are untrue (a "verified" test that never existed, `axe 0/0` with no axe JSON, "live" proof from a side-harness). **Never merge on a sub-agent's self-reported verdict.**
+
+**Sub-agent return contract** — every delegated story/epic unit returns:
+
+```
+{ readiness_state, pass, p0p1: [...], artifact_paths: [...], skills_invoked: [...] }
+```
+
+`skills_invoked` lists the actual Skill invocations made (e.g. `story-specify`, `speck-audit`, `story-validate`). Self-reported fields are **not** tamper-evident (host-runtime limitation) — the transcript check below is the backstop.
+
+**Verify-skills gate** — before ACCEPTING/merging a delegated result, the conductor MUST:
+
+1. Confirm required reports exist AND pass `.speck/scripts/validation/validate-template.sh --strict` (template-compliant, not merely right-shaped).
+2. Verify **≥2 real skill invocations** in the sub-agent's transcript — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. If `skills_invoked` is empty or the transcript shows zero `Skill` calls → **REJECT + re-run**.
+3. Treat `/audit` as **non-skippable** before any merge in delegated flows.
+
+A unit that produced passing-looking artifacts with zero skill calls is **simulated, not validated** — reject it.
 
 ## ⚖️ Always-On Discipline (unconditional, regardless of human hands-on intensity)
 
@@ -231,6 +255,7 @@ These apply at every play level, in every command, on every project:
 | **Decision-lock log** | Every phase boundary | Enumerate decisions, log SHA + alternatives in `project-decisions-log.md` |
 | **Skeptical-review** | Before any non-trivial proposal locks | Produce N≥3 alternatives + tradeoff scoring + rationale |
 | **Skeptical audit** | Between `implement` and `validate` | Run `/audit` — auditor doesn't trust the implementer's report |
+| **Verify-skills-before-accept** | Accepting any delegated / parallel sub-agent result | Confirm ≥2 real skill invocations (`skills_invoked` + transcript) AND template-compliant reports before merging; never accept a self-reported `{readiness_state, pass}` |
 | **Runtime LARP** | Every UI story/epic validate gate | Run `/larp [persona]` — produces checked-in evidence |
 | **PROFILE drift check** | Every `/recheck` | Compare root README one-liner vs `product-contract.md`; refresh via `/project-readme` when placeholders remain |
 | **Readiness-state declaration** | At every validate | Claim one of IMPL-GREEN / UX-RC / COMMERCIAL-RC / SHIP-RC / SHIP / NO-SHIP |
@@ -238,6 +263,7 @@ These apply at every play level, in every command, on every project:
 | **Banned-phrase detector** | In every agent self-summary | Phrases like "ready for launch", "outside autonomous reach", "premium polish complete", "should work in production", "tests pass therefore done" trigger re-audit or enumeration |
 | **Banned-language lint** | On every commit + at `/audit` | Run `.speck/scripts/banned-language-lint.sh` against `product-contract.md` banned terms |
 | **Evidence-or-it-didn't-happen** | At every validation gate | "Tests pass" is one signal, not proof. Require runtime evidence linked to claim. |
+| **Promise conservation** | `/epic-plan` → `/epic-analyze` → `/epic-validate` | Every enumerable upstream promise (product-contract §, each FR/NFR, every wireframe screen/element/state, every experience-chain seam) gets a `PRM-NNN` row in `traceability-matrix.md` and resolves to a story+AC, a DEC descope, or a visibly-open row. Enforced by `validate-traceability-matrix.sh`. **"Wireframes are inspiration" is banned** — a drawn element or stated seam is a promise. |
 
 A more hands-on human intervenes at decision locks. A more hands-off human lets the agent confirm and proceed. **Same methodology either way.**
 
@@ -349,6 +375,8 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Hand-wave dev/prod separation as "cleanup work" — it's infrastructure
 - Run costly full-integration CI runs on pure documentation/specification changes (always use path-gated triggers to optimize token and platform budgets)
 - Bypass the real UI DOM/form elements with API calls when auditing or validating UI stories (always drive the actual input fields)
+- Let a drawn wireframe element or a stated experience-chain seam go un-enumerated — it is a promise: give it a `PRM-NNN` row in `traceability-matrix.md` (story+AC) or descope it with a DEC. "Wireframes are inspiration" is banned.
+- Accept a delegated/parallel sub-agent's self-reported `{readiness_state, pass}` — verify ≥2 real skill invocations + template-compliant reports first (Verify-Skills Gate)
 
 **ALWAYS**:
 - Read `project-state.md` first
@@ -363,6 +391,7 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Update project truth docs after story validation passes
 - Treat live runtime as the source of truth, not stale validation reports
 - Treat AI-generated user-facing text as governed product copy
+- Enumerate every upstream promise into `traceability-matrix.md` at `/epic-plan` and re-walk it at `/epic-validate` (conservation law)
 - Add commit learning tags (`PATTERN:`, `GOTCHA:`, `PERF:`, `ARCH:`, `RULE:`, `DEBT:`) when you discover something
 
 ## 📊 Commit Learning Tags
@@ -408,7 +437,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 7.13.3  
+**Speck Version**: 7.14.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

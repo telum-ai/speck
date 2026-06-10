@@ -78,8 +78,9 @@ while IFS= read -r line; do
       # Enforce clean SVG-First rules
       content=$(cat "$abs_asset_path" | tr '\n' ' ' | xargs || true)
       
-      # 1. Basic tags check
-      if [[ ! "$content" =~ \<svg[[:space:]>]* || ! "$content" =~ \<\/svg\> ]]; then
+      # 1. Basic tags check — glob match (robust across bash versions; the prior
+      #    `=~ \<svg[[:space:]>]*` regex was a syntax-error risk on some bashes).
+      if [[ "$content" != *"<svg"* || "$content" != *"</svg>"* ]]; then
         echo -e "   ${RED}❌ Invalid SVG: File must be well-formed and contain matching <svg> and </svg> tags.${NC}"
         failed=true
         continue

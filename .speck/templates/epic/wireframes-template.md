@@ -5,6 +5,8 @@
 **Created**: [DATE]  
 **Version**: 1.0
 
+> **Wireframes are PROMISES, not inspiration.** Every screen in the inventory and every element/state you draw here (Default / Loading / Empty / Error / Success) is a commitment the product owes the user. `/epic-plan` enumerates each into `traceability-matrix.md` as a `PRM-NNN` row that must be discharged by a story+AC or descoped with a DEC. If you draw it and don't intend to build it, **delete it from the wireframe or DEC it** — do not leave it to evaporate silently. "It was just a mockup" is banned.
+
 ---
 
 ## 📊 Design Context Sources

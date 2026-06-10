@@ -43,6 +43,9 @@ This command benefits from parallel execution:
 1. Load epic planning context:
    - Epic specification (epic.md) - required
    - Project PRD and technical constraints
+   - **`product-contract.md`** (if it exists) — the sections routed to this epic (§1 paid promise, §3 differentiator pillars, §3a anti-differentiators, §4 JTBD/invariants, §5 magic moments, §10 trust moments). REQUIRED input for the traceability matrix (step 6b). *(This was previously NOT loaded — a real promise-coverage gap.)*
+   - **`experience-chain.md`** (if it exists, UI epics) — every seam rule (§2–§9 tables). Each seam is a promise. *(Also previously NOT loaded.)*
+   - **`wireframes.md`** / `user-journey.md` (if they exist) — the screen inventory and every per-screen element/state.
    - Epic architecture (epic-architecture.md) if exists
    - Check for existing research reports: epic-*-research-report-*.md (from earlier commands)
    - Codebase scans (epic-codebase-scan*.md)
@@ -188,6 +191,17 @@ This command benefits from parallel execution:
    - Location: `[EPIC_DIR]/epic-tech-spec.md` (technical blueprint with research embedded)
    - Update epic.md status to "Technical Specification Complete"
 
+6b. **Produce the Promise Traceability Matrix (conservation law — REQUIRED)**:
+   - Read the template FIRST: `.speck/templates/epic/traceability-matrix-template.md`.
+   - Enumerate **every** promise from the sources loaded in step 1 and give each a `PRM-NNN` id:
+     * `product-contract.md` sections routed to this epic (§1/§3/§3a/§4/§5/§10)
+     * every `FR-[EPIC]-###` and `NFR-###` in `epic.md`
+     * every wireframe screen (screen-inventory) AND every element/state drawn per screen (Default/Loading/Empty/Error/Success)
+     * every `experience-chain.md` seam rule (§2–§9)
+     * If a source is absent (e.g. backend-only epic, no wireframes), write "N/A — no UI surface" — state absence, never assume it.
+   - Write `[EPIC_DIR]/traceability-matrix.md` with all rows at **status=open** (the Discharge and DEC columns are filled later by `/epic-breakdown` + `/story-specify`, then verified at `/story-validate`).
+   - This is the ledger `/epic-analyze` blocks on and `/epic-validate` re-walks. A drawn wireframe element or stated seam with no row is a silently-evaporated promise.
+
 7. Validation checks:
    - All stories have technical approach
    - Architecture supports requirements
@@ -202,8 +216,9 @@ This command benefits from parallel execution:
    Epic: [Name]
    Architecture: [Pattern]
    
-   Generated Artifact:
+   Generated Artifacts:
    - epic-tech-spec.md (technical blueprint with embedded research)
+   - traceability-matrix.md (promise conservation ledger — all PRM rows at status=open)
    
    Research Integration:
    - Web searches conducted: [X topics]

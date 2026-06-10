@@ -74,11 +74,13 @@ If the user asks to run 2+ epics in parallel (e.g. "spawn E002+E003", "run these
 
 1. Read `specs/projects/<PROJECT_ID>/epics.md` → `## Epic Concurrency Waves & Rebase Cadence`
 2. **Wave safety**: every requested epic must be in the **same current wave** and must NOT be an integrator epic (2+ upstream deps not yet merged to `main`). If unsafe → STOP and list blockers.
-3. For each epic: `git worktree add ../<repo>-eNNN -b epic/eNNN origin/main` (or branch from current `main` if worktree already exists)
-4. Tell the user DEC band per epic (`E002` → `DEC-0201+`) and that `project-state.md` regen is **merge-only** on epic branches
-5. Route each epic to `/epic` in its worktree — do not start integrator epics until upstream wave merges
+3. **Push before spawn**: `git push origin main` so the planning corpus is on `origin/main` — worktrees branch from `origin/main`, not local `HEAD`. Unpushed commits = the wave builds blind to locked specs.
+4. For each epic: `git worktree add ../<repo>-eNNN -b epic/eNNN origin/main`. Include a precondition guard in each sub-agent prompt ("verify `<spec path>` exists on this branch, else abort").
+5. Tell the user DEC band per epic (`E002` → `DEC-0201+`) and that `project-state.md` regen is **merge-only** on epic branches
+6. Route each epic to `/epic` in its worktree — do not start integrator epics until upstream wave merges
+7. **After each epic merges**: `git worktree remove --force ../<repo>-eNNN` (worktrees are ~1 GB+; parallel accumulation can exhaust host disk and freeze every session)
 
-See AGENTS.md **Concurrent multi-epic execution** for migration ownership and daily rebase cadence.
+See AGENTS.md **Concurrent multi-epic execution** and `.speck/patterns/learned/process/parallel-epic-execution.md` for migration version coordination, disk hygiene, and the conductor + orchestration-ledger pattern.
 
 ## Complexity scale vs play level (read this first)
 

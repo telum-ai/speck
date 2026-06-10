@@ -13,6 +13,12 @@ The experience-chain.md defines the SEAMS between screens, not the screens thems
 Each story optimizes its own screen, but only this artifact prevents the result from feeling
 like "seven different apps stitched together."
 
+EVERY SEAM RULE IS A PROMISE. Each rule you state below (single-job-per-screen, no-repetition,
+first-viewport "why now", magic-moment placement, continuity threads, backtracking, adjacency)
+is a commitment the product owes the user. /epic-plan enumerates each seam into
+traceability-matrix.md as a PRM-NNN row that must be discharged by a story+AC or descoped with a
+DEC. A stated seam that is never built is an evaporated promise. "It was just the chain doc" is banned.
+
 If your epic has user-facing UI and no experience-chain.md, /epic-plan refuses to run.
 
 Skip ONLY for: backend-only, API-only, CLI-only, infrastructure/devops epics.

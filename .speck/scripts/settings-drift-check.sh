@@ -29,7 +29,11 @@ fi
 P0=0
 
 # Default managed blocks when _speck_managed absent (pre-v7.8 workspaces)
-mapfile -t BLOCKS < <(jq -r '._speck_managed.blocks[]? // empty' "$EXAMPLE" 2>/dev/null || true)
+# Portable read-loop instead of `mapfile` (bash 4+) — macOS default /bin/bash is 3.2.
+BLOCKS=()
+while IFS= read -r _block_line; do
+  BLOCKS+=("$_block_line")
+done < <(jq -r '._speck_managed.blocks[]? // empty' "$EXAMPLE" 2>/dev/null || true)
 if [[ ${#BLOCKS[@]} -eq 0 ]]; then
   BLOCKS=(hooks.Stop hooks.SessionStart hooks.PostToolUse)
 fi

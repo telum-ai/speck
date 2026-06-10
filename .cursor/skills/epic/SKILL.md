@@ -86,7 +86,8 @@ State: Planned       →  Run: /epic-analyze  →  Verify zero critical issues.
                                Transition to state: In Progress
 
 State: In Progress   →  Monitor and coordinate individual story completions.
-                        Once all stories are complete:
+                        For EACH delegated story result, run the Verify-Skills Gate (§3a) before accepting.
+                        Once all stories are complete AND verified:
                                Transition to state: Stories Complete
 
 State: Stories Complete → Run: /audit --epic [EPIC_ID]
@@ -97,6 +98,24 @@ State: Audited       →  Run: /epic-validate
                              ↳ STOP if validated state fails to meet targets.
                                Transition to state: Validated
 ```
+
+### 3a. Delegated-Execution Verify Gate (accepting sub-agent story results)
+
+When story work is delegated to background/worktree sub-agents, a sub-agent can emit template-shaped `spec.md` / `validation-report.md` with a declared readiness state **without ever invoking the skills** — it will pass every superficial check. Speck's rigor lives in the skills, so a story that produced passing-looking artifacts with zero skill calls is **simulated, not validated**.
+
+Each delegated story sub-agent returns the contract:
+
+```
+{ readiness_state, pass, p0p1: [...], artifact_paths: [...], skills_invoked: [...] }
+```
+
+Before ACCEPTING a story result (and before counting it toward "Stories Complete"), the conductor MUST:
+
+1. **Reports exist + compliant**: `validation-report.md` (and `audit-report.md`) exist AND pass `bash .speck/scripts/validation/validate-template.sh --strict <path>`.
+2. **Skills actually ran**: `skills_invoked` includes at least `speck-audit` AND `story-validate`; cross-check the sub-agent transcript for ≥2 real `Skill` invocations. If empty / zero → **REJECT and re-run the story** (do not accept on `{readiness_state, pass}` alone).
+3. **`/audit` non-skippable**: a story merged without a real `/audit` run is rejected regardless of its self-reported state.
+
+Self-reported fields are not tamper-evident (host-runtime limit) — the transcript check is the backstop. See AGENTS.md *Delegated execution: verify skills ran before accepting results*.
 
 ### 4. Hard Stop Conditions
 
@@ -112,6 +131,8 @@ Do NOT transition automatically and stop immediately if any of these occur:
 - **ALWAYS** check for the `E000` Developer Infrastructure epic first. Ensure testing and CI patterns are resolved before allowing other epics to specify.
 - **ALWAYS** invoke downstream skills by reading their `SKILL.md` — never substitute inline artifact authoring for a skipped skill step.
 - **ALWAYS** delegate per-story work to `/story`; the epic orchestrator coordinates sequencing, not story implementation.
+- **ALWAYS** run the §3a Verify-Skills Gate before accepting a delegated story result — "Stories Complete" counts only verified stories, never self-reported verdicts.
+- **NEVER** advance a state on mere artifact presence — require the report template-compliant AND its producing skills verified to have run.
 - **NEVER** skip a validation check without an explicit `--skip` argument and its corresponding `project-decisions-log.md` rationale.
 - **ALWAYS** regenerate `project-state.md` upon any state transition.
 - Provide a clear progress bar or status line (e.g. `[Specified 🟢] → [Planning 🟡] → [Planned ⚪]`) in each reply.

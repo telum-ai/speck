@@ -303,6 +303,8 @@ const supabase = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY)
 const supabase = createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 ```
 
+**Bundle secret-scan allowlist**: the anon key (`NEXT_PUBLIC_SUPABASE_ANON_KEY`) is public by design — RLS is the gate, not secrecy. Any "no secret in client bundle" test MUST allowlist public env prefixes (`NEXT_PUBLIC_*` / `PUBLIC_*` / `EXPO_PUBLIC_*`) or it false-positives on the anon key that is *supposed* to ship to the client. Only the service-role key (and other server-only secrets) should ever fail a bundle scan.
+
 ### 3. N+1 Query Pattern
 ```typescript
 // ❌ BAD: N+1 queries

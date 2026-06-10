@@ -138,9 +138,18 @@ If any P0 exists: claimed state must be lowered.
 
 *To establish high trust and avoid theater, you MUST explicitly disclose what this validation did NOT check or prove. Do not leave blank.*
 
-- **Untested / Unchecked Aspects**: [e.g., "Did not test native Apple Pay callbacks, verified mock flow only. Deferred to physical device walk."]
-- **Deferred / Stale Proofs**: [e.g., "Sentry logging was not verified against active staging event streams because the API keys are not provisioned yet."]
+**Classify EVERY deferral.** `autonomous-not-done` deferrals are BLOCKERS — an agent with a build + browser tool could have done them, so they must be completed, not deferred (they cap the state at IMPL-GREEN). Only `human/creds-gated` deferrals are legitimate.
+
+| Deferred item | Class (`autonomous-not-done` / `human/creds-gated`) | Why deferred | Resolve by |
+|---------------|------------------------------------------------------|--------------|-----------|
+| [e.g. browser LARP on prod build + stored axe JSON] | autonomous-not-done → MUST complete | [reason] | [before claiming UX-RC] |
+| [e.g. live SMS send to a real phone] | human/creds-gated | [creds not provisioned] | [human/keystone] |
+
+- **Untested / Unchecked Aspects**: [e.g., "Did not test native Apple Pay callbacks, verified mock flow only. Deferred to physical device walk (human/creds-gated)."]
+- **Deferred / Stale Proofs**: [e.g., "Sentry logging was not verified against active staging event streams because the API keys are not provisioned yet (human/creds-gated)."]
 - **Assumptions Untested**: [e.g., "Assumed the Stripe webhook responds under 1s; did not stress test webhook latency bounds."]
+
+> Any `autonomous-not-done` row present → this validation may NOT claim UX-RC; cap at IMPL-GREEN and complete the autonomous portion first.
 
 ---
 
