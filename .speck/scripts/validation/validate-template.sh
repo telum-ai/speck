@@ -149,6 +149,17 @@ def is_prose_annotation(bracket_content):
     return False
 
 
+def is_code_or_syntax_construct(bracket_content):
+    """Skip bracketed code tokens in prose (e.g. [BULK_MODEL, ESCALATION_MODEL], [\"scripts/foo.mjs\", target])."""
+    if any(char in bracket_content for char in ('"', "'", '`', ',', '=', '(', ')', '{', '}', '[', ']')):
+        return True
+    if '/' in bracket_content or '\\' in bracket_content:
+        return True
+    if re.search(r'\.[a-zA-Z0-9]+$', bracket_content):
+        return True
+    return False
+
+
 def is_template_bracket(bracket_content):
     upper = bracket_content.upper()
     if upper in TEMPLATE_BRACKET_MARKERS:
@@ -225,6 +236,8 @@ for m in matches:
     if is_citation_context(line, bracket_content):
         continue
     if is_prose_annotation(bracket_content):
+        continue
+    if is_code_or_syntax_construct(bracket_content):
         continue
     if not is_template_bracket(bracket_content):
         continue

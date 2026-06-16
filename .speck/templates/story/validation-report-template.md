@@ -2,8 +2,8 @@
 speck_version: 7.0
 template_version: "7.11.0"
 artifact_type: validation-report
-readiness_state_claimed: [NO-SHIP | IMPL-GREEN | UX-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
-readiness_state_verified: [NO-SHIP | IMPL-GREEN | UX-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
+readiness_state_claimed: [NO-SHIP | IMPL-GREEN | INTEGRATION-GREEN | UX-RC | API-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
+readiness_state_verified: [NO-SHIP | IMPL-GREEN | INTEGRATION-GREEN | UX-RC | API-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
 build_sha: [hash]
 build_artifact: [iOS sim / web prod bundle / etc.]
 audit_report: [path or "not-run"]
@@ -140,16 +140,18 @@ If any P0 exists: claimed state must be lowered.
 
 **Classify EVERY deferral.** `autonomous-not-done` deferrals are BLOCKERS — an agent with a build + browser tool could have done them, so they must be completed, not deferred (they cap the state at IMPL-GREEN). Only `human/creds-gated` deferrals are legitimate.
 
-| Deferred item | Class (`autonomous-not-done` / `human/creds-gated`) | Why deferred | Resolve by |
-|---------------|------------------------------------------------------|--------------|-----------|
-| [e.g. browser LARP on prod build + stored axe JSON] | autonomous-not-done → MUST complete | [reason] | [before claiming UX-RC] |
-| [e.g. live SMS send to a real phone] | human/creds-gated | [creds not provisioned] | [human/keystone] |
+| Deferred item | Class (`autonomous-not-done` / `human/creds-gated`) | Cap Status (`evidence-pending` / `implementation-pending`) | Why deferred | Resolve by |
+|---------------|------------------------------------------------------|-----------------------------------------------------------|--------------|-----------|
+| [e.g. browser LARP on prod build + stored axe JSON] | autonomous-not-done → MUST complete | evidence-pending | [reason] | [before claiming UX-RC] |
+| [e.g. Batch API path for FR-E002-004] | human/creds-gated | implementation-pending → BLOCKER | [code never built] | [implement or DEC descope] |
+| [e.g. live SMS send to a real phone] | human/creds-gated | evidence-pending | [creds not provisioned] | [human/keystone] |
 
-- **Untested / Unchecked Aspects**: [e.g., "Did not test native Apple Pay callbacks, verified mock flow only. Deferred to physical device walk (human/creds-gated)."]
-- **Deferred / Stale Proofs**: [e.g., "Sentry logging was not verified against active staging event streams because the API keys are not provisioned yet (human/creds-gated)."]
+- **Untested / Unchecked Aspects**: [e.g., "Did not test native Apple Pay callbacks, verified mock flow only. Deferred to physical device walk (human/creds-gated, evidence-pending)."]
+- **Deferred / Stale Proofs**: [e.g., "Sentry logging was not verified against active staging event streams because the API keys are not provisioned yet (human/creds-gated, evidence-pending)."]
 - **Assumptions Untested**: [e.g., "Assumed the Stripe webhook responds under 1s; did not stress test webhook latency bounds."]
 
-> Any `autonomous-not-done` row present → this validation may NOT claim UX-RC; cap at IMPL-GREEN and complete the autonomous portion first.
+> Any `implementation-pending` row present → verified readiness state MUST cap at `NO-SHIP`. Unbuilt code cannot pass as IMPL-GREEN or higher.
+> Any `autonomous-not-done` row present → this validation may NOT claim UX-RC/API-RC; cap at IMPL-GREEN/INTEGRATION-GREEN and complete the autonomous portion first.
 
 ---
 

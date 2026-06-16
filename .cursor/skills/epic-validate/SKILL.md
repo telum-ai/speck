@@ -20,7 +20,7 @@ $ARGUMENTS
 .speck/templates/epic/epic-punch-list-template.md
 ```
 
-**Checkpoint**: After reading, note the v7 readiness states (`NO-SHIP`, `IMPL-GREEN`, `UX-RC`, `COMMERCIAL-RC`, `SHIP-RC`, `SHIP`) and the v7 gate criteria.
+**Checkpoint**: After reading, note the v7 readiness states (`NO-SHIP`, `IMPL-GREEN`, `INTEGRATION-GREEN`, `UX-RC`, `API-RC`, `COMMERCIAL-RC`, `SHIP-RC`, `SHIP`) and the v7 gate criteria.
 
 ---
 
@@ -69,7 +69,12 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
     - If the JTBD cold-start LARP walkthrough fails, or if first-time user comprehension is blocked on any primary screen/step (e.g. dead-end placeholders, broken navigation headers, hard 404s), **the epic validation is FAIL regardless of story-level results**, and the maximum claimable/verified state is strictly capped at `IMPL-GREEN`.
 4b. **Verify Deferrals / What this validation did NOT verify**:
     - Require that the epic validation report populates the `## 🔬 What this validation did NOT verify / Deferrals` section. Failure to declare what was unchecked or untested will fail the validation.
-5. For non-UI epics (e.g. `infra_service` / `backend_api`): Validate the core system transaction flow via the Option B "System Operational Scenario Walkthrough". Verify all performance, load-handling, and failover invariants hold under disruption.
+    - **Cap Status enforcement**: every deferral row MUST include `Cap Status` (`evidence-pending` or `implementation-pending`). Any row tagged `implementation-pending` (code path not built) → verified state MUST cap at `NO-SHIP`. Any row tagged `autonomous-not-done` → cap at `IMPL-GREEN`/`INTEGRATION-GREEN` (cannot claim UX-RC/API-RC).
+4c. **INTEGRATION-GREEN gate** (when epic depends on external services in evidence-contract §7):
+    - If §7 lists services this epic touches, verify at least one **real round-trip** succeeded per service across the epic's stories (not mock-only). Capture logs/traces.
+    - Mock-green + adversarial audit alone is insufficient — the E002 LLM epic passed both with zero real Gemini calls; INTEGRATION-GREEN requires proof of at least one live call per §7 service.
+    - If no §7 services apply, INTEGRATION-GREEN auto-passes.
+5. For non-UI epics (e.g. `infra_service` / `backend_api`): Validate the core system transaction flow via the Option B "System Operational Scenario Walkthrough". Verify all performance, load-handling, and failover invariants hold under disruption. Declare `API-RC` when autonomous API-RC criteria pass (see evidence-contract §8).
 
 5b. **Promise Conservation Re-Walk + Evaporation Audit (REQUIRED — gates the readiness state)**:
    - **Re-walk the matrix with evidence**: run

@@ -47,7 +47,7 @@ fi
 # Standardise to uppercase
 claimed_state=$(echo "$claimed_state" | tr '[:lower:]' '[:upper:]')
 
-if [[ -z "$claimed_state" || "$claimed_state" == "NO-SHIP" || "$claimed_state" == "IMPL-GREEN" ]]; then
+if [[ -z "$claimed_state" || "$claimed_state" == "NO-SHIP" || "$claimed_state" == "IMPL-GREEN" || "$claimed_state" == "INTEGRATION-GREEN" ]]; then
   echo -e "ℹ️  State is ${claimed_state:-NO-SHIP} (or lower). No visual/runtime evidence files are required."
   exit 0
 fi

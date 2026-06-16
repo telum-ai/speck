@@ -231,6 +231,15 @@ For every validation report at UX-RC or higher:
 - [ ] No `expect().toBe(<wrong-value>)` with "BUG:" / "TODO:" / "fix later" / "should be" comments
 - [ ] Builds without warnings/errors
 
+### INTEGRATION-GREEN
+
+* **WHEN: features depend on external services/APIs/LLMs (§7)**:
+  - [ ] All IMPL-GREEN criteria pass
+  - [ ] **Real-Integration Smoke Check**: At least one real round-trip call has successfully run and succeeded against each live external service named in §7 (e.g., real LLM completion returned, live API call responded 200). This catches 429 rate-limiting, authentication, payload-shape, or connectivity errors that mocks and compilers cannot see.
+  - [ ] Real-integration logs or traces captured and saved in validation records.
+* **WHEN: no external services in §7**:
+  - [ ] (SKIP — Auto-passed. Proceed directly to UX-RC / API-RC)
+
 ### UX-RC / API-RC
 
 * **WHEN: consumer_product / b2b_saas / internal_tool (UX-RC)**:
@@ -258,6 +267,17 @@ For every validation report at UX-RC or higher:
   - [ ] All API endpoint contracts verified with strict schema checks (Pydantic / OpenAPI schema tests)
   - [ ] DX Verification: developer-facing documentation / quickstart is accurate and working
   - [ ] Operational stress-test (under Option B) recorded with acceptable latency metrics
+
+  **API-RC evidence partition — autonomous vs gated** *(backend analog of UX-RC partition)*:
+  - **Autonomous (REQUIRED — never deferrable)**:
+    - [ ] All endpoint schemas compiled/generated and verified with strict schema validators (Pydantic / OpenAPI schema tests)
+    - [ ] Operational Scenario Walkthrough (Option B) executed locally/headless and transaction log captured
+    - [ ] DX Verification: developer-facing docs/quickstart verified to compile and run with mock credentials
+  - **Human / creds-gated (legitimately deferrable — disclose in Deferrals, classify `human/creds-gated`)**:
+    - Real sandbox credentials/keys verification on production integration platforms
+    - Security audit or compliance scans requiring external third-party tools/credentials
+    - Production infrastructure latency metrics under load
+  - **RULE**: You may NOT declare "IMPL-GREEN with API-RC deferred" while any **autonomous** item above is undone. Deferring the whole API-RC tier when part of it is autonomously gatherable under-drives validation and is a finding.
 
 ### COMMERCIAL-RC *(paid products only)*
 

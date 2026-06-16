@@ -107,7 +107,7 @@ else
   # Full validation for Specified or later lifecycle states
 
 # 1. Check for User Story format
-if echo "$content" | grep -q "As a.*I want.*so that"; then
+if echo "$content" | grep -q -i -E "As (a|an|the)[[:space:]].*I want.*so that"; then
   log_success "User story format found"
 else
   log_error "Missing user story in standard format" \

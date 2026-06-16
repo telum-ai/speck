@@ -258,7 +258,7 @@ These apply at every play level, in every command, on every project:
 | **Verify-skills-before-accept** | Accepting any delegated / parallel sub-agent result | Confirm ≥2 real skill invocations (`skills_invoked` + transcript) AND template-compliant reports before merging; never accept a self-reported `{readiness_state, pass}` |
 | **Runtime LARP** | Every UI story/epic validate gate | Run `/larp [persona]` — produces checked-in evidence |
 | **PROFILE drift check** | Every `/recheck` | Compare root README one-liner vs `product-contract.md`; refresh via `/project-readme` when placeholders remain |
-| **Readiness-state declaration** | At every validate | Claim one of IMPL-GREEN / UX-RC / COMMERCIAL-RC / SHIP-RC / SHIP / NO-SHIP |
+| **Readiness-state declaration** | At every validate | Claim one of NO-SHIP / IMPL-GREEN / INTEGRATION-GREEN / UX-RC / API-RC / COMMERCIAL-RC / SHIP-RC / SHIP |
 | **SHA stamps** | On every truth artifact write | Footer with `[as of SHA <hash> | verified against runtime <date>]` |
 | **Banned-phrase detector** | In every agent self-summary | Phrases like "ready for launch", "outside autonomous reach", "premium polish complete", "should work in production", "tests pass therefore done" trigger re-audit or enumeration |
 | **Banned-language lint** | On every commit + at `/audit` | Run `.speck/scripts/banned-language-lint.sh` against `product-contract.md` banned terms |
@@ -273,7 +273,8 @@ A more hands-on human intervenes at decision locks. A more hands-off human lets 
 |-------|---------|---------------|
 | `NO-SHIP` | One or more hard blockers remain | Default when blocked |
 | `IMPL-GREEN` | Tests / lint / types pass | Unit + integration green |
-| `UX-RC` | Primary user flows pass in target runtime | Persona LARP recorded against built artifact (not dev server) |
+| `INTEGRATION-GREEN` | External API/LLM deps exercised for real | Real round-trip smoke per §7 service (catches mock-blind transport failures) |
+| `UX-RC` / `API-RC` | Primary flows pass in target runtime | Persona LARP (UI) or operational walkthrough (backend) |
 | `COMMERCIAL-RC` | Billing / entitlements / support / legal pass | Paid products only — checklist in `evidence-contract.md` |
 | `SHIP-RC` | All core gates pass, pending release ops | Runtime LARP against launch build (not dev server) |
 | `SHIP` | Production / live proof complete | Post-deploy smoke + healthcheck green |
@@ -437,7 +438,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 7.14.0  
+**Speck Version**: 7.14.1  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

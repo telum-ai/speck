@@ -6,6 +6,15 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
+    version: '7.14.1',
+    items: [
+      { id: 'S1', summary: 'INTEGRATION-GREEN state — real round-trip smoke per evidence-contract §7 external service (catches mock-blind 429/auth failures)' },
+      { id: 'S2', summary: 'Cap Status column in deferral tables — implementation-pending caps at NO-SHIP (unbuilt code cannot pass as IMPL-GREEN)' },
+      { id: 'S3', summary: 'API-RC evidence partition in evidence-contract §8 (autonomous vs human/creds-gated)' },
+      { id: 'S4', summary: 'Placeholder scanner skips bracketed code tokens; story-spec accepts As a|an|the user stories' },
+    ],
+  },
+  {
     version: '7.14.0',
     items: [
       { id: 'E1', summary: 'Promise conservation: traceability-matrix.md + validate-traceability-matrix.sh (epic-plan produces, epic-analyze blocks, story-validate cites, epic-validate re-walks)' },

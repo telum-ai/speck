@@ -1,6 +1,6 @@
 ---
 name: story-validate
-description: Load after /audit has completed to verify spec compliance, execute acceptance tests, run runtime LARP, declare a readiness state (NO-SHIP/IMPL-GREEN/UX-RC/COMMERCIAL-RC/SHIP-RC/SHIP), and produce validation-report.md. Required before story-retrospective. Use when user says 'is this done?', 'validate', 'test this', or implementation is marked complete. FIRST ACTION after loading is read template at .speck/templates/story/validation-report-template.md.
+description: Load after /audit has completed to verify spec compliance, execute acceptance tests, run runtime LARP, declare a readiness state (NO-SHIP/IMPL-GREEN/INTEGRATION-GREEN/UX-RC/API-RC/COMMERCIAL-RC/SHIP-RC/SHIP), and produce validation-report.md. Required before story-retrospective. Use when user says 'is this done?', 'validate', 'test this', or implementation is marked complete. FIRST ACTION after loading is read template at .speck/templates/story/validation-report-template.md.
 disable-model-invocation: false
 ---
 
@@ -21,7 +21,9 @@ $ARGUMENTS
 The v7 template centers on **readiness state declaration**. Validation does NOT produce PASS/FAIL — it produces one of:
 - `NO-SHIP` — blockers remain
 - `IMPL-GREEN` — tests/lint/types pass
+- `INTEGRATION-GREEN` — real round-trip smoke against each external service in evidence-contract §7 (catches mock-blind transport failures)
 - `UX-RC` — primary flows pass in target runtime with LARP evidence
+- `API-RC` — backend operational walkthrough + contract/schema gates met (no rendered surface required)
 - `COMMERCIAL-RC` — billing/entitlements/legal pass (paid products)
 - `SHIP-RC` — all gates pass against launch build
 - `SHIP` — post-deploy proof complete
@@ -73,6 +75,11 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
    - If an active Keystone is missing but skip-with-reason logs are recorded, do NOT fail the validation run; instead, mark the gate as `⚠️ Skipped (Awaiting Keystone)` and cap the maximum claimable state at `UX-RC` (allowing the story to pass green for `IMPL-GREEN` and `UX-RC`).
 4c. Verify Deferrals / What this validation did NOT verify section:
    - Ensure the report explicitly populates `## 🔬 What this validation did NOT verify / Deferrals`. If left blank or containing boilerplate, fail the validation.
+   - **Cap Status enforcement**: every deferral row MUST include `Cap Status` (`evidence-pending` or `implementation-pending`). Any row tagged `implementation-pending` (code path not built) → verified state MUST cap at `NO-SHIP` — unbuilt code cannot pass as IMPL-GREEN. Any row tagged `autonomous-not-done` → cap at `IMPL-GREEN`/`INTEGRATION-GREEN` (cannot claim UX-RC/API-RC).
+4d. **INTEGRATION-GREEN gate** (when story depends on external services in evidence-contract §7):
+   - If §7 lists services this story touches, verify at least one **real round-trip** succeeded per service (not mock-only). Capture logs/traces in validation records.
+   - Mock-green alone is insufficient for INTEGRATION-GREEN — transport failures (429, auth, payload shape) only appear on real calls.
+   - If no §7 services apply, INTEGRATION-GREEN auto-passes (skip to UX-RC/API-RC criteria).
 5. If any required-at-claimed-state gate is ❌ (including missing human attestation or missing Keystones for SHIP-RC+): lower the verified state to the highest state where all gates pass
 6. Run the banned-phrase self-check on the report's own language before publishing
 7. Apply SHA stamp to the report

@@ -340,16 +340,18 @@ artifact_type: epic-validation-report
 
 **Classify EVERY deferral.** `autonomous-not-done` deferrals are BLOCKERS — an agent with a build + browser tool could have gathered them (build + browser LARP + stored axe JSON + JTBD walkthrough), so they must be completed, not deferred (they cap the epic at IMPL-GREEN). Only `human/creds-gated` deferrals (live provider sends, human blind panels, live NFR on real infra) are legitimate.
 
-| Deferred item | Class (`autonomous-not-done` / `human/creds-gated`) | Why deferred | Resolve by |
-|---------------|------------------------------------------------------|--------------|-----------|
-| [e.g. built-app browser JTBD LARP + stored axe JSON] | autonomous-not-done → MUST complete | [reason] | [before claiming UX-RC] |
-| [e.g. live 360dialog/Sveve send to a real phone] | human/creds-gated | [creds not provisioned] | [human/keystone] |
+| Deferred item | Class (`autonomous-not-done` / `human/creds-gated`) | Cap Status (`evidence-pending` / `implementation-pending`) | Why deferred | Resolve by |
+|---------------|------------------------------------------------------|-----------------------------------------------------------|--------------|-----------|
+| [e.g. built-app browser JTBD LARP + stored axe JSON] | autonomous-not-done → MUST complete | evidence-pending | [reason] | [before claiming UX-RC] |
+| [e.g. Batch API path for FR-E002-004] | human/creds-gated | implementation-pending → BLOCKER | [code never built] | [implement or DEC descope] |
+| [e.g. live 360dialog/Sveve send to a real phone] | human/creds-gated | evidence-pending | [creds not provisioned] | [human/keystone] |
 
-- **Untested / Unchecked Aspects**: [e.g., "Did not verify live multi-tenant workspace routing, verified mock single-tenant flow only (human/creds-gated)."]
-- **Deferred / Stale Proofs**: [e.g., "Performance under 10k concurrent users was deferred, tested up to 500 concurrent callers only (human/creds-gated)."]
+- **Untested / Unchecked Aspects**: [e.g., "Did not verify live multi-tenant workspace routing, verified mock single-tenant flow only (human/creds-gated, evidence-pending)."]
+- **Deferred / Stale Proofs**: [e.g., "Performance under 10k concurrent users was deferred, tested up to 500 concurrent callers only (human/creds-gated, evidence-pending)."]
 - **Assumptions Untested**: [e.g., "Assumed the notification broker handles message queuing atomically; did not simulate broker disconnection."]
 
-> Any `autonomous-not-done` row present → this epic may NOT claim UX-RC; cap at IMPL-GREEN and complete the autonomous portion first.
+> Any `implementation-pending` row present → verified readiness state MUST cap at `NO-SHIP`. Unbuilt code cannot pass as IMPL-GREEN or higher.
+> Any `autonomous-not-done` row present → this epic may NOT claim UX-RC/API-RC; cap at IMPL-GREEN/INTEGRATION-GREEN and complete the autonomous portion first.
 
 ---
 

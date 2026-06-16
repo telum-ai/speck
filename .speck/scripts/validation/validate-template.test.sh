@@ -52,4 +52,46 @@ if [[ -n "$portability_hits" ]]; then
 fi
 echo "  ✓ No bash 4+ array builtins found"
 
+echo "Test: bracketed code tokens in prose pass (not template placeholders)"
+cat > "$TMP/specs/projects/test-proj/epics/E000-test/stories/S001-test/fixture-bracketed-code.md" <<'EOF'
+# Fixture
+
+Run lint against [BULK_MODEL, ESCALATION_MODEL] and ["scripts/banned-language-lint.mjs", target].
+EOF
+bash "$ROOT/.speck/scripts/validation/validate-template.sh" --strict "$TMP/specs/projects/test-proj/epics/E000-test/stories/S001-test/fixture-bracketed-code.md"
+
+echo "Test: user story 'As an' / 'As the' passes validate-story-spec"
+cat > "$TMP/specs/projects/test-proj/epics/E000-test/stories/S001-test/spec.md" <<'EOF'
+---
+depends_on: []
+blocks: []
+---
+
+**Current State**: Specified
+
+## User Story
+
+As an owner-operator, I want automated classification so that I save review time.
+
+## 1. Experience (What the user lives)
+
+Content here.
+
+## 2. Acceptance LARP (How we prove the experience works)
+
+#### Scenario: Happy path
+- **GIVEN** articles exist
+- **WHEN** classifier runs
+- **THEN** labels are assigned
+
+## 3. Evidence Required
+
+Screenshots.
+
+## 4. Adversarial Cases (What must NOT happen)
+
+None.
+EOF
+bash "$ROOT/.speck/scripts/validation/validators/validate-story-spec.sh" --strict "$TMP/specs/projects/test-proj/epics/E000-test/stories/S001-test/spec.md"
+
 echo "All validate-template smoke tests passed"

@@ -144,7 +144,7 @@ Path: specs/projects/<PROJECT_ID>/evidence-contract.md
 Target platforms: <count>
 Valid proof sources defined: <count>
 Invalid proof sources defined: <count>
-Readiness states with gate criteria: 6 (NO-SHIP, IMPL-GREEN, UX-RC, COMMERCIAL-RC, SHIP-RC, SHIP)
+Readiness states with gate criteria: 8 (NO-SHIP, IMPL-GREEN, INTEGRATION-GREEN, UX-RC, API-RC, COMMERCIAL-RC, SHIP-RC, SHIP)
 LARP requirements: <count> personas × <count> states
 Adversarial probes: <count>
 

@@ -1,5 +1,17 @@
 # Speck Changelog
 
+## v7.14.1 — 2026-06-16 — Integration Smoke, Cap Integrity, API-RC, Validator UX (Speilet E002 learnings)
+
+Speilet E002 build/validate feedback (V1–V4). An LLM epic passed `/epic-validate` at IMPL-GREEN and a full adversarial `/audit` with the external model never called — mocks and code review structurally could not see transport failures. This release closes that gap plus readiness-cap laundering and validator false positives.
+
+### Methodology (P1)
+- **`INTEGRATION-GREEN` readiness state** — New gate between IMPL-GREEN and UX-RC/API-RC: for each external service in evidence-contract §7, at least one real round-trip must succeed before claiming integration-green (catches 429/auth/payload failures mocks cannot see). Documented in `evidence-contract.md` §8, AGENTS.md readiness table, `/story-validate` + `/epic-validate`.
+- **Cap Status: evidence-pending vs implementation-pending** — Deferral tables in story/epic validation reports now require `Cap Status`. `implementation-pending` (unbuilt code path) caps verified state at `NO-SHIP` — cannot launder unbuilt code as IMPL-GREEN. Enforced in `/story-validate` + `/epic-validate`.
+
+### Methodology (P2)
+- **`API-RC` evidence partition** — Backend analog of UX-RC partition in `evidence-contract.md` §8: autonomous (schema tests, operational walkthrough, DX quickstart) vs human/creds-gated (live sandbox creds, compliance scans, prod load). `/epic-validate` explicitly declares `API-RC` for backend epics.
+- **Validator false-positive fixes** — Placeholder scanner skips bracketed code tokens in prose (`[BULK_MODEL, ESCALATION_MODEL]`, paths with extensions). Story-spec user-story regex accepts `As a|an|the`. Regression tests added.
+
 ## v7.14.0 — 2026-06-10 — Anti-Simulation, Promise Conservation, Concurrency Hardening (Flyt E002 learnings)
 
 Flyt E002 feedback (Parts 1+2) + GH issues #62/#63. Speck's gates verified *construction quality* but not *skill execution* (Part 1) nor *contract coverage* (Part 2) — both biggest failures were founder-caught, not gate-caught. This release closes both with verifiable delegation and a promise-conservation law backed by a real blocking validator.
