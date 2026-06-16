@@ -37,7 +37,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-set -- "${EXTRA_ARGS[@]}"
+# bash 3.2 + set -u: empty EXTRA_ARGS must not expand as "${EXTRA_ARGS[@]}"
+set -- ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}
 
 # Locate project dir
 if [[ -z "${1:-}" ]] || [[ "${1:-}" == -* ]]; then
@@ -123,11 +124,16 @@ if [[ "$STAGED_MODE" == true ]]; then
   TARGETS=()
   while IFS= read -r file; do
     [[ -z "$file" ]] && continue
+    # Match non-staged scope: product surfaces only (exclude specs/, .speck/, .cursor/, etc.)
+    case "$file" in
+      src/*|app/*|pages/*|components/*|public/*|locales/*|i18n/*) ;;
+      *) continue ;;
+    esac
     [[ -f "$file" ]] && TARGETS+=("$file")
   done < <(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
 
   if [[ ${#TARGETS[@]} -eq 0 ]]; then
-    echo "✅ No staged files to scan (--staged)."
+    echo "✅ No staged product-surface files to scan (--staged)."
     rm -f "$TMP_TERMS"
     exit 0
   fi

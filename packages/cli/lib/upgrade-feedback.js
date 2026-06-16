@@ -6,6 +6,13 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
+    version: '7.14.2',
+    items: [
+      { id: 'S5', summary: 'banned-language-lint.sh line 40 — empty-safe EXTRA_ARGS expansion for bash 3.2 + set -u (macOS pre-commit crash)' },
+      { id: 'S6', summary: 'banned-language-lint --staged scopes to product surfaces only (framework/specs excluded — Speck upgrade commits pass)' },
+    ],
+  },
+  {
     version: '7.14.1',
     items: [
       { id: 'S1', summary: 'INTEGRATION-GREEN state — real round-trip smoke per evidence-contract §7 external service (catches mock-blind 429/auth failures)' },

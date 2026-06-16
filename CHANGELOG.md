@@ -1,5 +1,14 @@
 # Speck Changelog
 
+## v7.14.2 — 2026-06-16 — banned-language-lint macOS + upgrade-commit regressions (Speilet V5–V6)
+
+Speilet feedback on v7.14.1: the upgrade that shipped E002 V1–V4 could not be committed on macOS without `--no-verify`. Two regressions in `banned-language-lint.sh` blocked every commit (V5) and false-positive on Speck framework files during upgrade commits (V6).
+
+### Bug fixes (P0/P1)
+- **V5 — bash 3.2 empty-array crash** — Restored empty-safe `set -- ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}` on line 40. Pre-commit always invokes `--staged` with no extra args; expanding empty `"${EXTRA_ARGS[@]}"` under `set -u` crashes macOS default bash 3.2 before any scan runs.
+- **V6 — staged-mode path scoping** — `--staged` now mirrors non-staged scope: only `src/`, `app/`, `pages/`, `components/`, `public/`, `locales/`, `i18n/`. Framework (`.speck/`, `.cursor/`), `specs/`, and profile docs are excluded — so a Speck upgrade commit staging dozens of methodology files no longer false-positives on ordinary English in Speck's own docs.
+- **Regression tests** — New `banned-language-lint.test.sh` wired into `npm test` (empty-array idiom + staged scoping).
+
 ## v7.14.1 — 2026-06-16 — Integration Smoke, Cap Integrity, API-RC, Validator UX (Speilet E002 learnings)
 
 Speilet E002 build/validate feedback (V1–V4). An LLM epic passed `/epic-validate` at IMPL-GREEN and a full adversarial `/audit` with the external model never called — mocks and code review structurally could not see transport failures. This release closes that gap plus readiness-cap laundering and validator false positives.
