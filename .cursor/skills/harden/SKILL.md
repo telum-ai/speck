@@ -4,6 +4,10 @@ description: Lightweight skill for post-validation hardening. Run when a defect 
 disable-model-invocation: false
 ---
 
+> 🚦 **METHODOLOGY INTENT SPLIT**: 
+> - Use `/harden` when something you previously validated/shipped is **broken** (defect, bug, incident).
+> - Use `/story-adjust` or `/epic-adjust` when you have **deliberately changed** what you specified/shipped (redesign, visual overhaul, scope pivot).
+
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
 
 User input:

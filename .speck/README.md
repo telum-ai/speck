@@ -354,8 +354,9 @@ Replaces single PASS/FAIL with a meaningful gradient:
 |-------|---------|---------------|
 | `NO-SHIP` | One or more hard blockers remain | Default when blocked |
 | `IMPL-GREEN` | Tests / lint / types pass | Unit + integration green |
-| `UX-RC` | Primary user flows pass in target runtime | Persona LARP recorded against built artifact |
-| `COMMERCIAL-RC` | Billing / entitlements / support / legal pass | Paid products — checklist in `evidence-contract.md` |
+| `INTEGRATION-GREEN` | External API/LLM deps exercised for real | Real round-trip smoke per §7 service + live DB schema matches migrations (DB-backed) |
+| `UX-RC` / `API-RC` | Primary flows pass in target runtime | Persona LARP (UI) or operational walkthrough (backend) |
+| `COMMERCIAL-RC` | Billing / entitlements / support / legal pass | Paid products only — checklist in `evidence-contract.md` |
 | `SHIP-RC` | All core gates pass, pending release ops | Runtime LARP against launch build (not dev server) |
 | `SHIP` | Production / live proof complete | Post-deploy smoke + healthcheck green |
 

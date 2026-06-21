@@ -40,7 +40,7 @@ Do NOT regenerate project-state.md from epic branches — that stays merge-only.
 - [ ] Planning corpus pushed to `origin/main` before this wave was spawned (worktrees branch from `origin/main`, not local HEAD)
 - [ ] Each merged epic's worktree removed (`git worktree remove --force ../repo-eNNN`) — disk is shared cross-session state
 - [ ] Migration filenames use real wall-clock `date -u +%Y%m%d%H%M%S` (no rounded placeholders); per-epic offset bands as fallback
-- [ ] No epic accepted on a self-reported `{readiness_state, pass}` — Verify-Skills Gate passed for each merged story
+- [ ] No epic accepted on a self-reported `{readiness_state, pass}` — Verify-Skills Gate passed for each merged story (including verifying `gate_checks` for full pre-commit gate success)
 - [ ] `project-state.md` regenerated on `main` only (never overwritten from `epic/*` branches)
 
 ---

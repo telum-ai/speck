@@ -95,13 +95,14 @@ Validate epic planning artifacts to identify issues before story implementation 
    - Absence is NOT inconsistency — flag unaddressed dimensions as **P1** ("unaddressed-promise gap: differentiator dimension X / magic moment Y has zero story coverage in this epic").
    - If the epic is backend-only and a magic moment is UI-only, note as deferral — do not silently pass.
    - Record a Promise Coverage matrix in `epic-analysis-report.md` (see template).
-   - **Walk `traceability-matrix.md` (conservation law)**: run
-     ```
-     bash .speck/scripts/validation/validators/validate-traceability-matrix.sh [EPIC_DIR]
-     ```
-     Because `/epic-analyze` runs AFTER `/epic-breakdown`, every `PRM-NNN` row MUST now resolve to a story+AC or a DEC. Any **open/unmapped row is a P1 BLOCK** ("promise evaporation: PRM-NNN has no discharging story and no descope DEC"). The orchestrator already halts on P1.
-     - Also confirm the matrix is complete: spot-check that each wireframe screen/element and each experience-chain seam actually has a row. A promise that was never enumerated cannot be caught by the validator — missing rows are themselves a P1 ("un-enumerated promise").
-     - If `traceability-matrix.md` is absent entirely → **P1 BLOCK**: "no traceability matrix — re-run /epic-plan step 6b."
+  - **Walk `traceability-matrix.md` (conservation law)**: run
+    ```
+    bash .speck/scripts/validation/validators/validate-traceability-matrix.sh [EPIC_DIR]
+    ```
+    Because `/epic-analyze` runs AFTER `/epic-breakdown`, every `PRM-NNN` row MUST now resolve to a story+AC, a DEC, or a `pilot-gated` status. Any **open/unmapped row is a P1 BLOCK** ("promise evaporation: PRM-NNN has no discharging story, no descope DEC, and is not pilot-gated"). The orchestrator already halts on P1.
+    - If the matrix was retrofitted, verify that consolidated rows cite fine-grained backing references in the Backing column (no silent truncation) and that `pilot-gated` rows cite pilot references.
+    - Also confirm the matrix is complete: spot-check that each wireframe screen/element and each experience-chain seam actually has a row. A promise that was never enumerated cannot be caught by the validator — missing rows are themselves a P1 ("un-enumerated promise").
+    - If `traceability-matrix.md` is absent entirely → **P1 BLOCK**: "no traceability matrix — re-run /epic-plan step 6b."
 
 3. Deep analysis checks:
 

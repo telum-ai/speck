@@ -6,6 +6,16 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
+    version: '7.15.0',
+    items: [
+      { id: '#65', summary: '/story-adjust + /epic-adjust deliberate post-validation re-engineering flow and reports (distinct from defect /harden)' },
+      { id: 'G1', summary: 'G1 — schema-drift detection for INTEGRATION-GREEN: live database objects matched to migrations + write-path check' },
+      { id: 'G2', summary: 'G2 — clean build requirement before UX-RC LARP claims to prevent stale incremental caches' },
+      { id: 'G3', summary: 'G3 — full pre-commit gate (tests, eslint, typecheck, banned-language, build) verification for delegated sub-agents' },
+      { id: 'G4', summary: 'G4 — traceability-matrix retrofit/finalization mode + pilot-gated lifecycle status and Backing column' },
+    ],
+  },
+  {
     version: '7.14.2',
     items: [
       { id: 'S5', summary: 'banned-language-lint.sh line 40 — empty-safe EXTRA_ARGS expansion for bash 3.2 + set -u (macOS pre-commit crash)' },

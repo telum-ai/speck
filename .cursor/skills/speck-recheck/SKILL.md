@@ -65,6 +65,7 @@ Required artifacts to check:
 ├── [Parallel] shell: PROFILE drift — run .speck/scripts/profile-drift-check.sh; classify P1/P2/P3; refresh placeholders via regenerate-project-readme.sh if P3 only
 ├── [Parallel] shell: SETTINGS drift — run .speck/scripts/settings-drift-check.sh; classify SETTINGS_DRIFT.P0; suggest `npx github:telum-ai/speck reconcile-settings`
 ├── [Parallel] shell: ASSET drift — run `.speck/scripts/asset-drift-check.sh`; classify `ASSET_DRIFT.P1` when duplicate SVG path geometry appears in 2+ source files (brand dual-encoding)
+├── [Parallel] shell: SCHEMA drift — run `.speck/scripts/validation/validators/validate-schema-drift.sh` (for DB-backed projects, or if migration directories exist); classify `SCHEMA_DRIFT.P0` or `MIGRATION_REPAIR_WARNING.P1`
 ├── [Parallel] shell: PROMISE drift — for each epic dir with a `traceability-matrix.md`, run `.speck/scripts/validation/validators/validate-traceability-matrix.sh <EPIC_DIR>` (and `--require-evidence` for epics whose validation claims ≥ UX-RC); classify any unresolved promise as `PROMISE_DRIFT.P1` (evaporated promise — a drawn/stated commitment with no story and no DEC)
 ├── [Parallel] shell: grep -rln "\[NEEDS USER REVIEW\]" specs/projects/<id>/   (surface to project-state.md)
 └── [Wait] → Synthesize drift report
@@ -96,7 +97,7 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0
+- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix
@@ -139,7 +140,7 @@ Report summary fields per claude skill.
 ## Behavior Rules
 
 - NEVER skip persona LARP cold-start
-- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh` AND `asset-drift-check.sh` (when UI/brand assets exist) AND `settings-drift-check.sh` (when `.claude/settings.json` exists)
+- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh` AND `asset-drift-check.sh` (when UI/brand assets exist) AND `settings-drift-check.sh` (when `.claude/settings.json` exists) AND `validate-schema-drift.sh` (when DB-backed)
 - NEVER mark a truth artifact "fresh" while it still contains `REPLACE_BEFORE_SHIP:` or `[NEEDS USER REVIEW]` tokens
 - ALWAYS write a dated report (even if green)
 - ALWAYS re-stamp truth artifacts on green (with fresh `verified` date)

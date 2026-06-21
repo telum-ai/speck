@@ -54,6 +54,7 @@ This evidence is what story-validate, epic-validate, project-validate consume.
 - `evidence-contract.md` exists (defines valid proof sources)
 - Active recipe with `visual_testing:` config (defines tooling)
 - Built artifact exists (per evidence-contract — NOT dev server)
+- **Clean Build for UX-RC+:** Build cache cleared (e.g. `rm -rf .next` / `trash .next` or build tool cache equivalents) and a fresh compilation run of the production built artifact.
 
 If launch-build doesn't exist: STOP and report. Tell user "LARP requires the target build. Run [build command] first."
 
@@ -84,6 +85,8 @@ Map the evidence-contract's valid proof source to a concrete artifact:
 | CLI | Release binary exists at `target/release/<name>` or equivalent |
 
 If invalid (e.g., user is trying to LARP against dev server for an iOS app): STOP and refuse. Tell user "Per evidence-contract.md, dev-server screenshots don't count as valid proof for this platform. Build the launch artifact first: [exact command]."
+
+**Clean Build Precheck (UX-RC+):** Verify that the production build was compiled AFTER clearing any incremental build caches. If a stale cache is detected, fail the precheck and require a clean build to prevent false-green results. Record "clean build: yes" in findings and report templates.
 
 ### 3. Load the platform-specific visual testing skill
 
@@ -136,11 +139,13 @@ Standard report format per claude skill.
 ## Behavior Rules
 
 - NEVER LARP against dev server when evidence-contract requires built artifact
+- NEVER claim UX-RC or higher based on an incremental cached build without performing a clean rebuild first
 - NEVER skip taste-judgment rubric
 - NEVER claim PASS if banned-language lint finds violations
 - ALWAYS capture from target runtime
 - ALWAYS write evidence with SHA-prefixed filenames
 - ALWAYS run backtracking + error scenarios
+- ALWAYS verify and record "clean build: yes" under larp setup and validation report for UX-RC+ claims
 
 ## Integration Points
 

@@ -1,6 +1,6 @@
 {
   "name": "speck",
-  "version": "7.14.2",
+  "version": "7.15.0",
   "description": "Speck methodology CLI",
   "type": "module",
   "bin": {
@@ -10,7 +10,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test packages/cli/lib/sync.readme.test.js && bash .speck/scripts/validation/validators/validate-readme.test.sh && bash .speck/scripts/validation/validate-template.test.sh && bash .speck/scripts/banned-language-lint.test.sh"
+    "test": "node --test packages/cli/lib/sync.readme.test.js && bash .speck/scripts/validation/validators/validate-readme.test.sh && bash .speck/scripts/validation/validate-template.test.sh && bash .speck/scripts/banned-language-lint.test.sh && bash .speck/scripts/validation/validators/validate-traceability-matrix.test.sh"
   },
   "repository": {
     "type": "git",

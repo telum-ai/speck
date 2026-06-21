@@ -70,10 +70,11 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
 4b. **Verify Deferrals / What this validation did NOT verify**:
     - Require that the epic validation report populates the `## 🔬 What this validation did NOT verify / Deferrals` section. Failure to declare what was unchecked or untested will fail the validation.
     - **Cap Status enforcement**: every deferral row MUST include `Cap Status` (`evidence-pending` or `implementation-pending`). Any row tagged `implementation-pending` (code path not built) → verified state MUST cap at `NO-SHIP`. Any row tagged `autonomous-not-done` → cap at `IMPL-GREEN`/`INTEGRATION-GREEN` (cannot claim UX-RC/API-RC).
-4c. **INTEGRATION-GREEN gate** (when epic depends on external services in evidence-contract §7):
+4c. **INTEGRATION-GREEN gate** (when epic depends on external services in evidence-contract §7 or is DB-backed):
     - If §7 lists services this epic touches, verify at least one **real round-trip** succeeded per service across the epic's stories (not mock-only). Capture logs/traces.
-    - Mock-green + adversarial audit alone is insufficient — the E002 LLM epic passed both with zero real Gemini calls; INTEGRATION-GREEN requires proof of at least one live call per §7 service.
-    - If no §7 services apply, INTEGRATION-GREEN auto-passes.
+    - If the project is DB-backed, run `validate-schema-drift.sh --strict` to verify live database schema matches migrations. Ensure at least one real write path is exercised (reads can fail-close or swallow missing tables).
+    - Mock-green + adversarial audit alone is insufficient — the E002 LLM epic passed both with zero real Gemini calls; INTEGRATION-GREEN requires proof of at least one live call per §7 service + schema-drift validation.
+    - If no §7 services apply and the project is not DB-backed, INTEGRATION-GREEN auto-passes.
 5. For non-UI epics (e.g. `infra_service` / `backend_api`): Validate the core system transaction flow via the Option B "System Operational Scenario Walkthrough". Verify all performance, load-handling, and failover invariants hold under disruption. Declare `API-RC` when autonomous API-RC criteria pass (see evidence-contract §8).
 
 5b. **Promise Conservation Re-Walk + Evaporation Audit (REQUIRED — gates the readiness state)**:
@@ -81,7 +82,7 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
      ```
      bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --require-evidence [EPIC_DIR]
      ```
-     Every `PRM-NNN` row MUST be `discharged` (a validated story cited it with evidence — see story-validate Spec Coverage) or `descoped` (a DEC). The JTBD walkthrough is necessary but **NOT sufficient** — a passing JTBD sample does not prove the long tail of promised screens/elements/seams exists. **Any open/undischarged row → the epic CANNOT claim any readiness state** (cap at the last clean state, surface the gap).
+     Every `PRM-NNN` row MUST be `discharged` (a validated story cited it with evidence — see story-validate Spec Coverage), `descoped` (a DEC), or `pilot-gated` (deferred to the pilot program with a valid backing reference). The JTBD walkthrough is necessary but **NOT sufficient** — a passing JTBD sample does not prove the long tail of promised screens/elements/seams exists. **Any open/undischarged row → the epic CANNOT claim any readiness state** (cap at the last clean state, surface the gap).
    - **Evaporation audit (dead-seam detection)**: grep the shipped data model + code for affordances that exist but are never populated, rendered, or wired — e.g. an `urgent` enum value never set by any writer, a prop-gated button with no caller, a status column no query reads, a route with no link. These are promises that were half-built then abandoned — **descope-by-silence**. Each finding must become either a DEC (intentional descope) or a P1 fix; record them in the report's Promise Conservation section. A drawn-but-dead seam is not "done", it is evaporated.
 6. Cross-epic integration check: any seams to other epics tested?
 7. If any previous rating, state, or recommendation has changed, write the `### Evaluative Drift / Change Explanation` section with detailed logical rationale.

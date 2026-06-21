@@ -21,12 +21,20 @@ Nothing evaporates silently. "Wireframes are just inspiration" is BANNED — if 
 or an experience-chain seam states it, it is a PROMISE and gets a row, or it gets a DEC.
 
 Status lifecycle:  open → mapped (assigned story+AC) → discharged (story validated with evidence)
-                                                      └→ descoped (a DEC drops it)
+                                                      ├→ descoped (a DEC drops it)
+                                                      └→ pilot-gated (deferred to live pilot, with backing reference)
 
 Enforced by .speck/scripts/validation/validators/validate-traceability-matrix.sh:
   • default mode (epic-analyze, pre-commit): once epic-breakdown.md exists, NO row may be open —
-    every row needs a discharge (story+AC) or a DEC.
-  • --require-evidence (epic-validate): every row must be `discharged` or `descoped`.
+    every row needs a discharge (story+AC) or a DEC/pilot-gated status.
+  • --require-evidence (epic-validate): every row must be `discharged`, `descoped`, or `pilot-gated`.
+
+## RETROFIT / FINALIZATION MODE (Speck v7.15)
+If you are retrofitting this matrix on an already-built epic (e.g. following a large audit of existing promises), do NOT start from scratch:
+1. **Seed from Existing Audit/Scan**: Import existing promises directly from your audit-report.md or codebase scan.
+2. **Consolidation Rule**: Consolidate multiple fine-grained promises (e.g., individual form fields or styling rules) into high-level, load-bearing PRM rows to maintain readability.
+3. **Backing Column**: List the fine-grained backing promise/audit IDs in the 'Backing' column. NEVER truncate or merge promises silently without backing references.
+4. **Pilot-Gated Status**: For promises restricted to the pilot program, set Status to 'pilot-gated' and cite the specific pilot boundary/reference (e.g. PILOT-GATED-01) in the DEC/Discharge columns.
 -->
 
 ## 1. Promise Sources
@@ -42,12 +50,13 @@ Enumerate EVERY promise this epic owns, from each source below, then give each a
 
 ## 2. Traceability Matrix
 
-| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Status |
-|--------|------------------------------------|------------------------|-------------------------------|-------------------|--------|
-| PRM-001 | product-contract §3 | [differentiator pillar text] | S012 / AC-3 | — | discharged |
-| PRM-002 | wireframes S05 / auto-reply opt-in toggle | [screen element + its job] | S018 / AC-1 | — | mapped |
-| PRM-003 | experience-chain §6 / magic-moment placement | [seam rule text] | — | DEC-0207 | descoped |
-| PRM-004 | epic.md FR-E0NN-014 | [requirement text] | — | — | open |
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|--------|
+| PRM-001 | product-contract §3 | [differentiator pillar text] | S012 / AC-3 | — | — | discharged |
+| PRM-002 | wireframes S05 / auto-reply opt-in toggle | [screen element + its job] | S018 / AC-1 | — | — | mapped |
+| PRM-003 | experience-chain §6 / magic-moment placement | [seam rule text] | — | DEC-0207 | — | descoped |
+| PRM-004 | epic.md FR-E0NN-014 | [requirement text] | — | — | — | open |
+| PRM-005 | wireframes S05 / dashboard | [consolidated complex visual flow] | — | — | AUDIT-E002-42, E002/PRM-054 | pilot-gated |
 
 ## 3. Coverage Summary
 
@@ -55,10 +64,11 @@ Enumerate EVERY promise this epic owns, from each source below, then give each a
 - **Discharged** (story validated w/ evidence): [N]
 - **Mapped** (assigned, pending validation): [N]
 - **Descoped** (via DEC): [N]
+- **Pilot-gated** (deferred to pilot): [N]
 - **Open / unmapped**: [N] ← **MUST be 0 after `/epic-breakdown`**
 
-Any open/undischarged row blocks `/epic-analyze` (P1) and bars the epic from claiming ANY readiness state at `/epic-validate`. Descope deliberately (with a DEC) or discharge it — never let it evaporate.
+Any open/undischarged row blocks `/epic-analyze` (P1) and bars the epic from claiming ANY readiness state at `/epic-validate`. Descope deliberately (with a DEC), defer (with pilot-gated and a backing reference), or discharge it — never let it evaporate.
 
 ---
 
-*[as of SHA `<hash>` | generated `<date>` | speck v7.14.0]*
+*[as of SHA `<hash>` | generated `<date>` | speck v7.15.0]*

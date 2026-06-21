@@ -151,7 +151,12 @@ $ARGUMENTS
    
    Tasks Completed: [X] of [Y]
    Files Created/Modified: [List]
-   Tests Status: [Passing/Failing]
+   Full Pre-Commit Gate: [PASSED/FAILED]
+   - Eslint/Lint: [Passing/Failing/Skipped]
+   - Typecheck (Tsc): [Passing/Failing/Skipped]
+   - Tests (Vitest/Jest): [Passing/Failing/Skipped]
+   - Build compiled: [Passing/Failing/Skipped]
+   - Banned-language lint: [Passing/Failing/Skipped]
    UI Self-Review Grade: [BEAUTIFUL/ACCEPTABLE/NEEDS_WORK]
    
    CRITICAL CANONICAL ORDERING RULE (Speck v7.3):

@@ -199,7 +199,8 @@ This command benefits from parallel execution:
      * every wireframe screen (screen-inventory) AND every element/state drawn per screen (Default/Loading/Empty/Error/Success)
      * every `experience-chain.md` seam rule (§2–§9)
      * If a source is absent (e.g. backend-only epic, no wireframes), write "N/A — no UI surface" — state absence, never assume it.
-   - Write `[EPIC_DIR]/traceability-matrix.md` with all rows at **status=open** (the Discharge and DEC columns are filled later by `/epic-breakdown` + `/story-specify`, then verified at `/story-validate`).
+   - **Retrofit / Finalization Mode**: If retrofitting the matrix on an already-built epic (e.g., following a large audit of existing promises), do NOT rebuild it blind to the code. Seed rows directly from the existing `audit-report.md` or codebase scan. You may consolidate many fine-grained promises into high-level, load-bearing PRM rows to maintain readability, but you MUST list the fine-grained backing IDs or refs in the `Backing` column (no silent truncation). For pilot-only features, set Status to `pilot-gated` and cite the pilot reference in the Backing/DEC column.
+   - Write `[EPIC_DIR]/traceability-matrix.md` with all rows at **status=open** (or **status=pilot-gated** if retrofitted as such). The Discharge and DEC columns are filled later by `/epic-breakdown` + `/story-specify`, then verified at `/story-validate`.
    - This is the ledger `/epic-analyze` blocks on and `/epic-validate` re-walks. A drawn wireframe element or stated seam with no row is a silently-evaporated promise.
 
 7. Validation checks:

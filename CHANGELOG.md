@@ -1,5 +1,29 @@
 # Speck Changelog
 
+## v7.15.0 — 2026-06-21 — Deliberate Adjustments, Migration Parity, Clean-Build LARPs, and Matrix Retrofitting
+
+Addresses multiple crucial feedback items (#64 and #65) to tighten the loop between validated specifications and live runtime reality, preventing promise evaporation and simulation drift.
+
+### Deliberate Post-Validation Re-engineering (#65)
+- **New `/story-adjust` and `/epic-adjust` stages** — Deliberate redesigns, visual overhauls, and IA shifts are now handled as first-class citizens. Modeled as siblings to `/harden` (which is reserved exclusively for defect/bug fixes), these stages require delta re-specification in specs/experience-chains/wireframes, promise conservation, forced decision logs, and delta-focused re-auditing + re-validation.
+- **Adjust Report templates** — New `story-adjust-template.md` and `epic-adjust-template.md` to cleanly document and re-stamp deliberate changes. Registered and checked for structural template drift.
+
+### Migration Schema-Drift Blind Spot (#64 G1)
+- **Live-Schema Parity check** — INTEGRATION-GREEN now requires live database schemas to match committed migrations. Banish "ledger-repair" false-greens.
+- **Write-path verification** — Real database writes are required for DB-backed projects, preventing fail-closed reads from silently hiding missing tables.
+- **Drift Probe validator** — New `validate-schema-drift.sh` script to statically check for migration-repair footguns and query target databases to verify schema parity. Integrated into `/speck-recheck` and validation report templates.
+
+### Clean-Build UX-RC LARP (#64 G2)
+- **Stale build-cache protection** — Any formal `UX-RC` or higher claim now strictly requires a clean production build (build cache cleared, e.g., Next.js caches) of the SHA under test to prevent incremental compiled asset false-greens. Added to evidence-contract §8/§13/§14, `speck-larp` skill, and validation templates.
+
+### Full-Gate Delegated Sub-agents (#64 G3)
+- **Full pre-commit validation** — Sub-agent return contracts now require running and reporting the project's full pre-commit gate checks (eslint, tsc typecheck, tests, build, banned-language) under `gate_checks` rather than tests+typecheck alone. The conductor's Verify-Skills Gate enforces this to block "simulated" green merges.
+
+### Traceability-Matrix Retrofit & Pilot Gating (#64 G4)
+- **Retrofit / Finalization Mode** — Supports seeding matrices directly from existing audits or code scans on pre-built epics, allowing consolidated high-level rows citing fine-grained backing references in a new `Backing` column.
+- **`pilot-gated` lifecycle status** — Traceability matrices now support `pilot-gated` as a terminal status under `--require-evidence` to track pilot-only deferred commitments with backing refs.
+- **Matrix test suite** — New `validate-traceability-matrix.test.sh` to fully verify mapping successes, pilot-gated validations, and failures.
+
 ## v7.14.2 — 2026-06-16 — banned-language-lint macOS + upgrade-commit regressions (Speilet V5–V6)
 
 Speilet feedback on v7.14.1: the upgrade that shipped E002 V1–V4 could not be committed on macOS without `--no-verify`. Two regressions in `banned-language-lint.sh` blocked every commit (V5) and false-positive on Speck framework files during upgrade commits (V6).

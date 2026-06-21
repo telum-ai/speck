@@ -110,6 +110,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Current state for next-session pickup (auto-regen) | `project-state.md` |
 | Drift / re-engagement report | `project-recheck-report.md` |
 | Project-level skeptical audit findings | `project-audit-report.md` |
+| Post-validation hardening report | `project-harden-report-*.md` |
 | Project punch list (remaining work to ship) | `project-punch-list.md` |
 | Sprint progress (Sprint play level only) | `sprint-log.md` |
 | Domain terminology + entities + rules (Platform; merges to product-contract at Build) | `domain-model.md` |
@@ -150,6 +151,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Wireframes (epic-level) | `wireframes.md` |
 | Epic-level skeptical audit findings | `audit-report.md` |
 | Epic validation report (JTBD walkthrough) | `epic-validation-report.md` |
+| Post-validation epic adjustment report | `epic-adjust-report-*.md` |
 | Epic-level pre-impl analysis (v6) | `epic-analysis-report.md` |
 | Epic retrospective | `epic-retro.md` |
 | Epic-scoped research report | `epic-*-research-report-*.md` |
@@ -168,6 +170,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Test scenarios / quickstart / manual validation | `quickstart.md` |
 | Story-level skeptical audit findings | `audit-report.md` |
 | Story validation evidence (declares readiness state) | `validation-report.md` |
+| Post-validation story adjustment report | `story-adjust-report-*.md` |
 | Story retrospective | `story-retro.md` |
 | Runtime LARP screenshots / recordings (checked-in evidence) | `screenshots/`, `larp-recordings/`, `larp-evidence/` |
 | Story-scoped research report | `story-*-research-report-*.md` |
@@ -230,16 +233,17 @@ Speck's rigor lives in the **skills** (the adversarial `/audit` probes, honest r
 **Sub-agent return contract** — every delegated story/epic unit returns:
 
 ```
-{ readiness_state, pass, p0p1: [...], artifact_paths: [...], skills_invoked: [...] }
+{ readiness_state, pass, p0p1: [...], artifact_paths: [...], skills_invoked: [...], gate_checks: [{ name, pass, evidence }] }
 ```
 
-`skills_invoked` lists the actual Skill invocations made (e.g. `story-specify`, `speck-audit`, `story-validate`). Self-reported fields are **not** tamper-evident (host-runtime limitation) — the transcript check below is the backstop.
+`skills_invoked` lists the actual Skill invocations made (e.g. `story-specify`, `speck-audit`, `story-validate`). `gate_checks` lists results for the project's full pre-commit gate (unit tests, eslint, types/tsc, banned-language, build). Self-reported fields are **not** tamper-evident (host-runtime limitation) — the transcript check below is the backstop.
 
 **Verify-skills gate** — before ACCEPTING/merging a delegated result, the conductor MUST:
 
 1. Confirm required reports exist AND pass `.speck/scripts/validation/validate-template.sh --strict` (template-compliant, not merely right-shaped).
 2. Verify **≥2 real skill invocations** in the sub-agent's transcript — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. If `skills_invoked` is empty or the transcript shows zero `Skill` calls → **REJECT + re-run**.
-3. Treat `/audit` as **non-skippable** before any merge in delegated flows.
+3. Verify that **`gate_checks`** shows that the project's full pre-commit gate (lint, typecheck, tests, build, banned-language) ran and passed (reject on any missing, skipped, or failed checks; green tests alone do not equal a green gate).
+4. Treat `/audit` as **non-skippable** before any merge in delegated flows.
 
 A unit that produced passing-looking artifacts with zero skill calls is **simulated, not validated** — reject it.
 
@@ -273,7 +277,7 @@ A more hands-on human intervenes at decision locks. A more hands-off human lets 
 |-------|---------|---------------|
 | `NO-SHIP` | One or more hard blockers remain | Default when blocked |
 | `IMPL-GREEN` | Tests / lint / types pass | Unit + integration green |
-| `INTEGRATION-GREEN` | External API/LLM deps exercised for real | Real round-trip smoke per §7 service (catches mock-blind transport failures) |
+| `INTEGRATION-GREEN` | External API/LLM deps exercised for real | Real round-trip smoke per §7 service + live DB schema matches migrations (DB-backed) |
 | `UX-RC` / `API-RC` | Primary flows pass in target runtime | Persona LARP (UI) or operational walkthrough (backend) |
 | `COMMERCIAL-RC` | Billing / entitlements / support / legal pass | Paid products only — checklist in `evidence-contract.md` |
 | `SHIP-RC` | All core gates pass, pending release ops | Runtime LARP against launch build (not dev server) |
@@ -351,7 +355,7 @@ Claude Code `Stop` hooks use **command-type** lifecycle gates (`.claude/hooks/st
 
 Skills are agent-decided expertise packages — auto-loaded when relevant.
 
-- **Process skills** (`speck-*`): `/speck`, `/recheck`, `/larp`, `/audit`, `/harden`, `/speck-debug`, `/speck-learn`
+- **Process skills**: `/speck`, `/recheck`, `/larp`, `/audit`, `/harden`, `/story-adjust`, `/epic-adjust`, `/speck-debug`, `/speck-learn`
 - **Level commands** (`project-*`, `epic-*`, `story-*`): the Speck workflow
 - **Domain patterns** (`.cursor/skills/patterns/`): Stripe, Clerk, Supabase, Firebase, RevenueCat, etc. — lazy-loaded when implementing those integrations
 
@@ -378,6 +382,7 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Bypass the real UI DOM/form elements with API calls when auditing or validating UI stories (always drive the actual input fields)
 - Let a drawn wireframe element or a stated experience-chain seam go un-enumerated — it is a promise: give it a `PRM-NNN` row in `traceability-matrix.md` (story+AC) or descope it with a DEC. "Wireframes are inspiration" is banned.
 - Accept a delegated/parallel sub-agent's self-reported `{readiness_state, pass}` — verify ≥2 real skill invocations + template-compliant reports first (Verify-Skills Gate)
+- Leave validated specification docs, experience chains, or wireframes stale after a deliberate post-validation change — run `/story-adjust` or `/epic-adjust` to re-spec the delta and conserve promises
 
 **ALWAYS**:
 - Read `project-state.md` first
@@ -426,6 +431,8 @@ These feed retrospectives. Without tags, learnings are lost.
 | "Continue from last time" | Read `project-state.md`'s "Next action" field. |
 | "Run epics in parallel" / "spawn E002+E003" | Read `epics.md` concurrency waves. Validate wave safety. Create `epic/eNNN` worktrees off current `main`. Assign DEC bands. Route each to `/epic`. |
 | "Audit / make ship-ready" | Run `/recheck` first. Block new feature work until drift reconciled. |
+| "Fix/patch a bug in validated/shipped work" | Run `/harden` flow to document root-cause and add systemic tests. |
+| "Redesign/deliberately change validated/shipped work" | Run `/story-adjust` or `/epic-adjust` to re-spec the delta and conserve promises. |
 
 ## 📚 Where to Find More
 

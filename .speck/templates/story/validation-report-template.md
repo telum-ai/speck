@@ -8,6 +8,7 @@ build_sha: [hash]
 build_artifact: [iOS sim / web prod bundle / etc.]
 audit_report: [path or "not-run"]
 larp_evidence: [path or "not-run"]
+clean_build: [yes/no]
 ---
 
 # Validation Report — [STORY/EPIC NAME]
@@ -16,6 +17,7 @@ larp_evidence: [path or "not-run"]
 **Date**: [YYYY-MM-DD HH:MM]
 **Build SHA**: [hash]
 **Build Artifact**: [per evidence-contract.md valid proof source]
+**Clean Build (caches cleared)**: [yes/no]
 **Claimed Readiness State**: [state]
 **Verified Readiness State**: [state — may be lower than claimed if gates fail]
 
@@ -44,6 +46,9 @@ larp_evidence: [path or "not-run"]
 | Lint passes | Yes (IMPL-GREEN+) | [evidence] | ✅ |
 | Type check passes | Yes (IMPL-GREEN+) | [evidence] | ✅ |
 | Build succeeds | Yes (IMPL-GREEN+) | [evidence] | ✅ |
+| Real-integration round-trips succeed | Yes (INTEGRATION-GREEN+, if external §7 deps exist) | [real completion logs / traces] | ✅/⚠️/❌ |
+| Live DB schema matches migrations & write path verified | Yes (INTEGRATION-GREEN+, if DB-backed) | `validate-schema-drift.sh output` | ✅/⚠️/❌ |
+| Clean build compiled (caches cleared) | Yes (UX-RC+) | [production compile logs] | ✅/⚠️/❌ |
 | Persona LARP recorded against built artifact | Yes (UX-RC+) | `larp-recordings/<sha>-<persona>-findings.md` | ✅/⚠️/❌ |
 | Reachability: user can complete primary JTBD without dev shortcuts | Yes (UX-RC+) | [LARP evidence] | ✅/⚠️/❌ |
 | No UI scaffolding (UUID inputs, debug headers) | Yes (UX-RC+) | [audit-report.md check] | ✅/⚠️/❌ |

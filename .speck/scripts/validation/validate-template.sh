@@ -324,6 +324,15 @@ case "$filename" in
   traceability-matrix.md)
     validation_type="traceability-matrix"
     ;;
+  *harden-report-*.md|*harden-report.md)
+    validation_type="harden-report"
+    ;;
+  *story-adjust-report-*.md|*story-adjust-report.md)
+    validation_type="story-adjust-report"
+    ;;
+  *epic-adjust-report-*.md|*epic-adjust-report.md)
+    validation_type="epic-adjust-report"
+    ;;
   *)
     # Not a tracked template, skip
     exit 0
@@ -368,5 +377,9 @@ case "$validation_type" in
   traceability-matrix)
     # Default (conservation) mode here; epic-validate invokes the validator directly with --require-evidence.
     bash "$SCRIPT_DIR/validators/validate-traceability-matrix.sh" "$file_path"
+    ;;
+  harden-report|story-adjust-report|epic-adjust-report)
+    # Passed placeholder check, no additional structural sub-validator needed
+    exit 0
     ;;
 esac

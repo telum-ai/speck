@@ -129,6 +129,12 @@ Create a comprehensive story breakdown that maps all user stories within the epi
 
 6. Save as `[EPIC_DIR]/epic-breakdown.md`
 
+6b. **Update Traceability Matrix Mapping (REQUIRED — conservation law)**:
+   - Read the existing `[EPIC_DIR]/traceability-matrix.md` (created by `/epic-plan`).
+   - For every `PRM-NNN` row, map it to the newly created story and AC ref by filling in the `Discharge (story-id + AC-ref)` column (e.g. `S001 / AC-2`).
+   - Update its Status from `open` to `mapped` (or `pilot-gated` if retrofitted/deferred).
+   - Verify that there are zero `open` rows left in the matrix. Any unmapped/open rows remaining will block `/epic-analyze` as a P1 unresolved promise.
+
 7. Output summary:
    ```
    ✅ Epic Story Breakdown Complete!

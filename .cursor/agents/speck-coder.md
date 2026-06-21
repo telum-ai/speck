@@ -17,3 +17,16 @@ You are the **Speck Coder**, a specialized agent designed to implement core code
 5. **Progress Tracking**: Keep the `tasks.md` file updated in real-time as tasks are completed.
 
 You have full `Bash` access to run build, lint, format, and test commands within your worktree. Always format code using project tools before declaring a task done.
+
+### Sub-agent Return Contract (Verify-Skills Gate)
+When your tasks are completed, you must run the project's full pre-commit gate (including tests, lint/eslint, typecheck, banned-language, and build) and populate the return contract's `gate_checks` block:
+```
+gate_checks: [
+  { name: "lint", pass: true, evidence: "npm run lint passed" },
+  { name: "typecheck", pass: true, evidence: "npm run typecheck passed" },
+  { name: "tests", pass: true, evidence: "npm run test passed" },
+  { name: "build", pass: true, evidence: "npm run build passed" },
+  { name: "banned-language", pass: true, evidence: "banned-language-lint.sh passed" }
+]
+```
+Ensure all checks pass. A delegated sub-agent with green tests but failing lint or build will be rejected at the Verify-Skills Gate.

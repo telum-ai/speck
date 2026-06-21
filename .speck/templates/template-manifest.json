@@ -82,5 +82,34 @@
       "## 2. Traceability Matrix",
       "## 3. Coverage Summary"
     ]
+  },
+  "harden-report": {
+    "structure_version": "7.13.2",
+    "required_headers": [
+      "## 1. Defect Description (The Truth)",
+      "## 2. Root Cause Analysis (The Gap)",
+      "## 3. Remediations & Hardening Guardrails (The Fix)",
+      "## 4. Readiness Re-assessment"
+    ]
+  },
+  "story-adjust-report": {
+    "structure_version": "7.15.0",
+    "required_headers": [
+      "## 1. Change Intent (The Why)",
+      "## 2. Delta Re-specification (The What)",
+      "## 3. Promise Conservation (The Contract)",
+      "## 4. Decision-Log & Audit Status",
+      "## 5. Readiness Re-assessment (The Status)"
+    ]
+  },
+  "epic-adjust-report": {
+    "structure_version": "7.15.0",
+    "required_headers": [
+      "## 1. Change Intent (The Why)",
+      "## 2. Delta Re-specification (The What)",
+      "## 3. Promise Conservation (The Contract)",
+      "## 4. Decision-Log & Audit Status",
+      "## 5. Readiness Re-assessment (The Status)"
+    ]
   }
 }

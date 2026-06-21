@@ -43,8 +43,9 @@ The one file that survives resets. Template: `.speck/templates/project/orchestra
 Before ACCEPTING/merging any delegated story or epic result, the conductor MUST:
 
 1. **Reports exist + compliant**: required reports (`validation-report.md`, `audit-report.md`; epic: `epic-validation-report.md`, `traceability-matrix.md`) exist AND pass `bash .speck/scripts/validation/validate-template.sh --strict <path>`.
-2. **Skills actually ran**: the unit's return contract `{ readiness_state, pass, p0p1, artifact_paths, skills_invoked }` lists ≥2 real skill invocations — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. Cross-check the sub-agent transcript for real `Skill` calls. Empty / zero → **REJECT + re-run**.
-3. **`/audit` non-skippable**: a unit merged without a real `/audit` is rejected regardless of its self-reported state.
+2. **Skills actually ran**: the unit's return contract `{ readiness_state, pass, p0p1, artifact_paths, skills_invoked, gate_checks }` lists ≥2 real skill invocations — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. Cross-check the sub-agent transcript for real `Skill` calls. Empty / zero → **REJECT + re-run**.
+3. **Full pre-commit gate passed**: `gate_checks` lists passing status for eslint, typecheck, tests, build, and banned-language check (reject on any skipped or failed checks).
+4. **`/audit` non-skippable**: a unit merged without a real `/audit` is rejected regardless of its self-reported state.
 
 Self-reported fields are not tamper-evident (host-runtime limit) — the transcript check is the backstop. A unit that produced passing-looking artifacts with zero skill calls is **simulated, not validated**.
 

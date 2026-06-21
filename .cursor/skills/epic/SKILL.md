@@ -106,14 +106,15 @@ When story work is delegated to background/worktree sub-agents, a sub-agent can 
 Each delegated story sub-agent returns the contract:
 
 ```
-{ readiness_state, pass, p0p1: [...], artifact_paths: [...], skills_invoked: [...] }
+{ readiness_state, pass, p0p1: [...], artifact_paths: [...], skills_invoked: [...], gate_checks: [{ name, pass, evidence }] }
 ```
 
 Before ACCEPTING a story result (and before counting it toward "Stories Complete"), the conductor MUST:
 
 1. **Reports exist + compliant**: `validation-report.md` (and `audit-report.md`) exist AND pass `bash .speck/scripts/validation/validate-template.sh --strict <path>`.
 2. **Skills actually ran**: `skills_invoked` includes at least `speck-audit` AND `story-validate`; cross-check the sub-agent transcript for ≥2 real `Skill` invocations. If empty / zero → **REJECT and re-run the story** (do not accept on `{readiness_state, pass}` alone).
-3. **`/audit` non-skippable**: a story merged without a real `/audit` run is rejected regardless of its self-reported state.
+3. **Full pre-commit gate passed**: `gate_checks` lists passing status for eslint, typecheck, tests, build, and banned-language check (reject on any skipped or failed checks).
+4. **`/audit` non-skippable**: a story merged without a real `/audit` run is rejected regardless of its self-reported state.
 
 Self-reported fields are not tamper-evident (host-runtime limit) — the transcript check is the backstop. See AGENTS.md *Delegated execution: verify skills ran before accepting results*.
 

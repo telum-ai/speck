@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# validate-traceability-matrix.sh — Promise conservation gate (Speck v7.14).
+# validate-traceability-matrix.sh — Promise conservation gate (Speck v7.15).
 #
 # Parses a traceability-matrix.md and enforces that every PRM-NNN row RESOLVES:
 #   • discharged by a story+AC, OR
 #   • descoped by a DEC, OR
+#   • pilot-gated (deferred to pilot, requires a backing reference), OR
 #   • visibly open (allowed ONLY before epic-breakdown.md exists).
 #
 # Usage:
@@ -11,8 +12,8 @@
 #
 # Modes:
 #   default            : once epic-breakdown.md exists, NO row may be open — each row needs a
-#                        discharge (story+AC) or a DEC. Pre-breakdown, open rows are allowed.
-#   --require-evidence : (epic-validate) every row must be `discharged` or `descoped`.
+#                        discharge (story+AC), a DEC, or a pilot-gated status. Pre-breakdown, open rows are allowed.
+#   --require-evidence : (epic-validate) every row must be `discharged`, `descoped`, or `pilot-gated`.
 #
 # Exit codes: 0 = pass, 1 = unresolved promises, 2 = invocation error.
 #
@@ -78,12 +79,28 @@ while IFS= read -r line; do
   [[ "$line" =~ ^\|[[:space:]]*PRM-[0-9]+ ]] || continue
 
   # Split the markdown row on '|'. Leading '|' yields an empty first field.
-  IFS='|' read -r _lead c_id c_src c_promise c_discharge c_dec c_status _rest <<< "$line"
+  # Handles both old 6-column matrix and new 7-column matrix (with Backing column) gracefully.
+  IFS='|' read -r _lead c_id c_src c_promise c_discharge c_dec c_col6 c_col7 _rest <<< "$line"
 
   id="$(trim "${c_id:-}")"
   promise="$(trim "${c_promise:-}")"
-  status="$(trim "${c_status:-}")"
+  
+  # Heuristically detect whether this is a 6-column or 7-column table by looking at _rest or fields
+  # In 6-column: c_discharge is col 4, c_dec is col 5, c_col6 is col 6 (status), c_col7 is rest/empty
+  # In 7-column: c_discharge is col 4, c_dec is col 5, c_col6 is col 6 (backing), c_col7 is col 7 (status)
+  status_raw=""
+  backing_raw=""
+  if [[ -n "$(trim "${c_col7:-}")" || "$line" =~ \|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\| ]]; then
+    backing_raw="${c_col6:-}"
+    status_raw="${c_col7:-}"
+  else
+    backing_raw=""
+    status_raw="${c_col6:-}"
+  fi
+
+  status="$(trim "$status_raw")"
   status="$(printf '%s' "$status" | tr '[:upper:]' '[:lower:]')"
+  backing="$(trim "$backing_raw")"
 
   # Skip the template's own example rows (promise still a [bracket placeholder]).
   case "$promise" in '['*']') continue ;; esac
@@ -92,19 +109,28 @@ while IFS= read -r line; do
 
   has_discharge=false; is_empty_cell "${c_discharge:-}" || has_discharge=true
   has_dec=false;       is_empty_cell "${c_dec:-}" || has_dec=true
+  has_backing=false;   is_empty_cell "$backing" || has_backing=true
+
+  # If pilot-gated, it MUST have a backing reference (cannot silently defer without citing details)
+  if [[ "$status" == "pilot-gated" && "$has_backing" == false ]]; then
+    echo -e "${RED}❌ $id${NC}: status 'pilot-gated' but has no backing reference! Cite fine-grained audit/matrix refs (e.g. AUDIT-E002-42) in the Backing column."
+    violations=$((violations + 1))
+  fi
 
   if [[ "$REQUIRE_EVIDENCE" == true ]]; then
-    if [[ "$status" != "discharged" && "$status" != "descoped" ]]; then
-      echo -e "${RED}❌ $id${NC}: status '${status:-<blank>}' — at epic-validate every promise must be 'discharged' (story validated with evidence) or 'descoped' (DEC)."
+    if [[ "$status" != "discharged" && "$status" != "descoped" && "$status" != "pilot-gated" ]]; then
+      echo -e "${RED}❌ $id${NC}: status '${status:-<blank>}' — at epic-validate every promise must be 'discharged', 'descoped' (DEC), or 'pilot-gated' (with backing)."
       violations=$((violations + 1))
     fi
   else
-    if [[ "$has_discharge" == false && "$has_dec" == false ]]; then
-      if [[ "$BREAKDOWN_EXISTS" == true ]]; then
-        echo -e "${RED}❌ $id${NC}: unmapped (no story+AC, no DEC) after epic-breakdown — promises cannot evaporate. Assign a story+AC or descope with a DEC."
-        violations=$((violations + 1))
-      else
-        open_rows=$((open_rows + 1))
+    if [[ "$status" != "pilot-gated" ]]; then
+      if [[ "$has_discharge" == false && "$has_dec" == false ]]; then
+        if [[ "$BREAKDOWN_EXISTS" == true ]]; then
+          echo -e "${RED}❌ $id${NC}: unmapped (no story+AC, no DEC) after epic-breakdown — promises cannot evaporate. Assign a story+AC, a DEC, or set to pilot-gated (with backing)."
+          violations=$((violations + 1))
+        else
+          open_rows=$((open_rows + 1))
+        fi
       fi
     fi
   fi

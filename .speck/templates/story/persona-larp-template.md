@@ -63,6 +63,7 @@ Build Fingerprint: [App version / Backend API fingerprint]
 ```
 
 **Starting state**:
+- [ ] Clean build: Yes (build cache cleared before production build compile)
 - [ ] Clean install / fresh storage / cleared cookies
 - [ ] No user logged in
 - [ ] Locale: [if multilingual, which locale to test]

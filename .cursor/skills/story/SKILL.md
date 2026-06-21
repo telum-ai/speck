@@ -111,7 +111,7 @@ State: Validated     →  Run: /story-retrospective
 Do NOT transition automatically and stop immediately if any of these occur:
 1. **Unresolved Clarifications**: Any `[NEEDS CLARIFICATION]` markers in `spec.md` or plans.
 2. **Critical/P0 Findings**: Any P0 findings returned by `/story-analyze`, `/audit`, or failed assertions in `/story-validate`.
-3. **Compilation or Test Failures**: Any test suite failure during implementation or validation.
+3. **Compilation, Test, or Gate Failures**: Any failure in compiling, running tests, or executing the project's full pre-commit gate (lint/eslint, typecheck, banned-language).
 4. **Comprehension Block**: Fails first-time user comprehension, capping readiness state.
 
 ---
@@ -123,5 +123,5 @@ Do NOT transition automatically and stop immediately if any of these occur:
 - **NEVER** advance Audited → Validated on mere `validation-report.md` presence. Require the report template-compliant (`validate-template.sh --strict`) AND produced by a real `/story-validate` + `/audit` run. A report that exists but whose skills never ran does not advance state.
 - **NEVER** let an agent jump directly to `/story-implement` without running `/story-implement` (including `check-story-prereqs.sh` gate).
 - **ALWAYS** regenerate `project-state.md` upon any state transition.
-- **When run as a delegated sub-agent** (background/worktree): do NOT stop at a downstream skill's closing "next steps" menu — that menu is not a turn boundary; proceed to the next state. On completion, return the contract `{ readiness_state, pass, p0p1, artifact_paths, skills_invoked }` so the conductor's Verify-Skills Gate can confirm the skills actually ran.
+- **When run as a delegated sub-agent** (background/worktree): do NOT stop at a downstream skill's closing "next steps" menu — that menu is not a turn boundary; proceed to the next state. On completion, return the contract `{ readiness_state, pass, p0p1, artifact_paths, skills_invoked, gate_checks }` so the conductor's Verify-Skills Gate can confirm the skills actually ran and the full pre-commit gate passed.
 - Provide a clear progress bar or status line (e.g. `[Tasks 🟢] → [Implementing 🟡] → [Audit ⚪]`) in each reply.

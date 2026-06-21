@@ -76,10 +76,14 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
 4c. Verify Deferrals / What this validation did NOT verify section:
    - Ensure the report explicitly populates `## 🔬 What this validation did NOT verify / Deferrals`. If left blank or containing boilerplate, fail the validation.
    - **Cap Status enforcement**: every deferral row MUST include `Cap Status` (`evidence-pending` or `implementation-pending`). Any row tagged `implementation-pending` (code path not built) → verified state MUST cap at `NO-SHIP` — unbuilt code cannot pass as IMPL-GREEN. Any row tagged `autonomous-not-done` → cap at `IMPL-GREEN`/`INTEGRATION-GREEN` (cannot claim UX-RC/API-RC).
-4d. **INTEGRATION-GREEN gate** (when story depends on external services in evidence-contract §7):
+4d. **INTEGRATION-GREEN gate** (when story depends on external services in evidence-contract §7 or is DB-backed):
    - If §7 lists services this story touches, verify at least one **real round-trip** succeeded per service (not mock-only). Capture logs/traces in validation records.
-   - Mock-green alone is insufficient for INTEGRATION-GREEN — transport failures (429, auth, payload shape) only appear on real calls.
-   - If no §7 services apply, INTEGRATION-GREEN auto-passes (skip to UX-RC/API-RC criteria).
+   - If the project is DB-backed, run `validate-schema-drift.sh --strict` to verify live database schema matches migrations. Ensure at least one real write path is exercised (reads can fail-close or swallow missing tables).
+   - Mock-green alone is insufficient for INTEGRATION-GREEN — transport failures (429, auth, payload shape) and schema-drift database errors only appear on real calls.
+   - If no §7 services apply and the project is not DB-backed, INTEGRATION-GREEN auto-passes (skip to UX-RC/API-RC criteria).
+4e. **Clean-Build gate** (for UX-RC+ claims):
+   - For UX-RC or higher, verify that `clean_build: yes` is declared in the report's frontmatter.
+   - Any UX-RC+ claim using `clean_build: no` or unspecified must be rejected/downgraded (cap verified readiness state at `INTEGRATION-GREEN` or lower). Stale compiled assets from incremental caches are a surrogate for the code under test.
 5. If any required-at-claimed-state gate is ❌ (including missing human attestation or missing Keystones for SHIP-RC+): lower the verified state to the highest state where all gates pass
 6. Run the banned-phrase self-check on the report's own language before publishing
 7. Apply SHA stamp to the report

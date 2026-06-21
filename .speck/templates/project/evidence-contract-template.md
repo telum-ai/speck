@@ -237,7 +237,12 @@ For every validation report at UX-RC or higher:
   - [ ] All IMPL-GREEN criteria pass
   - [ ] **Real-Integration Smoke Check**: At least one real round-trip call has successfully run and succeeded against each live external service named in §7 (e.g., real LLM completion returned, live API call responded 200). This catches 429 rate-limiting, authentication, payload-shape, or connectivity errors that mocks and compilers cannot see.
   - [ ] Real-integration logs or traces captured and saved in validation records.
-* **WHEN: no external services in §7**:
+* **WHEN: DB-backed project (persistent store + migrations)**:
+  - [ ] **Live-Schema Parity Check**: Every database object (tables, columns, custom types, trigger functions) that your migration files claim to create exists and is verified in the target database. Run the schema↔migrations drift probe (`validate-schema-drift.sh`) to assert parity.
+  - [ ] **Real Write-Path Smoke Check**: At least one real database write (e.g. insert, update, or delete) path is exercised and verified. Fail-closed reads (e.g., catching errors and returning empty/disabled) swallow missing tables on read paths; write paths expose them immediately.
+  - [ ] **Migration integrity**: Verify no migrations were "force-marked" as applied without running their SQL. 
+    > ⚠️ **CRITICAL WARNING**: Commands like `supabase migration repair --status applied <version>` (and database analogs) mark a migration as applied in the system ledger WITHOUT executing its SQL. This leaves the actual database schema in an un-migrated, drifting state while ledger checks false-pass. Never use migration ledger repairs as a shortcut for executing migrations in target environments.
+* **WHEN: no external services in §7 and not DB-backed**:
   - [ ] (SKIP — Auto-passed. Proceed directly to UX-RC / API-RC)
 
 ### UX-RC / API-RC
@@ -253,7 +258,7 @@ For every validation report at UX-RC or higher:
 
   **UX-RC evidence partition — autonomous vs gated** *(prevents under-driving validation: defer the gated part, NEVER the autonomous part)*:
   - **Autonomous (REQUIRED — an agent with a build + a browser/headless tool can gather ALL of this; it is NEVER deferrable)**:
-    - [ ] Production build produced (not dev server) and cold-started
+    - [ ] Production build produced (not dev server) and cold-started from a **clean build** (cache cleared, e.g. `rm -rf .next` / `trash .next` or build tool cache equivalents)
     - [ ] Headless/browser persona LARP recorded against that build (screenshots + AX tree per step)
     - [ ] axe-core run with the **JSON stored** under `larp-recordings/` (claiming "axe 0/0" with no stored JSON is surrogate proof)
     - [ ] JTBD walkthrough completed end-to-end on the built artifact
@@ -440,6 +445,8 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 3. Link to the canonical proof requirement
 4. Enqueue a follow-up task to gather valid proof
 
+- **Stale Build Cache as Surrogate:** Re-using an incremental build cache (e.g. Next.js, Webpack, Vite, or Android/iOS compiler caches) that serves stale compiled code instead of compiling the current commit HEAD is considered surrogate proof. It is strictly banned for UX-RC+ readiness claims.
+
 ---
 
 ## 14. LARP Runway & Efficiency Controls
@@ -450,6 +457,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 - **Rebuild Requirements:** A full native rebuild is required only when native dependencies (npm/cocoapods/gradle), environment variables, or native configuration changes.
 - **Freshness Window:** If the build fingerprint has not changed, the agent may reuse the existing build artifact for focused LARP runs.
 - **Focused Reruns:** When polishing UI, the agent should isolate the simulator/device and rerun only the specific affected steps, rather than the full suite.
+- **Clean Build Requirement for UX-RC+ claims:** While build fingerprint reuse is permitted for rapid iteration and UI polishing, any formal or final validation claiming a `UX-RC` or higher readiness state MUST be verified against a freshly compiled production build (where all incremental build caches were cleared prior to compile) to guarantee no stale compiled assets are served.
 
 ---
 
