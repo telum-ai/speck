@@ -111,6 +111,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Drift / re-engagement report | `project-recheck-report.md` |
 | Project-level skeptical audit findings | `project-audit-report.md` |
 | Post-validation hardening report | `project-harden-report-*.md` |
+| Post-validation project adjustment report | `project-adjust-report-*.md` |
 | Project punch list (remaining work to ship) | `project-punch-list.md` |
 | Sprint progress (Sprint play level only) | `sprint-log.md` |
 | Domain terminology + entities + rules (Platform; merges to product-contract at Build) | `domain-model.md` |
@@ -207,8 +208,48 @@ Same as Build but `/project-architecture` and `/project-ux` are required before 
 ### Platform flow
 Full flow: includes `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-readme` → `/project-evidence-contract` → `/project-plan` → `/project-roadmap`. `/project-state` keeps README status current after validation gates.
 
-### Reengagement
-On any new session: read `project-state.md`. If missing or stale (>2 weeks since last verified-against-runtime), run `/recheck` before any feature work.
+### Reengagement & Intent Changes
+On any new session: read `project-state.md`. 
+- If missing or stale (>2 weeks since last verified-against-runtime), run `/recheck` before any feature work to detect drift.
+- If the session is triggered by an **intent change** or **strategic pivot** to a completed/validated project, run `/project-adjust` to safely spec the delta and compute the reverse cascade rather than making silent code changes or re-authoring specs from scratch.
+
+### 🔄 Continuous Project Lifecycle & Post-Completion Triage Router
+
+The project lifecycle is continuous: post-`/project-validate` does not mean terminal freeze ("v1 shipped, evolving"). When new input, feedback, or pivot requests are received against a completed/validated project, the conductor MUST route the request using the **Post-Completion Triage Router**:
+
+```mermaid
+flowchart TD
+  input["Input against a completed/validated project"]
+  triage{"Kind x Level?"}
+  defect["/harden - defect/bug fix"]
+  s["/story-adjust - story-level redesign/visual overhaul"]
+  e["/epic-adjust - epic-level structure/IA pivot"]
+  p["/project-adjust - project directional/intent change"]
+  new_scope["/epic-specify or /story-specify - new scope/features"]
+  drift["/recheck - engagement gap / audit"]
+  promote["/project-promote - scale outgrowth"]
+
+  input --> triage
+  triage -->|"broken (defect/patch)"| defect
+  triage -->|"story redesign / delta"| s
+  triage -->|"epic structural redesign / IA"| e
+  triage -->|"high-level contract / direction pivot"| p
+  triage -->|"new features / addition"| new_scope
+  triage -->|"time gap / is this still working?"| drift
+  triage -->|"play-level outgrowth (e.g. Sprint->Build)"| promote
+
+  p --> cascade["compute-cascade.sh: reverse blast-radius"]
+  cascade --> fanout["flag dependent epics/stories stale (CASCADE_STALE.P1) -> /epic-adjust each -> re-validate delta"]
+```
+
+#### Triage Router Decision Matrix
+1. **Defect/Bug Fix in Validated Work**: Run `/harden` to document root-cause and add systemic tests.
+2. **Deliberate Story Redesign/Visual Overhaul**: Run `/story-adjust` to spec the delta, update story `plan.md`, and conserve promises.
+3. **Deliberate Epic Structural Pivot / IA Redesign**: Run `/epic-adjust` to re-spec epic-level deltas and update epic `traceability-matrix.md`.
+4. **Project Directional Pivot / Strategic Contract Change**: Run `/project-adjust` to update `product-contract.md` and force a superseding DEC, run `compute-cascade.sh` to determine the blast-radius of affected downstream epics/stories, and route each to `/epic-adjust` or `/story-adjust`.
+5. **New Features / Addition**: Run `/epic-specify` or `/story-specify` to draft new specs from scratch.
+6. **Time Gap / Audit**: Run `/recheck` to scan for drift, stale dependencies, and schema drift.
+7. **Scale/Rigor Outgrowth**: Run `/project-promote` to upgrade play levels (e.g. Sprint to Build, or Build to Platform).
 
 ### Concurrent multi-epic execution (Platform / 4+ epics)
 
@@ -218,7 +259,8 @@ When 2+ epics run in parallel (separate sessions or worktrees), shared truth art
 |------|------|-----|
 | **Worktree isolation** | One epic = one branch + optional worktree off *current* `main` | `git worktree add ../<repo>-eNNN -b epic/eNNN origin/main` (or `main`). Rebase off `main` daily: `git fetch && git rebase origin/main`. Never branch parallel epics from a stale pre-foundation base. |
 | **Push-before-spawn** | Worktrees branch from `origin/main`, NOT local `HEAD` | `git push origin main` the full planning corpus (epic specs, tech-spec, wireframes, DECs) **before** spawning any worktree wave, and after every merge. Unpushed local commits are invisible to worktrees → the first wave builds blind to locked specs. Each sub-agent prompt carries a precondition guard: "verify `<spec path>` exists on this branch, else abort." |
-| **Worktree disk hygiene** | Worktrees are a shared, exhaustible host resource | Each `isolation: worktree` sub-agent runs `pnpm install` + build (~1 GB+). Many parallel worktrees → host `ENOSPC` freezes **every** session on the machine (the harness writes a tmp file per command). **MUST** `git worktree remove --force ../<repo>-eNNN` after each merge. Cap concurrent worktrees to the current wave; treat free disk as cross-session shared state. |
+| **Worktree disk hygiene & WIP Recovery** | Worktrees are a shared, exhaustible host resource | Each `isolation: worktree` sub-agent runs `pnpm install` + build (~1 GB+). Many parallel worktrees → host `ENOSPC` freezes **every** session on the machine (the harness writes a tmp file per command). **MUST** run `git worktree remove ../<repo>-eNNN` (no `--force` by default so git warns you of any lost WIP) after each merge. Cap concurrent worktrees to the current wave; treat free disk as cross-session shared state. If a background agent is interrupted/killed, recover WIP directly from its worktree on disk (`git add -A && commit`) instead of deleting and restarting. |
+| **Conflicted-Merge Commit Guard** | Husky + lint-staged stash index corruption | Committing a manually resolved conflicted merge can cause lint-staged `--keep-index` stashing to corrupt the index, silently dropping auto-merged files (creating a broken single-parent commit). **MUST** commit conflicted merges using `git commit --no-verify`, then verify `git show --stat HEAD` lists all files and the commit has 2 parents. |
 | **DEC bands** | Prevent `project-decisions-log.md` number races | Project-level: `DEC-0001`–`DEC-0099`. Epic E###: `DEC-{NN}01`…`DEC-{NN}99` where `{NN}` = epic number (`E002` → `DEC-0201+`). Log via `/speck-decision-log` only. |
 | **project-state merge-only** | Single-file full regen clobbers under parallelism | Epic sessions on `epic/*` branches: **read** `project-state.md`, do **not** overwrite. Regenerate on `main` only (merge PR author or post-merge `/project-state`). |
 | **Migration ownership + version coordination** | Concurrent schema changes collide on shared tables AND on identical timestamps | Each epic owns **new** tables/migrations only. Foundation/shared tables (`studios`, auth, tenancy) are frozen — policy changes route through owning epic or sequential merge. Filenames: **real wall-clock 14-digit UTC** (`date -u +%Y%m%d%H%M%S`) — never rounded placeholders like `…120000` (parallel epics keep picking the same round number → collisions). Fallback when scripting stamps: per-epic second/minute offset bands (`E002` → `…NN02`, `E003` → `…NN03`). Validate ordering on a Supabase branch per PR. |
@@ -242,8 +284,11 @@ Speck's rigor lives in the **skills** (the adversarial `/audit` probes, honest r
 
 1. Confirm required reports exist AND pass `.speck/scripts/validation/validate-template.sh --strict` (template-compliant, not merely right-shaped).
 2. Verify **≥2 real skill invocations** in the sub-agent's transcript — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. If `skills_invoked` is empty or the transcript shows zero `Skill` calls → **REJECT + re-run**.
-3. Verify that **`gate_checks`** shows that the project's full pre-commit gate (lint, typecheck, tests, build, banned-language) ran and passed (reject on any missing, skipped, or failed checks; green tests alone do not equal a green gate).
-4. Treat `/audit` as **non-skippable** before any merge in delegated flows.
+   > 🔍 **TRANSCRIPT GREP RECIPE**: The conductor MUST actively verify the sub-agent's JSON transcript file or tool execution log for real skill tool calls. Run a grep search for `"name":"Skill"` (the host's tool invocation signature) to confirm at least N real skill invocations corresponding to the required lifecycle skills exist in the logs. Reject any hand-rolled file writes or copy-pasted templates.
+3. Require a **genuinely independent `audit-report.md`** authored by a **SEPARATE** auditor agent (e.g. `@speck-auditor` or a separate session), and NEVER the same agent who implemented/validated the story. Self-auditing is heavily prone to confirmation bias.
+   > 📊 **FIELD EVIDENCE**: In a parallel-epic SaaS project, role separation and the transcript verify-gate caught **4 critical defects across 9 stories** that self-audits completely missed (including a `use-server` build-breaker, a fabricated readiness claim citing nonexistent mock paths, an unrun build failure, and a runtime database function mismatch).
+4. Verify that **`gate_checks`** shows that the project's full pre-commit gate (lint, typecheck, tests, build, banned-language) ran and passed (reject on any missing, skipped, or failed checks; green tests alone do not equal a green gate).
+5. Treat `/audit` as **non-skippable** before any merge in delegated flows.
 
 A unit that produced passing-looking artifacts with zero skill calls is **simulated, not validated** — reject it.
 
@@ -323,6 +368,7 @@ Speck is designed to run seamlessly across all major AI coding environments. Cor
 1. **Shared Validation Engine**: All validation hooks (`validate-template.sh`) route to a unified, host-agnostic bash core inside `.speck/scripts/validation/`.
 2. **Subagents Fallback**: Spawning parallel subagents (e.g. `speck-auditor`, `speck-scanner`) is a Claude-specific optimization. When executing on Cursor or Codex, checklists run sequentially in the main conversation.
 3. **Local Validation Backstop**: Run validators with `--strict` via pre-commit hooks or manually when your host lacks edit/stop gates.
+4. **Agent Skill Tool Fallback**: Some AI host environments restrict or do not support the execution of the `Skill` tool inside highly restricted custom agent roles (such as `@speck-coder` or `@speck-auditor`). If your host environment fails to provide the `Skill` tool to custom roles, any workflow lane requiring skill invocation (e.g., running story/epic specification or validation) MUST be run using a general-purpose, all-tools agent instead. Never fall back to hand-writing or simulating report files; real skill execution recorded in the transcript is required.
 
 ## 🦾 Claude-First Autonomous & Agentic Workflows
 
@@ -355,7 +401,7 @@ Claude Code `Stop` hooks use **command-type** lifecycle gates (`.claude/hooks/st
 
 Skills are agent-decided expertise packages — auto-loaded when relevant.
 
-- **Process skills**: `/speck`, `/recheck`, `/larp`, `/audit`, `/harden`, `/story-adjust`, `/epic-adjust`, `/speck-debug`, `/speck-learn`
+- **Process skills**: `/speck`, `/recheck`, `/larp`, `/audit`, `/harden`, `/story-adjust`, `/epic-adjust`, `/project-adjust`, `/speck-debug`, `/speck-learn`
 - **Level commands** (`project-*`, `epic-*`, `story-*`): the Speck workflow
 - **Domain patterns** (`.cursor/skills/patterns/`): Stripe, Clerk, Supabase, Firebase, RevenueCat, etc. — lazy-loaded when implementing those integrations
 
@@ -382,7 +428,7 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Bypass the real UI DOM/form elements with API calls when auditing or validating UI stories (always drive the actual input fields)
 - Let a drawn wireframe element or a stated experience-chain seam go un-enumerated — it is a promise: give it a `PRM-NNN` row in `traceability-matrix.md` (story+AC) or descope it with a DEC. "Wireframes are inspiration" is banned.
 - Accept a delegated/parallel sub-agent's self-reported `{readiness_state, pass}` — verify ≥2 real skill invocations + template-compliant reports first (Verify-Skills Gate)
-- Leave validated specification docs, experience chains, or wireframes stale after a deliberate post-validation change — run `/story-adjust` or `/epic-adjust` to re-spec the delta and conserve promises
+- Leave validated specification docs, experience chains, wireframes, or product contracts stale after a deliberate post-validation change or strategic pivot — run `/project-adjust`, `/epic-adjust`, or `/story-adjust` to re-spec the delta, run the change-cascade computer, and conserve promises
 
 **ALWAYS**:
 - Read `project-state.md` first
@@ -433,6 +479,8 @@ These feed retrospectives. Without tags, learnings are lost.
 | "Audit / make ship-ready" | Run `/recheck` first. Block new feature work until drift reconciled. |
 | "Fix/patch a bug in validated/shipped work" | Run `/harden` flow to document root-cause and add systemic tests. |
 | "Redesign/deliberately change validated/shipped work" | Run `/story-adjust` or `/epic-adjust` to re-spec the delta and conserve promises. |
+| "Directional/contract change to a shipped project" | Run `/project-adjust` to spec contract deltas, run cascade compute to find blast radius, and route downstream adjustments. |
+| "Input against a completed/validated project" | Use the Post-Completion Triage Router to map input to `/harden` (defect), `/story-adjust` or `/epic-adjust` (redesign), or `/project-adjust` (pivot). |
 
 ## 📚 Where to Find More
 

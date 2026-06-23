@@ -324,6 +324,9 @@ const { data } = await supabase
 - Verify table has Realtime enabled in Dashboard
 - Filter by user_id if needed
 
+### 5. `CREATE OR REPLACE FUNCTION` Migration Regression
+When writing forward migrations that redefine an existing database function, view, or trigger using `CREATE OR REPLACE FUNCTION`, you **MUST** diff your proposed definition against the **latest** prior definition across all prior migrations, rather than just the first definition you find in your search. If an intervening migration (or parallel epic) changed the function's signature, arguments, security context (`security definer`), or internal logic, using a stale base will silently revert those changes, causing catastrophic runtime regressions. Always search all migrations (`git grep` or glob scan) to locate the absolute latest active definition first.
+
 ## References
 
 - [Row-Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)

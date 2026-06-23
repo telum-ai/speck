@@ -1,5 +1,23 @@
 # Speck Changelog
 
+## v7.16.0 — 2026-06-23 — Agent Skill Execution, Change Cascade Blast-Radius, Continuous Lifecycle, and Legibility Probes
+
+Addresses issues #66 and #67 to introduce first-class agent tool support, post-validation directional changes, automated reverse-cascade computation, continuous lifecycle triage, and UX comprehension checks.
+
+### Parallel-Epic Field Learnings (#66)
+- **Agent Skill-Tool Grant (#66.1)** — Added `Skill` to the `tools:` list of all 5 lane agents (`speck-coder`, `speck-auditor`, `speck-validator`, `speck-planner`, `speck-scribe`), enabling them to execute the full Speck skills required by the Verify-Skills Gate. Documented a `general-purpose` agent fallback for hosts restricting custom-role tool lists.
+- **Transcript Grep-Verify & Independent Auditor (#66.2)** — Codified a concrete verify recipe in the Verify-Skills Gate (`AGENTS.md`, `.cursor/skills/epic/SKILL.md`, `parallel-epic-execution.md`): the conductor must grep sub-agent transcripts for `"name":"Skill"` to prevent hand-rolled or copy-pasted report simulation. Mandated a genuinely independent `@speck-auditor` agent (citing field evidence where separate audits caught 4 critical bugs that self-audits missed).
+- **Web LARP & Env Cautions (#66.3)** — Added cautions to `speck-larp` and `visual-testing-web` for production-build testing. Click/hydration failures on hot-reload dev servers are suspect (HMR websocket reconnects false-BLOCKED); client bundles inline environment variables like `NEXT_PUBLIC_*` at build-time, so server shell variables do not update browser bundles (split-brain).
+- **Epic Retrospective Fallback Inputs (#66.4)** — Updated `epic-retrospective` to accept the `orchestration-ledger`, `validation-report.md` files, and `audit-report.md` files as sanctioned fallback synthesis inputs when per-story `story-retro.md` files are absent under parallel-conductor worktrees.
+- **Merge & Worktree Discipline (#66.5, #66.6)** — Documented `lint-staged` conflicted merge corruption (husky stashing drops auto-merged files, writing broken single-parent commits) and mandated resolving with `git commit --no-verify` and parent verification (`git show --stat HEAD` having 2 parents). Documented worktree hygiene (removing with regular `git worktree remove` to prevent forced-overwrite loss of uncommitted dirty WIP under concurrency) and killed-agent WIP restoration (`git add -A && commit`).
+- **Supabase & Balance Discipline (#66.7)** — Redefining database functions via `CREATE OR REPLACE FUNCTION` in forward migrations must be diffed against the *latest* prior migration definition across the entire codebase to prevent silent regression overrides. A story that decrements a balance owns the symmetric refund/re-credit logic in the same story.
+
+### Continuous Lifecycle & Project Adjustments (#67)
+- **Project Adjustment Stage & Template** — Introduced a new `/project-adjust` stage for project-level directional changes (strategic pivots, product contract revisions). Created `project-adjust-template.md` (report type `project-adjust-report`) and registered it in `template-manifest.json` and `validate-template.sh`.
+- **Change-Cascade Blast-Radius Computer** — Created `compute-cascade.sh` and `compute-cascade.test.sh` to automatically scan all epic traceability matrices for affected epics/stories matching a superseded decision (`DEC-NNNN`) or modified contract section. Integrates into `/speck-recheck` under `CASCADE_STALE.P1` taxonomy.
+- **Continuous Lifecycle Router** — Reframed post-validation lifecycle as non-terminal ("v1 shipped, evolving"). Added a **Post-Completion Triage Router** to `AGENTS.md` and `/speck` to direct post-validation feedback into `/harden` (defect), `/story-adjust` / `/epic-adjust` (redesign), or `/project-adjust` (pivot) based on level and intent. Softened `project-retrospective` terminal framing.
+- **Comprehension & Legibility Probe** — Added a "Comprehension / Legibility probe" class to §11 of `evidence-contract-template.md` to verify a first-time user can state the product value and call-to-action within 5 seconds of the JTBD cold-start. Integrated into `project-validate` JTBD walkthrough as a `LEGIBILITY.P1` gate that caps project status below `SHIP-RC` on failure.
+
 ## v7.15.0 — 2026-06-21 — Deliberate Adjustments, Migration Parity, Clean-Build LARPs, and Matrix Retrofitting
 
 Addresses multiple crucial feedback items (#64 and #65) to tighten the loop between validated specifications and live runtime reality, preventing promise evaporation and simulation drift.

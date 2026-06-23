@@ -1,6 +1,6 @@
 ---
 name: project-retrospective
-description: Load after project-validate passes to synthesize all epic retrospectives, validate cross-project patterns, and evolve the Speck methodology. Run once at project completion. FIRST ACTION after loading: read template at .speck/templates/project/project-retro-template.md before any context loading or artifact generation.
+description: Load after project-validate passes to synthesize all epic retrospectives, validate cross-project patterns, and evolve the Speck methodology. Note that the project lifecycle is continuous and re-entry loops exist (the project may adjust or evolve further). FIRST ACTION after loading: read template at .speck/templates/project/project-retro-template.md before any context loading or artifact generation.
 disable-model-invocation: false
 ---
 

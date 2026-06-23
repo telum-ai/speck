@@ -17,7 +17,16 @@ Analyze the user's request and route to the appropriate Speck workflow level bas
 
 Before routing to standard workflows, check for special cases:
 
-### 1. Brainstorm Detection
+### 1. Completed Project Input Detection (Post-Completion Triage Router)
+If the project has already been validated or shipped, and the user is providing new feedback, redesign requests, bug reports, or strategic pivots, triage and route accordingly:
+- **Defects / Bug Reports / Incidents**: Route to `/harden` to document root-cause and add systemic tests.
+- **Deliberate Story Redesign / Visual Overhaul**: Route to `/story-adjust` to spec the delta, update story `plan.md`, and conserve promises.
+- **Deliberate Epic Structural Pivot / IA Redesign**: Route to `/epic-adjust` to re-spec epic-level deltas and update epic `traceability-matrix.md`.
+- **Project Directional Pivot / Strategic Contract Change**: Route to `/project-adjust` to update `product-contract.md` and force a superseding DEC, run `compute-cascade.sh` to determine the blast-radius of affected downstream epics/stories, and route each to `/epic-adjust` or `/story-adjust`.
+- **New Feature Addition / Scope Expansion**: Route to `/epic-specify` or `/story-specify` to draft new specs from scratch.
+- **General Engagement Gap / "Is this still working?"**: Route to `/recheck`.
+
+### 2. Brainstorm Detection
 If user's request is vague or ideation-focused, route to `/project-brainstorm`:
 - "I have an idea but it's not clear yet"
 - "Help me figure out what to build"

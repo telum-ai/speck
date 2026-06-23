@@ -1,7 +1,7 @@
 ---
 name: speck-planner
 description: "Specialized Speck subagent for technical planning (plan.md, epic-tech-spec.md) and task decomposition (tasks.md)."
-tools: Read, Write, StrReplace, Glob, Grep
+tools: Read, Write, StrReplace, Glob, Grep, Skill
 model: sonnet
 color: yellow
 ---

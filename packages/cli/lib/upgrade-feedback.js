@@ -6,6 +6,22 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
+    version: '7.16.0',
+    items: [
+      { id: '#66.1', summary: 'P0 — granted Skill tool to all 5 lanes (speck-coder/auditor/validator/planner/scribe) and documented host fallback' },
+      { id: '#66.2', summary: 'grep-verify transcript check recipe for "name":"Skill" and mandated separate independent auditor' },
+      { id: '#66.3', summary: 'prod-build web LARP cautions: Turbopack hydration false-blocked limits and NEXT_PUBLIC_* build-time split-brain env variables' },
+      { id: '#66.4', summary: 'epic-retrospective accepts orchestration-ledger + validation/audit-reports as fallback inputs' },
+      { id: '#66.5', summary: 'lint-staged conflicted merge corruption prevention via git commit --no-verify and parent validation' },
+      { id: '#66.6', summary: 'worktree hygiene regular remove checks and interrupted agent WIP recovery' },
+      { id: '#66.7', summary: 'migration CREATE OR REPLACE FUNCTION regression protection and balanced story decrement/refund symmetry' },
+      { id: 'project-adjust', summary: 'strategic pivots and contract changes via /project-adjust flow and report templates' },
+      { id: 'change-cascade', summary: 'automated reverse change-cascade blast-radius computer via compute-cascade.sh and CASCADE_STALE.P1 recheck' },
+      { id: 'lifecycle-router', summary: 'continuous post-completion triage routing (defect, story-adjust, epic-adjust, project-adjust) and softened retrospectives' },
+      { id: 'legibility-probe', summary: 'first-time user comprehension/legibility check in project-validate and LEGIBILITY.P1 gate cap' },
+    ],
+  },
+  {
     version: '7.15.0',
     items: [
       { id: '#65', summary: '/story-adjust + /epic-adjust deliberate post-validation re-engineering flow and reports (distinct from defect /harden)' },

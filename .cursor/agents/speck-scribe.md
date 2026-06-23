@@ -1,7 +1,7 @@
 ---
 name: speck-scribe
 description: "Specialized Speck subagent for drafting and refining specifications (spec.md, epic.md)."
-tools: Read, Write, StrReplace, Glob, Grep
+tools: Read, Write, StrReplace, Glob, Grep, Skill
 model: sonnet
 color: blue
 ---

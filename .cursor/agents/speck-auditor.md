@@ -1,7 +1,7 @@
 ---
 name: speck-auditor
 description: "Adversarial Speck subagent for checking correctness, edge cases, security, and tests before validation."
-tools: Read, Write, StrReplace, Glob, Grep, Bash
+tools: Read, Write, StrReplace, Glob, Grep, Bash, Skill
 model: sonnet
 color: red
 ---

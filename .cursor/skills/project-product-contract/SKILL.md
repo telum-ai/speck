@@ -6,6 +6,10 @@ disable-model-invocation: false
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
 
+> 🚦 **METHODOLOGY INTENT SPLIT**:
+> - Use `/project-product-contract` to author the initial contract or refresh it during greenfield planning.
+> - If the project's contract has already been validated/shipped and you need to make a **deliberate directional or strategic intent change**, run `/project-adjust` instead of silently re-authoring to ensure downstream cascade dependencies are traced and re-validated.
+
 User input:
 
 $ARGUMENTS

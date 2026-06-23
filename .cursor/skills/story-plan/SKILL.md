@@ -273,6 +273,12 @@ This command benefits from parallel execution:
    4. Re-run this command to continue
    ```
 
+## ⚖️ Balance & Symmetry Guard (Crucial Plan Discipline)
+
+When planning any user story that involves decrementing, reserving, or consuming a balance, quota, credit, or inventory (e.g., deducting virtual currency, reducing stock, or occupying a seat):
+- **Symmetric Re-credit Obligation:** The SAME story MUST specify and own the symmetric re-credit, release, or refund logic for failed requests, transaction rollbacks, or user cancellations. 
+- **Atomic Pair Planning:** Never defer the re-credit/refund logic to a future story or "cleanup" task. Both decrement and re-credit MUST be paired and designed together in this story's `plan.md` to guarantee data consistency.
+
 9. Execute the implementation plan:
    
    **CRITICAL**: Load and follow the template exactly:

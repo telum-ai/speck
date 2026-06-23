@@ -35,7 +35,11 @@ description: Load when running visual validation for web applications - Next.js,
 
 ## 🌐 Browser MCP Tools
 
-Use these tools for live validation:
+Use these tools for live validation.
+
+> ⚠️ **PRODUCTION BUILD REQUIREMENT FOR UX-RC+ CLAIMS**: While rapid tight-loop testing during implementation can run against the hot-reloading dev server (e.g. `http://localhost:3000`), all formal validation for UX-RC or higher **MUST** navigate and validate against a serving local production build (e.g., compiled with `next build` and served via `next start` or standard reverse-proxy). 
+> - **Hydration Flake**: Hot Module Replacement (HMR) websocket reconnection errors on dev servers can cause temporary client hydration splits (where click handlers are completely dead). If a flow is BLOCKED on a dev server, always verify against the production build.
+> - **Inlined Build-Time Env (Split-Brain)**: Variables prefixed with `NEXT_PUBLIC_*` or `PUBLIC_*` are permanently inlined into the client-side JS bundles **at build time** from `.env` files. Runtime environment overrides on the server will not change the compiled client bundles, causing a silent split-brain. Check browser network calls to verify the correct API endpoint is targeted.
 
 | Tool | Purpose | Example |
 |------|---------|---------|

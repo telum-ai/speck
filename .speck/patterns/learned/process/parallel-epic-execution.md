@@ -28,11 +28,16 @@ A single **conductor** session owns sequencing and merges. It keeps one durable 
    Each sub-agent prompt carries a precondition guard: "verify <spec path> exists on this branch, else abort."
 4. Write/refresh the orchestration-ledger (per-epic cursor, open gate, wave cursor, guards checklist).
 5. As each delegated unit returns, run the VERIFY-SKILLS GATE before accepting (see below).
-6. On accept: merge to main, re-push origin/main, `git worktree remove --force` the merged worktree,
-   regenerate project-state.md ON MAIN, update the ledger.
-7. When the wave is fully merged, advance to the next wave (integrators last). Repeat.
+6. On accept: merge to main.
+   > ⚠️ **CONFLICTED-MERGE COMMIT GATES (lint-staged stashing corruption)**: For projects using husky + lint-staged, a conflicted merge commit — after manual resolution and `git add` — can trigger lint-staged `--keep-index` stashing, which frequently corrupts the git index. This results in the commit silently dropping auto-merged files (e.g., database migrations or shared modules) and writing a broken single-parent commit instead of a true merge commit. 
+   > **Guard Requirement**: Use `git commit --no-verify` exclusively for conflicted merge commits (since post-merge CI checks will still validate quality), and always run `git show --stat HEAD` to verify that (a) all expected files are in the commit, and (b) the commit header lists two parent hashes (e.g., `Merge: a1b2c3d e4f5g6h`).
+7. Clean up worktrees: Run `git worktree remove ../<repo>-eNNN` (omit `--force` by default so git safely blocks on uncommitted or dirty states, warning you of lost WIP; use `--force` only when completely certain).
+8. Re-push `origin/main`, regenerate `project-state.md` ON MAIN ONLY, and update the ledger.
+9. When the wave is fully merged, advance to the next wave (integrators last). Repeat.
 On any reset (compaction / spend / rate limit): re-read the orchestration-ledger and resume at step 4.
 ```
+
+> 🛠️ **INTERRUPTED SUB-AGENT RECOVERY (WIP Restoration)**: If a background or worktree sub-agent is killed, timed out, or interrupted mid-task, its in-memory agent state is lost but its worktree on disk is intact. Do NOT delete and restart. Recover the work directly by navigating to the worktree and running `git -C ../<repo>-eNNN add -A && git -C ../<repo>-eNNN commit -m "WIP: agent recovery"` to capture the state, then either resume the task directly in that worktree or merge the WIP branch.
 
 ### The orchestration ledger
 
@@ -43,9 +48,11 @@ The one file that survives resets. Template: `.speck/templates/project/orchestra
 Before ACCEPTING/merging any delegated story or epic result, the conductor MUST:
 
 1. **Reports exist + compliant**: required reports (`validation-report.md`, `audit-report.md`; epic: `epic-validation-report.md`, `traceability-matrix.md`) exist AND pass `bash .speck/scripts/validation/validate-template.sh --strict <path>`.
-2. **Skills actually ran**: the unit's return contract `{ readiness_state, pass, p0p1, artifact_paths, skills_invoked, gate_checks }` lists ≥2 real skill invocations — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. Cross-check the sub-agent transcript for real `Skill` calls. Empty / zero → **REJECT + re-run**.
-3. **Full pre-commit gate passed**: `gate_checks` lists passing status for eslint, typecheck, tests, build, and banned-language check (reject on any skipped or failed checks).
-4. **`/audit` non-skippable**: a unit merged without a real `/audit` is rejected regardless of its self-reported state.
+2. **Skills actually ran**: the unit's return contract `{ readiness_state, pass, p0p1, artifact_paths, skills_invoked, gate_checks }` lists ≥2 real skill invocations — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. The conductor MUST cross-check the sub-agent's JSON transcript or execution log by running a grep search for `"name":"Skill"` (the host's tool call signature) to confirm at least 2 real skill invocations actually ran. Empty / zero → **REJECT + re-run**.
+   > 💡 **AGENT ROLE AND SKILL-TOOL CAUTION**: If a host environment restricts custom agent types (like `@speck-coder` or `@speck-auditor`) from executing the `Skill` tool, those agents will fail to run the validation/specification flows. In such cases, the lanes requiring skill execution **MUST** use a general-purpose, all-tools agent to ensure the real skill is run and recorded in the transcript. Reading the skill markdown file by hand is considered simulation and will be rejected at the Verify-Skills Gate.
+3. **Mandatory Independent Auditor**: Ensure that the story's `audit-report.md` was authored by a separate, independent auditor agent/session rather than the implementer/validator. Self-audits suffer from confirmation bias (field runs showed separate audits caught 4 critical defects across 9 stories missed by self-audits, including a Next.js `use-server` compile-breaker, false/simulated readiness claims, and silent runtime database transaction crashes).
+4. **Full pre-commit gate passed**: `gate_checks` lists passing status for eslint, typecheck, tests, build, and banned-language check (reject on any skipped or failed checks).
+5. **`/audit` non-skippable**: a unit merged without a real `/audit` is rejected regardless of its self-reported state.
 
 Self-reported fields are not tamper-evident (host-runtime limit) — the transcript check is the backstop. A unit that produced passing-looking artifacts with zero skill calls is **simulated, not validated**.
 

@@ -86,7 +86,10 @@ Map the evidence-contract's valid proof source to a concrete artifact:
 
 If invalid (e.g., user is trying to LARP against dev server for an iOS app): STOP and refuse. Tell user "Per evidence-contract.md, dev-server screenshots don't count as valid proof for this platform. Build the launch artifact first: [exact command]."
 
-**Clean Build Precheck (UX-RC+):** Verify that the production build was compiled AFTER clearing any incremental build caches. If a stale cache is detected, fail the precheck and require a clean build to prevent false-green results. Record "clean build: yes" in findings and report templates.
+**Clean Build Precheck & Split-Brain Env Guard (UX-RC+):**
+- Verify that the production build was compiled AFTER clearing any incremental build caches. If a stale cache is detected, fail the precheck and require a clean build to prevent false-green results. Record "clean build: yes" in findings and report templates.
+- **Client-Bundle Env Guard:** Always verify the **client-side bundle's environment** (inspect the browser's actual network calls/console) rather than just looking at server-side environment variables. Modern frameworks (e.g. Next.js, Vite) inline public env variables (prefixed with `NEXT_PUBLIC_*`, `PUBLIC_*`, or `EXPO_PUBLIC_*`) directly into client JS chunks **at build time** from `.env` files. Simply changing the server's runtime shell-env does NOT update the client-side bundles, creating a "split-brain" where the server hits local but the browser still hits remote.
+- **Dev-Server HMR Warning:** Running a cold-start LARP against a hot-reloading dev server (e.g., Next.js Turbopack) can introduce false failures (such as broken hydration, dead interaction buttons, or hydration mismatches) that do NOT exist in the clean production build. If you encounter a `BLOCKED` state during a dev-server LARP that correlates with HMR or websocket reconnection errors, treat it as **suspect** and verify/reproduce against a clean production build (`next build && next start`) before capping the story's readiness.
 
 ### 3. Load the platform-specific visual testing skill
 

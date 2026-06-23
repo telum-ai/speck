@@ -112,9 +112,10 @@ Each delegated story sub-agent returns the contract:
 Before ACCEPTING a story result (and before counting it toward "Stories Complete"), the conductor MUST:
 
 1. **Reports exist + compliant**: `validation-report.md` (and `audit-report.md`) exist AND pass `bash .speck/scripts/validation/validate-template.sh --strict <path>`.
-2. **Skills actually ran**: `skills_invoked` includes at least `speck-audit` AND `story-validate`; cross-check the sub-agent transcript for ≥2 real `Skill` invocations. If empty / zero → **REJECT and re-run the story** (do not accept on `{readiness_state, pass}` alone).
-3. **Full pre-commit gate passed**: `gate_checks` lists passing status for eslint, typecheck, tests, build, and banned-language check (reject on any skipped or failed checks).
-4. **`/audit` non-skippable**: a story merged without a real `/audit` run is rejected regardless of its self-reported state.
+2. **Skills actually ran**: `skills_invoked` includes at least `speck-audit` AND `story-validate`; the conductor MUST cross-check the sub-agent's JSON transcript or execution log by grepping for `"name":"Skill"` (the host's tool call key) to confirm at least 2 real skill invocations actually ran. If empty or zero → **REJECT and re-run the story** (never accept on a self-reported state alone).
+3. **Mandatory Independent Auditor**: Ensure that the story's `audit-report.md` was authored by a separate, independent auditor agent/session rather than the implementer/validator. Self-audits suffer from confirmation bias (field runs showed separate audits caught 4 critical defects across 9 stories missed by self-audits).
+4. **Full pre-commit gate passed**: `gate_checks` lists passing status for eslint, typecheck, tests, build, and banned-language check (reject on any skipped or failed checks).
+5. **`/audit` non-skippable**: a story merged without a real `/audit` run is rejected regardless of its self-reported state.
 
 Self-reported fields are not tamper-evident (host-runtime limit) — the transcript check is the backstop. See AGENTS.md *Delegated execution: verify skills ran before accepting results*.
 

@@ -1,7 +1,7 @@
 ---
 name: speck-validator
 description: "Speck validation subagent for orchestrating visual testing, user LARP, and declaring readiness states."
-tools: Read, Write, StrReplace, Glob, Grep, Bash
+tools: Read, Write, StrReplace, Glob, Grep, Bash, Skill
 model: sonnet
 color: cyan
 ---

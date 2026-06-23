@@ -52,6 +52,7 @@ This command benefits from parallel data loading and validation:
 
 **Epic retrospective consumes ONLY synthesized data (NOT raw)**:
 - ✅ Reads `story-retro.md` files (structured summaries from story retros)
+- 💡 **Fallback Input:** If the epic ran under a parallel-conductor pattern and story-retros were not generated, you may load the **orchestration-ledger**, **validation-report.md** files, and **audit-report.md** files as sanctioned fallback synthesis inputs. Do NOT block retrospective completion.
 - ✅ Reads epic-level artifacts (epic.md, epic-architecture.md, etc.)
 - ❌ Does NOT mine git commits directly (already extracted in story retros)
 
@@ -66,21 +67,26 @@ This command benefits from parallel data loading and validation:
 ## Prerequisites
 
 - Completed epic with all stories validated
-- All stories have `story-retro.md` files (run `/story-retrospective` for each)
+- Story retrospectives (`story-retro.md` files) OR parallel-conductor fallback inputs (`validation-report.md` files, `audit-report.md` files, and orchestration ledger) are present
 - Epic directory with artifacts (epic.md, epic-tech-spec.md, epic-breakdown.md)
 
 ## Retrospective Process (Synthesis → Validation → Application)
 
-### Step 1: Load All Story Retrospectives
+### Step 1: Load All Story Retrospectives or Fallback Inputs
 
 1. Determine epic:
    - If in epic directory, use current epic
    - Otherwise ask: "Which epic to retrospective?"
 
-2. Find all story retros:
+2. Find and load all story retros:
 ```bash
 find [EPIC_DIR]/stories/*/story-retro.md
 ```
+   - **Parallel-Conductor Fallback**: If no story retros are found, scan and load:
+     * Validation reports: `find [EPIC_DIR]/stories/*/validation-report.md`
+     * Audit reports: `find [EPIC_DIR]/stories/*/audit-report.md`
+     * The orchestration ledger (if present in project specs)
+     Extract lessons learned, performance metrics, and blocker counts from these reports as inputs for the epic retrospective synthesis.
 
 3. Load epic artifacts:
    - epic.md (goals and scope)

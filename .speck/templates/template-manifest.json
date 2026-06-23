@@ -111,5 +111,16 @@
       "## 4. Decision-Log & Audit Status",
       "## 5. Readiness Re-assessment (The Status)"
     ]
+  },
+  "project-adjust-report": {
+    "structure_version": "7.16.0",
+    "required_headers": [
+      "## 1. Change Intent (The Why)",
+      "## 2. Delta Re-specification (The What)",
+      "## 3. Superseding Decision Lock (DEC) & Skeptical-Review Summary",
+      "## 4. Cascade & Blast Radius (The Blast Radius)",
+      "## 5. Re-validation Plan (The Plan)",
+      "## 6. Readiness Re-assessment (The Status)"
+    ]
   }
 }

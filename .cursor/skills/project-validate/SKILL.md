@@ -362,15 +362,26 @@ Include in `project-validation-report.md`:
 - [List any dev-mode shortcuts still in production UI]
 ```
 
-### Step F: JTBD Status Overrides Project Status
+### Step F: First-Time User Comprehension / Legibility Check
+
+**This is the ultimate clarity and value-articulation check**:
+1. Within 5 seconds of cold-starting the app walkthrough, can a first-time user articulate:
+   - Exactly what the product is?
+   - Why it matters (value proposition)?
+   - What the primary call-to-action (CTA) is?
+2. If the interface is cluttered, uses confusing technical jargon, or fails to make the core value immediately clear:
+   - Flag a **`LEGIBILITY.P1`** finding.
+   - **CAP project readiness below `SHIP-RC`** (limit to `UX-RC` or lower) until copy and design are clarified to ensure commercial viability and user success. "Technically correct but functionally unintelligible" is a failure.
+
+### Step G: JTBD Status Overrides Project Status
 
 | JTBD Smoke Test | Project Status |
 |-----------------|----------------|
-| COMPLETE | GO (if all other checks pass) |
-| PARTIAL | CONDITIONAL — list missing pieces |
+| COMPLETE (and Legibility is PASS) | GO (if all other checks pass) |
+| PARTIAL (or has LEGIBILITY.P1) | CONDITIONAL — list missing pieces / cap below SHIP-RC |
 | BLOCKED | NO-GO — product cannot deliver its core value |
 
-**CRITICAL**: A project with all epics validated but a BLOCKED JTBD is a NO-GO.
+**CRITICAL**: A project with all epics validated but a BLOCKED JTBD or unresolved `LEGIBILITY.P1` is a NO-GO / capped below SHIP-RC.
 
 ---
 

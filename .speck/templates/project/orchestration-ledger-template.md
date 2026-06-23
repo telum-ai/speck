@@ -38,7 +38,9 @@ Do NOT regenerate project-state.md from epic branches — that stays merge-only.
 ## Guards Checklist (re-confirm each resume)
 
 - [ ] Planning corpus pushed to `origin/main` before this wave was spawned (worktrees branch from `origin/main`, not local HEAD)
-- [ ] Each merged epic's worktree removed (`git worktree remove --force ../repo-eNNN`) — disk is shared cross-session state
+- [ ] Each merged epic's worktree removed (`git worktree remove ../repo-eNNN` - omit `--force` by default so git safely blocks on dirty trees and warns of lost WIP) — disk is shared cross-session state
+- [ ] Interrupted/killed background agent WIP recovered directly from its worktree on disk (`git add -A && commit`) instead of restarting
+- [ ] Conflicted merges committed with `--no-verify` (prevents lint-staged `--keep-index` index corruption / file drop), and verified with `git show --stat HEAD` to ensure 2 parent hashes and all files are intact
 - [ ] Migration filenames use real wall-clock `date -u +%Y%m%d%H%M%S` (no rounded placeholders); per-epic offset bands as fallback
 - [ ] No epic accepted on a self-reported `{readiness_state, pass}` — Verify-Skills Gate passed for each merged story (including verifying `gate_checks` for full pre-commit gate success)
 - [ ] `project-state.md` regenerated on `main` only (never overwritten from `epic/*` branches)

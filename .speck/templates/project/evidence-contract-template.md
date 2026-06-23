@@ -420,6 +420,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 | Rate limit exceeded | 429 with Retry-After header |
 | Auth header missing | 401, never 500 |
 | GDPR delete request | All related-table rows removed or anonymized; verified via integration test |
+| Comprehension / Legibility probe | A first-time user can articulate exactly what the product is, why it matters, and identify the primary call-to-action within 5 seconds of the JTBD walkthrough cold-start. Catches "technically correct but functionally unintelligible" landing pages or dashboards. |
 | Async close/teardown (Mocks check) | Mocks model late close events, queued timers, or retries after dependency is closed; verify no background work is rescheduled and tests assert "no late callbacks after close" |
 | Test count honesty | Verify no tests use tautologies (e.g. `expect(true).toBe(true)`) to inflate counts, and no collect-time skips hide unrun suites silently |
 | Keystone key landing | Verify that all human-provisioned external services have a clear skip-with-reason logic that auto-runs the moment the key lands |
