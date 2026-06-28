@@ -151,7 +151,7 @@ If minimal description (or upgrading from draft), gather/validate details:
 3. "What indicates completion?"
 
 **Acceptance Criteria:**
-4. "What are the must-have requirements?"
+4. "What are the must-have requirements?" (Utilize EARS format where applicable: `WHEN <trigger>, the system SHALL <response>`)
 5. "Any specific constraints?"
 6. "How will we test this?"
 
@@ -179,6 +179,9 @@ Note: Speck stories live in the hierarchical structure under:
 ```
 
 The template is self-documenting - follow all sections and guidelines within it.
+
+**Acceptance Criteria & EARS Syntax**:
+When writing acceptance criteria and functional requirements, recommend using the Easy Approach to Requirements Syntax (EARS) format (e.g. `WHEN <trigger>, the system SHALL <response>`, or `WHILE <state>, the system SHALL <response>`) alongside Gherkin (Given/When/Then). This makes expectations extremely explicit for coding agents and prevents downstream scope interpretation issues.
 
 **Output**: Save as `spec.md` with lifecycle state updated to `Specified`.
 

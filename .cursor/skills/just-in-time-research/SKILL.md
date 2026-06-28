@@ -31,6 +31,14 @@ Use research tools in this order:
 3. **Built-in web_search** - Fallback when Perplexity unavailable
 4. **Generate manual prompt** - If automated tools insufficient, create a prompt for the user
 
+## When an MCP/tool is down (resilient fallback)
+
+On any tool failure (401/quota, 429, timeout, 5xx):
+1. Drop to the next tier immediately (Perplexity -> web_search -> manual prompt) and proceed; never block the task on one provider.
+2. Record the outage inline (tool, error, time) so the gap is auditable.
+3. For a critical MCP with a documented HTTP/CLI equivalent, use the direct API or terminal commands as a same-tier fallback.
+4. Re-attempt the preferred tier once restored; note when richer results supersede the fallback.
+
 ## Research Workflow
 
 ### Step 1: Check Existing Research

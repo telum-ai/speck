@@ -67,6 +67,7 @@ Required artifacts to check:
 ├── [Parallel] shell: ASSET drift — run `.speck/scripts/asset-drift-check.sh`; classify `ASSET_DRIFT.P1` when duplicate SVG path geometry appears in 2+ source files (brand dual-encoding)
 ├── [Parallel] shell: SCHEMA drift — run `.speck/scripts/validation/validators/validate-schema-drift.sh` (for DB-backed projects, or if migration directories exist); classify `SCHEMA_DRIFT.P0` or `MIGRATION_REPAIR_WARNING.P1`
 ├── [Parallel] shell: CASCADE drift — run `.speck/scripts/validation/validators/compute-cascade.sh --strict` (if project-level adjustments, superseded project DECs, or contract section changes exist); classify `CASCADE_STALE.P1` (superseded decisions whose downstream promises are still active as discharged under old state)
+├── [Parallel] shell: EVAL signal drift — run `.speck/scripts/validation/validators/compute-eval-signals.sh --strict` to analyze VCS-as-eval metrics (override-rate, survival); classify any threshold breaches as `EVAL_SIGNAL_DRIFT.P2`
 ├── [Parallel] shell: PROMISE drift — for each epic dir with a `traceability-matrix.md`, run `.speck/scripts/validation/validators/validate-traceability-matrix.sh <EPIC_DIR>` (and `--require-evidence` for epics whose validation claims ≥ UX-RC); classify any unresolved promise as `PROMISE_DRIFT.P1` (evaporated promise — a drawn/stated commitment with no story and no DEC)
 ├── [Parallel] shell: grep -rln "\[NEEDS USER REVIEW\]" specs/projects/<id>/   (surface to project-state.md)
 └── [Wait] → Synthesize drift report
@@ -98,7 +99,7 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1
+- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix
@@ -141,7 +142,7 @@ Report summary fields per claude skill.
 ## Behavior Rules
 
 - NEVER skip persona LARP cold-start
-- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh` AND `asset-drift-check.sh` (when UI/brand assets exist) AND `settings-drift-check.sh` (when `.claude/settings.json` exists) AND `validate-schema-drift.sh` (when DB-backed) AND `compute-cascade.sh --strict` (if superseded DECs exist)
+- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh` AND `asset-drift-check.sh` (when UI/brand assets exist) AND `settings-drift-check.sh` (when `.claude/settings.json` exists) AND `validate-schema-drift.sh` (when DB-backed) AND `compute-cascade.sh --strict` (if superseded DECs exist) AND `compute-eval-signals.sh --strict`
 - NEVER mark a truth artifact "fresh" while it still contains `REPLACE_BEFORE_SHIP:` or `[NEEDS USER REVIEW]` tokens
 - ALWAYS write a dated report (even if green)
 - ALWAYS re-stamp truth artifacts on green (with fresh `verified` date)
@@ -176,4 +177,3 @@ This process skill is fully supported across all primary AI runtimes (Claude, Cu
 
 ### Fallbacks & Adaptations
 - **Subagents**: Spawning subagents (`speck-scanner` / `speck-auditor`) is a Claude-only feature. If running on Cursor or Codex, execute the staleness-check, replace-markers-check, and banned-language-lint checks sequentially using the core scripts in your main context.
-

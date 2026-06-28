@@ -113,7 +113,7 @@
     ]
   },
   "project-adjust-report": {
-    "structure_version": "7.16.0",
+    "structure_version": "7.17.0",
     "required_headers": [
       "## 1. Change Intent (The Why)",
       "## 2. Delta Re-specification (The What)",

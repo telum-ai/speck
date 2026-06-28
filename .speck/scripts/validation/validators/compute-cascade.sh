@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# compute-cascade.sh — Reverse blast-radius / change-cascade computer (Speck v7.16).
+# compute-cascade.sh — Reverse blast-radius / change-cascade computer (Speck v7.17).
 #
 # Scans all traceability-matrix.md files in the project to identify downstream 
 # epics, stories, and promises affected by a changed product-contract section 
@@ -97,7 +97,7 @@ if [[ ${#matrices[@]} -eq 0 ]]; then
 fi
 
 echo -e "${BLUE}======================================================================${NC}"
-echo -e "${BLUE}🔍  Speck Change Cascade Computer (v7.16.0)${NC}"
+echo -e "${BLUE}🔍  Speck Change Cascade Computer (v7.17.0)${NC}"
 echo -e "${BLUE}======================================================================${NC}"
 [[ -n "$DEC_TARGET" ]] && echo -e "Superseded DEC Target      : ${YELLOW}$DEC_TARGET${NC}"
 [[ -n "$SECTION_TARGET" ]] && echo -e "Changed Contract Section   : ${YELLOW}$SECTION_TARGET${NC}"

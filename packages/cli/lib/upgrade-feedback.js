@@ -6,6 +6,18 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
+    version: '7.17.0',
+    items: [
+      { id: 'g-plus-acl', summary: 'G+ — Irreversible-Action Control Tiers (0-3) in evidence-contract + compliance probe to prevent unauthorized state execution' },
+      { id: 'd-rules-contracts', summary: 'D — Strict boundaries between AGENTS.md, product-contract, and evidence-contract to prevent context rot' },
+      { id: 'f-mcp-fallback', summary: 'F — Resilient drop-tier fallback handling in research priority for tool and API outages' },
+      { id: 'e-vcs-eval', summary: 'E — VCS-as-Eval metric signal engine (compute-eval-signals.sh) for override and survival rates + EVAL_SIGNAL_DRIFT.P2 in recheck' },
+      { id: 'frontier-scan', summary: 'FTR — Continuous 4-angle SOTA frontier scanning skill (speck-frontier-scan) for evergreen SOTA alignment' },
+      { id: 'k-ears', summary: 'K — EARS natural language templates (WHEN/SHALL) in story-specify to reduce requirements ambiguity' },
+      { id: 'j-provenance', summary: 'J — Spec-to-Deployed Behavior Provenance ledger requirements in evidence-contract SHIP criteria' },
+    ],
+  },
+  {
     version: '7.16.0',
     items: [
       { id: '#66.1', summary: 'P0 — granted Skill tool to all 5 lanes (speck-coder/auditor/validator/planner/scribe) and documented host fallback' },

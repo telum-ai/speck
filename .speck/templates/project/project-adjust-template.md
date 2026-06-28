@@ -1,6 +1,6 @@
 ---
-speck_version: 7.16
-template_version: "7.16.0"
+speck_version: 7.17
+template_version: "7.17.0"
 artifact_type: project-adjust-report
 ---
 

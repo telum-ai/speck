@@ -1,5 +1,28 @@
 # Speck Changelog
 
+## v7.17.0 — 2026-06-28 — Irreversible-Action Control Tiers, Rules-vs-Contracts Boundaries, VCS-as-Eval Signals, and Continuous SOTA Scanning
+
+Introduces advanced SOTA agentic software engineering practices, adding irreversible-action autonomy levels, strict document boundaries, automated Git VCS performance analytics, resilient research fallbacks, and a continuous SOTA frontier scanning ritual.
+
+### Irreversible-Action Autonomy Tiers (G+)
+- **Action Control Tiers** — Added structured irreversible-action autonomy levels to `evidence-contract-template.md` (Tiers 0-3). Tiers autonomy by action blast radius (reversible local edits to irreversible/costly production drops), establishing minimum readiness states and recorded human approval token gates before execution.
+- **Compliance Probe** — Added a corresponding "Irreversible-action tier compliance check" to the Adversarial Probe Suite to verify that no Tier 2 or Tier 3 actions are executed without human authorization recorded in the trajectory log.
+
+### Rules-vs-Contracts Separation (D)
+- **Governance Boundaries** — Added strict document boundaries to `project-evidence-contract/SKILL.md` delineating the roles of workspace configuration (`AGENTS.md`), the product promise (`product-contract.md`), and verification proof rules (`evidence-contract.md`) to prevent competing constitutions and instruction rot.
+
+### VCS-as-Eval Metrics (E)
+- **VCS Performance Signals** — Created `compute-eval-signals.sh` and its robust suite `compute-eval-signals.test.sh` to extract agentic metrics (override rates, code survival rates, and agent-vs-human distribution) from real Git history, treating the VCS as an unbiased evaluation engine.
+- **Signal Drift Monitoring** — Integrated VCS evaluation analytics directly into the `/recheck` process skill across all three primary hosts (Cursor, Claude, and Codex) to monitor and flag `EVAL_SIGNAL_DRIFT.P2` breaches in CI and runtime.
+
+### Continuous SOTA Frontier-Scanning (FTR)
+- **Frontier-Scan skill** — Created a self-refreshing process skill `speck-frontier-scan` (`.cursor/skills/speck-frontier-scan/SKILL.md`) to execute continuous, cited audits on SOTA autonomous software engineering standards, synthesizing deltas and generating dated SOTA reports.
+- **Resilient Fallbacks (F)** — Toughened `just-in-time-research` with instant drop-tier fallback handling to bypass tool and quota outages (such as Perplexity API limits) gracefully.
+
+### Ambition & Provenance Polish (J & K)
+- **Spec-to-Deployed Provenance (J)** — Extended the evidence contract template SHIP gate to require Spec-to-Deployed Behavior Provenance logs, mapping live artifacts to their triggering commit SHA and Speck matrix lines.
+- **EARS Acceptance Criteria (K)** — Added EARS Natural Language Templates (`WHEN <trigger>, the system SHALL <response>`) to `story-specify` to eliminate downstream story interpretation ambiguity.
+
 ## v7.16.0 — 2026-06-23 — Agent Skill Execution, Change Cascade Blast-Radius, Continuous Lifecycle, and Legibility Probes
 
 Addresses issues #66 and #67 to introduce first-class agent tool support, post-validation directional changes, automated reverse-cascade computation, continuous lifecycle triage, and UX comprehension checks.

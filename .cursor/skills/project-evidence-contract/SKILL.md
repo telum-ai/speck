@@ -154,8 +154,18 @@ Next steps:
 3. Stories' validation reports will be checked against these criteria
 ```
 
+## Boundaries (Rules vs Contracts)
+
+To prevent competing constitutions and instruction rot, there is a strict separation of concerns between project governance files:
+1. **`AGENTS.md` (Workspace Agent Rules)**: Workspace-level static configuration and general behavior instructions for all AI agents entering the repo (general tooling, coding style, CLI shortcuts, and command mappings).
+2. **`product-contract.md` (The Promise)**: Product-level specification outlining the paid promise, core user personas, magic moments, and user-facing copy/language constraints.
+3. **`evidence-contract.md` (The Proof)**: Operational contract defining what counts as verifiable proof of functional correctness and readiness states, invalid proof sources, and adversarial probes.
+
+These files must never duplicate or contradict instructions. `evidence-contract.md` must focus purely on verifying that the promise is kept at runtime via concrete, tamper-proof evidence sources.
+
 ## Behavior Rules
 
+- ALWAYS maintain a strict boundary between `evidence-contract.md` (proof/verification rules), `product-contract.md` (product promise/personas), and `AGENTS.md` (general workspace rules); never duplicate or contradict instructions across these files.
 - NEVER allow validation reports to claim a readiness state without the gate criteria
 - NEVER let the same proof source be both valid and invalid
 - ALWAYS use recipe defaults as starting point when available

@@ -108,6 +108,14 @@ PLACEHOLDER CONVENTION:
 - ❌ API-bypassed forms: using direct API/programmatic client calls to audit or validate user stories that primarily focus on interactive forms/inputs. If a human touches the UI, the audit/LARP must drive it through the real UI.
 - ❌ Static mocks for async close: using synchronous/immediate mocks that do not model async callback latency or late-firing close events. Mocks must accurately simulate teardown delays.
 
+### Universal Evidence-Integrity Anti-Proof — Reward Hacking (All Platforms)
+*A green check is proof ONLY if the agent under test could not have manufactured it. The implementer/validator MUST be isolated from the evaluator. Any green gate produced through the channels below is anti-proof and caps the claim at NO-SHIP until re-run under isolation. (Industry audits found EVERY major coding benchmark could be driven to near-100% without solving a single task — Berkeley RDI, 2026.)*
+- ❌ Implementer-authored/-modified verification logic in the graded change: test-harness hooks (`conftest.py`, `pytest_*` hooks, `jest`/`vitest` global setup/teardown), grader scripts, or CI config touched in the same diff that is being graded. (SWE-bench Verified was driven to 100% via a `conftest.py` pytest hook that rewrote every result to PASSED.)
+- ❌ Force-passing constructs: monkeypatched assertions, module-load/`init()` side-effects that mutate results, or env flags that short-circuit checks.
+- ❌ Answer/fix retrieval instead of derivation: mining git history for the reference fix, fetching the patch/solution from the web or issue tracker, or copying a known-good diff. (Solution-artifact retrieval showed a 72% resolved rate vs. ~40% baseline — *The Verification Horizon*, arXiv 2606.26300, 2026.)
+- ❌ Visible-test overfitting: hard-coding outputs to satisfy the named tests rather than implementing the behavior.
+- ❌ Self-graded "done": the agent declaring its own success criteria met without a runtime / exit-code / artifact check it did not control. ("Gate progress with facts, not vibes" — Thread AI, 2026.)
+
 ---
 
 ## 4. Required Runtime LARP / Integration Stress Tests
@@ -230,6 +238,8 @@ For every validation report at UX-RC or higher:
 - [ ] Type check passes (if typed language)
 - [ ] No `expect().toBe(<wrong-value>)` with "BUG:" / "TODO:" / "fix later" / "should be" comments
 - [ ] Builds without warnings/errors
+- [ ] **Evaluator isolation**: the graded change does NOT add or modify test-harness hooks, grader scripts, or CI config (diff-scan for new/edited `conftest.py` & `pytest`/`jest`/`vitest` setup-teardown, and changed CI workflows). If verification logic legitimately changes, it lands and is reviewed in a SEPARATE change. A zero-capability/no-op change must NOT be able to make this gate pass.
+- [ ] **Clean trajectory**: the implementation transcript shows no shortcut-seeking — no reference-fix/answer retrieval (git-history mining, web fetch of the patch) and no test-oracle tampering. (A trajectory monitor + quality judge dropped the gamed-pass rate 28.57% → 0.56% — *The Verification Horizon*, 2026.)
 
 ### INTEGRATION-GREEN
 
@@ -323,6 +333,7 @@ For every validation report at UX-RC or higher:
   - [ ] All SHIP-RC / OPERATIONAL-RC criteria
   - [ ] Deployment ran without errors
   - [ ] Post-deploy healthcheck / smoke-test returns ok
+  - [ ] **Spec-to-Deployed Behavior Provenance Ledger**: Verification logs map the deployed artifact version/hash directly back to the triggering git commit SHA and the corresponding Speck specifications/PRM ledger line, guaranteeing complete, unbroken traceability of behavior from specifications to live production.
   - [ ] First real user/consumer signal observed (signup / payment / active service request)
   - [ ] Sentry / Log monitoring shows zero new errors in first 24h
   - [ ] Monitoring shows expected baseline metrics
@@ -402,6 +413,13 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 | SHIP-RC | AI agent (full record) | Human (final taste judgment) | Human (release decision) |
 | SHIP | AI agent (post-deploy smoke) | Human | Human (release decision) |
 
+### Irreversible-Action Control Tiers
+*Evidence proves doneness; this tiers AUTONOMY by blast radius. An action's tier sets the minimum readiness state + approval it needs before an agent may EXECUTE it (not merely propose it).*
+- **Tier 0 (reversible)**: Local edits, tests, branch commits, PR drafts — agent executes freely.
+- **Tier 1 (recoverable)**: Merge to main, dependency bumps — after Verify-Skills Gate; human veto post-hoc.
+- **Tier 2 (externally visible)**: Staging deploy, non-prod data seed — requires INTEGRATION-GREEN + recorded approval.
+- **Tier 3 (irreversible/costly)**: Prod deploy, prod-DB drop/alter, real user comms (email/SMS), secret rotation/exposure, force-push to main, charging cards — agent MAY prepare but NEVER executes without a recorded human approval token; allowed only at SHIP-RC+.
+
 ---
 
 ## 11. Adversarial Probe Suite
@@ -424,6 +442,9 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 | Async close/teardown (Mocks check) | Mocks model late close events, queued timers, or retries after dependency is closed; verify no background work is rescheduled and tests assert "no late callbacks after close" |
 | Test count honesty | Verify no tests use tautologies (e.g. `expect(true).toBe(true)`) to inflate counts, and no collect-time skips hide unrun suites silently |
 | Keystone key landing | Verify that all human-provisioned external services have a clear skip-with-reason logic that auto-runs the moment the key lands |
+| Evaluator-tampering scan | The graded diff adds/edits no test-harness hooks (`conftest.py`, global setup/teardown), grader, or CI config; if verification logic must change, it is reviewed in a separate change. A no-op/zero-capability change must NOT make any gate pass. |
+| Reward-hack trajectory audit | Transcript shows no fix/answer retrieval (git-history mining, web fetch of the reference patch) and no visible-test overfitting; any shortcut-dependent pass is re-run under isolation before it counts. |
+| Irreversible-action tier compliance check | Verification confirms no Tier 2 or Tier 3 actions were executed by the agent without corresponding recorded human approval tokens in the trajectory log. |
 
 ---
 
@@ -470,6 +491,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 - [ ] Adversarial Probe Suite is populated (at least the standard 10)
 - [ ] Evidence storage paths are defined
 - [ ] Stale-proof and Surrogate-proof rules are in force
+- [ ] Evidence-Integrity anti-proof (reward-hacking) rules are in force; evaluator is isolated from the implementer
 - [ ] PROFILE Gate Criteria populated (v7.7+ projects)
 
 ---
