@@ -6,6 +6,7 @@ depends_on: []         # e.g., [S001, S003]
 blocks: []             # e.g., [S005]
 persona: [persona-id]  # primary persona this story serves
 readiness_target: [IMPL-GREEN | UX-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
+lifecycle_state: Specified
 ---
 
 # Story: [STORY NAME]

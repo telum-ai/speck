@@ -24,10 +24,12 @@ set -euo pipefail
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 
 REQUIRE_EVIDENCE=false
+STATUS_ONLY=false
 TARGET=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --require-evidence) REQUIRE_EVIDENCE=true; shift ;;
+    --status-only) STATUS_ONLY=true; shift ;;
     --strict) shift ;;  # accepted for router compatibility; this validator is always strict
     -*) echo "Unknown flag: $1" >&2; exit 2 ;;
     *) TARGET="$1"; shift ;;
@@ -84,6 +86,7 @@ while IFS= read -r line; do
 
   id="$(trim "${c_id:-}")"
   promise="$(trim "${c_promise:-}")"
+  discharge="$(trim "${c_discharge:-}")"
   
   # Heuristically detect whether this is a 6-column or 7-column table by looking at _rest or fields
   # In 6-column: c_discharge is col 4, c_dec is col 5, c_col6 is col 6 (status), c_col7 is rest/empty
@@ -121,6 +124,70 @@ while IFS= read -r line; do
     if [[ "$status" != "discharged" && "$status" != "descoped" && "$status" != "pilot-gated" ]]; then
       echo -e "${RED}❌ $id${NC}: status '${status:-<blank>}' — at epic-validate every promise must be 'discharged', 'descoped' (DEC), or 'pilot-gated' (with backing)."
       violations=$((violations + 1))
+    elif [[ "$status" == "discharged" && "$STATUS_ONLY" == false ]]; then
+      # Parse story_id and ac_id
+      story_id=""
+      if [[ "$discharge" =~ (S[0-9]+) ]]; then
+        story_id="${BASH_REMATCH[1]}"
+      fi
+      ac_id=""
+      if [[ "$discharge" =~ (AC-[0-9]+) ]]; then
+        ac_id="${BASH_REMATCH[1]}"
+      fi
+
+      if [[ -z "$story_id" ]]; then
+        echo -e "${RED}❌ $id${NC}: status 'discharged' but has no story ID in Discharge column!"
+        violations=$((violations + 1))
+      else
+        # Find story directory
+        story_dir=""
+        for d in "$EPIC_DIR/stories/"${story_id}*; do
+          if [[ -d "$d" ]]; then
+            story_dir="$d"
+            break
+          fi
+        done
+
+        if [[ -z "$story_dir" || ! -f "$story_dir/validation-report.md" ]]; then
+          echo -e "${RED}❌ $id${NC}: status 'discharged' but story validation report not found for ${story_id} at ${story_dir:-$EPIC_DIR/stories/${story_id}*}/validation-report.md"
+          violations=$((violations + 1))
+        else
+          report_path="$story_dir/validation-report.md"
+          # Parse verified state
+          verified_state=$(grep -i "readiness_state_verified:" "$report_path" | cut -d':' -f2 | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]' || echo "")
+          if [[ -z "$verified_state" ]]; then
+            verified_state=$(grep -i "\*\*Verified Readiness State\**:" "$report_path" | cut -d':' -f2- | tr -d '[:space:]*`' | tr '[:upper:]' '[:lower:]' || echo "")
+          fi
+
+          # Check if verified state is at least integration-green
+          is_valid_state=false
+          case "$verified_state" in
+            integration-green|ux-rc|api-rc|commercial-rc|ship-rc|ship) is_valid_state=true ;;
+          esac
+
+          if [[ "$is_valid_state" == false ]]; then
+            echo -e "${RED}❌ $id${NC}: status 'discharged' but story validation report verified state '${verified_state:-<blank>}' is less than INTEGRATION-GREEN"
+            violations=$((violations + 1))
+          else
+            # Check if report contains PRM ID or AC ID
+            has_ref=false
+            if grep -q -F "$id" "$report_path"; then
+              has_ref=true
+            elif [[ -n "$ac_id" ]] && grep -q -F "$ac_id" "$report_path"; then
+              has_ref=true
+            fi
+
+            if [[ "$has_ref" == false ]]; then
+              if [[ -n "$ac_id" ]]; then
+                echo -e "${RED}❌ $id${NC}: status 'discharged' but story validation report does not cite $id or $ac_id"
+              else
+                echo -e "${RED}❌ $id${NC}: status 'discharged' but story validation report does not cite $id"
+              fi
+              violations=$((violations + 1))
+            fi
+          fi
+        fi
+      fi
     fi
   else
     if [[ "$status" != "pilot-gated" ]]; then

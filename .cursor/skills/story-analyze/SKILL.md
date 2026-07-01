@@ -20,7 +20,7 @@ This skill is **split in Speck v7**:
 
 **Recommended v7 path**: `/story-plan` → `/story-tasks` (includes consistency check at tail) → `/story-implement` → `/audit` (adversarial) → `/story-validate`
 
-This skill continues to work for v6 projects (back-compat). For new v7 work, prefer the path above.
+This skill continues to work for v6 projects (back-compat). For new v7 work, prefer the path above. Note that `check-story-prereqs.sh` now treats `analysis-report.md` as warn-only (optional) for v7 stories, but if present, it must contain no unresolved CRITICAL items.
 
 ---
 

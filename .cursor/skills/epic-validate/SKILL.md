@@ -82,6 +82,7 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
      ```
      bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --require-evidence [EPIC_DIR]
      ```
+     (For a quick, status-only check without cross-referencing story validation reports, you can append `--status-only`.)
      Every `PRM-NNN` row MUST be `discharged` (a validated story cited it with evidence — see story-validate Spec Coverage), `descoped` (a DEC), or `pilot-gated` (deferred to the pilot program with a valid backing reference). The JTBD walkthrough is necessary but **NOT sufficient** — a passing JTBD sample does not prove the long tail of promised screens/elements/seams exists. **Any open/undischarged row → the epic CANNOT claim any readiness state** (cap at the last clean state, surface the gap).
    - **Evaporation audit (dead-seam detection)**: grep the shipped data model + code for affordances that exist but are never populated, rendered, or wired — e.g. an `urgent` enum value never set by any writer, a prop-gated button with no caller, a status column no query reads, a route with no link. These are promises that were half-built then abandoned — **descope-by-silence**. Each finding must become either a DEC (intentional descope) or a P1 fix; record them in the report's Promise Conservation section. A drawn-but-dead seam is not "done", it is evaporated.
 6. Cross-epic integration check: any seams to other epics tested?

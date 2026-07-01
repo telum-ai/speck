@@ -38,6 +38,7 @@ SEARCH="$(cd "$(dirname "$TARGET")" 2>/dev/null && pwd)"
 while [[ -n "$SEARCH" && "$SEARCH" != "/" ]]; do
   if [[ -f "$SEARCH/.speck/VERSION" ]]; then
     SPECK_VERSION="$(cat "$SEARCH/.speck/VERSION" | tr -d '[:space:]')"
+    SPECK_VERSION="${SPECK_VERSION#v}"
     break
   fi
   SEARCH="$(dirname "$SEARCH")"

@@ -40,11 +40,11 @@ if [[ ! -f "$spec_path" ]]; then
   failed=true
 else
   # Verify lifecycle state is Specified
-  if grep -q -i "state:[[:space:]]*Specified" "$spec_path" || grep -q -i "lifecycle:[[:space:]]*Specified" "$spec_path" || grep -q -i "lifecycle_state:[[:space:]]*Specified" "$spec_path"; then
+  if grep -q -i -E '(current[ -]?state|status|lifecycle(_state)?)\**:[[:space:]]*Specified' "$spec_path" || grep -q -i "state:[[:space:]]*Specified" "$spec_path"; then
     echo -e "${GREEN}✅ spec.md is present and lifecycle state is 'Specified'${NC}"
   else
     echo -e "${YELLOW}⚠️  spec.md is present but lifecycle state is NOT 'Specified'. Found:${NC}"
-    found_state=$(grep -i -E "(state|lifecycle|lifecycle_state):" "$spec_path" | head -n 1 || echo "None")
+    found_state=$(grep -i -E "(current[ -]?state|status|lifecycle(_state)?|state)\**:" "$spec_path" | head -n 1 || echo "None")
     echo "   $found_state"
     failed=true
   fi
@@ -78,8 +78,7 @@ for possible_path in "${STORY_DIR}/analysis-report.md" "${STORY_DIR}/story-analy
 done
 
 if [[ -z "$analysis_report_path" ]]; then
-  echo -e "${RED}❌ Missing story-analysis-report.md${NC}"
-  failed=true
+  echo -e "${YELLOW}⚠️  Missing analysis-report.md (Recommended, but optional in v7 since /story-analyze is folded into tasks + /audit)${NC}"
 else
   # Check for unresolved CRITICAL items
   # Typically lines with "[ ] CRITICAL" or similar in markdown checklists
@@ -99,8 +98,8 @@ if [[ "$failed" == true ]]; then
   echo -e "\n${YELLOW}To begin implementation, please ensure the following steps are run first:${NC}"
   echo -e "  1. Run ${GREEN}/story-specify${NC} to create and specify the story requirements."
   echo -e "  2. Run ${GREEN}/story-plan${NC} to design the technical solution."
-  echo -e "  3. Run ${GREEN}/story-tasks${NC} to generate the implementation checklist."
-  echo -e "  4. Run ${GREEN}/story-analyze${NC} to evaluate and resolve any structural errors."
+  echo -e "  3. Run ${GREEN}/story-tasks${NC} to generate the implementation checklist (includes consistency check at tail)."
+  echo -e "  4. Optionally run ${GREEN}/story-analyze${NC} if a standalone analysis report is desired (deprecated in v7)."
   echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   exit 1
 else
