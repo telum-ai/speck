@@ -75,7 +75,15 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
    - If an active Keystone is missing but skip-with-reason logs are recorded, do NOT fail the validation run; instead, mark the gate as `⚠️ Skipped (Awaiting Keystone)` and cap the maximum claimable state at `UX-RC` (allowing the story to pass green for `IMPL-GREEN` and `UX-RC`).
 4c. Verify Deferrals / What this validation did NOT verify section:
    - Ensure the report explicitly populates `## 🔬 What this validation did NOT verify / Deferrals`. If left blank or containing boilerplate, fail the validation.
-   - **Cap Status enforcement**: every deferral row MUST include `Cap Status` (`evidence-pending` or `implementation-pending`). Any row tagged `implementation-pending` (code path not built) → verified state MUST cap at `NO-SHIP` — unbuilt code cannot pass as IMPL-GREEN. Any row tagged `autonomous-not-done` → cap at `IMPL-GREEN`/`INTEGRATION-GREEN` (cannot claim UX-RC/API-RC).
+   - **Cap Status enforcement**: every deferral row MUST include `Cap Status` (`evidence-pending` or `implementation-pending`). Any row tagged `implementation-pending` (code path not built) → verified state MUST cap at `NO-SHIP` — unbuilt code cannot pass as IMPL-GREEN. Any row tagged `autonomous-not-done` is NOT allowed for the browser cold-start LARP (which is required and non-deferrable for UI archetypes); any other autonomous deferral row tagged `autonomous-not-done` → cap at `IMPL-GREEN`/`INTEGRATION-GREEN` (cannot claim UX-RC/API-RC).
+
+### 💡 UI LARP Setup Recipe (Sandbox-Friendly)
+
+To execute browser LARPs successfully in sandboxed or restricted environments without real production databases/credentials:
+1. **Throwaway/Local DB**: Seed a local/SQLite or Docker-based database with minimal test fixtures.
+2. **Loopback/Review-Session Backdoor**: Implement a secure backdoor route or environment flag (e.g. `VITE_DEV_HTTP=true` or `process.env.PLAYWRIGHT_TEST=true`) that bypasses external OAuth/Clerk redirects and logs in a test user.
+3. **localStorage Token Re-injection**: Pre-populate `localStorage` or cookies with mock JWTs or session tokens before navigating, to simulate an authenticated state.
+4. **Loopback/Mock Server**: Run a lightweight local mock server (e.g., MSW or wiremock) to intercept and mock third-party API calls (e.g., Stripe, Resend) during the browser run.
 4d. **INTEGRATION-GREEN gate** (when story depends on external services in evidence-contract §7 or is DB-backed):
    - If §7 lists services this story touches, verify at least one **real round-trip** succeeded per service (not mock-only). Capture logs/traces in validation records.
    - If the project is DB-backed, run `validate-schema-drift.sh --strict` to verify live database schema matches migrations. Ensure at least one real write path is exercised (reads can fail-close or swallow missing tables).

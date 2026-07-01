@@ -267,7 +267,7 @@ For every validation report at UX-RC or higher:
   - [ ] Magic moments validated in LARP — each lands per its trigger / content beats / target response
 
   **UX-RC evidence partition — autonomous vs gated** *(prevents under-driving validation: defer the gated part, NEVER the autonomous part)*:
-  - **Autonomous (REQUIRED — an agent with a build + a browser/headless tool can gather ALL of this; it is NEVER deferrable)**:
+  - **Autonomous (REQUIRED — an agent with a build + a browser/headless tool can gather ALL of this; it is REQUIRED and NEVER deferrable)**:
     - [ ] Production build produced (not dev server) and cold-started from a **clean build** (cache cleared, e.g. `rm -rf .next` / `trash .next` or build tool cache equivalents)
     - [ ] Headless/browser persona LARP recorded against that build (screenshots + AX tree per step)
     - [ ] axe-core run with the **JSON stored** under `larp-recordings/` (claiming "axe 0/0" with no stored JSON is surrogate proof)
@@ -276,7 +276,14 @@ For every validation report at UX-RC or higher:
     - Live third-party provider sends to a real account/device (SMS / WhatsApp / email to a real phone)
     - Formal human blind panels (e.g. ≥3 native-speaker copy review)
     - Live NFR / load tests on real production infrastructure
-  - **RULE**: You may NOT declare "IMPL-GREEN with UX-RC deferred" while any **autonomous** item above is undone. If a build + browser/preview tool are available, the agent MUST complete the autonomous portion first; only the gated portion may be deferred. Deferring the whole UX-RC tier when part of it is autonomously gatherable under-drives validation and is a finding.
+  - **RULE**: You may NOT declare "IMPL-GREEN with UX-RC deferred" while any **autonomous** item above is undone. If a build + browser/preview tool are available, the agent MUST complete the autonomous portion first; only the gated portion may be deferred. Deferring the browser cold-start LARP is strictly prohibited. If there is an infrastructure limitation, it must be reported as a hard blocker (`NO-SHIP`) rather than allowing a bypass, unless a named infrastructure blocker is explicitly identified and the attempt is logged (in which case the state is capped at `INTEGRATION-GREEN`).
+
+  ### 💡 UI LARP Setup Recipe (Sandbox-Friendly)
+  To execute browser LARPs successfully in sandboxed or restricted environments without real production databases/credentials:
+  1. **Throwaway/Local DB**: Seed a local/SQLite or Docker-based database with minimal test fixtures.
+  2. **Loopback/Review-Session Backdoor**: Implement a secure backdoor route or environment flag (e.g. `VITE_DEV_HTTP=true` or `process.env.PLAYWRIGHT_TEST=true`) that bypasses external OAuth/Clerk redirects and logs in a test user.
+  3. **localStorage Token Re-injection**: Pre-populate `localStorage` or cookies with mock JWTs or session tokens before navigating, to simulate an authenticated state.
+  4. **Loopback/Mock Server**: Run a lightweight local mock server (e.g., MSW or wiremock) to intercept and mock third-party API calls (e.g., Stripe, Resend) during the browser run.
 * **WHEN: infra_service / backend_api (API-RC)**:
   - [ ] All IMPL-GREEN criteria
   - [ ] All API endpoint contracts verified with strict schema checks (Pydantic / OpenAPI schema tests)

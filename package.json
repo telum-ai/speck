@@ -1,6 +1,6 @@
 {
   "name": "speck",
-  "version": "7.17.1",
+  "version": "7.18.0",
   "description": "Speck methodology CLI",
   "type": "module",
   "bin": {
@@ -10,7 +10,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test packages/cli/lib/sync.readme.test.js && bash .speck/scripts/validation/validators/validate-readme.test.sh && bash .speck/scripts/validation/validate-template.test.sh && bash .speck/scripts/banned-language-lint.test.sh && bash .speck/scripts/validation/validators/validate-traceability-matrix.test.sh && bash .speck/scripts/validation/validators/compute-cascade.test.sh && bash .speck/scripts/validation/validators/compute-eval-signals.test.sh"
+    "test": "node --test packages/cli/lib/sync.readme.test.js && bash .speck/scripts/validation/validators/validate-readme.test.sh && bash .speck/scripts/validation/validate-template.test.sh && bash .speck/scripts/banned-language-lint.test.sh && bash .speck/scripts/validation/validators/validate-traceability-matrix.test.sh && bash .speck/scripts/validation/validators/compute-cascade.test.sh && bash .speck/scripts/validation/validators/compute-eval-signals.test.sh && bash .speck/scripts/validation/validators/validate-wave-safety.test.sh && bash .speck/scripts/validation/validators/validate-product-contract.test.sh"
   },
   "repository": {
     "type": "git",

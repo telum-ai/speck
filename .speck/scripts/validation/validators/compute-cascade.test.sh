@@ -44,5 +44,25 @@ echo "Test 4: Check strict mode for --dec DEC-0005 (should pass since PRM-104 is
 bash "$VALIDATOR" --dec DEC-0005 --strict "$TMP"
 echo "  ✓ Passed Test 4"
 
+echo "Test 5: Check pre-matrix fallback behavior when zero matrices are found"
+TMP_FALLBACK="$(mktemp -d)"
+mkdir -p "$TMP_FALLBACK/epics/E001-billing"
+cat > "$TMP_FALLBACK/epics/E001-billing/epic.md" <<'EOF'
+This is a mock epic that references DEC-0004.
+EOF
+
+# Info mode should pass
+bash "$VALIDATOR" --dec DEC-0004 "$TMP_FALLBACK"
+echo "  ✓ Passed Test 5 (info mode)"
+
+# Strict mode should fail
+if bash "$VALIDATOR" --dec DEC-0004 --strict "$TMP_FALLBACK" >/dev/null 2>&1; then
+  echo "ERROR: Expected strict fallback mode to fail, but it passed!"
+  exit 1
+else
+  echo "  ✓ Passed Test 5 (strict mode failed correctly)"
+fi
+rm -rf "$TMP_FALLBACK"
+
 echo "✅ All compute-cascade smoke tests passed!"
 exit 0

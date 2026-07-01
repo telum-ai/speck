@@ -13,6 +13,12 @@ $ARGUMENTS
 
 The text the user typed after `/project-specify` in the triggering message **is** the project description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
 
+## 🚦 Completed Project Check (Post-Completion Triage Router)
+
+**CRITICAL**: If this project is already completed or validated, and the user is requesting a directional pivot, strategic contract change, or redesigned feature, **do NOT run `/project-specify`**. 
+- Running `/project-specify` on a validated project clobbers the existing specifications and breaks promise conservation.
+- Instead, route the user to **`/project-adjust`** (or `/epic-adjust` / `/story-adjust` / `/harden` per the Post-Completion Triage Router in `AGENTS.md`). `/project-adjust` will safely spec the delta and compute the reverse cascade of affected downstream epics/stories.
+
 ## ⚠️ Step 0: Read Template First
 
 **Before any other action** — read this template now using the Read tool:

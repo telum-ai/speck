@@ -93,6 +93,11 @@ Set up testing framework, CI/CD pipeline, linting/formatting, error tracking, an
 - **Depends On**: E000 (infrastructure foundation)
 - **Enables**: E003, E004
 
+**Touch-points (creates/modifies)**:
+- Migrations: [e.g., create table auto_reply_config]
+- Models/Services: [e.g., models/availability.py, match_service.py]
+- Files/Components: [e.g., src/components/AvailabilityCard.tsx]
+
 **Estimated Stories**: [8-12]
 **Priority**: P0 - MVP Critical
 **Target Phase**: Phase 1
@@ -119,6 +124,11 @@ Set up testing framework, CI/CD pipeline, linting/formatting, error tracking, an
 **Dependencies**:
 - **Depends On**: None (can run parallel to E001)
 - **Enables**: E003
+
+**Touch-points (creates/modifies)**:
+- Migrations: [e.g., create table crew_members]
+- Models/Services: [e.g., models/crew.py, crew_service.py]
+- Files/Components: [e.g., src/components/CrewCard.tsx]
 
 **Estimated Stories**: [6-10]
 **Priority**: P0 - MVP Critical  

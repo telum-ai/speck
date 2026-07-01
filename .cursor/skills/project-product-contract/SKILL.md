@@ -162,6 +162,13 @@ Apply SHA stamp:
 .speck/scripts/stamp-truth.sh specs/projects/<PROJECT_ID>/product-contract.md
 ```
 
+### 6b. Validate the contract
+
+Run the product contract validator to ensure structural completeness and self-consistency (verifying that the contract does not self-violate its own banned language in other sections):
+```
+bash .speck/scripts/validation/validators/validate-product-contract.sh --strict specs/projects/<PROJECT_ID>/product-contract.md
+```
+
 ### 7. Trigger downstream regeneration
 
 Run `/project-state` to regenerate `project-state.md` with the new contract reflected.

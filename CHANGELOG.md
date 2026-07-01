@@ -1,5 +1,29 @@
 # Speck Changelog
 
+## v7.18.0 — 2026-07-01 — Wave Safety, Cascade Grep Fallback, Product Contract Self-Consistency, and Non-Deferrable UI LARP
+
+Introduces major methodology enhancements and validator scripts (#68 and #69) to support safe parallel epic execution, robust cascade tracking, self-consistent product contracts, and non-deferrable UI LARP gates.
+
+### Parallel Wave Safety & Concurrency (#68.1)
+- **Wave Safety Validator** — Added `validate-wave-safety.sh` to check `epics.md` waves and declared touch-points, flagging collisions on migrations or identical model/service files.
+- **Touch-points Field** — Added a `Touch-points (creates/modifies)` field to the epics list template.
+- **Schema-Freeze Pattern** — Promoted the "schema-freeze foundation epic" pattern in `AGENTS.md` concurrency doctrine.
+
+### Cascade Fallback & Routing (#68.2)
+- **Pre-Matrix Grep Fallback** — Hardened `compute-cascade.sh` to fall back to scanning `specs/**` for changed contract or decision references when no traceability matrices exist yet.
+- **Strategic Adjust Routing** — Added routing hints in `speck`, `project-specify`, and `project-product-contract` skills to suggest `/project-adjust` when a directional change is requested on a completed/validated project.
+
+### Product Contract Self-Consistency (#68.3)
+- **Self-Banned Language Check** — Extended `validate-product-contract.sh` to extract banned terms from Section 7 and scan the rest of the contract, failing on self-violations.
+- **Verification Hooks** — Integrated this check into `project-product-contract` review, `speck-audit`, and the test suite.
+
+### Non-Deferrable UI LARP Gate (#69.1)
+- **Required UI LARP** — Made the browser cold-start LARP required and non-deferrable for UI archetypes in `epic-validate`, `story-validate`, `speck-larp`, and `evidence-contract-template.md`.
+- **LARP Setup Recipe** — Added a sandbox-friendly setup recipe (throwaway DB, loopback backdoors, localStorage token re-injection, and mock servers) to bypass external dependencies.
+
+### Multi-Lens Audit (#69.3 / #70.3)
+- **N-Skeptic Default** — Made N-independent diverse-lens auditors (Security/Privacy, Performance/Scalability, UX/Accessibility) the default for P0/P1-risk and privacy-sensitive stories in `speck-audit` and `AGENTS.md`.
+
 ## v7.17.1 — 2026-07-01 — Story Prerequisite State Parsing, Analysis Report Warning, and Traceability Matrix Cross-Referencing
 
 Addresses critical feedback items (#70 and #71) to relax prereq gates and enforce real evidence cross-referencing in the traceability matrix.

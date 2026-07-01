@@ -49,6 +49,17 @@ On any reset (compaction / spend / rate limit): re-read the orchestration-ledger
 
 The one file that survives resets. Template: `.speck/templates/project/orchestration-ledger-template.md`. Keep it on `main` (or the conductor's branch) as a coordination-only file — it is **not** a truth artifact and is **not** SHA-stamped. Overwrite to keep it current; re-read it on every resume. It tracks: base SHA pushed to `origin/main`, active wave, per-epic branch/worktree/DEC-band/story-cursor/open-gate/verify-status/disk-present, open blockers, and the guards checklist.
 
+### Schema-Freeze Foundation Epic Pattern (The Concurrency Collision Shield)
+
+When parallelizing epics on a shared database, two collision classes are guaranteed to break merges under worktree-per-epic:
+1. **The single Alembic/db migration head**: Sibling heads occur when two concurrent epics each author a migration, even on different tables.
+2. **Shared model/service files**: Concurrent changes to the same model or service file create textual merge conflicts.
+
+To collapse both collision classes to zero, use the **Schema-Freeze Foundation Epic** pattern:
+- **Wave-0 Epic**: One dedicated foundation epic (e.g., E000/E001) creates *all* shared tables and columns that the entire downstream feature set will need.
+- **Downstream Epics**: Downstream parallel epics **consume** the frozen schema and author **zero** shared-table migrations. They only author new, completely independent tables/migrations if necessary, and touch zero shared files.
+- **Solo Wave Migrations**: Any post-freeze migrations are restricted to solo waves with a single migration author per wave.
+
 ### Verify-Skills Gate (the anti-simulation backstop)
 
 Before ACCEPTING/merging any delegated story or epic result, the conductor MUST:

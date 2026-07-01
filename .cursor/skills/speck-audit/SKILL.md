@@ -50,6 +50,18 @@ If `--story <id>`: audit that story.
 If `--epic <id>`: audit that epic.
 Default: audit the active story.
 
+### 1b. Multi-Lens/N-Skeptic Audit for High-Risk Stories (Default for P0/P1/Privacy)
+
+For any story/epic classified as high-risk (P0/P1 severity, or those handling sensitive user data, privacy, or security-critical authentication/billing flows), a single auditor is highly prone to confirmation bias. Therefore, **N-independent diverse-lens auditors (majority-refute)** is the default:
+1. **Deploy 3+ distinct auditor subagents** (or run 3+ separate sequential passes with distinct persona lenses):
+   - **Security/Privacy Lens**: Focuses on access control, data leakages, sanitization, token exposure, and compliance.
+   - **Performance/Scalability Lens**: Focuses on N+1 queries, memory leaks, unpaged lists, and database indexing.
+   - **UX/Accessibility Lens**: Focuses on form validation, keyboard trap, screen readers, and rendering gotchas.
+2. **Consensus & Majority-Refute**:
+   - If *any* auditor lens raises a P0 finding, the audit is blocked.
+   - If there is a disagreement on a P1 finding, a majority-refute rule applies (if 2 out of 3 lenses agree it is a violation, it is treated as a P1 finding).
+3. **Log the Lenses**: The final `audit-report.md` MUST explicitly list the lenses deployed under a `## 👥 Multi-Lens Audit Team` section.
+
 ### 2. Load context (parallel)
 
 ```
@@ -158,6 +170,11 @@ Verify that recent locked decisions (`DEC-XXXX`) from `project-decisions-log.md`
 ### 11. Banned-language scan
 
 Run `.speck/scripts/banned-language-lint.sh` against changed files.
+
+Also run the product contract validator to ensure the contract itself does not self-violate any of its own banned terms:
+```
+bash .speck/scripts/validation/validators/validate-product-contract.sh --strict specs/projects/<PROJECT_ID>/product-contract.md
+```
 
 ### 12. Compose audit report
 

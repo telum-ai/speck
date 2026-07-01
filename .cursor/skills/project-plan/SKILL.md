@@ -242,9 +242,15 @@ This command benefits from parallel execution:
      * Dependencies
      * Estimated story count
      * Business metrics (if applicable): Revenue impact, CAC/LTV impact, retention impact
-   - **Concurrency waves** (required when 4+ epics OR Platform play level):
-     * Fill `## Epic Concurrency Waves & Rebase Cadence` — assign every epic to exactly one wave
-     * Wave 0 = E000 foundation; parallel waves = independent slices; final waves = integrators (2+ upstream deps)
+  - **Concurrency waves** (required when 4+ epics OR Platform play level):
+    * Fill `## Epic Concurrency Waves & Rebase Cadence` — assign every epic to exactly one wave
+    * Fill out the `Touch-points (creates/modifies)` section for each epic (specifying Migrations, Models/Services, and Files/Components) to identify potential conflicts
+    * Validate the wave assignments using the wave safety validator:
+      ```
+      bash .speck/scripts/validation/validators/validate-wave-safety.sh epics.md
+      ```
+      Ensure no two concurrent epics touch the same files or both author migrations (which breaks the linear Alembic head).
+    * Wave 0 = E000 foundation; parallel waves = independent slices; final waves = integrators (2+ upstream deps)
      * Document daily rebase cadence (`git fetch && git rebase origin/main`) for each parallel wave
      * Flag integrator epics that MUST NOT start until upstream wave merges to `main`
 

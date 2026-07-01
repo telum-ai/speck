@@ -92,7 +92,46 @@ while IFS= read -r -d '' file; do
 done < <(find "$SPECS_ROOT" -name "traceability-matrix.md" -print0 2>/dev/null || true)
 
 if [[ ${#matrices[@]} -eq 0 ]]; then
-  echo -e "${YELLOW}No traceability-matrix.md files found under $SPECS_ROOT.${NC}"
+  search_term=""
+  if [[ -n "$DEC_TARGET" ]]; then
+    search_term="$DEC_TARGET"
+  elif [[ -n "$SECTION_TARGET" ]]; then
+    search_term="$SECTION_TARGET"
+  fi
+
+  echo -e "${YELLOW}⚠️  No traceability-matrix.md files found under $SPECS_ROOT.${NC}"
+  echo -e "${YELLOW}⚠️  Falling back to pre-matrix grep scan for '${search_term}' across specs/**...${NC}"
+
+  # Find all markdown files and grep for the search term
+  matching_files=()
+  while IFS= read -r -d '' file; do
+    if grep -q -F "$search_term" "$file" 2>/dev/null; then
+      matching_files+=("$file")
+    fi
+  done < <(find "$SPECS_ROOT" -name "*.md" -print0 2>/dev/null || true)
+
+  if [[ ${#matching_files[@]} -eq 0 ]]; then
+    echo -e "${GREEN}✅ Grep scan complete: No references to '${search_term}' found in specs.${NC}"
+    exit 0
+  fi
+
+  echo -e "\n${RED}📍 Found ${#matching_files[@]} file(s) referencing '${search_term}':${NC}"
+  for f in "${matching_files[@]}"; do
+    echo -e "  - ${YELLOW}$f${NC}"
+  done
+
+  echo -e "\n📋  ${YELLOW}ADJUSTMENT WORK-LIST REQUIRED (Pre-Matrix Fallback):${NC}"
+  echo -e "The project has no traceability matrices yet, but the files above reference the changed contract or decision."
+  echo -e "You should run ${BLUE}/epic-adjust${NC} or ${BLUE}/story-adjust${NC} on the affected epics/stories to align them."
+
+  if [[ "$STRICT" == true ]]; then
+    echo -e "\n${RED}❌ CASCADE BLOCKER DETECTED (CASCADE_STALE.P1)${NC}"
+    echo -e "${RED}A project-level directional change or superseded decision was found, and${NC}"
+    echo -e "${RED}${#matching_files[@]} file(s) still reference '${search_term}' under the old state.${NC}"
+    exit 1
+  fi
+
+  echo -e "\n${YELLOW}⚠️  Cascade checked (fallback mode). Downstream deltas are identified.${NC}"
   exit 0
 fi
 

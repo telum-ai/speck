@@ -138,6 +138,74 @@ else
   log_success "No 'REPLACE_BEFORE_SHIP' placeholders found"
 fi
 
+# 10. Self-banned language check (smart-exclude Section 7 itself)
+if echo "$content" | grep -q "^## 7\."; then
+  # Extract banned terms from Section 7
+  TMP_TERMS=$(mktemp)
+  awk '
+    /^## 7\. Banned Language/ { in_section=1; next }
+    /^## [0-9]/ && in_section { in_section=0 }
+    in_section && /^\|/ {
+      if ($0 ~ /Banned Term/) next
+      if ($0 ~ /^\|[ \t-]+\|/) next
+      line=$0
+      sub(/^\| */, "", line)      # strip leading "| "
+      sub(/ *\|.*/, "", line)     # keep ONLY column 1
+      if (line ~ /^\[/) next      # skip placeholder rows
+      if (line == "") next
+      n = split(line, parts, /[\/,]/)
+      for (i = 1; i <= n; i++) {
+        p = parts[i]
+        gsub(/"/, "", p)             # strip quotes
+        sub(/^[ \t]+/, "", p)        # trim leading ws
+        sub(/[ \t]+$/, "", p)        # trim trailing ws
+        if (p != "" && p !~ /^\[/) print p
+      }
+    }
+  ' "$file_path" > "$TMP_TERMS"
+
+  awk '
+    /^### Banned Phrase Classes/ { in_section=1; next }
+    /^### / && in_section { in_section=0 }
+    in_section && /^- ❌/ {
+      line=$0
+      sub(/^- ❌[[:space:]]*/, "", line)
+      while (match(line, /"[^"]+"/)) {
+        phrase = substr(line, RSTART+1, RLENGTH-2)
+        print phrase
+        line = substr(line, RSTART + RLENGTH)
+      }
+    }
+  ' "$file_path" >> "$TMP_TERMS"
+
+  banned_count=$(wc -l < "$TMP_TERMS" | tr -d ' ')
+  if [[ "$banned_count" -gt 0 ]]; then
+    self_violations=0
+    while IFS= read -r term; do
+      [[ -z "$term" ]] && continue
+      esc_term="$(printf '%s' "$term" | sed -e 's/[.[\*^$()+?{|]/\\&/g')"
+
+      # Find matching lines in original file excluding Section 7
+      matching_lines=$(awk '
+        /^## 7\. Banned Language/ { in_section=1; next }
+        /^## [0-9]/ && in_section { in_section=0 }
+        !in_section { print NR ":" $0 }
+      ' "$file_path" | grep -i -w "$esc_term" || true)
+
+      if [[ -n "$matching_lines" ]]; then
+        log_error "Product Contract self-violates banned term '${term}'" \
+          "Remove the banned term '${term}' from the contract text. Found at:\n${matching_lines}"
+        self_violations=$((self_violations + 1))
+      fi
+    done < "$TMP_TERMS"
+    
+    if [[ "$self_violations" -eq 0 ]]; then
+      log_success "Product Contract is self-consistent (no self-violations of banned terms)"
+    fi
+  fi
+  rm -f "$TMP_TERMS"
+fi
+
 # === OUTPUT RESULTS ===
 
 if [ -f "$validation_log" ]; then
