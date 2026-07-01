@@ -1,5 +1,17 @@
 # Speck Changelog
 
+## v7.19.0 — 2026-07-01 — Parallel Execution Skill, Seam Contract Template, and Continuous Feedback Capture
+
+Introduces two large new capabilities (#69.2 and #72) to formally document parallel execution choreography and establish an always-on continuous feedback capture loop.
+
+### Parallel Conductor Recipe & Seam Contracts (#69.2)
+- **Parallel Execution Skill** — Added `.cursor/skills/parallel-execution/SKILL.md` (symlinked to `.claude` and `.codex`) to document the Parallel-Conductor Pattern (worktree-per-chunk, file-cluster chunking, seam contracts, chunk briefs, merge choreography, and `--no-ff` clean merges).
+- **Seam Contract Template** — Added `.speck/templates/project/seam-contract-template.md` and registered it in `template-manifest.json` and `validate-template.sh`.
+
+### Continuous Feedback Capture (#72)
+- **Feedback Skill** — Added `.cursor/skills/speck-feedback/SKILL.md` to maintain a running `.speck/feedback/<date>-<session>.md` file, search existing issues on `telum-ai/speck` via `gh`, and draft comments/issues for user confirmation.
+- **Inline Capture Triggers** — Added inline triggers to `story-validate`, `epic-validate`, `speck-audit`, `speck-learn`, and `AGENTS.md` Always-On Discipline table to capture the moment a gate is bypassed, a skill is ambiguous, or a Speck behavior is patched.
+
 ## v7.18.0 — 2026-07-01 — Wave Safety, Cascade Grep Fallback, Product Contract Self-Consistency, and Non-Deferrable UI LARP
 
 Introduces major methodology enhancements and validator scripts (#68 and #69) to support safe parallel epic execution, robust cascade tracking, self-consistent product contracts, and non-deferrable UI LARP gates.

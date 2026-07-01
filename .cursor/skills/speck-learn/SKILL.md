@@ -108,6 +108,9 @@ GOTCHA: Timezone must be normalized before comparison - PostgreSQL stores in UTC
 
 ### Step 5: Output Confirmation
 
+### 🚦 Continuous Feedback Capture Trigger
+If you capture a `GOTCHA` or `DEBT` that stems from a Speck template or script limitation, you **MUST** run `/speck-feedback` (or read `.cursor/skills/speck-feedback/SKILL.md`) to propose a template or script enhancement. Do not let workarounds go undocumented.
+
 ```
 📚 Learning Captured!
 

@@ -122,5 +122,14 @@
       "## 5. Re-validation Plan (The Plan)",
       "## 6. Readiness Re-assessment (The Status)"
     ]
+  },
+  "seam-contract": {
+    "structure_version": "7.19.0",
+    "required_headers": [
+      "## 1. Interface Definition (The Boundary)",
+      "## 2. Shared Data Structures & Types",
+      "## 3. Error Allocation & Behaviors",
+      "## 4. Verification & Mocking Rules"
+    ]
   }
 }

@@ -193,6 +193,9 @@ Decision:
 
 ### 14. Report (standard format per claude skill)
 
+### 🚦 Continuous Feedback Capture Trigger
+If any adversarial probe is skipped or false-green theater is detected, you **MUST** run `/speck-feedback` (or read `.cursor/skills/speck-feedback/SKILL.md`) to document the probe gap. Do not let workarounds go undocumented.
+
 **Continuation (do NOT treat the report as a stop):**
 - **Orchestrated / background / delegated run**: when the decision gate is CLEAN (or NEEDS_FIXES with no P0), **immediately proceed to `/story-validate` (or `/epic-validate`)** — the audit is a mid-lifecycle step, not a turn boundary. Stopping after the audit silently leaves the unit unvalidated.
 - **Stop only** on a P0 finding (validate must refuse PASS) or when the user must choose how to handle P1–P3 findings in an interactive run.

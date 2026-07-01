@@ -99,6 +99,9 @@ To execute browser LARPs successfully in sandboxed or restricted environments wi
 9. **UI stories touching PROFILE surfaces** (landing, marketing, package.json): run `regenerate-project-readme.sh --check` before UX-RC+ claim.
 10. Trigger `/project-state` regeneration
 
+### 🚦 Continuous Feedback Capture Trigger
+If any gate is bypassed, skipped, or marked `⚠️ Skipped` due to environment or tooling limitations, you **MUST** run `/speck-feedback` (or read `.cursor/skills/speck-feedback/SKILL.md`) to document the limitation and propose a sandbox-friendly setup or mock. Do not let workarounds go undocumented.
+
 The legacy v6 validation algorithm follows below (use it for tests/lint/quality details, but the verdict MUST be a readiness state, not PASS/FAIL).
 
 ---

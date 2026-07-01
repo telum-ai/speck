@@ -313,6 +313,7 @@ These apply at every play level, in every command, on every project:
 | **Banned-phrase detector** | In every agent self-summary | Phrases like "ready for launch", "outside autonomous reach", "premium polish complete", "should work in production", "tests pass therefore done" trigger re-audit or enumeration |
 | **Banned-language lint** | On every commit + at `/audit` | Run `.speck/scripts/banned-language-lint.sh` against `product-contract.md` banned terms |
 | **Evidence-or-it-didn't-happen** | At every validation gate | "Tests pass" is one signal, not proof. Require runtime evidence linked to claim. |
+| **Continuous feedback capture** | Whenever a gate is worked around, a skill is ambiguous, or a Speck behavior is patched | Run `/speck-feedback` to document the gap, check for duplicates on GitHub, and draft comments/issues. |
 | **Promise conservation** | `/epic-plan` → `/epic-analyze` → `/epic-validate` | Every enumerable upstream promise (product-contract §, each FR/NFR, every wireframe screen/element/state, every experience-chain seam) gets a `PRM-NNN` row in `traceability-matrix.md` and resolves to a story+AC, a DEC descope, or a visibly-open row. Enforced by `validate-traceability-matrix.sh`. **"Wireframes are inspiration" is banned** — a drawn element or stated seam is a promise. |
 
 A more hands-on human intervenes at decision locks. A more hands-off human lets the agent confirm and proceed. **Same methodology either way.**

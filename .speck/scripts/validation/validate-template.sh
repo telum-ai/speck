@@ -336,6 +336,9 @@ case "$filename" in
   *project-adjust-report-*.md|*project-adjust-report.md)
     validation_type="project-adjust-report"
     ;;
+  *seam-contract-*.md|*seam-contract.md)
+    validation_type="seam-contract"
+    ;;
   *)
     # Not a tracked template, skip
     exit 0
@@ -381,7 +384,7 @@ case "$validation_type" in
     # Default (conservation) mode here; epic-validate invokes the validator directly with --require-evidence.
     bash "$SCRIPT_DIR/validators/validate-traceability-matrix.sh" "$file_path"
     ;;
-  harden-report|story-adjust-report|epic-adjust-report|project-adjust-report)
+  harden-report|story-adjust-report|epic-adjust-report|project-adjust-report|seam-contract)
     # Passed placeholder check, no additional structural sub-validator needed
     exit 0
     ;;
