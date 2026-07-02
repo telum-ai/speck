@@ -139,6 +139,7 @@ PLACEHOLDER CONVENTION:
 | [Anxious beginner] | Onboarding → first session → completion | Screenshots, AX tree, taste notes per screen, timings |
 | [Returning user] | Cold-open → resume context → action | Screenshots showing no re-onboarding, timings |
 | [Skeptical buyer] | Landing → trust check → first signal of value | Screenshots, taste notes, "would I pay?" judgment |
+| [Naive first-timer (context-stripped)] | Onboarding → first screen → value-producing screen | Screenshots, First-Viewport Reaction rubric, taste notes, revulsion check (Required for consumer archetypes) |
 
 ### LARP Required for SHIP-RC
 
@@ -231,6 +232,14 @@ For every validation report at UX-RC or higher:
 
 *The explicit checklist that must pass to claim each readiness state.*
 
+### 🧭 The Three-Axis Readiness Model
+Every readiness claim decomposes into three distinct, non-substitutable axes:
+1. **CORRECT** — Does the code do what it claims? (proven by unit/integration tests, types, and `/audit`).
+2. **ON-CONTRACT** — Does the behavior conform to the specifications and magic moments? (proven by standard LARP and traceability matrix).
+3. **FELT-GOOD** — Does a naive, first-time human actually find the experience good? (requires human taste review or context-stripped naive-hostile LARP).
+
+**CRITICAL**: You must never use unqualified "verified" or "validated" claims without naming the axis. A story or epic cannot claim FELT-GOOD coverage from correctness/conformance evidence alone; for consumer archetypes, the readiness map MUST render `FELT: uncovered (human required)` until a human taste review is recorded.
+
 ### IMPL-GREEN
 - [ ] Unit tests pass
 - [ ] Integration tests pass
@@ -319,6 +328,7 @@ For every validation report at UX-RC or higher:
 * **WHEN: consumer_product / b2b_saas / internal_tool (SHIP-RC)**:
   - [ ] All COMMERCIAL-RC criteria (or all UX-RC if free product)
   - [ ] Runtime LARP against the LAUNCH build (not dev, not preview)
+  - [ ] **FELT-GOOD human taste review landed**: Naive-hostile and premise-challenge passes have run, and a human has recorded a taste review/attestation in `larp-recordings/<sha>-felt-attestation.md`. **NOT satisfiable by AI-authored taste notes.** For consumer archetypes, if this is missing, the FELT axis must render `FELT: uncovered (human required)` and cap the state at `UX-RC`.
   - [ ] Device-walk manual attestation recorded (if story/epic contains device-walk criteria: keyboard avoidance, native hit-testing, biometrics, etc.)
   - [ ] Keystone Dependencies verified: all founder-provisioned secrets/infra keys are set and active. If a keystone is absent, CI/CD must output a clear skip-with-reason log (never silent) rather than failing the validation suite. Awaiting keystone keys caps maximum verified state at `UX-RC`, but allows lower suites to pass green.
   - [ ] Full JTBD walkthrough per persona passes
@@ -412,10 +422,16 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 *The default verification model: the AI agent runs the gates and records evidence. The human reviews the recorded evidence and may override.*
 
-| Gate | Who claims pass | Who can override pass | Who must approve SHIP |
-|------|-----------------|------------------------|-----------------------|
-| IMPL-GREEN | AI agent (automated) | Human (vetoes possible) | n/a |
-| UX-RC | AI agent (records LARP) | Human (taste judgment) | n/a |
+### 👥 Three-Axis Ownership & FELT Gate
+- **CORRECT**: AI agent can claim pass based on tests, types, and `/audit` logs.
+- **ON-CONTRACT**: AI agent can claim pass based on standard LARP and traceability matrix.
+- **FELT-GOOD**: **Human-owned and explicitly NOT AI-satisfiable.** AI agents can run naive-hostile LARPs to identify confusion/revulsion, but **cannot self-certify taste**. For consumer archetypes, a human must record a taste review in `larp-recordings/<sha>-felt-attestation.md` before claiming `SHIP-RC` or higher.
+
+| Gate / Axis | Who claims pass | Who can override pass | Who must approve SHIP |
+|-------------|-----------------|------------------------|-----------------------|
+| IMPL-GREEN (CORRECT) | AI agent (automated) | Human (vetoes possible) | n/a |
+| UX-RC (ON-CONTRACT) | AI agent (records LARP) | Human (taste judgment) | n/a |
+| UX-RC (FELT-GOOD) | Human (taste review) | Human | n/a |
 | COMMERCIAL-RC | AI agent (records purchase flow) | Human (legal/support review) | n/a |
 | SHIP-RC | AI agent (full record) | Human (final taste judgment) | Human (release decision) |
 | SHIP | AI agent (post-deploy smoke) | Human | Human (release decision) |

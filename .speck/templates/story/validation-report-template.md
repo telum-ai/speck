@@ -4,6 +4,7 @@ template_version: "7.11.0"
 artifact_type: validation-report
 readiness_state_claimed: [NO-SHIP | IMPL-GREEN | INTEGRATION-GREEN | UX-RC | API-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
 readiness_state_verified: [NO-SHIP | IMPL-GREEN | INTEGRATION-GREEN | UX-RC | API-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
+felt_axis: [uncovered | human-verified]
 build_sha: [hash]
 build_artifact: [iOS sim / web prod bundle / etc.]
 audit_report: [path or "not-run"]
@@ -32,6 +33,15 @@ clean_build: [yes/no]
 
 **Why this state and not lower**:
 [1-2 sentences. E.g., "Above IMPL-GREEN because LARP evidence captured from launch build, not dev server."]
+
+---
+
+## 🧭 Three-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD)
+
+*Every readiness claim decomposes into three independent, non-substitutable axes:*
+- **CORRECT**: [How correctness was verified, e.g. tests pass, /audit clean]
+- **ON-CONTRACT**: [How conformance to specs & magic moments was verified, e.g. larp-recordings/<sha>-<persona>-findings.md]
+- **FELT-GOOD**: [Status of naive taste review: 'uncovered (human required)' or path to human-attestation, e.g. larp-recordings/<sha>-felt-attestation.md]
 
 ---
 

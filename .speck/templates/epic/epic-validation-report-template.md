@@ -1,6 +1,7 @@
 ---
 template_version: "7.11.0"
 artifact_type: epic-validation-report
+felt_axis: [uncovered | human-verified]
 ---
 
 # Epic Validation Report: [Epic Name]
@@ -16,6 +17,15 @@ artifact_type: epic-validation-report
 ## Executive Summary
 
 [Summary of epic outcome vs original vision and success criteria. Include what’s complete, what’s partial, and what blocks closure.]
+
+---
+
+## 🧭 Three-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD)
+
+*Every readiness claim decomposes into three independent, non-substitutable axes:*
+- **CORRECT**: [How correctness was verified, e.g. tests pass, /audit clean]
+- **ON-CONTRACT**: [How conformance to specs & magic moments was verified, e.g. larp-recordings/<sha>-<persona>-findings.md]
+- **FELT-GOOD**: [Status of naive taste review: 'uncovered (human required)' or path to human-attestation, e.g. larp-recordings/<sha>-felt-attestation.md]
 
 ---
 

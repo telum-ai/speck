@@ -1,5 +1,30 @@
 # Speck Changelog
 
+## v7.20.0 — 2026-07-02 — Three-Axis Readiness Model, Premise-Challenge (Anti-Spec) Pass, Naive-Hostile LARP, and Hard Human FELT Gate
+
+Addresses Issue #73 by making the FELT-GOOD (naive first-impression taste) axis a structural, human-owned, non-substitutable part of Speck's readiness apparatus.
+
+### Three-Axis Readiness Model (#73)
+- **Three-Axis Framing** — Decomposed readiness claims into CORRECT (correctness), ON-CONTRACT (conformance), and FELT-GOOD (taste). Added three-axis framing across `AGENTS.md`, `evidence-contract-template.md`, `validation-report-template.md`, `epic-validation-report-template.md`, and `template-manifest.json`.
+- **FELT: uncovered** — Enforced that consumer product claims must render `FELT: uncovered (human required)` until a human taste review lands, capping the state at `UX-RC`.
+
+### Premise-Challenge (Anti-Spec) Pass (#73)
+- **New Skill** — Added `.cursor/skills/speck-premise-challenge/SKILL.md` to question whether the product contract's underlying design decisions are good (distinct from skeptical review and audit).
+- **Hooks & Integration** — Integrated premise-challenge hooks into `project-product-contract`, `story-validate`, `epic-validate`, and `AGENTS.md` skills list and always-on table.
+
+### Naive-Hostile LARP Persona (#73)
+- **Naive-Hostile Persona** — Added a canonical context-stripped "Naive-Hostile First-Timer" persona to `persona-larp-template.md` and `evidence-contract-template.md` §4.
+- **First-Viewport Reaction** — Added a "First-Viewport Reaction" rubric (What is this? / Who's asking? / Why now? / Why should I care?) where confusion/disorientation/revulsion are first-class PASS-blocking findings.
+- **Behavior Rule** — Integrated a mandatory naive-hostile pass for consumer onboarding/first-run surfaces into `speck-larp/SKILL.md`.
+
+### Hard Human FELT Gate & Attestation (#73)
+- **Human Taste Review** — Made FELT-GOOD taste review human-owned and explicitly NOT AI-satisfiable.
+- **Attestation Convention** — Introduced the `larp-recordings/<sha>-felt-attestation.md` convention in `evidence-contract-template.md`, `story-validate`, and `epic-validate`.
+
+### Enforcement Validator & Tests (#73)
+- **New Validator** — Added `.speck/scripts/validation/validators/validate-felt-axis.sh` and `.speck/scripts/validation/validators/validate-felt-axis.test.sh` to enforce Three-Axis blocks, `felt_axis` frontmatter, and human attestation for consumer SHIP-RC+ claims.
+- **Test Suite** — Wired the new validator test into `package.json` `test` script.
+
 ## v7.19.0 — 2026-07-01 — Parallel Execution Skill, Seam Contract Template, and Continuous Feedback Capture
 
 Introduces two large new capabilities (#69.2 and #72) to formally document parallel execution choreography and establish an always-on continuous feedback capture loop.

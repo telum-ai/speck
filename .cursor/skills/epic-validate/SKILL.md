@@ -37,10 +37,13 @@ Before doing ANY epic-level validation work, verify:
 
 3. **Check Project Archetype & UI Presence**:
    - Read `.speck/project.json` → `project_archetype` (and `play_level`).
-   - If `project_archetype` is `infra_service` or `backend_api`, or if the epic has no user-facing UI components: **Bypass human `/larp` requirement**. Proceed directly.
-   - For all UI-facing epics (archetypes `consumer_product`, `b2b_saas`, `internal_tool` with user-facing interfaces): **full-flow `/larp` MUST have been run** for every persona per evidence-contract
-     - Captures the JTBD walkthrough end-to-end across stories (not just per-story segments)
-     - If missing: STOP. Tell user "Run `/larp` for each persona's full epic flow first."
+   - If `project_archetype` is `infra_service` or `backend_api`, or if the epic has no user-facing UI components: **Bypass human `/larp` and Premise-Challenge requirements**. Proceed directly.
+   - For all UI-facing epics (archetypes `consumer_product`, `b2b_saas`, `internal_tool` with user-facing interfaces):
+     - **full-flow `/larp` MUST have been run** for every persona per evidence-contract
+       - Captures the JTBD walkthrough end-to-end across stories (not just per-story segments)
+       - If missing: STOP. Tell user "Run `/larp` for each persona's full epic flow first."
+     - **Premise-Challenge (Anti-Spec) Pass**: If the epic touches high-impact surfaces (onboarding/first-run, empty states, paywalls/billing, error/degraded states, celebration surfaces), a **Premise-Challenge pass MUST have been run** (using `/speck-premise-challenge`) and documented.
+       - If missing or failed: cap the maximum claimable state at `IMPL-GREEN` or `INTEGRATION-GREEN` (cannot claim `UX-RC` or higher).
 
 4. **`evidence-contract.md` exists**
    - If missing: STOP.
@@ -59,6 +62,11 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
 2c. **Parallel-Auditor Graceful Degradation Protocol**:
     - The `/audit --epic` step uses parallel `speck-auditor` subagents. If any subagent stalls (e.g., reaches maximum timeout or watchdogs on large file reads), the main orchestrator MUST NOT block the entire validation.
     - Instead, the orchestrator MUST gracefully degrade, take over the stalled subagent's scope, complete the check sequentially or via lighter heuristics, and explicitly disclose in `audit-report.md` and `epic-validation-report.md` that a fallback check was performed.
+2d. **Evaluate FELT-GOOD taste review** (for consumer archetypes):
+    - Read `.speck/project.json` → `project_archetype`.
+    - If `project_archetype` is `consumer_product` and the claimed state is `SHIP-RC` or higher:
+      - Check if a valid human FELT attestation file exists at `larp-recordings/<sha>-felt-attestation.md` at the epic level (or linked from the stories).
+      - If missing: the AI agent **MUST** cap the verified state at `UX-RC` (with `FELT: uncovered (human required)`) and refuse to claim `SHIP-RC` or higher, detailing that the epic is "Awaiting human FELT taste attestation" to complete `SHIP-RC+`.
 3. Read `audit-report.md` — any P0 lowers max claimable state.
 4. **Primary UI Gate — JTBD Cold-Start LARP (Mandatory Centerpiece)**:
     - Running the individual stories' validations is necessary but completely insufficient to prove a product works, because stories are isolated islands and are vulnerable to the composition fallacy.
@@ -98,6 +106,7 @@ To execute browser LARPs successfully in sandboxed or restricted environments wi
 7. If any previous rating, state, or recommendation has changed, write the `### Evaluative Drift / Change Explanation` section with detailed logical rationale.
 8. Run banned-phrase self-check on this report's own language before publishing
 9. Apply SHA stamp; trigger `/project-state` regeneration
+9b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict epic-validation-report.md` to ensure three-axis compliance and human FELT attestation for consumer SHIP-RC+.
 
 ### 🚦 Continuous Feedback Capture Trigger
 If any story-level validation is bypassed or the JTBD LARP is blocked by infrastructure, you **MUST** run `/speck-feedback` (or read `.cursor/skills/speck-feedback/SKILL.md`) to document the block and propose an upstream fix. Do not let workarounds go undocumented.

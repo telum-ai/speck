@@ -18,8 +18,16 @@ This is an executable script — the /larp skill runs it. Be specific about:
 -->
 
 **Persona ID**: `[persona-id]`
-**Persona Name**: [Anxious Beginner / Returning User / Skeptical Buyer / etc.]
+**Persona Name**: [Anxious Beginner / Returning User / Skeptical Buyer / Naive-Hostile First-Timer / etc.]
 **Last Updated**: [YYYY-MM-DD]
+
+---
+
+### 🎭 Canonical Persona: Naive-Hostile First-Timer (`naive-hostile`)
+This is a standard, context-stripped persona required for all consumer-facing products.
+- **Context-stripped setup**: The user just installed this app. They know nothing about its philosophy, founders, or technical architecture. They are impatient, easily confused, and highly sensitive to friction.
+- **Goal**: Complete the onboarding flow and reach the first value-producing screen.
+- **Hostile mindset**: They are looking for reasons to close the app, uninstall, or feel annoyed. Any jargon, slow loading, or unnecessary input fields will trigger immediate revulsion.
 
 ---
 
@@ -116,6 +124,7 @@ For each captured screenshot, the LARP runner must write a taste note:
 
 | Dimension | Question | Rating | Note |
 |-----------|----------|--------|------|
+| First-Viewport Reaction | **The Naive Rubric**: What is this? / Who's asking? / Why now? / Why should I care? (Any confusion/disorientation/revulsion is a PASS-blocking finding) | ✅/⚠️/❌ | [Note] |
 | First glance (3s) | What does the user understand in 3 seconds? | ✅/⚠️/❌ | [Note] |
 | Surface economy | What repeats or competes on this screen? (Are there redundant labels, competing CTAs?) | ✅/⚠️/❌ | [Note] |
 | Progressive disclosure | What should move one tap deeper to reduce cognitive load? | ✅/⚠️/❌ | [Note] |

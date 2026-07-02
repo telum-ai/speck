@@ -42,10 +42,13 @@ Before doing ANY validation work, verify:
 
 2. **Check Project Archetype & UI Presence**:
    - Read `.speck/project.json` → `project_archetype` (and `play_level`).
-   - If `project_archetype` is `infra_service` or `backend_api`, or if the story is backend-only / non-UI: **Bypass `/larp` requirement**. Proceed directly.
-   - For all UI-facing stories (archetypes `consumer_product`, `b2b_saas`, `internal_tool` with active UI components): **`/larp` MUST have been run** producing `larp-recordings/<sha>-<persona>-findings.md`
-     - If missing: STOP. Tell user "Run `/larp [persona]` first — UI story validation requires LARP evidence per evidence-contract.md."
-     - If LARP findings show FAIL: lower the maximum claimable state.
+   - If `project_archetype` is `infra_service` or `backend_api`, or if the story is backend-only / non-UI: **Bypass `/larp` and Premise-Challenge requirements**. Proceed directly.
+   - For all UI-facing stories (archetypes `consumer_product`, `b2b_saas`, `internal_tool` with active UI components):
+     - **`/larp` MUST have been run** producing `larp-recordings/<sha>-<persona>-findings.md`
+       - If missing: STOP. Tell user "Run `/larp [persona]` first — UI story validation requires LARP evidence per evidence-contract.md."
+       - If LARP findings show FAIL: lower the maximum claimable state.
+     - **Premise-Challenge (Anti-Spec) Pass**: If the story touches high-impact surfaces (onboarding/first-run, empty states, paywalls/billing, error/degraded states, celebration surfaces), a **Premise-Challenge pass MUST have been run** (using `/speck-premise-challenge`) and documented.
+       - If missing or failed: cap the maximum claimable state at `IMPL-GREEN` or `INTEGRATION-GREEN` (cannot claim `UX-RC` or higher).
 
 3. **`evidence-contract.md` exists at the project root**
    - If missing: STOP. Tell user "Run `/project-evidence-contract` first — validation needs the gate criteria definition."
@@ -92,9 +95,15 @@ To execute browser LARPs successfully in sandboxed or restricted environments wi
 4e. **Clean-Build gate** (for UX-RC+ claims):
    - For UX-RC or higher, verify that `clean_build: yes` is declared in the report's frontmatter.
    - Any UX-RC+ claim using `clean_build: no` or unspecified must be rejected/downgraded (cap verified readiness state at `INTEGRATION-GREEN` or lower). Stale compiled assets from incremental caches are a surrogate for the code under test.
-5. If any required-at-claimed-state gate is ❌ (including missing human attestation or missing Keystones for SHIP-RC+): lower the verified state to the highest state where all gates pass
+4f. **Evaluate FELT-GOOD taste review** (for consumer archetypes):
+   - Read `.speck/project.json` → `project_archetype`.
+   - If `project_archetype` is `consumer_product` and the claimed state is `SHIP-RC` or higher:
+     - Check if a valid human FELT attestation file exists at `larp-recordings/<sha>-felt-attestation.md`.
+     - If missing: the AI agent **MUST** cap the verified state at `UX-RC` (with `FELT: uncovered (human required)`) and refuse to claim `SHIP-RC` or higher, detailing that the story is "Awaiting human FELT taste attestation" to complete `SHIP-RC+`.
+5. If any required-at-claimed-state gate is ❌ (including missing human attestation, missing FELT attestation for consumer SHIP-RC+, or missing Keystones for SHIP-RC+): lower the verified state to the highest state where all gates pass
 6. Run the banned-phrase self-check on the report's own language before publishing
 7. Apply SHA stamp to the report
+7b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md` to ensure three-axis compliance and human FELT attestation for consumer SHIP-RC+.
 8. **Before claiming SHIP-RC or SHIP:** run `bash .speck/scripts/validation/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`. Block SHIP-RC+ if any `PROFILE_DRIFT.P1` finding.
 9. **UI stories touching PROFILE surfaces** (landing, marketing, package.json): run `regenerate-project-readme.sh --check` before UX-RC+ claim.
 10. Trigger `/project-state` regeneration

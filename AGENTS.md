@@ -310,15 +310,24 @@ These apply at every play level, in every command, on every project:
 | **PROFILE drift check** | Every `/recheck` | Compare root README one-liner vs `product-contract.md`; refresh via `/project-readme` when placeholders remain |
 | **Readiness-state declaration** | At every validate | Claim one of NO-SHIP / IMPL-GREEN / INTEGRATION-GREEN / UX-RC / API-RC / COMMERCIAL-RC / SHIP-RC / SHIP |
 | **SHA stamps** | On every truth artifact write | Footer with `[as of SHA <hash> | verified against runtime <date>]` |
-| **Banned-phrase detector** | In every agent self-summary | Phrases like "ready for launch", "outside autonomous reach", "premium polish complete", "should work in production", "tests pass therefore done" trigger re-audit or enumeration |
+| **Banned-phrase detector** | In every agent self-summary | Phrases like "ready for launch", "outside autonomous reach", "premium polish complete", "should work in production", "tests pass therefore done", "impossible to catch", "uncatchable by automation", or unqualified "validated/verified" with no axis trigger re-audit or enumeration |
 | **Banned-language lint** | On every commit + at `/audit` | Run `.speck/scripts/banned-language-lint.sh` against `product-contract.md` banned terms |
 | **Evidence-or-it-didn't-happen** | At every validation gate | "Tests pass" is one signal, not proof. Require runtime evidence linked to claim. |
+| **Three-axis honesty** | At every validation gate | Never substitute CORRECT or ON-CONTRACT evidence for FELT-GOOD taste judgment. Every claim decomposes into the three axes. |
+| **Premise-Challenge** | Before UX-RC+ on high-impact UI surfaces | Run `/speck-premise-challenge` to question design decisions on onboarding, empty states, paywalls, error/degraded states, and celebration surfaces. |
 | **Continuous feedback capture** | Whenever a gate is worked around, a skill is ambiguous, or a Speck behavior is patched | Run `/speck-feedback` to document the gap, check for duplicates on GitHub, and draft comments/issues. |
 | **Promise conservation** | `/epic-plan` → `/epic-analyze` → `/epic-validate` | Every enumerable upstream promise (product-contract §, each FR/NFR, every wireframe screen/element/state, every experience-chain seam) gets a `PRM-NNN` row in `traceability-matrix.md` and resolves to a story+AC, a DEC descope, or a visibly-open row. Enforced by `validate-traceability-matrix.sh`. **"Wireframes are inspiration" is banned** — a drawn element or stated seam is a promise. |
 
 A more hands-on human intervenes at decision locks. A more hands-off human lets the agent confirm and proceed. **Same methodology either way.**
 
 ## 🚦 Readiness States (the new PASS/FAIL taxonomy)
+
+Every readiness claim decomposes into three distinct, non-substitutable axes:
+1. **CORRECT** — Does the code do what it claims? (proven by unit/integration tests, types, and `/audit`).
+2. **ON-CONTRACT** — Does the behavior conform to the specifications and magic moments? (proven by standard LARP and traceability matrix).
+3. **FELT-GOOD** — Does a naive, first-time human actually find the experience good? (requires human taste review or context-stripped naive-hostile LARP).
+
+**CRITICAL**: You must never use unqualified "verified" or "validated" claims without naming the axis. A story or epic cannot claim FELT-GOOD coverage from correctness/conformance evidence alone; for consumer archetypes, the readiness map MUST render `FELT: uncovered (human required)` until a human taste review is recorded.
 
 | State | Meaning | Gate criteria |
 |-------|---------|---------------|
@@ -403,7 +412,7 @@ Claude Code `Stop` hooks use **command-type** lifecycle gates (`.claude/hooks/st
 
 Skills are agent-decided expertise packages — auto-loaded when relevant.
 
-- **Process skills**: `/speck`, `/recheck`, `/larp`, `/audit`, `/harden`, `/story-adjust`, `/epic-adjust`, `/project-adjust`, `/speck-debug`, `/speck-learn`
+- **Process skills**: `/speck`, `/recheck`, `/larp`, `/audit`, `/harden`, `/story-adjust`, `/epic-adjust`, `/project-adjust`, `/speck-debug`, `/speck-learn`, `/speck-premise-challenge`
 - **Level commands** (`project-*`, `epic-*`, `story-*`): the Speck workflow
 - **Domain patterns** (`.cursor/skills/patterns/`): Stripe, Clerk, Supabase, Firebase, RevenueCat, etc. — lazy-loaded when implementing those integrations
 
@@ -431,6 +440,8 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Let a drawn wireframe element or a stated experience-chain seam go un-enumerated — it is a promise: give it a `PRM-NNN` row in `traceability-matrix.md` (story+AC) or descope it with a DEC. "Wireframes are inspiration" is banned.
 - Accept a delegated/parallel sub-agent's self-reported `{readiness_state, pass}` — verify ≥2 real skill invocations + template-compliant reports first (Verify-Skills Gate)
 - Leave validated specification docs, experience chains, wireframes, or product contracts stale after a deliberate post-validation change or strategic pivot — run `/project-adjust`, `/epic-adjust`, or `/story-adjust` to re-spec the delta, run the change-cascade computer, and conserve promises
+- Conflate CORRECT or ON-CONTRACT with FELT-GOOD taste judgment
+- Launder a taste miss or design premise error as "uncatchable by automation"
 
 **ALWAYS**:
 - Read `project-state.md` first
@@ -447,6 +458,7 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Treat AI-generated user-facing text as governed product copy
 - Enumerate every upstream promise into `traceability-matrix.md` at `/epic-plan` and re-walk it at `/epic-validate` (conservation law)
 - Add commit learning tags (`PATTERN:`, `GOTCHA:`, `PERF:`, `ARCH:`, `RULE:`, `DEBT:`) when you discover something
+- Render FELT as uncovered (`FELT: uncovered (human required)`) in validation reports for consumer archetypes until a human taste review lands
 
 ## 📊 Commit Learning Tags
 

@@ -165,9 +165,13 @@ Apply SHA stamp:
 ### 6b. Validate the contract
 
 Run the product contract validator to ensure structural completeness and self-consistency (verifying that the contract does not self-violate its own banned language in other sections):
-```
+```bash
 bash .speck/scripts/validation/validators/validate-product-contract.sh --strict specs/projects/<PROJECT_ID>/product-contract.md
 ```
+
+### 6c. Run Premise-Challenge (Anti-Spec) Pass
+
+Run a premise-challenge pass on onboarding/first-run and other high-impact surfaces defined in the contract to ensure the underlying design decisions are fundamentally sound and feel good (using the `/speck-premise-challenge` skill).
 
 ### 7. Trigger downstream regeneration
 

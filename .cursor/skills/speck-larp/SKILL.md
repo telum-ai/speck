@@ -158,6 +158,7 @@ Standard report format per claude skill.
 - ALWAYS write evidence with SHA-prefixed filenames
 - ALWAYS run backtracking + error scenarios
 - ALWAYS verify and record "clean build: yes" under larp setup and validation report for UX-RC+ claims
+- ALWAYS run the `naive-hostile` persona pass for consumer onboarding/first-run surfaces, and treat any confusion, disorientation, or revulsion as a PASS-blocking finding
 
 ## Integration Points
 
