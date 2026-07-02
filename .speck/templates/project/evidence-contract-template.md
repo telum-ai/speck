@@ -236,9 +236,9 @@ For every validation report at UX-RC or higher:
 Every readiness claim decomposes into three distinct, non-substitutable axes:
 1. **CORRECT** — Does the code do what it claims? (proven by unit/integration tests, types, and `/audit`).
 2. **ON-CONTRACT** — Does the behavior conform to the specifications and magic moments? (proven by standard LARP and traceability matrix).
-3. **FELT-GOOD** — Does a naive, first-time human actually find the experience good? (requires human taste review or context-stripped naive-hostile LARP).
+3. **FELT-GOOD** — Would a naive, first-time user actually find the experience good? **The AI evaluates this axis directly** via the context-stripped naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric). A human taste review is an *optional stronger override* — never a prerequisite.
 
-**CRITICAL**: You must never use unqualified "verified" or "validated" claims without naming the axis. A story or epic cannot claim FELT-GOOD coverage from correctness/conformance evidence alone; for consumer archetypes, the readiness map MUST render `FELT: uncovered (human required)` until a human taste review is recorded.
+**CRITICAL**: You must never use unqualified "verified" or "validated" claims without naming the axis. FELT-GOOD is a real, AI-evaluable axis — the agent is expected to understand and apply first-impression taste judgment, not defer it. A story or epic cannot claim FELT-GOOD coverage from correctness/conformance evidence alone; it must come from an actual naive-hostile taste pass. For consumer archetypes: `FELT: uncovered` until the naive-hostile pass runs → `FELT: ai-verified` once the AI records its taste verdict → `FELT: human-verified` when a human additionally signs off.
 
 ### IMPL-GREEN
 - [ ] Unit tests pass
@@ -328,7 +328,7 @@ Every readiness claim decomposes into three distinct, non-substitutable axes:
 * **WHEN: consumer_product / b2b_saas / internal_tool (SHIP-RC)**:
   - [ ] All COMMERCIAL-RC criteria (or all UX-RC if free product)
   - [ ] Runtime LARP against the LAUNCH build (not dev, not preview)
-  - [ ] **FELT-GOOD human taste review landed**: Naive-hostile and premise-challenge passes have run, and a human has recorded a taste review/attestation in `larp-recordings/<sha>-felt-attestation.md`. **NOT satisfiable by AI-authored taste notes.** For consumer archetypes, if this is missing, the FELT axis must render `FELT: uncovered (human required)` and cap the state at `UX-RC`.
+  - [ ] **FELT-GOOD covered by the naive-hostile LARP**: The AI has run the naive-hostile + premise-challenge passes and recorded a first-impression taste verdict (`felt_axis: ai-verified`) with First-Viewport Reaction findings. A human taste review (`larp-recordings/<sha>-felt-attestation.md`) is an optional stronger signal, not a prerequisite. If FELT-GOOD is still `uncovered` (naive-hostile pass never ran), cap the state at the last clean state.
   - [ ] Device-walk manual attestation recorded (if story/epic contains device-walk criteria: keyboard avoidance, native hit-testing, biometrics, etc.)
   - [ ] Keystone Dependencies verified: all founder-provisioned secrets/infra keys are set and active. If a keystone is absent, CI/CD must output a clear skip-with-reason log (never silent) rather than failing the validation suite. Awaiting keystone keys caps maximum verified state at `UX-RC`, but allows lower suites to pass green.
   - [ ] Full JTBD walkthrough per persona passes
@@ -422,16 +422,16 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 *The default verification model: the AI agent runs the gates and records evidence. The human reviews the recorded evidence and may override.*
 
-### 👥 Three-Axis Ownership & FELT Gate
-- **CORRECT**: AI agent can claim pass based on tests, types, and `/audit` logs.
-- **ON-CONTRACT**: AI agent can claim pass based on standard LARP and traceability matrix.
-- **FELT-GOOD**: **Human-owned and explicitly NOT AI-satisfiable.** AI agents can run naive-hostile LARPs to identify confusion/revulsion, but **cannot self-certify taste**. For consumer archetypes, a human must record a taste review in `larp-recordings/<sha>-felt-attestation.md` before claiming `SHIP-RC` or higher.
+### 👥 Three-Axis Ownership
+- **CORRECT**: AI agent claims pass based on tests, types, and `/audit` logs.
+- **ON-CONTRACT**: AI agent claims pass based on standard LARP and traceability matrix.
+- **FELT-GOOD**: **AI-evaluated.** The agent runs the naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric), applies first-impression taste judgment, and records the verdict (`felt_axis: ai-verified`). A human may override at any time (final taste authority), and a recorded human taste review promotes the axis to `human-verified` — but human sign-off is an *optional stronger signal*, never a prerequisite for shipping.
 
 | Gate / Axis | Who claims pass | Who can override pass | Who must approve SHIP |
 |-------------|-----------------|------------------------|-----------------------|
 | IMPL-GREEN (CORRECT) | AI agent (automated) | Human (vetoes possible) | n/a |
 | UX-RC (ON-CONTRACT) | AI agent (records LARP) | Human (taste judgment) | n/a |
-| UX-RC (FELT-GOOD) | Human (taste review) | Human | n/a |
+| UX-RC (FELT-GOOD) | AI agent (naive-hostile LARP taste verdict) | Human (optional stronger override) | n/a |
 | COMMERCIAL-RC | AI agent (records purchase flow) | Human (legal/support review) | n/a |
 | SHIP-RC | AI agent (full record) | Human (final taste judgment) | Human (release decision) |
 | SHIP | AI agent (post-deploy smoke) | Human | Human (release decision) |

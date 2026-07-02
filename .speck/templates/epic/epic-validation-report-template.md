@@ -1,7 +1,7 @@
 ---
 template_version: "7.11.0"
 artifact_type: epic-validation-report
-felt_axis: [uncovered | human-verified]
+felt_axis: [uncovered | ai-verified | human-verified]
 ---
 
 # Epic Validation Report: [Epic Name]
@@ -25,7 +25,7 @@ felt_axis: [uncovered | human-verified]
 *Every readiness claim decomposes into three independent, non-substitutable axes:*
 - **CORRECT**: [How correctness was verified, e.g. tests pass, /audit clean]
 - **ON-CONTRACT**: [How conformance to specs & magic moments was verified, e.g. larp-recordings/<sha>-<persona>-findings.md]
-- **FELT-GOOD**: [Status of naive taste review: 'uncovered (human required)' or path to human-attestation, e.g. larp-recordings/<sha>-felt-attestation.md]
+- **FELT-GOOD**: [AI naive-hostile taste verdict + First-Viewport Reaction findings, e.g. larp-recordings/<sha>-naive-hostile-findings.md → `ai-verified`. Use `uncovered` only if the naive-hostile pass has not run. A human taste review (larp-recordings/<sha>-felt-attestation.md) is an optional stronger signal → `human-verified`.]
 
 ---
 

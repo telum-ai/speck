@@ -56,8 +56,8 @@ A Premise-Challenge pass results in one of two outcomes:
 
 ## ⚖️ Operator Guidance & Anti-Laundering Rules
 
-- **"This feels off" is a first-class thread**: Never ignore a gut-level taste or UX concern. If something feels awkward, clunky, or confusing, it is a failed premise.
+- **"This feels off" is a first-class thread**: Never ignore a gut-level taste or UX concern. If something feels awkward, clunky, or confusing, it is a failed premise. The AI is expected to apply this taste judgment itself — that is the whole point of the FELT-GOOD axis.
 - **Never conflate CORRECT/ON-CONTRACT with good**: A green test suite and a conforming LARP do not mean the product is ready to ship.
-- **Never launder a taste miss as "uncatchable by automation"**: If a user experience is poor, do not excuse it as an autonomous limitation. Document it, raise a premise challenge, and escalate to the human operator.
+- **Never launder a taste miss as "uncatchable by automation"**: If a user experience is poor, do not excuse it as an autonomous limitation. Run the naive lens, apply taste judgment, and document the finding. Escalation to a human operator is reserved for *contract-premise* problems (which force a `/project-adjust` or a conscious DEC) — it is NOT a way to offload the FELT-GOOD taste judgment the AI should be making.
 
-*[as of SHA HEAD | verified 2026-07-02 | speck v7.20.0]*
+*[as of SHA HEAD | verified 2026-07-02 | speck v7.20.1]*

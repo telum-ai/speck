@@ -62,11 +62,12 @@ If any pre-gate fails: refuse to proceed. Surface what's missing.
 2c. **Parallel-Auditor Graceful Degradation Protocol**:
     - The `/audit --epic` step uses parallel `speck-auditor` subagents. If any subagent stalls (e.g., reaches maximum timeout or watchdogs on large file reads), the main orchestrator MUST NOT block the entire validation.
     - Instead, the orchestrator MUST gracefully degrade, take over the stalled subagent's scope, complete the check sequentially or via lighter heuristics, and explicitly disclose in `audit-report.md` and `epic-validation-report.md` that a fallback check was performed.
-2d. **Evaluate FELT-GOOD taste review** (for consumer archetypes):
+2d. **Evaluate the FELT-GOOD axis** (the AI covers this — do NOT defer it to a human):
     - Read `.speck/project.json` → `project_archetype`.
-    - If `project_archetype` is `consumer_product` and the claimed state is `SHIP-RC` or higher:
-      - Check if a valid human FELT attestation file exists at `larp-recordings/<sha>-felt-attestation.md` at the epic level (or linked from the stories).
-      - If missing: the AI agent **MUST** cap the verified state at `UX-RC` (with `FELT: uncovered (human required)`) and refuse to claim `SHIP-RC` or higher, detailing that the epic is "Awaiting human FELT taste attestation" to complete `SHIP-RC+`.
+    - For UI-facing consumer archetypes at `UX-RC` or higher, the AI **MUST have run the naive-hostile LARP** across the epic's cold-start JTBD walkthrough (First-Viewport Reaction + taste-judgment rubric) and recorded a first-impression taste verdict. Set `felt_axis: ai-verified` and cite the naive-hostile findings.
+      - If the naive-hostile pass has NOT been run, `felt_axis` is `uncovered` → cap the verified state at the last clean state below `UX-RC` and run the pass. (Do NOT wait for a human — the AI performs this judgment itself.)
+      - If the naive-hostile taste verdict surfaces confusion/disorientation/revulsion on any primary surface, treat it as a PASS-blocking finding and lower the state accordingly.
+    - A recorded human taste review (`larp-recordings/<sha>-felt-attestation.md`) is an **optional stronger signal** that promotes `felt_axis` to `human-verified`. It is never required to reach `SHIP-RC`.
 3. Read `audit-report.md` — any P0 lowers max claimable state.
 4. **Primary UI Gate — JTBD Cold-Start LARP (Mandatory Centerpiece)**:
     - Running the individual stories' validations is necessary but completely insufficient to prove a product works, because stories are isolated islands and are vulnerable to the composition fallacy.
@@ -106,7 +107,7 @@ To execute browser LARPs successfully in sandboxed or restricted environments wi
 7. If any previous rating, state, or recommendation has changed, write the `### Evaluative Drift / Change Explanation` section with detailed logical rationale.
 8. Run banned-phrase self-check on this report's own language before publishing
 9. Apply SHA stamp; trigger `/project-state` regeneration
-9b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict epic-validation-report.md` to ensure three-axis compliance and human FELT attestation for consumer SHIP-RC+.
+9b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict epic-validation-report.md` to ensure three-axis compliance and that the AI-covered FELT-GOOD axis is not left `uncovered` for consumer UX-RC+ claims.
 
 ### 🚦 Continuous Feedback Capture Trigger
 If any story-level validation is bypassed or the JTBD LARP is blocked by infrastructure, you **MUST** run `/speck-feedback` (or read `.cursor/skills/speck-feedback/SKILL.md`) to document the block and propose an upstream fix. Do not let workarounds go undocumented.

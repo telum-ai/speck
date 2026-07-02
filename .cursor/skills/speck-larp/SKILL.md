@@ -159,6 +159,7 @@ Standard report format per claude skill.
 - ALWAYS run backtracking + error scenarios
 - ALWAYS verify and record "clean build: yes" under larp setup and validation report for UX-RC+ claims
 - ALWAYS run the `naive-hostile` persona pass for consumer onboarding/first-run surfaces, and treat any confusion, disorientation, or revulsion as a PASS-blocking finding
+- ALWAYS cover the FELT-GOOD axis yourself: apply first-impression taste judgment during the naive-hostile pass and record a verdict (`felt_axis: ai-verified`) in the findings — never defer taste to a mandatory human. A human taste review is an optional stronger signal (`felt_axis: human-verified`), not a prerequisite.
 
 ## Integration Points
 

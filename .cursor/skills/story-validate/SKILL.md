@@ -95,15 +95,16 @@ To execute browser LARPs successfully in sandboxed or restricted environments wi
 4e. **Clean-Build gate** (for UX-RC+ claims):
    - For UX-RC or higher, verify that `clean_build: yes` is declared in the report's frontmatter.
    - Any UX-RC+ claim using `clean_build: no` or unspecified must be rejected/downgraded (cap verified readiness state at `INTEGRATION-GREEN` or lower). Stale compiled assets from incremental caches are a surrogate for the code under test.
-4f. **Evaluate FELT-GOOD taste review** (for consumer archetypes):
+4f. **Evaluate the FELT-GOOD axis** (the AI covers this — do NOT defer it to a human):
    - Read `.speck/project.json` → `project_archetype`.
-   - If `project_archetype` is `consumer_product` and the claimed state is `SHIP-RC` or higher:
-     - Check if a valid human FELT attestation file exists at `larp-recordings/<sha>-felt-attestation.md`.
-     - If missing: the AI agent **MUST** cap the verified state at `UX-RC` (with `FELT: uncovered (human required)`) and refuse to claim `SHIP-RC` or higher, detailing that the story is "Awaiting human FELT taste attestation" to complete `SHIP-RC+`.
-5. If any required-at-claimed-state gate is ❌ (including missing human attestation, missing FELT attestation for consumer SHIP-RC+, or missing Keystones for SHIP-RC+): lower the verified state to the highest state where all gates pass
+   - For UI-facing consumer archetypes at `UX-RC` or higher, the AI **MUST have run the naive-hostile LARP** (First-Viewport Reaction + taste-judgment rubric) and recorded a first-impression taste verdict. Set `felt_axis: ai-verified` and cite the naive-hostile findings (`larp-recordings/<sha>-naive-hostile-findings.md`) in the Three-Axis Readiness section.
+     - If the naive-hostile pass has NOT been run, `felt_axis` is `uncovered` → cap the verified state at the last clean state below `UX-RC` and run the pass. (Do NOT wait for a human — the AI performs this judgment itself.)
+     - If the naive-hostile taste verdict surfaces confusion/disorientation/revulsion, treat it as a PASS-blocking finding and lower the state accordingly.
+   - A recorded human taste review (`larp-recordings/<sha>-felt-attestation.md`) is an **optional stronger signal** that promotes `felt_axis` to `human-verified`. It is never required to reach `SHIP-RC`.
+5. If any required-at-claimed-state gate is ❌ (including an `uncovered` FELT axis for a consumer UX-RC+ claim, or missing Keystones for SHIP-RC+): lower the verified state to the highest state where all gates pass
 6. Run the banned-phrase self-check on the report's own language before publishing
 7. Apply SHA stamp to the report
-7b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md` to ensure three-axis compliance and human FELT attestation for consumer SHIP-RC+.
+7b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md` to ensure three-axis compliance and that the AI-covered FELT-GOOD axis is not left `uncovered` for consumer UX-RC+ claims.
 8. **Before claiming SHIP-RC or SHIP:** run `bash .speck/scripts/validation/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`. Block SHIP-RC+ if any `PROFILE_DRIFT.P1` finding.
 9. **UI stories touching PROFILE surfaces** (landing, marketing, package.json): run `regenerate-project-readme.sh --check` before UX-RC+ claim.
 10. Trigger `/project-state` regeneration

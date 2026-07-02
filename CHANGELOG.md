@@ -1,5 +1,21 @@
 # Speck Changelog
 
+## v7.20.1 — 2026-07-02 — Correction: FELT-GOOD is AI-Evaluated, Not a Mandatory Human Gate
+
+Corrects the core semantics of the FELT-GOOD axis shipped in v7.20.0. The previous release treated FELT-GOOD as human-owned and explicitly NOT AI-satisfiable, demanding a `larp-recordings/<sha>-felt-attestation.md` human sign-off before a consumer product could reach `SHIP-RC`. That contradicted the entire premise of the naive-hostile LARP: an AI can and should understand and apply first-impression taste judgment. This release makes the AI the primary evaluator of FELT-GOOD.
+
+### FELT-GOOD is AI-Evaluated (#73 correction)
+- **AI covers taste** — The AI now evaluates the FELT-GOOD axis directly by running the naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric) and recording a verdict. A clean pass yields `felt_axis: ai-verified`.
+- **Human review is optional** — A human taste review (`larp-recordings/<sha>-felt-attestation.md`) is now an *optional stronger signal* that promotes the axis to `felt_axis: human-verified`. It is never a prerequisite for shipping.
+- **New `felt_axis` value** — Added `ai-verified` to the `felt_axis` frontmatter enum (`[uncovered | ai-verified | human-verified]`) in the story and epic validation report templates.
+
+### Enforcement Now Checks Coverage, Not Human Sign-Off
+- **`validate-felt-axis.sh` rewritten** — For consumer archetypes at `UX-RC` or higher, the validator now fails when FELT-GOOD is left `uncovered` (naive-hostile pass never ran) instead of failing when a human attestation is absent. `ai-verified` is sufficient; `human-verified` also passes. Unqualified "verified/validated" claims with no named axis still fail.
+- **Tests updated** — `validate-felt-axis.test.sh` now asserts: consumer UX-RC + `ai-verified` passes; consumer UX-RC/SHIP-RC + `uncovered` fails; consumer SHIP-RC + `ai-verified` passes (no human demanded); `human-verified` passes; unqualified claim fails.
+
+### Docs & Skills Realigned
+- **AGENTS.md, evidence-contract, validate skills, speck-larp, persona template, premise-challenge** — Reframed so the AI owns the FELT-GOOD taste judgment via the naive-hostile LARP, with human review as an optional override. Removed "human-owned / NOT AI-satisfiable / uncovered (human required)" framing. The anti-laundering rule ("never launder a taste miss as uncatchable by automation") is retained and reinforced — the AI must run the naive lens.
+
 ## v7.20.0 — 2026-07-02 — Three-Axis Readiness Model, Premise-Challenge (Anti-Spec) Pass, Naive-Hostile LARP, and Hard Human FELT Gate
 
 Addresses Issue #73 by making the FELT-GOOD (naive first-impression taste) axis a structural, human-owned, non-substitutable part of Speck's readiness apparatus.

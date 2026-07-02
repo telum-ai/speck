@@ -2,7 +2,12 @@
 
 # FELT-GOOD Axis Validator
 # Validates validation-report.md and epic-validation-report.md files for Three-Axis compliance.
-# Enforces that consumer SHIP-RC+ claims require human-verified FELT-GOOD attestation.
+#
+# Philosophy: FELT-GOOD is an axis the AI evaluates DIRECTLY via the naive-hostile LARP.
+# It is NOT gated behind a mandatory human sign-off. This validator therefore enforces
+# that FELT-GOOD was actually COVERED (felt_axis is ai-verified or human-verified) for
+# consumer UX-RC+ claims — not that a human attested to it. A human taste review is an
+# optional stronger signal (felt_axis: human-verified), never a prerequisite.
 
 set -euo pipefail
 
@@ -56,6 +61,14 @@ log_success() {
   echo -e "${GREEN}✓${NC} $1"
 }
 
+# Helper: is the readiness state UX-RC or higher (consumer UI-facing states)?
+is_ux_rc_or_higher() {
+  case "$1" in
+    UX-RC|COMMERCIAL-RC|SHIP-RC|SHIP) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 # === VALIDATION RULES ===
 
 # 1. Assert Three-Axis block header exists
@@ -66,23 +79,23 @@ else
     "Add the Three-Axis Readiness section to your validation report."
 fi
 
-# 2. Assert felt_axis frontmatter exists
+# 2. Assert felt_axis frontmatter exists and is valid
 if echo "$content" | grep -q "^felt_axis:[[:space:]]*"; then
   felt_axis=$(echo "$content" | grep "^felt_axis:[[:space:]]*" | sed -E 's/felt_axis:[[:space:]]*(.*)/\1/' | tr -d '[]' | xargs || true)
   log_success "felt_axis frontmatter found: '$felt_axis'"
-  if [[ "$felt_axis" != "uncovered" && "$felt_axis" != "human-verified" ]]; then
+  if [[ "$felt_axis" != "uncovered" && "$felt_axis" != "ai-verified" && "$felt_axis" != "human-verified" ]]; then
     log_error "Invalid felt_axis value: '$felt_axis'" \
-      "felt_axis must be either 'uncovered' or 'human-verified'."
+      "felt_axis must be one of: 'uncovered', 'ai-verified', or 'human-verified'."
   fi
 else
   log_error "Missing 'felt_axis' frontmatter field" \
-    "Add 'felt_axis: [uncovered | human-verified]' to the YAML frontmatter at the top of the file."
+    "Add 'felt_axis: [uncovered | ai-verified | human-verified]' to the YAML frontmatter at the top of the file."
   felt_axis=""
 fi
 
 # 3. Detect Project Archetype
 TARGET_DIR=$(dirname "$file_path")
-project_archetype="consumer_product" # Default fallback
+project_archetype="consumer_product" # Default fallback (strictest)
 project_json=""
 dir="$TARGET_DIR"
 while [[ "$dir" != "/" && -n "$dir" ]]; do
@@ -103,15 +116,13 @@ if [[ -f "$project_json" ]]; then
   fi
 fi
 
-# 4. Check Claimed Readiness State
+# 4. Parse claimed readiness state
 claimed_state=""
 if echo "$content" | grep -q "^readiness_state_claimed:[[:space:]]*"; then
   claimed_state=$(echo "$content" | grep "^readiness_state_claimed:[[:space:]]*" | sed -E 's/readiness_state_claimed:[[:space:]]*(.*)/\1/' | tr -d '[]' | xargs || true)
-elif echo "$content" | grep -q "^readiness_state_claimed[[:space:]]*=[[:space:]]*"; then
-  claimed_state=$(echo "$content" | grep "^readiness_state_claimed[[:space:]]*=[[:space:]]*" | sed -E 's/readiness_state_claimed[[:space:]]*=[[:space:]]*/\1/' | xargs || true)
 fi
 
-# Fallback check in body if frontmatter parse failed or not a standard validation report
+# Fallback: parse the "Claiming:" line in the body
 if [[ -z "$claimed_state" ]]; then
   claimed_state_line=$(echo "$content" | grep -i "Claiming:" | head -n 1 || true)
   if [[ -n "$claimed_state_line" ]]; then
@@ -119,36 +130,21 @@ if [[ -z "$claimed_state" ]]; then
   fi
 fi
 
-# 5. Enforce consumer SHIP-RC+ FELT-GOOD human attestation
-if [[ "$project_archetype" == "consumer_product" ]]; then
-  if [[ "$claimed_state" == "SHIP-RC" || "$claimed_state" == "SHIP" ]]; then
-    if [[ "$felt_axis" != "human-verified" ]]; then
-      log_error "Consumer product claiming $claimed_state requires 'felt_axis: human-verified'" \
-        "You must perform a human taste review and set 'felt_axis: human-verified' in frontmatter."
-    fi
-    
-    # Check for attestation file citation or existence
-    has_attestation=false
-    if echo "$content" | grep -qE "larp-recordings/[a-zA-Z0-9_-]+-felt-attestation\.md"; then
-      has_attestation=true
-    fi
-    
-    # Also check if any felt-attestation.md file exists in larp-recordings directory
-    if [ -d "$TARGET_DIR/larp-recordings" ]; then
-      if ls "$TARGET_DIR/larp-recordings"/*felt-attestation.md >/dev/null 2>&1; then
-        has_attestation=true
-      fi
-    fi
-    
-    if [[ "$has_attestation" == "false" ]]; then
-      log_error "Consumer product claiming $claimed_state requires a human FELT attestation file" \
-        "Create a human taste attestation file at 'larp-recordings/<sha>-felt-attestation.md' and cite it in the report."
+# 5. Enforce that FELT-GOOD is COVERED (by the AI) for consumer UX-RC+ claims.
+#    The AI covers FELT-GOOD via the naive-hostile LARP — it is NOT deferred to a human.
+#    'uncovered' means the naive-hostile pass never ran, which is a blocker at UX-RC+.
+if [[ "$project_archetype" == "consumer_product" && -n "$claimed_state" ]]; then
+  if is_ux_rc_or_higher "$claimed_state"; then
+    if [[ "$felt_axis" == "uncovered" ]]; then
+      log_error "Consumer product claiming $claimed_state has an uncovered FELT-GOOD axis" \
+        "The AI must run the naive-hostile LARP and record a taste verdict (felt_axis: ai-verified). FELT-GOOD is AI-evaluated — do not leave it uncovered or defer it to a human."
+    elif [[ "$felt_axis" == "ai-verified" || "$felt_axis" == "human-verified" ]]; then
+      log_success "FELT-GOOD axis is covered ($felt_axis) for $claimed_state"
     fi
   fi
 fi
 
-# 6. Flag unqualified "verified" or "validated" in the readiness claim with no axis
-# Extract the Readiness State Claim section
+# 6. Flag unqualified "verified" or "validated" in the readiness claim with no axis named.
 claim_section=$(echo "$content" | awk '/^## 🎯 Readiness State Claim/{flag=1;next}/^## /{flag=0}flag' || true)
 if [[ -n "$claim_section" ]]; then
   if echo "$claim_section" | grep -qiE "verified|validated"; then

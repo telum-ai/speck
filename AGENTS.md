@@ -313,7 +313,7 @@ These apply at every play level, in every command, on every project:
 | **Banned-phrase detector** | In every agent self-summary | Phrases like "ready for launch", "outside autonomous reach", "premium polish complete", "should work in production", "tests pass therefore done", "impossible to catch", "uncatchable by automation", or unqualified "validated/verified" with no axis trigger re-audit or enumeration |
 | **Banned-language lint** | On every commit + at `/audit` | Run `.speck/scripts/banned-language-lint.sh` against `product-contract.md` banned terms |
 | **Evidence-or-it-didn't-happen** | At every validation gate | "Tests pass" is one signal, not proof. Require runtime evidence linked to claim. |
-| **Three-axis honesty** | At every validation gate | Never substitute CORRECT or ON-CONTRACT evidence for FELT-GOOD taste judgment. Every claim decomposes into the three axes. |
+| **Three-axis honesty** | At every validation gate | Never substitute CORRECT or ON-CONTRACT evidence for FELT-GOOD taste judgment. The AI itself covers FELT-GOOD via the naive-hostile LARP — it does not defer taste to a human. Every claim decomposes into the three axes. |
 | **Premise-Challenge** | Before UX-RC+ on high-impact UI surfaces | Run `/speck-premise-challenge` to question design decisions on onboarding, empty states, paywalls, error/degraded states, and celebration surfaces. |
 | **Continuous feedback capture** | Whenever a gate is worked around, a skill is ambiguous, or a Speck behavior is patched | Run `/speck-feedback` to document the gap, check for duplicates on GitHub, and draft comments/issues. |
 | **Promise conservation** | `/epic-plan` → `/epic-analyze` → `/epic-validate` | Every enumerable upstream promise (product-contract §, each FR/NFR, every wireframe screen/element/state, every experience-chain seam) gets a `PRM-NNN` row in `traceability-matrix.md` and resolves to a story+AC, a DEC descope, or a visibly-open row. Enforced by `validate-traceability-matrix.sh`. **"Wireframes are inspiration" is banned** — a drawn element or stated seam is a promise. |
@@ -325,9 +325,9 @@ A more hands-on human intervenes at decision locks. A more hands-off human lets 
 Every readiness claim decomposes into three distinct, non-substitutable axes:
 1. **CORRECT** — Does the code do what it claims? (proven by unit/integration tests, types, and `/audit`).
 2. **ON-CONTRACT** — Does the behavior conform to the specifications and magic moments? (proven by standard LARP and traceability matrix).
-3. **FELT-GOOD** — Does a naive, first-time human actually find the experience good? (requires human taste review or context-stripped naive-hostile LARP).
+3. **FELT-GOOD** — Would a naive, first-time user actually find the experience good? **The AI evaluates this axis directly** by running the context-stripped naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric) and recording a verdict. A human taste review is an *optional stronger override* — never a prerequisite.
 
-**CRITICAL**: You must never use unqualified "verified" or "validated" claims without naming the axis. A story or epic cannot claim FELT-GOOD coverage from correctness/conformance evidence alone; for consumer archetypes, the readiness map MUST render `FELT: uncovered (human required)` until a human taste review is recorded.
+**CRITICAL**: You must never use unqualified "verified" or "validated" claims without naming the axis. FELT-GOOD is a real, AI-evaluable axis: an agent is expected to understand and apply first-impression taste judgment, not defer it. A story or epic cannot claim FELT-GOOD coverage from correctness/conformance evidence alone — it must come from an actual naive-hostile taste pass. For consumer archetypes, if that pass has not been run the readiness map renders `FELT: uncovered`; once the AI runs it, the map renders `FELT: ai-verified` (or `FELT: human-verified` when a human additionally signs off). Claiming a taste miss is "uncatchable by automation" is banned — run the naive lens.
 
 | State | Meaning | Gate criteria |
 |-------|---------|---------------|
@@ -441,7 +441,8 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Accept a delegated/parallel sub-agent's self-reported `{readiness_state, pass}` — verify ≥2 real skill invocations + template-compliant reports first (Verify-Skills Gate)
 - Leave validated specification docs, experience chains, wireframes, or product contracts stale after a deliberate post-validation change or strategic pivot — run `/project-adjust`, `/epic-adjust`, or `/story-adjust` to re-spec the delta, run the change-cascade computer, and conserve promises
 - Conflate CORRECT or ON-CONTRACT with FELT-GOOD taste judgment
-- Launder a taste miss or design premise error as "uncatchable by automation"
+- Launder a taste miss or design premise error as "uncatchable by automation" — the AI must run the naive-hostile lens and apply taste judgment
+- Defer the FELT-GOOD axis to a mandatory human sign-off — the AI evaluates taste itself via the naive-hostile LARP; human review is an optional override, not a gate
 
 **ALWAYS**:
 - Read `project-state.md` first
@@ -458,7 +459,7 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Treat AI-generated user-facing text as governed product copy
 - Enumerate every upstream promise into `traceability-matrix.md` at `/epic-plan` and re-walk it at `/epic-validate` (conservation law)
 - Add commit learning tags (`PATTERN:`, `GOTCHA:`, `PERF:`, `ARCH:`, `RULE:`, `DEBT:`) when you discover something
-- Render FELT as uncovered (`FELT: uncovered (human required)`) in validation reports for consumer archetypes until a human taste review lands
+- Cover the FELT-GOOD axis with the AI's own naive-hostile LARP taste judgment for consumer archetypes (render `FELT: ai-verified` with the findings); a human taste review is an optional stronger signal, never a prerequisite
 
 ## 📊 Commit Learning Tags
 

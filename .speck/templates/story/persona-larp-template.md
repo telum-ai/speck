@@ -24,10 +24,11 @@ This is an executable script — the /larp skill runs it. Be specific about:
 ---
 
 ### 🎭 Canonical Persona: Naive-Hostile First-Timer (`naive-hostile`)
-This is a standard, context-stripped persona required for all consumer-facing products.
+This is a standard, context-stripped persona required for all consumer-facing products. **Running it is how the AI covers the FELT-GOOD readiness axis** — the agent applies first-impression taste judgment directly rather than deferring it to a human.
 - **Context-stripped setup**: The user just installed this app. They know nothing about its philosophy, founders, or technical architecture. They are impatient, easily confused, and highly sensitive to friction.
 - **Goal**: Complete the onboarding flow and reach the first value-producing screen.
 - **Hostile mindset**: They are looking for reasons to close the app, uninstall, or feel annoyed. Any jargon, slow loading, or unnecessary input fields will trigger immediate revulsion.
+- **Outcome (FELT-GOOD verdict)**: The agent records a first-impression taste verdict from this pass. A clean pass yields `felt_axis: ai-verified` (cite the findings file); any confusion/disorientation/revulsion is a PASS-blocking finding. A human taste review is an optional stronger signal (`felt_axis: human-verified`), never a prerequisite.
 
 ---
 
