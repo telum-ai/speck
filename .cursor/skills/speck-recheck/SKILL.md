@@ -31,6 +31,7 @@ The fix is structural: every engagement above a threshold gap runs `/recheck` BE
 - A new agent picks up the project (no record of prior session continuity)
 - User explicitly requests audit / "make ship-ready" / "is this still working"
 - The "Next action" in `project-state.md` is unknown or empty
+- **v8 re-prove**: `.speck/.v8-reprove-needed` exists OR `staleness-check.sh` reports any `V8_STALE` artifact (stamped `< speck 8`). The project's green is verification-shaped (`[pre-v8-proof]`); this raises `V8_REPROVE.P1` and routes to `/speck-reprove` **before** any other drift work.
 
 `/recheck` is **optional but recommended** when:
 - Major dependency updates (framework, language, lib) since last validation
@@ -99,7 +100,7 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2
+- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | V8_REPROVE.P1
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix
@@ -112,6 +113,10 @@ Trigger `/project-state` to regenerate with drift findings in:
 - Next action: "Resolve drift before new feature work"
 
 ### 6. Decision gate
+
+If `V8_REPROVE.P1` (marker `.speck/.v8-reprove-needed` present, or any `V8_STALE` artifact stamped `< speck 8`):
+- **BLOCK new feature work**
+- Route to `/speck-reprove` **before** resolving other drift — it builds the suspect-green worklist (mapped to P1-P4), caps effective shippable state at `INTEGRATION-GREEN`, reverts consumer FELT-GOOD to `uncovered`, and preserves each historical claim stamped `[pre-v8-proof]`.
 
 If P0 drift found:
 - **BLOCK new feature work**
@@ -148,6 +153,7 @@ Report summary fields per claude skill.
 - ALWAYS re-stamp truth artifacts on green (with fresh `verified` date)
 - ALWAYS update `project-state.md` regardless of verdict (including the new "Sections Awaiting User Review" and "Outstanding REPLACE_BEFORE_SHIP markers" appendices)
 - BLOCK new feature work on P0 findings
+- ALWAYS route to `/speck-reprove` (and block feature work) when `.speck/.v8-reprove-needed` exists or any `V8_STALE` (pre-v8 stamp) artifact is found — v7-era green is not trusted under v8 until re-proven
 
 ## Integration Points
 

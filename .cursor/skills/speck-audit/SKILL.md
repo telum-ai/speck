@@ -27,6 +27,8 @@ The auditor:
 
 This step is **mandatory** between implement and validate. Replaces the v6 `/story-analyze` skill.
 
+**P4 — the auditor is the structural adversary**: a separate role judged by *defects found*, not by declaring green. Every probe here prompts the search; none of them defines "done." **P2** — every claim under audit must resolve to a mechanism: a fired endpoint, a written row, a real forbidden op attempted as a real principal — not the implementer's word, not a green-looking suite.
+
 ## When to Run
 
 | Trigger | What to do |
@@ -93,6 +95,10 @@ For each external dep, verify implementation handles its failure mode per spec's
 
 For each DB write path, list related tables per spec's `related_tables` section, verify cascade/anonymize behavior.
 
+### 6b. Exhaustive reader/writer sweep (security/privacy epics, #76.4)
+
+For any epic whose gate protects a sensitive/regulated resource (privacy, leakage, tenant isolation): **never trust a documented "single injection point" or a seam-local comment.** Enumerate EVERY reader and writer of the sensitive model across the WHOLE codebase (not just the documented seam) before trusting the gate design. A documented seam reflects one author's local view; real leak surfaces recur across reader families *outside* the primary module (e.g. a greeting/memory service reading the resource with only a GDPR guard). Run this as a fan-out over all references — a seam-local gate over an incomplete reader inventory ships a privacy hole. (`/epic-plan` should do this pre-impl; `/audit` re-sweeps post-impl — the re-sweep is what actually catches residual risk.)
+
 ### 7. Quality patterns scan
 
 N+1 queries, unpaged lists, type coverage, env-var validation, observability reach.
@@ -101,9 +107,11 @@ N+1 queries, unpaged lists, type coverage, env-var validation, observability rea
 
 Search commit messages + handoff notes for banned phrases. If found, require enumeration.
 
-### 9. Test pollution check
+### 9. Test pollution check (story-level AND epic-level, #77.1)
 
-Run test suite twice (default + random order). Results differ → P0 finding.
+Run the test suite twice — default order AND random order (e.g. Vitest `--sequence.shuffle`, pytest `-p randomly`). Results differ → **P0 test-isolation finding**. **This is mandatory at the STORY audit, not only the epic audit** — a single leaky harness silently poisons every downstream story that shares it, and order-dependence stays invisible (every story green in default order) until it compounds at epic close.
+
+Common root cause to grep for: a `beforeEach` using `mockClear()` (clears call history but NOT a persistent `mockResolvedValue` / `mockResolvedValueOnce` queue) instead of `mockReset()` — one test's mock override leaks into a sibling under shuffle and flips a branch assertion. Optional stronger signal: the mutation sanity check in step 9d.
 
 ### 9b. Async teardown / late callback mock validation
 
@@ -122,6 +130,15 @@ For any user-facing or logged error raised in a block (like a `try-catch`) that 
 2. **Examine boundary separation**: Check that each distinct boundary has explicit, separate error classification (or typed/property checks on the caught error object) to accurately identify and log *which* specific connection or provider failed.
 3. **Assert helpful feedback**: The user-facing error message or detailed debug logs must clearly distinguish network-level/config failures (such as a backend host returning a 502/HTML gateway page) from application-level validation failures (such as an expired token).
 4. Any block spanning multiple boundaries with lazy, unified `catch-all` error messages or logs → **P1 finding** ("lazy error attribution — hides multi-boundary config/network failures").
+
+### 9d. Negative-test authenticity — backend Non-Surrogate Rule (P2, #77.2)
+
+The backend sibling of the UI Non-Surrogate Rule (step 10). For any test asserting an authz / RLS / tenant-isolation / permission guard:
+
+1. **Real principal**: the test MUST run as a real, least-privileged authenticated principal (mint a real token/JWT carrying the relevant claim) and **actually attempt the forbidden operation** — never as a bypass-capable role (`service_role` / superuser / a connection that structurally bypasses row-level-security `WITH CHECK`), or the forbidden op "succeeds" and proves nothing.
+2. **Not silently skipped**: the guard test must not sit behind a collect-time `skipIf` that removes it from the run.
+3. Flag as **P1 "surrogate-proof / dead-guard test"** any negative test asserting a guard while running as a principal that structurally cannot reach it, or gated behind a silent skip — it stays green even if you delete the guard clause it claims to defend.
+4. **Optional mutation sanity check**: remove the guard clause; if no test goes red, the guard is untested.
 
 ### 10. Reachability + scaffolding check (UI stories)
 
@@ -156,7 +173,7 @@ If `ui-spec.md` exists and contains a **Form Validation Matrix**:
 To prevent test-suite inflation and "false green" theater:
 
 1. **Grep for Tautologies**: Scan the tests in the story scope for meaningless sentinels like unconditional `expect(true).toBe(true)` environment checks used to inflate test counts. Flag these as **P2 informational-only passes**.
-2. **Scan for Silent Skips**: Check for collect-time skip conditions (such as `describe.skipIf` evaluated before runtime setups) that silently skip suites without displaying execution-time skip-with-reason logs in test outputs.
+2. **Scan for Silent Skips**: Check for collect-time skip conditions (such as `describe.skipIf` evaluated before runtime setups) that silently skip suites without displaying execution-time skip-with-reason logs in test outputs. **A skipped standing/guarded regression suite is not a gate (#76.2)**: a leakage-probe or isolation suite `skipif`'d because CI lacks its throwaway DB reads as green with zero probes executed — worse than a failing suite (invisibly green). Verify standing/guarded suites report as RUN, not skipped, in the target CI.
 3. Recommend using runtime skips (`it.skip(reason)`) or context-based skips (`beforeEach((ctx) => ctx.skip(reason))`) over static collect-time skips, so skips are clearly visible in the CI log.
 
 ### 10e. Decision-Lock Application Check
@@ -203,8 +220,10 @@ If any adversarial probe is skipped or false-green theater is detected, you **MU
 ## Behavior Rules
 
 - NEVER skip the adversarial probe suite
-- NEVER claim CLEAN without random-order test rerun
-- NEVER take the implementer's word — verify with evidence
+- NEVER claim CLEAN without the random-order test rerun — at the STORY audit, not only the epic audit (#77.1)
+- NEVER accept a guard/authz/RLS test that runs as a bypass-capable role or is silently skipped (P2, #77.2)
+- NEVER treat a skipped standing/guarded suite as covered — verify it reported as RUN (#76.2)
+- NEVER take the implementer's word — verify with evidence (a mechanism, not a self-report)
 - NEVER end an orchestrated turn at the audit report when CLEAN — chain to validate
 - ALWAYS apply SHA stamp
 - ALWAYS write report even if CLEAN

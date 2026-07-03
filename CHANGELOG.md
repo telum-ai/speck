@@ -1,5 +1,37 @@
 # Speck Changelog
 
+## v8.0.0 — 2026-07-03 — Evaluation Over Verification
+
+The v7 patch line fought agent green-hacking by writing down ever more explicit checks. That is self-defeating: an agent optimizes to satisfy the *letter* of any enumerated gate (Goodhart), and the enumeration itself becomes the context-rot that crowds out common sense. v8 changes **what the agent optimizes for** — from "produce green evidence" to "find what is wrong" — and **shrinks the corpus** so common sense fits back in context. Design: `docs/v8/v8-north-star.md`.
+
+### The four principles (the spine — govern every gate)
+- **P1 — Evaluation over verification.** Every gate's default flips from "confirm the claim" to "find what is wrong." A clean pass is the residue of a genuine attempt to break it.
+- **P2 — No claim without a mechanism.** Every claim points to the observed mechanism that makes it true (fired endpoint, written row, real forbidden-op attempted as a real least-privileged principal, logged real attempt, value-defensibility artifact). Claimed-without-mechanism = automatic fail.
+- **P3 — "Can't reach it" is a finding, not an excuse.** Unreachable-by-automation is the default hypothesis for unreachable-by-some-user; a named blocker requires a logged, reproduced real attempt.
+- **P4 — The adversary is structural, not a checklist.** Truth-seeking is owned by a separately-incentivized evaluator measured by defects found. Probe lists prompt the adversary's imagination; they don't define "done."
+
+### The five issues collapse to the principles (holistic, not surgical)
+- **#78 (LARP verifies, doesn't evaluate) → P1.** `speck-larp` + `persona-larp-template` split into **DOES-IT-WORK** (functional) vs **IS-IT-GOOD** (experiential), with forced per-screen pixel-grounded adversarial critique, a Common-Sense Defect Sweep, and "un-adjudicated screenshot = surrogate proof."
+- **#74 (price vs free substitute) → P2.** New value-defensibility / WTP-vs-$0-substitute gate across `product-contract-template` §2a, `evidence-contract` COMMERCIAL-RC, `speck-premise-challenge`, and `speck-skeptical-review`.
+- **#75 (AI action-claims / laundered "unreachable" / sweep home) → P2 + P3.** Action-claim audit in LARP; "LARP must reach everything" reach doctrine + diagnostic playbook.
+- **#76.1 (named-blocker cap by assertion) → P3.** `INTEGRATION-GREEN` caps now require a logged, reproduced failure of the actual LARP recipe (fixed in `story-validate`, `epic-validate`, `speck-larp`).
+- **#76.2 / #76.4 / #77.1 / #77.2 → P2 / P1 / audit.** `speck-audit` retooled for mechanism-grounded negative-test authenticity (real least-privileged principal attempts the forbidden op), skipped≠run, story-level random-order rerun, and an exhaustive reader/writer sweep for privacy epics.
+- **#76.3 →** local fix: `validate-traceability-matrix.sh` now extracts the first canonical readiness-state token via an enum helper (+ test).
+
+### Consolidation (the bloat cut — ~a third off the always-on surface)
+- **Retired to alias-shims**: `epic-outline`, `story-outline` (→ `/speck-skeptical-review` + `/speck-decision-log`), `story-analyze` (→ consistency at the tail of `/story-tasks` + adversarial `/audit`). Deleted the two orphan templates `outline-template.md` + `analysis-report-template.md`. Fixed `story-implement`'s stale hard requirement on `analysis-report.md` (now optional) and reoriented the `story` orchestrator, `story-plan`, `story-specify`, `story-clarify`, and `breakdown-template` flows.
+- **Scan unified**: `project/epic/story-scan` are thin shims over `speck-scan --level`.
+- **`--level` dispatchers**: new `validate` / `retrospective` / `adjust` / `analyze` unified entry points route to the preserved per-level specialists (dispatcher pattern — no lossy merge; direct `project/epic/story-*` names still work).
+- **Visual-testing**: the 6 host variants are demoted to `disable-model-invocation: true` lazy sub-rules of the one `visual-testing` coordinator (host table loads the right one on demand).
+- **Integration patterns**: the 20 integration/domain skills (~6.2k lines, incl. the `model-selection` meta-pattern) are demoted to `disable-model-invocation: true` and indexed at the existing `.speck/patterns/library/README.md` (loaded on demand — no duplicate index). Deleted the content-free `ai-api-integration` stub.
+
+### Migration — mechanical instantly, truth deliberately (cap-and-worklist)
+- **Layer 1 (mechanical)**: `migrate.js` detects the v7→v8 (and v6→v8) crossing and writes a repo-level `.speck/.v8-reprove-needed` marker (analog of v6→v7's `.migration-needs-catchup`); `upgrade.js` prints the re-prove guidance. `.speck/VERSION` + both `package.json` bumped to `8.0.0`. Shims/lazy-patterns/reconcile ride the existing `smartSync` pipeline. New `migrate.test.js` (8 tests).
+- **Layer 2 (semantic)**: **version-as-staleness** — `staleness-check.sh` flags any artifact stamped `< speck 8` as `V8_STALE`; `/recheck` raises `V8_REPROVE.P1` and routes to the new **`/speck-reprove`** skill. Re-prove triages suspect green against P1–P4, **caps effective shippable state at `INTEGRATION-GREEN`**, reverts consumer **FELT-GOOD to `uncovered`**, preserves each historical claim stamped `[pre-v8-proof]`, and emits `project-v8-reprove-report.md` (new template + canonical routing). Nothing is reset to zero; nothing suspect keeps claiming ship-readiness.
+
+### Version
+- `.speck/VERSION`, root `package.json`, and `packages/cli/package.json` → `8.0.0`. `AGENTS.md` reframed around P1–P4 with the first-action v8 re-prove check.
+
 ## v7.20.1 — 2026-07-02 — Correction: FELT-GOOD is AI-Evaluated, Not a Mandatory Human Gate
 
 Corrects the core semantics of the FELT-GOOD axis shipped in v7.20.0. The previous release treated FELT-GOOD as human-owned and explicitly NOT AI-satisfiable, demanding a `larp-recordings/<sha>-felt-attestation.md` human sign-off before a consumer product could reach `SHIP-RC`. That contradicted the entire premise of the naive-hostile LARP: an AI can and should understand and apply first-impression taste judgment. This release makes the AI the primary evaluator of FELT-GOOD.

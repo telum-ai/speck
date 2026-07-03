@@ -1,5 +1,6 @@
 ---
 name: sentry-integration
+disable-model-invocation: true
 description: Load when integrating Sentry for error tracking and performance monitoring. Applies when implementing source maps, performance tracing, issue grouping, or release tracking in React/Next.js applications.
 ---
 

@@ -16,7 +16,7 @@ $ARGUMENTS
 
 **ANTI-PATTERN (do NOT do this)**:
 - ❌ Writing `spec.md`, `plan.md`, or `tasks.md` inline without loading `/story-specify`, `/story-plan`, or `/story-tasks`
-- ❌ Skipping `/story-analyze`, `/audit`, or `/story-validate` because the orchestrator "already knows" the outcome
+- ❌ Skipping `/audit` or `/story-validate` because the orchestrator "already knows" the outcome
 - ❌ Jumping to code changes without running `/story-implement` (including its prerequisite gates)
 - ❌ Treating the transition map as a checklist of filenames instead of a checklist of **skills to invoke**
 
@@ -33,12 +33,11 @@ A story's lifecycle in Speck is defined by its specs, tasks, and validation stat
 1. **Draft (Placeholder)**: Listed in `epic-breakdown.md` but has no story folder or only carries an empty draft spec.
 2. **Specified**: Completed `/story-specify` and `/story-clarify`. `spec.md` is complete with user stories, Gherkin scenarios, and is marked as `Specified`.
 3. **Planned**: Completed `/story-plan` and generated `plan.md`, `data-model.md` (if database), and API contracts (if applicable).
-4. **Tasked**: Completed `/story-tasks` and generated `tasks.md` with structured phases and sequential/parallel tasks.
-5. **Audited (Pre-impl)**: Completed `/story-analyze` (or `/audit --pre-impl`) with zero critical issues.
-6. **Implemented**: Completed `/story-implement` and marked all tasks as `[X]` in `tasks.md` with status set to `completed` in frontmatter.
-7. **Audited (Post-impl)**: Completed `/audit` post-implementation and generated `audit-report.md`.
-8. **Validated**: Completed `/story-validate` and `/larp` (if UI), and generated a stamped `validation-report.md` claiming a verified readiness state.
-9. **Done**: Completed `/story-retrospective` and created `story-retro.md` with learning-tagged commits.
+4. **Tasked**: Completed `/story-tasks` and generated `tasks.md` with structured phases and sequential/parallel tasks, **including the spec↔plan↔tasks consistency cross-check at its tail** (the pre-impl job of the retired `/story-analyze`).
+5. **Implemented**: Completed `/story-implement` and marked all tasks as `[X]` in `tasks.md` with status set to `completed` in frontmatter.
+6. **Audited (Post-impl)**: Completed `/audit` post-implementation and generated `audit-report.md`.
+7. **Validated**: Completed `/story-validate` and `/larp` (if UI), and generated a stamped `validation-report.md` claiming a verified readiness state.
+8. **Done**: Completed `/story-retrospective` and created `story-retro.md` with learning-tagged commits.
 
 ---
 
@@ -54,8 +53,7 @@ Read `spec.md` and evaluate its state:
 - If `spec.md` exists and contains `**Current State**: Draft` → State = **Draft (Needs Specify)**.
 - If `spec.md` contains `**Current State**: Specified` but no `plan.md` exists → State = **Specified (Needs Plan)**.
 - If `plan.md` exists but no `tasks.md` exists → State = **Planned (Needs Tasks)**.
-- If `tasks.md` exists but has not been run or `/story-analyze` is missing → State = **Tasked (Needs Pre-impl Audit)**.
-- If `tasks.md` exists and is marked `status: in_progress` or `status: pending` → State = **Pre-impl Audited (Needs Implement)**.
+- If `tasks.md` exists and is marked `status: in_progress` or `status: pending` (not `completed`) → State = **Tasked (Needs Implement)**.
 - If `tasks.md` has `status: completed` but no `audit-report.md` exists → State = **Implemented (Needs Post-impl Audit)**.
 - If `audit-report.md` exists but `validation-report.md` is missing → State = **Audited (Needs Validate)**.
 - If `validation-report.md` exists but `story-retro.md` is missing → State = **Validated (Needs Retrospective)**.
@@ -84,13 +82,11 @@ State: Specified     →  Run: /story-plan
                                Transition to state: Planned
 
 State: Planned       →  Run: /story-tasks    →  If UI: /story-ui-spec
+                             ↳ /story-tasks ends with the spec↔plan↔tasks consistency cross-check.
+                             ↳ STOP if any CRITICAL conflict surfaces there.
                                Transition to state: Tasked
 
-State: Tasked        →  Run: /story-analyze
-                             ↳ STOP if any CRITICAL or P0 issues found in plan/tasks.
-                               Transition to state: Audited (Pre-impl)
-
-State: Audited       →  Run: /story-implement (writes code)
+State: Tasked        →  Run: /story-implement (writes code)
                              ↳ STOP if test suite or compilation fails.
                                Transition to state: Implemented
 
@@ -110,7 +106,7 @@ State: Validated     →  Run: /story-retrospective
 
 Do NOT transition automatically and stop immediately if any of these occur:
 1. **Unresolved Clarifications**: Any `[NEEDS CLARIFICATION]` markers in `spec.md` or plans.
-2. **Critical/P0 Findings**: Any P0 findings returned by `/story-analyze`, `/audit`, or failed assertions in `/story-validate`.
+2. **Critical/P0 Findings**: Any P0 findings returned by the `/story-tasks` consistency cross-check, `/audit`, or failed assertions in `/story-validate`.
 3. **Compilation, Test, or Gate Failures**: Any failure in compiling, running tests, or executing the project's full pre-commit gate (lint/eslint, typecheck, banned-language).
 4. **Comprehension Block**: Fails first-time user comprehension, capping readiness state.
 

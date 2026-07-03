@@ -1,5 +1,6 @@
 ---
 name: visual-testing-mobile-react-native
+disable-model-invocation: true
 description: Load when running visual validation for React Native/Expo mobile applications. Provides Maestro flows, Detox patterns, and ADB/simctl commands for device screenshots.
 ---
 

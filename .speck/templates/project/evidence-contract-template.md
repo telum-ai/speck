@@ -1,6 +1,6 @@
 ---
-speck_version: 7.0
-template_version: "7.11.0"
+speck_version: 8.0
+template_version: "8.0.0"
 artifact_type: evidence-contract
 play_levels: [build, platform]
 ---
@@ -34,6 +34,19 @@ PLACEHOLDER CONVENTION:
 **Play Level**: REPLACE_BEFORE_SHIP: build | platform
 **Speck Version**: REPLACE_BEFORE_SHIP: Speck version
 **Last Updated**: REPLACE_BEFORE_SHIP: YYYY-MM-DD
+
+---
+
+## 0. How this contract is read — the Four Principles
+
+This contract is an instance of Speck v8's four principles, not a checklist to satisfy the letter of:
+
+- **P1 — Evaluation over verification.** Every gate below asks "what is wrong here?" first. An un-adjudicated capture (a stored screenshot no one judged) is surrogate proof, never a pass. LARP is two non-collapsible jobs — DOES-IT-WORK and IS-IT-GOOD.
+- **P2 — No claim without a mechanism.** Every proof points to the observed mechanism that makes it true (a fired endpoint, a written row, a real forbidden op attempted as a real principal, a logged real attempt, a price-vs-free-substitute artifact). No mechanism → automatic fail.
+- **P3 — "Can't reach it" is a finding.** An unreachable control/flow/guard is a defect hypothesis, not a license to skip or cap. Caps require a logged, reproduced real attempt.
+- **P4 — The adversary is structural.** The evaluator is separately incentivized (independent auditor / N-skeptic), judged by defects found. The probe suite (§11) prompts the adversary's imagination; it does not define "done."
+
+Full rationale: `docs/v8/v8-north-star.md`.
 
 ---
 
@@ -104,9 +117,12 @@ PLACEHOLDER CONVENTION:
 
 ### Universal Test Hygiene & Form-UX Anti-Proof (All Platforms)
 - ❌ Tautological assertions: using empty/unconditional `expect(true).toBe(true)` checks to inflate passing test counts.
-- ❌ Silent skips: using collect-time skips (like `describe.skipIf` evaluated before runtime setups) that silently hide unrun tests. Skips must be runtime skip-with-reason logs.
+- ❌ Silent skips: collect-time skips (e.g. `describe.skipIf` evaluated before runtime setup) that hide unrun tests. Skips must be runtime skip-with-reason logs. **A skipped standing/guarded regression suite is not a gate** — verify guarded suites report as RUN (not skipped) in the target CI. A conditionally-skipped suite is worse than a failing one: invisibly green (#76.2).
 - ❌ API-bypassed forms: using direct API/programmatic client calls to audit or validate user stories that primarily focus on interactive forms/inputs. If a human touches the UI, the audit/LARP must drive it through the real UI.
 - ❌ Static mocks for async close: using synchronous/immediate mocks that do not model async callback latency or late-firing close events. Mocks must accurately simulate teardown delays.
+- ❌ **Un-adjudicated capture (P1)**: a screenshot/recording stored as evidence of *quality* with no substantive per-screen critique. Twenty un-judged screenshots are surrogate proof of felt quality, not proof (#78).
+- ❌ **Claim without mechanism (P2)**: any product/AI-surface claim of an action or completed state (built, generated, scheduled, "done") with no observed mechanism behind it (endpoint hit, row written, state change). A first-person action claim on a no-tools LLM surface is an automatic FELT-GOOD fail + P0 (#75-G1).
+- ❌ **Bypass-role / dead-guard tests (P2)**: a negative test asserting an authz/RLS/tenant-isolation guard while running as a bypass-capable role (e.g. `service_role`/superuser) or behind a silent collect-time skip — it stays green even if the guard clause is deleted. Guard tests MUST run as a real least-privileged principal and actually attempt the forbidden op (#77.2).
 
 ### Universal Evidence-Integrity Anti-Proof — Reward Hacking (All Platforms)
 *A green check is proof ONLY if the agent under test could not have manufactured it. The implementer/validator MUST be isolated from the evaluator. Any green gate produced through the channels below is anti-proof and caps the claim at NO-SHIP until re-run under isolation. (Industry audits found EVERY major coding benchmark could be driven to near-100% without solving a single task — Berkeley RDI, 2026.)*
@@ -122,6 +138,8 @@ PLACEHOLDER CONVENTION:
 
 * **WHEN: consumer_product / b2b_saas / internal_tool**: Persona-based LARP flows recorded as evidence at each readiness state.
 * **WHEN: infra_service / backend_api**: Integration / Stress-test scenarios under concurrent simulated load.
+
+> **P1 — the two-job LARP**: every UI LARP is two non-collapsible jobs — **DOES-IT-WORK** (functional: the flow completes, gates enforced) and **IS-IT-GOOD** (experiential: per-screen, pixel-grounded adversarial critique of how it looks and feels). IS-IT-GOOD has its own pass/fail and can block ship independently of functional green. A captured screen with no substantive critique is an incomplete LARP (surrogate proof), not a pass. See `/larp`.
 
 ### Option A: Human Persona-Based LARP (for UI/Human-facing products)
 
@@ -313,6 +331,7 @@ Every readiness claim decomposes into three distinct, non-substitutable axes:
 ### COMMERCIAL-RC *(paid products only)*
 
 * **WHEN: consumer_product / b2b_saas / internal_tool (or paid APIs)**:
+  - [ ] **Value defensibility (P2, #74)**: `product-contract.md` §2a substitute table is filled with a defensible-wedge verdict a skeptical buyer *who already has free AI* would accept, AND a naive-hostile "skeptical buyer" LARP pass confirms the product earns its price over the $0 substitute (not "convenience" alone). A price with no defensibility artifact is an unbacked claim — cap at UX-RC.
   - [ ] All UX-RC / API-RC criteria
   - [ ] Real sandbox purchase + restore + manage + entitlement state in DB (or metered API billing verified)
   - [ ] Real fallback states (network down, payment fail, restore fail) tested
@@ -447,7 +466,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 ## 11. Adversarial Probe Suite
 
-*Standard adversarial checks for SHIP-RC. The `/audit` skill runs these automatically.*
+*P4: this list **prompts the adversary's imagination — it is not the definition of "done."** A green row counts only if a genuine attempt to break it was made and logged. Do not grow this list to close a gap; install the gap as a principle (P1–P4) instead. The `/audit` skill runs these.*
 
 | Probe | Expected behavior |
 |-------|-------------------|

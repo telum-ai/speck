@@ -1,5 +1,6 @@
 ---
 name: posthog-integration
+disable-model-invocation: true
 description: Load when integrating PostHog for product analytics and feature flags. Applies when implementing event tracking, A/B testing, session replay, or funnel analysis.
 ---
 

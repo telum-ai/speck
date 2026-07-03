@@ -64,6 +64,24 @@ BREAKDOWN_EXISTS=false
 # Trim leading/trailing whitespace from a string.
 trim() { local s="$1"; s="${s#"${s%%[![:space:]]*}"}"; s="${s%"${s##*[![:space:]]}"}"; printf '%s' "$s"; }
 
+# Extract the FIRST canonical readiness-state token from a "key: value" line via the
+# state enum — never the whole line. A value like "UX-RC (agent-verified)" or
+# "INTEGRATION-GREEN — capped, awaiting keystone" must resolve to the bare token
+# ("ux-rc" / "integration-green"), not a mangled "ux-rc(agent-verified)". (#76.3)
+extract_readiness_state() {
+  local raw first lc
+  raw="${1#*:}"                                  # value after the first ':'
+  raw="$(printf '%s' "$raw" | tr -d "\`*\"'")"   # strip md emphasis / code ticks / quotes
+  first="$(printf '%s' "$raw" | awk '{print $1}')"  # first whitespace-delimited token
+  first="${first%%(*}"; first="${first%%,*}"     # drop glued "(..." / ",..." suffixes
+  first="$(trim "$first")"
+  lc="$(printf '%s' "$first" | tr '[:upper:]' '[:lower:]')"
+  case "$lc" in
+    no-ship|impl-green|integration-green|ux-rc|api-rc|operational-rc|commercial-rc|ship-rc|ship) printf '%s' "$lc" ;;
+    *) printf '' ;;
+  esac
+}
+
 # Treat —, -, em-dash, empty, or a [bracket placeholder] as "no value".
 is_empty_cell() {
   local v; v="$(trim "$1")"
@@ -153,16 +171,17 @@ while IFS= read -r line; do
           violations=$((violations + 1))
         else
           report_path="$story_dir/validation-report.md"
-          # Parse verified state
-          verified_state=$(grep -i "readiness_state_verified:" "$report_path" | cut -d':' -f2 | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]' || echo "")
+          # Parse verified state — extract the FIRST canonical token via enum (#76.3),
+          # so decorated values ("UX-RC (agent-verified)") resolve correctly.
+          verified_state="$(extract_readiness_state "$(grep -i "readiness_state_verified:" "$report_path" | head -n1 || true)")"
           if [[ -z "$verified_state" ]]; then
-            verified_state=$(grep -i "\*\*Verified Readiness State\**:" "$report_path" | cut -d':' -f2- | tr -d '[:space:]*`' | tr '[:upper:]' '[:lower:]' || echo "")
+            verified_state="$(extract_readiness_state "$(grep -i "\*\*Verified Readiness State\**:" "$report_path" | head -n1 || true)")"
           fi
 
           # Check if verified state is at least integration-green
           is_valid_state=false
           case "$verified_state" in
-            integration-green|ux-rc|api-rc|commercial-rc|ship-rc|ship) is_valid_state=true ;;
+            integration-green|ux-rc|api-rc|operational-rc|commercial-rc|ship-rc|ship) is_valid_state=true ;;
           esac
 
           if [[ "$is_valid_state" == false ]]; then

@@ -1,6 +1,6 @@
 ---
-speck_version: 7.0
-template_version: "7.11.0"
+speck_version: 8.0
+template_version: "8.0.0"
 artifact_type: persona-larp
 ---
 
@@ -117,11 +117,11 @@ Build Fingerprint: [App version / Backend API fingerprint]
 
 ---
 
-## Taste Judgment Rubric
+## IS-IT-GOOD — Per-Screen Adversarial Critique (P1, Job B)
 
-*Beyond functional pass/fail — does the experience deserve the magic moments?*
+*This is the point of the LARP — how it looks and feels IS the product. Switch modes: stop confirming the spec, look at the pixels for what is WRONG.*
 
-For each captured screenshot, the LARP runner must write a taste note:
+For **every** captured screen, judging **from the image, not the AX tree**, answer: *"What is the first thing that looks wrong? Where would a discerning user of THIS product wince?"* Record **≥2 specific, pixel-anchored observations per screen**. "No defects" is never the default — argue it explicitly against the assumption that every screen has something to improve. A captured screen with no substantive critique is an incomplete LARP (surrogate proof), not a pass.
 
 | Dimension | Question | Rating | Note |
 |-----------|----------|--------|------|
@@ -136,7 +136,25 @@ For each captured screenshot, the LARP runner must write a taste note:
 | Thumb reach | Primary action reachable for one-handed mobile use? (mobile only) | ✅/⚠️/❌ | [Note] |
 | Safe-area | No critical UI clipped by status bar / home indicator? (mobile only) | ✅/⚠️/❌ | [Note] |
 | Magic-moment delivery | Does the magic moment actually feel like a magic moment? | ✅/⚠️/❌ | [Note] |
-| Would I pay? | Skeptical buyer judgment: does this earn the price? | ✅/⚠️/❌ | [Note] |
+| Would I pay? | Skeptical buyer judgment: does this earn the price *vs a free/DIY substitute*? | ✅/⚠️/❌ | [Note] |
+
+### Common-Sense Defect Sweep (the class specs never encode)
+
+The exact defects a human notices instantly and specs omit. Check every screen:
+- [ ] Duplicated / redundant content (a value printed twice, repeated labels)
+- [ ] Clipped, hidden, or overlapping elements (esp. inputs behind sticky footers / keyboard)
+- [ ] Primary action off-screen or otherwise unreachable
+- [ ] Typographic proliferation (too many sizes / weights)
+- [ ] Accent colors used with no semantic rule (same accent doing unrelated jobs)
+- [ ] Alignment / spacing raggedness
+- [ ] Off-brand or wrong iconography / emoji (e.g. gamey full-color emoji on a calm, premium brand)
+- [ ] Awkward, truncated, or placeholder-looking copy
+- [ ] **Emotional-tone match**: does the visual feeling match the intended feeling? (e.g. maxed 5/5 severity dots reading as a report card on a screen meant to feel gentle)
+
+### Action-Claim Audit (Job A / DOES-IT-WORK, P2)
+
+For every action the product or its AI surface claims (in-progress or completed), verify the mechanism actually fired. A claim with no mechanism is an automatic FELT-GOOD fail + P0 (the product is lying to the user):
+- [ ] Claim: "[what the surface said it did / is doing]" → Mechanism observed: [endpoint hit / row written / state change] OR **NONE → P0**
 
 ---
 
@@ -165,8 +183,10 @@ Each LARP run produces a findings note:
 **Build target**: [valid proof source from evidence-contract]
 **Date**: [YYYY-MM-DD]
 
-## Overall Verdict
-[PASS / CONDITIONAL_PASS / FAIL]
+## Overall Verdict (two non-collapsible jobs)
+- **DOES-IT-WORK**: [PASS / CONDITIONAL_PASS / FAIL]
+- **IS-IT-GOOD**: [PASS / CONDITIONAL_PASS / FAIL]  ← can block ship independently of DOES-IT-WORK
+- **felt_axis**: [uncovered / ai-verified / human-verified]
 
 ## Step Results
 [Per-step table]
@@ -186,4 +206,4 @@ Each LARP run produces a findings note:
 
 ---
 
-*[as of SHA `<git_sha_short>` | verified `<date>` | speck v7.0.0]*
+*[as of SHA `<git_sha_short>` | verified `<date>` | speck 8.0.0]*

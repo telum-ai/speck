@@ -1,5 +1,6 @@
 ---
 name: multi-tenancy-patterns
+disable-model-invocation: true
 description: Load when implementing multi-tenancy for B2B SaaS applications. Applies when designing tenant isolation, Row-Level Security, organization switching, or role-based access control.
 ---
 

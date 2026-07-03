@@ -1,5 +1,6 @@
 ---
 name: tanstack-query
+disable-model-invocation: true
 description: Load when using TanStack Query (React Query) for server state management. Applies when implementing data fetching, caching, mutations, or optimistic updates in React applications.
 ---
 

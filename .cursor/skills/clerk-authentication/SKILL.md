@@ -1,5 +1,6 @@
 ---
 name: clerk-authentication
+disable-model-invocation: true
 description: Load when integrating Clerk for authentication in React and Next.js apps. Applies when implementing auth with Next.js App Router, managing sessions, handling webhooks, or building multi-tenant apps with Organizations.
 ---
 

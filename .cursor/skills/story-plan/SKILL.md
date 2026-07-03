@@ -315,9 +315,9 @@ When planning any user story that involves decrementing, reserving, or consuming
    Next Steps:
    1. Review technical design with team
    2. ⚠️ If UI components detected: /story-ui-spec (REQUIRED before tasks)
-   3. Required: /story-tasks (generate implementation tasks)
-   4. ⚠️ REQUIRED: /story-analyze (quality check before implementation - DO NOT SKIP)
-   5. Then: /story-implement (execute the tasks)
+   3. Required: /story-tasks (generate implementation tasks; ends with the spec↔plan↔tasks consistency cross-check)
+   4. Then: /story-implement (execute the tasks)
+   5. Then: /audit (adversarial behavior-vs-spec check — non-skippable) → /story-validate
    
    Note: /story-tasks will use these artifacts to generate concrete,
    numbered tasks that /story-implement can execute.

@@ -1,5 +1,6 @@
 ---
 name: firebase-integration
+disable-model-invocation: true
 description: Load when integrating Firebase for mobile and web apps. Applies when implementing Firestore security rules, custom claims, FCM push notifications, or offline persistence in Flutter/React Native.
 ---
 

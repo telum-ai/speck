@@ -192,5 +192,42 @@ else
   echo "  ✓ S004 failed correctly"
 fi
 
+
+echo "Test 6: Decorated readiness-state tokens resolve to the first canonical token (#76.3)"
+# S010: frontmatter value with a parenthetical suffix — must resolve to ux-rc, NOT "ux-rc(agent-verified)"
+mkdir -p "$TMP/stories/S010-decorated"
+cat > "$TMP/stories/S010-decorated/validation-report.md" <<'EOF'
+---
+readiness_state_verified: UX-RC (agent-verified, felt: ai-verified)
+---
+Spec Coverage:
+- PRM-010
+EOF
+
+# S011: bold prose form with a code-ticked value + em-dash cap note — must resolve to integration-green
+mkdir -p "$TMP/stories/S011-decorated"
+cat > "$TMP/stories/S011-decorated/validation-report.md" <<'EOF'
+# Validation Report
+
+**Verified Readiness State**: `INTEGRATION-GREEN` — capped, awaiting keystone key
+
+Spec Coverage:
+- PRM-011
+EOF
+
+cat > "$TMP/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|--------|
+| PRM-010 | product-contract §3 | decorated-token differentiator | S010 / AC-1 | — | — | discharged |
+| PRM-011 | product-contract §4 | decorated-token invariant | S011 / AC-2 | — | — | discharged |
+EOF
+
+bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md"
+echo "  ✓ Passed Test 6 (decorated UX-RC + bold INTEGRATION-GREEN both resolved)"
+
 echo "All validate-traceability-matrix tests passed successfully!"
 exit 0

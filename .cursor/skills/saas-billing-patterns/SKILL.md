@@ -1,5 +1,6 @@
 ---
 name: saas-billing-patterns
+disable-model-invocation: true
 description: Load when implementing subscription billing for SaaS applications. Applies when building subscription state machines, proration logic, trials, dunning sequences, or metered billing.
 ---
 

@@ -29,6 +29,7 @@ Common triggers:
 - Locking a tech stack choice
 - Locking an architectural pattern (microservices vs monolith, REST vs GraphQL, etc.)
 - Locking an evidence-contract proof source
+- Locking a price / pricing tier / paywall trigger (must clear the free/DIY-substitute defensibility test, #74)
 - Locking a readiness-state target for a story/epic
 - Resolving conflicting requirements between PROMISE and CONSTRAINT
 
@@ -64,6 +65,7 @@ Pick 3-5 dimensions relevant to the decision. Common ones:
 - **Risk**: What can go wrong?
 - **Reversibility**: How hard to undo?
 - **Operational**: Who maintains this?
+- **Substitute defensibility** (pricing/value locks, #74): Does this survive the buyer's $0 substitute (free general-purpose AI + effort, a free tier, a manual process)? A price whose only edge is "convenience" is not defensible — name the durable wedge or don't lock the price.
 
 For each alternative, write a 1-2 sentence judgment per dimension. Be specific to THIS project, not generic.
 
@@ -114,6 +116,7 @@ Return the locked decision to the calling skill so it can continue its workflow.
 - NEVER lock with fewer than 3 alternatives — refuse and brainstorm more
 - NEVER mark all alternatives as equal — the agent must commit to ONE with rationale
 - NEVER use generic dimensions; tie them to product-contract.md / evidence-contract.md / context.md
+- NEVER lock a price without the free/DIY-substitute defensibility test (#74) — a price is a P2 claim and needs the substitute mechanism, not just a working paywall
 - ALWAYS surface the matrix before locking (transparent reasoning > silent agent confidence)
 - ALWAYS pass the locked decision to `/speck-decision-log`
 

@@ -1,5 +1,6 @@
 ---
 name: github-actions-cicd
+disable-model-invocation: true
 description: Load when using GitHub Actions for CI/CD pipelines. Applies when creating workflows for testing, building, deploying, or automating repository tasks.
 ---
 

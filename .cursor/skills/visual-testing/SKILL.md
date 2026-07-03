@@ -46,16 +46,16 @@ Determine the testing platform from:
 2. Load the recipe's `visual_testing.platform` field
 3. Fallback: detect stack from `architecture.md`
 
-Based on platform, load the appropriate sub-rule:
+Based on platform, **Read** the appropriate host rule (these are lazy sub-rules of this skill — `disable-model-invocation: true` — so they don't occupy the always-on skill surface; this coordinator loads exactly the one your platform needs):
 
-| Platform | Sub-Rule | Tools |
-|----------|----------|-------|
-| `web` | `visual-testing-web` skill | Browser MCP, Playwright |
-| `mobile-flutter` | `visual-testing-mobile-flutter` skill | Golden tests, Alchemist |
-| `mobile-rn` | `visual-testing-mobile-react-native` skill | Maestro, Detox |
-| `desktop-electron` | `visual-testing-desktop-electron` skill | Playwright Electron |
-| `desktop-tauri` | `visual-testing-desktop-tauri` skill | WebdriverIO |
-| `extension` | `visual-testing-extension` skill | Puppeteer/Playwright |
+| Platform | Host rule to Read | Tools |
+|----------|-------------------|-------|
+| `web` | `.cursor/skills/visual-testing-web/SKILL.md` | Browser MCP, Playwright |
+| `mobile-flutter` | `.cursor/skills/visual-testing-mobile-flutter/SKILL.md` | Golden tests, Alchemist |
+| `mobile-rn` | `.cursor/skills/visual-testing-mobile-react-native/SKILL.md` | Maestro, Detox |
+| `desktop-electron` | `.cursor/skills/visual-testing-desktop-electron/SKILL.md` | Playwright Electron |
+| `desktop-tauri` | `.cursor/skills/visual-testing-desktop-tauri/SKILL.md` | WebdriverIO |
+| `extension` | `.cursor/skills/visual-testing-extension/SKILL.md` | Puppeteer/Playwright |
 | `cli` / `api` | None | Skip visual testing |
 
 ---
@@ -192,13 +192,13 @@ Skip for:
 
 ---
 
-## 📚 Platform-Specific Rules
+## 📚 Platform-Specific Rules (lazy sub-rules of this skill)
 
-For detailed implementation, load platform-specific rules:
+The 6 host rules below are consolidated under this one coordinator skill (v8): they carry `disable-model-invocation: true`, so they are **Read on demand** by this skill for the detected platform rather than auto-loaded. For detailed implementation, Read the matching file:
 
-- `visual-testing-web` skill - Browser MCP tools, Playwright, Percy
-- `visual-testing-mobile-flutter` skill - Golden tests, Alchemist
-- `visual-testing-mobile-react-native` skill - Maestro, Detox
-- `visual-testing-desktop-electron` skill - Playwright Electron
-- `visual-testing-desktop-tauri` skill - WebdriverIO
-- `visual-testing-extension` skill - Puppeteer, CDP
+- `.cursor/skills/visual-testing-web/SKILL.md` — Browser MCP tools, Playwright, Percy
+- `.cursor/skills/visual-testing-mobile-flutter/SKILL.md` — Golden tests, Alchemist
+- `.cursor/skills/visual-testing-mobile-react-native/SKILL.md` — Maestro, Detox
+- `.cursor/skills/visual-testing-desktop-electron/SKILL.md` — Playwright Electron
+- `.cursor/skills/visual-testing-desktop-tauri/SKILL.md` — WebdriverIO
+- `.cursor/skills/visual-testing-extension/SKILL.md` — Puppeteer, CDP

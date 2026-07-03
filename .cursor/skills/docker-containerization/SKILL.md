@@ -1,5 +1,6 @@
 ---
 name: docker-containerization
+disable-model-invocation: true
 description: Load when using Docker for containerizing applications. Applies when creating Dockerfiles, docker-compose setups, multi-stage builds, or optimizing container images.
 ---
 

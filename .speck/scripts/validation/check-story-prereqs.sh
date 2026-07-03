@@ -6,7 +6,7 @@
 # 1. spec.md must exist and have lifecycle: Specified (or State: Specified)
 # 2. plan.md must exist
 # 3. tasks.md must exist
-# 4. analysis-report.md (or story-analysis-report.md) must exist and contain no unresolved CRITICAL items
+# 4. analysis-report.md is OPTIONAL (v7+: /story-analyze retired — consistency folded into /story-tasks, adversarial check is /audit); if present, it must contain no unresolved CRITICAL items
 
 set -euo pipefail
 
@@ -99,7 +99,7 @@ if [[ "$failed" == true ]]; then
   echo -e "  1. Run ${GREEN}/story-specify${NC} to create and specify the story requirements."
   echo -e "  2. Run ${GREEN}/story-plan${NC} to design the technical solution."
   echo -e "  3. Run ${GREEN}/story-tasks${NC} to generate the implementation checklist (includes consistency check at tail)."
-  echo -e "  4. Optionally run ${GREEN}/story-analyze${NC} if a standalone analysis report is desired (deprecated in v7)."
+  echo -e "  4. The spec↔plan↔tasks consistency check runs at the tail of ${GREEN}/story-tasks${NC}; the adversarial cross-check is ${GREEN}/audit${NC} after implementation (a standalone analysis-report.md is optional; /story-analyze is retired in v8)."
   echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   exit 1
 else

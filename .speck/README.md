@@ -106,7 +106,7 @@ npx github:telum-ai/speck upgrade
 npx github:telum-ai/speck upgrade --dry-run
 
 # Upgrade to specific version
-npx github:telum-ai/speck upgrade v7.14.2
+npx github:telum-ai/speck upgrade v8.0.0
 ```
 
 ### What Gets Updated
@@ -294,7 +294,7 @@ For UI epics, `experience-chain.md` is required before `/epic-plan` (prevents th
 graph TD
     A[/story-specify] --> B[/story-clarify]
     B --> C{Brownfield?}
-    C -->|Yes| D[/story-scan]
+    C -->|Yes| D[/speck-scan --level story]
     C -->|No| E[/story-plan]
     D --> E
     E --> F{UI Story?}
@@ -308,7 +308,7 @@ graph TD
     L --> M[/story-retrospective]
 ```
 
-Note: `/story-analyze` is folded into `/story-tasks` final pass and `/audit` in v7. `/audit` runs **between** implement and validate — it's not optional.
+Note: `/story-analyze` is **retired in v8** (alias-shim) — its pre-implementation consistency check is folded into the tail of `/story-tasks`, and its adversarial behavior-vs-spec check is `/audit`. `/audit` runs **between** implement and validate — it's not optional.
 
 ### 4. Reengagement (PROVE)
 
@@ -546,7 +546,28 @@ This is where the actual work happens. The next time any agent engages the proje
 
 ### v6 command compatibility
 
-v6 commands (`/story-analyze`, `/epic-outline`, `/story-outline`, `/project-scan`, etc.) continue to work via shims that route to v7 equivalents (with deprecation warnings in their description).
+v6 commands (`/story-analyze`, `/epic-outline`, `/story-outline`, `/project-scan`, etc.) continue to work via alias-shims that route to their current equivalents (with deprecation notes in their description). In v8 the level triplets also gain `--level` dispatchers (`/validate`, `/retrospective`, `/adjust`, `/analyze`) that route to the preserved per-level specialists.
+
+---
+
+## 🔄 Migrating from v7 to v8 — re-prove, don't reset
+
+v8 ("Evaluation Over Verification") does **not** trust v7-era "green" as evaluation-proven — v7 green was optimized to satisfy enumerated checks (Goodhart), which is exactly the failure mode v8 exists to fix. So the upgrade is deliberately two-layer (design: `docs/v8/v8-north-star.md`):
+
+### Layer 1 — Mechanical (automatic, instant, non-destructive)
+
+On `npx github:telum-ai/speck upgrade` across the v7 → v8 boundary, the CLI bumps versions, reconciles the `SPECK:START..END` blocks, installs the alias-shims and lazy patterns, and drops a `.speck/.v8-reprove-needed` marker (the direct analog of v6 → v7's `.migration-needs-catchup`).
+
+### Layer 2 — Semantic re-prove (`/speck-reprove`, cap-and-worklist)
+
+**Version-as-staleness**: any truth artifact stamped `< speck 8` is `V8_STALE` regardless of SHA/date freshness. The next engagement's `/recheck` detects the marker (or a `V8_STALE` stamp), raises `V8_REPROVE.P1`, blocks new feature work, and routes to `/speck-reprove`. That skill:
+
+1. Triages each suspect-green artifact against the four principles (P1–P4).
+2. **Caps** effective shippable state at `INTEGRATION-GREEN` and reverts consumer **FELT-GOOD to `uncovered`**.
+3. **Preserves** each historical v7 claim, stamped `[pre-v8-proof]` (nothing is reset to zero).
+4. Emits a prioritized `project-v8-reprove-report.md` worklist. States climb back to `verified` only as real v8 evidence (adversarial LARP, mechanism-grounded audit) lands.
+
+**Without `/speck-reprove`, a v8-upgraded project keeps claiming v7 ship-readiness under v8 paint.** The re-prove is mandatory for any project that wasn't built v8-native from day one.
 
 ---
 
@@ -571,5 +592,5 @@ After running retrospective commands (`/story-retrospective`, `/epic-retrospecti
 
 **Need help?** Just type `/speck` and describe what you want to build. Speck will guide you through the rest!
 
-**Speck Version**: 7.14.2
+**Speck Version**: 8.0.0
 **Methodology**: Promise → Build → Prove + Profile (evidence-driven specification)

@@ -1,5 +1,6 @@
 ---
 name: visual-testing-desktop-tauri
+disable-model-invocation: true
 description: Load when running visual validation for Tauri desktop applications. Provides WebdriverIO and tauri-driver patterns with platform-specific baseline guidance.
 ---
 

@@ -1,5 +1,6 @@
 ---
 name: oauth-implementation
+disable-model-invocation: true
 description: Load when implementing OAuth 2.0 and OpenID Connect authentication. Applies when building social login, SSO, PKCE flows, or integrating with OAuth providers like Google, GitHub, Apple.
 ---
 

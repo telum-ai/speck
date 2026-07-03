@@ -1,5 +1,6 @@
 ---
 name: resend-integration
+disable-model-invocation: true
 description: Load when integrating Resend for transactional email with React Email templates. Applies when implementing email sending, webhook handling, domain verification, or batch email operations.
 ---
 

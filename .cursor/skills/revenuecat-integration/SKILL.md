@@ -1,5 +1,6 @@
 ---
 name: revenuecat-integration
+disable-model-invocation: true
 description: Load when integrating RevenueCat for in-app purchases and subscriptions. Applies when implementing iOS/Android subscriptions, entitlement checking, or purchase webhooks in React Native/Flutter.
 ---
 

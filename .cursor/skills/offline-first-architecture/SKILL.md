@@ -1,5 +1,6 @@
 ---
 name: offline-first-architecture
+disable-model-invocation: true
 description: Load when building offline-first applications that work without network connectivity. Applies when implementing local storage, sync queues, conflict resolution, or background sync.
 ---
 

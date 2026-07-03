@@ -6,6 +6,22 @@
 /** @type {{ version: string; items: { id: string; summary: string }[] }[]} */
 export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
+    version: '8.0.0',
+    items: [
+      { id: '#78', summary: 'P1 — Evaluation Over Verification: split LARP into DOES-IT-WORK vs IS-IT-GOOD, forced per-screen pixel-grounded critique' },
+      { id: '#74', summary: 'P2 — Price vs Free Substitute: value-defensibility / WTP-vs-$0 gate across product, evidence, premise-challenge, skeptical-review' },
+      { id: '#75', summary: 'P2/P3 — AI action-claims / laundered "unreachable": reach doctrine, action-claim audit, diagnostic playbook' },
+      { id: '#76.1', summary: 'P3 — Named-blocker cap by assertion: require logged, reproduced failure of actual LARP recipe before INTEGRATION-GREEN cap' },
+      { id: '#76.2', summary: 'P2 — Skipped suite reads green: speck-audit retooled for mechanism-grounded test authenticity, skipped != run' },
+      { id: '#76.3', summary: 'traceability parser bug: validate-traceability-matrix.sh extracts first canonical readiness-state token via enum regex' },
+      { id: '#76.4', summary: 'P1/audit — Privacy reader sweep: exhaustive reader/writer sweep for privacy epics' },
+      { id: '#77.1', summary: 'story-level shuffle rerun: random-order test execution in speck-audit' },
+      { id: '#77.2', summary: 'P2 — RLS test bypasses guard: RLS/authz negative tests must attempt forbidden op as a real least-privileged principal' },
+      { id: 'bloat', summary: 'Consolidation: retired 3 skills, unified scan, parameterized dispatchers, demoted 20 integration patterns + 6 visual hosts to lazy-load' },
+      { id: 'migration', summary: 'Two-Layer Migration: mechanical Layer 1 (.v8-reprove-needed marker) + semantic Layer 2 (/speck-reprove cap-and-worklist)' },
+    ],
+  },
+  {
     version: '7.17.0',
     items: [
       { id: 'g-plus-acl', summary: 'G+ — Irreversible-Action Control Tiers (0-3) in evidence-contract + compliance probe to prevent unauthorized state execution' },

@@ -171,7 +171,7 @@ Epic Complete:
 ## Next Steps
 
 1. Create story directories under `[EPIC_DIR]/stories/`
-2. Start with Phase 1 stories (`/story-specify` → `/story-plan` → `/story-tasks` → `/story-analyze` → `/story-implement`)
+2. Start with Phase 1 stories (`/story-specify` → `/story-plan` → `/story-tasks` → `/story-implement` → `/audit` → `/story-validate`)
 3. Optionally run `/epic-analyze` to validate breakdown quality before starting
 
 ---

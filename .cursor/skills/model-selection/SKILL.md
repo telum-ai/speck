@@ -1,6 +1,7 @@
 ---
 name: model-selection
-description: Load at the start of any task to assess whether the current model is optimal. Prompt the user to switch models when task characteristics indicate a better choice exists.
+disable-model-invocation: true
+description: Lazy meta-pattern (v8) — Read on demand (indexed in .speck/patterns/library/) when you want to assess whether the current model is optimal for the task at hand. Prompt the user to switch models when task characteristics indicate a better choice exists.
 ---
 
 # Model Selection

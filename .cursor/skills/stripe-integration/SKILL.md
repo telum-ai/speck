@@ -1,5 +1,6 @@
 ---
 name: stripe-integration
+disable-model-invocation: true
 description: Load when implementing Stripe checkout flows, subscription management, webhook handling, or payment processing.
 ---
 

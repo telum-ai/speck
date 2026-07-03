@@ -100,6 +100,7 @@ STALE_COUNT=0
 DRIFT_COUNT=0
 NOSTAMP_COUNT=0
 MISSING_COUNT=0
+V8STALE_COUNT=0
 
 check_artifact() {
   local artifact="$1"
@@ -133,6 +134,18 @@ check_artifact() {
   # Extract verified date (YYYY-MM-DD format)
   local stamp_date
   stamp_date=$(echo "$stamp_line" | sed -nE 's/.*verified ([0-9]{4}-[0-9]{2}-[0-9]{2}).*/\1/p')
+
+  # Version-as-staleness (Speck v8): an artifact stamped by a pre-v8 Speck is
+  # v8-stale — its "green" was produced under v7 verification, not v8 evaluation.
+  # This takes precedence over SHA/date freshness and routes to /speck-reprove.
+  local stamp_speck_major
+  stamp_speck_major=$(echo "$stamp_line" | sed -nE 's/.*speck v?([0-9]+)\..*/\1/p')
+  if [[ -n "$stamp_speck_major" ]] && [[ "$stamp_speck_major" -lt 8 ]]; then
+    echo "⚠️  V8_STALE  $artifact (stamped speck v$stamp_speck_major — pre-v8 proof; run /speck-reprove)"
+    ANY_STALE=1
+    V8STALE_COUNT=$((V8STALE_COUNT + 1))
+    return
+  fi
 
   # Check SHA drift — use commit count on this file since stamp.
   # Count <= 1 means only the stamp commit touched the file (normal commit flow) → FRESH.
@@ -188,7 +201,7 @@ check_artifact() {
   FRESH_COUNT=$((FRESH_COUNT + 1))
 }
 
-echo "Speck v7 staleness check — Project: $PROJECT_DIR"
+echo "Speck staleness check — Project: $PROJECT_DIR"
 echo "Play level: $PLAY_LEVEL"
 echo "Current HEAD: $CURRENT_SHA"
 echo ""
@@ -202,7 +215,7 @@ for a in "${OPTIONAL_ARTIFACTS[@]}"; do
 done
 
 echo ""
-echo "Summary: $FRESH_COUNT fresh / $STALE_COUNT stale / $DRIFT_COUNT drift / $NOSTAMP_COUNT no-stamp / $MISSING_COUNT missing"
+echo "Summary: $FRESH_COUNT fresh / $STALE_COUNT stale / $DRIFT_COUNT drift / $NOSTAMP_COUNT no-stamp / $V8STALE_COUNT v8-stale / $MISSING_COUNT missing"
 
 if [[ $ANY_MISSING -eq 1 ]]; then
   exit 2

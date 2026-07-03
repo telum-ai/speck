@@ -174,7 +174,10 @@ export async function upgrade(targetDir, version, options = {}) {
   printFeedbackAddressed(currentVersion, targetVersion);
   runTemplateDriftCheck(targetDir);
 
-  if (migrationSummary && migrationSummary.projects.length > 0) {
+  const didV7Scaffold = migrationSummary && migrationSummary.projects.length > 0;
+  const didV8Marker = migrationSummary && migrationSummary.v8Reprove && migrationSummary.v8Reprove.written;
+
+  if (didV7Scaffold) {
     console.log(`
 🔁 Auto-migrated ${migrationSummary.projects.length} project(s) to v${migrationSummary.targetMajor}:
 ${migrationSummary.projects.map(p => `   • ${p.path}: ${p.created} new artifact(s) scaffolded`).join('\n')}
@@ -208,7 +211,29 @@ ${migrationSummary.projects.map(p => `   • ${p.path}: ${p.created} new artifac
    See <project>/migration-report.md for what was scaffolded. The next agent
    that engages any of these projects will detect the marker and start
    catch-up automatically.`);
-  } else {
+  }
+
+  if (didV8Marker) {
+    console.log(`
+🔁 Speck v8 upgrade — semantic RE-PROVE required (marker written: .speck/.v8-reprove-needed).
+
+   v8 (Evaluation Over Verification) does NOT trust v7-era "green" as evaluation-proven.
+   The mechanical upgrade is complete; the truth is not yet re-established.
+
+   BEFORE new feature work, run:
+     /speck-reprove
+
+   It triages suspect green against P1–P4, caps effective shippable state at
+   INTEGRATION-GREEN, reverts consumer FELT-GOOD to \`uncovered\`, preserves each
+   historical claim as [pre-v8-proof], and emits project-v8-reprove-report.md.
+   States climb back to \`verified\` only as real v8 evidence lands.
+
+   See docs/v8/v8-north-star.md §5. Do NOT commit a green-claiming state as if it
+   were v8-proven — reprove first. The next agent that engages will detect the
+   marker and start the re-prove automatically.`);
+  }
+
+  if (!didV7Scaffold && !didV8Marker) {
     console.log(`
 Review the changes and commit when ready:
   git add -A

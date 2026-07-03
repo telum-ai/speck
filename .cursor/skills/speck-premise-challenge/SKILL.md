@@ -32,10 +32,11 @@ When executing a Premise-Challenge pass, the agent must adopt a hostile, highly 
 - Are we asking for too much information too early?
 - Does the user have to think or hunt to proceed?
 
-### 2. Challenge the Value
+### 2. Challenge the Value (and the price vs the free substitute, #74)
 - Is the value proposition immediately clear on this screen?
 - Are we showing generic AI cheerleading copy instead of real, governed product copy?
 - Does the screen feel like a "chore" rather than a "magic moment"?
+- **Paywall / pricing surfaces**: adopt a skeptical buyer who *already has free general-purpose AI*. Could they get ~this outcome from ChatGPT/Claude + 15 minutes, a spreadsheet, or a free tier? If yes, what is the durable, defensible reason to pay — and is that reason actually visible on this screen? "Better UX / convenience" alone is a **failed premise** (→ `/project-adjust` on the differentiator, not a copy tweak). Cross-check `product-contract.md` §2a.
 
 ### 3. Challenge the Failure Paths
 - When this fails, does the user feel stupid, or do they feel supported?
@@ -60,4 +61,4 @@ A Premise-Challenge pass results in one of two outcomes:
 - **Never conflate CORRECT/ON-CONTRACT with good**: A green test suite and a conforming LARP do not mean the product is ready to ship.
 - **Never launder a taste miss as "uncatchable by automation"**: If a user experience is poor, do not excuse it as an autonomous limitation. Run the naive lens, apply taste judgment, and document the finding. Escalation to a human operator is reserved for *contract-premise* problems (which force a `/project-adjust` or a conscious DEC) — it is NOT a way to offload the FELT-GOOD taste judgment the AI should be making.
 
-*[as of SHA HEAD | verified 2026-07-02 | speck v7.20.1]*
+*[as of SHA HEAD | verified 2026-07-02 | speck 8.0.0]*

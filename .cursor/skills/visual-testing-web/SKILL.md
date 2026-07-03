@@ -1,5 +1,6 @@
 ---
 name: visual-testing-web
+disable-model-invocation: true
 description: Load when running visual validation for web applications - Next.js, SvelteKit, React, Django, Go+HTMX, or static sites. Provides Browser MCP tool usage and Playwright patterns.
 ---
 

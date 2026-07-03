@@ -1,6 +1,6 @@
 ---
-speck_version: 7.0
-template_version: "7.11.0"
+speck_version: 8.0
+template_version: "8.0.0"
 artifact_type: product-contract
 play_levels: [build, platform]
 ---
@@ -64,6 +64,22 @@ PLACEHOLDER CONVENTION:
 **Current alternatives they're "firing"**: [What they're using/doing today that this replaces/optimizes]
 
 **Willingness to pay / Cost of Failure**: [Price tier / Resource budget or Cost of Downtime]
+
+### 2a. Value Defensibility — WTP vs the free/DIY substitute (P2, #74)
+
+*A price is a claim; under P2 it needs a mechanism. For any paid product (or paid API), the price is only defensible if it survives the substitute a rational buyer already has — most acutely **free general-purpose AI** (ChatGPT/Claude/Gemini) plus 15 minutes, a spreadsheet, or a free tier of a competitor.*
+
+* **WHEN: consumer_product / b2b_saas / internal_tool / paid APIs**:
+
+| Free / DIY substitute the buyer already has | What they'd get from it for $0 | Why THIS product is still worth paying for (the defensible wedge) |
+|---|---|---|
+| Free general-purpose AI (ChatGPT/Claude) + effort | REPLACE_BEFORE_SHIP: honest account of what the free path delivers | REPLACE_BEFORE_SHIP: the durable reason this beats it — NOT "better UX" alone |
+| [Free tier / open-source / manual process] | [What it delivers] | [Defensible wedge] |
+
+**Buyer's real reference price**: REPLACE_BEFORE_SHIP: what the skeptical buyer *actually* compares to (usually $0, not a competitor's paid tier).
+**Defensible-wedge verdict**: REPLACE_BEFORE_SHIP: one sentence a skeptical buyer who already has free AI would accept as the reason to pay. If the only honest answer is "convenience," the price is not yet defensible — fix the product, not this cell.
+
+* **WHEN: infra_service / backend_api**: (May skip if not independently priced; otherwise state build-vs-buy defensibility vs the buyer running the OSS/self-hosted equivalent.)
 
 ---
 

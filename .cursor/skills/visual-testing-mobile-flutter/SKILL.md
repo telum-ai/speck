@@ -1,5 +1,6 @@
 ---
 name: visual-testing-mobile-flutter
+disable-model-invocation: true
 description: Load when running visual validation for Flutter mobile applications. Provides Golden Tests, Alchemist, and Fastlane patterns for widget rendering and theme variations.
 ---
 

@@ -9,7 +9,7 @@
  * migration script skips it. If there are no projects, nothing happens.
  */
 
-import { existsSync, readdirSync, statSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, statSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
 
@@ -81,57 +81,113 @@ function migrateProjectV7(targetDir, projectPath, options = {}) {
 }
 
 /**
- * Decide whether the (currentVersion → targetVersion) transition requires
- * post-upgrade migrations. Currently triggers only for major bumps that
- * cross the 7.x boundary (i.e., 6.x → 7.x).
+ * Decide which post-upgrade actions the (currentVersion → targetVersion)
+ * transition requires. Actions are independent and can combine (a v6 → v8
+ * jump needs both):
+ *   - scaffoldV7: run the per-project v6 → v7 artifact scaffolding script
+ *   - reproveV8:  drop the .speck/.v8-reprove-needed marker (semantic re-prove)
  *
- * Returns an object describing the migration to run, or null.
+ * Exported for testability.
  */
-function detectMigration(currentVersion, targetVersion) {
+export function detectMigration(currentVersion, targetVersion) {
   const fromMajor = majorOf(currentVersion);
   const toMajor = majorOf(targetVersion);
-  if (toMajor == null) return null;
-
-  // 6.x or earlier → 7.x: run v6→v7 migration script per project
-  if (toMajor >= 7 && (fromMajor == null || fromMajor < 7)) {
-    return { kind: 'v6-to-v7', targetMajor: toMajor };
+  if (toMajor == null) {
+    return { scaffoldV7: false, reproveV8: false, targetMajor: null };
   }
-  return null;
+
+  // Crossing into v7 from anything older → run v6→v7 scaffolding per project.
+  // (Also fires on a v6→v8 jump: you need the v7 artifacts before the v8 re-prove.)
+  const scaffoldV7 = toMajor >= 7 && (fromMajor == null || fromMajor < 7);
+
+  // Crossing into v8 from anything older → semantic re-prove (cap-and-worklist).
+  // The mechanical upgrade is trusted; v7-era "green" is NOT (see docs/v8/v8-north-star.md §5).
+  const reproveV8 = toMajor >= 8 && (fromMajor == null || fromMajor < 8);
+
+  return { scaffoldV7, reproveV8, targetMajor: toMajor };
+}
+
+/**
+ * Write the repo-level .speck/.v8-reprove-needed marker — the direct analog of
+ * v6→v7's .speck/.migration-needs-catchup. Non-destructive and idempotent:
+ * never overwrites an existing marker. Returns { written, path, reason }.
+ */
+export function writeV8ReproveMarker(targetDir, targetVersion = '8.0.0') {
+  const speckDir = join(targetDir, '.speck');
+  if (!existsSync(speckDir)) {
+    return { written: false, path: null, reason: '.speck directory not present' };
+  }
+  const markerPath = join(speckDir, '.v8-reprove-needed');
+  if (existsSync(markerPath)) {
+    return { written: false, path: markerPath, reason: 'marker already present' };
+  }
+  const date = new Date().toISOString().slice(0, 10);
+  const body = `V8 SEMANTIC RE-PROVE NEEDED
+
+This project was upgraded to Speck v8 (Evaluation Over Verification) on ${date}
+(target ${targetVersion}). The mechanical upgrade — files, alias-shims, lazy patterns,
+version — is done. But v8 does NOT trust v7-era "green" as evaluation-proven
+(see docs/v8/v8-north-star.md §5).
+
+BEFORE any new feature work, run:  /speck-reprove
+
+It will:
+  - triage suspect-green artifacts against the four v8 principles (P1-P4),
+  - cap effective shippable state at INTEGRATION-GREEN,
+  - revert consumer FELT-GOOD to \`uncovered\`,
+  - preserve each historical v7 claim but stamp it [pre-v8-proof],
+  - build a prioritized worklist and emit project-v8-reprove-report.md.
+
+States climb back to \`verified\` only as real v8 evidence lands. Nothing is reset
+to zero; nothing suspect keeps claiming ship-readiness.
+
+Delete this marker only after /speck-reprove has produced the report and the
+worklist is tracked.
+`;
+  writeFileSync(markerPath, body);
+  return { written: true, path: markerPath, reason: null };
 }
 
 /**
  * Run any post-upgrade migrations needed. Idempotent and silent unless
- * options.verbose is set. Returns a summary object.
+ * options.verbose is set. Returns a summary object:
+ *   { kind, targetMajor, projects: [...], v8Reprove: { written, path, reason } | null }
  */
 export function runPostUpgradeMigrations(targetDir, currentVersion, targetVersion, options = {}) {
-  const migration = detectMigration(currentVersion, targetVersion);
-  if (!migration) {
-    return { kind: null, targetMajor: null, projects: [] };
+  const { scaffoldV7, reproveV8, targetMajor } = detectMigration(currentVersion, targetVersion);
+  const summary = { kind: null, targetMajor, projects: [], v8Reprove: null };
+
+  if (!scaffoldV7 && !reproveV8) {
+    summary.targetMajor = null;
+    return summary;
   }
 
-  if (options.verbose) {
-    console.log(`\n🔁 Detected ${currentVersion} → ${targetVersion} (major bump). Running auto-migration...`);
-  }
-
-  const projects = findProjects(targetDir);
-  if (projects.length === 0) {
+  if (scaffoldV7) {
     if (options.verbose) {
-      console.log('   No projects under specs/projects/ — nothing to migrate.');
+      console.log(`\n🔁 Detected ${currentVersion} → ${targetVersion} crossing into v7. Running v6→v7 scaffolding...`);
     }
-    return { kind: migration.kind, targetMajor: migration.targetMajor, projects: [] };
+    const projects = findProjects(targetDir);
+    if (projects.length === 0) {
+      if (options.verbose) {
+        console.log('   No projects under specs/projects/ — nothing to scaffold.');
+      }
+    } else {
+      for (const proj of projects) {
+        summary.projects.push(migrateProjectV7(targetDir, proj, options));
+      }
+    }
+    summary.kind = reproveV8 ? 'v6-to-v8' : 'v6-to-v7';
   }
 
-  const results = [];
-  for (const proj of projects) {
-    const result = migrateProjectV7(targetDir, proj, options);
-    results.push(result);
+  if (reproveV8) {
+    if (options.verbose) {
+      console.log(`\n🔁 Detected crossing into Speck v8. Writing .speck/.v8-reprove-needed marker (semantic re-prove)...`);
+    }
+    summary.v8Reprove = writeV8ReproveMarker(targetDir, targetVersion);
+    if (!summary.kind) summary.kind = 'v7-to-v8';
   }
 
-  return {
-    kind: migration.kind,
-    targetMajor: migration.targetMajor,
-    projects: results,
-  };
+  return summary;
 }
 
 /**

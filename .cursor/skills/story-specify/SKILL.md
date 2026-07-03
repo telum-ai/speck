@@ -247,14 +247,14 @@ After saving `spec.md`, scan its content and evaluate each optional step. Output
 | /story-ui-spec | ⬜ / 🔴       | "[specific quote or observation]" |
 
 Recommended path to /story-plan:
-→ [only Required/Recommended steps in flow order] → /story-plan → [/story-ui-spec if needed] → /story-tasks → /story-analyze → /story-implement
+→ [only Required/Recommended steps in flow order] → /story-plan → [/story-ui-spec if needed] → /story-tasks → /story-implement → /audit → /story-validate
 ```
 
 **Continuation (do NOT treat this menu as a stop):**
 - **Orchestrated / background / delegated run** (invoked by `/story` or a conductor): this table is informational — **immediately proceed to the first recommended step**. Do NOT end your turn here; the lifecycle is incomplete until validate. Ending after the menu silently leaves the story half-built.
 - **Interactive single-step run** (a human invoked `/story-specify` directly): end with "Shall I proceed with [first recommended step]?" and wait.
 
-**Flow order**: `/story-clarify` → `/story-outline` → `/story-scan` → `/story-plan` → `/story-ui-spec` → `/story-tasks` → `/story-analyze` → `/story-implement`
+**Flow order**: `/story-clarify` → [`/speck-skeptical-review` if approach unclear] → [`/speck-scan --level story` if brownfield] → `/story-plan` → `/story-ui-spec` → `/story-tasks` → `/story-implement` → `/audit` → `/story-validate`
 
 **If `/story-ui-spec` is 🔴 Required**, note it clearly after `/story-plan`:
 > "This story has UI components — run `/story-ui-spec` after `/story-plan` and before `/story-tasks`. Skipping it means the implementation will guess at layout, states, and design token usage."

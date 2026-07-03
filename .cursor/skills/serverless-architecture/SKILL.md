@@ -1,5 +1,6 @@
 ---
 name: serverless-architecture
+disable-model-invocation: true
 description: Load when building serverless applications with AWS Lambda, Vercel Functions, or Cloudflare Workers. Applies when implementing FaaS patterns, managing cold starts, or optimizing serverless costs.
 ---
 

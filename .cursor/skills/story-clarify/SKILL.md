@@ -176,7 +176,7 @@ Execution steps:
    | /story-ui-spec | ⬜ / 🔴       | "[observation]" |
 
    Recommended path to /story-plan:
-   → [only Required/Recommended steps] → /story-plan → [/story-ui-spec if needed] → /story-tasks → /story-analyze → /story-implement
+   → [only Required/Recommended steps] → /story-plan → [/story-ui-spec if needed] → /story-tasks → /story-implement → /audit → /story-validate
 
    Shall I proceed with [first recommended step]?
    ```

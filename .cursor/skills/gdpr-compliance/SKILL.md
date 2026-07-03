@@ -1,5 +1,6 @@
 ---
 name: gdpr-compliance
+disable-model-invocation: true
 description: Load when implementing GDPR compliance for applications processing EU personal data. Applies when building consent management, data export, right to erasure, or audit logging.
 ---
 

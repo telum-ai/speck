@@ -25,17 +25,14 @@ The template defines the LARP script structure (setup, steps, magic moments, tas
 
 ## Purpose
 
-`/larp` is first-class in Speck v7 because v6's six retrospectives independently said the same thing: **runtime LARP is what closes the spec-to-reality gap.** It's not a late add-on.
+`/larp` is first-class in Speck because runtime LARP closes the spec-to-reality gap. In v8 it is **two non-collapsible jobs** (P1 — evaluation over verification):
 
-LARP:
-- Uses the actual target build artifact (not dev server)
-- Cold-starts from fresh state per persona
-- Captures screenshots, AX trees, timings, transcripts
-- Validates magic moments (per product-contract.md)
-- Writes taste-judgment notes per screen
-- Produces checked-in evidence with SHA stamps
+- **Job A · DOES-IT-WORK** — functional verification: the flow completes, gates are enforced, magic-moment mechanisms fire, and every claim has a mechanism.
+- **Job B · IS-IT-GOOD** — experiential judgment: for *every* captured screen, look **at the pixels** (not the AX tree) and judge, adversarially, how it actually looks and feels to a discerning user of THIS product.
 
-This evidence is what story-validate, epic-validate, project-validate consume.
+The critical inversion (#78): an agent left to its defaults will *verify* (confirm the spec) and never *evaluate* (judge quality) — a spec is fully satisfiable by an ugly, broken-feeling screen. Job B forces the evaluation mode a human runs reflexively. **Job B has its own pass/fail and can block ship independently of Job A.** A captured screen with no substantive critique is an incomplete LARP (surrogate proof), not a pass.
+
+LARP uses the actual target build (not dev server), cold-starts fresh per persona, captures screenshots/AX trees/timings/transcripts, runs both jobs, validates magic moments, and produces checked-in SHA-stamped evidence that story/epic/project-validate consume.
 
 ## When to Run
 
@@ -55,7 +52,7 @@ This evidence is what story-validate, epic-validate, project-validate consume.
 - Active recipe with `visual_testing:` config (defines tooling)
 - Built artifact exists (per evidence-contract — NOT dev server)
 - **Clean Build for UX-RC+:** Build cache cleared (e.g. `rm -rf .next` / `trash .next` or build tool cache equivalents) and a fresh compilation run of the production built artifact.
-- **REQUIRED and non-deferrable:** For all UI-facing stories/epics, the browser cold-start LARP is **REQUIRED and non-deferrable**. You may NOT defer the LARP or use `autonomous-not-done` to bypass it. If there is an infrastructure limitation, it must be reported as a hard blocker (`NO-SHIP`) rather than allowing a bypass, unless a named infrastructure blocker is explicitly identified and the attempt is logged (in which case the state is capped at `INTEGRATION-GREEN`).
+- **REQUIRED and non-deferrable:** For all UI-facing stories/epics, the browser cold-start LARP is **REQUIRED and non-deferrable**. You may NOT defer the LARP or use `autonomous-not-done` to bypass it. A cap at `INTEGRATION-GREEN` for a "named infrastructure blocker" is valid ONLY with a **logged, reproduced failure of the actual LARP recipe** (the attempted run + the specific error captured) — never an assertion, memory, or a prior epic's precedent (P3, #76.1). First try the Sandbox-Friendly setup recipe below. Otherwise report a hard blocker (`NO-SHIP`).
 
 If launch-build doesn't exist: STOP and report. Tell user "LARP requires the target build. Run [build command] first."
 
@@ -114,42 +111,56 @@ Execute setup from `personas/<persona-id>.md`:
 
 Record the **build SHA** that's actually running (not just current HEAD — they should match for fresh evidence).
 
-### 5. Execute the LARP script step-by-step
+### 5. Job A — DOES-IT-WORK (functional verification)
 
-For each step:
-1. Take the action (tap, type, swipe, etc.) using platform-specific tooling
-2. Capture per the persona script (screenshot, AX tree, timing, transcript)
-3. Write the captured-state file to `<story-or-epic-dir>/larp-recordings/<sha>-<persona>-<step>.{png,xml,json,md}`
-4. Compare against expected emotional state / PASS criterion / FAIL criterion
-5. If FAIL: record finding (P0-P3), continue (don't abort)
+Execute the LARP script step-by-step. For each step:
+1. Take the action (tap, type, swipe) using platform-specific tooling — always through the **real UI**, never an API/programmatic bypass.
+2. Capture per the persona script (screenshot, AX tree, timing, transcript). Write to `<story-or-epic-dir>/larp-recordings/<sha>-<persona>-<step>.{png,xml,json,md}`.
+3. Compare against the PASS/FAIL criterion. If FAIL: record finding (P0-P3), continue (don't abort).
+4. **Magic moments**: confirm each relevant magic moment's surface / trigger / content beats fire (per `product-contract.md`).
+5. **Backtracking / error scenarios**: run the hesitation, back-nav, network-drop, 500, invalid-input, and skip-optional scenarios per the template.
+6. **Action-claim audit (P2, #75-G1)**: for *every* action the product or its AI surface claims — in-progress ("building your plan…") or completed ("done", "scheduled", "generated") — verify the mechanism actually fired (endpoint hit, row written, state changed). **A claim with no mechanism is an automatic FELT-GOOD fail + P0** — the product is lying to the user. A no-tools LLM surface must be told what it cannot do, or it will roleplay capabilities it lacks.
 
-### 6. Validate magic moments
+### 6. Job B — IS-IT-GOOD (experiential judgment) — REQUIRED, non-collapsible
 
-For each magic moment relevant to this persona (per `product-contract.md`):
-- Confirm the surface, trigger, content beats fire as expected
-- Compare actual content to "target emotional response"
-- Write taste judgment using the rubric in the persona template
+Switch cognitive modes: stop confirming the spec, start hunting for what is wrong. For **every** captured screen, look **at the image itself (not the AX tree)** and answer:
 
-### 7. Run the backtracking / error scenarios
+> "What is the first thing that looks wrong here? Where would a discerning user of THIS product wince?"
 
-- Backtracking, hesitation, error states, skip optional fields — per template
+Record **≥2 specific, pixel-anchored observations per screen**. "No defects" is never the default — it must be explicitly argued against the assumption that every screen has something to improve. Run the **Common-Sense Defect Sweep** (the class of defect specs never encode — full list in the persona template): duplicated/redundant content; clipped/hidden/overlapping elements; primary action off-screen or trapped behind a sticky footer; typographic proliferation; accent colors used with no rule; alignment/spacing raggedness; off-brand or wrong iconography/emoji; awkward or truncated copy; anything that "looks like a placeholder"; and **emotional-tone match** — does the *visual* feeling match the intended feeling (e.g. a report-card treatment on a screen meant to feel gentle)?
 
-### 8. Write findings note
+This is the naive-hostile taste pass — it produces the FELT-GOOD verdict (`felt_axis: ai-verified` on a clean pass, citing the findings file). An un-adjudicated screenshot cannot support any readiness state that depends on felt quality.
 
-Per the template's findings format. Save to `<story-or-epic-dir>/larp-recordings/<sha>-<persona>-findings.md`.
+### 7. Write findings note
 
-### 9. Apply SHA stamp
+Per the template's findings format, with **separate DOES-IT-WORK and IS-IT-GOOD verdicts**. Save to `<story-or-epic-dir>/larp-recordings/<sha>-<persona>-findings.md`.
+
+### 8. Apply SHA stamp
 
 ```
 .speck/scripts/stamp-truth.sh <story-or-epic-dir>/larp-recordings/<sha>-<persona>-findings.md
 ```
 
-### 10. Report
+### 9. Report
 
-Standard report format per claude skill.
+Standard report format. Report **both** job verdicts; never collapse Job B into Job A.
+
+## 🧭 LARP Must Reach Everything (P3)
+
+If automation cannot reach a control, focus a field, or complete a flow, that is a **finding**, not a valid skip reason (#75-G2).
+
+- "Not tappable / not in the a11y tree / needs a real device / tooling limitation" is NEVER a valid skip — it is a P1 finding until proven otherwise.
+- **Default hypothesis**: a control automation can't reach is a control some users can't reach (VoiceOver parity, invisible-overlay hit-testing). The tool is often *surfacing a real layout/a11y bug*, not failing.
+- **Diagnostic playbook before blaming tooling**: dump the a11y tree + element frames; coordinate-tap A/B; empirically isolate (stash the suspect layer, re-test); check invisible-overlay geometry (a transformed / opacity-0 absolute-fill plane still hit-tests and still eats VoiceOver focus). Synthetic-tap workarounds are the *wrong* first move.
+- A "named infrastructure blocker" cap on readiness requires a **logged, reproduced** failure of the actual LARP recipe (the run + the specific error) — never an assertion, memory, or a prior epic's precedent.
 
 ## Behavior Rules
 
+- NEVER accept a captured-but-un-adjudicated screen as a pass — Job B (IS-IT-GOOD) is REQUIRED and non-collapsible
+- NEVER let an AI-surface action claim stand without a verified mechanism (action-claim audit, P2)
+- NEVER write off an unreachable control as a tooling limitation without running the diagnostic playbook — unreachable = finding (P3)
+- NEVER cap on a "named infra blocker" without a logged, reproduced real attempt (P3)
+- ALWAYS record separate DOES-IT-WORK and IS-IT-GOOD verdicts; look at the pixels for Job B, not the AX tree
 - NEVER LARP against dev server when evidence-contract requires built artifact
 - NEVER claim UX-RC or higher based on an incremental cached build without performing a clean rebuild first
 - NEVER skip taste-judgment rubric

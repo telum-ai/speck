@@ -1,10 +1,12 @@
 <!-- SPECK:START -->
 
-# Speck 7 — Promise → Build → Prove
+# Speck 8 — Promise → Build → Prove
 
-You are working in a project using **Speck 🥓 v7**, an evidence-driven specification methodology.
+You are working in a project using **Speck 🥓 v8**, an evidence-driven specification methodology.
 
 **Speck's core promise**: produce excellent products regardless of how hands-on the human is. The discipline (decision logs, skeptical audits, runtime LARP, evidence gates, drift detection) is **unconditional** — not a mode you opt into.
+
+**The v8 thesis**: you cannot out-enumerate an agent optimizing for green. Speck's gates are governed by **four principles** (below), not an ever-growing checklist. At every gate your job is to **find what is wrong**, not to confirm the claim. When you find a gap, install it as a principle — don't grow the checklist. Full rationale: `docs/v8/v8-north-star.md`.
 
 ## 🧭 The Mental Model
 
@@ -28,15 +30,25 @@ PROMISE          BUILD            PROVE
 
 > Every spec assertion compiles to evidence. Every evidence claim ties to runtime proof. Every truth artifact is SHA-stamped against current HEAD. PROFILE derives from PROMISE + PROVE; `PROFILE_DRIFT.P1` blocks SHIP-RC+ claims.
 
+## 🧱 The Four Principles (the spine — govern every gate)
+
+Speck v8 replaces "append another probe" with four unconditional principles. Every gate, skill, and template is an instance of these. When a gap appears, install it as a principle — do not grow the checklist (that is how green becomes theater and context rots).
+
+- **P1 — Evaluation over verification.** Every gate's default is *"find what is wrong,"* not *"confirm the claim."* A clean pass is the residue of a genuine attempt to break it. An un-adjudicated artifact (a screenshot no one judged) is **surrogate proof**, never a pass. Flagship: LARP splits into **DOES-IT-WORK** (functional) and **IS-IT-GOOD** (experiential), each separately gated and each able to block ship.
+- **P2 — No claim without a mechanism.** Every claim points to the observed mechanism that makes it true (endpoint hit, row written, real forbidden op attempted as a real principal, logged real attempt, price-vs-free-substitute artifact). A claim whose mechanism can't be exhibited is an **automatic fail**, not a soft note.
+- **P3 — "Can't reach it" is a finding, not an excuse.** If automation can't reach a control/flow/guard, that is evidence of a defect (some real user can't reach it either) — never a license to skip, cap, or defer. A "named infra blocker" cap requires a **logged, reproduced** real attempt; a prior session's precedent never licenses the next.
+- **P4 — The adversary is structural, not a checklist.** Truth-seeking is owned by a **separately-incentivized evaluator** judged by defects found (independent auditor / N-skeptic). Probe *lists* prompt the adversary's imagination; they never define "done."
+
 ## 🚦 First Actions on Any Engagement
 
 Run these checks **in order**. Stop at the first hit, run the indicated skill, then resume the list.
 
-1. **Catch-up needed?** Check `.speck/.migration-needs-catchup`. If the file exists OR any of `product-contract.md`, `evidence-contract.md`, `project-state.md` contains the literal text `<!-- v7 MIGRATION SCAFFOLD -->` → run `/speck-catch-up` BEFORE anything else. The project was just migrated from v6 and the artifacts are empty scaffolds. No feature work, no implementations, no validation gates until catch-up is done.
-2. **Read `specs/projects/<PROJECT_ID>/project-state.md`** if it exists (single page, current state, open questions, locked decisions, known issues, next action). This is always your first read once catch-up is clear.
-3. **Detect play level** from `.speck/project.json` → `play_level` (sprint/build/platform). No file = platform.
-4. **Detect engagement gap**. If `project-state.md` is missing, stale (>2 weeks), or you're a new agent picking up: route to `/recheck` before any new feature work.
-5. **Then proceed** with whatever the user asked for.
+1. **v8 re-prove needed?** Check `.speck/.v8-reprove-needed`. If it exists, the project was just upgraded from v7 and its green is verification-shaped (`[pre-v8-proof]`). Run `/speck-reprove` to build the suspect-green worklist; effective state is capped at `INTEGRATION-GREEN` and consumer FELT-GOOD reverts to `uncovered` until each axis is re-earned under the four principles. Do not trust any prior UX-RC+ claim until then.
+2. **Catch-up needed?** Check `.speck/.migration-needs-catchup`. If it exists OR any of `product-contract.md`, `evidence-contract.md`, `project-state.md` contains the literal text `<!-- v7 MIGRATION SCAFFOLD -->` → run `/speck-catch-up` BEFORE anything else (v6→v7 empty scaffolds). No feature work until catch-up is done.
+3. **Read `specs/projects/<PROJECT_ID>/project-state.md`** if it exists (single page, current state, open questions, locked decisions, known issues, next action). This is always your first read once catch-up/re-prove is clear.
+4. **Detect play level** from `.speck/project.json` → `play_level` (sprint/build/platform). No file = platform.
+5. **Detect engagement gap**. If `project-state.md` is missing, stale (>2 weeks), stamped `< speck 8`, or you're a new agent picking up: route to `/recheck` before any new feature work.
+6. **Then proceed** with whatever the user asked for.
 
 ## 🎚️ Play Levels (affects rigor, not discipline)
 
@@ -109,6 +121,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Phase-boundary decisions (locked) | `project-decisions-log.md` |
 | Current state for next-session pickup (auto-regen) | `project-state.md` |
 | Drift / re-engagement report | `project-recheck-report.md` |
+| v7→v8 truth re-prove report (cap-and-worklist) | `project-v8-reprove-report.md` |
 | Project-level skeptical audit findings | `project-audit-report.md` |
 | Post-validation hardening report | `project-harden-report-*.md` |
 | Post-validation project adjustment report | `project-adjust-report-*.md` |
@@ -295,10 +308,15 @@ A unit that produced passing-looking artifacts with zero skill calls is **simula
 
 ## ⚖️ Always-On Discipline (unconditional, regardless of human hands-on intensity)
 
-These apply at every play level, in every command, on every project:
+These apply at every play level, in every command, on every project. The first four are the v8 spine (see §The Four Principles):
 
 | Discipline | When | What |
 |------------|------|------|
+| **P1 · Evaluation over verification** | Every gate | Default posture is "find what is wrong," not "confirm the claim." Un-adjudicated evidence = surrogate proof. LARP = DOES-IT-WORK + IS-IT-GOOD, each able to block ship. |
+| **P2 · No claim without a mechanism** | Every claim | Point to the observed mechanism (endpoint hit, row written, real forbidden op as a real principal, logged attempt, price-vs-substitute artifact). No mechanism = automatic fail. |
+| **P3 · Can't-reach is a finding** | Any skip / cap / defer | Unreachable-by-automation = defect hypothesis, not an excuse. A "named blocker" cap needs a logged, reproduced real attempt. |
+| **P4 · Adversary is structural** | Every audit / validate | A separately-incentivized evaluator judged by defects found; probe lists prompt imagination, never define done. |
+| **Value defensibility** | Before a price locks / COMMERCIAL-RC | Enumerate the $0 / DIY / free-AI substitutes; state the buyer's real reference price; a price needs a substitute-defensibility artifact (P2), not just a working paywall. |
 | **Catch-up first** | After v6 → v7 migration | If `.speck/.migration-needs-catchup` exists OR truth artifacts still carry the `v7 MIGRATION SCAFFOLD` banner → run `/speck-catch-up` BEFORE any feature work |
 | **First-read state** | Every engagement | Read `project-state.md` before anything else |
 | **Engagement-gap recheck** | >2 weeks since last verified-against-runtime stamp OR new agent | Run `/recheck` to detect drift before new feature work |
@@ -320,14 +338,16 @@ These apply at every play level, in every command, on every project:
 
 A more hands-on human intervenes at decision locks. A more hands-off human lets the agent confirm and proceed. **Same methodology either way.**
 
-## 🚦 Readiness States (the new PASS/FAIL taxonomy)
+## 🚦 Readiness States (evaluation over verification)
 
-Every readiness claim decomposes into three distinct, non-substitutable axes:
-1. **CORRECT** — Does the code do what it claims? (proven by unit/integration tests, types, and `/audit`).
-2. **ON-CONTRACT** — Does the behavior conform to the specifications and magic moments? (proven by standard LARP and traceability matrix).
-3. **FELT-GOOD** — Would a naive, first-time user actually find the experience good? **The AI evaluates this axis directly** by running the context-stripped naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric) and recording a verdict. A human taste review is an *optional stronger override* — never a prerequisite.
+Readiness is **earned by trying to disprove it** (P1), not by confirming a claim. Every readiness claim decomposes into three distinct, non-substitutable axes:
+1. **CORRECT** — Does the code do what it claims? (unit/integration tests, types, `/audit`).
+2. **ON-CONTRACT** — Does the behavior conform to the specifications and magic moments? (standard LARP + traceability matrix).
+3. **FELT-GOOD** — Would a naive, first-time user actually find the experience good? **The AI evaluates this axis directly** via the context-stripped naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric) and the IS-IT-GOOD adjudication, recording a verdict. A human taste review is an *optional stronger override* — never a prerequisite.
 
-**CRITICAL**: You must never use unqualified "verified" or "validated" claims without naming the axis. FELT-GOOD is a real, AI-evaluable axis: an agent is expected to understand and apply first-impression taste judgment, not defer it. A story or epic cannot claim FELT-GOOD coverage from correctness/conformance evidence alone — it must come from an actual naive-hostile taste pass. For consumer archetypes, if that pass has not been run the readiness map renders `FELT: uncovered`; once the AI runs it, the map renders `FELT: ai-verified` (or `FELT: human-verified` when a human additionally signs off). Claiming a taste miss is "uncatchable by automation" is banned — run the naive lens.
+**CRITICAL**: Never use unqualified "verified"/"validated" without naming the axis. FELT-GOOD is a real, AI-evaluable axis — the agent applies first-impression taste judgment, it does not defer it. A story/epic cannot claim FELT-GOOD from correctness/conformance evidence alone; it must come from an actual naive-hostile taste pass. Consumer archetypes render `FELT: uncovered` until that pass runs → `FELT: ai-verified` once the AI records its verdict (→ `FELT: human-verified` if a human also signs off). "Uncatchable by automation" is banned — run the naive lens.
+
+**v8 migration cap**: after `speck upgrade`, all pre-v8 truth is `[pre-v8-proof]` (verification-shaped). Effective state caps at `INTEGRATION-GREEN` and consumer FELT-GOOD reverts to `uncovered` until `/speck-reprove` re-earns each axis under the four principles. Artifacts stamped `< speck 8` are v8-stale (`V8_REPROVE.P1` at `/recheck`).
 
 | State | Meaning | Gate criteria |
 |-------|---------|---------------|
@@ -343,7 +363,7 @@ Stories/epics/projects declare which state they're claiming. Validation only mar
 
 ## 🧠 Context-Rot Defenses
 
-Context rot is real — old decisions get deprioritized as tokens accumulate. Speck v7 fights it structurally:
+Context rot is real — old decisions get deprioritized as tokens accumulate. It is also a root cause of missed defects (a checklist too big to hold crowds out common sense). Speck v8 fights it structurally:
 
 - **Layered loading**: `project-state.md` first (one page). Load deeper docs only when the active skill needs them. **Never** pre-load all foundation docs at task start.
 - **File-size discipline**: This file (AGENTS.md) is the table of contents. SKILL.md files target ~150 lines. Templates are checklists, not narratives.
@@ -381,40 +401,17 @@ Speck is designed to run seamlessly across all major AI coding environments. Cor
 3. **Local Validation Backstop**: Run validators with `--strict` via pre-commit hooks or manually when your host lacks edit/stop gates.
 4. **Agent Skill Tool Fallback**: Some AI host environments restrict or do not support the execution of the `Skill` tool inside highly restricted custom agent roles (such as `@speck-coder` or `@speck-auditor`). If your host environment fails to provide the `Skill` tool to custom roles, any workflow lane requiring skill invocation (e.g., running story/epic specification or validation) MUST be run using a general-purpose, all-tools agent instead. Never fall back to hand-writing or simulating report files; real skill execution recorded in the transcript is required.
 
-## 🦾 Claude-First Autonomous & Agentic Workflows
+## 🦾 Claude-First Autonomous Workflows (optional accelerators)
 
-When running Speck with Claude Code, the methodology provides first-class autonomous features to dramatically accelerate development loops without sacrificing rigor.
-
-### 🎭 Specialized Subagents
-Speck defines five custom subagents in `.claude/agents/` that can be invoked via `@-mentions` or deployed as peer reviewers on an agent team:
-* **`@speck-scribe`**: Drafts and refines `spec.md` and `epic.md` using precise normative language (`SHALL/MUST`).
-* **`@speck-planner`**: technical planning (`plan.md`, `epic-tech-spec.md`) and task lists (`tasks.md`) enforcing simplicity-first principles and TDD.
-* **`@speck-coder`**: Implements code in isolated, conflict-free environments using git worktrees (`isolation: worktree`).
-* **`@speck-auditor`**: Conducts adversarial audits and drafts `audit-report.md`.
-* **`@speck-validator`**: Validates readiness, executes persona LARP, and stamps evidence files.
-
-### 🚀 Agent Teams
-Leverage Claude's session orchestration to run multi-perspective teammate sessions (e.g. peer review / dual implementation) concurrently:
-```text
-Create an agent team to design and build story S005. Assign one teammate as a @speck-coder to implement the service and another as a @speck-auditor to review edge-cases.
-```
-
-### 🔄 Speck Maintenance Loops
-You can start a scheduled workspace babysitting or maintenance loop. This executes `.claude/loop.md` to run test suites, check for spec drift, and scan for scaffolding tokens dynamically:
-```text
-/loop 1h
-```
-
-### 🎯 Exit/Stop Verification Gates
-Claude Code `Stop` hooks use **command-type** lifecycle gates (`.claude/hooks/stop-gate.sh`) — not prompt-type loops. Story-level `tasks.md` checks apply only inside story directories; epic/project sessions never gate on `tasks.md`. Speck-managed hook blocks in `.claude/settings.json` reconcile from `settings.json.example` on `speck upgrade` / `speck reconcile-settings`. Drift surfaces as `SETTINGS_DRIFT.P0` on `/recheck`.
+Claude Code adds optional accelerators; none change the discipline. Five `speck-*` subagents in `.claude/agents/` (`@speck-scribe`, `@speck-planner`, `@speck-coder`, `@speck-auditor`, `@speck-validator`) can run as an agent team — e.g. one implements while a **separate** one audits (P4 role separation). `/loop <duration>` runs `.claude/loop.md` for scheduled test/drift/scaffold sweeps. `Stop` hooks use command-type lifecycle gates (`.claude/hooks/stop-gate.sh`); story `tasks.md` checks apply only inside story dirs. Speck-managed hook blocks reconcile from `settings.json.example` on `speck upgrade`; drift surfaces as `SETTINGS_DRIFT.P0` at `/recheck`.
 
 ## 🧪 Agent Skills
 
 Skills are agent-decided expertise packages — auto-loaded when relevant.
 
-- **Process skills**: `/speck`, `/recheck`, `/larp`, `/audit`, `/harden`, `/story-adjust`, `/epic-adjust`, `/project-adjust`, `/speck-debug`, `/speck-learn`, `/speck-premise-challenge`
-- **Level commands** (`project-*`, `epic-*`, `story-*`): the Speck workflow
-- **Domain patterns** (`.cursor/skills/patterns/`): Stripe, Clerk, Supabase, Firebase, RevenueCat, etc. — lazy-loaded when implementing those integrations
+- **Process skills**: `/speck`, `/recheck`, `/larp`, `/audit`, `/harden`, `/adjust` (`--level story|epic|project`), `/speck-debug`, `/speck-learn`, `/speck-premise-challenge`, `/speck-reprove` (v7→v8 truth re-prove)
+- **Level commands** (`project-*`, `epic-*`, `story-*`): the Speck workflow. In v8, `validate`, `retrospective`, `adjust`, and `analyze` add unified `--level` **dispatcher** entry points that route to the per-level specialists — the specialists keep the full battle-tested logic (no lossy merge), so `project-validate`/`epic-validate`/`story-validate` etc. remain valid direct entries. `scan` is unified in `speck-scan --level`, with `project/epic/story-scan` as thin alias-shims; `epic-outline`/`story-outline`/`story-analyze` are retired alias-shims (folded into `/speck-skeptical-review`, `/story-tasks`, and `/audit`).
+- **Domain patterns** (lazy): the 20 lazy patterns (Stripe, Clerk, Supabase, Firebase, RevenueCat, GDPR, Sentry, PostHog, … and the `model-selection` meta-pattern) carry `disable-model-invocation: true` and are **loaded on demand** — consult the index `.speck/patterns/library/README.md` and `Read` the one your task needs, rather than carrying all of them on the always-on surface.
 
 Commands are invoked by reading the corresponding `SKILL.md` file. **Always read the skill AND the template before generating any artifact** — never reconstruct from training data.
 
@@ -443,6 +440,9 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Conflate CORRECT or ON-CONTRACT with FELT-GOOD taste judgment
 - Launder a taste miss or design premise error as "uncatchable by automation" — the AI must run the naive-hostile lens and apply taste judgment
 - Defer the FELT-GOOD axis to a mandatory human sign-off — the AI evaluates taste itself via the naive-hostile LARP; human review is an optional override, not a gate
+- Accept an un-adjudicated screenshot/recording as evidence of quality — an un-judged capture is surrogate proof (P1); a captured screen without a substantive per-screen critique is an incomplete LARP, not a pass
+- Let an AI surface claim an action (built/generated/scheduled) with no observed mechanism, let a price lock without a free-substitute defensibility artifact, or let a guard-test pass as a bypass-capable role or while silently skipped (P2)
+- Cap readiness on a "named infra blocker" without a logged, reproduced real attempt, or write off an unreachable control as a tooling limit instead of a finding (P3)
 
 **ALWAYS**:
 - Read `project-state.md` first
@@ -508,7 +508,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 7.14.2  
+**Speck Version**: 8.0.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

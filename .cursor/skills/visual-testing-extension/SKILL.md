@@ -1,5 +1,6 @@
 ---
 name: visual-testing-extension
+disable-model-invocation: true
 description: Load when running visual validation for browser extensions (Chrome, Firefox, Edge). Provides Puppeteer and Playwright patterns for popup, options, and content script contexts.
 ---
 

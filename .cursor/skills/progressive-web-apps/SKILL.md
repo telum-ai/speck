@@ -1,5 +1,6 @@
 ---
 name: progressive-web-apps
+disable-model-invocation: true
 description: Load when building Progressive Web Apps with offline support, push notifications, and installability. Applies when implementing service workers, caching strategies, or PWA manifest configuration.
 ---
 

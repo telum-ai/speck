@@ -1,6 +1,6 @@
 ---
 name: story-implement
-description: Load when user says 'implement this', 'write the code', 'build it', or all planning artifacts are in place and reviewed. PREREQUISITE GATE — before executing, verify all four artifacts exist in the story directory: spec.md (from /story-specify), plan.md (from /story-plan), tasks.md (from /story-tasks), and analysis-report.md with no unresolved CRITICALs (from /story-analyze). If any are missing, do NOT implement — route to the missing step first (story-specify → story-plan → story-tasks → story-analyze → story-implement).
+description: Load when user says 'implement this', 'write the code', 'build it', or all planning artifacts are in place and reviewed. PREREQUISITE GATE — before executing, verify the three required artifacts exist in the story directory: spec.md (from /story-specify), plan.md (from /story-plan), and tasks.md (from /story-tasks, whose tail includes the spec↔plan↔tasks consistency cross-check). If any are missing, do NOT implement — route to the missing step first (story-specify → story-plan → story-tasks → story-implement). The adversarial behavior-vs-spec check is /audit, run AFTER implementation and before /story-validate (v7+: /story-analyze is retired; a standalone analysis-report.md is optional, not a hard prereq).
 disable-model-invocation: false
 ---
 
@@ -17,7 +17,7 @@ $ARGUMENTS
    - Preferred: user is already in the story directory (or a subfolder like `contracts/`)
    - Walk up from current directory until you find `spec.md`
    - If NO `spec.md` found anywhere in the directory tree:
-     * ERROR "No story spec found. Run `/story-specify` first to define what to build, then `/story-plan` → `/story-tasks` → `/story-analyze` before implementing."
+     * ERROR "No story spec found. Run `/story-specify` first to define what to build, then `/story-plan` → `/story-tasks` before implementing."
    - If `spec.md` found but lifecycle state is `Draft (Placeholder)`:
      * ERROR "This story's spec.md is still a Draft placeholder — `/story-specify` has not been run yet. Complete the specification before implementing."
 
@@ -29,15 +29,13 @@ $ARGUMENTS
    - `{STORY_DIR}/spec.md` — REQUIRED (ERROR if missing: "Run `/story-specify` first")
    - `{STORY_DIR}/plan.md` — REQUIRED (ERROR if missing: "Run `/story-plan` first")
    - `{STORY_DIR}/tasks.md` — REQUIRED (ERROR if missing: "Run `/story-tasks` first")
-   - `{STORY_DIR}/analysis-report.md` — REQUIRED (ERROR if missing: "Run `/story-analyze` first — it is non-negotiable")
+   - `{STORY_DIR}/analysis-report.md` — OPTIONAL (v7+: `/story-analyze` is retired — its consistency job runs at the tail of `/story-tasks`, its adversarial job is `/audit`). If a report is present, it must carry no unresolved CRITICALs.
 
-   All four must exist and the prerequisite script must exit with 0 before a single line of implementation code is written.
+   All three REQUIRED artifacts (spec.md, plan.md, tasks.md) must exist and the prerequisite script must exit with 0 before a single line of implementation code is written.
 
    **⚠️ PRE-IMPLEMENTATION CHECK**:
-   Verify `analysis-report.md` has no CRITICAL issues unresolved. If it does:
-   - List the CRITICAL issues
-   - Refuse to proceed: "Fix the CRITICAL issues in analysis-report.md before implementing"
-   - story-analyze catches spec/plan/task conflicts BEFORE implementation — never skip it
+   The spec↔plan↔tasks consistency cross-check runs at the tail of `/story-tasks`; the adversarial behavior-vs-spec cross-check is `/audit` (`speck-audit`), run AFTER implementation and before `/story-validate`. If an `analysis-report.md` happens to be present, verify it has no unresolved CRITICAL issues:
+   - List any CRITICAL issues and refuse to proceed until they are resolved.
 
 2. Load and analyze the implementation context:
    - **REQUIRED**: Read tasks.md for the complete task list and execution plan

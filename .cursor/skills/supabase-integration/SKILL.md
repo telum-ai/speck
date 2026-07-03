@@ -1,5 +1,6 @@
 ---
 name: supabase-integration
+disable-model-invocation: true
 description: Load when integrating Supabase for database, auth, storage, and real-time features. Applies when implementing Row-Level Security, Supabase Auth with Next.js/React, real-time subscriptions, or Edge Functions.
 ---
 

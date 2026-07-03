@@ -1,5 +1,6 @@
 ---
 name: websocket-implementation
+disable-model-invocation: true
 description: Implement WebSockets for real-time communication. Applies when building chat, notifications, live updates, or any feature requiring bidirectional server-client communication.
 ---
 

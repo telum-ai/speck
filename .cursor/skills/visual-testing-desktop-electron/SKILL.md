@@ -1,5 +1,6 @@
 ---
 name: visual-testing-desktop-electron
+disable-model-invocation: true
 description: Load when running visual validation for Electron desktop apps. Provides Playwright Electron API patterns.
 ---
 
