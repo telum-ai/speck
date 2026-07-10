@@ -1,5 +1,30 @@
 # Speck Changelog
 
+## v8.0.1 — 2026-07-10 — Fix: upgrade no longer deletes project-custom skills/agents
+
+Data-loss-class fix found live during the keegt v6.1.12→v8.0.0 upgrade (captured via the
+v8 feedback discipline: `.speck/feedback/2026-07-10-v8-upgrade-session.md` in keegt).
+
+### The bug
+`.cursor/skills` and `.cursor/agents` are ALWAYS_OVERWRITE directories — `smartSync` does a
+wholesale `rmSync` + re-copy on every `speck upgrade`/`speck init`. But project-custom skills
+MUST live in `.cursor/skills` (`.claude/skills` and `.codex/skills` are symlinks into it), so
+every upgrade silently deleted them. Keegt lost its four `keegt-content-*` skills (recovered
+from git; an uncommitted custom skill would have been unrecoverable). `--dry-run` did not
+disclose the wholesale replacement.
+
+### The fix
+- `PRESERVE_UNKNOWN_SUBDIRS = ['.cursor/skills', '.cursor/agents']`: during the replace, any
+  subdirectory NOT shipped by the Speck source tree is snapshotted and restored (same machinery
+  as `PRESERVE_SUBDIRS`). Speck-shipped dirs (including retired-skill shims) are still fully
+  overwritten; explicit removals via `REMOVE_FILES` still apply afterward.
+- New `packages/cli/lib/sync.preserve.test.js` (4 tests: custom skill survives, shipped skill
+  fully overwritten, stale files inside shipped dirs do not survive, custom agent survives) —
+  wired into `npm test`.
+
+### Version
+- `VERSION`, root `package.json`, `packages/cli/package.json` → `8.0.1`.
+
 ## v8.0.0 — 2026-07-03 — Evaluation Over Verification
 
 The v7 patch line fought agent green-hacking by writing down ever more explicit checks. That is self-defeating: an agent optimizes to satisfy the *letter* of any enumerated gate (Goodhart), and the enumeration itself becomes the context-rot that crowds out common sense. v8 changes **what the agent optimizes for** — from "produce green evidence" to "find what is wrong" — and **shrinks the corpus** so common sense fits back in context. Design: `docs/v8/v8-north-star.md`.

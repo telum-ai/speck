@@ -42,6 +42,31 @@ const PRESERVE_SUBDIRS = {
 };
 
 /**
+ * ALWAYS_OVERWRITE directories where PROJECT-CUSTOM subdirectories (ones Speck never
+ * shipped) must survive upgrades. Custom skills/agents have to live here — .claude and
+ * .codex are symlinks into .cursor — so wholesale replacement would delete user work.
+ * Anything Speck ships (including retired-skill shims) comes back from the source copy;
+ * explicit removals still happen via REMOVE_FILES afterward.
+ */
+const PRESERVE_UNKNOWN_SUBDIRS = ['.cursor/skills', '.cursor/agents'];
+
+/**
+ * Compute the subdirectories of targetPath that do not exist in sourcePath.
+ */
+function unknownSubdirs(sourcePath, targetPath) {
+  if (!existsSync(targetPath)) return [];
+  const sourceEntries = new Set(
+    existsSync(sourcePath)
+      ? readdirSync(sourcePath).filter(e => statSync(join(sourcePath, e)).isDirectory())
+      : []
+  );
+  return readdirSync(targetPath).filter(e => {
+    const p = join(targetPath, e);
+    return statSync(p).isDirectory() && !sourceEntries.has(e);
+  });
+}
+
+/**
  * Files that need smart merging
  */
 const SMART_MERGE_FILES = {
@@ -652,7 +677,10 @@ export function smartSync(sourceDir, targetDir, options = {}) {
       if (isDir) {
         // Remove existing and copy entire directory
         // (but preserve any project-owned extension points configured under this directory).
-        const preserveSubdirs = PRESERVE_SUBDIRS[pattern] || [];
+        const preserveSubdirs = [...(PRESERVE_SUBDIRS[pattern] || [])];
+        if (PRESERVE_UNKNOWN_SUBDIRS.includes(pattern)) {
+          preserveSubdirs.push(...unknownSubdirs(sourcePath, targetPath));
+        }
         const preserved = [];
         let preserveTmpRoot = null;
 
