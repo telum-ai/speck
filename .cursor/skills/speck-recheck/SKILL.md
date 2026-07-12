@@ -173,7 +173,7 @@ Report summary fields per claude skill.
 
 ### Live Workspace Gaps (Claude-Only Pre-Injection)
 ```!
-bash .speck/scripts/v7/staleness-check.sh 2>/dev/null || true
+bash .speck/scripts/staleness-check.sh 2>/dev/null || true
 bash .speck/scripts/check-replace-markers.sh specs/projects/ 2>/dev/null || true
 ```
 

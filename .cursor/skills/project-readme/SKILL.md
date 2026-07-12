@@ -70,7 +70,7 @@ Parse `$ARGUMENTS` for `--surface=`, `--check`, `--epic-validated=`.
 
 Validation (separate):
 ```bash
-.speck/scripts/validation/validate-readme.sh [--strict]
+.speck/scripts/validation/validators/validate-readme.sh [--strict]
 .speck/scripts/profile-drift-check.sh
 ```
 

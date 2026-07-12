@@ -43,7 +43,7 @@ Before doing ANY project-level validation, verify:
    - If missing for any persona: STOP. Tell user "Run `/larp <persona>` for [list]."
 
 5. **PROFILE gates for SHIP-RC+ claims**
-   - Run `bash .speck/scripts/validation/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`
+   - Run `bash .speck/scripts/validation/validators/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`
    - If any `PROFILE_DRIFT.P1`: STOP. Tell user "Resolve PROFILE drift before project-validate at SHIP-RC."
 
 If any pre-gate fails: refuse to proceed.

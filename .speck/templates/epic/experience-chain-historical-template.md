@@ -1,5 +1,5 @@
 ---
-speck_version: 7.2
+speck_version: 8.0
 artifact_type: experience-chain-historical
 required_for: ui-epics-pre-v7
 brownfield_exempt: true

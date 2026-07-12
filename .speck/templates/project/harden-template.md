@@ -1,5 +1,5 @@
 ---
-speck_version: 7.0
+speck_version: 8.0
 template_version: "7.13.2"
 artifact_type: harden-report
 ---

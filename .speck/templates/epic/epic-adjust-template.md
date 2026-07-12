@@ -1,5 +1,5 @@
 ---
-speck_version: 7.15
+speck_version: 8.0
 template_version: "7.15.0"
 artifact_type: epic-adjust-report
 ---

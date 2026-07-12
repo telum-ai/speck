@@ -1,5 +1,5 @@
 ---
-speck_version: 7.0
+speck_version: 8.0
 artifact_type: experience-chain
 required_for: ui-epics
 ---

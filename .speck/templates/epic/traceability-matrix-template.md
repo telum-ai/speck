@@ -1,5 +1,5 @@
 ---
-speck_version: 7.14
+speck_version: 8.0
 template_version: "7.14.0"
 artifact_type: traceability-matrix
 ---

@@ -1,5 +1,5 @@
 ---
-speck_version: 7.0
+speck_version: 8.0
 artifact_type: decisions-log
 append_only: true
 ---

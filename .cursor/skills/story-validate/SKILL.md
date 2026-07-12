@@ -105,7 +105,7 @@ To execute browser LARPs successfully in sandboxed or restricted environments wi
 6. Run the banned-phrase self-check on the report's own language before publishing
 7. Apply SHA stamp to the report
 7b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md` to ensure three-axis compliance and that the AI-covered FELT-GOOD axis is not left `uncovered` for consumer UX-RC+ claims.
-8. **Before claiming SHIP-RC or SHIP:** run `bash .speck/scripts/validation/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`. Block SHIP-RC+ if any `PROFILE_DRIFT.P1` finding.
+8. **Before claiming SHIP-RC or SHIP:** run `bash .speck/scripts/validation/validators/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`. Block SHIP-RC+ if any `PROFILE_DRIFT.P1` finding.
 9. **UI stories touching PROFILE surfaces** (landing, marketing, package.json): run `regenerate-project-readme.sh --check` before UX-RC+ claim.
 10. Trigger `/project-state` regeneration
 

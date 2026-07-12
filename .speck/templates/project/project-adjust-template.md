@@ -1,5 +1,5 @@
 ---
-speck_version: 7.17
+speck_version: 8.0
 template_version: "7.17.0"
 artifact_type: project-adjust-report
 ---

@@ -1,5 +1,5 @@
 ---
-speck_version: 7.0
+speck_version: 8.0
 template_version: "7.11.0"
 artifact_type: validation-report
 readiness_state_claimed: [NO-SHIP | IMPL-GREEN | INTEGRATION-GREEN | UX-RC | API-RC | COMMERCIAL-RC | SHIP-RC | SHIP]

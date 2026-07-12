@@ -392,7 +392,7 @@ Run when `--phase=profile` or as part of `--phase=all` on v7.7+ projects missing
 1. If `project.md` lacks `## PROFILE surfaces`, append table from [project-template.md](.speck/templates/project/project-template.md) marked `[FROM PROFILE CATCH-UP]`
 2. If `evidence-contract.md` lacks `PROFILE Gate Criteria`, append subsection from [evidence-contract-template.md](.speck/templates/project/evidence-contract-template.md) marked `[FROM PROFILE CATCH-UP]`
 3. Log decision via `/speck-decision-log` — "PROFILE pillar backfilled for v7.7 enforcement"
-4. Run `.speck/scripts/regenerate-project-readme.sh` + `.speck/scripts/validation/validate-readme.sh`
+4. Run `.speck/scripts/regenerate-project-readme.sh` + `.speck/scripts/validation/validators/validate-readme.sh`
 5. Run `.speck/scripts/profile-drift-check.sh` — add P1/P2 findings to `project-state.md` blocking issues
 6. Trigger `/project-state` regeneration
 

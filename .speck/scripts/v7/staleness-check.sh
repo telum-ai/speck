@@ -1,1 +1,0 @@
-../staleness-check.sh
