@@ -27,7 +27,7 @@ The template defines the canonical structure for product-contract.md.
 
 ## Purpose
 
-`product-contract.md` is the **single executable PROMISE document** in Speck v7. Everything downstream — epic specs, story specs, audit reports, validation reports — references it.
+`product-contract.md` is the **single executable PROMISE document** in Speck. Everything downstream — epic specs, story specs, audit reports, validation reports — references it.
 
 Six v6 projects (Streb, Pust, Brightstance, Fau, Ukesmeny, Splang) independently failed when they didn't have this:
 - Generic concepts leaked into specialized products (Streb: "deload" in adaptive coach)

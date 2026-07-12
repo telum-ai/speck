@@ -1,6 +1,6 @@
 ---
 name: speck-audit
-description: Adversarial skeptical audit inserted between /story-implement (or /epic-implement) and /story-validate (or /epic-validate). The auditor does NOT trust the implementer's report. For each acceptance criterion it asks "what's the negative case? has it been observed? what evidence proves it works?" Runs adversarial probes (malformed input, oversized payload, dep failure, concurrency, N+1, env vars, observability reach) per evidence-contract.md. Required for every epic close in Speck v7 — replaces the v6 /story-analyze step. Load when implementation just finished, when user says "audit this", "are we sure?", "what's missing", or before any validate gate.
+description: Adversarial skeptical audit inserted between /story-implement (or /epic-implement) and /story-validate (or /epic-validate). The auditor does NOT trust the implementer's report. For each acceptance criterion it asks "what's the negative case? has it been observed? what evidence proves it works?" Runs adversarial probes (malformed input, oversized payload, dep failure, concurrency, N+1, env vars, observability reach) per evidence-contract.md. Required for every epic close — replaces the v6 /story-analyze step. Load when implementation just finished, when user says "audit this", "are we sure?", "what's missing", or before any validate gate.
 disable-model-invocation: false
 ---
 

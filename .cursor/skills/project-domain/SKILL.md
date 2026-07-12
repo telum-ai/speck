@@ -1,6 +1,6 @@
 ---
 name: project-domain
-description: Capture subject-matter expertise for specialized domains (healthcare, fitness, finance, legal, e-commerce, etc.) so terminology and rules aren't guessed wrong. In Speck v7, this is OPTIONAL at Build — domain terminology + invariants live inside product-contract.md Section 6 (Public Language) by default. REQUIRED at Platform when domain regulation/terminology is non-trivial. Produces domain-model.md when run. Load when the product operates in a specialized domain AND deserves a standalone document.
+description: Capture subject-matter expertise for specialized domains (healthcare, fitness, finance, legal, e-commerce, etc.) so terminology and rules aren't guessed wrong. This is OPTIONAL at Build — domain terminology + invariants live inside product-contract.md Section 6 (Public Language) by default. REQUIRED at Platform when domain regulation/terminology is non-trivial. Produces domain-model.md when run. Load when the product operates in a specialized domain AND deserves a standalone document.
 disable-model-invocation: false
 ---
 
@@ -11,7 +11,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ v7 Play Level Guard
+## ⚠️ Play Level Guard
 
 Read `.speck/project.json` → `play_level`. If missing, default to Platform.
 

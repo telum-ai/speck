@@ -1,6 +1,6 @@
 ---
 name: speck-recheck
-description: Mandatory engagement-gap drift detector for Speck v7. Compares truth-doc assertions to current HEAD via SHA stamps, runs persona LARP cold-start, scans for third-party integration risk + ToS posture, checks constitution principle compliance, updates project-state.md, and blocks new feature work if drift is found. Load when reengagement gap is >2 weeks since last verified-against-runtime, when a new agent picks up a project, or when user says "audit", "make ship-ready", "is this still working".
+description: Mandatory engagement-gap drift detector for Speck. Compares truth-doc assertions to current HEAD via SHA stamps, runs persona LARP cold-start, scans for third-party integration risk + ToS posture, checks constitution principle compliance, updates project-state.md, and blocks new feature work if drift is found. Load when reengagement gap is >2 weeks since last verified-against-runtime, when a new agent picks up a project, or when user says "audit", "make ship-ready", "is this still working".
 disable-model-invocation: false
 ---
 
@@ -14,7 +14,7 @@ $ARGUMENTS
 
 ## Purpose
 
-`/recheck` is the **engagement-gap drift detector** that prevents Speck v7's #1 failure mode: an agent (or human) picks up a project after time has passed and starts new feature work on top of stale assumptions.
+`/recheck` is the **engagement-gap drift detector** that prevents Speck's #1 failure mode: an agent (or human) picks up a project after time has passed and starts new feature work on top of stale assumptions.
 
 Six v6 projects independently described this pattern:
 - Odd: B0 ToS violation shipped through 7 epics of validation; would have surfaced via persona LARP cold-start

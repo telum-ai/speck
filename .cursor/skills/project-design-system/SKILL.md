@@ -1,6 +1,6 @@
 ---
 name: project-design-system
-description: Create design tokens, component patterns, and visual standards before planning. In Speck v7, this is OPTIONAL at Build — visual identity lives inside product-contract.md (voice + magic moments) and `design-system/primitives.md` (registered UI primitives) by default. REQUIRED at Platform. Produces design-system.md when run. Load when visual consistency is critical AND Platform-level governance is in force. Always produces or updates `design-system/primitives.md` (the primitive registry) regardless.
+description: Create design tokens, component patterns, and visual standards before planning. This is OPTIONAL at Build — visual identity lives inside product-contract.md (voice + magic moments) and `design-system/primitives.md` (registered UI primitives) by default. REQUIRED at Platform. Produces design-system.md when run. Load when visual consistency is critical AND Platform-level governance is in force. Always produces or updates `design-system/primitives.md` (the primitive registry) regardless.
 disable-model-invocation: false
 ---
 
@@ -11,12 +11,12 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ v7 Play Level Guard
+## ⚠️ Play Level Guard
 
 Read `.speck/project.json` (if it exists) for `play_level`. If missing, default to Platform.
 
 - **Sprint**: Tell the user: "Sprint projects don't need a design system. Ship with whatever CSS you know. Run `/project-promote` when you're ready to grow." STOP.
-- **Build**: Tell the user "At Build, the standalone `design-system.md` is optional. The required artifact for any UI project is `design-system/primitives.md` (the live primitive registry) — that prevents inline UI re-implementations from drifting. Run this skill ONLY if you want a full design-system.md AND keep primitives.md as the live registry. Otherwise, run `/speck-primitives-init` to bootstrap just the registry."
+- **Build**: Tell the user "At Build, the standalone `design-system.md` is optional. The required artifact for any UI project is `design-system/primitives.md` (the live primitive registry) — that prevents inline UI re-implementations from drifting. Run this skill ONLY if you want a full design-system.md AND keep primitives.md as the live registry. Otherwise, run this skill to bootstrap just the registry (`design-system/primitives.md`) from `primitives-registry-template.md`."
 - **Platform** (or no project.json): Recommended. Full flow below.
 
 **Always**, on any run, also create or update `design-system/primitives.md` using `.speck/templates/project/primitives-registry-template.md`.

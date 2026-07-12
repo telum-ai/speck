@@ -1,6 +1,6 @@
 ---
 name: speck-scan
-description: Unified scan skill that extracts code-side facts from an existing codebase at project, epic, or story scope. In Speck v7 this consolidates the v6 project-scan, epic-scan, and story-scan into one skill with a --level argument. Load when starting brownfield work, when /recheck needs a fresh code-side reality check, or when user says "scan this project/epic/story". Defaults to inferring level from current directory.
+description: Unified scan skill that extracts code-side facts from an existing codebase at project, epic, or story scope. This consolidates the v6 project-scan, epic-scan, and story-scan into one skill with a --level argument. Load when starting brownfield work, when /recheck needs a fresh code-side reality check, or when user says "scan this project/epic/story". Defaults to inferring level from current directory.
 disable-model-invocation: false
 ---
 

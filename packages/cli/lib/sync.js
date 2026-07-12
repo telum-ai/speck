@@ -445,28 +445,6 @@ export async function extractRelease(tag, token = null) {
 }
 
 /**
- * Get all files from a directory recursively
- */
-export function getAllFiles(dir, baseDir = dir) {
-  const files = [];
-  
-  if (!existsSync(dir)) return files;
-  
-  for (const entry of readdirSync(dir)) {
-    const fullPath = join(dir, entry);
-    const relativePath = relative(baseDir, fullPath);
-    
-    if (statSync(fullPath).isDirectory()) {
-      files.push(...getAllFiles(fullPath, baseDir));
-    } else {
-      files.push(relativePath);
-    }
-  }
-  
-  return files;
-}
-
-/**
  * Recursively copy a directory, respecting SKIP_PATTERNS
  */
 function copyDir(src, dest, baseDir = null) {
@@ -907,9 +885,3 @@ export function saveVersion(targetDir, version) {
   mkdirSync(dirname(versionPath), { recursive: true });
   writeFileSync(versionPath, version);
 }
-
-// Legacy exports for backwards compatibility
-export function loadIgnorePatterns() { return []; }
-export function shouldIgnore() { return false; }
-export function planSync() { return { create: [], update: [], skip: [], unchanged: [] }; }
-export function executeSync() { return { created: [], updated: [], errors: [] }; }

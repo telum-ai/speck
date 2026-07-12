@@ -323,7 +323,7 @@ This command benefits from parallel subagent execution:
    - Recommended: /project-roadmap (epic timeline and resource allocation)
    - Then: /project-plan (to synthesize PRD + epics)
    - Begin epic development (for each epic: /epic-specify → /epic-plan)
-   - Note: Do NOT run /project-validate yet. Under Speck v7, /project-validate is strictly the final post-implementation release gate run only after ALL epics are validated.
+   - Note: Do NOT run /project-validate yet. /project-validate is strictly the final post-implementation release gate run only after ALL epics are validated.
    ```
 
 ## Architecture Validation

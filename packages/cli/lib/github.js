@@ -73,30 +73,6 @@ export async function getReleaseByTag(tag) {
 }
 
 /**
- * Download and extract a release tarball
- * Returns a map of file paths to contents
- */
-export async function downloadRelease(tag) {
-  const tarballUrl = `https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/tags/${tag}.tar.gz`;
-  
-  const response = await fetch(tarballUrl, {
-    headers: {
-      'User-Agent': 'speck-cli',
-    },
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Failed to download release: ${response.statusText}`);
-  }
-  
-  // Return the tarball URL for extraction
-  return {
-    url: tarballUrl,
-    tag,
-  };
-}
-
-/**
  * Get the changelog between two versions
  */
 export async function getChangelog(fromVersion, toVersion) {

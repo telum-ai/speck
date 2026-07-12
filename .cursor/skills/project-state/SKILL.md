@@ -145,7 +145,7 @@ Footer must include the SHA stamp:
 ```
 ---
 
-*[as of SHA `<git_sha_short>` | generated `<iso_timestamp>` | speck v7.0.0]*
+*[as of SHA `<git_sha_short>` | generated `<iso_timestamp>` | speck vX.Y.Z]*
 ```
 
 ### 12. Pre-write concurrency check

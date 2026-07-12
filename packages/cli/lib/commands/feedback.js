@@ -20,6 +20,7 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import { execSync } from 'child_process';
+import { isSpeckMarketingReadme } from '../sync.js';
 
 const FEEDBACK_TOPICS = ['catchup', 'migration', 'recipe', 'methodology', 'cli', 'docs', 'other'];
 
@@ -41,16 +42,6 @@ function gitMeta(cwd) {
   } catch {
     return { sha: 'unknown', branch: 'unknown' };
   }
-}
-
-function isSpeckMarketingReadme(content) {
-  if (!content) return false;
-  const firstLine = content.split('\n')[0].trim();
-  if (!firstLine.startsWith('# Speck')) return false;
-  return (
-    content.includes('Spec-driven development methodology') ||
-    content.includes('npx github:telum-ai/speck init')
-  );
 }
 
 function detectProjects(cwd) {

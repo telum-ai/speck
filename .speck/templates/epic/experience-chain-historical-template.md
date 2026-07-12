@@ -85,4 +85,4 @@ Speck v7.2+ chose option 3. Future agents: do not delete this exemption marker w
 
 ---
 
-*[as of SHA `REPLACE_BEFORE_SHIP: git_sha_short` | scaffolded REPLACE_BEFORE_SHIP: date | speck v7.2.0]*
+*[as of SHA `REPLACE_BEFORE_SHIP: git_sha_short` | scaffolded REPLACE_BEFORE_SHIP: date | speck vX.Y.Z]*

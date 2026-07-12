@@ -190,4 +190,4 @@ This stamp is auto-updated when project-state.md is regenerated.
 
 ---
 
-*[as of SHA `[GIT_SHA_SHORT]` | generated `[ISO_TIMESTAMP]` | speck v7.0.0]*
+*[as of SHA `[GIT_SHA_SHORT]` | generated `[ISO_TIMESTAMP]` | speck vX.Y.Z]*

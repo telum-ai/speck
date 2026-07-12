@@ -1,6 +1,6 @@
 ---
 name: project-ux
-description: Define UX strategy and design principles before architecture and planning. In Speck v7, this is OPTIONAL at Build (with 1-3 epics) — UX content lives inside product-contract.md by default. REQUIRED at Build if 4+ epics expected, REQUIRED at Platform. Produces ux-strategy.md when run. Load when the product's UX is a key differentiator, when the user-facing surface area is large, or when Platform-level governance demands a standalone artifact.
+description: Define UX strategy and design principles before architecture and planning. This is OPTIONAL at Build (with 1-3 epics) — UX content lives inside product-contract.md by default. REQUIRED at Build if 4+ epics expected, REQUIRED at Platform. Produces ux-strategy.md when run. Load when the product's UX is a key differentiator, when the user-facing surface area is large, or when Platform-level governance demands a standalone artifact.
 disable-model-invocation: false
 ---
 
@@ -11,7 +11,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ v7 Play Level Guard
+## ⚠️ Play Level Guard
 
 Read `.speck/project.json` → `play_level`. If missing, default to Platform.
 

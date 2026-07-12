@@ -233,4 +233,4 @@ For each updated doc, re-stamp with `.speck/scripts/stamp-truth.sh <path>`.
 
 ---
 
-*[as of SHA `<git_sha_short>` | verified `<date>` | speck v7.0.0]*
+*[as of SHA `<git_sha_short>` | verified `<date>` | speck vX.Y.Z]*

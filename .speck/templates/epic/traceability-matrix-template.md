@@ -71,4 +71,4 @@ Any open/undischarged row blocks `/epic-analyze` (P1) and bars the epic from cla
 
 ---
 
-*[as of SHA `<hash>` | generated `<date>` | speck v7.15.0]*
+*[as of SHA `<hash>` | generated `<date>` | speck vX.Y.Z]*
