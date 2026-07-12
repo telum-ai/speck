@@ -181,9 +181,19 @@ if echo "$content" | grep -q "^## 7\."; then
   banned_count=$(wc -l < "$TMP_TERMS" | tr -d ' ')
   if [[ "$banned_count" -gt 0 ]]; then
     self_violations=0
+    # Terms the contract itself declares as domain vocabulary in §6 (Public Language /
+    # API taxonomy) are established internal→public names; naming them in §1–§5
+    # spec-prose (e.g. a §1 promise mechanic or a §5 Surface/Trigger definition) is not
+    # a user-surface leak — the ban is scoped "on user surfaces". Build the §6 window. (#82)
+    section6=$(awk '/^## 6\./ {s=1; next} /^## [0-9]/ && s {s=0} s {print}' "$file_path")
     while IFS= read -r term; do
       [[ -z "$term" ]] && continue
       esc_term="$(printf '%s' "$term" | sed -e 's/[.[\*^$()+?{|]/\\&/g')"
+
+      # Skip a banned term the contract also declares as §6 domain vocabulary.
+      if [[ -n "$section6" ]] && printf '%s\n' "$section6" | grep -iwq -e "$esc_term"; then
+        continue
+      fi
 
       # Only scan the product-VOICE sections (§1–§5) where a banned term would be a
       # real leak. Everything from §6 on (Public Language / API taxonomy, §7 banned
@@ -197,7 +207,7 @@ if echo "$content" | grep -q "^## 7\."; then
         /^### /     { if ($0 !~ /^### 3a\./) in_3a=0 }
         /^## [0-9]/ { in_3a=0 }
         in_3a { next }
-        /Bad:/ || /❌/ || /\(internal only/ || /\*\*Validation step\*\*/ { next }
+        /Bad:/ || /❌/ || /\(internal only/ || /\*\*Validation step\*\*/ || /\*\*Surface\*\*:/ || /\*\*Trigger\*\*:/ { next }
         /^[[:space:]]*\|/ { next }
         { line=$0; gsub(/`[^`]*`/, "", line); print NR ":" line }
       ' "$file_path" | grep -i -w "$esc_term" || true)

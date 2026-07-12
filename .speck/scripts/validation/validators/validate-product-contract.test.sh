@@ -176,16 +176,63 @@ bash "$VALIDATOR" --strict "$TMP/t81a/product-contract.md"
 echo "  ✓ Passed Test 4 (legit meta-mentions no longer false-positive)"
 
 
-echo "Test 5: a REAL leak (banned term in the §1 promise) still fails (issue #81 guardrail)"
+echo "Test 5: a REAL copy leak (banned cheerleading phrase in the §1 promise) still fails (issue #81/#82 guardrail)"
 mkdir -p "$TMP/t81b"
-sed 's#Adapt your training locally, set by set.#Adapt your mesocycle locally, set by set.#' \
+# 'crushing it' is a pure copy-voice banned phrase (not §6 domain vocabulary), so it
+# must still hard-fail when it leaks into the §1 promise.
+sed 's#Adapt your training locally, set by set.#Adapt your training locally — crushing it, set by set.#' \
   "$TMP/t81a/product-contract.md" > "$TMP/t81b/product-contract.md"
 if bash "$VALIDATOR" --strict "$TMP/t81b/product-contract.md" >/dev/null 2>&1; then
-  echo "ERROR: Expected a §1 promise leak to fail, but it passed!"
+  echo "ERROR: Expected a §1 promise copy leak to fail, but it passed!"
   exit 1
 else
-  echo "  ✓ Passed Test 5 (real leak in §1 still caught)"
+  echo "  ✓ Passed Test 5 (real copy leak in §1 still caught)"
 fi
+
+
+echo "Test 6: an established §6 domain term in §1 prose / §5 Surface·Trigger does NOT self-violate (issue #82)"
+mkdir -p "$TMP/t82"
+cat > "$TMP/t82/product-contract.md" <<'EOF'
+---
+artifact_type: product-contract
+---
+
+## 1. The Paid Promise / Operational SLA
+Turn your hangouts into a named crew — an earned promotion when a subset recurs (MM5).
+
+## 2. Primary Persona / Consumer
+The regular.
+
+## 3. The Differentiator
+
+**Core differentiator**: Detects the crew that keeps forming and names it.
+
+## 4. JTBD Scorecard / Operational Invariants Scorecard
+Scorecard.
+
+## 5. Magic Moments / Operational Milestones
+
+### Magic Moment 5: Crew emergence
+- **Surface**: Home prompt, after a subset recurs
+- **Trigger**: Recurring-subset detection — the same few people keep ending up together
+- **Content / Execution beats**: The crew is named and celebrated.
+- **Validation step**: LARP the third recurrence.
+
+## 6. Public Language / API & System Taxonomy
+
+### Canonical Domain Terms
+| Internal concept | English UI term | Notes |
+|------------------|-----------------|-------|
+| subset | Crew | internal maximality term; never shown as "subset" |
+
+## 7. Banned Language / System Anti-Patterns
+
+### Banned Phrase Classes
+- ❌ Technical/architecture words on user surfaces: "subset", "superset"
+EOF
+
+bash "$VALIDATOR" --strict "$TMP/t82/product-contract.md"
+echo "  ✓ Passed Test 6 (established §6 domain term in spec-prose no longer false-positives)"
 
 echo "All validate-product-contract tests passed successfully!"
 exit 0

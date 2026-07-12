@@ -1,5 +1,15 @@
 # Speck Changelog
 
+## v8.1.3 — 2026-07-12 — Fix: product-contract validator rule 10 residual (#82)
+
+Follow-up to #81. Rule 10 still flagged an *established domain term* that the contract's own §7 ❌ list scopes to "on user surfaces" when it legitimately appeared in §1 promise prose and §5 magic-moment `Surface:`/`Trigger:` spec-definitions (the same case as the already-exempted `Validation step`). Repro: Splang's `subset` — a load-bearing domain term (62 uses in shipped code) declared as internal→public vocabulary. #81's fix dropped the flag count 8→1; this closes the last one.
+
+Two additions to rule 10:
+- Skip §5 `**Surface**:` / `**Trigger**:` spec-definition lines (mirrors the existing `**Validation step**` skip).
+- Exempt any banned term the contract itself declares as domain vocabulary in §6 (Public Language / API taxonomy) — an established internal→public name appearing in §1–§5 spec-prose is not a user-surface leak.
+
+A real leak still fails — a pure copy-voice banned phrase (e.g. "crushing it", not §6 vocabulary) in the §1 promise or a §5 user-facing string is caught (new test). The #81 fixtures stay green.
+
 ## v8.1.2 — 2026-07-12 — Fix: product-contract validator rule 10 false-positives (#81)
 
 `validate-product-contract.sh` rule 10 (the self-banned-language check) scanned the whole file excluding only §7, so it hard-failed **correct** contracts whose by-design vocabulary sections legitimately name banned terms — §6 taxonomy (`| mesocycle | Training Block |`), §3a anti-differentiators ("no mesocycle templates"), `Bad:`/❌ example copy, §5 "Validation step" LARP methodology (`simulator` as test tooling), and inline-code identifiers. Because `validate-template.sh --strict` runs in the pre-commit hook, the first legitimate edit to a migrated project's `product-contract.md` (e.g. the v8.1.0 market-claim re-stamp) was rejected — with `--no-verify` the only escape, the exact gate-bypass v8 forbids.
