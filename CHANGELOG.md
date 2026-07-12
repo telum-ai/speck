@@ -25,6 +25,12 @@ disclose the wholesale replacement.
 ### Version
 - `VERSION`, root `package.json`, `packages/cli/package.json` → `8.0.1`.
 
+### Docs — README rendering & de-versioning
+- Fixed GitHub's "Unable to render rich display" on all three workflow diagrams: slash-command node labels (`A[/speck …]`) were parsed as mermaid parallelogram-shape syntax and failed the whole graph. Every label is now quoted (`A["/speck …"]`); verified by rendering all three to SVG.
+- De-versioned the README (it is not a changelog): dropped the "v7" title, the dead `**Speck Version**` footer (read by nothing — `sync.js` only parses the `AGENTS.md` copy), the "shift from v6" note, the "v7.7+" / "in v8" inline stamps, and the "Core v7 Concepts" heading.
+- Relocated the two major-version migration sections (v6→v7, v7→v8) into `DEVELOPMENT.md#migration-major-version-upgrades`, leaving a short version-agnostic pointer under "Keeping Speck Updated".
+- Reconciled `.speck/VERSION` 8.0.0 → 8.0.1 (the bump commit missed this authoritative file) and the `AGENTS.md` version footer → 8.0.1.
+
 ## v8.0.0 — 2026-07-03 — Evaluation Over Verification
 
 The v7 patch line fought agent green-hacking by writing down ever more explicit checks. That is self-defeating: an agent optimizes to satisfy the *letter* of any enumerated gate (Goodhart), and the enumeration itself becomes the context-rot that crowds out common sense. v8 changes **what the agent optimizes for** — from "produce green evidence" to "find what is wrong" — and **shrinks the corpus** so common sense fits back in context. Design: `docs/v8/v8-north-star.md`.
