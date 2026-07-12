@@ -1,5 +1,23 @@
 # Speck Changelog
 
+## v8.1.0 — 2026-07-12 — Market-claim staleness recheck + §2a↔§3 reconciliation (#80)
+
+Competitive / differentiator claims were captured once at planning time and rotted silently — true when written, false weeks later. Streb's "no competitor offers real-time autoregulation + LLM coaching" was true in 2026-05 and false ~8 weeks later (SensAI, Ray, WHOOP Coach, JuggernautAI, Fitbod); nothing in Speck flagged it. v8.1.0 attaches a mechanism (P2) to those claims. Design: 3 independent architectures, adversarially scored, synthesized.
+
+### The mechanism
+- **Unforgeable market stamp** — an inline `*[market-verified <date> | verdict | sources | scan: <report>]*` line under §3, written ONLY by `stamp-market.sh`, which refuses without an existing sourced scan report (and, for `holds`, `sources ≥ floor`). No claim reads fresh without evidence behind it. Inline (not the EOF footer) so it never collides with `stamp-truth.sh`.
+- **Split clock** — absolute "no competitor does X" claims get a tight `market_absolute_claim_days` (default 30, below the observed rot); generic differentiators get `market_scan_cadence_days` (default 45 consumer/SaaS/paid-API, 90 infra/backend).
+- **A — detector** `market-staleness-check.sh` (cheap, no-web) in the `/recheck` fan-out: `MARKET_DRIFT.P1` (absolute claim unverified/stale past the tight clock, honest `verdict: eroded|false`, or a missing cited report — phantom evidence) / `.P2` (generic past cadence, provisional baseline, under-sourced). Fires on FILLED claim values only and competitor-relative frames only (no bare only/first/unique) — no rollout false-positive flood.
+- **B — cadence scan** `/speck-frontier-scan --product`: reuses the 4-angle web-scan machinery re-pointed at a product's live market; writes `project-market-research-report-<date>.md` (existing routing glob), proposes `/project-adjust` deltas, re-stamps. No new skill.
+- **C — reconciliation** `market-reconcile-check.sh` + `validate-product-contract.sh`: keeps §3 never weaker than the §2a defensible wedge — `WEDGE_DRIFT.P1` (§3 empty while §2a states a wedge, or §2a self-flags §3 as thin/copyable — the Brightstance case) blocks the contract stamp; `.P2` (low §3↔§2a overlap) routes to the auditor. Handles both §2a and legacy standalone `value-defensibility.md`.
+- **Blast radius**: `MARKET_DRIFT` / `WEDGE_DRIFT` are P1, not P0 — they do NOT block `/story-implement` (a stale claim is not a runtime defect); they block `COMMERCIAL-RC` / `SHIP-RC` and generating marketing copy from the spec.
+
+### Config (all optional in `.speck/project.json`, absent = safe default)
+`market_absolute_claim_days` (30), `market_scan_cadence_days` (45 / 90 by archetype), `market_sources_floor` (3), `market_scan` (`false` opts a claim-free internal tool out).
+
+### Files
+New: `.speck/scripts/market-staleness-check.sh`, `market-reconcile-check.sh`, `stamp-market.sh` (+ `.test.sh` for both detectors, wired into `npm test`). Edited: `speck-recheck`, `speck-frontier-scan`, `project-product-contract` skills; `product-contract-template.md`; `validate-product-contract.sh` (+ test); one `AGENTS.md` discipline row. Additive, no migration. `.speck/VERSION` / root `package.json` / `packages/cli/package.json` → 8.1.0.
+
 ## v8.0.1 — 2026-07-10 — Fix: upgrade no longer deletes project-custom skills/agents
 
 Data-loss-class fix found live during the keegt v6.1.12→v8.0.0 upgrade (captured via the

@@ -81,5 +81,49 @@ else
   echo "  ✓ Passed Test 2 (failed correctly)"
 fi
 
+echo "Test 3: §2a self-flags §3 as thin/copyable → reconciliation fails (issue #80)"
+mkdir -p "$TMP/recon"
+cat > "$TMP/recon/product-contract.md" <<'EOF'
+---
+artifact_type: product-contract
+---
+
+## 1. The Paid Promise / Operational SLA
+We deliver high-quality features.
+
+## 2. Primary Persona / Consumer
+Persona
+
+### 2a. Value Defensibility
+
+**Defensible-wedge verdict**: Our §3 headline is thin and copyable; the real moat is the proprietary longitudinal dataset.
+
+## 3. The Differentiator
+
+**Core differentiator**: A friendly daily dashboard.
+
+## 4. JTBD Scorecard / Operational Invariants Scorecard
+Scorecard
+
+## 5. Magic Moments / Operational Milestones
+Magic moments
+
+## 6. Public Language / API & System Taxonomy
+Taxonomy
+
+## 7. Banned Language / System Anti-Patterns
+
+| Banned Term | Use instead |
+|-------------|-------------|
+| premium     | high-quality |
+EOF
+
+if bash "$VALIDATOR" --strict "$TMP/recon/product-contract.md" >/dev/null 2>&1; then
+  echo "ERROR: Expected §2a↔§3 reconciliation to fail, but it passed!"
+  exit 1
+else
+  echo "  ✓ Passed Test 3 (reconciliation failed correctly)"
+fi
+
 echo "All validate-product-contract tests passed successfully!"
 exit 0

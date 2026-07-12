@@ -162,9 +162,15 @@ Apply SHA stamp:
 .speck/scripts/stamp-truth.sh specs/projects/<PROJECT_ID>/product-contract.md
 ```
 
+Write the provisional market stamp under §3 (issue #80) so the differentiator is scheduled for its first market re-validation instead of reading as never-checked. Only `stamp-market.sh` writes this stamp — never by hand:
+```bash
+.speck/scripts/stamp-market.sh specs/projects/<PROJECT_ID>/product-contract.md --baseline
+```
+A real dated + sourced verdict lands later via `/speck-frontier-scan --product`.
+
 ### 6b. Validate the contract
 
-Run the product contract validator to ensure structural completeness and self-consistency (verifying that the contract does not self-violate its own banned language in other sections):
+Run the product contract validator to ensure structural completeness, self-consistency (no self-violation of the contract's own banned language), and **§2a↔§3 reconciliation** — the validator blocks (`--strict`) when the §3 differentiator is weaker than the project's own §2a defensible wedge (`WEDGE_DRIFT.P1`), the exact "canonical headline is weaker than our own analysis" failure. When it fires, promote the §2a wedge into §3 before locking:
 ```bash
 bash .speck/scripts/validation/validators/validate-product-contract.sh --strict specs/projects/<PROJECT_ID>/product-contract.md
 ```

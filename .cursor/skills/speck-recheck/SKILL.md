@@ -70,6 +70,8 @@ Required artifacts to check:
 ├── [Parallel] shell: CASCADE drift — run `.speck/scripts/validation/validators/compute-cascade.sh --strict` (if project-level adjustments, superseded project DECs, or contract section changes exist); classify `CASCADE_STALE.P1` (superseded decisions whose downstream promises are still active as discharged under old state)
 ├── [Parallel] shell: EVAL signal drift — run `.speck/scripts/validation/validators/compute-eval-signals.sh --strict` to analyze VCS-as-eval metrics (override-rate, survival); classify any threshold breaches as `EVAL_SIGNAL_DRIFT.P2`
 ├── [Parallel] shell: PROMISE drift — for each epic dir with a `traceability-matrix.md`, run `.speck/scripts/validation/validators/validate-traceability-matrix.sh <EPIC_DIR>` (and `--require-evidence` for epics whose validation claims ≥ UX-RC); classify any unresolved promise as `PROMISE_DRIFT.P1` (evaporated promise — a drawn/stated commitment with no story and no DEC)
+├── [Parallel] shell: MARKET drift — run `.speck/scripts/market-staleness-check.sh` (no-web, age/stamp only); classify `MARKET_DRIFT.P1` (an absolute "no competitor does X" claim in §3/§3a that is unverified/stale past the tight clock, an honest `verdict: eroded|false`, or a cited scan report that is missing — phantom evidence) or `MARKET_DRIFT.P2` (generic differentiator past its archetype cadence, provisional/unverified baseline, or under-sourced). Route findings to `/speck-frontier-scan --product`
+├── [Parallel] shell: WEDGE reconciliation — run `.speck/scripts/market-reconcile-check.sh`; classify `WEDGE_DRIFT.P1` (§3 differentiator empty while §2a states a defensible wedge, OR §2a self-flags §3 as thin/copyable — the Brightstance case) or `WEDGE_DRIFT.P2` (§3↔§2a token overlap < 25% — auditor confirms §3 is at least as defensible as the wedge)
 ├── [Parallel] shell: grep -rln "\[NEEDS USER REVIEW\]" specs/projects/<id>/   (surface to project-state.md)
 └── [Wait] → Synthesize drift report
 ```
@@ -100,7 +102,7 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | V8_REPROVE.P1
+- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | V8_REPROVE.P1
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix
@@ -123,6 +125,10 @@ If P0 drift found:
 - Surface P0 findings to user with proposed remediations
 - Recommend running `/audit` for affected stories
 - Refuse to proceed with any `/story-implement`, `/epic-plan` until P0 resolved
+
+If `MARKET_DRIFT.P1` or `WEDGE_DRIFT.P1` found:
+- Do NOT block `/story-implement` — a stale or over-strong market claim is not a runtime defect
+- **BLOCK claiming `COMMERCIAL-RC` / `SHIP-RC`** and **BLOCK generating marketing / positioning copy from the spec** until the claim is re-validated (`/speck-frontier-scan --product` → re-stamp) or §3 is reconciled with the §2a wedge (`/project-adjust`). This is the precise "don't ship a false 'no competitor does X'" save.
 
 If only P1-P3:
 - Surface findings; allow user to proceed at their discretion
@@ -147,13 +153,14 @@ Report summary fields per claude skill.
 ## Behavior Rules
 
 - NEVER skip persona LARP cold-start
-- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh` AND `asset-drift-check.sh` (when UI/brand assets exist) AND `settings-drift-check.sh` (when `.claude/settings.json` exists) AND `validate-schema-drift.sh` (when DB-backed) AND `compute-cascade.sh --strict` (if superseded DECs exist) AND `compute-eval-signals.sh --strict`
+- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh` AND `asset-drift-check.sh` (when UI/brand assets exist) AND `settings-drift-check.sh` (when `.claude/settings.json` exists) AND `validate-schema-drift.sh` (when DB-backed) AND `compute-cascade.sh --strict` (if superseded DECs exist) AND `compute-eval-signals.sh --strict` AND `market-staleness-check.sh` AND `market-reconcile-check.sh` (when `product-contract.md` exists)
 - NEVER mark a truth artifact "fresh" while it still contains `REPLACE_BEFORE_SHIP:` or `[NEEDS USER REVIEW]` tokens
 - ALWAYS write a dated report (even if green)
 - ALWAYS re-stamp truth artifacts on green (with fresh `verified` date)
 - ALWAYS update `project-state.md` regardless of verdict (including the new "Sections Awaiting User Review" and "Outstanding REPLACE_BEFORE_SHIP markers" appendices)
 - BLOCK new feature work on P0 findings
 - ALWAYS route to `/speck-reprove` (and block feature work) when `.speck/.v8-reprove-needed` exists or any `V8_STALE` (pre-v8 stamp) artifact is found — v7-era green is not trusted under v8 until re-proven
+- NEVER hand-write or hand-edit the `*[market-verified …]*` stamp; only `stamp-market.sh` writes it, and only when a real sourced scan report backs it (P2). On `MARKET_DRIFT.P1`, block `COMMERCIAL-RC`/`SHIP-RC` and spec-derived marketing copy until re-scanned
 
 ## Integration Points
 

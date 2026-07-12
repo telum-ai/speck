@@ -79,6 +79,8 @@ PLACEHOLDER CONVENTION:
 **Buyer's real reference price**: REPLACE_BEFORE_SHIP: what the skeptical buyer *actually* compares to (usually $0, not a competitor's paid tier).
 **Defensible-wedge verdict**: REPLACE_BEFORE_SHIP: one sentence a skeptical buyer who already has free AI would accept as the reason to pay. If the only honest answer is "convenience," the price is not yet defensible — fix the product, not this cell.
 
+> **Reconcile with §3 (#80).** This wedge is the deepest defensible truth about the product. §3's Core differentiator must never lead with a claim *weaker* than this. `market-reconcile-check.sh` emits `WEDGE_DRIFT` when §3 is empty while a wedge exists here, when this analysis self-flags §3 as thin/copyable, or when §3 and this wedge barely overlap — and `validate-product-contract.sh` blocks the contract stamp on it.
+
 * **WHEN: infra_service / backend_api**: (May skip if not independently priced; otherwise state build-vs-buy defensibility vs the buyer running the OSS/self-hosted equivalent.)
 
 ---
@@ -90,6 +92,8 @@ PLACEHOLDER CONVENTION:
 **Core differentiator**: REPLACE_BEFORE_SHIP: One sentence. The thing that's true of THIS product and not its alternatives.
 
 *Example: "Most fitness apps prescribe templates; Streb adapts the dose locally per exercise based on your last set's response."*
+
+> **Market recheck (P2, #80).** The differentiator — and any "no competitor does X" claim — rots: it can be true when written and false weeks later. At lock, `stamp-market.sh --baseline` writes an inline `*[market-verified: unverified | staged <date>]*` line directly under **Core differentiator** above; `/speck-frontier-scan --product` later re-stamps it with a dated, **sourced** verdict. Absolute/exclusivity claims get a tight clock (default 30 days); generic differentiators an archetype cadence (45 / 90). **Never hand-edit the stamp** — only `stamp-market.sh` writes it, and only when a real scan report backs it. `market-staleness-check.sh` flags a stale/unverified claim as `MARKET_DRIFT`.
 
 ### 3a. Anti-Differentiators ("We are NOT...")
 
@@ -352,6 +356,7 @@ For each user-visible AI surface:
 ### Clarity Check
 - [ ] Paid promise is one sentence and outcome-focused
 - [ ] Differentiator is one sentence; alternatives don't satisfy it
+- [ ] §3 differentiator is at least as defensible as the §2a wedge; the `market-verified` stamp is present and current for any "no competitor does X" claim
 - [ ] Anti-differentiators name specific failure modes
 - [ ] Each magic moment has a validation step
 - [ ] Each banned term has a reason and a replacement

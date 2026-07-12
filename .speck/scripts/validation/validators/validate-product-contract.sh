@@ -206,6 +206,24 @@ if echo "$content" | grep -q "^## 7\."; then
   rm -f "$TMP_TERMS"
 fi
 
+# 11. §2a ↔ §3 reconciliation (issue #80): the canonical §3 differentiator must never
+#     be weaker than the project's own §2a defensible-wedge analysis.
+RECONCILE_SCRIPT="$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd)/market-reconcile-check.sh"
+if [[ -f "$RECONCILE_SCRIPT" && "$(basename "$file_path")" == "product-contract.md" ]]; then
+  recon_dir="$(cd "$(dirname "$file_path")" 2>/dev/null && pwd)"
+  recon_out=$(bash "$RECONCILE_SCRIPT" "$recon_dir" 2>/dev/null || true)
+  if echo "$recon_out" | grep -q "WEDGE_DRIFT.P1"; then
+    log_error "§3 differentiator is weaker than the §2a defensible wedge (or §3 is empty while §2a states a wedge)" \
+      "Promote the §2a wedge into §3 — the canonical differentiator must be at least as defensible as your own value-defensibility analysis.
+Detail: $(echo "$recon_out" | grep 'WEDGE_DRIFT.P1' | head -1)"
+  elif echo "$recon_out" | grep -q "WEDGE_DRIFT.P2"; then
+    log_warning "§3 differentiator and §2a wedge share few tokens — confirm §3 leads with the defensible wedge" \
+      "$(echo "$recon_out" | grep 'WEDGE_DRIFT.P2' | head -1)"
+  else
+    log_success "§3 differentiator is consistent with the §2a defensible wedge"
+  fi
+fi
+
 # === OUTPUT RESULTS ===
 
 if [ -f "$validation_log" ]; then

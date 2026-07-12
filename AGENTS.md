@@ -317,6 +317,7 @@ These apply at every play level, in every command, on every project. The first f
 | **P3 · Can't-reach is a finding** | Any skip / cap / defer | Unreachable-by-automation = defect hypothesis, not an excuse. A "named blocker" cap needs a logged, reproduced real attempt. |
 | **P4 · Adversary is structural** | Every audit / validate | A separately-incentivized evaluator judged by defects found; probe lists prompt imagination, never define done. |
 | **Value defensibility** | Before a price locks / COMMERCIAL-RC | Enumerate the $0 / DIY / free-AI substitutes; state the buyer's real reference price; a price needs a substitute-defensibility artifact (P2), not just a working paywall. |
+| **Market-claim recheck** | `/recheck`; before COMMERCIAL-RC / marketing copy | Competitive/differentiator claims rot silently (true when written, false weeks later). `market-staleness-check.sh` flags a stale/unverified "no competitor does X" claim (`MARKET_DRIFT`, tight clock for absolutes); `market-reconcile-check.sh` keeps §3 ≥ the §2a wedge (`WEDGE_DRIFT`). Re-validate + re-stamp via `/speck-frontier-scan --product` — the stamp is written only by `stamp-market.sh`, never by hand. |
 | **Catch-up first** | After v6 → v7 migration | If `.speck/.migration-needs-catchup` exists OR truth artifacts still carry the `v7 MIGRATION SCAFFOLD` banner → run `/speck-catch-up` BEFORE any feature work |
 | **First-read state** | Every engagement | Read `project-state.md` before anything else |
 | **Engagement-gap recheck** | >2 weeks since last verified-against-runtime stamp OR new agent | Run `/recheck` to detect drift before new feature work |
@@ -508,7 +509,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 8.0.1  
+**Speck Version**: 8.1.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->
