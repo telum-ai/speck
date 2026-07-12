@@ -178,3 +178,48 @@ Follow the "Removing a synced file" process above. Specifically:
 1. Move from `ALWAYS_OVERWRITE` to `REMOVE_FILES` in `sync.js`
 2. Delete the file in this repo
 3. Release a new version — projects pick up the removal on `speck upgrade`
+
+## Migration (major-version upgrades)
+
+Speck upgrades across a major boundary are automatic on `npx github:telum-ai/speck upgrade` and never delete content — they drop a marker and defer the semantic work to a skill that runs on the next engagement. Two boundaries exist today.
+
+### v6 → v7 (`/speck-catch-up`)
+
+**Step 1 — Scaffolding (automatic, CLI).** `bash .speck/scripts/migrate.sh <project-dir>` runs per project:
+
+1. Adds `speck_version: 7.0.0` to `.speck/project.json`.
+2. Scaffolds **empty** templates: `product-contract.md`, `evidence-contract.md`, `project-decisions-log.md`, `project-state.md`, `design-system/primitives.md` (each with a `<!-- v7 MIGRATION SCAFFOLD -->` banner).
+3. SHA-stamps existing v6 truth artifacts with current HEAD.
+4. Writes a `migration-report.md` per project.
+5. Drops a `.speck/.migration-needs-catchup` marker at workspace root.
+6. **Does NOT delete any v6 content.**
+
+**Step 2 — Catch-up (brownfield reconstruction, `/speck-catch-up`).** The next engagement detects the marker (via AGENTS.md's first-action rule) and runs the skill, which:
+
+1. Backfills `product-contract.md` from `project.md` + `PRD.md` + `ux-strategy.md` + `domain-model.md` + `constitution.md`.
+2. Backfills `evidence-contract.md` from the active recipe's `evidence_contract:` defaults.
+3. Reconstructs `project-decisions-log.md` from git history.
+4. Backfills `experience-chain.md` for each UI epic from `user-journey.md` + `wireframes.md` + story specs.
+5. **Honesty pass** — downgrades unsupported v6 PASS claims to `IMPL-GREEN`, flags surrogate proof.
+6. Regenerates `project-state.md` with post-honesty reality.
+7. Writes `project-catch-up-plan.md` (P0–P3 remediation).
+8. Removes the marker.
+
+Without `/speck-catch-up`, a migrated project carries v6 debt under v7 paint. The skill is mandatory for any project not built v7-native from day one.
+
+**v6 command compatibility.** v6 commands (`/story-analyze`, `/epic-outline`, `/story-outline`, `/project-scan`, …) keep working via alias-shims that route to their current equivalents. The level triplets also expose `--level` dispatchers (`/validate`, `/retrospective`, `/adjust`, `/analyze`) that route to the preserved per-level specialists.
+
+### v7 → v8 (`/speck-reprove`)
+
+v8 ("Evaluation Over Verification") does **not** trust v7-era "green" as evaluation-proven — v7 green was optimized to satisfy enumerated checks (Goodhart), the exact failure mode v8 fixes. The upgrade is deliberately two-layer (design: `docs/v8/v8-north-star.md`):
+
+**Layer 1 — Mechanical (automatic, instant, non-destructive).** On `upgrade` across the v7 → v8 boundary the CLI bumps versions, reconciles the `SPECK:START..END` blocks, installs the alias-shims and lazy patterns, and drops a `.speck/.v8-reprove-needed` marker (the analog of v6 → v7's `.migration-needs-catchup`).
+
+**Layer 2 — Semantic re-prove (`/speck-reprove`, cap-and-worklist).** Any truth artifact stamped `< speck 8` is `V8_STALE` regardless of SHA/date freshness. The next engagement's `/recheck` detects the marker (or a `V8_STALE` stamp), raises `V8_REPROVE.P1`, blocks new feature work, and routes to `/speck-reprove`, which:
+
+1. Triages each suspect-green artifact against the four principles (P1–P4).
+2. **Caps** effective shippable state at `INTEGRATION-GREEN` and reverts consumer **FELT-GOOD to `uncovered`**.
+3. **Preserves** each historical v7 claim, stamped `[pre-v8-proof]` (nothing reset to zero).
+4. Emits a prioritized `project-v8-reprove-report.md` worklist. States climb back to `verified` only as real v8 evidence (adversarial LARP, mechanism-grounded audit) lands.
+
+Without `/speck-reprove`, a v8-upgraded project keeps claiming v7 ship-readiness under v8 paint. The re-prove is mandatory for any project not built v8-native from day one.

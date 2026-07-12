@@ -1,8 +1,6 @@
-# 🥓 Speck v7 — Promise → Build → Prove
+# 🥓 Speck — Promise → Build → Prove
 
-**Speck** is an evidence-driven specification methodology for AI-led software development. It produces excellent products regardless of how hands-on the human is.
-
-> **The shift from v6**: v6 was *spec-driven development* (write specs, then code). v7 is *evidence-driven specification* — every spec assertion compiles to evidence, every claim ties to runtime proof, every truth artifact is SHA-stamped against current HEAD.
+**Speck** is an evidence-driven specification methodology for AI-led software development: every spec assertion compiles to evidence, every claim ties to runtime proof, and every truth artifact is SHA-stamped against current HEAD. It produces excellent products regardless of how hands-on the human is.
 
 ---
 
@@ -105,8 +103,8 @@ npx github:telum-ai/speck upgrade
 # Preview changes without applying
 npx github:telum-ai/speck upgrade --dry-run
 
-# Upgrade to specific version
-npx github:telum-ai/speck upgrade v8.0.0
+# Upgrade to a specific release tag
+npx github:telum-ai/speck upgrade <tag>
 ```
 
 ### What Gets Updated
@@ -116,6 +114,10 @@ Updates preserve your customizations:
 - Your `.gitignore` entries
 - Your custom hooks and MCP config
 - Your root `README.md` (project identity — Speck only merges the `<!-- SPECK:START -->` footer)
+
+### Major-Version Upgrades
+
+Crossing a major boundary (e.g. v6→v7, v7→v8) happens **automatically on `upgrade` and non-destructively**: the CLI drops a re-prove marker and the next engagement runs the matching skill — `/speck-catch-up` (v6→v7) or `/speck-reprove` (v7→v8). Historical claims are **preserved and re-proven** against the current principles, never reset to zero. Full mechanics → [DEVELOPMENT.md](../DEVELOPMENT.md#migration-major-version-upgrades).
 
 ---
 
@@ -139,7 +141,7 @@ Every Speck project lives in this loop:
 | **PROMISE** | What product are we building? Who pays? What's banned? What's magic? | `product-contract.md` |
 | **BUILD** | Implement evidence-producing slices | `spec.md`, `tasks.md`, `experience-chain.md` |
 | **PROVE** | Runtime evidence that promise = reality | `project-state.md`, `evidence-contract.md`, runtime LARP |
-| **PROFILE** | How the project presents itself to outsiders | Root `README.md` + declared surfaces — **enforced v7.7+** via validators and readiness gates |
+| **PROFILE** | How the project presents itself to outsiders | Root `README.md` + declared surfaces — **enforced** via validators and readiness gates |
 
 The loop closes via drift detection. PROFILE derives from PROMISE + PROVE; `validate-readme.sh` and `profile-drift-check.sh` enforce it at commit and SHIP-RC gates.
 
@@ -242,18 +244,18 @@ specs/projects/<PROJECT_ID>/
 
 ```mermaid
 graph TD
-    A[/speck Build XYZ] --> B[/project-specify]
-    B --> C[/project-clarify]
-    C --> D[/project-product-contract]
-    D --> E[/project-evidence-contract]
-    E --> F[/project-context]
-    F --> G{4+ epics<br/>expected?}
-    G -->|Yes| H[/project-architecture]
-    G -->|Yes| I[/project-ux]
-    H --> J[/project-plan]
+    A["/speck Build XYZ"] --> B["/project-specify"]
+    B --> C["/project-clarify"]
+    C --> D["/project-product-contract"]
+    D --> E["/project-evidence-contract"]
+    E --> F["/project-context"]
+    F --> G{"4+ epics<br/>expected?"}
+    G -->|Yes| H["/project-architecture"]
+    G -->|Yes| I["/project-ux"]
+    H --> J["/project-plan"]
     I --> J
     G -->|No| J
-    J --> K[Epics & E000 Infrastructure]
+    J --> K["Epics & E000 Infrastructure"]
 ```
 
 Required artifacts at Build level:
@@ -268,22 +270,22 @@ Optional at Build (required at Platform):
 
 ```mermaid
 graph TD
-    A[/epic-specify] --> B[/epic-clarify]
-    B --> C{UI Epic?}
-    C -->|Yes| D[/epic-experience-chain]
-    C -->|Yes| E[/epic-journey]
-    C -->|Yes| F[/epic-wireframes]
-    D --> G[/epic-plan]
+    A["/epic-specify"] --> B["/epic-clarify"]
+    B --> C{"UI Epic?"}
+    C -->|Yes| D["/epic-experience-chain"]
+    C -->|Yes| E["/epic-journey"]
+    C -->|Yes| F["/epic-wireframes"]
+    D --> G["/epic-plan"]
     E --> G
     F --> G
     C -->|No| G
-    G --> H[/epic-breakdown]
-    H --> I[/epic-analyze]
-    I --> J[Story Work]
-    J --> K[/audit epic-level]
-    K --> L[/epic-validate]
-    L --> M[/larp full JTBD]
-    M --> N[/epic-retrospective]
+    G --> H["/epic-breakdown"]
+    H --> I["/epic-analyze"]
+    I --> J["Story Work"]
+    J --> K["/audit epic-level"]
+    K --> L["/epic-validate"]
+    L --> M["/larp full JTBD"]
+    M --> N["/epic-retrospective"]
 ```
 
 For UI epics, `experience-chain.md` is required before `/epic-plan` (prevents the "seven different apps stitched together" failure).
@@ -292,23 +294,23 @@ For UI epics, `experience-chain.md` is required before `/epic-plan` (prevents th
 
 ```mermaid
 graph TD
-    A[/story-specify] --> B[/story-clarify]
-    B --> C{Brownfield?}
-    C -->|Yes| D[/speck-scan --level story]
-    C -->|No| E[/story-plan]
+    A["/story-specify"] --> B["/story-clarify"]
+    B --> C{"Brownfield?"}
+    C -->|Yes| D["/speck-scan --level story"]
+    C -->|No| E["/story-plan"]
     D --> E
-    E --> F{UI Story?}
-    F -->|Yes| G[/story-ui-spec]
-    F -->|No| H[/story-tasks]
+    E --> F{"UI Story?"}
+    F -->|Yes| G["/story-ui-spec"]
+    F -->|No| H["/story-tasks"]
     G --> H
-    H --> I[/story-implement]
-    I --> J[/audit]
-    J --> K[/story-validate]
-    K --> L[/larp]
-    L --> M[/story-retrospective]
+    H --> I["/story-implement"]
+    I --> J["/audit"]
+    J --> K["/story-validate"]
+    K --> L["/larp"]
+    L --> M["/story-retrospective"]
 ```
 
-Note: `/story-analyze` is **retired in v8** (alias-shim) — its pre-implementation consistency check is folded into the tail of `/story-tasks`, and its adversarial behavior-vs-spec check is `/audit`. `/audit` runs **between** implement and validate — it's not optional.
+Note: `/story-analyze` is **retired** (alias-shim) — its pre-implementation consistency check is folded into the tail of `/story-tasks`, and its adversarial behavior-vs-spec check is `/audit`. `/audit` runs **between** implement and validate — it's not optional.
 
 ### 4. Reengagement (PROVE)
 
@@ -364,11 +366,11 @@ Validation only marks the claimed state. Never let `IMPL-GREEN` be confused with
 
 ---
 
-## 🆕 Core v7 Concepts
+## 🧩 Core Concepts
 
 ### `product-contract.md` — The PROMISE center of gravity
 
-Merges what was scattered across v6 (domain-model + ux-strategy voice/tone + constitution principles + tone-of-voice + magic moments). The canonical single contract:
+The canonical single contract — it consolidates the domain model, UX voice/tone, constitution principles, and magic moments that would otherwise be scattered across separate artifacts:
 
 - **Paid promise** + primary persona
 - **Differentiator** + anti-differentiators ("we are NOT")
@@ -514,63 +516,6 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-## 🔄 Migrating from v6 — a two-step process
-
-Migration is **automatic on `npx github:telum-ai/speck upgrade`** when crossing the v6 → v7 boundary, but it has two distinct phases:
-
-### Step 1 — Scaffolding (automatic, runs by the CLI)
-
-`bash .speck/scripts/migrate.sh <project-dir>` (invoked automatically per project):
-
-1. Adds `speck_version: 7.0.0` to `.speck/project.json`
-2. Scaffolds **empty** templates: `product-contract.md`, `evidence-contract.md`, `project-decisions-log.md`, `project-state.md`, `design-system/primitives.md` (each with a `<!-- v7 MIGRATION SCAFFOLD -->` banner)
-3. SHA-stamps existing v6 truth artifacts (`project.md`, `PRD.md`, `architecture.md`, etc.) with current HEAD
-4. Writes a `migration-report.md` per project
-5. Drops a `.speck/.migration-needs-catchup` marker at workspace root
-6. **Does NOT delete any v6 content**
-
-### Step 2 — Catch-up (brownfield reconstruction — `/speck-catch-up`)
-
-This is where the actual work happens. The next time any agent engages the project, AGENTS.md's first-action rule detects the marker and runs `/speck-catch-up` automatically. The skill:
-
-1. **Backfills `product-contract.md`** from `project.md` + `PRD.md` + `ux-strategy.md` + `domain-model.md` + `constitution.md`
-2. **Backfills `evidence-contract.md`** from the active recipe's `evidence_contract:` block (every recipe ships per-platform defaults)
-3. **Reconstructs `project-decisions-log.md`** from git history (architecture / design-system / plan commits + commit learning tags)
-4. **Backfills `experience-chain.md`** for each existing UI epic from `user-journey.md` + `wireframes.md` + story specs
-5. **Honesty pass** — for each existing story marked PASS in v6: cross-references with `evidence-contract.md`, downgrades unsupported claims to `IMPL-GREEN`, flags surrogate proof
-6. **Regenerates `project-state.md`** with the post-honesty-pass reality
-7. **Writes `project-catch-up-plan.md`** with prioritized remediation work (P0–P3)
-8. Removes the `.speck/.migration-needs-catchup` marker
-
-**Without `/speck-catch-up`, a migrated project carries v6 debt under v7 paint.** The scaffolded templates are empty, the old PASS claims still stand, and the seven v6 failure modes are still latent. The skill is mandatory for any project that wasn't built v7-native from day one.
-
-### v6 command compatibility
-
-v6 commands (`/story-analyze`, `/epic-outline`, `/story-outline`, `/project-scan`, etc.) continue to work via alias-shims that route to their current equivalents (with deprecation notes in their description). In v8 the level triplets also gain `--level` dispatchers (`/validate`, `/retrospective`, `/adjust`, `/analyze`) that route to the preserved per-level specialists.
-
----
-
-## 🔄 Migrating from v7 to v8 — re-prove, don't reset
-
-v8 ("Evaluation Over Verification") does **not** trust v7-era "green" as evaluation-proven — v7 green was optimized to satisfy enumerated checks (Goodhart), which is exactly the failure mode v8 exists to fix. So the upgrade is deliberately two-layer (design: `docs/v8/v8-north-star.md`):
-
-### Layer 1 — Mechanical (automatic, instant, non-destructive)
-
-On `npx github:telum-ai/speck upgrade` across the v7 → v8 boundary, the CLI bumps versions, reconciles the `SPECK:START..END` blocks, installs the alias-shims and lazy patterns, and drops a `.speck/.v8-reprove-needed` marker (the direct analog of v6 → v7's `.migration-needs-catchup`).
-
-### Layer 2 — Semantic re-prove (`/speck-reprove`, cap-and-worklist)
-
-**Version-as-staleness**: any truth artifact stamped `< speck 8` is `V8_STALE` regardless of SHA/date freshness. The next engagement's `/recheck` detects the marker (or a `V8_STALE` stamp), raises `V8_REPROVE.P1`, blocks new feature work, and routes to `/speck-reprove`. That skill:
-
-1. Triages each suspect-green artifact against the four principles (P1–P4).
-2. **Caps** effective shippable state at `INTEGRATION-GREEN` and reverts consumer **FELT-GOOD to `uncovered`**.
-3. **Preserves** each historical v7 claim, stamped `[pre-v8-proof]` (nothing is reset to zero).
-4. Emits a prioritized `project-v8-reprove-report.md` worklist. States climb back to `verified` only as real v8 evidence (adversarial LARP, mechanism-grounded audit) lands.
-
-**Without `/speck-reprove`, a v8-upgraded project keeps claiming v7 ship-readiness under v8 paint.** The re-prove is mandatory for any project that wasn't built v8-native from day one.
-
----
-
 ## 📚 Learn More
 
 - **AI agent rules**: `AGENTS.md` (workspace root) — the table-of-contents the agent reads on every task
@@ -592,5 +537,4 @@ After running retrospective commands (`/story-retrospective`, `/epic-retrospecti
 
 **Need help?** Just type `/speck` and describe what you want to build. Speck will guide you through the rest!
 
-**Speck Version**: 8.0.0
 **Methodology**: Promise → Build → Prove + Profile (evidence-driven specification)
