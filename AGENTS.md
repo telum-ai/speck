@@ -509,7 +509,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 8.1.0  
+**Speck Version**: 8.1.1  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

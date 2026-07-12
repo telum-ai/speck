@@ -1,5 +1,21 @@
 # Speck Changelog
 
+## v8.1.1 — 2026-07-12 — Cruft cleanup + broken-ref fix
+
+Housekeeping pass (two reference-verified cruft sweeps). No methodology behavior change; fixes broken skill commands and removes dead weight.
+
+### Fixed
+- 4 skills (project-validate, story-validate, speck-catch-up, project-readme) referenced `.speck/scripts/validation/validate-readme.sh` — the file lives in `validators/`, so the command was a guaranteed file-not-found. Corrected.
+- 13 template frontmatters `speck_version: 7.x` → `8.0` (`detect-version.sh` reads this field; new artifacts were mis-detected as v7 and could wrongly trip the v8 re-prove gate).
+
+### Removed (dead / superseded, zero callers — all verified)
+- Root `VERSION` (redundant with `.speck/VERSION`); `.speck/scripts/v7/` symlink shim; `sync-claude-commands.sh` wrapper; `audit.sh` (superseded by the `/audit` skill; checked a retired v6 model + a non-existent `quickstart.md`); `add-recipe-evidence-defaults.sh` (completed one-off v6-era migration).
+- CLI dead code: `getAllFiles()`, `downloadRelease()`, and 4 no-op legacy exports (`loadIgnorePatterns`/`shouldIgnore`/`planSync`/`executeSync`); dedup'd `isSpeckMarketingReadme` (feedback.js now imports the single source from sync.js).
+
+### De-versioned / wired
+- 10 active skills + 6 footer example stamps de-versioned (kept legit provenance like "v6 projects" and "added in v7.2+"); phantom `/speck-primitives-init` command replaced with the real registry path.
+- Wired 3 on-disk-but-never-run checks into `npm test`: `claude-settings.test.js`, `validate-recipes.sh`, `validate-artifact-docs.sh`.
+
 ## v8.1.0 — 2026-07-12 — Market-claim staleness recheck + §2a↔§3 reconciliation (#80)
 
 Competitive / differentiator claims were captured once at planning time and rotted silently — true when written, false weeks later. Streb's "no competitor offers real-time autoregulation + LLM coaching" was true in 2026-05 and false ~8 weeks later (SensAI, Ray, WHOOP Coach, JuggernautAI, Fitbod); nothing in Speck flagged it. v8.1.0 attaches a mechanism (P2) to those claims. Design: 3 independent architectures, adversarially scored, synthesized.
