@@ -1,5 +1,11 @@
 # Speck Changelog
 
+## v8.1.2 — 2026-07-12 — Fix: product-contract validator rule 10 false-positives (#81)
+
+`validate-product-contract.sh` rule 10 (the self-banned-language check) scanned the whole file excluding only §7, so it hard-failed **correct** contracts whose by-design vocabulary sections legitimately name banned terms — §6 taxonomy (`| mesocycle | Training Block |`), §3a anti-differentiators ("no mesocycle templates"), `Bad:`/❌ example copy, §5 "Validation step" LARP methodology (`simulator` as test tooling), and inline-code identifiers. Because `validate-template.sh --strict` runs in the pre-commit hook, the first legitimate edit to a migrated project's `product-contract.md` (e.g. the v8.1.0 market-claim re-stamp) was rejected — with `--no-verify` the only escape, the exact gate-bypass v8 forbids.
+
+Rule 10 now scans only the product-**voice** sections (§1–§5), stops at §6, and skips §3a, markdown tables, `Bad:`/❌ examples, `Validation step` lines, `(internal only)` callouts, and inline-code. A real leak (banned term in the §1 promise or §5 magic-moment copy) still fails — verified by a new test (legit meta-mentions pass; §1 leak fails). Same false-positive class as the already-fixed #63.
+
 ## v8.1.1 — 2026-07-12 — Cruft cleanup + broken-ref fix
 
 Housekeeping pass (two reference-verified cruft sweeps). No methodology behavior change; fixes broken skill commands and removes dead weight.

@@ -185,11 +185,21 @@ if echo "$content" | grep -q "^## 7\."; then
       [[ -z "$term" ]] && continue
       esc_term="$(printf '%s' "$term" | sed -e 's/[.[\*^$()+?{|]/\\&/g')"
 
-      # Find matching lines in original file excluding Section 7
+      # Only scan the product-VOICE sections (§1–§5) where a banned term would be a
+      # real leak. Everything from §6 on (Public Language / API taxonomy, §7 banned
+      # list, AI contract bad-answer examples, etc.) exists to NAME the vocabulary, as
+      # do §3a anti-differentiators, "Bad:"/❌ examples, §5 "Validation step" LARP
+      # methodology, "(internal only)" callouts, markdown tables, and inline-code. (#81)
       matching_lines=$(awk '
-        /^## 7\. Banned Language/ { in_section=1; next }
-        /^## [0-9]/ && in_section { in_section=0 }
-        !in_section { print NR ":" $0 }
+        /^## 6\./ { stop=1 }
+        stop { next }
+        /^### 3a\./ { in_3a=1; next }
+        /^### /     { if ($0 !~ /^### 3a\./) in_3a=0 }
+        /^## [0-9]/ { in_3a=0 }
+        in_3a { next }
+        /Bad:/ || /❌/ || /\(internal only/ || /\*\*Validation step\*\*/ { next }
+        /^[[:space:]]*\|/ { next }
+        { line=$0; gsub(/`[^`]*`/, "", line); print NR ":" line }
       ' "$file_path" | grep -i -w "$esc_term" || true)
 
       if [[ -n "$matching_lines" ]]; then
