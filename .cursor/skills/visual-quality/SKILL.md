@@ -9,6 +9,8 @@ description: Enforce visual design quality in every UI file. Fires for .tsx, .js
 
 Make deliberate, creative design choices that express the design system's personality instead of producing a generic or boilerplate UI.
 
+> **This skill is the TASTE axis's universal anchor.** The *Universal Design Quality Principles* below are Anchor B of the dual-anchored TASTE (connoisseur) readiness axis. The connoisseur-hostile pass (`/speck-larp` Job C) reads them here rather than re-authoring them; the product-relative Anchor A lives in `product-contract.md` §6b + `design-system.md`.
+
 ## Source of Truth
 
 Before implementing any UI, load the project's `design-system.md` and extract:
@@ -118,6 +120,6 @@ If ANY answer is "no" or "not sure" — iterate before marking done.
 
 - **story-implement**: Load design-system.md Bold Choices AND primitives.md Rendering Gotchas BEFORE implementing any UI task
 - **speck-audit**: Grep Rendering Gotchas signatures against changed UI files (step 10b)
-- **story-validate**: UI must pass the Aesthetic Quality Gate (BEAUTIFUL or ACCEPTABLE grade)
+- **story-validate**: UI must pass the **TASTE axis** — the connoisseur-hostile pass (Job C in `/speck-larp`). This skill's *Universal Design Quality Principles* ARE that axis's **universal anchor (Anchor B)**; `product-contract.md` §6b Aesthetic Contract + `design-system.md` are the **product-relative anchor (Anchor A)**. A severe BAD or a named-rule violation caps the readiness state.
 - **story-ui-spec**: This is where design taste gets injected — never skip for UI stories
 - **Design tokens**: Use them, but tokens alone don't create beauty — personality does

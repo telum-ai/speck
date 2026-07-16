@@ -107,7 +107,8 @@ To execute browser LARPs successfully in sandboxed or restricted environments wi
 7. If any previous rating, state, or recommendation has changed, write the `### Evaluative Drift / Change Explanation` section with detailed logical rationale.
 8. Run banned-phrase self-check on this report's own language before publishing
 9. Apply SHA stamp; trigger `/project-state` regeneration
-9b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict epic-validation-report.md` to ensure three-axis compliance and that the AI-covered FELT-GOOD axis is not left `uncovered` for consumer UX-RC+ claims.
+9b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict epic-validation-report.md` to ensure four-axis compliance and that the AI-covered FELT-GOOD axis is not left `uncovered` for consumer UX-RC+ claims.
+9c. **Run TASTE axis validation:** run `bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict epic-validation-report.md` to ensure the AI-covered TASTE (connoisseur) axis is not left `uncovered` for consumer UX-RC+ claims, that a `forks-open` claim lists its aesthetic forks, and that a `universal-only` anchor doesn't back a premium ship claim. If TASTE is uncovered, run the connoisseur-hostile pass (`/speck-larp` Job C) first.
 
 ### 🚦 Continuous Feedback Capture Trigger
 If any story-level validation is bypassed or the JTBD LARP is blocked by infrastructure, you **MUST** run `/speck-feedback` (or read `.cursor/skills/speck-feedback/SKILL.md`) to document the block and propose an upstream fix. Do not let workarounds go undocumented.

@@ -282,6 +282,22 @@ Each auditor returns PASS | FAIL | PARTIAL with evidence.
 
 ---
 
+## 🔥 Exhaustive Torture Tier (`--exhaustive` — opt-in, expensive)
+
+The default `/project-validate` runs the JTBD smoke test across personas. `--exhaustive` is the opt-in **breadth orchestrator** — the level where cross-epic *composition* defects live (a banned word on a flagship surface, contradictory advice across cards, duplicate greetings) that isolated per-epic LARPs structurally cannot surface.
+
+**Always-on (cheap) — GENERATE.** Regardless of tier, (re)generate the checked-in coverage-matrix skeleton so breadth GAPs are visible, not silent, then surface them (non-strict) in the report:
+```bash
+.speck/scripts/validation/generate-coverage-matrix.sh --level project specs/projects/<PROJECT_ID>
+bash .speck/scripts/validation/validators/validate-coverage-matrix.sh specs/projects/<PROJECT_ID>
+```
+
+**Opt-in (expensive) — FILL** (`--exhaustive`). Compute the coverage universe (persona-army × route × {happy,error,empty,loading} × viewport × theme, + an N-sample input-variety matrix on §8 AI-generative surfaces), then fan out UNCHANGED `/speck-larp <persona> --tier=torture` runs via parallel `@speck-validator` subagents grouped by build fingerprint (one cold-start serves many cells). Per generative cell, run `banned-language-lint.sh` **deterministically across all N samples** (the deterministic cure for a stale banned word slipping a single happy-path seed). Add full-page axe (not element-scoped) + Lighthouse per screen, and the evidence-contract §11 resilience class as the resilience cells (for `infra_service`/`backend_api`, §11 *is* the torture grid). Record each cell's Job A/B/C verdict + a real `larp-recordings/…` evidence path (no surrogate) into `coverage-matrix.md`.
+
+**Verdict.** The breadth verdict from the coverage-matrix **caps** (never raises) the claimable state. Run `validate-coverage-matrix.sh --strict` before a project SHIP-RC claim when the project declared the coverage-matrix as a required gate in `evidence-contract.md` §8. Opt-in everywhere; advisory-recommended before the first consumer SHIP-RC.
+
+---
+
 ## Full JTBD Smoke Test (REQUIRED — Product-Level Coherence)
 
 **This is the ultimate composition check** — verifying the product works as a whole, not just as a collection of validated epics.

@@ -218,6 +218,22 @@ Story validation fails if a user-facing story has no evidence for at least the f
 
 ---
 
+### 6b. Aesthetic Contract (visual craft intent — the TASTE axis's product-relative anchor)
+
+*The declared aesthetic intent the TASTE (connoisseur) axis is judged against. Without it, TASTE degrades to universal-craft only (`taste_anchor: universal-only`). Elaborated by `design-system.md` when present. This is what makes "excellent taste in product X, awful in product Y" real — the connoisseur pass judges against THIS, not a universal template.*
+
+* **WHEN: consumer_product / b2b_saas** (skip for infra_service / backend_api):
+
+- **Target Feeling** (3-5 adjectives + one sentence): REPLACE_BEFORE_SHIP: e.g. "calm, precise, quietly premium — like a well-made instrument, not a toy."
+- **Reference Exemplars** ("feel like X, not Y"): REPLACE_BEFORE_SHIP: 2-3 products/artifacts whose feel we draw from, each with its anti-reference.
+- **Restraint Rules** (3-5, checkable): REPLACE_BEFORE_SHIP: e.g. "at most two font weights", "one accent colour", "motion ≤200ms, never decorative".
+- **What Would Cheapen It**: REPLACE_BEFORE_SHIP: the specific treatments that make this product feel cheap/off-brand (garish gradients, stock icons, cheerleading copy…).
+- **House Style** (optional): pointer to a portfolio-level house-style artifact for cross-product coherence, if one exists.
+
+> A **HARD** restraint rule (named, checkable) that is violated is an objective TASTE defect (may block). **FUZZY** intent (the Target Feeling adjectives) is judged as a **fork**, never auto-enforced as a rule — the AI surfaces it for the owner.
+
+---
+
 ## 7. Banned Language / System Anti-Patterns
 
 *Absolute prohibitions. For UI products, these are forbidden user-visible terms. For backend/infra, these are strict system/code anti-patterns.*

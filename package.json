@@ -1,6 +1,6 @@
 {
   "name": "speck",
-  "version": "8.1.4",
+  "version": "8.2.0",
   "description": "Speck methodology CLI",
   "type": "module",
   "bin": {
@@ -10,7 +10,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test packages/cli/lib/sync.readme.test.js packages/cli/lib/migrate.test.js packages/cli/lib/sync.preserve.test.js packages/cli/lib/claude-settings.test.js && bash .speck/scripts/validation/validators/validate-readme.test.sh && bash .speck/scripts/validation/validate-template.test.sh && bash .speck/scripts/banned-language-lint.test.sh && bash .speck/scripts/validation/validators/validate-traceability-matrix.test.sh && bash .speck/scripts/validation/validators/compute-cascade.test.sh && bash .speck/scripts/validation/validators/compute-eval-signals.test.sh && bash .speck/scripts/validation/validators/validate-wave-safety.test.sh && bash .speck/scripts/validation/validators/validate-product-contract.test.sh && bash .speck/scripts/validation/validators/validate-felt-axis.test.sh && bash .speck/scripts/market-staleness-check.test.sh && bash .speck/scripts/market-reconcile-check.test.sh && bash .speck/scripts/validation/validators/validate-recipes.sh && bash .speck/scripts/bash/validate-artifact-docs.sh"
+    "test": "node --test packages/cli/lib/sync.readme.test.js packages/cli/lib/migrate.test.js packages/cli/lib/sync.preserve.test.js packages/cli/lib/claude-settings.test.js && bash .speck/scripts/validation/validators/validate-readme.test.sh && bash .speck/scripts/validation/validate-template.test.sh && bash .speck/scripts/banned-language-lint.test.sh && bash .speck/scripts/validation/validators/validate-traceability-matrix.test.sh && bash .speck/scripts/validation/validators/compute-cascade.test.sh && bash .speck/scripts/validation/validators/compute-eval-signals.test.sh && bash .speck/scripts/validation/validators/validate-wave-safety.test.sh && bash .speck/scripts/validation/validators/validate-product-contract.test.sh && bash .speck/scripts/validation/validators/validate-felt-axis.test.sh && bash .speck/scripts/validation/validators/validate-taste-axis.test.sh && bash .speck/scripts/validation/validators/validate-coverage-matrix.test.sh && bash .speck/scripts/market-staleness-check.test.sh && bash .speck/scripts/market-reconcile-check.test.sh && bash .speck/scripts/validation/validators/validate-recipes.sh && bash .speck/scripts/bash/validate-artifact-docs.sh"
   },
   "repository": {
     "type": "git",

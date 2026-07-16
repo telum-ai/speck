@@ -250,11 +250,12 @@ For every validation report at UX-RC or higher:
 
 *The explicit checklist that must pass to claim each readiness state.*
 
-### 🧭 The Three-Axis Readiness Model
+### 🧭 The Four-Axis Readiness Model
 Every readiness claim decomposes into three distinct, non-substitutable axes:
 1. **CORRECT** — Does the code do what it claims? (proven by unit/integration tests, types, and `/audit`).
 2. **ON-CONTRACT** — Does the behavior conform to the specifications and magic moments? (proven by standard LARP and traceability matrix).
-3. **FELT-GOOD** — Would a naive, first-time user actually find the experience good? **The AI evaluates this axis directly** via the context-stripped naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric). A human taste review is an *optional stronger override* — never a prerequisite.
+3. **FELT-GOOD** *(legibility)* — Would a naive, first-time user actually find the experience good? **The AI evaluates this axis directly** via the context-stripped naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric). A human taste review is an *optional stronger override* — never a prerequisite.
+4. **TASTE** *(connoisseur craft)* — Is it *crafted / premium / does it sing*? Distinct from FELT-GOOD legibility: a screen can be clear yet cheap-feeling. **The AI evaluates this directly** via the connoisseur-hostile pass (Job C), **dual-anchored** against `product-contract.md` §6b Aesthetic Contract + `design-system.md` (product-relative) AND the `visual-quality` universal principles. Records `taste_axis` + `taste_anchor`; **surfaces aesthetic forks for the owner** (never resolves subjective taste unilaterally); a **severe BAD** (≥2 pixel-grounded craft violations on a flagship surface) or a named-declared-rule violation **caps the state**. `TASTE: uncovered` for consumer archetypes until the connoisseur pass runs.
 
 **CRITICAL**: You must never use unqualified "verified" or "validated" claims without naming the axis. FELT-GOOD is a real, AI-evaluable axis — the agent is expected to understand and apply first-impression taste judgment, not defer it. A story or epic cannot claim FELT-GOOD coverage from correctness/conformance evidence alone; it must come from an actual naive-hostile taste pass. For consumer archetypes: `FELT: uncovered` until the naive-hostile pass runs → `FELT: ai-verified` once the AI records its taste verdict → `FELT: human-verified` when a human additionally signs off.
 
@@ -441,10 +442,11 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 *The default verification model: the AI agent runs the gates and records evidence. The human reviews the recorded evidence and may override.*
 
-### 👥 Three-Axis Ownership
+### 👥 Four-Axis Ownership
 - **CORRECT**: AI agent claims pass based on tests, types, and `/audit` logs.
 - **ON-CONTRACT**: AI agent claims pass based on standard LARP and traceability matrix.
 - **FELT-GOOD**: **AI-evaluated.** The agent runs the naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric), applies first-impression taste judgment, and records the verdict (`felt_axis: ai-verified`). A human may override at any time (final taste authority), and a recorded human taste review promotes the axis to `human-verified` — but human sign-off is an *optional stronger signal*, never a prerequisite for shipping.
+- **TASTE**: **AI-evaluated, owner-sovereign on direction.** The agent runs the connoisseur-hostile pass (dual-anchored), records `taste_axis`/`taste_anchor`, and **surfaces aesthetic forks** — it never resolves subjective taste unilaterally, nor auto-fixes contestable taste (only named-rule violations + hard-objective defects). A **severe BAD** (≥2 pixel-grounded craft violations on a flagship surface) or a named-declared-rule violation **caps the state**; the *direction* of any fix is the owner's fork. A `universal-only` anchor (no §6b/design-system) cannot back a premium claim at SHIP-RC.
 
 | Gate / Axis | Who claims pass | Who can override pass | Who must approve SHIP |
 |-------------|-----------------|------------------------|-----------------------|

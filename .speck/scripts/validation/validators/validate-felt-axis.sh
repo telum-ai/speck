@@ -71,12 +71,13 @@ is_ux_rc_or_higher() {
 
 # === VALIDATION RULES ===
 
-# 1. Assert Three-Axis block header exists
-if echo "$content" | grep -q "^## 🧭 Three-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD)"; then
-  log_success "Three-Axis Readiness header found"
+# 1. Assert the Readiness axes block header exists (loose match — v8.2.0 adds a 4th
+#    axis, so accept both "Three-Axis …" and "Four-Axis … (… / TASTE)").
+if echo "$content" | grep -qE "^## 🧭 .*Readiness \("; then
+  log_success "Readiness axes header found"
 else
-  log_error "Missing required header: '## 🧭 Three-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD)'" \
-    "Add the Three-Axis Readiness section to your validation report."
+  log_error "Missing the Readiness axes header (e.g. '## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)')" \
+    "Add the Readiness axes section to your validation report."
 fi
 
 # 2. Assert felt_axis frontmatter exists and is valid

@@ -129,7 +129,7 @@ For **every** captured screen, judging **from the image, not the AX tree**, answ
 | First glance (3s) | What does the user understand in 3 seconds? | ✅/⚠️/❌ | [Note] |
 | Surface economy | What repeats or competes on this screen? (Are there redundant labels, competing CTAs?) | ✅/⚠️/❌ | [Note] |
 | Progressive disclosure | What should move one tap deeper to reduce cognitive load? | ✅/⚠️/❌ | [Note] |
-| Visual feel | Calm/intentional/premium OR cramped/random/cheap? | ✅/⚠️/❌ | [Note] |
+| Visual legibility | Clear/uncramped/coherent OR cramped/broken/placeholder? (premium/craft is the TASTE axis — Job C) | ✅/⚠️/❌ | [Note] |
 | Copy feel | Specific to product OR generic SaaS? | ✅/⚠️/❌ | [Note] |
 | Voice match | Matches product-contract voice principles? | ✅/⚠️/❌ | [Note] |
 | Banned-language | Any banned terms appear in user-visible surface? | ✅/⚠️/❌ | [Note] |
@@ -183,10 +183,12 @@ Each LARP run produces a findings note:
 **Build target**: [valid proof source from evidence-contract]
 **Date**: [YYYY-MM-DD]
 
-## Overall Verdict (two non-collapsible jobs)
-- **DOES-IT-WORK**: [PASS / CONDITIONAL_PASS / FAIL]
-- **IS-IT-GOOD**: [PASS / CONDITIONAL_PASS / FAIL]  ← can block ship independently of DOES-IT-WORK
+## Overall Verdict (three non-collapsible jobs)
+- **DOES-IT-WORK** (Job A): [PASS / CONDITIONAL_PASS / FAIL]
+- **IS-IT-GOOD** (Job B — legibility → FELT-GOOD): [PASS / CONDITIONAL_PASS / FAIL]  ← can block ship independently of DOES-IT-WORK
+- **IS-IT-CRAFTED** (Job C — connoisseur craft → TASTE): [PASS / CONDITIONAL_PASS / FAIL]  ← dual-anchored; a severe BAD or named-rule violation caps state; aesthetic forks surfaced for the owner. Rubric: `.speck/templates/story/connoisseur-critique-template.md`
 - **felt_axis**: [uncovered / ai-verified / human-verified]
+- **taste_axis**: [uncovered / ai-critiqued / forks-open / human-verified]  ·  **taste_anchor**: [product+universal / universal-only]
 
 ## Step Results
 [Per-step table]

@@ -1,9 +1,31 @@
+---
+artifact_type: project-validation-report
+readiness_state_claimed: [NO-SHIP | IMPL-GREEN | INTEGRATION-GREEN | UX-RC | API-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
+felt_axis: [uncovered | ai-verified | human-verified]
+taste_axis: [uncovered | ai-critiqued | forks-open | human-verified]
+taste_anchor: [product+universal | universal-only]
+---
+
 # Project Validation Report: [Project Name]
 
 **Project**: [PROJECT_ID]  
 **Validation Date**: [DATE]  
 **Project Duration**: [Start] to [End]  
 **Overall Status**: [SUCCESS/PARTIAL/FAILED]
+
+---
+
+## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
+
+*Every readiness claim decomposes into four independent, non-substitutable axes:*
+- **CORRECT**: [tests / types / audit across the project]
+- **ON-CONTRACT**: [end-to-end JTBD walkthrough + traceability across epics]
+- **FELT-GOOD** *(legibility)*: [AI naive-hostile verdict across personas → `felt_axis`]
+- **TASTE** *(connoisseur craft, dual-anchored)*: [AI connoisseur-hostile verdict across the flagship/magic-moment surfaces → `taste_axis` + `taste_anchor`. `forks-open` if aesthetic forks await your decision. A severe BAD caps the state.]
+
+### 🎨 Aesthetic Forks — Owner Decision
+*Populated when `taste_axis: forks-open`. Surfaced for you — the AI never resolves subjective taste unilaterally.*
+- [Fork: the decision · Option A vs Option B · pixel reasoning · anchor status · AI recommendation]
 
 ---
 

@@ -131,9 +131,17 @@ Record **≥2 specific, pixel-anchored observations per screen**. "No defects" i
 
 This is the naive-hostile taste pass — it produces the FELT-GOOD verdict (`felt_axis: ai-verified` on a clean pass, citing the findings file). An un-adjudicated screenshot cannot support any readiness state that depends on felt quality.
 
+### 6b. Job C — IS-IT-CRAFTED (connoisseur judgment) — the TASTE axis, REQUIRED for consumer UI, non-collapsible
+
+Job B asks "is anything *broken / confusing*?" (legibility → FELT-GOOD). Job C asks the distinct, non-collapsible question "is this *crafted* — premium, restrained, does it sing?" (aesthetic connoisseurship → TASTE). **A screen can pass Job B and fail Job C.** First action: read `.speck/templates/story/connoisseur-critique-template.md` (the lazy rubric — dual-anchor rule, the 8 craft dimensions, HARD-vs-FUZZY verdict logic, fork triage, conservative auto-fix, severe-BAD blocking).
+
+Run it **connoisseur-hostile** over the SAME screenshots Job B captured (no new capture run at normal tier). Per screen: GOOD/ACCEPTABLE/BAD across the 8 dimensions, **dual-anchored** against (a) the product's declared intent — `product-contract.md` §6b Aesthetic Contract + `design-system.md` — and (b) universal craft (the `visual-quality` principles). When §6b/design-system is absent: judge universal-only, stamp `taste_anchor: universal-only`, convert borderline calls to forks, nudge `/project-design-system`.
+
+Output → `larp-recordings/<sha>-connoisseur-findings.md`: a **makes-it-premium** list, a **cheapens-it** list, and an **Aesthetic Forks — Owner Decision** list. Verdict → `taste_axis: ai-critiqued` (or `forks-open` if any fork is open) + `taste_anchor`. **You surface forks; you never resolve subjective taste unilaterally.** A **severe BAD** (≥2 pixel-grounded craft violations on a flagship/magic-moment surface) or a named-declared-rule violation **caps the claimable state** — the objective floor blocks, the *direction* of the fix is the owner's fork.
+
 ### 7. Write findings note
 
-Per the template's findings format, with **separate DOES-IT-WORK and IS-IT-GOOD verdicts**. Save to `<story-or-epic-dir>/larp-recordings/<sha>-<persona>-findings.md`.
+Per the template's findings format, with **separate DOES-IT-WORK, IS-IT-GOOD, and IS-IT-CRAFTED verdicts**. Save to `<story-or-epic-dir>/larp-recordings/<sha>-<persona>-findings.md` (+ the connoisseur findings to `<sha>-connoisseur-findings.md` when Job C ran).
 
 ### 8. Apply SHA stamp
 
@@ -143,7 +151,7 @@ Per the template's findings format, with **separate DOES-IT-WORK and IS-IT-GOOD 
 
 ### 9. Report
 
-Standard report format. Report **both** job verdicts; never collapse Job B into Job A.
+Standard report format. Report **all three** job verdicts (DOES-IT-WORK / IS-IT-GOOD / IS-IT-CRAFTED); never collapse Job B into Job A, nor Job C into Job B.
 
 ## 🧭 LARP Must Reach Everything (P3)
 
@@ -160,7 +168,8 @@ If automation cannot reach a control, focus a field, or complete a flow, that is
 - NEVER let an AI-surface action claim stand without a verified mechanism (action-claim audit, P2)
 - NEVER write off an unreachable control as a tooling limitation without running the diagnostic playbook — unreachable = finding (P3)
 - NEVER cap on a "named infra blocker" without a logged, reproduced real attempt (P3)
-- ALWAYS record separate DOES-IT-WORK and IS-IT-GOOD verdicts; look at the pixels for Job B, not the AX tree
+- ALWAYS record separate DOES-IT-WORK, IS-IT-GOOD, and IS-IT-CRAFTED verdicts; look at the pixels for Job B and Job C, not the AX tree
+- For consumer UI, ALWAYS run Job C (connoisseur-hostile → TASTE) and record `taste_axis` + `taste_anchor`; surface aesthetic forks for the owner, never resolve subjective taste unilaterally, and never auto-fix contestable taste (only named-rule violations + hard-objective defects)
 - NEVER LARP against dev server when evidence-contract requires built artifact
 - NEVER claim UX-RC or higher based on an incremental cached build without performing a clean rebuild first
 - NEVER skip taste-judgment rubric

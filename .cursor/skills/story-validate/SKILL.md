@@ -104,7 +104,8 @@ To execute browser LARPs successfully in sandboxed or restricted environments wi
 5. If any required-at-claimed-state gate is ❌ (including an `uncovered` FELT axis for a consumer UX-RC+ claim, or missing Keystones for SHIP-RC+): lower the verified state to the highest state where all gates pass
 6. Run the banned-phrase self-check on the report's own language before publishing
 7. Apply SHA stamp to the report
-7b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md` to ensure three-axis compliance and that the AI-covered FELT-GOOD axis is not left `uncovered` for consumer UX-RC+ claims.
+7b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md` to ensure four-axis compliance and that the AI-covered FELT-GOOD axis is not left `uncovered` for consumer UX-RC+ claims.
+7c. **Run TASTE axis validation:** run `bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict validation-report.md` to ensure the AI-covered TASTE (connoisseur) axis is not left `uncovered` for consumer UX-RC+ claims, that a `forks-open` claim actually lists its aesthetic forks, and that a `universal-only` anchor doesn't back a premium ship claim. If TASTE is uncovered, run the connoisseur-hostile pass (`/speck-larp` Job C) first.
 8. **Before claiming SHIP-RC or SHIP:** run `bash .speck/scripts/validation/validators/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`. Block SHIP-RC+ if any `PROFILE_DRIFT.P1` finding.
 9. **UI stories touching PROFILE surfaces** (landing, marketing, package.json): run `regenerate-project-readme.sh --check` before UX-RC+ claim.
 10. Trigger `/project-state` regeneration

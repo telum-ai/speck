@@ -1,5 +1,24 @@
 # Speck Changelog
 
+## v8.2.0 — 2026-07-16 — TASTE axis (4th) + exhaustive torture tier (#84)
+
+Two recurring gaps in LARP/validate: (1) **coverage narrowness** — a composed walk runs one persona / one seed / one viewport / happy-path (the Splang cross-epic P0 class); (2) **taste was not first-class** — "technically correct and legible" can still be cheap-feeling. Designed via 3 architectures per pillar, adversarially scored, synthesized.
+
+### TASTE — a 4th non-collapsible readiness axis
+CORRECT / ON-CONTRACT / FELT-GOOD / **TASTE**. Implemented as **Job C · IS-IT-CRAFTED** in `/speck-larp` — a connoisseur-hostile pass over the SAME screenshots Job B captures (one extra evaluation, **no new capture cost** at normal tier). FELT-GOOD stays "not broken / confusing" (legibility); TASTE is "crafted / premium / it sings" (connoisseur).
+- **Dual-anchored**: Anchor A (product-relative) = new `product-contract.md` **§6b Aesthetic Contract** + `design-system.md`; Anchor B (universal) = the `visual-quality` skill's principles (reused, not duplicated). HARD declared rules → BAD (may block); FUZZY intent → fork only. Under-specified intent → `taste_anchor: universal-only` (anti-masquerade) + a `/project-design-system` nudge. The same treatment can be excellent taste in one product and awful in another.
+- **Owner-sovereign**: the pass **surfaces Aesthetic Forks** for the owner and never resolves subjective taste unilaterally; conservative auto-fix (named-rule violations + hard-objective defects only). A **severe BAD** (≥2 pixel-grounded craft violations on a flagship surface) or a named-declared-rule violation **caps the state**.
+- New `validate-taste-axis.sh` (+ test) mirrors `validate-felt-axis.sh`; `taste_axis` / `taste_anchor` frontmatter + a Four-Axis section across all three validation-report templates; new lazy `connoisseur-critique-template.md`. Consumer archetypes must cover TASTE at UX-RC+.
+
+### Exhaustive torture tier (opt-in) + coverage matrix
+`/project-validate --exhaustive` — the cross-epic breadth orchestrator (where the Splang composition P0 lived).
+- **GENERATE** (always-on, cheap): a script-authored `coverage-matrix.md` skeleton — the runtime analog of `traceability-matrix.md` — so breadth GAPs are visible-not-silent even if you never pay to fill them.
+- **FILL** (opt-in, expensive): persona-army × route × {happy, error, empty, loading} × viewport × theme, N-sample input variety with **deterministic** `banned-language-lint` per generative cell (the deterministic cure for a stale word slipping a single happy-path seed), full-page axe + Lighthouse, §11 resilience cells, fanned out via `@speck-validator`.
+- **VALIDATE**: `validate-coverage-matrix.sh` fails on un-run/un-waived cells or surrogate (no-evidence) RUNs. Breadth **caps, never raises**, the state. New `generate-coverage-matrix.sh` (deterministic v1 + `chain-partial` self-check), `validate-coverage-matrix.sh` (+ test), `coverage-matrix-template.md`.
+
+### Notes
+Neither pillar adds a new readiness **state** — both are modifiers (`taste_axis`; coverage tier + breadth cap). Net always-on ≈ +30 lines (§6b + the four-axis reframe); all heavy machinery lazy-loaded. New tests wired into `npm test` (full suite green). AGENTS.md, evidence-contract, product-contract, the report templates, and the larp/validate skills all reframed to four axes.
+
 ## v8.1.4 — 2026-07-16 — Fix: banned-language §7 extractor blind to code-formatted terms (#83)
 
 `banned-language-lint.sh` (and `validate-product-contract.sh` rule 10) extracted §7 banned terms from column 1 but didn't strip markdown backticks or a trailing `*(qualifier)*` note. A project that code-formats its banned terms — natural for single words, e.g. `` | `host`, `organizer` *(of the user)* | … | `` — had them extracted as `` `host` `` / `` `organizer` *(of the user)* ``, so `grep -w` searched for the backtick-delimited literal and **never matched the bare word in source**. A shipped `✦ HOST` UI pill (the exact §7-banned differentiator word) passed the lint — a false-green in a gate whose entire job is to catch banned language.

@@ -159,6 +159,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Epic technical architecture (cross-cutting epics) | `epic-architecture.md` |
 | Epic technical approach (output of epic-plan) | `epic-tech-spec.md` |
 | Promise conservation ledger (every upstream promise → story+AC, DEC, or open) | `traceability-matrix.md` |
+| Runtime breadth coverage (opt-in torture tier; every cell RUN/waived/GAP) | `coverage-matrix.md` |
 | Story map + ordering | `epic-breakdown.md` |
 | Cross-screen UI flow + emotional state (REQUIRED for UI epics) | `experience-chain.md` |
 | User journey map | `user-journey.md` |
@@ -332,7 +333,7 @@ These apply at every play level, in every command, on every project. The first f
 | **Banned-phrase detector** | In every agent self-summary | Phrases like "ready for launch", "outside autonomous reach", "premium polish complete", "should work in production", "tests pass therefore done", "impossible to catch", "uncatchable by automation", or unqualified "validated/verified" with no axis trigger re-audit or enumeration |
 | **Banned-language lint** | On every commit + at `/audit` | Run `.speck/scripts/banned-language-lint.sh` against `product-contract.md` banned terms |
 | **Evidence-or-it-didn't-happen** | At every validation gate | "Tests pass" is one signal, not proof. Require runtime evidence linked to claim. |
-| **Three-axis honesty** | At every validation gate | Never substitute CORRECT or ON-CONTRACT evidence for FELT-GOOD taste judgment. The AI itself covers FELT-GOOD via the naive-hostile LARP — it does not defer taste to a human. Every claim decomposes into the three axes. |
+| **Four-axis honesty** | At every validation gate | Never substitute one axis for another. Every claim decomposes into four non-collapsible axes — CORRECT / ON-CONTRACT / FELT-GOOD / TASTE. The AI covers FELT-GOOD (legibility, via the naive-hostile LARP) and TASTE (connoisseur craft, via the dual-anchored connoisseur-hostile pass) itself; it surfaces aesthetic forks for the owner but never defers an axis to a mandatory human. |
 | **Premise-Challenge** | Before UX-RC+ on high-impact UI surfaces | Run `/speck-premise-challenge` to question design decisions on onboarding, empty states, paywalls, error/degraded states, and celebration surfaces. |
 | **Continuous feedback capture** | Whenever a gate is worked around, a skill is ambiguous, or a Speck behavior is patched | Run `/speck-feedback` to document the gap, check for duplicates on GitHub, and draft comments/issues. |
 | **Promise conservation** | `/epic-plan` → `/epic-analyze` → `/epic-validate` | Every enumerable upstream promise (product-contract §, each FR/NFR, every wireframe screen/element/state, every experience-chain seam) gets a `PRM-NNN` row in `traceability-matrix.md` and resolves to a story+AC, a DEC descope, or a visibly-open row. Enforced by `validate-traceability-matrix.sh`. **"Wireframes are inspiration" is banned** — a drawn element or stated seam is a promise. |
@@ -344,7 +345,8 @@ A more hands-on human intervenes at decision locks. A more hands-off human lets 
 Readiness is **earned by trying to disprove it** (P1), not by confirming a claim. Every readiness claim decomposes into three distinct, non-substitutable axes:
 1. **CORRECT** — Does the code do what it claims? (unit/integration tests, types, `/audit`).
 2. **ON-CONTRACT** — Does the behavior conform to the specifications and magic moments? (standard LARP + traceability matrix).
-3. **FELT-GOOD** — Would a naive, first-time user actually find the experience good? **The AI evaluates this axis directly** via the context-stripped naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric) and the IS-IT-GOOD adjudication, recording a verdict. A human taste review is an *optional stronger override* — never a prerequisite.
+3. **FELT-GOOD** *(legibility — not broken / not confusing)* — Would a naive, first-time user actually find the experience good? **The AI evaluates this axis directly** via the context-stripped naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric) and the IS-IT-GOOD adjudication, recording a verdict. A human taste review is an *optional stronger override* — never a prerequisite.
+4. **TASTE** *(connoisseur craft — crafted / premium / does it sing?)* — Distinct from FELT-GOOD: a screen can be perfectly legible yet cheap-feeling. **The AI evaluates this directly** via the connoisseur-hostile pass (Job C), **dual-anchored** against the product's declared aesthetic intent (`product-contract.md` §6b Aesthetic Contract + `design-system.md`) AND universal craft (the `visual-quality` principles) — so the *same treatment can be excellent taste in one product and awful in another*. It records `taste_axis` (uncovered → ai-critiqued → forks-open → human-verified) + `taste_anchor` (product+universal | universal-only). Aesthetic *direction* is an owner call — the AI **surfaces forks, never resolves subjective taste unilaterally** — but a **severe BAD** (≥2 pixel-grounded craft violations on a flagship/magic-moment surface) or a named-declared-rule violation **caps the state**. Consumer archetypes render `TASTE: uncovered` until the connoisseur pass runs.
 
 **CRITICAL**: Never use unqualified "verified"/"validated" without naming the axis. FELT-GOOD is a real, AI-evaluable axis — the agent applies first-impression taste judgment, it does not defer it. A story/epic cannot claim FELT-GOOD from correctness/conformance evidence alone; it must come from an actual naive-hostile taste pass. Consumer archetypes render `FELT: uncovered` until that pass runs → `FELT: ai-verified` once the AI records its verdict (→ `FELT: human-verified` if a human also signs off). "Uncatchable by automation" is banned — run the naive lens.
 
@@ -438,9 +440,10 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Let a drawn wireframe element or a stated experience-chain seam go un-enumerated — it is a promise: give it a `PRM-NNN` row in `traceability-matrix.md` (story+AC) or descope it with a DEC. "Wireframes are inspiration" is banned.
 - Accept a delegated/parallel sub-agent's self-reported `{readiness_state, pass}` — verify ≥2 real skill invocations + template-compliant reports first (Verify-Skills Gate)
 - Leave validated specification docs, experience chains, wireframes, or product contracts stale after a deliberate post-validation change or strategic pivot — run `/project-adjust`, `/epic-adjust`, or `/story-adjust` to re-spec the delta, run the change-cascade computer, and conserve promises
-- Conflate CORRECT or ON-CONTRACT with FELT-GOOD taste judgment
+- Conflate any of the four axes (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE) with one another
 - Launder a taste miss or design premise error as "uncatchable by automation" — the AI must run the naive-hostile lens and apply taste judgment
 - Defer the FELT-GOOD axis to a mandatory human sign-off — the AI evaluates taste itself via the naive-hostile LARP; human review is an optional override, not a gate
+- Defer the TASTE axis to a human as a prerequisite — the AI runs the connoisseur-hostile pass itself and surfaces aesthetic *forks* for the owner; it never blocks on its own subjective opinion (only a severe BAD or a named-rule violation caps state), nor auto-fixes contestable taste
 - Accept an un-adjudicated screenshot/recording as evidence of quality — an un-judged capture is surrogate proof (P1); a captured screen without a substantive per-screen critique is an incomplete LARP, not a pass
 - Let an AI surface claim an action (built/generated/scheduled) with no observed mechanism, let a price lock without a free-substitute defensibility artifact, or let a guard-test pass as a bypass-capable role or while silently skipped (P2)
 - Cap readiness on a "named infra blocker" without a logged, reproduced real attempt, or write off an unreachable control as a tooling limit instead of a finding (P3)
@@ -509,7 +512,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 8.1.4  
+**Speck Version**: 8.2.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->
