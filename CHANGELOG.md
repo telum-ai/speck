@@ -1,5 +1,11 @@
 # Speck Changelog
 
+## v8.1.4 — 2026-07-16 — Fix: banned-language §7 extractor blind to code-formatted terms (#83)
+
+`banned-language-lint.sh` (and `validate-product-contract.sh` rule 10) extracted §7 banned terms from column 1 but didn't strip markdown backticks or a trailing `*(qualifier)*` note. A project that code-formats its banned terms — natural for single words, e.g. `` | `host`, `organizer` *(of the user)* | … | `` — had them extracted as `` `host` `` / `` `organizer` *(of the user)* ``, so `grep -w` searched for the backtick-delimited literal and **never matched the bare word in source**. A shipped `✦ HOST` UI pill (the exact §7-banned differentiator word) passed the lint — a false-green in a gate whose entire job is to catch banned language.
+
+Both §7 extractors now strip backticks and trailing `*(qualifier)*` notes before whole-word grepping. New regression test (V7): a backtick+qualifier §7 row now matches the bare word in code. Same robustness family as #81/#82 — opposite direction (a false *negative*, not a false positive).
+
 ## v8.1.3 — 2026-07-12 — Fix: product-contract validator rule 10 residual (#82)
 
 Follow-up to #81. Rule 10 still flagged an *established domain term* that the contract's own §7 ❌ list scopes to "on user surfaces" when it legitimately appeared in §1 promise prose and §5 magic-moment `Surface:`/`Trigger:` spec-definitions (the same case as the already-exempted `Validation step`). Repro: Splang's `subset` — a load-bearing domain term (62 uses in shipped code) declared as internal→public vocabulary. #81's fix dropped the flag count 8→1; this closes the last one.

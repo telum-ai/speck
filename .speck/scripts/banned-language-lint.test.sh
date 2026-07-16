@@ -104,6 +104,24 @@ init_git "$WORK/staged-product"
 assert_fail "V6b: --staged still scans src/* for banned terms" \
   bash -c "cd '$WORK/staged-product' && bash '$LINT' --staged"
 
+# V7: §7 terms written in backticks + a *(qualifier)* note must still match the bare word in code (#83)
+mkdir -p "$WORK/backtick/specs/projects/test" "$WORK/backtick/.speck" "$WORK/backtick/src"
+cat > "$WORK/backtick/specs/projects/test/product-contract.md" <<'EOF'
+# Product Contract
+
+## 7. Banned Language / System Anti-Patterns
+
+| Banned Term | Where it appears | Why it's banned | Use instead |
+|-------------|------------------|-----------------|-------------|
+| `host`, `organizer` *(of the user)* | UI pills | positions the user as a host | founder |
+EOF
+cat > "$WORK/backtick/.speck/project.json" <<'EOF'
+{"project_id":"test","play_level":"sprint"}
+EOF
+printf 'export const pill = "✦ HOST";\nconst label = "organizer";\n' > "$WORK/backtick/src/pill.tsx"
+assert_fail "V7: backtick/qualifier §7 terms match bare words in code (#83)" \
+  bash -c "cd '$WORK/backtick' && bash '$LINT'"
+
 echo ""
 echo "Results: $pass passed, $fail failed"
 [[ "$fail" -eq 0 ]]

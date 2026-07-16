@@ -89,6 +89,8 @@ awk '
     for (i = 1; i <= n; i++) {
       p = parts[i]
       gsub(/"/, "", p)             # strip quotes
+      gsub(/`/, "", p)             # strip markdown code backticks so `host` matches bare host (#83)
+      sub(/[[:space:]]*\*\([^)]*\)\*[[:space:]]*$/, "", p)  # strip trailing *(qualifier)* note (#83)
       sub(/^[ \t]+/, "", p)        # trim leading ws
       sub(/[ \t]+$/, "", p)        # trim trailing ws
       if (p != "" && p !~ /^\[/) print p
