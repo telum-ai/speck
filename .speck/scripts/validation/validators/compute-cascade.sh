@@ -85,6 +85,62 @@ is_empty_cell() {
   return 1
 }
 
+# --- Header-keyed row parser (Speck v8.4) --------------------------------------------------------
+# Resolve columns by NAME from the header row, so an 8-col matrix (with the new Grain column between
+# Backing and Status) is read correctly rather than mistaking Grain for Status. Back-compatible with
+# 6/7-col matrices. Portable bash 3.2 (no associative arrays, no mapfile).
+ROW_CELLS=()
+split_row() {
+  local line="$1" i cell
+  local -a raw=()
+  IFS='|' read -r -a raw <<< "$line" || true
+  ROW_CELLS=()
+  for (( i=1; i<${#raw[@]}; i++ )); do
+    cell="$(trim "${raw[$i]}")"
+    ROW_CELLS+=("$cell")
+  done
+}
+
+COL_ID=-1; COL_SRC=-1; COL_PROMISE=-1; COL_DISCHARGE=-1; COL_DEC=-1; COL_BACKING=-1; COL_GRAIN=-1; COL_STATUS=-1
+COLUMNS_RESOLVED=false
+resolve_columns_from_header() {
+  split_row "$1"
+  COL_ID=-1; COL_SRC=-1; COL_PROMISE=-1; COL_DISCHARGE=-1; COL_DEC=-1; COL_BACKING=-1; COL_GRAIN=-1; COL_STATUS=-1
+  local i lc
+  for (( i=0; i<${#ROW_CELLS[@]}; i++ )); do
+    lc="$(printf '%s' "${ROW_CELLS[$i]}" | tr '[:upper:]' '[:lower:]')"
+    case "$lc" in
+      prm-id*)    COL_ID=$i ;;
+      source*)    COL_SRC=$i ;;
+      promise*)   COL_PROMISE=$i ;;
+      discharge*) COL_DISCHARGE=$i ;;
+      dec*)       COL_DEC=$i ;;
+      backing*)   COL_BACKING=$i ;;
+      grain*)     COL_GRAIN=$i ;;
+      status*)    COL_STATUS=$i ;;
+    esac
+  done
+  [[ $COL_ID -ge 0 && $COL_STATUS -ge 0 ]] && COLUMNS_RESOLVED=true
+}
+
+resolve_columns_positional() {
+  local n=${#ROW_CELLS[@]}
+  if [[ $n -gt 0 && -z "${ROW_CELLS[$((n-1))]}" ]]; then n=$((n-1)); fi
+  COL_ID=0; COL_SRC=1; COL_PROMISE=2; COL_DISCHARGE=3; COL_DEC=4; COL_BACKING=-1; COL_GRAIN=-1; COL_STATUS=-1
+  case "$n" in
+    6) COL_STATUS=5 ;;
+    7) COL_BACKING=5; COL_STATUS=6 ;;
+    8) COL_BACKING=5; COL_GRAIN=6; COL_STATUS=7 ;;
+    *) COL_STATUS=$((n-1)) ;;
+  esac
+  COLUMNS_RESOLVED=true
+}
+
+cell_at() {
+  local idx="$1"
+  [[ "$idx" -ge 0 && "$idx" -lt ${#ROW_CELLS[@]} ]] && printf '%s' "${ROW_CELLS[$idx]}" || printf ''
+}
+
 # Find all traceability matrices
 matrices=()
 while IFS= read -r -d '' file; do
@@ -166,30 +222,31 @@ for matrix in "${matrices[@]}"; do
   fi
 
   matrix_has_affected=false
+  COLUMNS_RESOLVED=false
 
   while IFS= read -r line; do
+    # Header row → resolve columns by name, then skip.
+    if [[ "$line" =~ ^\|[[:space:]]*[Pp][Rr][Mm]-[Ii][Dd] ]]; then
+      resolve_columns_from_header "$line"
+      continue
+    fi
+
     # Only data rows whose first cell is PRM-<digits>
     [[ "$line" =~ ^\|[[:space:]]*PRM-[0-9]+ ]] || continue
 
-    IFS='|' read -r _lead c_id c_src c_promise c_discharge c_dec c_col6 c_col7 _rest <<< "$line"
+    split_row "$line"
+    [[ "$COLUMNS_RESOLVED" == true ]] || resolve_columns_positional
 
-    id="$(trim "${c_id:-}")"
-    src="$(trim "${c_src:-}")"
-    promise="$(trim "${c_promise:-}")"
-    discharge="$(trim "${c_discharge:-}")"
-    dec_cell="$(trim "${c_dec:-}")"
-    
+    id="$(cell_at "$COL_ID")"
+    src="$(cell_at "$COL_SRC")"
+    promise="$(cell_at "$COL_PROMISE")"
+    discharge="$(cell_at "$COL_DISCHARGE")"
+    dec_cell="$(cell_at "$COL_DEC")"
+
     # Ignore template example lines
     case "$promise" in '['*']') continue ;; esac
 
-    # Determine status (old 6-column vs new 7-column matrix)
-    status_raw=""
-    if [[ -n "$(trim "${c_col7:-}")" || "$line" =~ \|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\|[[:space:]]*[^\|]+[[:space:]]*\| ]]; then
-      status_raw="${c_col7:-}"
-    else
-      status_raw="${c_col6:-}"
-    fi
-    status="$(trim "$status_raw")"
+    status="$(cell_at "$COL_STATUS")"
     status_lower="$(printf '%s' "$status" | tr '[:upper:]' '[:lower:]')"
 
     # Check match criteria

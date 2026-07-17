@@ -64,5 +64,27 @@ else
 fi
 rm -rf "$TMP_FALLBACK"
 
+echo "Test 6: 8-column matrix (with Grain) — Status read by header, not mistaken for Grain (v8.4, #87)"
+mkdir -p "$TMP/projects/001-test-project/epics/E002-grain/"
+cat > "$TMP/projects/001-test-project/epics/E002-grain/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Grain Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Grain (proven-at) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|-------------------|--------|
+| PRM-201 | product-contract §3 | differentiator pillar text | S050 / AC-1 | DEC-0009 | — | ux-rc | discharged |
+| PRM-202 | product-contract §1 | payment refund | — | DEC-0009 | — | — | descoped |
+EOF
+
+# The DEC-0009 blast radius includes PRM-201, whose Status is 'discharged' (column 8). If the parser
+# read Grain (column 7 = 'ux-rc') as Status, this would NOT be flagged and strict mode would pass.
+if bash "$VALIDATOR" --dec DEC-0009 --strict "$TMP/projects/001-test-project" >/dev/null 2>&1; then
+  echo "ERROR: 8-col matrix — expected strict mode to fail on active discharged row PRM-201, but it passed! (Grain likely mis-read as Status)"
+  exit 1
+else
+  echo "  ✓ Passed Test 6 (8-col discharged row correctly detected under superseded DEC)"
+fi
+
 echo "✅ All compute-cascade smoke tests passed!"
 exit 0

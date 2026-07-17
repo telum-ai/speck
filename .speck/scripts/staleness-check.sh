@@ -214,6 +214,24 @@ for a in "${OPTIONAL_ARTIFACTS[@]}"; do
   check_artifact "$a" "no"
 done
 
+# --- v8 matrix↔report reconcile check (Speck v8.4, #87) --------------------------------------------
+# A traceability matrix still asserting `discharged` at a readiness the discharging story's report
+# capped `[pre-v8-proof]` is the exact #87 contradiction — the cap reached the report but not the
+# matrix. Flag it as V8_STALE so /recheck routes to /speck-reprove (which runs reconcile-matrix-grain.sh).
+# No new drift enum — this stays under the V8_REPROVE.P1 family.
+while IFS= read -r -d '' mx; do
+  epic_dir="$(dirname "$mx")"
+  # Already reconciled? (matrix carries the sentinel) → nothing to flag.
+  grep -qi "pre-v8-proof" "$mx" 2>/dev/null && continue
+  # Any discharging story report under this epic capped pre-v8, while the matrix is un-graded?
+  if [[ -d "$epic_dir/stories" ]] && grep -rqli "pre-v8-proof" "$epic_dir/stories" 2>/dev/null; then
+    rel="${mx#$PROJECT_DIR/}"
+    echo "⚠️  V8_STALE  $rel (story report capped [pre-v8-proof] but matrix un-graded — run /speck-reprove: reconcile-matrix-grain.sh)"
+    ANY_STALE=1
+    V8STALE_COUNT=$((V8STALE_COUNT + 1))
+  fi
+done < <(find "$PROJECT_DIR" -name "traceability-matrix.md" -print0 2>/dev/null || true)
+
 echo ""
 echo "Summary: $FRESH_COUNT fresh / $STALE_COUNT stale / $DRIFT_COUNT drift / $NOSTAMP_COUNT no-stamp / $V8STALE_COUNT v8-stale / $MISSING_COUNT missing"
 

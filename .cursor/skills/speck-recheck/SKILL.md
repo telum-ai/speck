@@ -119,7 +119,7 @@ Trigger `/project-state` to regenerate with drift findings in:
 
 If `V8_REPROVE.P1` (marker `.speck/.v8-reprove-needed` present, or any `V8_STALE` artifact stamped `< speck 8`):
 - **BLOCK new feature work**
-- Route to `/speck-reprove` **before** resolving other drift — it builds the suspect-green worklist (mapped to P1-P4), caps effective shippable state at `INTEGRATION-GREEN`, reverts consumer FELT-GOOD to `uncovered`, and preserves each historical claim stamped `[pre-v8-proof]`.
+- Route to `/speck-reprove` **before** resolving other drift — it builds the suspect-green worklist (mapped to P1-P4), caps effective shippable state at `INTEGRATION-GREEN`, reverts consumer FELT-GOOD to `uncovered`, preserves each historical claim stamped `[pre-v8-proof]`, and (Phase 1.5, #87) runs `reconcile-matrix-grain.sh` so the traceability matrices stop asserting a readiness the report cap removed. A `V8_STALE` line naming a `traceability-matrix.md` ("report capped but matrix un-graded") is this exact un-reconciled contradiction.
 
 If P0 drift found:
 - **BLOCK new feature work**

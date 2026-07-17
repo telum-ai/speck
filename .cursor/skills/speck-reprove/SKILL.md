@@ -69,6 +69,20 @@ For each artifact/claim:
 - For consumer archetypes, render **FELT-GOOD → `uncovered`** in the readiness map (the AI must re-run the naive-hostile IS-IT-GOOD LARP to re-cover it — a human sign-off is an optional stronger override, never a prerequisite).
 - Do NOT rewrite the numeric history to a lower value; add the `[pre-v8-proof]` marker + a one-line "capped pending v8 re-prove" note.
 
+### Phase 1.5 — Reconcile the traceability matrices (#87)
+
+Phase 1 caps the validation **reports**. But the traceability **matrices** in the same epic dirs still assert `discharged` at the readiness the cap removed — the two artifacts now contradict each other, and the matrix is the one people cite when asked "is it covered?". Reconcile them:
+
+```bash
+bash .speck/scripts/validation/reconcile-matrix-grain.sh specs/projects/<PROJECT_ID>
+```
+
+For every `discharged` row whose discharging story's report is pre-v8-stamped or capped, this writes the row's `Grain (proven-at)` to the **effective** (capped) state — `integration-green [pre-v8-proof]` — the same sentinel the reports carry, so matrix and report converge. It reads the effective state (the cap), never the preserved numeric; it **never** auto-promotes to product grain; it inserts the `Grain` column if the matrix is still 6/7-col; Status is untouched (conservation byte-identical); and it is idempotent. `MATRIX_GRAIN_CAP` (MIN grain over all discharged rows) then drops each epic to its honest ceiling at `/epic-validate`.
+
+Record the reconcile counts (`regraded=… columns_added=… matrices_changed=…` from the tail line) in the report's Status block.
+
+> Note: the `[pre-v8-proof]` sentinel lives in BOTH the report (a story-level fact) and the matrix Grain cell (a row-level fact). Genuinely different facts sharing a token — NOT a one-fact-two-homes drift violation.
+
 ### Phase 2 — Build the re-prove worklist
 
 Map every suspect claim to its concrete re-prove action, prioritized P0→P3:
@@ -93,6 +107,7 @@ Read the template at `.speck/templates/project/project-v8-reprove-report-templat
 - **NEVER** carry a v7 `UX-RC`+ claim into v8 as ship-ready without a fresh v8 evaluation — cap at `INTEGRATION-GREEN` first.
 - **NEVER** silently lower a historical numeric claim — preserve it and append `[pre-v8-proof]` with a capped note.
 - **NEVER** re-cover consumer FELT-GOOD from correctness/conformance evidence — it requires the naive-hostile IS-IT-GOOD LARP (P1).
+- **NEVER** leave the traceability matrices asserting a readiness the report cap removed — run `reconcile-matrix-grain.sh` (Phase 1.5) so matrix and report converge. Reconcile writes only the capped (`≤ integration-green [pre-v8-proof]`) grain; it never promotes a row to product grain.
 - **NEVER** accept a `[pre-v8-proof]` cap justified by a "named blocker" without a logged, reproduced real attempt (P3).
 - **ALWAYS** map each suspect claim to the specific principle (P1-P4) and a concrete re-prove action.
 - **ALWAYS** SHA-stamp the report (v8) and remove the marker only after the worklist is tracked.

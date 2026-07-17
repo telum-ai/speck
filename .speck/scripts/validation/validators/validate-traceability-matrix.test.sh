@@ -229,5 +229,187 @@ EOF
 bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md"
 echo "  ✓ Passed Test 6 (decorated UX-RC + bold INTEGRATION-GREEN both resolved)"
 
+echo "Test 7: 8-column matrix (with Grain) — header-keyed parse; MATRIX_GRAIN_CAP + product/story split"
+cat > "$TMP/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Grain (proven-at) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|-------------------|--------|
+| PRM-001 | product-contract §3 | differentiator pillar text | S012 / AC-3 | — | — | ux-rc | discharged |
+| PRM-002 | epic.md NFR-003 | backend invariant | S021 / AC-2 | — | — | integration-green | discharged |
+| PRM-003 | experience-chain §6 | seam rule text | — | DEC-0207 | — | — | descoped |
+EOF
+
+OUT7="$(bash "$VALIDATOR" --require-evidence --status-only "$TMP/traceability-matrix.md")"
+echo "$OUT7" | grep -q "MATRIX_GRAIN_CAP=integration-green" || { echo "ERROR: expected cap integration-green"; echo "$OUT7"; exit 1; }
+echo "$OUT7" | grep -q "1 at product grain" || { echo "ERROR: expected 1 product-grain row"; echo "$OUT7"; exit 1; }
+echo "$OUT7" | grep -q "1 at story grain" || { echo "ERROR: expected 1 story-grain row"; echo "$OUT7"; exit 1; }
+echo "  ✓ Passed Test 7"
+
+
+echo "Test 8: un-graded discharged row counts as story-grain (integration-green) even beside a ux-rc row"
+cat > "$TMP/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing | Grain (proven-at) | Status |
+|--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
+| PRM-001 | product-contract §3 | differentiator pillar text | S012 / AC-3 | — | — | ux-rc | discharged |
+| PRM-002 | epic.md NFR-003 | backend invariant | S021 / AC-2 | — | — | — | discharged |
+EOF
+
+OUT8="$(bash "$VALIDATOR" --require-evidence --status-only "$TMP/traceability-matrix.md")"
+echo "$OUT8" | grep -q "MATRIX_GRAIN_CAP=integration-green" || { echo "ERROR: un-graded row must pull cap to integration-green"; echo "$OUT8"; exit 1; }
+echo "$OUT8" | grep -q "1 at product grain" || { echo "ERROR: expected 1 product-grain"; echo "$OUT8"; exit 1; }
+echo "$OUT8" | grep -q "1 at story grain" || { echo "ERROR: expected 1 story-grain (the un-graded row)"; echo "$OUT8"; exit 1; }
+echo "  ✓ Passed Test 8"
+
+
+echo "Test 9: invalid grain token WARNs but still passes (soft in v8.4.0)"
+cat > "$TMP/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing | Grain (proven-at) | Status |
+|--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
+| PRM-001 | product-contract §3 | differentiator pillar text | S012 / AC-3 | — | — | banana | discharged |
+EOF
+
+OUT9="$(bash "$VALIDATOR" --require-evidence --status-only "$TMP/traceability-matrix.md")"  # exit 0 (soft)
+echo "$OUT9" | grep -q "not a readiness-ladder token" || { echo "ERROR: expected invalid-grain WARN"; echo "$OUT9"; exit 1; }
+echo "  ✓ Passed Test 9"
+
+
+echo "Test 10: grain tooth 1 — grain exceeds the discharging story's state → WARN, still passes"
+mkdir -p "$TMP/stories/S030-teeth"
+cat > "$TMP/stories/S030-teeth/validation-report.md" <<'EOF'
+---
+readiness_state_verified: INTEGRATION-GREEN
+---
+Spec Coverage:
+- PRM-030
+EOF
+cat > "$TMP/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing | Grain (proven-at) | Status |
+|--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
+| PRM-030 | product-contract §3 | differentiator pillar text | S030 / AC-1 | — | — | ux-rc | discharged |
+EOF
+OUT10="$(bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md")"  # exit 0
+echo "$OUT10" | grep -q "exceeds the discharging story's effective state" || { echo "ERROR: expected tooth-1 WARN"; echo "$OUT10"; exit 1; }
+echo "  ✓ Passed Test 10"
+
+
+echo "Test 11: grain tooth 1 — [pre-v8-proof] cap makes a ux-rc grain WARN even when the story claims UX-RC"
+mkdir -p "$TMP/stories/S031-capped"
+cat > "$TMP/stories/S031-capped/validation-report.md" <<'EOF'
+---
+readiness_state_verified: UX-RC [pre-v8-proof]
+---
+Spec Coverage:
+- PRM-031
+LARP evidence: evidence/larp/home.png
+EOF
+cat > "$TMP/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing | Grain (proven-at) | Status |
+|--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
+| PRM-031 | product-contract §3 | differentiator pillar text | S031 / AC-1 | — | — | ux-rc | discharged |
+EOF
+OUT11="$(bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md")"  # exit 0
+echo "$OUT11" | grep -q "exceeds the discharging story's effective state 'integration-green'" || { echo "ERROR: expected pre-v8-proof cap WARN"; echo "$OUT11"; exit 1; }
+echo "  ✓ Passed Test 11"
+
+
+echo "Test 12: grain tooth 2 — product-grain (≥ux-rc) row without walk-evidence → WARN"
+mkdir -p "$TMP/stories/S032-nowalk"
+cat > "$TMP/stories/S032-nowalk/validation-report.md" <<'EOF'
+---
+readiness_state_verified: UX-RC
+---
+Spec Coverage:
+- PRM-032 discharged by a unit test importing the helper.
+EOF
+cat > "$TMP/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing | Grain (proven-at) | Status |
+|--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
+| PRM-032 | product-contract §3 | differentiator pillar text | S032 / AC-1 | — | — | ux-rc | discharged |
+EOF
+OUT12="$(bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md")"  # exit 0
+echo "$OUT12" | grep -q "cites no walk-evidence artifact" || { echo "ERROR: expected tooth-2 WARN"; echo "$OUT12"; exit 1; }
+echo "  ✓ Passed Test 12"
+
+
+echo "Test 13: grain teeth satisfied — ux-rc grain, story at UX-RC, report cites walk-evidence → no grain WARN"
+mkdir -p "$TMP/stories/S033-clean"
+cat > "$TMP/stories/S033-clean/validation-report.md" <<'EOF'
+---
+readiness_state_verified: UX-RC
+---
+Spec Coverage:
+- PRM-033 discharged by a cold-start build LARP; evidence/larp/home.png captured.
+EOF
+cat > "$TMP/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing | Grain (proven-at) | Status |
+|--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
+| PRM-033 | product-contract §3 | differentiator pillar text | S033 / AC-1 | — | — | ux-rc | discharged |
+EOF
+OUT13="$(bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md")"  # exit 0
+if echo "$OUT13" | grep -q "grain warning(s)"; then echo "ERROR: expected NO grain warnings"; echo "$OUT13"; exit 1; fi
+echo "$OUT13" | grep -q "1 at product grain" || { echo "ERROR: expected 1 product-grain row"; echo "$OUT13"; exit 1; }
+echo "  ✓ Passed Test 13"
+
+
+echo "Test 14: --check-fidelity (opt-in, WARN-only) — phantom source + vocabulary drift, faithful row silent"
+FID="$TMP/fidelity-epic"
+mkdir -p "$FID"
+cat > "$FID/epic.md" <<'EOF'
+# Epic
+
+**NFR-001**: Safety on a live table
+- Target: idempotent and reversible migration; validated on a throwaway postgres, never on DEV.
+EOF
+cat > "$FID/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing | Grain (proven-at) | Status |
+|--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
+| PRM-001 | epic.md NFR-001 | idempotent reversible migration safety | S001 / AC-1 | — | — | — | discharged |
+| PRM-002 | epic.md NFR-001 | completely unrelated banana zebra xylophone | S002 / AC-1 | — | — | — | discharged |
+| PRM-003 | wireframes S99 / ghost screen | a drawn element nowhere on disk | S003 / AC-1 | — | — | — | discharged |
+EOF
+OUT14="$(bash "$VALIDATOR" --check-fidelity "$FID/traceability-matrix.md")"  # exit 0 (WARN-only)
+echo "$OUT14" | grep -q "PRM-002.*vocabulary drift" || { echo "ERROR: expected vocabulary-drift WARN on PRM-002"; echo "$OUT14"; exit 1; }
+echo "$OUT14" | grep -q "PRM-003.*phantom or renamed source" || { echo "ERROR: expected phantom-source WARN on PRM-003"; echo "$OUT14"; exit 1; }
+if echo "$OUT14" | grep -q "PRM-001.*fidelity"; then echo "ERROR: faithful PRM-001 must NOT warn"; echo "$OUT14"; exit 1; fi
+echo "  ✓ Passed Test 14"
+
+
+echo "Test 15: fidelity OFF by default — a drifting row produces no fidelity WARN without the flag"
+OUT15="$(bash "$VALIDATOR" "$FID/traceability-matrix.md")"
+if echo "$OUT15" | grep -q "\[fidelity\]"; then echo "ERROR: fidelity must be opt-in (no [fidelity] WARN without the flag)"; echo "$OUT15"; exit 1; fi
+echo "  ✓ Passed Test 15"
+
+
 echo "All validate-traceability-matrix tests passed successfully!"
 exit 0

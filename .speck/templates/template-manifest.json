@@ -78,7 +78,7 @@
     ]
   },
   "traceability-matrix": {
-    "structure_version": "7.14.0",
+    "structure_version": "8.4.0",
     "required_headers": [
       "## 1. Promise Sources",
       "## 2. Traceability Matrix",

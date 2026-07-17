@@ -83,6 +83,20 @@ For each acceptance criterion / FR in spec.md:
 - Flag `expect().toBe(<wrong>)` + "BUG/TODO/should be/fix later" comments
 - Flag `test.skip` without reason
 
+### 3b. Promise↔Source Fidelity Sweep (opt-in semantic, #86)
+
+The cheap structural check — `validate-traceability-matrix.sh --check-fidelity` — verifies a row's `Promise` shares vocabulary with the `Source` it names and that the artifact/anchor exists. It checks **presence + overlap only**; it *provably cannot* catch the live #86 miss: a `discharged` row whose `Promise` states a hard conditional ("X **only if** Y") that the discharging predicate never implements. That is a semantic judgment, so it needs an evaluator, not a parser.
+
+This sweep is **opt-in and lazy** (v8 SHRINK ethos) — run it at `/audit` before an epic close, or when `--check-fidelity` raised a WARN, or on demand. Default **scope: sampled on load-bearing Sources** — the differentiator (product-contract §3) and magic-moment (§5) rows are **mandatory**; widen to all rows on request.
+
+For each in-scope `discharged` row, dispatch an adversarial `@speck-auditor` subagent (reuse the harness from step 1b) with: the **named Source clause** (verbatim, resolved from the artifact the `Source` cell names), the row's **`Promise`**, and the **discharged predicate** (the code/function the story+AC discharges to). The auditor returns exactly one verdict:
+
+- **`faithful`** — the shipped predicate keeps the promise the Source states (including every limiting clause: "only", "never", "without", "unless", conditionals).
+- **`drift`** — the `Promise` restates the Source minus a load-bearing clause (the #86(b) truncation), or the predicate partially implements it. → **P2** punch-list item (reconcile the row / DEC the descope).
+- **`contradictory`** — the `Promise` faithfully restates the Source, but the discharged predicate has **no term for a hard condition the promise requires** (the live #86(a) repro: a guarantee that "only holds once Y", where the guarding function carries no data from which a caller could supply Y). → **P1** punch-list item; blocks the epic claiming ≥ UX-RC on that row until re-specified or descoped.
+
+Log each verdict with the Source clause, the Promise, and the predicate location. A `contradictory` on a `discharged` row is a false discharge — treat it as the grain problem's sibling: the row is honestly discharged at story grain and false at product grain. Never auto-resolve a subjective faithfulness call; surface `drift`/`contradictory` for the owner.
+
 ### 4. Adversarial probe suite (parallel subagents)
 
 Per evidence-contract.md. Standard 10 probes (see claude skill for full list). Each subagent runs probe + verifies response.
@@ -197,6 +211,12 @@ bash .speck/scripts/validation/validators/validate-product-contract.sh --strict 
 ```bash
 bash .speck/scripts/validation/validators/validate-gate-liveness.sh --strict specs/projects/<PROJECT_ID>/evidence-contract.md
 ```
+
+**Promise↔Source structural fidelity (opt-in, #86).** For each epic under audit, run the WARN-only structural fidelity pass — it never touches the conservation exit code, it just surfaces phantom/renamed Sources and vocabulary-drifting Promises:
+```bash
+bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --check-fidelity specs/projects/<PROJECT_ID>/epics/<EPIC_ID>
+```
+Any `[fidelity]` WARN feeds step 3b's semantic sweep — the structural check finds candidates, the AI sweep adjudicates `faithful | drift | contradictory`.
 
 ### 12. Compose audit report
 
