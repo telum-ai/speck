@@ -1,5 +1,18 @@
 # Speck Changelog
 
+## v8.3.0 — 2026-07-17 — Gate-liveness: check the gates actually run (#88, Phase 1)
+
+v8's thesis is "verification-shaped evidence lies — evaluate on the real artifact." One link it didn't reach: nothing checked that the gates `evidence-contract.md` §6 declares actually **run**. A gate that never runs is indistinguishable from a passing one — both leave every validator green, and the dark one manufactures a clean evidence trail. Three §6-declared gates were dark for 20 days in a live repo (Splang) while every Speck check read green. Designed via 3 architectures, adversarially scored, synthesized.
+
+### The wiring check (always-on, cheap)
+- **§6a CI-Enforced Gate Registry** — a machine-readable table in evidence-contract (`Gate ID | Command/Script | Stage | Domain | Canary | Waiver`), **seeded** from a new recipe `evidence_contract.ci_gates` block via `seed-gate-registry.sh` (scaffolded, not hand-authored — an un-seeded project isn't dark, it's seeded on first contract generation).
+- **`validate-gate-liveness.sh`** builds each gate's firing-set from the project's **committed** config (`.pre-commit-config.yaml`, `.husky`, `package.json`, Speck's hook, `.github/workflows`) — never the ephemeral `.git/hooks` — and diffs the declared stage against it. All three real dark-gate bugs collapse to one case, "declared ∉ firing": `GATE_WIRING_DRIFT.P1` (declared pre-push, wired `stages:[manual]`), `CI_TRUNK_EXCLUDED.P1` (a `ci:` gate whose workflow ignores trunk), `SCRIPT_UNREFERENCED.P1` (a §6a script never called on the commit path). Unrecognized hook/CI system → `GATE_WIRING_UNVERIFIED` (degrade-to-honest, never false-green / false-P1).
+- **Agreement, not "everything everywhere"**: a gate legitimately off the fast path declares `stage: manual`; a should-be-wired gate accepts a logged exception via `waived DEC-####` (the DEC must resolve, or `GATE_WAIVER_UNBACKED`). The sin is the silent divergence.
+- **Cadence**: wiring runs at `/audit`, `/recheck` (new drift class), and readiness transitions; **hard-blocks only at COMMERCIAL-RC / SHIP-RC** (enumerate-and-warn below). Near-zero always-on.
+- Fixes the incidental `validate-evidence-contract` §5/§6/§7 label off-by-one (and adds the previously-missing §7 check).
+
+Phase 2 (opt-in mutation/canary liveness — inject a defect, assert the gate goes red) is next. This release seeds `ci_gates` in `react-fastapi-postgres` (+ `capacitor-wrapped-web` via `extends`); remaining recipes degrade to a P3 nudge until seeded. New test suite (8 cases: all three dark-gate bugs + waiver + degrade + empty-`.git/hooks`-must-not-P1), wired into `npm test`.
+
 ## v8.2.1 — 2026-07-17 — Fix: banned-language silent-green on non-web files (#85) + traceability success-string honesty (#86)
 
 Two fixes from the evidence-integrity family filed against Splang (#85–#88): a green gate that doesn't mean what it claims.

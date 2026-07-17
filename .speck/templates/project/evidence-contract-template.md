@@ -229,6 +229,21 @@ For every validation report at UX-RC or higher:
 - Logs showing zero redbox / zero unhandled exceptions
 - Network capture or backend logs for any backend-dependent flow
 
+### 6a. CI-Enforced Gate Registry
+
+*The machine-readable registry of the gates this contract relies on — so Speck can check they are actually **wired**, not just declared. A gate that never runs is indistinguishable from a passing one; both leave every validator green, and the dark one manufactures a clean-looking evidence trail. `validate-gate-liveness.sh` diffs each gate's declared stage against what the **committed** hook/CI config actually runs (`GATE_WIRING_DRIFT` when they disagree). Seeded from the recipe's `evidence_contract.ci_gates` by `seed-gate-registry.sh` — don't hand-author unless amending.*
+
+| Gate ID | Command / Script | Stage | Domain | Canary | Waiver |
+|---------|------------------|-------|--------|--------|--------|
+| REPLACE_BEFORE_SHIP:unit-frontend | `npm run test` | pre-push | frontend-tests | — | — |
+| REPLACE_BEFORE_SHIP:banned-language | `.speck/scripts/banned-language-lint.sh` | pre-commit | copy | — | — |
+| REPLACE_BEFORE_SHIP:integration | `pytest tests/integration` | ci:push | backend | — | — |
+
+**Stage** ∈ `pre-commit | pre-push | commit-msg | ci:push | ci:pull_request | manual`.
+- `manual` = the contract honestly declares this gate off the automatic path (no divergence to detect).
+- **Waiver** = `waived DEC-####` — the gate *should* be wired but a logged decision accepts it dark for now (the DEC must resolve in `project-decisions-log.md`, or `GATE_WAIVER_UNBACKED`).
+- The sin the validator hunts is the silent third case: §6a says `pre-push` / `ci:` while the wiring says `manual` / nowhere — with **neither** a `manual` declaration **nor** a waiver. Either arm the gate or amend the contract; the sin is the divergence, not being off the fast path.
+
 ---
 
 ## 7. Required Live-Service Evidence

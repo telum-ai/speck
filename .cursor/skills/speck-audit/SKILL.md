@@ -193,6 +193,11 @@ Also run the product contract validator to ensure the contract itself does not s
 bash .speck/scripts/validation/validators/validate-product-contract.sh --strict specs/projects/<PROJECT_ID>/product-contract.md
 ```
 
+**Gate-liveness (wiring) — the gate that checks the other gates actually run (#88).** A gate declared in `evidence-contract.md` §6a but wired nowhere (or off its declared stage) is indistinguishable from a passing one — a dark gate manufactures a clean evidence trail. Diff the §6a registry against the committed hook/CI config:
+```bash
+bash .speck/scripts/validation/validators/validate-gate-liveness.sh --strict specs/projects/<PROJECT_ID>/evidence-contract.md
+```
+
 ### 12. Compose audit report
 
 Write to `<story-or-epic-dir>/audit-report.md` (template per claude skill).

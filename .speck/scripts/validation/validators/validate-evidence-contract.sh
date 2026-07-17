@@ -103,22 +103,31 @@ else
 ## 4. Required Runtime LARP / Integration Stress Tests"
 fi
 
-# 6. Check for Section 5: Required Static Evidence
+# 6. Check for Section 5: Quality Judgment & Scoring Protocol
 if echo "$content" | grep -q "^## 5\."; then
-  log_success "Section 5 (Required Static Evidence) found"
+  log_success "Section 5 (Quality Judgment & Scoring Protocol) found"
 else
-  log_error "Missing Section 5 (Required Static Evidence)" \
+  log_error "Missing Section 5 (Quality Judgment & Scoring Protocol)" \
     "Ensure Section 5 header is present:
-## 5. Required Static Evidence"
+## 5. Quality Judgment & Scoring Protocol"
 fi
 
-# 7. Check for Section 6: Required Live-Service Evidence
+# 7. Check for Section 6: Required Static Evidence
 if echo "$content" | grep -q "^## 6\."; then
-  log_success "Section 6 (Required Live-Service Evidence) found"
+  log_success "Section 6 (Required Static Evidence) found"
 else
-  log_error "Missing Section 6 (Required Live-Service Evidence)" \
+  log_error "Missing Section 6 (Required Static Evidence)" \
     "Ensure Section 6 header is present:
-## 6. Required Live-Service Evidence"
+## 6. Required Static Evidence"
+fi
+
+# 8. Check for Section 7: Required Live-Service Evidence (was previously unchecked — #88)
+if echo "$content" | grep -q "^## 7\."; then
+  log_success "Section 7 (Required Live-Service Evidence) found"
+else
+  log_error "Missing Section 7 (Required Live-Service Evidence)" \
+    "Ensure Section 7 header is present:
+## 7. Required Live-Service Evidence"
 fi
 
 # 8. Scan for unreplaced REPLACE_BEFORE_SHIP placeholders

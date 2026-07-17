@@ -72,6 +72,7 @@ Required artifacts to check:
 ├── [Parallel] shell: PROMISE drift — for each epic dir with a `traceability-matrix.md`, run `.speck/scripts/validation/validators/validate-traceability-matrix.sh <EPIC_DIR>` (and `--require-evidence` for epics whose validation claims ≥ UX-RC); classify any unresolved promise as `PROMISE_DRIFT.P1` (evaporated promise — a drawn/stated commitment with no story and no DEC)
 ├── [Parallel] shell: MARKET drift — run `.speck/scripts/market-staleness-check.sh` (no-web, age/stamp only); classify `MARKET_DRIFT.P1` (an absolute "no competitor does X" claim in §3/§3a that is unverified/stale past the tight clock, an honest `verdict: eroded|false`, or a cited scan report that is missing — phantom evidence) or `MARKET_DRIFT.P2` (generic differentiator past its archetype cadence, provisional/unverified baseline, or under-sourced). Route findings to `/speck-frontier-scan --product`
 ├── [Parallel] shell: WEDGE reconciliation — run `.speck/scripts/market-reconcile-check.sh`; classify `WEDGE_DRIFT.P1` (§3 differentiator empty while §2a states a defensible wedge, OR §2a self-flags §3 as thin/copyable — the Brightstance case) or `WEDGE_DRIFT.P2` (§3↔§2a token overlap < 25% — auditor confirms §3 is at least as defensible as the wedge)
+├── [Parallel] shell: GATE-WIRING drift — run `.speck/scripts/validation/validators/validate-gate-liveness.sh specs/projects/<id>/evidence-contract.md`; classify `GATE_WIRING_DRIFT.P1` (a §6a gate declared pre-commit/pre-push but wired stages:[manual] or nowhere), `CI_TRUNK_EXCLUDED.P1` (a ci: gate whose workflow ignores trunk), `SCRIPT_UNREFERENCED.P1` (a §6a-named script never called on the commit path), or `GATE_WAIVER_UNBACKED.P2` (a waiver citing a missing DEC). A dark gate manufactures clean-looking evidence — this is P2 (no claim without a mechanism) applied to the GATES themselves. Unrecognized CI/hook system → `GATE_WIRING_UNVERIFIED` (never false-green)
 ├── [Parallel] shell: grep -rln "\[NEEDS USER REVIEW\]" specs/projects/<id>/   (surface to project-state.md)
 └── [Wait] → Synthesize drift report
 ```
@@ -102,7 +103,7 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | V8_REPROVE.P1
+- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | GATE_WIRING_DRIFT.P1 | CI_TRUNK_EXCLUDED.P1 | SCRIPT_UNREFERENCED.P1 | GATE_WAIVER_UNBACKED.P2 | V8_REPROVE.P1
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix

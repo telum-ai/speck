@@ -282,6 +282,16 @@ Each auditor returns PASS | FAIL | PARTIAL with evidence.
 
 ---
 
+## 🔌 Gate-Liveness (wiring) — hard gate at COMMERCIAL-RC / SHIP-RC (#88)
+
+Before a `COMMERCIAL-RC` or `SHIP-RC` claim, run the gate-liveness wiring check — a §6-declared gate that never runs is indistinguishable from a passing one, and manufactures a clean evidence trail:
+```bash
+bash .speck/scripts/validation/validators/validate-gate-liveness.sh --strict specs/projects/<PROJECT_ID>/evidence-contract.md
+```
+An un-waived `GATE_WIRING_DRIFT.P1` / `CI_TRUNK_EXCLUDED.P1` / `SCRIPT_UNREFERENCED.P1` — or a missing §6a registry — **hard-blocks** the state at `COMMERCIAL-RC` / `SHIP-RC` (below that, enumerate-and-warn: it's a finding, not a block). Either arm the gate or amend the contract (a `waived DEC-####` on the §6a row, with the DEC logged). If the registry is absent, run `seed-gate-registry.sh <recipe> --contract specs/projects/<PROJECT_ID>/evidence-contract.md` first.
+
+---
+
 ## 🔥 Exhaustive Torture Tier (`--exhaustive` — opt-in, expensive)
 
 The default `/project-validate` runs the JTBD smoke test across personas. `--exhaustive` is the opt-in **breadth orchestrator** — the level where cross-epic *composition* defects live (a banned word on a flagship surface, contradictory advice across cards, duplicate greetings) that isolated per-epic LARPs structurally cannot surface.
