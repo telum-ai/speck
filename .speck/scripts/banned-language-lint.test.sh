@@ -122,6 +122,20 @@ printf 'export const pill = "✦ HOST";\nconst label = "organizer";\n' > "$WORK/
 assert_fail "V7: backtick/qualifier §7 terms match bare words in code (#83)" \
   bash -c "cd '$WORK/backtick' && bash '$LINT'"
 
+# V8: non-allowlist extensions (.astro) must be scanned — the rg branch used to omit them (#85)
+mkdir -p "$WORK/astro/specs/projects/test" "$WORK/astro/.speck" "$WORK/astro/src/pages"
+cat > "$WORK/astro/specs/projects/test/product-contract.md" <<'EOF'
+# Product Contract
+## 7. Banned Language / System Anti-Patterns
+| Banned Term | Where | Why | Use instead |
+|-------------|-------|-----|-------------|
+| thought leader | UI | jargon | practitioner |
+EOF
+echo '{"project_id":"test","play_level":"sprint"}' > "$WORK/astro/.speck/project.json"
+echo '<p>He is a thought leader.</p>' > "$WORK/astro/src/pages/probe.astro"
+assert_fail "V8: .astro user-visible strings are scanned (#85)" \
+  bash -c "cd '$WORK/astro' && bash '$LINT'"
+
 echo ""
 echo "Results: $pass passed, $fail failed"
 [[ "$fail" -eq 0 ]]

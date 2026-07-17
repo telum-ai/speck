@@ -1,5 +1,15 @@
 # Speck Changelog
 
+## v8.2.1 — 2026-07-17 — Fix: banned-language silent-green on non-web files (#85) + traceability success-string honesty (#86)
+
+Two fixes from the evidence-integrity family filed against Splang (#85–#88): a green gate that doesn't mean what it claims.
+
+### #85 — `banned-language-lint` scanned ~0 files on non-web projects and reported green
+When `ripgrep` is installed, the lint used a `--type=ui` extension allowlist that omitted `.astro` (and `.dart` / `.swift` / `.kt` / `.php` / … — platforms Speck supports elsewhere), so the fast branch silently scanned a subset and printed "✅ No banned-language violations" while the `grep` fallback would have caught the term. On an Astro project it scanned **zero** pages. Fix: the rg branch now scans ALL textual files (excluding the same build/vendor dirs as the fallback) — no allowlist, so the two branches agree — plus a loud **"scanned 0 files"** guard so a green result on nothing can't pass silently. New regression test (V8).
+
+### #86 — traceability success string over-claimed
+`validate-traceability-matrix.sh` verifies promise **conservation** (every PRM row resolves) but printed "✅ Promise conservation holds — no promise evaporated", a stronger claim than the check makes. The message now states exactly what was verified (rows RESOLVE) and explicitly disclaims fidelity/grain. (The deeper Promise↔Source fidelity check + the discharge grain field from #87 are in design.)
+
 ## v8.2.0 — 2026-07-16 — TASTE axis (4th) + exhaustive torture tier (#84)
 
 Two recurring gaps in LARP/validate: (1) **coverage narrowness** — a composed walk runs one persona / one seed / one viewport / happy-path (the Splang cross-epic P0 class); (2) **taste was not first-class** — "technically correct and legible" can still be cheap-feeling. Designed via 3 architectures per pillar, adversarially scored, synthesized.

@@ -158,10 +158,13 @@ fi
 FILTER_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/filter-forbidding-context.py"
 
 if command -v rg >/dev/null 2>&1; then
+  # Scan ALL textual files (rg auto-skips binaries), excluding the same build/vendor dirs
+  # as the grep fallback — NOT a UI-extension allowlist. The old `--type=ui` allowlist
+  # omitted .astro / .dart / .swift / .kt / .php / … so the fast (rg) branch silently
+  # scanned a subset and reported green while the grep fallback would have caught the
+  # term. The two branches must agree. (#85)
   GREP_INVOKE=(rg --hidden --no-heading --line-number --color=never
-    --glob='!{node_modules,.git,vendor,dist,build,.next,out,.cache}/**'
-    --type-add='ui:*.{tsx,jsx,ts,js,vue,svelte,html,md,mdx,json,po,strings,xml,yaml,yml}'
-    --type=ui)
+    --glob='!{node_modules,.git,vendor,dist,build,.next,out,.cache}/**')
 else
   GREP_INVOKE=()
 fi
@@ -175,6 +178,20 @@ if [[ "$STAGED_MODE" == true ]]; then
   echo "   Mode: --staged (pre-commit scoped)"
 fi
 echo "   Targets: ${TARGETS[*]}"
+
+# Silent-green guard (#85): if the scanner would look at ZERO files, "no violations" is
+# meaningless — a green result on nothing is the worst failure mode for this gate. Warn loudly.
+if [[ ${#GREP_INVOKE[@]} -gt 0 ]]; then
+  SCANNED=$("${GREP_INVOKE[@]}" --files "${TARGETS[@]}" 2>/dev/null | wc -l | tr -d ' ')
+else
+  SCANNED=$(grep -rIl --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=vendor \
+    --exclude-dir=dist --exclude-dir=build --exclude-dir=.next --exclude-dir=out --exclude-dir=.cache \
+    -e '' "${TARGETS[@]}" 2>/dev/null | wc -l | tr -d ' ')
+fi
+echo "   Files in scan scope: ${SCANNED:-0}"
+if [[ "${SCANNED:-0}" -eq 0 ]]; then
+  echo "⚠️  Scanned 0 files under the targets — the banned-language gate is inspecting NOTHING. A green result here is meaningless; check the target paths / globs before trusting it."
+fi
 echo ""
 
 while IFS= read -r term; do
