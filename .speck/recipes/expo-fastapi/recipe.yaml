@@ -269,6 +269,21 @@ evidence_contract:
     commercial_rc: "IAP test purchase via RevenueCat sandbox, receipt validation verified"
     ship_rc: "TestFlight (iOS) and Internal Testing (Android) builds installed + manual LARP recorded"
     ship: "App Store / Play Store live, post-release crash rate <1%"
+  # CI-enforced gate registry (#88): seeds evidence-contract §6a via seed-gate-registry.sh.
+  ci_gates:
+    - id: frontend-unit
+      command: jest
+      stage: pre-push
+      domain: frontend-tests
+    - id: backend-tests
+      command: pytest
+      stage: ci:push
+      domain: backend-tests
+    - id: banned-language
+      command: .speck/scripts/banned-language-lint.sh
+      stage: pre-commit
+      domain: copy
+      canary: banned-language
   required_static_evidence:
     - "Bundle builds with no warnings"
     - "Native build (Xcode/Gradle) succeeds for release config"

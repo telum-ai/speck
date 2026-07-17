@@ -118,6 +118,21 @@ evidence_contract:
     commercial_rc: "License/auth flow tested if paid; permissions justified in manifest"
     ship_rc: "Store-review build uploaded; pre-publish LARP confirms identical behavior"
     ship: "Published in store, install count tracked, no critical reviews"
+  # CI-enforced gate registry (#88): seeds evidence-contract §6a via seed-gate-registry.sh.
+  ci_gates:
+    - id: unit
+      command: npm test
+      stage: pre-push
+      domain: tests
+    - id: eslint
+      command: eslint
+      stage: pre-commit
+      domain: lint
+    - id: banned-language
+      command: .speck/scripts/banned-language-lint.sh
+      stage: pre-commit
+      domain: copy
+      canary: banned-language
   required_static_evidence:
     - "Manifest v3 valid"
     - "Store-required assets (icons, screenshots) present"

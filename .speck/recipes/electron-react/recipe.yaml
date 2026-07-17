@@ -96,6 +96,25 @@ evidence_contract:
     commercial_rc: "License key validation tested against live licensing backend"
     ship_rc: "Signed + notarized build installed on clean OS; LARP recorded"
     ship: "Auto-updater confirmed working; post-deploy crash reports clean"
+  # CI-enforced gate registry (#88): seeds evidence-contract §6a via seed-gate-registry.sh.
+  ci_gates:
+    - id: unit
+      command: vitest run
+      stage: pre-push
+      domain: tests
+    - id: e2e
+      command: npx playwright test
+      stage: ci:push
+      domain: e2e
+    - id: eslint
+      command: eslint
+      stage: pre-commit
+      domain: lint
+    - id: banned-language
+      command: .speck/scripts/banned-language-lint.sh
+      stage: pre-commit
+      domain: copy
+      canary: banned-language
   required_static_evidence:
     - "Code signing succeeds"
     - "Notarization succeeds (macOS)"

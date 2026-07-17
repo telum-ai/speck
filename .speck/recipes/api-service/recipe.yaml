@@ -219,6 +219,21 @@ evidence_contract:
     commercial_rc: "Rate limiting + auth tested against live IdP; billing webhooks exercised"
     ship_rc: "Production deployment smoke tests pass; load test meets target"
     ship: "Production responding, monitoring dashboards green for 24h"
+  # CI-enforced gate registry (#88): seeds evidence-contract §6a via seed-gate-registry.sh.
+  ci_gates:
+    - id: backend-tests
+      command: pytest
+      stage: ci:push
+      domain: backend-tests
+    - id: ruff
+      command: ruff check
+      stage: pre-commit
+      domain: lint
+    - id: banned-language
+      command: .speck/scripts/banned-language-lint.sh
+      stage: pre-commit
+      domain: copy
+      canary: banned-language
   required_static_evidence:
     - "API tests passing in CI"
     - "OpenAPI spec valid and matches behavior"

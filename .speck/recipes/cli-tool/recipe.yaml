@@ -171,6 +171,21 @@ evidence_contract:
     commercial_rc: "License key validation if paid; telemetry/analytics opt-in respected"
     ship_rc: "Binary installed via published package, re-LARP confirms identical behavior"
     ship: "Published; install count and bug reports tracked"
+  # CI-enforced gate registry (#88): seeds evidence-contract §6a via seed-gate-registry.sh.
+  ci_gates:
+    - id: tests
+      command: npm test
+      stage: ci:push
+      domain: tests
+    - id: lint
+      command: eslint
+      stage: pre-commit
+      domain: lint
+    - id: banned-language
+      command: .speck/scripts/banned-language-lint.sh
+      stage: pre-commit
+      domain: copy
+      canary: banned-language
   required_static_evidence:
     - "Binary builds for all target platforms"
     - "--help output matches documented commands"

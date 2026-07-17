@@ -60,6 +60,23 @@ overlay:
     # Override platform to multi-platform
     platform: web+ios+android
 
+    # CI-enforced gate registry (#88): seeds evidence-contract §6a via seed-gate-registry.sh.
+    ci_gates:
+      - id: frontend-unit
+        command: vitest run
+        stage: pre-push
+        domain: frontend-tests
+        canary: a11y-role
+      - id: e2e
+        command: npx playwright test
+        stage: ci:push
+        domain: e2e
+      - id: banned-language
+        command: .speck/scripts/banned-language-lint.sh
+        stage: pre-commit
+        domain: copy
+        canary: banned-language
+
     # Add iOS-specific valid + invalid proof
     valid_proof_sources_additional:
       - "iOS standalone simulator screenshot from the Capacitor-built .app (not Safari, not web view in browser)"

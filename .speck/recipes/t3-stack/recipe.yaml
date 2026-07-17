@@ -124,6 +124,25 @@ evidence_contract:
     commercial_rc: "Stripe checkout / paywall flow exercised against test mode, webhook delivery verified"
     ship_rc: "Live preview URL LARP recorded with HAR; auth flow on real provider"
     ship: "Production URL smoke screenshots checked in post-deploy"
+  # CI-enforced gate registry (#88): seeds evidence-contract §6a via seed-gate-registry.sh.
+  ci_gates:
+    - id: unit
+      command: vitest run
+      stage: pre-push
+      domain: tests
+    - id: e2e
+      command: npx playwright test
+      stage: ci:push
+      domain: e2e
+    - id: eslint
+      command: eslint
+      stage: pre-commit
+      domain: lint
+    - id: banned-language
+      command: .speck/scripts/banned-language-lint.sh
+      stage: pre-commit
+      domain: copy
+      canary: banned-language
   required_static_evidence:
     - "tests passing in CI"
     - "Lighthouse score >=85 for performance, accessibility"

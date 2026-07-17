@@ -141,6 +141,21 @@ evidence_contract:
     commercial_rc: "IAP test purchase via RevenueCat sandbox or Apple/Google sandbox"
     ship_rc: "TestFlight + Internal Testing builds installed; manual LARP recorded"
     ship: "App Store / Play Store live, post-release crash rate <1%"
+  # CI-enforced gate registry (#88): seeds evidence-contract §6a via seed-gate-registry.sh.
+  ci_gates:
+    - id: flutter-test
+      command: flutter test
+      stage: ci:push
+      domain: tests
+    - id: dart-analyze
+      command: dart analyze
+      stage: pre-commit
+      domain: lint
+    - id: banned-language
+      command: .speck/scripts/banned-language-lint.sh
+      stage: pre-commit
+      domain: copy
+      canary: banned-language
   required_static_evidence:
     - "flutter analyze: 0 warnings"
     - "Release builds succeed for iOS + Android"
