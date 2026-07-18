@@ -1,0 +1,12 @@
+# lint-error.canary — Speck gate-liveness canary (#88 Phase 2). Tier B.
+# Adds a normal (non-dotfile, staged) source file with a canonical always-flagged construct keyed to
+# the resolved linter (ruff/flake8 -> F401 unused import; eslint/biome -> no-unused-vars). Worktree
+# isolation makes the ADD safe; degrades to UNVERIFIED where the linter isn't recognized.
+DOMAIN=lint
+MECHANISM=add
+TIER=B
+STAGE_IT=true
+REQUIRED_SCOPE="src app backend frontend lib packages"
+EXT_CLASSES=""
+PROVIDER=provide_lint_error
+DESC="A canonical lint violation in a scanned source file must make the linter go red."

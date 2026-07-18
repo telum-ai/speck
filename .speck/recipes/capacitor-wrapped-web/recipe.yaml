@@ -66,11 +66,12 @@ overlay:
         command: vitest run
         stage: pre-push
         domain: frontend-tests
-        canary: a11y-role
+        canary: unit-tripwire
       - id: e2e
         command: npx playwright test
         stage: ci:push
         domain: e2e
+        canary: exempt:e2e-needs-browser-and-live-backend
       - id: banned-language
         command: .speck/scripts/banned-language-lint.sh
         stage: pre-commit

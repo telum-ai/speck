@@ -1,0 +1,11 @@
+# unit-tripwire.canary — Speck gate-liveness canary (#88 Phase 2). Tier B, universal weak floor.
+# Drops a deterministic always-failing test keyed to the resolved runner (pytest -> .py; vitest/jest
+# -> .test.ts). Proves the test RUNNER is actually invoked by the gate — NOT that coverage is complete.
+DOMAIN=tests
+MECHANISM=add
+TIER=B
+STAGE_IT=true
+REQUIRED_SCOPE="tests test src app backend frontend"
+EXT_CLASSES=""
+PROVIDER=provide_unit_tripwire
+DESC="A deterministic failing test must make the test gate go red — proves invocation, not coverage."

@@ -212,6 +212,12 @@ bash .speck/scripts/validation/validators/validate-product-contract.sh --strict 
 bash .speck/scripts/validation/validators/validate-gate-liveness.sh --strict specs/projects/<PROJECT_ID>/evidence-contract.md
 ```
 
+**Gate-liveness (canary probe) — prove the gate is LOAD-BEARING, not just wired (#88 Phase 2, opt-in).** Wiring proves a gate runs; the canary proves it would actually go red on a real defect. On-demand at `/audit` (heavier — mutation runs in a throwaway worktree, so not on the push path):
+```bash
+bash .speck/scripts/validation/validators/gate-liveness-probe.sh --require-liveness specs/projects/<PROJECT_ID>/evidence-contract.md
+```
+A `GATE_DISARMED.P1` (baseline green, defect injected in the gate's required scope, gate still green — incl. the #85 scope-hole shape) is a P0-adjacent finding: the guardrail is manufacturing false evidence. `GATE_LIVENESS_UNVERIFIED.P2` degrades honestly (caps the ship claim, never blocks). Never runs a destructive gate.
+
 **Promise↔Source structural fidelity (opt-in, #86).** For each epic under audit, run the WARN-only structural fidelity pass — it never touches the conservation exit code, it just surfaces phantom/renamed Sources and vocabulary-drifting Promises:
 ```bash
 bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --check-fidelity specs/projects/<PROJECT_ID>/epics/<EPIC_ID>

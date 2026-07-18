@@ -290,6 +290,14 @@ bash .speck/scripts/validation/validators/validate-gate-liveness.sh --strict spe
 ```
 An un-waived `GATE_WIRING_DRIFT.P1` / `CI_TRUNK_EXCLUDED.P1` / `SCRIPT_UNREFERENCED.P1` — or a missing §6a registry — **hard-blocks** the state at `COMMERCIAL-RC` / `SHIP-RC` (below that, enumerate-and-warn: it's a finding, not a block). Either arm the gate or amend the contract (a `waived DEC-####` on the §6a row, with the DEC logged). If the registry is absent, run `seed-gate-registry.sh <recipe> --contract specs/projects/<PROJECT_ID>/evidence-contract.md` first.
 
+### Gate-liveness (canary probe) — prove the gate is LOAD-BEARING (#88 Phase 2, opt-in)
+
+Wiring proves reachability; the canary proves the gate would actually go red on a real defect (the level above §13: *"the gate is green therefore the gate ran"*). Before a `COMMERCIAL-RC` / `SHIP-RC` claim, run the mutation probe:
+```bash
+bash .speck/scripts/validation/validators/gate-liveness-probe.sh --strict --require-liveness specs/projects/<PROJECT_ID>/evidence-contract.md
+```
+Each canaried gate is run green-then-mutated inside a throwaway git worktree (the real tree is never the write surface). A **`GATE_DISARMED.P1`** — baseline green, defect injected in the gate's required scope, gate still green (incl. the #85 scope-hole shape) — **hard-blocks** at `COMMERCIAL-RC` / `SHIP-RC` (enumerate-and-warn below that). **`GATE_LIVENESS_UNVERIFIED.P2`** degrades honestly and **caps** the claimable state (fold into `MAX claimable`, like `MATRIX_GRAIN_CAP`) — you may not claim SHIP-RC on a gate you never watched fire — but does not block dev. A destructive gate is never executed (`exempt:<reason>` it in §6a). This is opt-in + lazy (mutation runs are too slow for a push); it never runs in the always-on `/recheck` shell.
+
 ---
 
 ## 🔥 Exhaustive Torture Tier (`--exhaustive` — opt-in, expensive)

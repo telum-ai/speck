@@ -1,5 +1,27 @@
 # Speck Changelog
 
+## v8.6.0 — 2026-07-18 — Gate-liveness Phase 2: prove the gate is load-bearing (#88)
+
+Phase 1 (v8.3.0) proved a §6a gate is **wired** (reachable at its declared stage). Phase 2 proves it is **load-bearing**: for each gate that carries a canary token, inject a deliberate defect in the domain the gate owns, run the gate, and assert it goes **red for the right reason**. "A guardrail you haven't watched fail is a guardrail you're assuming." The level above §13 (`tests pass → done`) is `the gate is green → the gate ran` — this closes it. Designed via a 3-architecture adversarial synthesis (one ADOPT-SPINE + two GRAFT-ONLY); shipped against Kjetil's decisions (split from the #87 grain flip; ship 3 canaries).
+
+### The probe (`gate-liveness-probe.sh`, opt-in `--require-liveness`)
+Per canaried gate: resolve the **exact committed invocation** Phase 1 already knows (probe the gate that *ships* — `--staged` and all) → **safety-screen** against a destructive-verb denylist (never probe a deploy/migrate gate) → isolate in a **throwaway git worktree** (the real tree is never the write surface — INVARIANT-ZERO holds on a mid-run kill) → **baseline green** → inject the canary + `git add` (so `--staged` gates observe it) → **mutated run** → attribute the failure to the injected defect (fingerprint) → revert → assert `$ROOT` byte-identical.
+
+**Multi-surface + attribution (the load-bearing insight the adversarial pass forced in).** A single-file canary greens on a *partially-dark* gate and falsely certifies it live. `banned-language` injects one file **per extension-class present in the gate's required scope** and takes a per-surface verdict — which is exactly what catches the real shipped **#85** (`rg --type=ui` that skipped `.astro`): the `.tsx` surface is caught, the `.astro` surface stays green → `GATE_DISARMED.P1 (scope-hole: .astro)`. The wiring check structurally cannot see this.
+
+### Three outcomes — the fail-closed tension, resolved
+- **`GATE_LIVE`** — watched it fail on every injected surface.
+- **`GATE_DISARMED.P1`** — baseline green, defect injected in the gate's required scope, gate **still green**. The one positive block; hard-blocks only at COMMERCIAL-RC / SHIP-RC (mirrors Phase 1).
+- **`GATE_LIVENESS_UNVERIFIED.P2`** — couldn't apply/attribute the canary (unknown key, no green baseline, red-unattributable, unsafe-to-probe, infra-bound). Degrade-to-honest — **caps** the claimable state (fold into `MAX claimable`, like `MATRIX_GRAIN_CAP`), never a false-P1, never blocks dev.
+
+Fail-closed on **safety** (a destructive command is never executed) and on **claims**; degrade-to-honest on **applicability**. "Couldn't run the canary" ≠ "ran it and the gate slept" — only the second blocks.
+
+### Canary library + vocabulary (ship 3)
+Speck-owned `.canary` records under `.speck/scripts/validation/canaries/` (flat KEY=VALUE, ALWAYS_OVERWRITE — a project can only reference a canary Speck reviewed). Three functional canaries ship: **`banned-language`** (Tier A, multi-surface, real §7 term — the #85 catch), **`lint-error`** (Tier B, ruff/flake8/eslint), **`unit-tripwire`** (Tier B, pytest/vitest — a universal weak floor that proves the runner is invoked, not that coverage is complete). Two declared-degrading (`a11y-role`, `integration-invariant`) ship in the vocabulary for projects to seed; `exempt:<reason>` marks a deliberately un-probeable gate (e2e/deploy). `validate-recipes.sh` enforces the closed vocabulary (unknown key = error; a canary on a destructive command = error). Reference recipe `react-fastapi-postgres` (+ `capacitor-wrapped-web`) wired to the 3 functional canaries + an `exempt:` e2e gate.
+
+### Cadence + wiring
+Opt-in and lazy (mutation runs are too slow for a push): runs at `/epic-validate`, `/project-validate`, on-demand at `/audit` — **never** on push or in the always-on `/recheck` shell (which learns the two new finding classes but does not run the probe). New hostile test suite (10 assertions: LIVE, DISARMED, DISARMED scope-hole, unknown-key / baseline-red / red-unattributable / unsafe-to-probe UNVERIFIED, staged-mutation LIVE, INVARIANT-ZERO, real-PATH-preserved), wired into `npm test`. Closes #88.
+
 ## v8.5.0 — 2026-07-18 — Grain teeth enforced: WARN → BLOCK at the validate gate (#87)
 
 v8.4.0 shipped discharge grain-awareness with the two grain teeth **surfaced-only (WARN)** and pre-committed the flip to BLOCK for v8.5.0. This is that flip — kept as its own focused release so the enforcement change is legible and attributable, with Phase 2 gate-liveness (#88) landing separately.

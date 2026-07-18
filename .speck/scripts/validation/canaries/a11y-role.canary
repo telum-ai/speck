@@ -1,0 +1,11 @@
+# a11y-role.canary — Speck gate-liveness canary (#88 Phase 2). Tier B, declared-degrading.
+# Modifies a role/aria-label/testid on a project-declared component<->role-test target. Ships in the
+# vocabulary; degrades to GATE_LIVENESS_UNVERIFIED.P2 until a project seeds the target (never auto-DISARMED).
+DOMAIN=frontend-tests
+MECHANISM=modify
+TIER=B
+STAGE_IT=true
+REQUIRED_SCOPE="src app components"
+EXT_CLASSES="tsx jsx"
+PROVIDER=provide_a11y_role
+DESC="Break a known role/aria-label -> the a11y/role test must go red. Needs a declared target."

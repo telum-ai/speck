@@ -1,0 +1,11 @@
+# banned-language.canary — Speck gate-liveness canary (#88 Phase 2). Tier A, the reference.
+# Injects a REAL product-contract §7 banned term into one file per extension-class PRESENT under the
+# gate's required scan roots (multi-surface). A gate dark for any surface (the #85 shape) is caught.
+DOMAIN=copy
+MECHANISM=add
+TIER=A
+STAGE_IT=true
+REQUIRED_SCOPE="src app pages components public locales content lib"
+EXT_CLASSES="tsx jsx ts js astro vue svelte html htm md mdx php dart swift kt rb py go templ"
+PROVIDER=provide_banned_language
+DESC="A shipped banned term in a rendered surface MUST be caught on every extension-class the gate is contracted to scan."

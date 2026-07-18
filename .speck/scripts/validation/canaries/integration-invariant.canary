@@ -1,0 +1,11 @@
+# integration-invariant.canary — Speck gate-liveness canary (#88 Phase 2). Tier C, declared-degrading.
+# Flips an integration-only invariant (the issue's pytest example). Infra-bound (live DB) -> honest
+# GATE_LIVENESS_UNVERIFIED.P2 in a sandbox; never spun against live infra to force a red.
+DOMAIN=backend-tests
+MECHANISM=modify
+TIER=C
+STAGE_IT=true
+REQUIRED_SCOPE="backend src app"
+EXT_CLASSES="py"
+PROVIDER=provide_integration_invariant
+DESC="Make an integration invariant false -> the integration gate must go red. Infra-bound; degrades in sandbox."

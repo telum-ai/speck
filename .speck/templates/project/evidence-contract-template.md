@@ -244,6 +244,13 @@ For every validation report at UX-RC or higher:
 - **Waiver** = `waived DEC-####` — the gate *should* be wired but a logged decision accepts it dark for now (the DEC must resolve in `project-decisions-log.md`, or `GATE_WAIVER_UNBACKED`).
 - The sin the validator hunts is the silent third case: §6a says `pre-push` / `ci:` while the wiring says `manual` / nowhere — with **neither** a `manual` declaration **nor** a waiver. Either arm the gate or amend the contract; the sin is the divergence, not being off the fast path.
 
+**Canary** (Speck v8.6, #88 Phase 2 — the *liveness* half). Wiring proves a gate is reachable; the canary proves it is **load-bearing**. `gate-liveness-probe.sh` (opt-in, `--require-liveness`) injects a deliberate defect in the gate's domain inside a throwaway git worktree, runs the gate, and asserts it goes **red for the right reason**. The Canary cell is a single **library key** (seeded from the recipe's `canary:` tag), NOT project-authored mutation code — it resolves to `.speck/scripts/validation/canaries/<key>.canary`, a Speck-owned+reviewed definition. Values:
+- a library key (`banned-language` | `lint-error` | `unit-tripwire` | `a11y-role` | `integration-invariant`, …) — the gate is probed.
+- `exempt:<reason>` — deliberately un-probeable (destructive / infra-bound, e.g. an e2e or deploy gate); first-class, distinct from blank.
+- `—` — un-probed-honest (default; never a finding).
+
+Outcomes: **`GATE_LIVE`** (watched it fail on every injected surface), **`GATE_DISARMED.P1`** (baseline green, defect in the gate's required scope, gate *still* green — the one positive block; hard-blocks only at COMMERCIAL-RC/SHIP-RC), **`GATE_LIVENESS_UNVERIFIED.P2`** (couldn't apply/attribute the canary — unknown key, no green baseline, unsafe-to-probe, infra-bound; degrade-to-honest, caps the ship claim, never blocks dev). Fail-closed on **safety** (a destructive command is never executed) and on **claims**; degrade-to-honest on **applicability**. Runs at `/epic-validate`, `/project-validate`, on-demand at `/audit` — never on push or in the always-on `/recheck` shell.
+
 ---
 
 ## 7. Required Live-Service Evidence

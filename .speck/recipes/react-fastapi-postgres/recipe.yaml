@@ -269,15 +269,17 @@ evidence_contract:
       command: npm run test
       stage: pre-push
       domain: frontend-tests
-      canary: a11y-role
+      canary: unit-tripwire
     - id: backend-tests
       command: pytest
       stage: ci:push
       domain: backend-tests
+      canary: unit-tripwire
     - id: lint-typecheck
       command: eslint
       stage: pre-commit
       domain: lint
+      canary: lint-error
     - id: banned-language
       command: .speck/scripts/banned-language-lint.sh
       stage: pre-commit
