@@ -40,9 +40,10 @@ Enforced by .speck/scripts/validation/validators/validate-traceability-matrix.sh
   • default mode (epic-analyze, pre-commit): once epic-breakdown.md exists, NO row may be open —
     every row needs a discharge (story+AC) or a DEC/pilot-gated status. Grain is OPTIONAL here.
   • --require-evidence (epic-validate): every row must be `discharged`, `descoped`, or `pilot-gated`.
-    Grain is SOFT: absent grain is never a conservation violation. The two grain teeth — grain ≤ the
-    discharging story's effective state, and a ≥ ux-rc row must cite walk-evidence — WARN in v8.4.0
-    and flip to BLOCK in v8.5.0. The gate emits MATRIX_GRAIN_CAP = MIN grain over ALL discharged rows;
+    Absent grain is never a conservation violation. As of v8.5.0 the grain teeth BLOCK here (at the
+    /epic-validate gate): grain ≤ the discharging story's effective state; a ≥ ux-rc row must cite
+    walk-evidence; an invalid grain token is rejected. On the fast path (default mode) grain findings
+    stay surfaced-only (WARN). The gate emits MATRIX_GRAIN_CAP = MIN grain over ALL discharged rows;
     /epic-validate folds it into MAX claimable = MIN(story states, MATRIX_GRAIN_CAP).
   • --check-fidelity (opt-in, WARN-only, #86): checks each row's Promise shares vocabulary with the
     Source clause it names, and that the named Source artifact/anchor exists. PRESENCE + OVERLAP only —

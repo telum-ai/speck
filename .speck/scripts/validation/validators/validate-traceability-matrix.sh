@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# validate-traceability-matrix.sh — Promise conservation gate (Speck v8.4).
+# validate-traceability-matrix.sh — Promise conservation gate (Speck v8.5).
 #
 # Parses a traceability-matrix.md and enforces that every PRM-NNN row RESOLVES:
 #   • discharged by a story+AC, OR
@@ -17,14 +17,17 @@
 #   --check-fidelity   : (opt-in, #86) WARN-only Promise↔Source structural check (presence + vocabulary
 #                        overlap). NEVER touches the conservation exit code.
 #
-# GRAIN (Speck v8.4, #87) — a second, ORTHOGONAL axis. Status answers "resolved?" (conservation,
-# unchanged); the optional `Grain (proven-at)` column answers "at what grain was the discharging
-# evidence collected?" (readiness-ladder enum, optionally ` [pre-v8-proof]`). Grain is SOFT this
-# release: the two teeth (grain ≤ story effective state; a ≥ ux-rc row must cite walk-evidence) WARN
-# in v8.4.0 and flip to BLOCK in v8.5.0. Absent grain is NEVER a conservation violation. The gate
-# emits MATRIX_GRAIN_CAP = MIN grain over ALL discharged rows for /epic-validate to fold into
-# MAX claimable = MIN(story states, MATRIX_GRAIN_CAP). Conservation exit-1 logic is byte-for-byte
-# unchanged from v8.3.
+# GRAIN (Speck v8.4, #87; ENFORCED v8.5) — a second, ORTHOGONAL axis. Status answers "resolved?"
+# (conservation, unchanged); the optional `Grain (proven-at)` column answers "at what grain was the
+# discharging evidence collected?" (readiness-ladder enum, optionally ` [pre-v8-proof]`). As of
+# v8.5.0 the grain teeth BLOCK under --require-evidence (the /epic-validate gate): grain ≤ the
+# discharging story's effective state; a ≥ ux-rc row must cite walk-evidence; an invalid grain token
+# is rejected. On the fast path (default mode: pre-commit/recheck) grain findings stay surfaced-only
+# (WARN, non-blocking) — enforcement lives at the validate gate, not the commit. Absent grain is
+# NEVER a violation in any mode. The gate emits MATRIX_GRAIN_CAP = MIN grain over ALL discharged rows
+# for /epic-validate to fold into MAX claimable = MIN(story states, MATRIX_GRAIN_CAP). Promise
+# CONSERVATION exit-1 logic is byte-for-byte unchanged since v8.3 — grain violations are a separate,
+# additive block.
 #
 # NOTE on the `[pre-v8-proof]` sentinel: it lives BOTH in a validation report (a story-level fact:
 # "this claim predates v8 proof") and in a matrix Grain cell (a row-level fact: "this row's grain
@@ -236,6 +239,7 @@ open_rows=0
 total=0
 fidelity_warnings=0
 grain_warnings=0
+grain_violations=0
 discharged_total=0
 product_grain_count=0
 story_grain_count=0
@@ -284,9 +288,15 @@ while IFS= read -r line; do
     if ! is_empty_cell "$grain_cell"; then
       row_grain="$(extract_grain "$grain_cell")"
       if [[ -z "$row_grain" ]]; then
-        # Present but not a valid enum token → WARN (v8.4.0; BLOCK in v8.5.0).
-        echo -e "${YELLOW}⚠️  $id${NC}: Grain '${grain_cell}' is not a readiness-ladder token (no-ship|impl-green|integration-green|ux-rc|api-rc|operational-rc|commercial-rc|ship-rc|ship, optional [pre-v8-proof])."
-        grain_warnings=$((grain_warnings + 1))
+        # Present but not a valid enum token. BLOCK at the validate gate (--require-evidence, v8.5.0);
+        # surfaced-only on the fast path.
+        if [[ "$REQUIRE_EVIDENCE" == true ]]; then
+          echo -e "${RED}❌ $id${NC}: Grain '${grain_cell}' is not a readiness-ladder token (no-ship|impl-green|integration-green|ux-rc|api-rc|operational-rc|commercial-rc|ship-rc|ship, optional [pre-v8-proof])."
+          grain_violations=$((grain_violations + 1))
+        else
+          echo -e "${YELLOW}⚠️  $id${NC}: Grain '${grain_cell}' is not a readiness-ladder token (no-ship|impl-green|integration-green|ux-rc|api-rc|operational-rc|commercial-rc|ship-rc|ship, optional [pre-v8-proof])."
+          grain_warnings=$((grain_warnings + 1))
+        fi
       fi
     fi
     # Effective grain for the CAP: an un-graded/invalid discharged row is story-grain = integration-green.
@@ -370,7 +380,7 @@ while IFS= read -r line; do
               violations=$((violations + 1))
             fi
 
-            # --- GRAIN TEETH (WARN in v8.4.0 → BLOCK in v8.5.0) --------------------------------
+            # --- GRAIN TEETH (BLOCK under --require-evidence as of v8.5.0) ---------------------
             row_grain="$(extract_grain "$grain_cell")"
             if [[ -n "$row_grain" ]]; then
               # Effective story state: numeric verified state, UNLESS the report's state line carries
@@ -381,16 +391,16 @@ while IFS= read -r line; do
                   eff_state="integration-green"
                 fi
               fi
-              # Tooth 1: grain must not exceed the discharging story's effective state.
+              # Tooth 1: grain must not exceed the discharging story's effective state. (BLOCK v8.5.0)
               if [[ "$(grain_rank "$row_grain")" -gt "$(grain_rank "$eff_state")" ]]; then
-                echo -e "${YELLOW}⚠️  $id${NC}: Grain '${row_grain}' exceeds the discharging story's effective state '${eff_state}' — a row cannot be proven at a grain higher than its story reached. (WARN in v8.4.0; BLOCK in v8.5.0)"
-                grain_warnings=$((grain_warnings + 1))
+                echo -e "${RED}❌ $id${NC}: Grain '${row_grain}' exceeds the discharging story's effective state '${eff_state}' — a row cannot be proven at a grain higher than its story reached."
+                grain_violations=$((grain_violations + 1))
               fi
-              # Tooth 2: a ≥ ux-rc (product-grain) row must cite a walk-evidence artifact in the report.
+              # Tooth 2: a ≥ ux-rc (product-grain) row must cite a walk-evidence artifact. (BLOCK v8.5.0)
               if [[ "$(grain_rank "$row_grain")" -ge "$(grain_rank ux-rc)" ]]; then
                 if ! grep -qiE 'evidence/|larp|screenshot|persona|walk|\.png|\.jpe?g|\.gif|\.mp4|\.webm' "$report_path"; then
-                  echo -e "${YELLOW}⚠️  $id${NC}: Grain '${row_grain}' is product-grain (≥ ux-rc) but the discharging report cites no walk-evidence artifact (LARP / screenshot / evidence path). (WARN in v8.4.0; BLOCK in v8.5.0)"
-                  grain_warnings=$((grain_warnings + 1))
+                  echo -e "${RED}❌ $id${NC}: Grain '${row_grain}' is product-grain (≥ ux-rc) but the discharging report cites no walk-evidence artifact (LARP / screenshot / evidence path)."
+                  grain_violations=$((grain_violations + 1))
                 fi
               fi
             fi
@@ -461,13 +471,22 @@ if [[ "$discharged_total" -gt 0 ]]; then
   echo "MATRIX_GRAIN_CAP=${grain_cap_token}"
 fi
 
+# Grain violations BLOCK at the validate gate (--require-evidence) as of v8.5.0 — a separate,
+# additive block from promise conservation above. The grain surface/floor is emitted first (it is
+# informational and useful even on a failing run) before this exit.
+if [[ "$grain_violations" -gt 0 ]]; then
+  echo -e "${RED}❌ ${grain_violations} grain violation(s) — a discharged row is graded above its story's proven grain, cites no walk-evidence at product grain, or carries an invalid grain token.${NC}"
+  echo -e "${YELLOW}Grade each discharged row at the grain its evidence was actually collected (a helper-importing unit test is impl-green, not the story's headline state). Enforced at /epic-validate as of v8.5.0 (#87).${NC}"
+  exit 1
+fi
+
 if [[ "$grain_warnings" -gt 0 ]]; then
-  echo -e "${YELLOW}⚠️  ${grain_warnings} grain warning(s) — soft in v8.4.0 (surfaced, non-blocking); these BLOCK in v8.5.0.${NC}"
+  echo -e "${YELLOW}⚠️  ${grain_warnings} grain warning(s) — surfaced on the fast path (non-blocking); grain is ENFORCED (BLOCK) at /epic-validate via --require-evidence.${NC}"
 fi
 if [[ "$CHECK_FIDELITY" == true && "$fidelity_warnings" -gt 0 ]]; then
   echo -e "${YELLOW}⚠️  ${fidelity_warnings} fidelity warning(s) — structural presence/overlap only (WARN-only), NOT a faithfulness verdict.${NC}"
 fi
 
 echo -e "${GREEN}✅ Promise conservation holds — every PRM row resolves (discharged / descoped / pilot-gated).${NC}"
-echo -e "${YELLOW}   Scope: this gate verifies RESOLUTION, not fidelity — it does NOT check that a discharge is true, nor (beyond the soft grain teeth) that a story-grain 'discharged' is a product-grain claim. Treat the two distinctly; the grain floor above is the honest ceiling.${NC}"
+echo -e "${YELLOW}   Scope: this gate verifies RESOLUTION + (under --require-evidence) grain enforcement — it does NOT check that a discharge is true. The grain floor above is the honest ceiling.${NC}"
 exit 0

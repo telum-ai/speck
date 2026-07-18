@@ -1,5 +1,20 @@
 # Speck Changelog
 
+## v8.5.0 — 2026-07-18 — Grain teeth enforced: WARN → BLOCK at the validate gate (#87)
+
+v8.4.0 shipped discharge grain-awareness with the two grain teeth **surfaced-only (WARN)** and pre-committed the flip to BLOCK for v8.5.0. This is that flip — kept as its own focused release so the enforcement change is legible and attributable, with Phase 2 gate-liveness (#88) landing separately.
+
+### The flip
+Under `--require-evidence` (the `/epic-validate` gate), `validate-traceability-matrix.sh` now **BLOCKS** (exit 1) on a grain violation instead of warning:
+- **Tooth 1** — a discharged row's `Grain` exceeds its story's **effective** state (a `[pre-v8-proof]` cap wins over the numeric claim). A row cannot be proven at a grain higher than its story reached.
+- **Tooth 2** — a product-grain (≥ ux-rc) row whose discharging report cites **no walk-evidence** artifact (LARP / screenshot / evidence path).
+- **Invalid grain token** — a `Grain` cell that isn't a readiness-ladder enum (+ optional `[pre-v8-proof]`).
+
+Grain violations are a **separate, additive** exit-1 block from promise conservation — the conservation logic is byte-for-byte unchanged since v8.3. The grain surface/floor line (`MATRIX_GRAIN_CAP`) still prints first, so a failing run still tells `/epic-validate` the honest ceiling.
+
+### The fast path stays soft
+Default mode (pre-commit / `/recheck`) keeps grain findings **surfaced-only (WARN, non-blocking)** — enforcement lives at the validate gate, not the commit. Absent grain is never a violation in any mode, so a legacy or reconciled matrix (`—` / `integration-green [pre-v8-proof]`) does not newly fail. New regression test asserts the fast path never blocks; the four grain-teeth tests now assert the block. `npm test` green.
+
 ## v8.4.0 — 2026-07-17 — Discharge grain-awareness + Promise↔Source fidelity (#87, #86)
 
 A `discharged` traceability row was **grain-blind**: the status means "a story's evidence satisfied a story's AC", but the Coverage Summary reads to a founder as "the product does this" — and every one of Splang's 16 false discharges lived in that gap (a unit test imported a helper the route never called; a lint scanned source, the product ships a build). Worse, `/speck-reprove` correctly capped v7 green `[pre-v8-proof]` **on the reports only** — the matrices kept asserting the capped readiness, so report and matrix contradicted each other in the same epic dir (#87). Separately, the conservation gate reads a row's bookkeeping columns but never its `Source`/`Promise`, so a row can name a promise the product doesn't keep and the gate prints green (#86). Designed via 3 architectures, adversarially synthesized, and shipped against Kjetil's blessed decisions (cap = MIN grain over ALL discharged rows; teeth WARN now, BLOCK in v8.5.0).

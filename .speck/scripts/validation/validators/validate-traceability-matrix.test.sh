@@ -268,7 +268,7 @@ echo "$OUT8" | grep -q "1 at story grain" || { echo "ERROR: expected 1 story-gra
 echo "  ✓ Passed Test 8"
 
 
-echo "Test 9: invalid grain token WARNs but still passes (soft in v8.4.0)"
+echo "Test 9: invalid grain token BLOCKS under --require-evidence (enforced v8.5.0)"
 cat > "$TMP/traceability-matrix.md" <<'EOF'
 # Promise Traceability Matrix: Test Epic
 
@@ -279,12 +279,14 @@ cat > "$TMP/traceability-matrix.md" <<'EOF'
 | PRM-001 | product-contract §3 | differentiator pillar text | S012 / AC-3 | — | — | banana | discharged |
 EOF
 
-OUT9="$(bash "$VALIDATOR" --require-evidence --status-only "$TMP/traceability-matrix.md")"  # exit 0 (soft)
-echo "$OUT9" | grep -q "not a readiness-ladder token" || { echo "ERROR: expected invalid-grain WARN"; echo "$OUT9"; exit 1; }
+if OUT9="$(bash "$VALIDATOR" --require-evidence --status-only "$TMP/traceability-matrix.md" 2>&1)"; then
+  echo "ERROR: expected invalid grain token to BLOCK under --require-evidence (v8.5.0)"; echo "$OUT9"; exit 1
+fi
+echo "$OUT9" | grep -q "not a readiness-ladder token" || { echo "ERROR: expected invalid-grain block message"; echo "$OUT9"; exit 1; }
 echo "  ✓ Passed Test 9"
 
 
-echo "Test 10: grain tooth 1 — grain exceeds the discharging story's state → WARN, still passes"
+echo "Test 10: grain tooth 1 — grain exceeds the discharging story's state → BLOCK (v8.5.0)"
 mkdir -p "$TMP/stories/S030-teeth"
 cat > "$TMP/stories/S030-teeth/validation-report.md" <<'EOF'
 ---
@@ -302,12 +304,14 @@ cat > "$TMP/traceability-matrix.md" <<'EOF'
 |--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
 | PRM-030 | product-contract §3 | differentiator pillar text | S030 / AC-1 | — | — | ux-rc | discharged |
 EOF
-OUT10="$(bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md")"  # exit 0
-echo "$OUT10" | grep -q "exceeds the discharging story's effective state" || { echo "ERROR: expected tooth-1 WARN"; echo "$OUT10"; exit 1; }
+if OUT10="$(bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md" 2>&1)"; then
+  echo "ERROR: expected tooth-1 to BLOCK (v8.5.0)"; echo "$OUT10"; exit 1
+fi
+echo "$OUT10" | grep -q "exceeds the discharging story's effective state" || { echo "ERROR: expected tooth-1 block message"; echo "$OUT10"; exit 1; }
 echo "  ✓ Passed Test 10"
 
 
-echo "Test 11: grain tooth 1 — [pre-v8-proof] cap makes a ux-rc grain WARN even when the story claims UX-RC"
+echo "Test 11: grain tooth 1 — [pre-v8-proof] cap makes a ux-rc grain BLOCK even when the story claims UX-RC"
 mkdir -p "$TMP/stories/S031-capped"
 cat > "$TMP/stories/S031-capped/validation-report.md" <<'EOF'
 ---
@@ -326,12 +330,14 @@ cat > "$TMP/traceability-matrix.md" <<'EOF'
 |--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
 | PRM-031 | product-contract §3 | differentiator pillar text | S031 / AC-1 | — | — | ux-rc | discharged |
 EOF
-OUT11="$(bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md")"  # exit 0
-echo "$OUT11" | grep -q "exceeds the discharging story's effective state 'integration-green'" || { echo "ERROR: expected pre-v8-proof cap WARN"; echo "$OUT11"; exit 1; }
+if OUT11="$(bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md" 2>&1)"; then
+  echo "ERROR: expected pre-v8-proof cap tooth to BLOCK (v8.5.0)"; echo "$OUT11"; exit 1
+fi
+echo "$OUT11" | grep -q "exceeds the discharging story's effective state 'integration-green'" || { echo "ERROR: expected pre-v8-proof cap block message"; echo "$OUT11"; exit 1; }
 echo "  ✓ Passed Test 11"
 
 
-echo "Test 12: grain tooth 2 — product-grain (≥ux-rc) row without walk-evidence → WARN"
+echo "Test 12: grain tooth 2 — product-grain (≥ux-rc) row without walk-evidence → BLOCK (v8.5.0)"
 mkdir -p "$TMP/stories/S032-nowalk"
 cat > "$TMP/stories/S032-nowalk/validation-report.md" <<'EOF'
 ---
@@ -349,8 +355,10 @@ cat > "$TMP/traceability-matrix.md" <<'EOF'
 |--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
 | PRM-032 | product-contract §3 | differentiator pillar text | S032 / AC-1 | — | — | ux-rc | discharged |
 EOF
-OUT12="$(bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md")"  # exit 0
-echo "$OUT12" | grep -q "cites no walk-evidence artifact" || { echo "ERROR: expected tooth-2 WARN"; echo "$OUT12"; exit 1; }
+if OUT12="$(bash "$VALIDATOR" --require-evidence "$TMP/traceability-matrix.md" 2>&1)"; then
+  echo "ERROR: expected tooth-2 to BLOCK (v8.5.0)"; echo "$OUT12"; exit 1
+fi
+echo "$OUT12" | grep -q "cites no walk-evidence artifact" || { echo "ERROR: expected tooth-2 block message"; echo "$OUT12"; exit 1; }
 echo "  ✓ Passed Test 12"
 
 
@@ -409,6 +417,24 @@ echo "Test 15: fidelity OFF by default — a drifting row produces no fidelity W
 OUT15="$(bash "$VALIDATOR" "$FID/traceability-matrix.md")"
 if echo "$OUT15" | grep -q "\[fidelity\]"; then echo "ERROR: fidelity must be opt-in (no [fidelity] WARN without the flag)"; echo "$OUT15"; exit 1; fi
 echo "  ✓ Passed Test 15"
+
+
+echo "Test 16: grain is enforced at the gate but SURFACED-only on the fast path (v8.5.0)"
+# Default mode (no --require-evidence) = the pre-commit/recheck fast path: an invalid grain token
+# and a grain-exceeds situation must WARN, never block. Enforcement lives at --require-evidence.
+cat > "$TMP/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing | Grain (proven-at) | Status |
+|--------|--------|---------|-------------------------------|-------------------|---------|-------------------|--------|
+| PRM-001 | product-contract §3 | differentiator pillar text | S012 / AC-3 | — | — | banana | discharged |
+EOF
+OUT16="$(bash "$VALIDATOR" "$TMP/traceability-matrix.md")"   # default mode → exit 0 (surfaced-only)
+echo "$OUT16" | grep -q "not a readiness-ladder token" || { echo "ERROR: expected fast-path grain WARN"; echo "$OUT16"; exit 1; }
+echo "$OUT16" | grep -qi "grain warning" || { echo "ERROR: expected fast-path warning summary"; echo "$OUT16"; exit 1; }
+echo "  ✓ Passed Test 16"
 
 
 echo "All validate-traceability-matrix tests passed successfully!"
