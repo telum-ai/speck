@@ -287,6 +287,36 @@ else
   bad "fully-served graph should not block" "$OUT (rc=$RC)"
 fi
 
+echo "── Test 16: MM delivered ONLY via a discharged PRM (no serves edge) is NOT phantom"
+CHK2="$TMP/projects/003-prmpath"
+mkdir -p "$CHK2/epics/001-x/stories/S001-a"
+cat > "$CHK2/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — Delivered via the matrix, not a serves edge
+EOF
+# story body does NOT mention MM-1 (no serves edge) — delivery is via the discharged PRM
+cat > "$CHK2/epics/001-x/stories/S001-a/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: A
+#### AC-1 — primary
+EOF
+cat > "$CHK2/epics/001-x/traceability-matrix.md" <<'EOF'
+# Matrix
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | product-contract §5 MM-1 | wow | S001 / AC-1 | — | ux-rc | discharged |
+EOF
+OUT="$(python3 "$GRAPH" check "$CHK2" 2>&1)" && RC=0 || RC=$?
+if ! echo "$OUT" | grep -q "PHANTOM_PROMISE.P1"; then
+  ok "MM delivered via discharged PRM is not flagged phantom (no false positive)"
+else
+  bad "PRM-sourcing delivery path should count as delivered" "$OUT (rc=$RC)"
+fi
+
 echo ""
 echo "════════════════════════════════════════════"
 echo "  speck_graph: $PASS passed, $FAIL failed"

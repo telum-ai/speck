@@ -755,24 +755,40 @@ def check_graph(project_dir):
         cap_state = _min_readiness(cap_state, "integration-green")
 
     # PHANTOM_PROMISE — a promise nobody delivers. Loud CAP (bars ux-rc+), migration-aware.
+    # A promise is DELIVERED by either valid path: a story serves it directly (serves edge), OR a
+    # DISCHARGED PRM sources it (PRM --sources--> MM/JOB, that PRM discharged by a story). Counting
+    # only the first path would false-positive every MM tracked via the matrix. "Adopted" = the
+    # project wires promises to delivery by SOME path; if it wires none, degrade to un-migrated.
     served = set(e.dst for e in edges if e.kind == "serves" and e.dst)
+    delivered = set(served)
+    for e in edges:
+        if e.kind == "sources" and e.dst:
+            prm = nodes.get(e.src)
+            if prm and prm.kind == "prm" and prm.attrs.get("status") == "discharged":
+                delivered.add(e.dst)
+    wired_kinds = set()
+    for e in edges:
+        if e.kind == "serves" and e.dst and nodes.get(e.dst):
+            wired_kinds.add(nodes[e.dst].kind)
+        if e.kind == "sources" and e.dst and nodes.get(e.dst):
+            wired_kinds.add(nodes[e.dst].kind)
     for kind in ("magic-moment", "job"):
         present = [n for n in nodes.values() if n.kind == kind]
         if not present:
             continue
-        # only meaningful once at least one story serves SOME promise of this kind
-        if not any(g.nodes.get(s) and g.nodes[s].kind == kind for s in served):
-            caps.append("GRAPH_UNMIGRATED.P3: %d %s(s) defined but no story wires to any (stories "
-                        "not yet tagged with %s ids)" % (len(present), kind, kind))
+        if kind not in wired_kinds:  # no delivery path wired at all → not yet adopted
+            caps.append("GRAPH_UNMIGRATED.P3: %d %s(s) defined but nothing wires to any (no story "
+                        "serves them and no discharged PRM sources them yet)" % (len(present), kind))
             cap_state = _min_readiness(cap_state, "integration-green")
             continue
         for n in present:
-            if n.id not in served:
+            if n.id not in delivered:
                 findings.append({
                     "code": "PHANTOM_PROMISE.P1", "src": n.id, "edge": "serves", "ref": n.id,
                     "resolved_to": n.id, "source_file": n.source_file,
-                    "detail": "%s '%s' is promised in the contract but NO story delivers it "
-                              "(build the right thing)" % (n.id, n.title),
+                    "detail": "%s '%s' is promised in the contract but NO story delivers it — no "
+                              "story serves it and no discharged PRM sources it (build the right thing)"
+                              % (n.id, n.title),
                 })
 
     # GRAPH_STALE — the on-disk graph must equal a fresh compile (freshness computed, not asserted)
