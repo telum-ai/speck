@@ -474,6 +474,39 @@ else
   bad "parser dropped/shifted a row" "$OUT (rc=$RC)"
 fi
 
+echo "── Test 23: gate — orphan story in a promise-adopted epic BLOCKS (build the right thing)"
+GT="$TMP/projects/006-gate"
+mkdir -p "$GT/epics/001-e/stories/S001-orphan" "$GT/epics/001-e/stories/S002-wired"
+printf -- '---\nartifact_type: story-spec\n---\n# Orphan\n' > "$GT/epics/001-e/stories/S001-orphan/spec.md"
+printf -- '---\nartifact_type: story-spec\n---\n# Wired\n#### AC-1 — a\n' > "$GT/epics/001-e/stories/S002-wired/spec.md"
+cat > "$GT/epics/001-e/traceability-matrix.md" <<'EOF'
+# M
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | x | y | S002 / AC-1 | — | ux-rc | discharged |
+EOF
+OUT="$(python3 "$GRAPH" gate "$GT" --story 001-e/S001 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 1 ]] && echo "$OUT" | grep -q "ORPHAN_STORY.P1"; then
+  ok "orphan story blocks in a promise-adopted epic (exit 1)"
+else
+  bad "orphan story should block" "$OUT (rc=$RC)"
+fi
+
+echo "── Test 24: gate — the SAME missing structure GUIDES (not blocks) in an un-adopted epic"
+mkdir -p "$GT/epics/002-fresh/stories/S001-new"
+printf -- '---\nartifact_type: story-spec\n---\n# New\n' > "$GT/epics/002-fresh/stories/S001-new/spec.md"
+OUT="$(python3 "$GRAPH" gate "$GT" --story 002-fresh/S001 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && echo "$OUT" | grep -q "guide-rail"; then
+  ok "fresh story in un-adopted epic is guided, not walled (exit 0)"
+else
+  bad "greenfield story should not be bricked" "$OUT (rc=$RC)"
+fi
+
+echo "── Test 25: gate — a wired story clears; scoping isolates unrelated rot"
+OUT="$(python3 "$GRAPH" gate "$GT" --story 001-e/S002 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]]; then ok "wired story clears (exit 0)"; else bad "wired story should clear" "$OUT (rc=$RC)"; fi
+
 echo ""
 echo "════════════════════════════════════════════"
 echo "  speck_graph: $PASS passed, $FAIL failed"

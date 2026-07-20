@@ -92,6 +92,28 @@ else
   fi
 fi
 
+# 5. Witness-graph forcing gate (v9): the story must be non-dangling AND trace UP to a promise,
+#    with zero dangling refs in its subtree — an orphan specified-but-unwired story blocks implement.
+#    Migration-aware: an epic that hasn't adopted a promise ledger yet GUIDES (never walls) greenfield.
+graph_py=".speck/scripts/graph/speck_graph.py"
+if command -v python3 >/dev/null 2>&1 && [[ -f "$graph_py" ]]; then
+  # derive PROJECT_DIR (…/specs/projects/<id>) and STORY_ID (<epic>/<story>) from STORY_DIR
+  proj_dir="${STORY_DIR%%/epics/*}"
+  rest="${STORY_DIR#*/epics/}"                       # <epic-dir>/stories/<story-dir>
+  epic_dir="${rest%%/stories/*}"; story_dir="${rest##*/stories/}"
+  story_num="$(printf '%s' "${story_dir%%/*}" | grep -oE '^S[0-9]+' || true)"
+  graph_story_id="${epic_dir}/${story_num}"          # canonical node id: <epic-basename>/S###
+  if [[ -d "$proj_dir" && "$STORY_DIR" == *"/epics/"* ]]; then
+    echo -e "${YELLOW}🔍 Witness-graph reachability gate (v9)...${NC}"
+    if ! python3 "$graph_py" gate "$proj_dir" --story "$graph_story_id"; then
+      echo -e "${RED}❌ Graph gate: this story is not legitimately wired (see above).${NC}"
+      failed=true
+    fi
+  fi
+else
+  echo -e "${YELLOW}⚠️  python3 or witness graph unavailable — skipping the graph reachability gate (CI is the backstop).${NC}"
+fi
+
 if [[ "$failed" == true ]]; then
   echo -e "\n${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo -e "${RED}GATES REJECTED: One or more pre-implementation prerequisite checks have failed.${NC}"

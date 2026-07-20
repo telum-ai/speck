@@ -1,12 +1,14 @@
 <!-- SPECK:START -->
 
-# Speck 8 — Promise → Build → Prove
+# Speck 9 — Promise → Build → Prove (→ Drive)
 
-You are working in a project using **Speck 🥓 v8**, an evidence-driven specification methodology.
+You are working in a project using **Speck 🥓 v9**, an evidence-driven specification methodology.
 
 **Speck's core promise**: produce excellent products regardless of how hands-on the human is. The discipline (decision logs, skeptical audits, runtime LARP, evidence gates, drift detection) is **unconditional** — not a mode you opt into.
 
-**The v8 thesis**: you cannot out-enumerate an agent optimizing for green. Speck's gates are governed by **four principles** (below), not an ever-growing checklist. At every gate your job is to **find what is wrong**, not to confirm the claim. When you find a gap, install it as a principle — don't grow the checklist. Full rationale: `docs/v8/v8-north-star.md`.
+**The v8 thesis** (still the spine): you cannot out-enumerate an agent optimizing for green. Speck's gates are governed by **four principles** (below), not an ever-growing checklist. At every gate your job is to **find what is wrong**, not to confirm the claim. Full rationale: `docs/v8/v8-north-star.md`.
+
+**The v9 addition**: the **witness graph** (`.speck/scripts/graph/speck_graph.py`) is the derived, content-hashed **spine** — project-state renders from it, the forcing gates fire off it, `road-to-completion.md` re-projects it (🧹 TIDY → 🗑 REMOVE → 🔨 BUILD → 🔬 PROVE), and native **`/goal`** drives against its computed gap to actual 100%. It proves **traceable · complete · fresh**; it never grants **faithful · good · excellent** (those stay with `/audit` + the four-axis LARP — the graph *feeds* the adversary, it never rubber-stamps). Rationale + the `/goal` workflow: `docs/v9/v9-north-star.md`.
 
 ## 🧭 The Mental Model
 
@@ -43,6 +45,7 @@ Speck v8 replaces "append another probe" with four unconditional principles. Eve
 
 Run these checks **in order**. Stop at the first hit, run the indicated skill, then resume the list.
 
+0. **v9 witness graph established?** Check `.speck/.v9-graph-needed`. If it exists, the project was upgraded to v9 but its graph truth is not yet established — run `/speck-graph-up` BEFORE any feature work (it hardens identity, builds the graph, heals the road already walked, and emits `road-to-completion.md`). Once clear, run the **forcing gate**: `python3 .speck/scripts/graph/speck_graph.py build specs/projects/<id> && python3 .speck/scripts/graph/speck_graph.py check specs/projects/<id>`. A hard `.P1` (`DANGLING_REF` / `DUP_ID` / `PHANTOM_PROMISE`) means the graph lacks what it needs — **you cannot advance; repair the graph first** (the road's 🧹 TIDY / 🔨 BUILD buckets say how). `GRAPH_CAP` caps every readiness claim this session. This is migration-aware: a fresh project with no adopted id scheme is *guided* (caps + `GRAPH_UNMIGRATED`), never blocked. python3 absent → WARN + proceed (CI is the backstop).
 1. **v8 re-prove needed?** Check `.speck/.v8-reprove-needed`. If it exists, the project was just upgraded from v7 and its green is verification-shaped (`[pre-v8-proof]`). Run `/speck-reprove` to build the suspect-green worklist; effective state is capped at `INTEGRATION-GREEN` and consumer FELT-GOOD reverts to `uncovered` until each axis is re-earned under the four principles. Do not trust any prior UX-RC+ claim until then.
 2. **Catch-up needed?** Check `.speck/.migration-needs-catchup`. If it exists OR any of `product-contract.md`, `evidence-contract.md`, `project-state.md` contains the literal text `<!-- v7 MIGRATION SCAFFOLD -->` → run `/speck-catch-up` BEFORE anything else (v6→v7 empty scaffolds). No feature work until catch-up is done.
 3. **Read `specs/projects/<PROJECT_ID>/project-state.md`** if it exists (single page, current state, open questions, locked decisions, known issues, next action). This is always your first read once catch-up/re-prove is clear.
@@ -514,7 +517,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 8.8.0  
+**Speck Version**: 9.0.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

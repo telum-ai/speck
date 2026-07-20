@@ -1,5 +1,51 @@
 # Speck Changelog
 
+## v9.0.0 — 2026-07-20 — The Witness Graph is the Spine (major)
+
+v9 promotes the witness graph from a late gate into the project's **spine** — the derived,
+content-hashed index that project-state renders from, that the forcing gates fire off, that
+`road-to-completion.md` re-projects, and that native `/goal` drives against to reach *actual* 100%.
+Full architecture (incl. the `/goal` workflow, hierarchy, and sequence): `docs/v9/v9-north-star.md`.
+Shipping incrementally (v9.0 → v9.5); this is the **additive spine + forcing** arc — no deletions yet.
+
+### Forcing: "you cannot advance if the graph lacks what it needs" — without bricking greenfield
+One signal makes it safe: **id-scheme adoption**, counted from the graph (never asserted). Rot in an
+*adopted* scope BLOCKS (`.P1`); the **identical** structural absence in an *un-adopted* scope GUIDES
+(a cap), never blocks. Same missing structure = a wall for a rotted project, a guide-rail for a fresh one.
+
+- New scoped forcing primitive: `speck_graph.py gate <dir> [--story ID | --epic ID]` (exit 1 = blocked),
+  with a **reachability** check — a story must trace UP to a promise (a PRM discharges to it, or it serves
+  an `MM-N`/`JOB-N`) once its epic has adopted a promise ledger. An orphan specified-but-unwired story
+  raises `ORPHAN_STORY.P1`. Proven on Streb + Splang.
+- Wired at the boundaries (all python3-guarded; absent → WARN + proceed, CI is the backstop):
+  **First Actions step 0** (`build && check`; a hard `.P1` → "repair the graph first", `GRAPH_CAP` caps
+  the session); **`check-story-prereqs.sh`** (the reachability gate before implementation);
+  **`pre-commit-hook.sh`** (rejects a staged spec edit that introduces a dangling ref against an adopted
+  scheme — you cannot commit rot in). The epic-validate step-5d gate shipped in v8.8.
+
+### Migration: `.v9-graph-needed` marker + `/speck-graph-up` (heal the road already walked)
+- `migrate.js` gains chain-aware `graphV9` detection (a v6→v9 jump runs scaffoldV7 → reproveV8 → graphV9
+  in dependency order) + `writeV9GraphMarker` (`.speck/.v9-graph-needed`), the v9 analog of the v8-reprove
+  marker. An engagement with the marker present refuses feature work until the graph is established.
+- New `/speck-graph-up` skill: Phase 0 chain-preflight (catch-up/reprove first) → 1 harden identity
+  (`migrate --apply`, resolve lint-refs) → 2 build → 3 **retroactive cleanup** (dry-run-first reconcilers:
+  version-as-staleness `[pre-v9-proof]` caps, matrix-grain reconcile, prose↔canonical readiness render,
+  un-graded re-grade — heal stale digests + over-claimed matrices) → 4 emit road + render project-state
+  from the graph → 5 finalize. Any project, any state, ends with an excellent graph and a legible road.
+
+### Also
+- +3 forcing tests (25 total) in the graph suite; +5 migrate tests (13 total) for `graphV9` /
+  `writeV9GraphMarker`. `docs/v9/v9-north-star.md` is the canonical v9 record. AGENTS.md banner → v9 with
+  the graph-spine + `/goal` doctrine. `npm test` green.
+
+### Roadmap (each a committed, parity-gated arc)
+- **v9.1** retire-and-prove: delete `compute-cascade.sh` + the traceability conservation branch after a
+  byte-parity test on Streb + Splang; CI asserts the bespoke-validator count drops.
+- **v9.2** `speck_graph.py road` + project-state renders from the graph (kills digest-rot).
+- **v9.3** `speck_graph.py gap --emit-goal` + the `/goal` drive doctrine + the thin `/speck-goal` primer.
+- **v9.4** verdict extraction → real `UNJUDGED_SURFACE`; grain teeth migrate off the last parser.
+- **v9.5** tests-as-join → real `ORPHAN_CODE` (honestly not-evaluated until then).
+
 ## v8.8.0 — 2026-07-20 — Witness Graph Phase 2–3: agent queries + the forcing gates, wired into the lifecycle
 
 Builds on v8.7.0's identity + extractor. Turns the graph from a linter into the **first-class forcing

@@ -56,6 +56,27 @@ if [[ "$staged_readme" == true ]]; then
   fi
 fi
 
+# Witness-graph reference integrity (v9): reject a staged spec/matrix edit that introduces a
+# dangling reference against an ADOPTED id scheme. You cannot commit rot in. Migration-aware:
+# un-adopted schemes surface as guidance (GRAPH_UNMIGRATED), never a block — greenfield is safe.
+graph_py=".speck/scripts/graph/speck_graph.py"
+if command -v python3 >/dev/null 2>&1 && [[ -f "$graph_py" ]]; then
+  staged_specs=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null \
+    | grep -E '^specs/projects/[^/]+/(epics/[^/]+/(traceability-matrix\.md|stories/[^/]+/spec\.md)|.*)$' || true)
+  if [[ -n "$staged_specs" ]]; then
+    # collect the distinct project dirs touched, lint-refs each (real DANGLING/DUP block; unmigrated guides)
+    proj_dirs=$(printf '%s\n' "$staged_specs" | sed -E 's#(specs/projects/[^/]+)/.*#\1#' | sort -u)
+    while IFS= read -r pd; do
+      [[ -d "$pd" ]] || continue
+      echo -e "${BLUE}🔍 Witness-graph reference integrity: ${pd}...${NC}"
+      if ! python3 "$graph_py" lint-refs "$pd"; then
+        echo -e "${RED}❌ Staged edit introduces or leaves a dangling reference (see above).${NC}"
+        errors=$((errors + 1))
+      fi
+    done <<< "$proj_dirs"
+  fi
+fi
+
 # Staged-scoped banned-language lint (advisory at pre-commit; full-repo scan remains manual/CI)
 if [[ -f ".speck/scripts/banned-language-lint.sh" ]]; then
   echo -e "${BLUE}🔍 Running staged banned-language lint...${NC}"

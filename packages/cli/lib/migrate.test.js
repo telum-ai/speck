@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import {
   detectMigration,
   writeV8ReproveMarker,
+  writeV9GraphMarker,
   runPostUpgradeMigrations,
 } from './migrate.js';
 
@@ -43,6 +44,26 @@ test('detectMigration: same-major (8 → 8) needs neither', () => {
   const r = detectMigration('8.0.0', '8.1.0');
   assert.equal(r.scaffoldV7, false);
   assert.equal(r.reproveV8, false);
+});
+
+test('detectMigration: 8.x → 9.x needs graphV9, not v7/v8', () => {
+  const r = detectMigration('8.6.0', '9.0.0');
+  assert.equal(r.scaffoldV7, false);
+  assert.equal(r.reproveV8, false);
+  assert.equal(r.graphV9, true);
+  assert.equal(r.targetMajor, 9);
+});
+
+test('detectMigration: 6.x → 9.x chains all three (scaffold + reprove + graph)', () => {
+  const r = detectMigration('6.0.0', '9.0.0');
+  assert.equal(r.scaffoldV7, true);
+  assert.equal(r.reproveV8, true);
+  assert.equal(r.graphV9, true);
+});
+
+test('detectMigration: same-major (9 → 9) needs no graphV9', () => {
+  const r = detectMigration('9.0.0', '9.1.0');
+  assert.equal(r.graphV9, false);
 });
 
 test('detectMigration: v-prefixed and unknown targets', () => {
@@ -79,6 +100,36 @@ test('writeV8ReproveMarker: writes marker, is idempotent, needs .speck', () => {
     assert.equal(r.written, false);
   } finally {
     rmSync(noSpeck, { recursive: true, force: true });
+  }
+});
+
+test('writeV9GraphMarker: writes marker, is idempotent, needs .speck', () => {
+  const dir = tempTarget(true);
+  try {
+    const first = writeV9GraphMarker(dir, '9.0.0');
+    assert.equal(first.written, true);
+    assert.ok(existsSync(join(dir, '.speck', '.v9-graph-needed')));
+    const body = readFileSync(join(dir, '.speck', '.v9-graph-needed'), 'utf-8');
+    assert.match(body, /WITNESS-GRAPH/);
+    assert.match(body, /\/speck-graph-up/);
+    assert.match(body, /road-to-completion\.md/);
+    const second = writeV9GraphMarker(dir, '9.0.0');
+    assert.equal(second.written, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('runPostUpgradeMigrations: 8 → 9 writes graph marker, kind v8-to-v9', () => {
+  const dir = tempTarget(true);
+  try {
+    const summary = runPostUpgradeMigrations(dir, '8.6.0', '9.0.0');
+    assert.equal(summary.kind, 'v8-to-v9');
+    assert.equal(summary.targetMajor, 9);
+    assert.equal(summary.v9Graph.written, true);
+    assert.ok(existsSync(join(dir, '.speck', '.v9-graph-needed')));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 });
 

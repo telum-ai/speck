@@ -917,6 +917,84 @@ def cmd_check(project_dir):
 
 
 # ---------------------------------------------------------------------------
+# gate — the SCOPED forcing primitive the lifecycle hooks call (v9).
+#
+# "You cannot advance if the graph lacks what it needs" — scoped to the work grain so a clean
+# sibling is never blocked by unrelated rot, and a rotted story can't hide behind a fresh project.
+# The block-vs-guide split is the id-scheme-adoption signal: rot in an ADOPTED scope BLOCKS (.P1);
+# the identical absence in an un-adopted scope GUIDES (cap), never blocks. So greenfield work is
+# never bricked — "what it needs" is scoped to what the phase's own adopted scheme makes detectable.
+# ---------------------------------------------------------------------------
+
+def _in_scope(finding, scope_prefix):
+    if scope_prefix is None:
+        return True
+    for key in ("src", "resolved_to", "ref"):
+        v = finding.get(key) or ""
+        if v == scope_prefix or v.startswith(scope_prefix + "/"):
+            return True
+    return False
+
+
+def gate_graph(project_dir, story=None, epic=None):
+    """Scoped forcing check. Returns (blocking_findings, notes). Empty blocking → advance allowed."""
+    graph, nodes, edges = build_graph(project_dir)
+    g = Graph(nodes, edges)
+    scope = None
+    if story:
+        scope = g.resolve_subject(story) or story
+    elif epic:
+        scope = canonicalize_epic(epic, build_epic_index([n.id for n in nodes.values() if n.kind == "epic"])) or epic
+
+    findings, unmigrated = lint_refs(nodes, edges)
+    blocking = [f for f in findings if f["code"].endswith(".P1") and _in_scope(f, scope)]
+    notes = []
+
+    # story reachability — a story must trace UP to a promise ONCE its epic has adopted promises.
+    if story and scope in nodes and nodes[scope].kind == "story":
+        epic_id = nodes[scope].scope
+        epic_has_promises = any(
+            n.kind == "prm" and n.scope == epic_id for n in nodes.values()
+        ) or any(e.kind == "serves" and nodes.get(e.src) and nodes[e.src].scope == epic_id for e in edges)
+        reaches_promise = any(
+            e.kind == "discharges" and e.dst and (e.dst == scope or e.dst.startswith(scope + "/"))
+            for e in edges
+        ) or any(e.kind == "serves" and e.src == scope and e.dst for e in edges)
+        if epic_has_promises and not reaches_promise:
+            blocking.append({
+                "code": "ORPHAN_STORY.P1", "src": scope, "edge": "reaches", "ref": scope,
+                "resolved_to": scope, "source_file": nodes[scope].source_file,
+                "detail": "story is specified but wired to NO promise — no PRM discharges to it and it "
+                          "serves no MM/JOB. Wire it to what it delivers, or it's building the wrong thing.",
+            })
+        elif not epic_has_promises:
+            notes.append("GRAPH_UNMIGRATED: epic %s has no promise ledger yet — reachability not "
+                         "enforced (guide-rail, not a wall). Fill the traceability matrix to force it."
+                         % epic_id)
+    if unmigrated:
+        notes.append("un-adopted id schemes present (%s) — guidance only, not a block"
+                     % ", ".join("%d %s" % (v, k) for k, v in sorted(unmigrated.items())))
+    return blocking, notes
+
+
+def cmd_gate(project_dir, story=None, epic=None):
+    blocking, notes = gate_graph(project_dir, story=story, epic=epic)
+    label = ("story " + story) if story else (("epic " + epic) if epic else "project")
+    if not blocking:
+        sys.stdout.write("✅ graph gate (%s): clear to advance\n" % label)
+        for n in notes:
+            sys.stdout.write("   ℹ️  %s\n" % n)
+        return 0
+    sys.stdout.write("⛔ graph gate (%s): %d blocking finding(s) — cannot advance until fixed\n\n"
+                     % (label, len(blocking)))
+    for f in blocking:
+        sys.stdout.write("  %s  %s\n      %s\n" % (f["code"], f["ref"], f["detail"]))
+    for n in notes:
+        sys.stdout.write("   ℹ️  %s\n" % n)
+    return 1
+
+
+# ---------------------------------------------------------------------------
 # migrate — generic identity hardening for ANY existing Speck project
 #
 # Non-destructive by design: dry-run is the DEFAULT (reports the diff); only `--apply` writes.
@@ -1031,6 +1109,15 @@ def _resolve_project_dir(arg):
     return None
 
 
+def _flag_value(args, flag):
+    """Return the value following `flag` in args, or None."""
+    if flag in args:
+        i = args.index(flag)
+        if i + 1 < len(args):
+            return args[i + 1]
+    return None
+
+
 def cmd_build(project_dir, write=True):
     graph, nodes, edges = build_graph(project_dir)
     if write:
@@ -1079,6 +1166,7 @@ Usage:
   speck_graph.py query     <PROJECT_DIR> <node-id>    Raw in/out edges of a node (story, MM-N, DEC…)
   speck_graph.py context   <PROJECT_DIR> <story-id>   The story's context pack — one lookup, no tree walk
   speck_graph.py check     <PROJECT_DIR>              Forcing gates: dangling/dup BLOCK; phantom/stale CAP
+  speck_graph.py gate      <PROJECT_DIR> [--story ID|--epic ID]   Scoped advance-gate (exit 1 = blocked)
 
 PROJECT_DIR is a specs/projects/<id> directory. The graph is DERIVED — never hand-edit witness.json.
 """
@@ -1117,6 +1205,13 @@ def main(argv):
             sys.stderr.write("ERROR: check requires an existing PROJECT_DIR\n")
             return 2
         return cmd_check(project_dir)
+    if cmd == "gate":
+        if not project_dir:
+            sys.stderr.write("ERROR: gate requires an existing PROJECT_DIR\n")
+            return 2
+        story = _flag_value(args, "--story")
+        epic = _flag_value(args, "--epic")
+        return cmd_gate(project_dir, story=story, epic=epic)
     sys.stderr.write("Unknown command: %s\n\n%s" % (cmd, USAGE))
     return 2
 

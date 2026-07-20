@@ -104,7 +104,12 @@ export function detectMigration(currentVersion, targetVersion) {
   // The mechanical upgrade is trusted; v7-era "green" is NOT (see docs/v8/v8-north-star.md §5).
   const reproveV8 = toMajor >= 8 && (fromMajor == null || fromMajor < 8);
 
-  return { scaffoldV7, reproveV8, targetMajor: toMajor };
+  // Crossing into v9 from anything older → establish the witness graph as the spine.
+  // Chain-aware: a v6→v9 jump runs scaffoldV7 → reproveV8 → graphV9 in dependency order (the
+  // graph extracts from the v7 artifacts and inherits the v8 caps). See docs/v9/v9-north-star.md §4.
+  const graphV9 = toMajor >= 9 && (fromMajor == null || fromMajor < 9);
+
+  return { scaffoldV7, reproveV8, graphV9, targetMajor: toMajor };
 }
 
 /**
@@ -149,15 +154,54 @@ worklist is tracked.
 }
 
 /**
+ * Write the repo-level .speck/.v9-graph-needed marker — the v9 analog of writeV8ReproveMarker.
+ * The mechanical upgrade cannot BUILD the graph (it needs identity hardened first, and the per-project
+ * graph work is a reversible gesture the /speck-graph-up skill owns). Non-destructive, idempotent.
+ */
+export function writeV9GraphMarker(targetDir, targetVersion = '9.0.0') {
+  const speckDir = join(targetDir, '.speck');
+  if (!existsSync(speckDir)) {
+    return { written: false, path: null, reason: '.speck directory not present' };
+  }
+  const markerPath = join(speckDir, '.v9-graph-needed');
+  if (existsSync(markerPath)) {
+    return { written: false, path: markerPath, reason: 'marker already present' };
+  }
+  const date = new Date().toISOString().slice(0, 10);
+  const body = `V9 WITNESS-GRAPH TRUTH NOT YET ESTABLISHED
+
+This project was upgraded to Speck v9 (the witness graph is the spine) on ${date}
+(target ${targetVersion}). The mechanical upgrade — files, scripts, version — is done.
+But the graph itself has NOT been built: it requires identity hardened first, and the
+per-project graph work + retroactive cleanup is a reversible gesture the skill owns
+(see docs/v9/v9-north-star.md §4).
+
+BEFORE any new feature work, run:  /speck-graph-up
+
+It will (chain-aware — runs /speck-catch-up or /speck-reprove first if their markers exist):
+  - harden identity (AC-N numbering; surface MM-N/JOB-N for manual add; make lint-refs resolve),
+  - build the witness graph (specs/projects/<id>/graph/witness.json),
+  - run retroactive-cleanup reconcilers (--dry-run first; heal stale digests, over-claimed
+    matrices, [pre-v9-proof] caps) — the road already walked,
+  - emit road-to-completion.md and render project-state FROM the graph.
+
+Delete this marker ONLY after witness.json + road-to-completion.md exist and project-state
+renders from the graph. Until then, the engagement gate refuses feature work.
+`;
+  writeFileSync(markerPath, body);
+  return { written: true, path: markerPath, reason: null };
+}
+
+/**
  * Run any post-upgrade migrations needed. Idempotent and silent unless
  * options.verbose is set. Returns a summary object:
- *   { kind, targetMajor, projects: [...], v8Reprove: { written, path, reason } | null }
+ *   { kind, targetMajor, projects: [...], v8Reprove: {...} | null, v9Graph: {...} | null }
  */
 export function runPostUpgradeMigrations(targetDir, currentVersion, targetVersion, options = {}) {
-  const { scaffoldV7, reproveV8, targetMajor } = detectMigration(currentVersion, targetVersion);
-  const summary = { kind: null, targetMajor, projects: [], v8Reprove: null };
+  const { scaffoldV7, reproveV8, graphV9, targetMajor } = detectMigration(currentVersion, targetVersion);
+  const summary = { kind: null, targetMajor, projects: [], v8Reprove: null, v9Graph: null };
 
-  if (!scaffoldV7 && !reproveV8) {
+  if (!scaffoldV7 && !reproveV8 && !graphV9) {
     summary.targetMajor = null;
     return summary;
   }
@@ -185,6 +229,16 @@ export function runPostUpgradeMigrations(targetDir, currentVersion, targetVersio
     }
     summary.v8Reprove = writeV8ReproveMarker(targetDir, targetVersion);
     if (!summary.kind) summary.kind = 'v7-to-v8';
+  }
+
+  if (graphV9) {
+    if (options.verbose) {
+      console.log(`\n🔁 Detected crossing into Speck v9. Writing .speck/.v9-graph-needed marker (witness graph)...`);
+    }
+    summary.v9Graph = writeV9GraphMarker(targetDir, targetVersion);
+    if (!summary.kind) summary.kind = 'v8-to-v9';
+    else if (summary.kind === 'v6-to-v8') summary.kind = 'v6-to-v9';
+    else if (summary.kind === 'v7-to-v8') summary.kind = 'v7-to-v9';
   }
 
   return summary;
