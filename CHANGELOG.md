@@ -1,5 +1,28 @@
 # Speck Changelog
 
+## v9.2.0 — 2026-07-20 — Drive to done: `gap` + native `/goal` (leverage, don't reimplement)
+
+The fourth motion — DRIVE — that closes Promise→Build→Prove into a self-terminating loop toward
+*actual* 100%. Speck does **not** reimplement `/goal`'s loop (native `/goal` is Claude Code's
+prompt-Stop-hook / Codex's thread-scoped goal); it supplies the three things native `/goal` can't
+compute, and directs the user to run `/goal` (a client command a skill cannot invoke for you):
+
+- **`speck_graph.py gap <dir>`** — folds the structural remainder (`check_graph`) + validation-report
+  axis frontmatter (`felt_axis`/`taste_axis`/`readiness`) + magic/JTBD into ONE evaluator-legible
+  `SPECK-GAP:` line (the evaluator reads only surfaced text and runs no tools). Terminates on
+  `SPECK-GAP: none`. Axis extraction is best-effort + honest — reports without the frontmatter count as
+  uncovered, never silently passed.
+- **`speck_graph.py gap <dir> --emit-goal [--target ship-rc|ship]`** — prints a ready-to-run `/goal …`
+  completion condition using Codex's six components (outcome · verification surface · constraints ·
+  boundaries · iteration policy · blocked-stop), with anti-gaming baked in: the success token must be
+  literal `gap` stdout, `GRAPH_STALE` catches a hand-edited witness.json, and every gate stays authoritative.
+- **AGENTS.md "Drive to Done"** section: the routing table (gap item → owning skill) + the hierarchy
+  (`/goal` = conductor/loop; Speck skills = players/work; the graph = score/condition+evidence).
+  User-initiated with a mandatory turn bound; STOP-BLOCKED at owner-gated inches (taste forks, contract
+  pivots, price, deploy). Full workflow/sequence in `docs/v9/v9-north-star.md` §6.
+
++2 tests (29 total). npm test green. (MM "judged" stays honestly pending verdict extraction, v9.4.)
+
 ## v9.1.0 — 2026-07-20 — The road to completion (the graph, re-projected)
 
 `speck_graph.py road <dir>` → `specs/projects/<id>/graph/road-to-completion.md`: the graph's findings

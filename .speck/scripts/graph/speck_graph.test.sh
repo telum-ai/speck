@@ -541,6 +541,34 @@ else
   bad "road missing derived banner / GRAPH_CAP" "$OUT"
 fi
 
+echo "── Test 28: gap line folds structural findings + axes into one evaluator-legible token"
+GP="$TMP/projects/008-gap"
+mkdir -p "$GP/epics/001-e/stories/S001-a"
+cat > "$GP/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — delivered (adopts the scheme)
+### MM-2 — nobody delivers this (phantom)
+EOF
+printf -- '---\nartifact_type: story-spec\n---\n# A\nDelivers MM-1.\n#### AC-1 — a\n' > "$GP/epics/001-e/stories/S001-a/spec.md"
+OUT="$(python3 "$GRAPH" gap "$GP" 2>&1)"
+if echo "$OUT" | grep -q "^SPECK-GAP:" && echo "$OUT" | grep -q "PHANTOM_PROMISE" && echo "$OUT" | grep -q "CAP="; then
+  ok "gap emits a single SPECK-GAP token with the phantom + cap folded in"
+else
+  bad "gap line malformed" "$OUT"
+fi
+
+echo "── Test 29: emit-goal produces a native /goal condition with the 6 components + anti-gaming"
+OUT="$(python3 "$GRAPH" gap "$GP" --emit-goal --target ship-rc 2>&1)"
+if echo "$OUT" | grep -q "^/goal " \
+   && echo "$OUT" | grep -q "OUTCOME:" && echo "$OUT" | grep -q "VERIFICATION SURFACE:" \
+   && echo "$OUT" | grep -q "BLOCKED STOP:" && echo "$OUT" | grep -q "VERBATIM" \
+   && echo "$OUT" | grep -q "/goal runs the loop — Speck does not"; then
+  ok "emit-goal yields a ready-to-run /goal condition; Speck defers the loop to native /goal"
+else
+  bad "emit-goal condition incomplete" "$OUT"
+fi
+
 echo ""
 echo "════════════════════════════════════════════"
 echo "  speck_graph: $PASS passed, $FAIL failed"

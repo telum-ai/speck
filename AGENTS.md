@@ -41,6 +41,32 @@ Speck v8 replaces "append another probe" with four unconditional principles. Eve
 - **P3 — "Can't reach it" is a finding, not an excuse.** If automation can't reach a control/flow/guard, that is evidence of a defect (some real user can't reach it either) — never a license to skip, cap, or defer. A "named infra blocker" cap requires a **logged, reproduced** real attempt; a prior session's precedent never licenses the next.
 - **P4 — The adversary is structural, not a checklist.** Truth-seeking is owned by a **separately-incentivized evaluator** judged by defects found (independent auditor / N-skeptic). Probe *lists* prompt the adversary's imagination; they never define "done."
 
+## 🏁 Drive to Done (native `/goal` + Speck)
+
+Green gates ≠ 100%. To drive a project to *actual* done (works + feels-good + looks-good + tasteful +
+magic + JTBD-solved), Speck **leverages native `/goal`** (Claude Code v2.1.139+ / Codex) — it does NOT
+reimplement the loop. Speck supplies the three things `/goal` can't compute; `/goal` supplies the loop.
+
+1. **Condition** — `python3 .speck/scripts/graph/speck_graph.py gap <dir> --emit-goal [--target ship-rc|ship]`
+   prints a ready-to-run `/goal …` completion condition derived from the graph's gap to the contract.
+2. **Evidence surface** — the evaluator reads only surfaced text, so **every driven turn prints the
+   verbatim stdout of `check` + `gap`**. The terminating token is a literal `SPECK-GAP: none` line.
+3. **Routing** — each turn, take the single highest-severity unmet `gap` item and route it to the
+   owning skill (never reimplement one):
+
+   | gap item | route to |
+   |----------|----------|
+   | untraced / undischarged / phantom promise | `/story-specify` → `/story-plan` → `/story-tasks` → `/story-implement` → `/audit` → `/story-validate` |
+   | `/audit` P0/P1 finding | `/harden` |
+   | uncovered FELT-GOOD / unjudged MM | `/larp` (naive-hostile Job A + connoisseur Job B) |
+   | forks-open TASTE · contract pivot · price · deploy | **STOP-BLOCKED** — surface as an owner decision |
+   | stale graph | `speck_graph.py build` |
+
+**Hierarchy:** `/goal` is the conductor (loop); Speck's lifecycle skills are the players (work); the graph
+is the score (condition + evidence). `/goal` adds no new discipline and never bypasses a gate — it drives
+work UNTIL the gates pass at the target. **User-initiated** with a mandatory turn bound, because the tail
+of the ladder is owner-gated. Full workflow + sequence: `docs/v9/v9-north-star.md` §6.
+
 ## 🚦 First Actions on Any Engagement
 
 Run these checks **in order**. Stop at the first hit, run the indicated skill, then resume the list.
@@ -517,7 +543,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 9.1.0  
+**Speck Version**: 9.2.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

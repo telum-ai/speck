@@ -995,6 +995,138 @@ def cmd_gate(project_dir, story=None, epic=None):
 
 
 # ---------------------------------------------------------------------------
+# gap — the DRIVE surface for native /goal (v9). Speck does NOT reimplement /goal's loop; it
+# supplies the three things native /goal cannot compute: the completion CONDITION, the evidence
+# SURFACE the evaluator reads (this line), and — via AGENTS.md — the per-turn routing. The
+# evaluator judges SURFACED text and runs no tools, so `gap` folds the structural remainder +
+# report-frontmatter axes into ONE machine-legible `SPECK-GAP:` line. See docs/v9/v9-north-star.md §6.
+# ---------------------------------------------------------------------------
+
+def _collect_axes(project_dir):
+    """Walk validation-report.md frontmatter → aggregate readiness/felt/taste coverage (best-effort)."""
+    felt_uncovered = 0
+    taste_open = 0
+    reports = 0
+    axes_absent = 0
+    epics_dir = os.path.join(project_dir, "epics")
+    if os.path.isdir(epics_dir):
+        for ep in sorted(os.listdir(epics_dir)):
+            sdir = os.path.join(epics_dir, ep, "stories")
+            if not os.path.isdir(sdir):
+                continue
+            for st in sorted(os.listdir(sdir)):
+                rpt = os.path.join(sdir, st, "validation-report.md")
+                if not os.path.isfile(rpt):
+                    continue
+                reports += 1
+                fm, _ = strip_frontmatter(read_text(rpt))
+                felt = (fm.get("felt_axis", "") or "").lower()
+                taste = (fm.get("taste_axis", "") or "").lower()
+                if not felt and not taste:
+                    axes_absent += 1
+                if felt in ("", "uncovered"):
+                    felt_uncovered += 1
+                if taste in ("uncovered",) or "forks-open" in taste:
+                    taste_open += 1
+    return {"reports": reports, "felt_uncovered": felt_uncovered,
+            "taste_open": taste_open, "axes_absent": axes_absent}
+
+
+def compute_gap(project_dir):
+    """Return a structured gap state folding structural findings + axis coverage + magic/JTBD."""
+    findings, caps, pending, cap_state = check_graph(project_dir)
+    _graph, nodes, edges = build_graph(project_dir)
+    hard = [f for f in findings if f["code"].endswith(".P1")]
+    axes = _collect_axes(project_dir)
+    mm_total = sum(1 for n in nodes.values() if n.kind == "magic-moment")
+    job_total = sum(1 for n in nodes.values() if n.kind == "job")
+    phantom = [f for f in hard if f["code"].startswith("PHANTOM_PROMISE")]
+    return {
+        "cap_state": cap_state,
+        "hard": hard,
+        "caps": caps,
+        "felt_uncovered": axes["felt_uncovered"],
+        "taste_open": axes["taste_open"],
+        "reports": axes["reports"],
+        "axes_absent": axes["axes_absent"],
+        "mm_total": mm_total,
+        "job_total": job_total,
+        "jtbd_gap": len(phantom) > 0,
+        # MM "judged" is pending verdict extraction (v9.4) — surfaced honestly, never counted a pass
+        "mm_judged_pending": True,
+    }
+
+
+def gap_line(project_dir):
+    """The single evaluator-legible SPECK-GAP: line."""
+    g = compute_gap(project_dir)
+    parts = []
+    if g["hard"]:
+        codes = ", ".join("%s %s" % (f["code"].split(".")[0], f.get("ref", "")) for f in g["hard"][:6])
+        parts.append("%d·P1(%s)" % (len(g["hard"]), codes))
+    if g["caps"]:
+        parts.append("%d·cap" % len(g["caps"]))
+    if g["felt_uncovered"]:
+        parts.append("FELT:uncovered(%d)" % g["felt_uncovered"])
+    if g["taste_open"]:
+        parts.append("TASTE:open(%d)" % g["taste_open"])
+    if g["mm_total"]:
+        parts.append("MM:%d·unjudged(verdict-extraction pending v9.4)" % g["mm_total"])
+    parts.append("JTBD:%s" % ("gap" if g["jtbd_gap"] else "ok"))
+    if g["axes_absent"]:
+        parts.append("axes-absent:%d-reports" % g["axes_absent"])
+
+    done = (not g["hard"] and not g["caps"] and not g["felt_uncovered"]
+            and not g["taste_open"] and not g["jtbd_gap"])
+    if done and g["mm_total"] == 0:
+        # no promises to judge and nothing structural — but a real product should have MMs; stay honest
+        return "SPECK-GAP: none-structural — GRAPH_CAP=%s (no MM/JOB defined; verify this is intended)" % g["cap_state"].upper()
+    if done:
+        return "SPECK-GAP: none — GRAPH_CAP=%s · structural clear · JTBD ok (MM judging pending v9.4)" % g["cap_state"].upper()
+    return "SPECK-GAP: " + " | ".join(parts) + " | CAP=%s" % g["cap_state"].upper()
+
+
+def emit_goal(project_dir, target=None):
+    """Emit the ≤4000-char /goal completion CONDITION (Codex's 6 components), for the user to run."""
+    g = compute_gap(project_dir)
+    tgt = (target or "ship-rc").lower()
+    cond = (
+        "Drive this Speck project to %s. "
+        "OUTCOME: `speck_graph.py check` and `gap` both report SPECK-GAP with no `.P1` and no caps, "
+        "every validation-report declares readiness>=%s with felt_axis and taste_axis non-uncovered "
+        "and no forks-open, every MM-N observed firing in LARP Job A and judged good in Job B, every "
+        "JOB-N served (no PHANTOM_PROMISE), and /audit reports P0=0 P1=0. "
+        "VERIFICATION SURFACE: each turn, re-run and print VERBATIM the stdout of "
+        "`python3 .speck/scripts/graph/speck_graph.py check %s` and `... gap %s` — the terminating "
+        "token is a literal `SPECK-GAP: none` line, never a hand-typed summary. "
+        "CONSTRAINTS: never edit witness.json by hand (GRAPH_STALE will catch it — it is derived + "
+        "content-hashed); never delete an MM-N/JOB-N to dodge a phantom; every gate (validate, audit, "
+        "larp) stays authoritative. "
+        "BOUNDARIES: route each unmet gap item through the owning Speck skill, never reimplement one. "
+        "ITERATION POLICY: take the single highest-severity unmet item from `gap` and close it "
+        "(untraced/phantom -> the story chain; audit P0/P1 -> /harden; uncovered FELT / unjudged MM -> "
+        "/larp; stale -> build), then re-check before advancing. "
+        "BLOCKED STOP: stop and report for an owner decision at any forks-open TASTE, contract/project "
+        "pivot, price lock, or deploy. "
+        "Or stop after --max-turns turns."
+        % (tgt.upper(), tgt, project_dir, project_dir)
+    )
+    return cond, g
+
+
+def cmd_gap(project_dir, emit=False, target=None, punch=False):
+    if emit:
+        cond, _g = emit_goal(project_dir, target)
+        sys.stdout.write("# Copy this into native /goal (Claude Code v2.1.139+ or Codex), then pair with auto mode:\n\n")
+        sys.stdout.write("/goal " + cond + "\n\n")
+        sys.stdout.write("# Speck supplies the CONDITION (above), the EVIDENCE surface (`gap`), and the\n")
+        sys.stdout.write("# per-turn routing (AGENTS.md 'Drive to done'). /goal runs the loop — Speck does not.\n")
+        return 0
+    sys.stdout.write(gap_line(project_dir) + "\n")
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # road — the "perfect road to completion" (v9). DERIVED from the graph, never authored.
 #
 # Re-projects check_graph() into four ORDERED buckets whose sequence IS the dependency order:
@@ -1296,6 +1428,7 @@ Usage:
   speck_graph.py check     <PROJECT_DIR>              Forcing gates: dangling/dup BLOCK; phantom/stale CAP
   speck_graph.py gate      <PROJECT_DIR> [--story ID|--epic ID]   Scoped advance-gate (exit 1 = blocked)
   speck_graph.py road      <PROJECT_DIR> [--stdout]   The road to completion: TIDY→REMOVE→BUILD→PROVE
+  speck_graph.py gap       <PROJECT_DIR> [--emit-goal] [--target ship-rc|ship]   Drive surface for native /goal
 
 PROJECT_DIR is a specs/projects/<id> directory. The graph is DERIVED — never hand-edit witness.json.
 """
@@ -1346,6 +1479,11 @@ def main(argv):
             sys.stderr.write("ERROR: road requires an existing PROJECT_DIR\n")
             return 2
         return cmd_road(project_dir, write="--stdout" not in args)
+    if cmd == "gap":
+        if not project_dir:
+            sys.stderr.write("ERROR: gap requires an existing PROJECT_DIR\n")
+            return 2
+        return cmd_gap(project_dir, emit="--emit-goal" in args, target=_flag_value(args, "--target"))
     sys.stderr.write("Unknown command: %s\n\n%s" % (cmd, USAGE))
     return 2
 
