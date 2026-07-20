@@ -46,14 +46,65 @@ SCHEMA_VERSION = "1.0"
 # ---------------------------------------------------------------------------
 
 RE_STORY_BARE = re.compile(r"^S\d{2,}$")
-RE_AC_BARE = re.compile(r"^AC-\d+$")
+RE_AC_BARE = re.compile(r"^AC-\d+[a-z]?$")            # sub-lettered ACs (AC-1a) are real
 RE_PRM_BARE = re.compile(r"^PRM-\d+$")
 RE_MM = re.compile(r"^MM-\d+$")
 RE_JOB = re.compile(r"^JOB-\d+$")
 RE_DEC = re.compile(r"^DEC-\d+$")
-RE_FR = re.compile(r"^FR-[A-Za-z0-9]+-\d+$")
+RE_FR = re.compile(r"^FR-[A-Za-z0-9-]+-\d+$")         # tolerate hyphenated middles (FR-auth-svc-014)
 RE_NFR = re.compile(r"^NFR-\d+$")
 RE_EPIC_ORDINAL = re.compile(r"^(\d{2,}|E\d{2,})")  # leading ordinal token of an epic basename
+
+# One story reference, optionally epic-qualified (ordinal or full dir) and/or AC-suffixed:
+#   S012 · 004/S012 · 004-beta/S012 · S012/AC-1 · 004/S012/AC-1a
+RE_STORY_REF = re.compile(
+    r"(?:(?P<epic>[A-Za-z0-9][A-Za-z0-9-]*)/)?(?P<story>S\d{2,})(?:\s*/\s*(?P<ac>AC-\d+[a-z]?))?")
+
+
+def strip_noncontent(text):
+    """Remove fenced code blocks and HTML comments so id scans don't harvest example ids.
+
+    parse_tables already does this for tables; the free-text id scans (MM/JOB/DEC/FR) must too,
+    or a `DEC-9999` inside ``` or <!-- --> pollutes kind_counts and flips a ref's P3→P1 tier.
+    """
+    out = []
+    in_fence = False
+    in_comment = False
+    for line in text.splitlines():
+        s = line.strip()
+        if not in_fence and "<!--" in line and "-->" not in line:
+            in_comment = True
+            continue
+        if in_comment:
+            if "-->" in line:
+                in_comment = False
+            continue
+        if s.startswith("```") or s.startswith("~~~"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        # single-line <!-- ... --> comment
+        line = re.sub(r"<!--.*?-->", "", line)
+        out.append(line)
+    return "\n".join(out)
+
+
+def story_refs(raw):
+    """Yield reconstructed, resolver-ready reference strings from a cell/value.
+
+    Preserves the epic qualifier (ordinal or full dir) and any AC suffix — the single-match
+    extraction this replaces silently dropped every target but the first and stripped qualifiers.
+    """
+    refs = []
+    for m in RE_STORY_REF.finditer(raw):
+        epic, story, ac = m.group("epic"), m.group("story"), m.group("ac")
+        # a leading token that is itself a story id (e.g. the "S001" in "S001/AC-1") is not an epic
+        if epic and RE_STORY_BARE.match(epic):
+            epic = None
+        ref = (epic + "/" if epic else "") + story + ("/" + ac if ac else "")
+        refs.append(ref)
+    return refs
 
 
 def build_epic_index(epic_ids):
@@ -144,22 +195,24 @@ def strip_frontmatter(text):
     for line in fm_raw.splitlines():
         if ":" in line and not line.lstrip().startswith("#"):
             k, _, v = line.partition(":")
+            v = re.sub(r"\s+#.*$", "", v)  # drop inline YAML comments (` # ...`) — they leaked tokens
             fm[k.strip()] = v.strip()
     return fm, body
 
 
 def _split_row(line):
-    """Split a markdown table row into trimmed cells, tolerating leading/trailing pipes."""
+    """Split a markdown table row into trimmed cells, tolerating leading/trailing and escaped pipes."""
     s = line.strip()
+    s = s.replace("\\|", "\x00")  # protect escaped pipes so they don't shift columns
     if s.startswith("|"):
         s = s[1:]
     if s.endswith("|"):
         s = s[:-1]
-    return [c.strip() for c in s.split("|")]
+    return [c.strip().replace("\x00", "|") for c in s.split("|")]
 
 
 def _is_divider(cells):
-    return bool(cells) and all(re.fullmatch(r":?-{2,}:?", c.strip()) for c in cells if c.strip() != "")
+    return bool(cells) and all(re.fullmatch(r":?-+:?", c.strip()) for c in cells if c.strip() != "")
 
 
 def parse_tables(text):
@@ -227,6 +280,13 @@ def content_hash(text):
     return hashlib.sha256(text.encode("utf-8", "replace")).hexdigest()[:12]
 
 
+def _norm_status(raw):
+    """Normalize a Status cell to its bare enum: '**discharged** (UX-RC)' → 'discharged'."""
+    s = re.sub(r"[*`_]", "", raw or "").strip().lower()
+    s = s.split("(")[0].strip()          # drop trailing "(UX-RC — …)"
+    return s.split()[0] if s.split() else ""
+
+
 def git_head_sha(root):
     try:
         out = subprocess.check_output(
@@ -263,16 +323,17 @@ def resolve_ref(raw, epic_scope=None, story_scope=None, epic_index=None):
         head, rest = r.split("/", 1)
         epic = canonicalize_epic(head, epic_index) if epic_index else (head if head == epic_scope else None)
         if epic:
-            m = re.match(r"^(S\d{2,})/(AC-\d+)$", rest)
+            m = re.match(r"^(S\d{2,})/(AC-\d+[a-z]?)$", rest)
             if m:
                 return "%s/%s/%s" % (epic, m.group(1), m.group(2))
-            if RE_STORY_BARE.match(rest) or RE_PRM_BARE.match(rest):
-                return "%s/%s" % (epic, rest)
             return "%s/%s" % (epic, rest)
         # <story>/AC-N inside the current epic (e.g. "S012/AC-3")
-        m = re.match(r"^(S\d{2,})/(AC-\d+)$", r)
+        m = re.match(r"^(S\d{2,})/(AC-\d+[a-z]?)$", r)
         if m and epic_scope:
             return "%s/%s/%s" % (epic_scope, m.group(1), m.group(2))
+        # looked like an epic-qualified ref but the epic doesn't resolve → a typo, not prose
+        if re.match(r"^[A-Za-z0-9][A-Za-z0-9-]*/S\d{2,}", r):
+            return "?epic/" + rest  # unresolved-epic sentinel; lint-refs reports it as dangling
         return None
 
     # project-global ids
@@ -312,9 +373,10 @@ def extract(project_dir):
     # --- product-contract.md → MM-N, JOB-N (project-global) ---
     contract = os.path.join(project_dir, "product-contract.md")
     if os.path.isfile(contract):
-        text = read_text(contract)
-        for m in re.finditer(r"^#{2,4}\s+(MM-\d+)\s*[—\-:]\s*(.+)$", text, re.MULTILINE):
-            add_node(Node(m.group(1), "magic-moment", None, m.group(2).strip(),
+        text = strip_noncontent(read_text(contract))
+        # MM heading, title optional: "### MM-1 — Name", "### MM-1", "#### MM-2: Name"
+        for m in re.finditer(r"^#{2,4}\s+(MM-\d+)\b\s*(?:[—\-:]\s*(.*))?$", text, re.MULTILINE):
+            add_node(Node(m.group(1), "magic-moment", None, (m.group(2) or "").strip(),
                           contract, m.group(1), content_hash(m.group(0))))
         for m in re.finditer(r"(JOB-\d+)", text):
             if m.group(1) not in nodes:
@@ -325,7 +387,7 @@ def extract(project_dir):
     # --- project-decisions-log.md → DEC-#### (project-global) ---
     declog = os.path.join(project_dir, "project-decisions-log.md")
     if os.path.isfile(declog):
-        text = read_text(declog)
+        text = strip_noncontent(read_text(declog))
         for m in re.finditer(r"(DEC-\d+)", text):
             if m.group(1) not in nodes:
                 add_node(Node(m.group(1), "dec", None, "", declog, m.group(1), content_hash(m.group(1))))
@@ -355,8 +417,8 @@ def _extract_epic(epic_path, epic_id, nodes, edges, add_node):
     # epic.md → FR-/NFR- requirement nodes
     epic_md = os.path.join(epic_path, "epic.md")
     if os.path.isfile(epic_md):
-        text = read_text(epic_md)
-        for m in re.finditer(r"(FR-[A-Za-z0-9]+-\d+|NFR-\d+)", text):
+        text = strip_noncontent(read_text(epic_md))
+        for m in re.finditer(r"(FR-[A-Za-z0-9-]+-\d+|NFR-\d+)", text):
             rid = m.group(1)
             cid = rid if rid.startswith("FR-") else "%s/%s" % (epic_id, rid)
             if cid not in nodes:
@@ -400,24 +462,19 @@ def _extract_matrix(matrix, epic_id, nodes, edges, add_node):
             if not pm:
                 continue
             prm_id = "%s/%s" % (epic_id, pm.group(1))
-            status = (row.get(h_status, "") or "").strip().lower() if h_status else ""
+            status = _norm_status(row.get(h_status, "")) if h_status else ""
             grain = (row.get(h_grain, "") or "").strip() if h_grain else ""
             add_node(Node(prm_id, "prm", epic_id, (row.get(h_src, "") or "").strip(),
                           matrix, pm.group(1), content_hash(json.dumps(row, sort_keys=True)),
                           {"status": status, "grain": grain}))
             # sources edge — the Source cell may name MM-N / JOB-N / FR-... / screen ids
             if h_src:
-                for tok in re.findall(r"(MM-\d+|JOB-\d+|FR-[A-Za-z0-9]+-\d+|NFR-\d+)", row.get(h_src, "")):
+                for tok in re.findall(r"(MM-\d+|JOB-\d+|FR-[A-Za-z0-9-]+-\d+|NFR-\d+)", row.get(h_src, "")):
                     edges.append(Edge(prm_id, "sources", tok, source_file=matrix,
                                       attrs={"epic_scope": epic_id}))
-            # discharge edge — points at a story and (optionally) an AC-N
+            # discharge edges — a cell may list SEVERAL story/AC targets (multi-target discharge)
             if h_dis:
-                dref = (row.get(h_dis, "") or "").strip()
-                dm = re.search(r"(E\d{2,}/)?(S\d{2,})\s*/?\s*(AC-\d+)?", dref)
-                if dm and dm.group(2):
-                    tgt = (dm.group(1) or "") + dm.group(2)
-                    if dm.group(3):
-                        tgt = tgt + "/" + dm.group(3)
+                for tgt in story_refs(row.get(h_dis, "") or ""):
                     edges.append(Edge(prm_id, "discharges", tgt, source_file=matrix,
                                       attrs={"epic_scope": epic_id}))
             # descoped-by edge — a DEC
@@ -437,25 +494,22 @@ def _extract_story(spec, story_path, epic_id, story_qual, nodes, edges, add_node
         return
     text = read_text(spec)
     fm, body = strip_frontmatter(text)
+    body = strip_noncontent(body)  # don't harvest MM/AC refs from fenced examples
     add_node(Node(story_qual, "story", epic_id, title, spec, "", content_hash(text),
                   {"readiness_state_verified": fm.get("readiness_state_verified", ""),
                    "lifecycle_state": fm.get("lifecycle_state", "")}))
-    # AC-N nodes from §2b headings: "#### AC-1 — ..."
-    for m in re.finditer(r"^#{2,4}\s+(AC-\d+)\b\s*[—\-:]?\s*(.*)$", body, re.MULTILINE):
+    # AC-N nodes from §2b headings: "#### AC-1 — ...", incl. sub-lettered "#### AC-1a: ..."
+    for m in re.finditer(r"^#{2,4}\s+(AC-\d+[a-z]?)\b\s*(?:[—\-:]\s*(.*))?$", body, re.MULTILINE):
         ac_id = "%s/%s" % (story_qual, m.group(1))
-        add_node(Node(ac_id, "ac", epic_id, m.group(2).strip(), spec, m.group(1),
+        add_node(Node(ac_id, "ac", epic_id, (m.group(2) or "").strip(), spec, m.group(1),
                       content_hash(m.group(0))))
-    # magic-moment references (serves edges)
-    for tok in re.findall(r"(MM-\d+)", body):
+    # magic-moment / job references (serves edges)
+    for tok in re.findall(r"(MM-\d+|JOB-\d+)", body):
         edges.append(Edge(story_qual, "serves", tok, source_file=spec,
                           attrs={"epic_scope": epic_id, "story_scope": story_qual}))
-    for tok in re.findall(r"(JOB-\d+)", body):
-        edges.append(Edge(story_qual, "serves", tok, source_file=spec,
-                          attrs={"epic_scope": epic_id, "story_scope": story_qual}))
-    # depends_on / blocks from frontmatter
+    # depends_on / blocks from frontmatter — story_refs preserves ordinal/full-dir qualifiers
     for key, kind in (("depends_on", "depends-on"), ("blocks", "blocks")):
-        raw = fm.get(key, "")
-        for tok in re.findall(r"(E\d{2,}/S\d{2,}|S\d{2,})", raw):
+        for tok in story_refs(fm.get(key, "")):
             edges.append(Edge(story_qual, kind, tok, source_file=spec,
                               attrs={"epic_scope": epic_id, "story_scope": story_qual}))
 
@@ -514,7 +568,9 @@ def graph_path(project_dir):
 
 def _target_kind(dst):
     """Infer the referenced node kind from a resolved canonical id's shape."""
-    if re.search(r"/AC-\d+$", dst):
+    if dst.startswith("?epic/"):
+        return "unresolved-epic"
+    if re.search(r"/AC-\d+[a-z]?$", dst):
         return "ac"
     if RE_MM.match(dst):
         return "magic-moment"
@@ -591,6 +647,10 @@ def lint_refs(nodes, edges):
             else:
                 add_p1("DANGLING_REF.P1", e,
                        "%s --%s--> %s : no such %s defined" % (e.src, e.kind, e.dst, kind))
+        elif kind == "unresolved-epic":
+            add_p1("DANGLING_REF.P1", e,
+                   "%s --%s--> %s : the epic qualifier does not match any epic (typo?)"
+                   % (e.src, e.kind, e.dst_ref))
         # kind == "unknown": not a confident id shape — leave it (prose), never a false P1
 
     for nid, n in nodes.items():
@@ -760,11 +820,19 @@ def check_graph(project_dir):
     # only the first path would false-positive every MM tracked via the matrix. "Adopted" = the
     # project wires promises to delivery by SOME path; if it wires none, degrade to un-migrated.
     served = set(e.dst for e in edges if e.kind == "serves" and e.dst)
+    # a PRM genuinely delivers only if it is discharged AND actually points at an existing story
+    prms_really_discharged = set()
+    for e in edges:
+        if e.kind == "discharges" and e.dst:
+            story_part = e.dst.rsplit("/", 1)[0] if re.search(r"/AC-\d+[a-z]?$", e.dst) else e.dst
+            if story_part in nodes and nodes[story_part].kind == "story":
+                prms_really_discharged.add(e.src)
     delivered = set(served)
     for e in edges:
         if e.kind == "sources" and e.dst:
             prm = nodes.get(e.src)
-            if prm and prm.kind == "prm" and prm.attrs.get("status") == "discharged":
+            if (prm and prm.kind == "prm" and prm.attrs.get("status") == "discharged"
+                    and e.src in prms_really_discharged):
                 delivered.add(e.dst)
     wired_kinds = set()
     for e in edges:
@@ -796,9 +864,13 @@ def check_graph(project_dir):
     if os.path.isfile(on_disk):
         try:
             saved = json.load(open(on_disk, encoding="utf-8"))
-            fresh_ids = sorted(n["id"] for n in graph["nodes"])
-            saved_ids = sorted(n["id"] for n in saved.get("nodes", []))
-            if fresh_ids != saved_ids or len(saved.get("edges", [])) != len(graph["edges"]):
+            # compare full CONTENT (nodes incl. their content_hash, + edges), not just ids/counts —
+            # a title/hash change or a repointed edge that keeps the id-set must still read STALE
+            # (design invariant §6.1: freshness is computed, never asserted).
+            def _sig(gr):
+                return content_hash(json.dumps(
+                    {"nodes": gr.get("nodes", []), "edges": gr.get("edges", [])}, sort_keys=True))
+            if _sig(graph) != _sig(saved):
                 caps.append("GRAPH_STALE.P2: committed witness.json differs from a fresh compile — "
                             "regenerate with `speck_graph.py build` (never hand-edit it)")
                 cap_state = _min_readiness(cap_state, "integration-green")

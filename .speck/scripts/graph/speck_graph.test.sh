@@ -48,7 +48,7 @@ EOF
 cat > "$PROJ/epics/001-alpha/stories/S002-bar/spec.md" <<'EOF'
 ---
 artifact_type: story-spec
-depends_on: [S001, 002/S001]
+depends_on: [S001, 002/S077]   # S077 exists ONLY in epic 002 — a decisive cross-epic test
 blocks: []
 readiness_state_verified: IMPL-GREEN
 ---
@@ -65,8 +65,8 @@ cat > "$PROJ/epics/001-alpha/traceability-matrix.md" <<'EOF'
 | PRM-002 | product-contract §2 JOB-1 | job done | S002 / AC-1 | — | impl-green | discharged |
 EOF
 
-# --- epic 002-beta: a story so cross-epic ordinal ref (002/S001) resolves ---
-mkdir -p "$PROJ/epics/002-beta/stories/S001-baz"
+# --- epic 002-beta: S001-baz + a uniquely-numbered S077 that ONLY exists here ---
+mkdir -p "$PROJ/epics/002-beta/stories/S001-baz" "$PROJ/epics/002-beta/stories/S077-uniq"
 cat > "$PROJ/epics/002-beta/stories/S001-baz/spec.md" <<'EOF'
 ---
 artifact_type: story-spec
@@ -74,6 +74,12 @@ depends_on: []
 blocks: []
 ---
 # Story: Baz
+EOF
+cat > "$PROJ/epics/002-beta/stories/S077-uniq/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: Uniq (only in epic 002)
 EOF
 
 echo "── Test 1: clean project → lint-refs passes, all refs resolve"
@@ -101,9 +107,15 @@ else
   bad "build did not write witness.json" "missing file"
 fi
 
-echo "── Test 3: cross-epic ordinal ref (002/S001) resolves (no dangling)"
-OUT="$(python3 "$GRAPH" lint-refs "$PROJ" 2>&1)"
-if ! echo "$OUT" | grep -q "002/S001"; then ok "ordinal cross-epic ref resolved"; else bad "002/S001 should resolve" "$OUT"; fi
+echo "── Test 3: cross-epic ordinal ref (002/S077) resolves to the RIGHT epic (decisive)"
+# S077 exists only in epic 002-beta; if the ordinal qualifier were dropped it'd resolve to
+# 001-alpha/S077 (absent) and dangle. Assert the edge landed on 002-beta/S077.
+OUT="$(python3 "$GRAPH" query "$PROJ" "001-alpha/S002" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && echo "$OUT" | grep -q '"to": "002-beta/S077"'; then
+  ok "ordinal cross-epic ref resolved to the correct epic (002-beta/S077)"
+else
+  bad "cross-epic ordinal qualifier was dropped or misresolved" "$OUT (rc=$RC)"
+fi
 
 echo "── Test 4: dangling story ref → real P1"
 mkdir -p "$PROJ/epics/001-alpha/stories/S003-dangler"
@@ -315,6 +327,151 @@ if ! echo "$OUT" | grep -q "PHANTOM_PROMISE.P1"; then
   ok "MM delivered via discharged PRM is not flagged phantom (no false positive)"
 else
   bad "PRM-sourcing delivery path should count as delivered" "$OUT (rc=$RC)"
+fi
+
+echo "── Test 17: multi-target discharge cell — a dangling target in a NON-first slot is caught"
+mkdir -p "$PROJ/epics/001-alpha/stories/S050-multi"
+cat > "$PROJ/epics/001-alpha/stories/S050-multi/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: Multi
+#### AC-1 — a
+EOF
+cat > "$PROJ/epics/001-alpha/traceability-matrix.md" <<'EOF'
+# Matrix
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | product-contract §5 MM-1 | wow | S001 / AC-1, S050 / AC-1, S999 / AC-1 | — | ux-rc | discharged |
+EOF
+OUT="$(python3 "$GRAPH" lint-refs "$PROJ" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 1 ]] && echo "$OUT" | grep -q "S999"; then
+  ok "dangling target in 3rd discharge slot is caught (multi-target parse)"
+else
+  bad "non-first multi-target should not be dropped" "$OUT (rc=$RC)"
+fi
+rm -rf "$PROJ/epics/001-alpha/stories/S050-multi"
+# restore clean 2-row matrix
+cat > "$PROJ/epics/001-alpha/traceability-matrix.md" <<'EOF'
+# Matrix: Alpha
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | product-contract §5 MM-1 | wow | S001 / AC-1 | — | ux-rc | discharged |
+| PRM-002 | product-contract §2 JOB-1 | job | S002 / AC-1 | — | impl-green | discharged |
+EOF
+
+echo "── Test 18: inline YAML comment in depends_on does NOT leak phantom refs"
+mkdir -p "$PROJ/epics/001-alpha/stories/S060-cmt"
+cat > "$PROJ/epics/001-alpha/stories/S060-cmt/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+depends_on: []          # nothing blocks it (S010/S099 shipped already)
+blocks: []
+---
+# Story: Cmt
+EOF
+OUT="$(python3 "$GRAPH" lint-refs "$PROJ" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && ! echo "$OUT" | grep -q "S099"; then
+  ok "comment tokens (S010/S099) do not become phantom depends-on edges"
+else
+  bad "inline YAML comment leaked into refs" "$OUT (rc=$RC)"
+fi
+rm -rf "$PROJ/epics/001-alpha/stories/S060-cmt"
+
+echo "── Test 19: sub-lettered AC (AC-1a) is extracted + resolvable"
+mkdir -p "$PROJ/epics/001-alpha/stories/S070-sub"
+cat > "$PROJ/epics/001-alpha/stories/S070-sub/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: Sub
+## 2. Acceptance
+#### AC-1a — first sub
+#### AC-1b — second sub
+EOF
+cat > "$PROJ/epics/001-alpha/traceability-matrix.md" <<'EOF'
+# Matrix
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | product-contract §5 MM-1 | wow | S070 / AC-1a | — | ux-rc | discharged |
+EOF
+OUT="$(python3 "$GRAPH" lint-refs "$PROJ" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]]; then ok "AC-1a extracted as a node and the discharge resolves"; else bad "sub-lettered AC not handled" "$OUT (rc=$RC)"; fi
+rm -rf "$PROJ/epics/001-alpha/stories/S070-sub"
+cat > "$PROJ/epics/001-alpha/traceability-matrix.md" <<'EOF'
+# Matrix: Alpha
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | product-contract §5 MM-1 | wow | S001 / AC-1 | — | ux-rc | discharged |
+| PRM-002 | product-contract §2 JOB-1 | job | S002 / AC-1 | — | impl-green | discharged |
+EOF
+
+echo "── Test 20: GRAPH_STALE fires on a content change that keeps id-set + edge-count"
+python3 "$GRAPH" build "$PROJ" >/dev/null 2>&1
+python3 - "$PROJ/graph/witness.json" <<'PY'
+import json, sys
+p = sys.argv[1]; g = json.load(open(p))
+# mutate a node's title only — same ids, same edge count
+for n in g["nodes"]:
+    if n["kind"] == "story":
+        n["title"] = n["title"] + " (hand-edited)"; break
+json.dump(g, open(p, "w"), indent=2)
+PY
+OUT="$(python3 "$GRAPH" check "$PROJ" 2>&1)" && RC=0 || RC=$?
+if echo "$OUT" | grep -q "GRAPH_STALE.P2"; then ok "content change (same ids/count) detected as stale"; else bad "stale content evaded detection" "$OUT"; fi
+python3 "$GRAPH" build "$PROJ" >/dev/null 2>&1  # restore fresh
+
+echo "── Test 21: decorated Status ('**discharged** (UX-RC)') normalizes — no spurious phantom"
+CHK3="$TMP/projects/004-decorated"
+mkdir -p "$CHK3/epics/001-x/stories/S001-a"
+cat > "$CHK3/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — delivered via a decorated-status PRM
+EOF
+cat > "$CHK3/epics/001-x/stories/S001-a/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: A
+#### AC-1 — a
+EOF
+cat > "$CHK3/epics/001-x/traceability-matrix.md" <<'EOF'
+# Matrix
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | product-contract §5 MM-1 | wow | S001 / AC-1 | — | ux-rc | **discharged** (UX-RC — baked-build LARP) |
+EOF
+OUT="$(python3 "$GRAPH" check "$CHK3" 2>&1)" && RC=0 || RC=$?
+if ! echo "$OUT" | grep -q "PHANTOM_PROMISE.P1"; then ok "decorated status counts as discharged (no false phantom)"; else bad "decorated status broke phantom gate" "$OUT"; fi
+
+echo "── Test 22: parser resilience — single-dash divider + escaped pipe"
+CHK4="$TMP/projects/005-parser"
+mkdir -p "$CHK4/epics/001-x/stories/S001-a"
+cat > "$CHK4/epics/001-x/stories/S001-a/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: A
+#### AC-1 — a
+EOF
+cat > "$CHK4/epics/001-x/traceability-matrix.md" <<'EOF'
+# Matrix
+## 2. Traceability Matrix
+|PRM-ID|Source|Promise|Discharge (story-id + AC-ref)|DEC|Grain|Status|
+|-|-|-|-|-|-|-|
+|PRM-001|a \| b pipe in cell|wow|S001 / AC-1|—|ux-rc|discharged|
+EOF
+OUT="$(python3 "$GRAPH" lint-refs "$CHK4" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && echo "$OUT" | grep -q "all cross-references resolve"; then
+  ok "single-dash divider + escaped pipe parsed correctly (row not dropped/shifted)"
+else
+  bad "parser dropped/shifted a row" "$OUT (rc=$RC)"
 fi
 
 echo ""
