@@ -85,6 +85,7 @@ specs/projects/<PROJECT_ID>/
 ├── adaptive-axes/<name>.md     # PROMISE: Adaptive behavior decomposition (if product adapts)
 ├── project-import.md           # Brownfield only
 ├── project-landscape-overview.md  # Brownfield only
+├── graph/witness.json          # PROVE: DERIVED witness graph (v8.8; regenerated, never hand-edited)
 └── epics/E###-name/
     ├── epic.md                 # PROMISE: Epic scope
     ├── experience-chain.md     # BUILD: Required for UI epics (v7)
@@ -102,7 +103,7 @@ specs/projects/<PROJECT_ID>/
         └── larp-recordings/    # PROVE: Recorded execution traces
 ```
 
-**Naming**: `E###-epic-name`, `S###-story-name`. Shorthand: `E001`, `S001`.
+**Naming**: `E###-epic-name` (or the ordinal `001-epic-name` as many repos use), `S###-story-name`. The witness graph's canonical epic id is the **dir basename**; cross-epic references resolve by ordinal shorthand (`004/S012`), full-dir, or bare-within-epic (`S012`). Acceptance criteria are `AC-N` anchors in story §2b; magic moments `MM-N` and jobs `JOB-N` in the product-contract — the number is the machine key a reference binds to.
 
 ## 🗺️ Canonical-Doc Routing (FORBID non-canonical filenames in `specs/`)
 
@@ -372,6 +373,7 @@ Context rot is real — old decisions get deprioritized as tokens accumulate. It
 - **File-size discipline**: This file (AGENTS.md) is the table of contents. SKILL.md files target ~150 lines. Templates are checklists, not narratives.
 - **Auto-regenerated state**: `project-state.md` updates on every truth-affecting command on `main` (merge-only when concurrent epic branches are active). Replaces ad-hoc handoff docs and human reconstruction.
 - **SHA-stamped truth**: Stale truth artifacts revert to "proposal" status and cannot serve as inputs to downstream decisions until re-verified.
+- **Witness graph (v8.8)**: `.speck/scripts/graph/speck_graph.py` compiles a DERIVED, content-hashed graph of everything Speck traces (promise → story → `AC-N` → evidence; `MM-N`/`JOB-N` served-by; DEC blast radius) from the markdown — never hand-authored, so it can't be gamed by editing it. `context <story>` assembles a story's full connection pack in **one lookup** instead of a seven-file tree walk (the direct fix for "not having the right context"). `check` is a **structural forcing gate** (dangling-ref / duplicate-id / phantom-promise BLOCK; un-migrated / stale CAP via `GRAPH_CAP`, folded into MAX-claimable at `/epic-validate`). It proves **traceable · complete · fresh** and deliberately **never** certifies faithful/good/excellent — those stay owned by the four-axis LARP + `/audit`; the graph *feeds* the adversary, it never rubber-stamps. Design: `docs/graph/witness-graph-design.md`.
 - **Fresh windows per phase**: For large features, break into phases that complete within a fresh context window. Use `project-state.md` as the persistent foundation across resets.
 - **No bespoke docs**: All `specs/` content routes to canonical homes (see table above). No `positioning-brief.md`, no `premium-launch-plan-2026-04-23.md`.
 
@@ -512,7 +514,7 @@ These feed retrospectives. Without tags, learnings are lost.
 
 ---
 
-**Speck Version**: 8.7.0  
+**Speck Version**: 8.8.0  
 **Methodology**: Promise → Build → Prove (evidence-driven specification)
 
 <!-- SPECK:END -->

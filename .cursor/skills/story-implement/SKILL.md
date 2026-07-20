@@ -38,6 +38,11 @@ $ARGUMENTS
    - List any CRITICAL issues and refuse to proceed until they are resolved.
 
 2. Load and analyze the implementation context:
+   - **RECOMMENDED (v8.8)**: Pull the story's witness-graph context pack in one lookup instead of hand-tracing across artifacts:
+     ```bash
+     python3 .speck/scripts/graph/speck_graph.py context specs/projects/[PROJECT_ID] [STORY_ID]
+     ```
+     It returns the promises this story discharges (PRM + source `MM-N`/`JOB-N`/`FR`), the magic moments it serves, its `AC-N` anchors, `depends_on`/`blocks`, and the DECs constraining its epic — so you build against the actual connected intent, not a partial read.
    - **REQUIRED**: Read tasks.md for the complete task list and execution plan
    - **REQUIRED**: Read plan.md for tech stack, architecture, and file structure
    - **IF EXISTS**: Read data-model.md for entities and relationships

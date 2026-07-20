@@ -1,5 +1,43 @@
 # Speck Changelog
 
+## v8.8.0 — 2026-07-20 — Witness Graph Phase 2–3: agent queries + the forcing gates, wired into the lifecycle
+
+Builds on v8.7.0's identity + extractor. Turns the graph from a linter into the **first-class forcing
+function** Kjetil specified — loud where things aren't traced right, and a genuine context-assembly
+engine — while holding the anti-rubber-stamp law: it proves `traceable · complete · fresh` and never
+certifies `faithful · good · excellent` (those stay owned by the four-axis LARP + `/audit`; the graph
+*feeds* the adversary, it never replaces judgment).
+
+### Agent-facing queries — the fix for Speck's named failure mode ("not having the right context")
+- `query <PROJECT_DIR> <node-id>` — a node's raw in/out edges (story, `MM-N`, `PRM`, `DEC`, `AC-N`).
+- `context <PROJECT_DIR> <story-id>` — the story's **context pack in one lookup**, replacing a
+  seven-file tree walk: promises discharged (PRM + source `MM-N`/`JOB-N`/`FR`), magic moments served,
+  `AC-N` anchors, `depends_on`/`blocks`, and the DECs constraining its epic. Wired into
+  `/story-implement` pickup.
+
+### The forcing gates — `check <PROJECT_DIR>` (caps or blocks; NEVER grants)
+- **BLOCK (P1):** `DANGLING_REF` (discharge/dep → non-existent story or `AC-N`), `DUP_ID` (two story
+  dirs sharing an S-number in one epic), `PHANTOM_PROMISE` (an `MM-N`/`JOB-N` the contract promises but
+  no story delivers — "build the right thing").
+- **CAP (fold into MAX-claimable, like `MATRIX_GRAIN_CAP`):** `GRAPH_UNMIGRATED.P3` (un-adopted id
+  scheme), `GRAPH_STALE.P2` (committed `witness.json` ≠ a fresh compile — freshness is computed, never
+  asserted). `GRAPH_CAP` caps an un-migrated/stale graph at `INTEGRATION-GREEN`.
+- **NOT-evaluated, never a pass:** `ORPHAN_CODE` (pending tests-as-join, P5) and `UNJUDGED_SURFACE`
+  (pending verdict extraction) are reported as honest pending — the graph refuses to rubber-stamp what
+  it cannot yet prove.
+
+### Wired into the lifecycle (a forcing function nothing calls isn't one)
+- `/epic-validate` step 5d: `build` + `check`; P1 findings block the readiness transition, `GRAPH_CAP`
+  folds into MAX-claimable (same idiom as gate-liveness / grain teeth).
+- `/recheck` step 2: `lint-refs` as a parallel drift detector (`DANGLING_REF.P1` / `DUP_ID.P1` /
+  advisory `GRAPH_UNMIGRATED.P3`) — structural link rot invisible to prose scans.
+- `AGENTS.md`: the witness graph is now a documented Context-Rot Defense + canonical `graph/` artifact;
+  qualified-id naming reconciled to field reality (dir-basename epics, ordinal shorthand).
+
+### Also
+- +5 hostile assertions (query, context, phantom-promise block, no-rubber-stamp, fully-served clear) —
+  15 total, wired into `npm test`. Design status updated in `docs/graph/witness-graph-design.md`.
+
 ## v8.7.0 — 2026-07-20 — Witness Graph Phase 1: identity hardening + the dangling-reference gate
 
 The first arc of the **Speck Witness Graph** — a DERIVED, tamper-evident graph of everything Speck

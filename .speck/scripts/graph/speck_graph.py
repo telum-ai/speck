@@ -605,6 +605,230 @@ def lint_refs(nodes, edges):
 
 
 # ---------------------------------------------------------------------------
+# Graph index + agent-facing queries (the context-assembly value: one lookup instead of a
+# seven-file tree walk — Speck's named failure mode is "not having the right context").
+# ---------------------------------------------------------------------------
+
+class Graph:
+    def __init__(self, nodes, edges):
+        self.nodes = nodes
+        self.edges = edges
+        self.out = {}  # src id -> [edges]
+        self.inc = {}  # dst id -> [edges]
+        for e in edges:
+            self.out.setdefault(e.src, []).append(e)
+            if e.dst:
+                self.inc.setdefault(e.dst, []).append(e)
+
+    def node(self, nid):
+        return self.nodes.get(nid)
+
+    def resolve_subject(self, raw):
+        """Best-effort: accept a canonical id, a bare story/epic id, or a dir-name fragment."""
+        if raw in self.nodes:
+            return raw
+        # try each epic scope for a bare story/prm/ac
+        epic_index = build_epic_index([n.id for n in self.nodes.values() if n.kind == "epic"])
+        for scope in [n.id for n in self.nodes.values() if n.kind == "epic"]:
+            cand = resolve_ref(raw, epic_scope=scope, epic_index=epic_index)
+            if cand and cand in self.nodes:
+                return cand
+        # substring match on ids (e.g. "S038" or "app-shell")
+        hits = [nid for nid in self.nodes if raw in nid]
+        return hits[0] if len(hits) == 1 else None
+
+    def context_pack(self, story_id):
+        """Assemble everything an agent needs to safely work a story — in one query."""
+        n = self.nodes.get(story_id)
+        if not n or n.kind != "story":
+            return None
+        epic = n.scope
+        pack = {
+            "story": story_id,
+            "title": n.title,
+            "epic": epic,
+            "readiness_state_verified": n.attrs.get("readiness_state_verified", ""),
+            "acs": sorted(nid for nid, nn in self.nodes.items()
+                          if nn.kind == "ac" and nid.startswith(story_id + "/")),
+            "serves_promises": [],       # MM / JOB this story delivers
+            "discharges": [],            # PRM rows this story discharges (+ their sources)
+            "depends_on": [], "blocks": [],
+            "constraining_decs": [],     # DECs that descope PRMs in this story's epic
+            "guarding_gates": [],        # populated once gate nodes land (P3)
+        }
+        for e in self.out.get(story_id, []):
+            if e.kind == "serves" and e.dst:
+                pack["serves_promises"].append(e.dst)
+            elif e.kind == "depends-on" and e.dst:
+                pack["depends_on"].append(e.dst)
+            elif e.kind == "blocks" and e.dst:
+                pack["blocks"].append(e.dst)
+        # PRMs discharged by this story = discharge edges landing on the story or its ACs
+        for e in self.edges:
+            if e.kind == "discharges" and e.dst and (e.dst == story_id or e.dst.startswith(story_id + "/")):
+                prm = self.nodes.get(e.src)
+                sources = [se.dst for se in self.out.get(e.src, []) if se.kind == "sources" and se.dst]
+                pack["discharges"].append({
+                    "prm": e.src,
+                    "ac": e.dst if e.dst != story_id else None,
+                    "grain": prm.attrs.get("grain", "") if prm else "",
+                    "status": prm.attrs.get("status", "") if prm else "",
+                    "sources": sources,
+                })
+        # DECs in the same epic that descope something (constraints the story lives under)
+        decs = set()
+        for e in self.edges:
+            if e.kind == "descoped-by" and e.dst and self.nodes.get(e.src) and self.nodes[e.src].scope == epic:
+                decs.add(e.dst)
+        pack["constraining_decs"] = sorted(decs)
+        return pack
+
+
+def cmd_query(project_dir, subject):
+    _g, nodes, edges = build_graph(project_dir)
+    g = Graph(nodes, edges)
+    sid = g.resolve_subject(subject)
+    if not sid:
+        sys.stderr.write("No unique node matches %r. Try a canonical id (e.g. 004-x/S012, MM-3).\n" % subject)
+        return 2
+    n = g.nodes[sid]
+    out_edges = [(e.kind, e.dst or e.dst_ref) for e in g.out.get(sid, [])]
+    in_edges = [(e.src, e.kind) for e in g.inc.get(sid, [])]
+    result = {
+        "id": sid, "kind": n.kind, "title": n.title, "scope": n.scope,
+        "attrs": n.attrs,
+        "out_edges": [{"kind": k, "to": d} for k, d in out_edges],
+        "in_edges": [{"from": s, "kind": k} for s, k in in_edges],
+    }
+    json.dump(result, sys.stdout, indent=2)
+    sys.stdout.write("\n")
+    return 0
+
+
+def cmd_context(project_dir, subject):
+    _g, nodes, edges = build_graph(project_dir)
+    g = Graph(nodes, edges)
+    sid = g.resolve_subject(subject)
+    if not sid or g.nodes[sid].kind != "story":
+        sys.stderr.write("context needs a story id (e.g. 004-ai-core-workout-gen/S008 or S008).\n")
+        return 2
+    pack = g.context_pack(sid)
+    json.dump(pack, sys.stdout, indent=2)
+    sys.stdout.write("\n")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# check — the forcing gates. LOUD and structural. Caps or blocks; NEVER grants.
+#
+# The anti-rubber-stamp law: this proves traceable/complete/fresh. It CANNOT prove
+# faithful/good — those stay with /audit + the canaries. Gates that need data not yet in the
+# graph (orphan-code needs code nodes from tests-as-join P5; un-judged needs verdict nodes)
+# are reported as HONEST pending notes, never as a false pass.
+# ---------------------------------------------------------------------------
+
+READINESS_ORDER = ["no-ship", "impl-green", "integration-green", "ux-rc", "api-rc",
+                   "operational-rc", "commercial-rc", "ship-rc", "ship"]
+
+
+def _min_readiness(a, b):
+    ia = READINESS_ORDER.index(a) if a in READINESS_ORDER else 0
+    ib = READINESS_ORDER.index(b) if b in READINESS_ORDER else 0
+    return READINESS_ORDER[min(ia, ib)]
+
+
+def check_graph(project_dir):
+    """Run every structural forcing gate. Returns (findings, caps, pending, cap_state)."""
+    graph, nodes, edges = build_graph(project_dir)
+    g = Graph(nodes, edges)
+    kind_counts = _count_by(nodes.values(), lambda n: n.kind)
+
+    findings, cap_reasons = lint_refs(nodes, edges)  # DANGLING_REF.P1 / DUP_ID.P1 (+ unmigrated caps)
+    caps = []
+    cap_state = "ship"
+
+    # unmigrated schemes cap honestly at integration-green (an un-hardened graph can't back ux-rc)
+    if cap_reasons:
+        detail = ", ".join("%d %s" % (v, k) for k, v in sorted(cap_reasons.items()))
+        caps.append("GRAPH_UNMIGRATED.P3: %s reference(s) to un-adopted id schemes (%s)"
+                    % (sum(cap_reasons.values()), detail))
+        cap_state = _min_readiness(cap_state, "integration-green")
+
+    # PHANTOM_PROMISE — a promise nobody delivers. Loud CAP (bars ux-rc+), migration-aware.
+    served = set(e.dst for e in edges if e.kind == "serves" and e.dst)
+    for kind in ("magic-moment", "job"):
+        present = [n for n in nodes.values() if n.kind == kind]
+        if not present:
+            continue
+        # only meaningful once at least one story serves SOME promise of this kind
+        if not any(g.nodes.get(s) and g.nodes[s].kind == kind for s in served):
+            caps.append("GRAPH_UNMIGRATED.P3: %d %s(s) defined but no story wires to any (stories "
+                        "not yet tagged with %s ids)" % (len(present), kind, kind))
+            cap_state = _min_readiness(cap_state, "integration-green")
+            continue
+        for n in present:
+            if n.id not in served:
+                findings.append({
+                    "code": "PHANTOM_PROMISE.P1", "src": n.id, "edge": "serves", "ref": n.id,
+                    "resolved_to": n.id, "source_file": n.source_file,
+                    "detail": "%s '%s' is promised in the contract but NO story delivers it "
+                              "(build the right thing)" % (n.id, n.title),
+                })
+
+    # GRAPH_STALE — the on-disk graph must equal a fresh compile (freshness computed, not asserted)
+    on_disk = graph_path(project_dir)
+    if os.path.isfile(on_disk):
+        try:
+            saved = json.load(open(on_disk, encoding="utf-8"))
+            fresh_ids = sorted(n["id"] for n in graph["nodes"])
+            saved_ids = sorted(n["id"] for n in saved.get("nodes", []))
+            if fresh_ids != saved_ids or len(saved.get("edges", [])) != len(graph["edges"]):
+                caps.append("GRAPH_STALE.P2: committed witness.json differs from a fresh compile — "
+                            "regenerate with `speck_graph.py build` (never hand-edit it)")
+                cap_state = _min_readiness(cap_state, "integration-green")
+        except (ValueError, OSError):
+            caps.append("GRAPH_STALE.P2: witness.json is unreadable — regenerate with `build`")
+    else:
+        caps.append("GRAPH_STALE.P2: no committed witness.json — run `speck_graph.py build`")
+
+    # HONEST pending gates — needed data not yet in the graph; never a false pass
+    pending = [
+        "ORPHAN_CODE: pending tests-as-join (P5) — needs code nodes to prove every code entity "
+        "traces to a promise. NOT evaluated (cannot claim 'no orphan code' yet).",
+        "UNJUDGED_SURFACE: pending verdict extraction (P3/P4) — needs IS-IT-GOOD verdict nodes to "
+        "prove every magic moment was judged. NOT evaluated. Taste itself stays owned by /audit + LARP.",
+    ]
+
+    hard = [f for f in findings if f["code"].endswith(".P1")]
+    if hard:
+        cap_state = "no-ship"
+    return findings, caps, pending, cap_state
+
+
+def cmd_check(project_dir):
+    findings, caps, pending, cap_state = check_graph(project_dir)
+    hard = [f for f in findings if f["code"].endswith(".P1")]
+    sys.stdout.write("Speck Witness Graph — forcing gates (structural: traceable · complete · fresh)\n")
+    sys.stdout.write("(faithful · good · excellent are NOT graph-provable — owned by /audit + LARP)\n\n")
+    if hard:
+        sys.stdout.write("❌ %d hard finding(s) — BLOCK:\n\n" % len(hard))
+        for f in hard:
+            sys.stdout.write("  %s  %s\n      %s\n      in %s\n\n"
+                             % (f["code"], f["ref"], f["detail"], f["source_file"]))
+    if caps:
+        sys.stdout.write("⚠️  caps (surfaced loud; fold into MAX-claimable at /epic-validate):\n")
+        for c in caps:
+            sys.stdout.write("  • %s\n" % c)
+        sys.stdout.write("\n")
+    sys.stdout.write("ℹ️  not-yet-evaluated (honest — never counted as a pass):\n")
+    for p in pending:
+        sys.stdout.write("  • %s\n" % p)
+    sys.stdout.write("\nGRAPH_CAP = %s  (the ceiling this graph can back; caps never grant)\n"
+                     % cap_state.upper())
+    return 1 if hard else 0
+
+
+# ---------------------------------------------------------------------------
 # migrate — generic identity hardening for ANY existing Speck project
 #
 # Non-destructive by design: dry-run is the DEFAULT (reports the diff); only `--apply` writes.
@@ -764,6 +988,9 @@ Usage:
   speck_graph.py build     <PROJECT_DIR> [--stdout]   Compile the graph → graph/witness.json
   speck_graph.py lint-refs <PROJECT_DIR>              Fail on any dangling/ambiguous reference
   speck_graph.py migrate   <PROJECT_DIR> [--apply]    Harden ids (AC-N numbering); dry-run by default
+  speck_graph.py query     <PROJECT_DIR> <node-id>    Raw in/out edges of a node (story, MM-N, DEC…)
+  speck_graph.py context   <PROJECT_DIR> <story-id>   The story's context pack — one lookup, no tree walk
+  speck_graph.py check     <PROJECT_DIR>              Forcing gates: dangling/dup BLOCK; phantom/stale CAP
 
 PROJECT_DIR is a specs/projects/<id> directory. The graph is DERIVED — never hand-edit witness.json.
 """
@@ -791,6 +1018,17 @@ def main(argv):
             sys.stderr.write("ERROR: migrate requires an existing PROJECT_DIR\n")
             return 2
         return cmd_migrate(project_dir, apply="--apply" in args)
+    if cmd in ("query", "context"):
+        if not project_dir or len(args) < 2:
+            sys.stderr.write("ERROR: %s requires <PROJECT_DIR> <node-id>\n" % cmd)
+            return 2
+        subject = args[1]
+        return cmd_query(project_dir, subject) if cmd == "query" else cmd_context(project_dir, subject)
+    if cmd == "check":
+        if not project_dir:
+            sys.stderr.write("ERROR: check requires an existing PROJECT_DIR\n")
+            return 2
+        return cmd_check(project_dir)
     sys.stderr.write("Unknown command: %s\n\n%s" % (cmd, USAGE))
     return 2
 

@@ -211,6 +211,82 @@ else
   bad "unadopted MM should degrade, not block" "$OUT (rc=$RC)"
 fi
 
+echo "── Test 11: query returns a node's in/out edges"
+OUT="$(python3 "$GRAPH" query "$PROJ" "001-alpha/PRM-001" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && echo "$OUT" | grep -q '"discharges"' && echo "$OUT" | grep -q "001-alpha/S001/AC-1"; then
+  ok "query resolves a PRM and shows its discharge edge"
+else
+  bad "query should show PRM edges" "$OUT (rc=$RC)"
+fi
+
+echo "── Test 12: context pack assembles a story's discharges + ACs + deps in one call"
+OUT="$(python3 "$GRAPH" context "$PROJ" "S001" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] \
+   && echo "$OUT" | grep -q '"acs"' \
+   && echo "$OUT" | grep -q "001-alpha/S001/AC-1" \
+   && echo "$OUT" | grep -q '"prm": "001-alpha/PRM-001"' \
+   && echo "$OUT" | grep -q "001-alpha/S002"; then
+  ok "context pack resolves bare 'S001' and assembles discharges + ACs + blocks"
+else
+  bad "context pack incomplete" "$OUT (rc=$RC)"
+fi
+
+echo "── Test 13: check — phantom promise (an MM no story delivers) → P1, GRAPH_CAP NO-SHIP"
+CHK="$TMP/projects/002-check"
+mkdir -p "$CHK/epics/001-x/stories/S001-a"
+cat > "$CHK/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — Delivered
+### MM-2 — Nobody delivers this
+EOF
+cat > "$CHK/epics/001-x/stories/S001-a/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: A
+Delivers MM-1.
+#### AC-1 — primary
+EOF
+cat > "$CHK/epics/001-x/traceability-matrix.md" <<'EOF'
+# Matrix
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | product-contract §5 MM-1 | wow | S001 / AC-1 | — | ux-rc | discharged |
+EOF
+OUT="$(python3 "$GRAPH" check "$CHK" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 1 ]] && echo "$OUT" | grep -q "PHANTOM_PROMISE.P1" && echo "$OUT" | grep -q "MM-2" && echo "$OUT" | grep -q "GRAPH_CAP = NO-SHIP"; then
+  ok "phantom promise (MM-2) blocks; GRAPH_CAP NO-SHIP"
+else
+  bad "phantom promise should block" "$OUT (rc=$RC)"
+fi
+
+echo "── Test 14: check never rubber-stamps — orphan-code + un-judged reported as NOT-evaluated"
+if echo "$OUT" | grep -q "ORPHAN_CODE: pending" && echo "$OUT" | grep -q "UNJUDGED_SURFACE: pending" \
+   && echo "$OUT" | grep -q "NOT graph-provable"; then
+  ok "honest pending notes present; taste explicitly not claimed"
+else
+  bad "check must not claim un-evaluated gates as passing" "$OUT"
+fi
+
+echo "── Test 15: check on a fully-served graph → no P1 block (caps only), exit 0"
+# make MM-2 delivered too
+cat > "$CHK/epics/001-x/stories/S001-a/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: A
+Delivers MM-1 and MM-2.
+#### AC-1 — primary
+EOF
+OUT="$(python3 "$GRAPH" check "$CHK" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && ! echo "$OUT" | grep -q "PHANTOM_PROMISE.P1"; then
+  ok "no phantom once every MM is delivered (exit 0, caps only)"
+else
+  bad "fully-served graph should not block" "$OUT (rc=$RC)"
+fi
+
 echo ""
 echo "════════════════════════════════════════════"
 echo "  speck_graph: $PASS passed, $FAIL failed"

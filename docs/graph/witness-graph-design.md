@@ -1,6 +1,16 @@
 # The Speck Witness Graph — design
 
-*Status: building · Arc: identity → extractor → forcing gates → context packs → tests-as-join · Owner: Kjetil*
+*Owner: Kjetil · Arc: identity → extractor → forcing gates → context packs → tests-as-join*
+
+**Status (v8.8):** P1 shipped (identity model, extractor, `lint-refs`, generic migration, manifest-drift
+fix). P2/P3 shipped (`build`/`query`/`context`/`check`; the dangling-ref, duplicate-id and
+phantom-promise forcing gates; `GRAPH_CAP` staleness/migration caps) and **wired into the lifecycle**
+— `check` at `/epic-validate` (folds into MAX-claimable), `lint-refs` in `/recheck` drift detection,
+`context` at `/story-implement` pickup. Proven on Streb + Splang (caught real dangling refs, a
+renumbered AC discharge, and a duplicate story-id collision). **Remaining:** P4 (project-state renders
+from the graph; revive the learning edge — just-in-time GOTCHA retrieval), P5 (tests-as-join → real
+`ORPHAN_CODE` gate), verdict extraction (real `UNJUDGED_SURFACE` gate), and running the migration on
+the live repos (a per-repo gated gesture — the dry-run diff goes to Kjetil first).
 
 ## 1. The problem (from evidence, not intuition)
 

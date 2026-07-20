@@ -109,6 +109,12 @@ To execute browser LARPs successfully in sandboxed or restricted environments wi
    bash .speck/scripts/validation/validators/gate-liveness-probe.sh --require-liveness specs/projects/<PROJECT_ID>/evidence-contract.md
    ```
    A `GATE_DISARMED.P1` (baseline green, in-scope defect not caught — incl. the #85 scope-hole) is a P1 finding: the gate manufactures false evidence. `GATE_LIVENESS_UNVERIFIED.P2` caps the claimable state (fold into MAX claimable, like `MATRIX_GRAIN_CAP`). Hard-blocks only at COMMERCIAL-RC/SHIP-RC (project-validate owns that gate); mutation runs in a throwaway worktree and never touches the real tree or runs a destructive gate.
+5d. **Witness-graph forcing gates (structural traceability, v8.8):** rebuild the graph and run its gates:
+   ```bash
+   python3 .speck/scripts/graph/speck_graph.py build  specs/projects/<PROJECT_ID>
+   python3 .speck/scripts/graph/speck_graph.py check   specs/projects/<PROJECT_ID>
+   ```
+   A `DANGLING_REF.P1` (a discharge/dep pointing at a story or `AC-N` that does not exist), `DUP_ID.P1` (two story dirs sharing an S-number in one epic), or `PHANTOM_PROMISE.P1` (an `MM-N`/`JOB-N` the contract promises but NO story delivers — "build the right thing") is a P1 finding: fix the anchor/add the discharge, do not hand-wave. `GRAPH_CAP` (lowered by `GRAPH_UNMIGRATED.P3`, `GRAPH_STALE.P2`) folds into MAX claimable exactly like `MATRIX_GRAIN_CAP` — an un-migrated or stale graph caps at `INTEGRATION-GREEN`. **The graph proves traceable/complete/fresh only** — it never certifies faithful/good/excellent (those remain owned by the four-axis LARP + `/audit`; the graph feeds them, it does not replace them). `ORPHAN_CODE`/`UNJUDGED_SURFACE` report as NOT-evaluated until their data lands (tests-as-join P5 / verdict extraction) — never counted as a pass.
 6. Cross-epic integration check: any seams to other epics tested?
 7. If any previous rating, state, or recommendation has changed, write the `### Evaluative Drift / Change Explanation` section with detailed logical rationale.
 8. Run banned-phrase self-check on this report's own language before publishing
