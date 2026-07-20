@@ -8,3 +8,7 @@ logs/
 
 # OS
 .DS_Store
+
+# Python bytecode (witness graph ships stdlib scripts, no build artifacts)
+__pycache__/
+*.pyc
