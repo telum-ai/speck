@@ -58,7 +58,7 @@ PLACEHOLDER CONVENTION:
 
 **Who pays / consumes**: [Specific persona or service. Life/operational context, urgency, alternatives.]
 
-**JTBD they hire this product / service for**:
+**JTBD they hire this product / service for** (`JOB-1` — stable id; add `JOB-2`, `JOB-3` for further jobs, numbered sequentially. Stories name the `JOB-N` they serve):
 > When [situation/system state], I/the service want to [job/operation], so that [outcome/guarantee].
 
 **Current alternatives they're "firing"**: [What they're using/doing today that this replaces/optimizes]
@@ -152,21 +152,26 @@ Story validation fails if a user-facing story has no evidence for at least the f
 * **WHEN: consumer_product / b2b_saas / internal_tool**: List the **Magic Moments** where the user says "wow, this gets me." Each must be testable in runtime LARP.
 * **WHEN: infra_service / backend_api**: List the **Operational Milestones** (e.g., graceful recovery from DB disconnect, sub-millisecond hot-path caching hits, exact rate-limiting blocks).
 
-### Magic Moment / Milestone 1: REPLACE_BEFORE_SHIP: Name
+> **Each moment carries a stable `MM-N` id (Speck v8.7, witness graph).** The number (not the name)
+> is the machine key: stories tie to `MM-N`, and the witness graph blocks
+> (`UNJUDGED_SURFACE.P1`) any `MM-N` that reaches validation with no IS-IT-GOOD verdict recorded
+> against it. Keep the human name in the heading; never renumber a shipped moment silently.
+
+### MM-1 — Magic Moment / Milestone: REPLACE_BEFORE_SHIP: Name
 - **Surface / System Boundary**: REPLACE_BEFORE_SHIP: Screen / interaction / endpoint / system action
 - **Trigger**: REPLACE_BEFORE_SHIP: What action / context / load state creates this moment
 - **Content / Execution beats**: REPLACE_BEFORE_SHIP: What happens in sequence to land this moment/milestone
 - **Target Response**: REPLACE_BEFORE_SHIP: User thinks "<reaction>" OR Operator logs verify "<exact behavior>"
 - **Validation step**: REPLACE_BEFORE_SHIP: Specific LARP scenario or integration stress test that proves it works
 
-### Magic Moment / Milestone 2: REPLACE_BEFORE_SHIP: Name
+### MM-2 — Magic Moment / Milestone: REPLACE_BEFORE_SHIP: Name
 - **Surface / System Boundary**: REPLACE_BEFORE_SHIP
 - **Trigger**: REPLACE_BEFORE_SHIP
 - **Content / Execution beats**: REPLACE_BEFORE_SHIP
 - **Target Response**: REPLACE_BEFORE_SHIP
 - **Validation step**: REPLACE_BEFORE_SHIP
 
-*(repeat for each magic moment)*
+*(repeat for each magic moment — `MM-3`, `MM-4`, … numbered sequentially, never reused)*
 
 ---
 

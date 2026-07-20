@@ -1,17 +1,18 @@
 ---
 speck_version: 8.0
-template_version: "7.11.0"
+template_version: "8.7.0"
 artifact_type: story-spec
-depends_on: []         # e.g., [S001, S003]
-blocks: []             # e.g., [S005]
+depends_on: []         # scope-qualified for cross-epic, bare within own epic. e.g., [S001, E010/S003]
+blocks: []             # e.g., [S005, E012/S002]
 persona: [persona-id]  # primary persona this story serves
 readiness_target: [IMPL-GREEN | UX-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
+readiness_state_verified: NO-SHIP   # canonical machine field — the single source for this story's verified state
 lifecycle_state: Specified
 ---
 
 # Story: [STORY NAME]
 
-**Story ID**: `S###-story-name`
+**Story ID**: `S###-story-name` &nbsp;·&nbsp; **Qualified**: `E0NN/S###` (use the qualified form in any cross-epic reference; bare `S###` only inside this story's own epic)
 **Created**: [DATE]
 **Status**: Specified
 **Input**: [User description]
@@ -62,7 +63,14 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 (Verifiability Rules: Choose `agent-LARP` for behaviors verifiable programmatically on a dev server. Choose `device-walk` for native shell behaviors [keyboard-avoidance, native gestures, biometrics] OR artifact-config dependencies [baked environment variables, tokens, API host urls, signing, origin/redirect allowlists]. Since agent-LARP runs on dev servers with injected environments, any behaviors depending on final baked build config MUST be marked `device-walk` to prevent false verification at UX-RC.)
 
-#### Scenario: [Primary success path]
+> **AC-N is a real, resolvable id (Speck v8.7, witness graph).** Each scenario heading below is
+> `#### AC-N — [name]`, numbered from 1, stable for the life of the story. The traceability matrix
+> discharges promises by pointing at these anchors — `Discharge = E0NN/S0MM/AC-N` (or bare `AC-N`
+> inside this story's own epic docs). An `AC-N` referenced by a matrix row that does not exist here
+> is a `DANGLING_REF.P1`. Renumber only via `/story-adjust` (never silently) — a matrix points at
+> the number. Keep the `— [name]` label; the number is the machine key.
+
+#### AC-1 — [Primary success path]
 - **GIVEN** [initial state in the actual runtime — not abstract "data exists" but "the running build, with X user, in Y state"]
 - **WHEN** [user action]
 - **THEN** [expected outcome — visible in screenshot/AX tree/transcript]
@@ -70,14 +78,14 @@ As a [persona-id], I want to [action] so that I can [outcome].
 - **EVIDENCE** [screenshot path or AX-tree path or transcript line]
 - **VERIFIABILITY** [agent-LARP | device-walk]
 
-#### Scenario: [Alternative path]
+#### AC-2 — [Alternative path]
 - **GIVEN** ...
 - **WHEN** ...
 - **THEN** ...
 - **EVIDENCE** ...
 - **VERIFIABILITY** [agent-LARP | device-walk]
 
-#### Scenario: [Recovery from error]
+#### AC-3 — [Recovery from error]
 - **GIVEN** ...
 - **WHEN** ...
 - **THEN** ...
@@ -184,7 +192,9 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 ### Cross-Reference
 - [ ] Primary persona matches `personas/<id>.md`
-- [ ] Magic moments match `product-contract.md`
+- [ ] Magic moments cite `product-contract.md` ids (`MM-N`), not free-text names
+- [ ] Every acceptance scenario has a stable `AC-N` id; the matrix rows discharging this story point at ids that exist here (no `DANGLING_REF`)
+- [ ] Cross-epic `depends_on` / `blocks` use the qualified `E0NN/S###` form
 - [ ] Evidence requirements align with `evidence-contract.md` gate criteria for `readiness_target`
 
 ---

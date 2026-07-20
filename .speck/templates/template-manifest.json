@@ -42,7 +42,7 @@
     "structure_version": "7.11.0",
     "required_headers": [
       "## 🎯 Readiness State Claim",
-      "## 🧭 Three-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD)",
+      "## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)",
       "## ✅ Gate Criteria Check",
       "## 📋 Spec Coverage (Requirements Traceability)",
       "## 🛑 Blocking Issues (from audit-report.md)",
@@ -56,7 +56,7 @@
     "structure_version": "7.11.0",
     "required_headers": [
       "## Executive Summary",
-      "## 🧭 Three-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD)",
+      "## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)",
       "## Story Completion Status",
       "## Acceptance Criteria Validation",
       "## Technical Validation",
@@ -72,7 +72,7 @@
       "## Detection Signals",
       "## Primary Intent",
       "## LARP Script",
-      "## Taste Judgment Rubric",
+      "## IS-IT-GOOD — Per-Screen Adversarial Critique (P1, Job B)",
       "## Evidence Capture Convention",
       "## Findings Template"
     ]

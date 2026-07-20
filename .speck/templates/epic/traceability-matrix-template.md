@@ -49,6 +49,12 @@ Enforced by .speck/scripts/validation/validators/validate-traceability-matrix.sh
     Source clause it names, and that the named Source artifact/anchor exists. PRESENCE + OVERLAP only —
     it does NOT judge whether the shipped product keeps the promise (that is /audit's semantic sweep).
 
+DISCHARGE ANCHORS RESOLVE (Speck v8.7, witness graph). The Discharge cell points at a real, defined
+anchor: `S012 / AC-3` (bare within this epic) or `E0NN/S0MM/AC-K` (cross-epic). `AC-N` ids are defined
+in each story spec's §2b. The witness graph resolves every Discharge ref; one that names a story or an
+`AC-N` that does not exist is a `DANGLING_REF.P1` (a renamed/renumbered anchor left behind). Source ids
+(`MM-N`, `JOB-N`, `FR-...`, screen ids) resolve the same way.
+
 ## RETROFIT / FINALIZATION MODE (Speck v7.15)
 If you are retrofitting this matrix on an already-built epic (e.g. following a large audit of existing promises), do NOT start from scratch:
 1. **Seed from Existing Audit/Scan**: Import existing promises directly from your audit-report.md or codebase scan.

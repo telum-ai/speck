@@ -1,5 +1,53 @@
 # Speck Changelog
 
+## v8.7.0 — 2026-07-20 — Witness Graph Phase 1: identity hardening + the dangling-reference gate
+
+The first arc of the **Speck Witness Graph** — a DERIVED, tamper-evident graph of everything Speck
+traces (design: `docs/graph/witness-graph-design.md`). Speck v8 already *was* a knowledge graph (~35
+edge types, ~138 instances), but stored as prose and enforced by ~30 bespoke regex-parsers whose
+entire scar history (#76.3/#83/#85/#87) is format-drift bugs. Half the edges have teeth; the other
+half — every id and name — is free text string-matched across 3–6 artifacts with no resolver. The
+graph is compiled from the markdown (never hand-authored), so to fake an edge you must fake the
+reality it is extracted from: **automatic derivation is the precondition for a loud, un-gameable
+forcing function.** It proves `traceable · complete · fresh`; it never claims `faithful · good` —
+those stay owned by `/audit`, LARP, and the canaries (the anti-rubber-stamp law).
+
+### Identity model (the prerequisite — extraction over ambiguous keys yields a confidently-wrong graph)
+- **`AC-N` is now a real, resolvable anchor** — defined in the story template §2b (each acceptance
+  scenario is `#### AC-N — <name>`). The conservation law's `S012 / AC-3` discharge finally points at
+  something that exists; a matrix row naming a missing `AC-N` is a `DANGLING_REF.P1`.
+- **`MM-N` magic-moment ids** (product-contract §5) and **`JOB-N` JTBD ids** (§2/§4) — the number,
+  not the free-text name, is the machine key.
+- **Scope-qualified references** — canonical epic id is the dir basename (field reality:
+  `004-ai-core-workout-gen`, not a fictional `E004`); cross-epic refs resolve by ordinal shorthand
+  (`004/S012`), full-dir, or bare-within-epic. `readiness_state_verified` is the single machine field.
+
+### The extractor + `lint-refs` gate (`.speck/scripts/graph/speck_graph.py`, stdlib-only, portable)
+- `build` compiles `specs/projects/<id>/graph/witness.json` — content-hashed nodes, per-edge
+  resolution, a `generator_completeness` honesty stamp, `built_against_sha`. Tables are parsed **by
+  header name, never column position** — retiring the #83/#85 positional-parse scar class.
+- `lint-refs` is the first forcing gate, and it is **migration-aware** (mirrors gate-liveness
+  UNVERIFIED-vs-DISARMED): a dangling ref is real rot (`DANGLING_REF.P1`, BLOCK) only when the id
+  SCHEME is established — a missing story is always rot; an `AC-N`/`MM-N` ref into a scope that hasn't
+  adopted the scheme yet degrades to `GRAPH_UNMIGRATED.P3` (degrade-to-honest, never a false P1).
+  Also catches `DUP_ID.P1` (two story dirs sharing an S-number in one epic).
+- **Proven on real repos on the first run**: caught Streb's dangling `blocks: S010`/`S042` (the
+  epic-breakdown rot), Splang's renumbered `S006/AC-1` discharge and a real `S007` duplicate-id
+  collision — defects that were previously invisible. Clears the FTR-A1 "measured defects caught" bar.
+
+### Generic migration (`speck_graph.py migrate`, dry-run by DEFAULT, `--apply` to write)
+Works on any live Speck project. Confidently auto-numbers acceptance scenarios to `AC-N` (§2-scoped,
+idempotent, non-destructive); reports heterogeneous surfaces (MM/JOB headings) for manual review
+rather than mangling them.
+
+### Also
+- Fixed the live `template-manifest.json` drift the connection-model sweep surfaced (Three-Axis →
+  Four-Axis readiness; persona-larp `Taste Judgment Rubric` → `IS-IT-GOOD` critique) — the schema
+  detector's own reference data had rotted.
+- 10-assertion hostile test suite wired into `npm test`. Ships to consuming repos via the existing
+  recursive sync. Next arcs: the extractor's `query`/`context` packs (P2/P4), the orphan/phantom/
+  un-judged forcing gates (P3), and tests-as-join fine grain (P5).
+
 ## v8.6.0 — 2026-07-18 — Gate-liveness Phase 2: prove the gate is load-bearing (#88)
 
 Phase 1 (v8.3.0) proved a §6a gate is **wired** (reachable at its declared stage). Phase 2 proves it is **load-bearing**: for each gate that carries a canary token, inject a deliberate defect in the domain the gate owns, run the gate, and assert it goes **red for the right reason**. "A guardrail you haven't watched fail is a guardrail you're assuming." The level above §13 (`tests pass → done`) is `the gate is green → the gate ran` — this closes it. Designed via a 3-architecture adversarial synthesis (one ADOPT-SPINE + two GRAFT-ONLY); shipped against Kjetil's decisions (split from the #87 grain flip; ship 3 canaries).
