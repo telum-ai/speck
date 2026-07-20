@@ -995,6 +995,134 @@ def cmd_gate(project_dir, story=None, epic=None):
 
 
 # ---------------------------------------------------------------------------
+# road — the "perfect road to completion" (v9). DERIVED from the graph, never authored.
+#
+# Re-projects check_graph() into four ORDERED buckets whose sequence IS the dependency order:
+# 🧹 TIDY (messy but correct — make it legible) → 🗑 REMOVE (don't build on orphans) →
+# 🔨 BUILD (make something to prove) → 🔬 PROVE (climb grain to the ceiling). Each line is
+# {node · source · gate-code · resolving-skill}. Disposable: the GRAPH_STALE law applies to the
+# road itself (a road disagreeing with a fresh compile is stale), so it never becomes a 9th
+# authored copy. It charts what remains AND (via /speck-graph-up) heals the road already walked.
+# ---------------------------------------------------------------------------
+
+# gate-code → (bucket, resolving-skill). Buckets are ordered; a code not listed defaults to TIDY.
+ROAD_ROUTING = {
+    "GRAPH_STALE": ("TIDY", "speck_graph.py build"),
+    "GRAPH_UNMIGRATED": ("TIDY", "/speck-graph-up (harden ids) — or fill the promise ledger"),
+    "DANGLING_REF": ("TIDY", "fix the reference (repoint or restore the target)"),
+    "DUP_ID": ("TIDY", "rename one of the colliding dirs to a free S-number"),
+    "ORPHAN_STORY": ("BUILD", "wire the story to a promise (add its PRM row / MM-serve), or descope it"),
+    "PHANTOM_PROMISE": ("BUILD", "/story-specify → … → /story-validate the delivering story"),
+    "ORPHAN_CODE": ("REMOVE", "remove the code no promise asked for (or wire it) — pending tests-as-join P5"),
+    "UNJUDGED_SURFACE": ("PROVE", "/larp connoisseur Job B — judge this surface (pending verdict extraction)"),
+    "PRE_V9_PROOF": ("PROVE", "/speck-reprove — re-earn the claim under v9 evidence"),
+    "GRAIN_DEFICIT": ("PROVE", "collect product-grain evidence (cold-start build-LARP) and re-grade the row"),
+}
+BUCKET_ORDER = ["TIDY", "REMOVE", "BUILD", "PROVE"]
+BUCKET_ICON = {"TIDY": "🧹 TIDY", "REMOVE": "🗑 REMOVE", "BUILD": "🔨 BUILD", "PROVE": "🔬 PROVE"}
+BUCKET_BLURB = {
+    "TIDY": "messy but correct — make the graph legible first (cheapest wins)",
+    "REMOVE": "don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture",
+    "BUILD": "make the thing the contract promised — weakest-grain / topological first",
+    "PROVE": "climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest",
+}
+
+
+def _code_root(code):
+    return code.split(".")[0]
+
+
+def road_lines(project_dir):
+    """Return (buckets: dict[name]->[line dicts], cap_state, blocking_count)."""
+    findings, caps, pending, cap_state = check_graph(project_dir)
+    buckets = {b: [] for b in BUCKET_ORDER}
+
+    def route(code, node, source, detail):
+        root = _code_root(code)
+        bucket, skill = ROAD_ROUTING.get(root, ("TIDY", "review"))
+        buckets[bucket].append({"code": code, "node": node, "source": source,
+                                "skill": skill, "detail": detail})
+
+    for f in findings:
+        route(f["code"], f.get("ref", ""), f.get("source_file", ""), f.get("detail", ""))
+    # caps carry their code as a prefix "CODE.Pn: text"
+    for c in caps:
+        code = c.split(":", 1)[0].strip()
+        route(code, "", "", c)
+    # pending gates render as honest PROVE/REMOVE lines (never a pass)
+    for p in pending:
+        code = p.split(":", 1)[0].strip()
+        route(code, "", "", p)
+
+    blocking = sum(1 for f in findings if f["code"].endswith(".P1"))
+    return buckets, cap_state, blocking
+
+
+def render_road(project_dir):
+    buckets, cap_state, blocking = road_lines(project_dir)
+    root = _repo_root(project_dir)
+    sha = git_head_sha(root) if root else ""
+    total = sum(len(v) for v in buckets.values())
+    next_action = "ship — no remaining road" if total == 0 else None
+    if not next_action:
+        for b in BUCKET_ORDER:
+            if buckets[b]:
+                nb = buckets[b][0]
+                next_action = "%s → %s" % (BUCKET_ICON[b], nb["skill"])
+                break
+
+    out = []
+    out.append("<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->")
+    out.append("<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->")
+    out.append("<!-- compile is stale. Regenerate; do not patch. -->")
+    out.append("")
+    out.append("# Road to Completion — %s" % project_id_of(project_dir))
+    out.append("")
+    out.append("**GRAPH_CAP** = `%s` (the ceiling the graph can back; caps never grant readiness)  "
+               % cap_state.upper())
+    out.append("**Blocking** = %d hard `.P1` finding(s) — %s  "
+               % (blocking, "clear to advance" if blocking == 0 else "**cannot advance until fixed**"))
+    out.append("**Next action** → %s" % (next_action or "—"))
+    out.append("")
+    out.append("The four buckets are in dependency order: tidy so it's legible → remove so you don't "
+               "build on orphans → build so there's something to prove → prove to climb grain. "
+               "The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* "
+               "stay owned by `/audit` + the four-axis LARP.")
+    out.append("")
+    for b in BUCKET_ORDER:
+        rows = buckets[b]
+        out.append("## %s (%d) — %s" % (BUCKET_ICON[b], len(rows), BUCKET_BLURB[b]))
+        out.append("")
+        if not rows:
+            out.append("_clear._")
+            out.append("")
+            continue
+        out.append("| item | where | gate | resolve with |")
+        out.append("|------|-------|------|--------------|")
+        for r in rows:
+            node = r["node"] or "—"
+            src = os.path.relpath(r["source"], project_dir) if r["source"] else "—"
+            out.append("| `%s` | %s | `%s` | %s |" % (node, src, r["code"], r["skill"]))
+        out.append("")
+    out.append("*[as of SHA `%s` | derived — regenerate, never hand-edit | speck v9]*" % (sha or "pending"))
+    out.append("")
+    return "\n".join(out)
+
+
+def cmd_road(project_dir, write=True):
+    text = render_road(project_dir)
+    if write:
+        out = os.path.join(project_dir, "graph", "road-to-completion.md")
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        with open(out, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        sys.stderr.write("✅ Wrote %s\n" % out)
+    else:
+        sys.stdout.write(text)
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # migrate — generic identity hardening for ANY existing Speck project
 #
 # Non-destructive by design: dry-run is the DEFAULT (reports the diff); only `--apply` writes.
@@ -1167,6 +1295,7 @@ Usage:
   speck_graph.py context   <PROJECT_DIR> <story-id>   The story's context pack — one lookup, no tree walk
   speck_graph.py check     <PROJECT_DIR>              Forcing gates: dangling/dup BLOCK; phantom/stale CAP
   speck_graph.py gate      <PROJECT_DIR> [--story ID|--epic ID]   Scoped advance-gate (exit 1 = blocked)
+  speck_graph.py road      <PROJECT_DIR> [--stdout]   The road to completion: TIDY→REMOVE→BUILD→PROVE
 
 PROJECT_DIR is a specs/projects/<id> directory. The graph is DERIVED — never hand-edit witness.json.
 """
@@ -1212,6 +1341,11 @@ def main(argv):
         story = _flag_value(args, "--story")
         epic = _flag_value(args, "--epic")
         return cmd_gate(project_dir, story=story, epic=epic)
+    if cmd == "road":
+        if not project_dir:
+            sys.stderr.write("ERROR: road requires an existing PROJECT_DIR\n")
+            return 2
+        return cmd_road(project_dir, write="--stdout" not in args)
     sys.stderr.write("Unknown command: %s\n\n%s" % (cmd, USAGE))
     return 2
 

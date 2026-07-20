@@ -1,5 +1,25 @@
 # Speck Changelog
 
+## v9.1.0 — 2026-07-20 — The road to completion (the graph, re-projected)
+
+`speck_graph.py road <dir>` → `specs/projects/<id>/graph/road-to-completion.md`: the graph's findings
+re-projected into four **ordered** buckets whose sequence *is* the dependency order —
+**🧹 TIDY** (stale/unmigrated/dangling/dup — messy but correct, make it legible) →
+**🗑 REMOVE** (orphans — don't build on them; deletion is always a separate human gesture) →
+**🔨 BUILD** (phantom promises, orphan stories — make what the contract promised) →
+**🔬 PROVE** (unjudged surfaces, `[pre-v9-proof]` caps, grain deficits — climb to the ceiling).
+Header carries `GRAPH_CAP`, the blocking-`.P1` count, and the single next action; each row is
+`{item · where · gate-code · resolve-with-skill}`. This is Kjetil's "perfect road to completion" — any
+project, any state, gets a crystal-clear worklist of what to tidy, remove, build, and prove.
+
+DERIVED + disposable: the road carries a never-hand-edit banner and the `GRAPH_STALE` law applies to
+itself (a road disagreeing with a fresh compile is stale — regenerate, don't patch), so it never becomes
+a ninth authored copy. Pending gates (`ORPHAN_CODE`, `UNJUDGED_SURFACE`) render as honest lines, never
+false-clean. `/speck-graph-up` Phase 4 emits it. +2 tests (27 total). npm test green.
+
+> Sequencing note: the road (this arc) ships before the retire-and-prove deletions — those land in a
+> following minor after the byte-parity tests on Streb + Splang pass. Additive-first, delete-on-proof.
+
 ## v9.0.0 — 2026-07-20 — The Witness Graph is the Spine (major)
 
 v9 promotes the witness graph from a late gate into the project's **spine** — the derived,

@@ -507,6 +507,40 @@ echo "── Test 25: gate — a wired story clears; scoping isolates unrelated 
 OUT="$(python3 "$GRAPH" gate "$GT" --story 001-e/S002 2>&1)" && RC=0 || RC=$?
 if [[ $RC -eq 0 ]]; then ok "wired story clears (exit 0)"; else bad "wired story should clear" "$OUT (rc=$RC)"; fi
 
+echo "── Test 26: road emits the four ordered buckets and routes findings correctly"
+RD="$TMP/projects/007-road"
+mkdir -p "$RD/epics/001-e/stories/S001-a"
+cat > "$RD/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — delivered
+### MM-2 — nobody builds this
+EOF
+printf -- '---\nartifact_type: story-spec\n---\n# A\nDelivers MM-1.\n#### AC-1 — a\n' > "$RD/epics/001-e/stories/S001-a/spec.md"
+cat > "$RD/epics/001-e/traceability-matrix.md" <<'EOF'
+# M
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | §5 MM-1 | wow | S001 / AC-1 | — | ux-rc | discharged |
+EOF
+OUT="$(python3 "$GRAPH" road "$RD" --stdout 2>&1)"
+if echo "$OUT" | grep -q "🧹 TIDY" && echo "$OUT" | grep -q "🗑 REMOVE" \
+   && echo "$OUT" | grep -q "🔨 BUILD" && echo "$OUT" | grep -q "🔬 PROVE" \
+   && echo "$OUT" | grep -q "PHANTOM_PROMISE.P1" \
+   && echo "$OUT" | grep -qE "BUILD \([1-9]\)"; then
+  ok "road has 4 ordered buckets; phantom MM-2 routed to BUILD"
+else
+  bad "road buckets/routing wrong" "$OUT"
+fi
+
+echo "── Test 27: road is DERIVED — carries the never-hand-edit banner + GRAPH_CAP"
+if echo "$OUT" | grep -q "NEVER hand-edit" && echo "$OUT" | grep -q "GRAPH_CAP"; then
+  ok "road declares itself derived + disposable"
+else
+  bad "road missing derived banner / GRAPH_CAP" "$OUT"
+fi
+
 echo ""
 echo "════════════════════════════════════════════"
 echo "  speck_graph: $PASS passed, $FAIL failed"
