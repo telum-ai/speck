@@ -1,8 +1,7 @@
 ---
 name: speck-explorer
 description: "Fast file and pattern finding. Use when you need to locate files, grep patterns, or count files by type before deeper analysis."
-tier: mechanical
-model: composer-2.5
+model: haiku
 ---
 # Speck Explorer Agent 🔍
 

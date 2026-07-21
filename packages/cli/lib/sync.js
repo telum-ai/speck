@@ -2,7 +2,7 @@
  * Core sync logic for Speck files with smart merging
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync, copyFileSync, symlinkSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync, copyFileSync, symlinkSync, lstatSync, unlinkSync } from 'fs';
 import { join, dirname, relative } from 'path';
 import { execSync } from 'child_process';
 import { tmpdir } from 'os';
@@ -21,6 +21,8 @@ const ALWAYS_OVERWRITE = [
   '.speck/VERSION',
   '.cursor/skills',
   '.cursor/agents',
+  '.claude/agents',
+  '.codex/agents',
   '.cursor/hooks/hooks',
   '.cursor/hooks/VALIDATION.md',
   '.cursor/MCP-SETUP.md',
@@ -43,12 +45,13 @@ const PRESERVE_SUBDIRS = {
 
 /**
  * ALWAYS_OVERWRITE directories where PROJECT-CUSTOM subdirectories (ones Speck never
- * shipped) must survive upgrades. Custom skills/agents have to live here — .claude and
- * .codex are symlinks into .cursor — so wholesale replacement would delete user work.
+ * shipped) must survive upgrades. Skills are symlinked into .claude/.codex from .cursor;
+ * agents are GENERATED per-harness into each runtime dir (see generate-agents.js), so a
+ * custom agent subdir is preserved in all three — wholesale replacement would delete it.
  * Anything Speck ships (including retired-skill shims) comes back from the source copy;
  * explicit removals still happen via REMOVE_FILES afterward.
  */
-const PRESERVE_UNKNOWN_SUBDIRS = ['.cursor/skills', '.cursor/agents'];
+const PRESERVE_UNKNOWN_SUBDIRS = ['.cursor/skills', '.cursor/agents', '.claude/agents', '.codex/agents'];
 
 /**
  * Compute the subdirectories of targetPath that do not exist in sourcePath.
@@ -494,6 +497,20 @@ function symlinkCursorDir(targetDir, runtimeDir, relativeDir) {
 }
 
 /**
+ * Migrate legacy `.claude/agents` and `.codex/agents` SYMLINKS (older Speck symlinked them
+ * into `.cursor/agents`) to nothing, so the real per-harness generated dirs can be copied in
+ * their place. Uses lstat + unlink so we remove the LINK, never follow it into `.cursor`.
+ */
+function unlinkLegacyAgentSymlinks(targetDir) {
+  for (const runtimeDir of ['.claude', '.codex']) {
+    const linkPath = join(targetDir, runtimeDir, 'agents');
+    if (existsSync(linkPath) && lstatSync(linkPath).isSymbolicLink()) {
+      unlinkSync(linkPath);
+    }
+  }
+}
+
+/**
  * Escape regex special characters in a string
  */
 function escapeRegExp(string) {
@@ -639,6 +656,10 @@ export function smartSync(sourceDir, targetDir, options = {}) {
   
   const verbose = options.verbose || false;
   
+  // 0. Migrate legacy .claude/.codex agent symlinks → removed, so the real generated agent
+  //    dirs can be copied in as ALWAYS_OVERWRITE below. Safe (unlinks the link, not its target).
+  unlinkLegacyAgentSymlinks(targetDir);
+
   // 1. Handle ALWAYS_OVERWRITE patterns
   for (const pattern of ALWAYS_OVERWRITE) {
     // Skip patterns that match skip rules
@@ -791,9 +812,11 @@ export function smartSync(sourceDir, targetDir, options = {}) {
   const readmeSync = syncProjectReadme(targetDir, results, verbose);
   results.readmeRepaired = readmeSync.repaired;
 
-  // 5. Symlink Cursor runtime directories into .claude and .codex for cross-tool parity
+  // 5. Symlink Cursor SKILLS into .claude and .codex for cross-tool parity. Agents are NOT
+  //    symlinked — each harness has a different model vocabulary, so agents are generated
+  //    per-harness (generate-agents.js) and copied as real dirs via ALWAYS_OVERWRITE above.
   for (const runtimeDir of ['.claude', '.codex']) {
-    for (const relativeDir of ['skills', 'agents']) {
+    for (const relativeDir of ['skills']) {
       try {
         const symlinkResult = symlinkCursorDir(targetDir, runtimeDir, relativeDir);
         if (symlinkResult.action === 'sync') {

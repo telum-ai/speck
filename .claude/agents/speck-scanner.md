@@ -1,8 +1,7 @@
 ---
 name: speck-scanner
 description: "Deep code analysis for patterns. Use when you need to understand how existing code works, extract conventions, or find reference implementations."
-tier: mechanical
-model: composer-2.5
+model: haiku
 ---
 # Speck Scanner Agent 📡
 

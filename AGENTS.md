@@ -439,6 +439,24 @@ Speck is designed to run seamlessly across all major AI coding environments. Cor
 
 Claude Code adds optional accelerators; none change the discipline. Five `speck-*` subagents in `.claude/agents/` (`@speck-scribe`, `@speck-planner`, `@speck-coder`, `@speck-auditor`, `@speck-validator`) can run as an agent team — e.g. one implements while a **separate** one audits (P4 role separation). `/loop <duration>` runs `.claude/loop.md` for scheduled test/drift/scaffold sweeps. `Stop` hooks use command-type lifecycle gates (`.claude/hooks/stop-gate.sh`); story `tasks.md` checks apply only inside story dirs. Speck-managed hook blocks reconcile from `settings.json.example` on `speck upgrade`; drift surfaces as `SETTINGS_DRIFT.P0` at `/recheck`.
 
+### Model tiering doctrine (enforced)
+
+Every `speck-*` agent is assigned a **tier** (its `.cursor/agents/*.md` source `tier:` field), never a model snapshot. Three tiers by role — and each harness gets its **own** model, because Claude Code, Cursor, and Codex have different model vocabularies (Cursor, e.g., has no Sonnet/Haiku):
+
+| Tier | Agents | Claude Code | Cursor | Codex |
+|---|---|---|---|---|
+| **Frontier** | `speck-architect`, `speck-planner`, `speck-auditor` | `opus` | `claude-opus-4-8-thinking-high` | `gpt-5.6-sol` |
+| **Mid** | `speck-coder`, `speck-scribe`, `speck-researcher`, `speck-validator` | `sonnet` | `composer-2.5` | `gpt-5.6-terra` |
+| **Mechanical** | `speck-scanner`, `speck-explorer` | `haiku` | `composer-2.5` | `gpt-5.6-luna` |
+
+Frontier = decomposition, design/trade-offs, and the adversarial audit — the few moments that need frontier judgment. Mid = implementation/drafting/research against an explicit plan. Mechanical = pattern extraction and file/grep discovery.
+
+**Never cheap the planner (or the auditor).** Once a frontier planner collapses ambiguity into an explicit spec, cheaper models just follow it — so the worker fleet, not the planner, dominates cost. But a *weaker* planner produces a worse spec, and **a bad spec taxes the entire downstream fleet**: in Cursor's agent-swarm experiment ([cursor.com/blog/agent-swarm-model-economics](https://cursor.com/blog/agent-swarm-model-economics)) the same 100% result cost 8× less with a frontier planner + cheap workers, yet a *slightly* weaker planner made the whole fleet consume more tokens overall. Spend up on the decisions (`speck-planner`, `speck-architect`), keep the audit frontier and **decorrelated from the coder** (`speck-auditor` ≠ the model that implemented), spend down on the labor.
+
+**Generated per-harness, from one source — so it works in concert and separately.** The source of truth is `.cursor/agents/speck-*.md` (the `tier:` field + the role body). `packages/cli/lib/generate-agents.js` derives every `model` value and stamps the three runtime files: `.claude/agents/*.md` (bare alias), `.cursor/agents/*.md` (Cursor slug), `.codex/agents/*.toml` (GPT slug + `developer_instructions`). This replaces the old symlink layout, which forced one markdown-YAML file — and one model value — onto three grammars and left `.codex` non-functional (Codex reads TOML, not markdown). **Edit the source `tier`/body and run `npm run gen-agents`; never hand-edit a generated file.** Reasoning depth (effort/thinking) is a separate dial — the Cursor/Codex maps carry a default effort; override at invocation.
+
+**Enforcement.** `packages/cli/lib/agent-model-tiers.test.js` (in `npm test`) fails if any `speck-*` agent's source tier drifts from its role, an agent is added without a tier, or a generated harness file is out of sync with source (hand-edited, or source changed without `npm run gen-agents`). The doctrine is a gate, not a suggestion.
+
 ## 🧪 Agent Skills
 
 Skills are agent-decided expertise packages — auto-loaded when relevant.

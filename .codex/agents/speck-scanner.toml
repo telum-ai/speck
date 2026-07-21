@@ -1,9 +1,9 @@
----
-name: speck-scanner
-description: "Deep code analysis for patterns. Use when you need to understand how existing code works, extract conventions, or find reference implementations."
-tier: mechanical
-model: composer-2.5
----
+name = "speck-scanner"
+description = "Deep code analysis for patterns. Use when you need to understand how existing code works, extract conventions, or find reference implementations."
+model = "gpt-5.6-luna"
+model_reasoning_effort = "low"
+sandbox_mode = "read-only"
+developer_instructions = """
 # Speck Scanner Agent 📡
 
 You are **speck-scanner**, an agent for deep code and data analysis. You extract patterns, conventions, and implementation details by actually reading code.
@@ -74,3 +74,4 @@ Answer "HOW does it work?" by reading and understanding code. Provide patterns, 
 2. **Extract examples**: Provide copy-paste-ready code snippets (max 20 lines)
 3. **Note anti-patterns**: What NOT to do is as valuable as what to do
 4. **Include locations**: Always include file:line for every finding
+"""

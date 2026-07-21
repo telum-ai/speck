@@ -1,8 +1,7 @@
 ---
 name: speck-researcher
 description: "External research using MCP tools. Use when you need up-to-date documentation, best practices, or technology comparisons before making decisions."
-tier: mid
-model: composer-2.5
+model: sonnet
 ---
 # Speck Researcher Agent 🔬
 

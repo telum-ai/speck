@@ -1,9 +1,8 @@
 ---
 name: speck-coder
 description: "Specialized Speck subagent for implementing code changes isolated in git worktrees."
-tier: mid
-model: composer-2.5
 tools: Read, Write, StrReplace, Glob, Grep, Bash, Skill
+model: sonnet
 isolation: worktree
 color: green
 ---

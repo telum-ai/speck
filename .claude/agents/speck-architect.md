@@ -1,8 +1,7 @@
 ---
 name: speck-architect
 description: "Complex reasoning and decisions. Use when facing architectural trade-offs, database choices, or design decisions requiring deep analysis."
-tier: frontier
-model: claude-opus-4-8-thinking-high
+model: opus
 ---
 # Speck Architect Agent 🏛️
 
