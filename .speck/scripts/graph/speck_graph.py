@@ -414,6 +414,9 @@ def extract(project_dir):
 
 
 def _extract_epic(epic_path, epic_id, nodes, edges, add_node):
+    # conservation applies only once epic-breakdown.md exists (pre-breakdown, open rows are allowed)
+    if epic_id in nodes:
+        nodes[epic_id].attrs["has_breakdown"] = os.path.isfile(os.path.join(epic_path, "epic-breakdown.md"))
     # epic.md → FR-/NFR- requirement nodes
     epic_md = os.path.join(epic_path, "epic.md")
     if os.path.isfile(epic_md):
@@ -797,6 +800,58 @@ def _min_readiness(a, b):
     return READINESS_ORDER[min(ia, ib)]
 
 
+def _find_cycle(adj):
+    """Return one cycle as a node list (closed: [a, b, a]) via DFS, or None. Deterministic."""
+    WHITE, GRAY, BLACK = 0, 1, 2
+    color = {}
+    parent = {}
+    for start in sorted(adj.keys()):
+        if color.get(start, WHITE) != WHITE:
+            continue
+        stack = [(start, iter(sorted(adj.get(start, []))))]
+        color[start] = GRAY
+        while stack:
+            node, it = stack[-1]
+            advanced = False
+            for nxt in it:
+                c = color.get(nxt, WHITE)
+                if c == WHITE:
+                    color[nxt] = GRAY
+                    parent[nxt] = node
+                    stack.append((nxt, iter(sorted(adj.get(nxt, [])))))
+                    advanced = True
+                    break
+                if c == GRAY:  # back-edge → reconstruct the cycle
+                    cyc = [nxt, node]
+                    p = node
+                    while p != nxt and p in parent:
+                        p = parent[p]
+                        cyc.append(p)
+                    cyc.reverse()
+                    cyc.append(cyc[0])
+                    return cyc
+            if not advanced:
+                color[node] = BLACK
+                stack.pop()
+    return None
+
+
+def cascade_blast(project_dir, dec):
+    """Reverse-reachability from a DEC → the discharged PRMs it descopes that are still active.
+
+    The graph form of compute-cascade.sh's core: a still-`discharged` promise under a (superseded)
+    DEC is a CASCADE_STALE risk. Informational query; the recheck skill decides supersession.
+    """
+    _graph, nodes, edges = build_graph(project_dir)
+    hits = []
+    for e in edges:
+        if e.kind == "descoped-by" and e.dst == dec:
+            prm = nodes.get(e.src)
+            if prm and (prm.attrs.get("status") or "").lower() == "discharged":
+                hits.append(prm.id)
+    return sorted(set(hits))
+
+
 def check_graph(project_dir):
     """Run every structural forcing gate. Returns (findings, caps, pending, cap_state)."""
     graph, nodes, edges = build_graph(project_dir)
@@ -878,6 +933,53 @@ def check_graph(project_dir):
             caps.append("GRAPH_STALE.P2: witness.json is unreadable — regenerate with `build`")
     else:
         caps.append("GRAPH_STALE.P2: no committed witness.json — run `speck_graph.py build`")
+
+    # UNMAPPED_PROMISE — conservation anti-join (the graph form of validate-traceability-matrix.sh's
+    # DEFAULT-mode open-row check): once an epic has an epic-breakdown.md, every PRM must RESOLVE —
+    # have a discharge edge (story+AC), a descoped-by edge (DEC), or pilot-gated status. Resolution is
+    # judged by EDGE PRESENCE, not the status label: a `mapped` row (story+AC assigned, pending
+    # validation) IS resolved and is fine here — matching the script, which only flags truly-`open`
+    # rows in default mode. Pre-breakdown, open rows are allowed (guide-rail). The stricter
+    # everything-must-be-terminal check is /epic-validate's job (see MATRIX grain cap).
+    discharged_prms = set(e.src for e in edges if e.kind == "discharges")
+    descoped_prms = set(e.src for e in edges if e.kind == "descoped-by")
+    TERMINAL_STATUS = ("discharged", "descoped", "pilot-gated")
+    for n in nodes.values():
+        if n.kind != "prm":
+            continue
+        status = (n.attrs.get("status") or "").strip().lower()
+        # Resolved by a terminal STATUS (matches the script) OR by an actual edge (robust to
+        # mislabeled rows). `mapped` is not terminal but carries a discharge edge → resolved.
+        resolved = (status in TERMINAL_STATUS or n.id in discharged_prms or n.id in descoped_prms)
+        if resolved:
+            continue
+        epic_node = nodes.get(n.scope)
+        has_breakdown = bool(epic_node and epic_node.attrs.get("has_breakdown"))
+        if has_breakdown:
+            findings.append({
+                "code": "UNMAPPED_PROMISE.P1", "src": n.id, "edge": "resolves", "ref": n.id,
+                "resolved_to": n.id, "source_file": n.source_file,
+                "detail": "open promise (status '%s', no discharge and no DEC) after epic-breakdown "
+                          "exists — discharge it (story+AC), descope it (DEC), or pilot-gate it. "
+                          "Nothing evaporates." % (status or "<blank>"),
+            })
+        else:
+            caps.append("GRAPH_UNMIGRATED.P3: PRM %s is open but epic %s has no breakdown yet "
+                        "(open rows allowed pre-breakdown)" % (n.id.split("/")[-1], n.scope))
+
+    # DEP_CYCLE — a depends-on cycle is unbuildable; detect via DFS over resolved depends-on edges.
+    dep_adj = {}
+    for e in edges:
+        if e.kind == "depends-on" and e.dst:
+            dep_adj.setdefault(e.src, []).append(e.dst)
+    cycle = _find_cycle(dep_adj)
+    if cycle:
+        findings.append({
+            "code": "DEP_CYCLE.P1", "src": cycle[0], "edge": "depends-on", "ref": " → ".join(cycle),
+            "resolved_to": cycle[0], "source_file": nodes[cycle[0]].source_file if cycle[0] in nodes else "",
+            "detail": "circular dependency: %s — no valid build order exists; break the cycle"
+                      % " → ".join(cycle),
+        })
 
     # HONEST pending gates — needed data not yet in the graph; never a false pass
     pending = [
@@ -1143,6 +1245,8 @@ ROAD_ROUTING = {
     "GRAPH_UNMIGRATED": ("TIDY", "/speck-graph-up (harden ids) — or fill the promise ledger"),
     "DANGLING_REF": ("TIDY", "fix the reference (repoint or restore the target)"),
     "DUP_ID": ("TIDY", "rename one of the colliding dirs to a free S-number"),
+    "DEP_CYCLE": ("TIDY", "break the circular dependency (drop one depends_on edge)"),
+    "UNMAPPED_PROMISE": ("BUILD", "discharge it (story+AC), descope it (DEC), or pilot-gate it — no open rows"),
     "ORPHAN_STORY": ("BUILD", "wire the story to a promise (add its PRM row / MM-serve), or descope it"),
     "PHANTOM_PROMISE": ("BUILD", "/story-specify → … → /story-validate the delivering story"),
     "ORPHAN_CODE": ("REMOVE", "remove the code no promise asked for (or wire it) — pending tests-as-join P5"),
@@ -1429,6 +1533,7 @@ Usage:
   speck_graph.py gate      <PROJECT_DIR> [--story ID|--epic ID]   Scoped advance-gate (exit 1 = blocked)
   speck_graph.py road      <PROJECT_DIR> [--stdout]   The road to completion: TIDY→REMOVE→BUILD→PROVE
   speck_graph.py gap       <PROJECT_DIR> [--emit-goal] [--target ship-rc|ship]   Drive surface for native /goal
+  speck_graph.py cascade   <PROJECT_DIR> --dec DEC-NNNN    Blast radius: still-discharged promises a DEC descopes
 
 PROJECT_DIR is a specs/projects/<id> directory. The graph is DERIVED — never hand-edit witness.json.
 """
@@ -1484,6 +1589,18 @@ def main(argv):
             sys.stderr.write("ERROR: gap requires an existing PROJECT_DIR\n")
             return 2
         return cmd_gap(project_dir, emit="--emit-goal" in args, target=_flag_value(args, "--target"))
+    if cmd == "cascade":
+        dec = _flag_value(args, "--dec")
+        if not project_dir or not dec:
+            sys.stderr.write("ERROR: cascade requires <PROJECT_DIR> --dec DEC-NNNN\n")
+            return 2
+        hits = cascade_blast(project_dir, dec)
+        if not hits:
+            sys.stdout.write("✅ cascade: no still-discharged promise descoped by %s\n" % dec)
+            return 0
+        sys.stdout.write("⚠️  CASCADE risk: %s descopes %d still-discharged promise(s): %s\n"
+                         % (dec, len(hits), ", ".join(hits)))
+        return 1
     sys.stderr.write("Unknown command: %s\n\n%s" % (cmd, USAGE))
     return 2
 

@@ -95,6 +95,20 @@ the bespoke-validator file count does not drop**.
 - **Net: machinery DOWN** — −2 parsers, −6 skill re-derivation steps, vs +subcommands in the one graph
   file +2 skill files. The load-bearing rot source (regex-over-markdown) strictly decreases.
 
+**Retirement status (honest, parity-gated).** The graph now *independently* enforces conservation
+(`UNMAPPED_PROMISE`, **parity-proven = the script's default-mode open-row set on Streb + Splang**),
+cycle-freedom (`DEP_CYCLE`), and DEC-cascade (`cascade` query). But the parity work surfaced two real
+blockers to a *whole-file* deletion, and we do not delete unsafely:
+- `validate-traceability-matrix.sh` interleaves conservation with the v8.5 **grain teeth** (BLOCK
+  enforcement the graph does not yet own) in one loop — so it *shrinks*, it cannot *delete*, until the
+  graph grain-gate ships (v9.4). Recheck's redundant per-epic default-mode invocation is folded into the
+  single graph `check` now (real simplification); the `--require-evidence` grain run stays at epic-validate.
+- `compute-cascade.sh` also handles **contract-section** change cascades, which the graph does not model —
+  so the graph reproduces its DEC half (the `cascade` query) but the file is not yet deletable.
+No script file is deleted in the v9.3 arc — the graph reaches *retire-ready* and the deletions land when
+their named blocker clears. This is the parity-proven-delete discipline: prove first, delete only what
+parity + safety confirm.
+
 ## 6. `/goal` — driving to actual 100% by leveraging native functionality
 
 **Speck does NOT reimplement the loop.** Native `/goal` (Claude Code v2.1.139+ prompt-Stop-hook; Codex

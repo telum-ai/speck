@@ -569,6 +569,46 @@ else
   bad "emit-goal condition incomplete" "$OUT"
 fi
 
+echo "── Test 30: UNMAPPED_PROMISE — parity with the conservation script (open flags; mapped/descoped don't)"
+CN="$TMP/projects/009-conserv"
+mkdir -p "$CN/epics/001-e/stories/S001-a"
+printf 'x' > "$CN/epics/001-e/epic-breakdown.md"
+printf -- '---\nartifact_type: story-spec\n---\n# A\n#### AC-1 — a\n' > "$CN/epics/001-e/stories/S001-a/spec.md"
+cat > "$CN/epics/001-e/traceability-matrix.md" <<'EOF'
+# M
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | x | discharged one | S001 / AC-1 | — | ux-rc | discharged |
+| PRM-002 | x | mapped one (assigned, pending) | S001 / AC-1 | — | — | mapped |
+| PRM-003 | x | descoped one | — | DEC-0009 | — | descoped |
+| PRM-004 | x | GENUINELY open | — | — | — | open |
+EOF
+OUT="$(python3 "$GRAPH" check "$CN" 2>&1)" || true
+n_unmapped=$(echo "$OUT" | grep -c "UNMAPPED_PROMISE.P1")
+if [[ "$n_unmapped" == "1" ]] && echo "$OUT" | grep -q "PRM-004"; then
+  ok "only the genuinely-open PRM-004 flags; discharged/mapped/descoped pass (script parity)"
+else
+  bad "conservation parity wrong ($n_unmapped unmapped)" "$OUT"
+fi
+
+echo "── Test 31: open row is ALLOWED pre-breakdown (guide-rail, not a wall)"
+rm -f "$CN/epics/001-e/epic-breakdown.md"
+OUT="$(python3 "$GRAPH" check "$CN" 2>&1)" || true
+if ! echo "$OUT" | grep -q "UNMAPPED_PROMISE.P1"; then
+  ok "pre-breakdown open row is guided (GRAPH_UNMIGRATED), not blocked"
+else
+  bad "pre-breakdown open row should not block" "$OUT"
+fi
+
+echo "── Test 32: DEP_CYCLE — a circular depends_on is caught"
+CY="$TMP/projects/010-cycle"
+mkdir -p "$CY/epics/001-e/stories/S001-a" "$CY/epics/001-e/stories/S002-b"
+printf -- '---\nartifact_type: story-spec\ndepends_on: [S002]\n---\n# A\n' > "$CY/epics/001-e/stories/S001-a/spec.md"
+printf -- '---\nartifact_type: story-spec\ndepends_on: [S001]\n---\n# B\n' > "$CY/epics/001-e/stories/S002-b/spec.md"
+OUT="$(python3 "$GRAPH" check "$CY" 2>&1)" || true
+if echo "$OUT" | grep -q "DEP_CYCLE.P1"; then ok "circular depends_on caught (no valid build order)"; else bad "cycle not detected" "$OUT"; fi
+
 echo ""
 echo "════════════════════════════════════════════"
 echo "  speck_graph: $PASS passed, $FAIL failed"

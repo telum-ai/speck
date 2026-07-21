@@ -1,5 +1,28 @@
 # Speck Changelog
 
+## v9.3.0 — 2026-07-21 — Conservation, cycles, cascade in the graph (retire-ready, parity-proven)
+
+The graph now *independently* enforces the checks the bespoke validators own — the prerequisite for
+retiring them. Parity-gated per Kjetil's "delete only on proof" call.
+
+- **`UNMAPPED_PROMISE.P1`** — the conservation anti-join (graph form of `validate-traceability-matrix.sh`'s
+  default-mode open-row check): once an epic has `epic-breakdown.md`, every PRM must resolve (discharge
+  edge / DEC / pilot-gated). Resolution is judged by **edge presence or terminal status**, so a `mapped`
+  row (assigned, pending) passes and only a truly-`open` row flags — **parity-proven = the script's set
+  (0 on Streb, 0 on Splang; 1 on a synthetic open row)**. Pre-breakdown open rows are guided, not blocked.
+- **`DEP_CYCLE.P1`** — a circular `depends_on` has no valid build order; detected via DFS.
+- **`cascade` query** (`speck_graph.py cascade <dir> --dec DEC-NNNN`) — reverse-reachability to the
+  still-`discharged` promises a (superseded) DEC descopes: the graph form of `compute-cascade.sh`'s DEC half.
+- **Real subtraction:** recheck's redundant per-epic `validate-traceability-matrix.sh` default-mode run is
+  folded into the single graph `check` (which now covers conservation + link rot + phantom + cycle).
+
+**Honest retirement status — no file deleted yet, on purpose.** The parity work surfaced two real blockers:
+`validate-traceability-matrix.sh` interleaves conservation with the v8.5 grain **teeth** (BLOCK enforcement
+the graph doesn't yet own → the file shrinks, can't delete, until the v9.4 grain-gate); `compute-cascade.sh`
+also handles contract-section cascades the graph doesn't model. The graph is *retire-ready*; the deletions
+land when each blocker clears. Deleting either now would strip a live safety check — parity-proven-delete
+means we don't. +3 tests (32 total). npm test green.
+
 ## v9.2.0 — 2026-07-20 — Drive to done: `gap` + native `/goal` (leverage, don't reimplement)
 
 The fourth motion — DRIVE — that closes Promise→Build→Prove into a self-terminating loop toward
