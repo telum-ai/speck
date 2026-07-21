@@ -2,15 +2,21 @@
 
 *Owner: Kjetil · Arc: identity → extractor → forcing gates → context packs → tests-as-join*
 
-**Status (v8.8):** P1 shipped (identity model, extractor, `lint-refs`, generic migration, manifest-drift
-fix). P2/P3 shipped (`build`/`query`/`context`/`check`; the dangling-ref, duplicate-id and
-phantom-promise forcing gates; `GRAPH_CAP` staleness/migration caps) and **wired into the lifecycle**
-— `check` at `/epic-validate` (folds into MAX-claimable), `lint-refs` in `/recheck` drift detection,
-`context` at `/story-implement` pickup. Proven on Streb + Splang (caught real dangling refs, a
-renumbered AC discharge, and a duplicate story-id collision). **Remaining:** P4 (project-state renders
-from the graph; revive the learning edge — just-in-time GOTCHA retrieval), P5 (tests-as-join → real
-`ORPHAN_CODE` gate), verdict extraction (real `UNJUDGED_SURFACE` gate), and running the migration on
-the live repos (a per-repo gated gesture — the dry-run diff goes to Kjetil first).
+**Status (v9.4):** Shipped — the witness graph is the **spine** (v9). `build`/`lint-refs`/`query`/
+`context`/`check`/`gate`/`road`/`gap`/`cascade`/`migrate` subcommands; forcing at 4 boundaries
+(First-Actions, story-prereqs reachability, validate, pre-commit) with the block-vs-guide adoption
+signal; the `.v9-graph-needed` migration marker + `/speck-graph-up` skill; `road-to-completion.md`
+(TIDY→REMOVE→BUILD→PROVE); native-`/goal` drive via `gap --emit-goal`; conservation (`UNMAPPED_PROMISE`,
+parity-proven), cycle (`DEP_CYCLE`), and verdict (`UNJUDGED_SURFACE`, v9.4) gates. Proven on Streb +
+Splang (real dangling refs, a renumbered AC discharge, a duplicate story-id, and open-row parity = 0).
+
+**Remaining (the honest edge):** `ORPHAN_CODE` (tests-as-join) stays **not-evaluated** — never a false
+pass. It needs data the methodology repo can't provide generically: a per-repo test-tagging convention
+(a test named/tagged with the spec id it covers, e.g. `S013/AC-2`) + coverage data mapping the passing
+test to the code entity. A consuming repo *opts in* by adopting the convention and pointing the extractor
+at its coverage output; until then the gate honestly reports "not evaluated" (design §9). Also pending:
+project-state fully rendering from the graph (P4 render), and running `/speck-graph-up` on the live repos
+(a per-repo gated gesture — the dry-run diff goes to Kjetil first).
 
 ## 1. The problem (from evidence, not intuition)
 

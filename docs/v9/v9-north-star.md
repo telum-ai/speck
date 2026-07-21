@@ -179,8 +179,13 @@ engine differs.
   CI asserts the count drop.
 - **v9.2** — `road-to-completion.md` + project-state renders from the graph.
 - **v9.3** — `gap` + the `/goal` drive doctrine + the thin `/speck-goal` primer.
-- **v9.4** — verdict extraction → real `UNJUDGED_SURFACE`; grain teeth migrate off the last parser.
-- **v9.5** — tests-as-join → real `ORPHAN_CODE` (may slip to v10; stays honestly not-evaluated until then).
+- **v9.4** — verdict extraction → real `UNJUDGED_SURFACE`. ✅ shipped.
+- **v9.5 / v10** — tests-as-join → real `ORPHAN_CODE`. **Opt-in per repo**, not a generic gate: a repo
+  adopts a test-tagging convention (a passing test named/tagged with the spec id it covers) and points
+  the extractor at its coverage output; the AC↔code edge exists only when a *passing* tagged test covers
+  the code. Until a repo opts in, `ORPHAN_CODE` reports **not-evaluated** — never a false "no orphan code."
+  A generic version would falsely certify coverage the graph can't see (rubber-stamp), so it is
+  deliberately deferred to per-repo opt-in.
 
 ## 8. What v9 is NOT
 
