@@ -1,5 +1,26 @@
 # Speck Changelog
 
+## v9.4.0 — 2026-07-21 — Verdict extraction → the real `UNJUDGED_SURFACE` gate
+
+The IS-IT-GOOD machinery becomes graph-visible: `UNJUDGED_SURFACE` turns from an honest pending note
+into a **computed gate** — without crossing the anti-rubber-stamp line.
+
+- **Verdict extraction** — the extractor scans each story's validation artifacts (`validation-report.md`,
+  `connoisseur-critique.md`, `larp-recordings/*findings*.md`) for a magic-moment reference within reach
+  of an explicit verdict token (`GOOD`/`BAD`/`PASS`/`FAIL`/`✅`/`❌`/`scored`/`judged`) → a `verdict` node
+  + a `judges` edge to the `MM-N` (normalizing `MM3` → `MM-3`).
+- **`UNJUDGED_SURFACE.P2`** — every promised `MM-N` must have a recorded verdict. Migration-aware: if no
+  MM anywhere is judged yet, LARP simply hasn't run → honest cap (not a block); once any MM is judged, an
+  unjudged MM caps `ux-rc+` (the `/epic-validate` gate blocks the transition on it).
+- **The anti-rubber-stamp line holds exactly:** the graph proves a verdict *was recorded* (the machinery
+  ran), never that it is *honest* — a recorded **BAD** verdict still counts as judged; the honesty of the
+  verdict stays owned by `/audit` + the LARP. So an agent can't dodge the gate with a bare token without
+  the adversary catching a fabricated one.
+- `gap` now reports real `MM:<judged>/<total>·judged`; the "pending v9.4" placeholder is gone. Only
+  `ORPHAN_CODE` remains honestly not-evaluated (needs tests-as-join, v9.5 / v10).
+
++2 tests (34 total). npm test green.
+
 ## v9.3.0 — 2026-07-21 — Conservation, cycles, cascade in the graph (retire-ready, parity-proven)
 
 The graph now *independently* enforces the checks the bespoke validators own — the prerequisite for

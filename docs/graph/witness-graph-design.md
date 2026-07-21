@@ -102,7 +102,7 @@ authored markdown  ──►  extractor (python, stdlib)  ──►  witness.jso
 - **Identity resolver** — the node-id scheme below. Bare ids resolve within their owning scope;
   cross-scope references MUST qualify. A failed resolve is `DANGLING_REF.P1`.
 - **Node/edge model** — nodes: `job`, `magic-moment`, `persona`, `contract-clause`, `epic`, `story`,
-  `ac`, `task`, `dec`, `gate`, `evidence`, `verdict`, `test`, `code`, `pattern`. Typed edges:
+  `ac`, `task`, `dec`, `gate`, `evidence`, `verdict` (v9.4), `test`, `code`, `pattern`. Typed edges:
   `sources · discharges · proves · guards · constrains · covers · judges · supersedes · depends-on`.
 
 ## 5. Identity model (Phase 1 — the prerequisite)

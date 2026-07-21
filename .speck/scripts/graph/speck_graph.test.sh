@@ -274,10 +274,9 @@ else
   bad "phantom promise should block" "$OUT (rc=$RC)"
 fi
 
-echo "── Test 14: check never rubber-stamps — orphan-code + un-judged reported as NOT-evaluated"
-if echo "$OUT" | grep -q "ORPHAN_CODE: pending" && echo "$OUT" | grep -q "UNJUDGED_SURFACE: pending" \
-   && echo "$OUT" | grep -q "NOT graph-provable"; then
-  ok "honest pending notes present; taste explicitly not claimed"
+echo "── Test 14: check never rubber-stamps — orphan-code NOT-evaluated; taste stays with /audit+LARP"
+if echo "$OUT" | grep -q "ORPHAN_CODE: pending" && echo "$OUT" | grep -q "NOT graph-provable"; then
+  ok "orphan-code honestly pending; faithful/good explicitly not claimed by the graph"
 else
   bad "check must not claim un-evaluated gates as passing" "$OUT"
 fi
@@ -608,6 +607,47 @@ printf -- '---\nartifact_type: story-spec\ndepends_on: [S002]\n---\n# A\n' > "$C
 printf -- '---\nartifact_type: story-spec\ndepends_on: [S001]\n---\n# B\n' > "$CY/epics/001-e/stories/S002-b/spec.md"
 OUT="$(python3 "$GRAPH" check "$CY" 2>&1)" || true
 if echo "$OUT" | grep -q "DEP_CYCLE.P1"; then ok "circular depends_on caught (no valid build order)"; else bad "cycle not detected" "$OUT"; fi
+
+echo "── Test 33: verdict extraction — a recorded MM verdict clears UNJUDGED; the rest is capped"
+VJ="$TMP/projects/011-verdict"
+mkdir -p "$VJ/epics/001-e/stories/S001-a"
+cat > "$VJ/product-contract.md" <<'EOF'
+# C
+## 5. Magic Moments
+### MM-1 — judged
+### MM-2 — unjudged
+EOF
+printf -- '---\nartifact_type: story-spec\n---\n# A\nDelivers MM-1 and MM-2.\n#### AC-1 — a\n' > "$VJ/epics/001-e/stories/S001-a/spec.md"
+cat > "$VJ/epics/001-e/stories/S001-a/validation-report.md" <<'EOF'
+---
+readiness_state_verified: UX-RC
+---
+## Magic Moment Validation
+- MM-1 scored **GOOD** (pixel-anchored, connoisseur Job B)
+EOF
+OUT="$(python3 "$GRAPH" check "$VJ" 2>&1)" || true
+if echo "$OUT" | grep -q "UNJUDGED_SURFACE" && echo "$OUT" | grep -q "MM-2" && ! echo "$OUT" | grep -qE "no recorded verdict.*MM-1"; then
+  ok "MM-1 (recorded verdict) clears; MM-2 (no verdict) is UNJUDGED — real gate, not pending"
+else
+  bad "verdict extraction / UNJUDGED gate wrong" "$OUT"
+fi
+
+echo "── Test 34: UNJUDGED proves the machinery RAN, not that the verdict is good (anti-rubber-stamp)"
+# even a BAD-recorded verdict counts as JUDGED — honesty of the verdict is /audit's job, not the graph's
+cat > "$VJ/epics/001-e/stories/S001-a/validation-report.md" <<'EOF'
+---
+readiness_state_verified: UX-RC
+---
+## Magic Moment Validation
+- MM-1 scored **GOOD**
+- MM-2 scored **BAD** — cheap-feeling, needs work
+EOF
+OUT="$(python3 "$GRAPH" check "$VJ" 2>&1)" || true
+if ! echo "$OUT" | grep -q "UNJUDGED_SURFACE"; then
+  ok "a recorded BAD verdict still counts as judged (graph proves it ran; /audit owns its honesty)"
+else
+  bad "a recorded verdict (even BAD) should clear UNJUDGED" "$OUT"
+fi
 
 echo ""
 echo "════════════════════════════════════════════"

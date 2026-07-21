@@ -516,6 +516,43 @@ def _extract_story(spec, story_path, epic_id, story_qual, nodes, edges, add_node
             edges.append(Edge(story_qual, kind, tok, source_file=spec,
                               attrs={"epic_scope": epic_id, "story_scope": story_qual}))
 
+    # verdict extraction (v9.4): scan this story's validation artifacts for RECORDED MM verdicts →
+    # `judges` edges. The graph proves a verdict was recorded (the excellence machinery RAN), NOT that
+    # it is honest — that stays with /audit. So an agent can't dodge UNJUDGED by writing a bare token
+    # without the /audit adversary catching a fabricated one.
+    _extract_verdicts(story_path, story_qual, epic_id, nodes, edges, add_node)
+
+
+# a line that judges a magic moment: an MM reference within reach of an explicit verdict token
+RE_MM_VERDICT = re.compile(
+    r"(MM-?\d+)\b(?:(?!MM-?\d).){0,80}?(GOOD|BAD|PASS|FAIL|CONDITIONAL[_ ]?PASS|✅|❌|judged|scored)",
+    re.IGNORECASE)
+
+
+def _extract_verdicts(story_path, story_qual, epic_id, nodes, edges, add_node):
+    artifacts = [os.path.join(story_path, "validation-report.md"),
+                 os.path.join(story_path, "connoisseur-critique.md")]
+    lrp = os.path.join(story_path, "larp-recordings")
+    if os.path.isdir(lrp):
+        for f in sorted(os.listdir(lrp)):
+            if f.endswith(".md") and ("finding" in f or "critique" in f or "larp" in f):
+                artifacts.append(os.path.join(lrp, f))
+    seen = set()
+    for art in artifacts:
+        if not os.path.isfile(art):
+            continue
+        text = strip_noncontent(read_text(art))
+        for m in RE_MM_VERDICT.finditer(text):
+            mm = m.group(1)
+            mm_id = mm if mm.startswith("MM-") else "MM-" + mm[2:]  # normalize MM3 → MM-3
+            key = (mm_id, art)
+            if key in seen:
+                continue
+            seen.add(key)
+            vnode = "verdict:%s@%s" % (mm_id, story_qual)
+            add_node(Node(vnode, "verdict", epic_id, m.group(2).upper(), art, mm_id, content_hash(m.group(0))))
+            edges.append(Edge(vnode, "judges", mm_id, dst=mm_id, source_file=art))
+
 
 # ---------------------------------------------------------------------------
 # Graph object + serialization
@@ -981,12 +1018,30 @@ def check_graph(project_dir):
                       % " → ".join(cycle),
         })
 
+    # UNJUDGED_SURFACE (v9.4) — every promised MM-N must have a RECORDED verdict (the excellence
+    # machinery ran). Migration-aware: if NO MM anywhere has a verdict yet, LARP simply hasn't run →
+    # honest cap, not a block. Once ANY MM is judged, an unjudged MM is a real gap → caps ux-rc+
+    # (the /epic-validate gate blocks the ux-rc transition on it). The graph proves a verdict EXISTS;
+    # whether it is honest stays with /audit + LARP (the anti-rubber-stamp line).
+    judged = set(e.dst for e in edges if e.kind == "judges" and e.dst)
+    mm_nodes = [n for n in nodes.values() if n.kind == "magic-moment"]
+    if mm_nodes:
+        if not judged:
+            caps.append("UNJUDGED_SURFACE.P2: %d magic-moment(s) defined, none judged yet — run "
+                        "/larp connoisseur Job B (LARP not yet run; honest cap, not a block)" % len(mm_nodes))
+            cap_state = _min_readiness(cap_state, "integration-green")
+        else:
+            unjudged = [n.id for n in mm_nodes if n.id not in judged]
+            if unjudged:
+                caps.append("UNJUDGED_SURFACE.P2: %d/%d magic-moment(s) have no recorded verdict (%s) — "
+                            "/larp Job B judges them; bars ux-rc+ until then"
+                            % (len(unjudged), len(mm_nodes), ", ".join(sorted(unjudged)[:5])))
+                cap_state = _min_readiness(cap_state, "integration-green")
+
     # HONEST pending gates — needed data not yet in the graph; never a false pass
     pending = [
         "ORPHAN_CODE: pending tests-as-join (P5) — needs code nodes to prove every code entity "
         "traces to a promise. NOT evaluated (cannot claim 'no orphan code' yet).",
-        "UNJUDGED_SURFACE: pending verdict extraction (P3/P4) — needs IS-IT-GOOD verdict nodes to "
-        "prove every magic moment was judged. NOT evaluated. Taste itself stays owned by /audit + LARP.",
     ]
 
     hard = [f for f in findings if f["code"].endswith(".P1")]
@@ -1142,6 +1197,8 @@ def compute_gap(project_dir):
     axes = _collect_axes(project_dir)
     mm_total = sum(1 for n in nodes.values() if n.kind == "magic-moment")
     job_total = sum(1 for n in nodes.values() if n.kind == "job")
+    judged = set(e.dst for e in edges if e.kind == "judges" and e.dst)
+    mm_judged = sum(1 for n in nodes.values() if n.kind == "magic-moment" and n.id in judged)
     phantom = [f for f in hard if f["code"].startswith("PHANTOM_PROMISE")]
     return {
         "cap_state": cap_state,
@@ -1152,10 +1209,9 @@ def compute_gap(project_dir):
         "reports": axes["reports"],
         "axes_absent": axes["axes_absent"],
         "mm_total": mm_total,
+        "mm_judged": mm_judged,
         "job_total": job_total,
         "jtbd_gap": len(phantom) > 0,
-        # MM "judged" is pending verdict extraction (v9.4) — surfaced honestly, never counted a pass
-        "mm_judged_pending": True,
     }
 
 
@@ -1173,7 +1229,7 @@ def gap_line(project_dir):
     if g["taste_open"]:
         parts.append("TASTE:open(%d)" % g["taste_open"])
     if g["mm_total"]:
-        parts.append("MM:%d·unjudged(verdict-extraction pending v9.4)" % g["mm_total"])
+        parts.append("MM:%d/%d·judged" % (g["mm_judged"], g["mm_total"]))
     parts.append("JTBD:%s" % ("gap" if g["jtbd_gap"] else "ok"))
     if g["axes_absent"]:
         parts.append("axes-absent:%d-reports" % g["axes_absent"])
@@ -1184,7 +1240,8 @@ def gap_line(project_dir):
         # no promises to judge and nothing structural — but a real product should have MMs; stay honest
         return "SPECK-GAP: none-structural — GRAPH_CAP=%s (no MM/JOB defined; verify this is intended)" % g["cap_state"].upper()
     if done:
-        return "SPECK-GAP: none — GRAPH_CAP=%s · structural clear · JTBD ok (MM judging pending v9.4)" % g["cap_state"].upper()
+        return ("SPECK-GAP: none — GRAPH_CAP=%s · structural clear · MM %d/%d judged · JTBD ok"
+                % (g["cap_state"].upper(), g["mm_judged"], g["mm_total"]))
     return "SPECK-GAP: " + " | ".join(parts) + " | CAP=%s" % g["cap_state"].upper()
 
 
