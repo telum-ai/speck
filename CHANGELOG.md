@@ -1,5 +1,32 @@
 # Speck Changelog
 
+## v9.5.0 — 2026-07-21 — Per-harness agent tiering (decoupled, generated)
+
+`speck-*` agents are now tiered by role and generated per harness, replacing the symlink layout
+that was invalid for two of three runtimes.
+
+- **Model-tiering doctrine** — every agent is assigned a `tier` (frontier / mid / mechanical) by
+  role: frontier only at decomposition, design, and the adversarial audit (`speck-architect`,
+  `speck-planner`, `speck-auditor`) — never cheaping the planner or the auditor. Rationale: once a
+  frontier planner collapses ambiguity into an explicit spec cheap workers just follow, but a weak
+  spec taxes the whole worker fleet (Cursor agent-swarm economics — same 100% result at 8× lower
+  cost with a frontier planner + cheap workers).
+- **Per-harness generation** — the source of truth is `.cursor/agents/*.md` (`tier:` field + role
+  body); `generate-agents.js` derives every model and stamps three real files:
+  `.claude/agents/*.md` (`opus`/`sonnet`/`haiku`), `.cursor/agents/*.md`
+  (`claude-opus-4-8-thinking-high` / `composer-2.5`), `.codex/agents/*.toml` (`gpt-5.6-sol` /
+  `-terra` / `-luna` + `developer_instructions`). Each harness reads its own grammar + model
+  vocabulary — the old `.claude`/`.codex` symlinks into `.cursor` were invalid (Cursor has no bare
+  aliases and no Sonnet/Haiku; Codex reads TOML, not markdown, so the `.codex` symlink was
+  non-functional). Model maps verified against `cursor-agent --list-models` + Codex smoke tests.
+- **sync.js** — agents are copied as real per-harness dirs (`ALWAYS_OVERWRITE` + preserve); skills
+  stay symlinked. Legacy agent symlinks are safely unlinked (never followed) on upgrade.
+- **Enforcement** — `agent-model-tiers.test.js` (tier↔role + generated-in-sync-with-source, fail
+  loud on hand-edit) and `sync.agents-decouple.test.js` (the symlink→real-dir migration).
+  Regenerate after editing source with `npm run gen-agents`.
+
++8 tests (agent tiering + decouple migration). npm test green.
+
 ## v9.4.0 — 2026-07-21 — Verdict extraction → the real `UNJUDGED_SURFACE` gate
 
 The IS-IT-GOOD machinery becomes graph-visible: `UNJUDGED_SURFACE` turns from an honest pending note
