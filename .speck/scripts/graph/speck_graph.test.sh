@@ -38,6 +38,7 @@ cat > "$PROJ/epics/001-alpha/stories/S001-foo/spec.md" <<'EOF'
 artifact_type: story-spec
 depends_on: []
 blocks: [S002]
+serves: [MM-1]
 readiness_state_verified: UX-RC
 ---
 # Story: Foo
@@ -50,6 +51,7 @@ cat > "$PROJ/epics/001-alpha/stories/S002-bar/spec.md" <<'EOF'
 artifact_type: story-spec
 depends_on: [S001, 002/S077]   # S077 exists ONLY in epic 002 — a decisive cross-epic test
 blocks: []
+serves: [JOB-1]
 readiness_state_verified: IMPL-GREEN
 ---
 # Story: Bar
@@ -255,6 +257,7 @@ EOF
 cat > "$CHK/epics/001-x/stories/S001-a/spec.md" <<'EOF'
 ---
 artifact_type: story-spec
+serves: [MM-1]
 ---
 # Story: A
 Delivers MM-1.
@@ -286,6 +289,7 @@ echo "── Test 15: check on a fully-served graph → no P1 block (caps only),
 cat > "$CHK/epics/001-x/stories/S001-a/spec.md" <<'EOF'
 ---
 artifact_type: story-spec
+serves: [MM-1, MM-2]
 ---
 # Story: A
 Delivers MM-1 and MM-2.
@@ -515,7 +519,7 @@ cat > "$RD/product-contract.md" <<'EOF'
 ### MM-1 — delivered
 ### MM-2 — nobody builds this
 EOF
-printf -- '---\nartifact_type: story-spec\n---\n# A\nDelivers MM-1.\n#### AC-1 — a\n' > "$RD/epics/001-e/stories/S001-a/spec.md"
+printf -- '---\nartifact_type: story-spec\nserves: [MM-1]\n---\n# A\n#### AC-1 — a\n' > "$RD/epics/001-e/stories/S001-a/spec.md"
 cat > "$RD/epics/001-e/traceability-matrix.md" <<'EOF'
 # M
 ## 2. Traceability Matrix
@@ -549,7 +553,7 @@ cat > "$GP/product-contract.md" <<'EOF'
 ### MM-1 — delivered (adopts the scheme)
 ### MM-2 — nobody delivers this (phantom)
 EOF
-printf -- '---\nartifact_type: story-spec\n---\n# A\nDelivers MM-1.\n#### AC-1 — a\n' > "$GP/epics/001-e/stories/S001-a/spec.md"
+printf -- '---\nartifact_type: story-spec\nserves: [MM-1]\n---\n# A\n#### AC-1 — a\n' > "$GP/epics/001-e/stories/S001-a/spec.md"
 OUT="$(python3 "$GRAPH" gap "$GP" 2>&1)"
 if echo "$OUT" | grep -q "^SPECK-GAP:" && echo "$OUT" | grep -q "PHANTOM_PROMISE" && echo "$OUT" | grep -q "CAP="; then
   ok "gap emits a single SPECK-GAP token with the phantom + cap folded in"
@@ -617,13 +621,13 @@ cat > "$VJ/product-contract.md" <<'EOF'
 ### MM-1 — judged
 ### MM-2 — unjudged
 EOF
-printf -- '---\nartifact_type: story-spec\n---\n# A\nDelivers MM-1 and MM-2.\n#### AC-1 — a\n' > "$VJ/epics/001-e/stories/S001-a/spec.md"
+printf -- '---\nartifact_type: story-spec\nserves: [MM-1, MM-2]\n---\n# A\n#### AC-1 — a\n' > "$VJ/epics/001-e/stories/S001-a/spec.md"
 cat > "$VJ/epics/001-e/stories/S001-a/validation-report.md" <<'EOF'
 ---
 readiness_state_verified: UX-RC
 ---
 ## Magic Moment Validation
-- MM-1 scored **GOOD** (pixel-anchored, connoisseur Job B)
+- **VERDICT** MM-1 = GOOD — pixel-anchored, connoisseur Job B
 EOF
 OUT="$(python3 "$GRAPH" check "$VJ" 2>&1)" || true
 if echo "$OUT" | grep -q "UNJUDGED_SURFACE" && echo "$OUT" | grep -q "MM-2" && ! echo "$OUT" | grep -qE "no recorded verdict.*MM-1"; then
@@ -639,8 +643,8 @@ cat > "$VJ/epics/001-e/stories/S001-a/validation-report.md" <<'EOF'
 readiness_state_verified: UX-RC
 ---
 ## Magic Moment Validation
-- MM-1 scored **GOOD**
-- MM-2 scored **BAD** — cheap-feeling, needs work
+- **VERDICT** MM-1 = GOOD
+- **VERDICT** MM-2 = BAD — cheap-feeling, needs work
 EOF
 OUT="$(python3 "$GRAPH" check "$VJ" 2>&1)" || true
 if ! echo "$OUT" | grep -q "UNJUDGED_SURFACE"; then
@@ -669,13 +673,13 @@ cat > "$CAPP/product-contract.md" <<'EOF'
 ## 5. Magic Moments
 ### MM-1 — judged good
 EOF
-printf -- '---\nartifact_type: story-spec\n---\n# A\nDelivers MM-1 and serves JOB-1.\n#### AC-1 — a\n' > "$CAPP/epics/001-e/stories/S001-a/spec.md"
+printf -- '---\nartifact_type: story-spec\nserves: [MM-1, JOB-1]\n---\n# A\n#### AC-1 — a\n' > "$CAPP/epics/001-e/stories/S001-a/spec.md"
 cat > "$CAPP/epics/001-e/stories/S001-a/validation-report.md" <<'EOF'
 ---
 readiness_state_verified: UX-RC
 ---
 ## Magic Moment Validation
-- MM-1 scored **GOOD**
+- **VERDICT** MM-1 = GOOD
 EOF
 cat > "$CAPP/epics/001-e/traceability-matrix.md" <<'EOF'
 # M
@@ -771,6 +775,391 @@ if echo "$GAPOUT" | grep -q "CAP=INTEGRATION-GREEN" && ! echo "$GAPOUT" | grep -
   ok "hand-edited witness → the cap NUMBER itself is lowered (gap: CAP=INTEGRATION-GREEN)"
 else
   bad "sig-differs must lower cap_state, not merely warn beside CAP=SHIP" "$GAPOUT"
+fi
+
+# ── Tests 38-49: no proof may be derived from unstructured prose (issue #97).
+#
+# The scar, in one sentence: `serves` was minted by `re.findall(r"(MM-\d+|JOB-\d+)", body)` over the
+# WHOLE story spec, so a sentence written to say the OPPOSITE created the claim it denied. In one
+# committed graph 10 of 15 distinct MM `serves` edges were false and 8 came from lines reading
+# "None claimed" or "MM-1 and MM-2 are not claimed here." The same matcher was under-inclusive the
+# other way: `MM-5a` could not be node-ified at all, so a real promise dropped out of the census with
+# NO finding. Two opposite failure directions out of one matcher is the signature of an inference
+# that should never have been textual.
+#
+# The two surfaces these tests read, and why:
+#   `check` — the P1 COUNT (its header line is the honest total; a hidden finding shows up here).
+#   `gap`   — the raw `CAP=` token. `check` swaps the number for STALE whenever a witness is stale,
+#             so the number is only reliably observable on `gap` (the Test-35 scar-on-the-scar).
+# Both fixtures below deliberately have NO committed witness.json: GRAPH_UNBUILT is the one absence
+# that does not cap, so `CAP=` stays a real number instead of being masked to STALE.
+
+# Parse helpers — no pipelines, so `set -o pipefail` can't turn a non-match into a killed run.
+hard_count() { awk '/^❌ [0-9]+ hard finding/ {print $2; f=1; exit} END {if (!f) print 0}' <<<"$1"; }
+cap_token()  { awk 'match($0, /CAP=[A-Z-]+/) {print substr($0, RSTART, RLENGTH); exit}' <<<"$1"; }
+
+echo "── Test 38: PROPERTY — an explanatory sentence naming every MM/JOB changes NOTHING (headline)"
+# The single highest-value assertion in this file. Appending prose to an UNRELATED story must leave
+# the hard-finding count and GRAPH_CAP byte-identical. Today it does the opposite of nothing: the
+# disclaimer makes MM-2 look delivered and the real PHANTOM_PROMISE.P1 block disappears.
+PZ="$TMP/projects/013-prose"
+mkdir -p "$PZ/epics/001-e/stories/S001-claims" "$PZ/epics/001-e/stories/S002-unrelated"
+cat > "$PZ/product-contract.md" <<'EOF'
+# Contract
+## 2. Primary Persona
+**JTBD** (`JOB-1`): When X, I want Y, so that Z.
+## 5. Magic Moments
+### MM-1 — claimed by S001
+### MM-2 — nobody claims this (a real phantom)
+EOF
+cat > "$PZ/epics/001-e/stories/S001-claims/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+serves: [MM-1, JOB-1]
+---
+# Story: Claims
+This story delivers MM-1 for JOB-1.
+#### AC-1 — a
+EOF
+printf -- '---\nartifact_type: story-spec\n---\n# Story: Unrelated\n#### AC-1 — a\n' \
+  > "$PZ/epics/001-e/stories/S002-unrelated/spec.md"
+BEFORE_CHK="$(python3 "$GRAPH" check "$PZ" 2>&1 || true)"
+BEFORE_GAP="$(python3 "$GRAPH" gap "$PZ" 2>&1 || true)"
+B_HARD="$(hard_count "$BEFORE_CHK")"; B_CAP="$(cap_token "$BEFORE_GAP")"
+cat >> "$PZ/epics/001-e/stories/S002-unrelated/spec.md" <<'EOF'
+
+**Magic moments:** None claimed. MM-1 and MM-2 are not claimed here, and JOB-1 is served by S001.
+EOF
+AFTER_CHK="$(python3 "$GRAPH" check "$PZ" 2>&1 || true)"
+AFTER_GAP="$(python3 "$GRAPH" gap "$PZ" 2>&1 || true)"
+A_HARD="$(hard_count "$AFTER_CHK")"; A_CAP="$(cap_token "$AFTER_GAP")"
+if [[ "$B_HARD" == "1" && "$B_CAP" == "CAP=NO-SHIP" ]]; then
+  ok "property baseline is meaningful (1 hard PHANTOM_PROMISE.P1, CAP=NO-SHIP)"
+else
+  bad "property baseline is not the intended state" "hard=$B_HARD cap=$B_CAP -- $BEFORE_CHK"
+fi
+if [[ "$A_HARD" == "$B_HARD" && "$A_CAP" == "$B_CAP" ]]; then
+  ok "prose naming every MM/JOB left hard-count ($B_HARD) and $B_CAP byte-identical"
+else
+  bad "an explanatory sentence changed the graph's verdict" \
+      "hard ${B_HARD}→${A_HARD}, cap ${B_CAP}→${A_CAP} -- $AFTER_CHK"
+fi
+
+echo "── Test 39: PROPERTY, other direction — a cross-reference must not exit the amnesty for everyone"
+# The interaction behind issue #97 finding 3b: with zero serves edges an undelivered promise is
+# capped GRAPH_UNMIGRATED.P3 ("nothing wires to any … yet"). The FIRST prose mention anywhere used to
+# exit that amnesty for EVERY promise at once — converting soft caps into hard P1 blocks — while
+# immunising the one moment it happened to name. Naming a moment in a sentence is not migration.
+AM="$TMP/projects/014-amnesty"
+mkdir -p "$AM/epics/001-e/stories/S001-a"
+cat > "$AM/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — lives in another epic
+### MM-2 — not wired yet
+### MM-3 — not wired yet
+EOF
+printf -- '---\nartifact_type: story-spec\n---\n# Story: A\n#### AC-1 — a\n' \
+  > "$AM/epics/001-e/stories/S001-a/spec.md"
+B_HARD="$(hard_count "$(python3 "$GRAPH" check "$AM" 2>&1 || true)")"
+B_CAP="$(cap_token "$(python3 "$GRAPH" gap "$AM" 2>&1 || true)")"
+printf '\nCross-reference: MM-1 is delivered in the platform epic, not here.\n' \
+  >> "$AM/epics/001-e/stories/S001-a/spec.md"
+AFTER_CHK="$(python3 "$GRAPH" check "$AM" 2>&1 || true)"
+A_HARD="$(hard_count "$AFTER_CHK")"
+A_CAP="$(cap_token "$(python3 "$GRAPH" gap "$AM" 2>&1 || true)")"
+if [[ "$B_HARD" == "0" && "$A_HARD" == "0" && "$A_CAP" == "$B_CAP" ]]; then
+  ok "a cross-reference left the un-migrated project capped (0 hard, $B_CAP), not blocked"
+else
+  bad "one prose mention converted every other promise's cap into a block" \
+      "hard ${B_HARD}→${A_HARD}, cap ${B_CAP}→${A_CAP} -- $AFTER_CHK"
+fi
+
+echo "── Test 40: a backticked date placeholder (YYYY-MM-01) mints no edge and no DANGLING_REF.P1"
+# `MM-01` was a hard P1 BLOCK minted from the substring of a date format inside a code span.
+DT="$TMP/projects/015-dateformat"
+mkdir -p "$DT/epics/001-e/stories/S001-a"
+cat > "$DT/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — the one real moment
+EOF
+cat > "$DT/epics/001-e/stories/S001-a/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+serves: [MM-1]
+---
+# Story: A
+A date-format placeholder in a table: `YYYY-MM-01`.
+#### AC-1 — a
+EOF
+OUT="$(python3 "$GRAPH" check "$DT" 2>&1 || true)"
+if ! grep -q "MM-01" <<<"$OUT"; then
+  ok "a date format inside a code span is not a magic-moment reference"
+else
+  bad "date placeholder still mints an MM-01 reference" "$OUT"
+fi
+
+echo "── Test 41: a heterogeneous id (MM-5a) node-ifies — no silent census drop"
+# Streb renamed a founder-facing promise (MM-5a → MM-10, 19 files, +77/−67) because the node parser
+# pinned `MM-\d+`. AC ids five lines away already accepted `AC-1a`. The tool set the vocabulary.
+HT="$TMP/projects/016-hetero"
+mkdir -p "$HT/epics/001-e/stories/S001-a"
+cat > "$HT/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — plain
+### MM-5a — heterogeneous, historically numbered
+EOF
+cat > "$HT/epics/001-e/stories/S001-a/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+serves: [MM-1, MM-5a]
+---
+# Story: A
+#### AC-1 — a
+EOF
+python3 "$GRAPH" build "$HT" --stdout > "$TMP/hetero.json" 2>/dev/null
+if python3 - "$TMP/hetero.json" <<'PY'
+import json, sys
+g = json.load(open(sys.argv[1]))
+assert g["counts"]["by_kind"].get("magic-moment") == 2, g["counts"]["by_kind"]
+assert any(n["id"] == "MM-5a" for n in g["nodes"]), "MM-5a must be a node"
+assert any(e["kind"] == "serves" and e["dst"] == "MM-5a" for e in g["edges"]), "MM-5a must be servable"
+PY
+then ok "MM-5a is a node and a resolvable serves target (census = 2, matches the contract)"
+else bad "MM-5a dropped out of the census silently" "see assertion above"; fi
+# The matrix Source cell must accept the same shape, or `MM-5a` matches the PREFIX `MM-5` and mints
+# a DANGLING_REF.P1 at a node that never existed — the widening has to be consistent across the file.
+cat > "$HT/epics/001-e/traceability-matrix.md" <<'EOF'
+# M
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | product-contract §5 MM-5a | wow | S001 / AC-1 | — | ux-rc | discharged |
+EOF
+OUT="$(python3 "$GRAPH" lint-refs "$HT" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && ! grep -q "MM-5 " <<<"$OUT"; then
+  ok "a Source cell naming MM-5a resolves whole — no MM-5 prefix ghost"
+else
+  bad "the matrix Source regex shredded MM-5a into MM-5" "$OUT (rc=$RC)"
+fi
+rm -f "$HT/epics/001-e/traceability-matrix.md"
+
+echo "── Test 42: a §5 heading the schema still cannot node-ify is LOUD (HETEROGENEOUS_ID.P3)"
+cat > "$HT/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — plain
+### MM-5a — heterogeneous but accepted
+### Magic Moment: the coach is already here
+EOF
+OUT="$(python3 "$GRAPH" check "$HT" 2>&1 || true)"
+if grep -q "HETEROGENEOUS_ID.P3" <<<"$OUT" && grep -q "coach is already here" <<<"$OUT"; then
+  ok "an un-node-ifiable §5 heading is reported, never silently dropped"
+else
+  bad "the census disagreed with the contract's own headings and said nothing" "$OUT"
+fi
+
+echo "── Test 43: a NEGATED sentence must not clear UNJUDGED_SURFACE (it flipped the cap to SHIP)"
+# RE_MM_VERDICT matched an MM id within 80 chars of GOOD|PASS|judged|scored — including inside a
+# negation. `MM-1 was NOT judged in this story — no LARP has run` minted a `judges` edge, cleared
+# UNJUDGED_SURFACE and lifted GRAPH_CAP from INTEGRATION-GREEN to SHIP.
+NV="$TMP/projects/017-negverdict"
+mkdir -p "$NV/epics/001-e/stories/S001-a"
+cat > "$NV/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — the moment
+EOF
+cat > "$NV/epics/001-e/stories/S001-a/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+serves: [MM-1]
+---
+# Story: A
+#### AC-1 — a
+EOF
+cat > "$NV/epics/001-e/stories/S001-a/validation-report.md" <<'EOF'
+---
+readiness_state_verified: INTEGRATION-GREEN
+---
+## Magic Moment Validation
+MM-1 was NOT judged in this story — no LARP has run.
+EOF
+OUT="$(python3 "$GRAPH" check "$NV" 2>&1 || true)"
+GAPOUT="$(python3 "$GRAPH" gap "$NV" 2>&1 || true)"
+if grep -q "UNJUDGED_SURFACE" <<<"$OUT" && [[ "$(cap_token "$GAPOUT")" == "CAP=INTEGRATION-GREEN" ]]; then
+  ok "a negated sentence leaves MM-1 unjudged and the cap at INTEGRATION-GREEN"
+else
+  bad "a sentence saying MM-1 was NOT judged cleared the unjudged gate" "$OUT / $GAPOUT"
+fi
+if grep -q "UNPARSED_VERDICT.P3" <<<"$OUT"; then
+  ok "the verdict-shaped prose is surfaced as an UNPARSED_VERDICT.P3 hint, not read as proof"
+else
+  bad "verdict-shaped prose vanished instead of becoming a hint" "$OUT"
+fi
+
+echo "── Test 44: only an explicit machine-readable verdict line clears UNJUDGED (positive control)"
+cat > "$NV/epics/001-e/stories/S001-a/validation-report.md" <<'EOF'
+---
+readiness_state_verified: UX-RC
+---
+## Magic Moment Validation
+- **VERDICT** MM-1 = GOOD — pixel-anchored, connoisseur Job B
+EOF
+OUT="$(python3 "$GRAPH" check "$NV" 2>&1 || true)"
+if ! grep -q "UNJUDGED_SURFACE" <<<"$OUT" && ! grep -q "UNPARSED_VERDICT" <<<"$OUT"; then
+  ok "an explicit VERDICT line records the judgement (and needs no hint)"
+else
+  bad "the structured verdict line did not register" "$OUT"
+fi
+
+echo "── Test 44b: mm_verdicts: frontmatter also clears UNJUDGED — the tool's OWN remediation path"
+# UNPARSED_VERDICT.P3 tells authors to use a VERDICT line "or mm_verdicts: in the report
+# frontmatter" — that second half of its own advice had zero coverage until now.
+cat > "$NV/epics/001-e/stories/S001-a/validation-report.md" <<'EOF'
+---
+readiness_state_verified: UX-RC
+mm_verdicts: MM-1=GOOD
+---
+## Magic Moment Validation
+Recorded structurally via frontmatter, not a VERDICT line.
+EOF
+OUT="$(python3 "$GRAPH" check "$NV" 2>&1 || true)"
+if ! grep -q "UNJUDGED_SURFACE" <<<"$OUT" && ! grep -q "UNPARSED_VERDICT" <<<"$OUT"; then
+  ok "mm_verdicts: frontmatter records the judgement (and needs no hint)"
+else
+  bad "the frontmatter verdict path (mm_verdicts:) did not register" "$OUT"
+fi
+
+echo "── Test 45: a bare prose mention is UNCLAIMED_MM_REF.P3 with path:line — a hint, never a block"
+OUT="$(python3 "$GRAPH" check "$PZ" 2>&1 || true)"
+if grep -q "UNCLAIMED_MM_REF.P3" <<<"$OUT" \
+   && grep -q "S002-unrelated/spec.md:" <<<"$OUT" \
+   && [[ "$(hard_count "$OUT")" == "1" ]]; then
+  ok "prose drift is VISIBLE (path:line) instead of AUTHORITATIVE, and adds no block"
+else
+  bad "unclaimed prose mentions must surface as a located P3 hint" "$OUT"
+fi
+
+echo "── Test 46: a Status word without an edge behind it is STATUS_WITHOUT_EDGE.P2, not resolution"
+SW="$TMP/projects/018-statusword"
+mkdir -p "$SW/epics/001-e/stories/S001-a"
+printf 'x' > "$SW/epics/001-e/epic-breakdown.md"
+printf -- '---\nartifact_type: story-spec\n---\n# A\n#### AC-1 — a\n' > "$SW/epics/001-e/stories/S001-a/spec.md"
+cat > "$SW/epics/001-e/traceability-matrix.md" <<'EOF'
+# M
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | x | really discharged | S001 / AC-1 | — | ux-rc | discharged |
+| PRM-002 | x | the word only | — | — | ux-rc | discharged |
+EOF
+OUT="$(python3 "$GRAPH" check "$SW" 2>&1 || true)"
+GAPOUT="$(python3 "$GRAPH" gap "$SW" 2>&1 || true)"
+if grep -q "STATUS_WITHOUT_EDGE.P2" <<<"$OUT" && grep -q "PRM-002" <<<"$OUT" \
+   && ! grep -q "PRM-001" <<<"$OUT" && [[ "$(cap_token "$GAPOUT")" == "CAP=INTEGRATION-GREEN" ]]; then
+  ok "a self-authored 'discharged' with no discharge edge caps instead of resolving silently"
+else
+  bad "the status WORD still bought resolution with no edge behind it" "$OUT / $GAPOUT"
+fi
+
+echo "── Test 47: the §1d checklist line is the migration-era claim slot — and the template emits it"
+# The fallback is only reachable if the SHIPPED template puts an id on that line. It used to emit a
+# bare NAME placeholder, so the fallback matched nothing on a template-conformant story.
+if grep -q 'Magic Moment: MM-N — ' "$ROOT/.speck/templates/story/story-template.md"; then
+  ok 'story-template §1d emits "MM-N — [Name]" (the fallback has something to match)'
+else
+  bad "story-template §1d still emits a bare NAME placeholder" "the checklist fallback is dead on arrival"
+fi
+CL="$TMP/projects/019-checklist"
+mkdir -p "$CL/epics/001-e/stories/S001-a" "$CL/epics/001-e/stories/S002-b"
+cat > "$CL/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — claimed on the checklist line
+### MM-2 — disclaimed in a checklist line, so NOT claimed
+EOF
+cat > "$CL/epics/001-e/stories/S001-a/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: A
+### 1d. Magic Moments Tied to This Story
+- [x] Magic Moment: MM-1 — First wow
+  - Surface: the home screen
+#### AC-1 — a
+EOF
+cat > "$CL/epics/001-e/stories/S002-b/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: B
+### 1d. Magic Moments Tied to This Story
+- [ ] Magic Moment: None claimed. MM-1 and MM-2 are delivered and judged in S001.
+#### AC-1 — a
+EOF
+OUT="$(python3 "$GRAPH" check "$CL" 2>&1 || true)"
+if grep -q "PHANTOM_PROMISE.P1" <<<"$OUT" && grep -q "MM-2" <<<"$OUT" \
+   && [[ "$(hard_count "$OUT")" == "1" ]]; then
+  ok "the checklist line claims MM-1; a 'None claimed' checklist line claims nothing"
+else
+  bad "the §1d fallback read a disclaimer as a claim (or missed the real one)" "$OUT"
+fi
+
+echo "── Test 48: migrate --lift-serves is DRY-RUN by default and shows what it would assert for you"
+LS="$TMP/projects/020-lift"
+mkdir -p "$LS/epics/001-e/stories/S004-real" "$LS/epics/001-e/stories/S008-disclaimer"
+cat > "$LS/product-contract.md" <<'EOF'
+# Contract
+## 5. Magic Moments
+### MM-1 — one
+### MM-2 — two
+EOF
+cat > "$LS/epics/001-e/stories/S004-real/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: Real
+- [x] Magic Moment: MM-2 — the wow
+#### AC-1 — a
+EOF
+cat > "$LS/epics/001-e/stories/S008-disclaimer/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+---
+# Story: Disclaimer
+**None.** MM-1 and MM-2 change character in this epic, but they are delivered by S004.
+#### AC-1 — a
+EOF
+S008_BEFORE="$(shasum "$LS/epics/001-e/stories/S008-disclaimer/spec.md" | awk '{print $1}')"
+OUT="$(python3 "$GRAPH" migrate "$LS" --lift-serves 2>&1 || true)"
+S008_AFTER="$(shasum "$LS/epics/001-e/stories/S008-disclaimer/spec.md" | awk '{print $1}')"
+if grep -q "DRY-RUN" <<<"$OUT" && grep -q "S004-real/spec.md" <<<"$OUT" \
+   && grep -qE ":[0-9]+" <<<"$OUT" && grep -q "MM-2" <<<"$OUT" \
+   && grep -q "they are delivered by S004" <<<"$OUT" \
+   && [[ "$S008_BEFORE" == "$S008_AFTER" ]]; then
+  ok "dry-run prints each prose-derived edge with its source line and writes nothing"
+else
+  bad "lift-serves must be dry-run by default and quote the line it would assert from" "$OUT"
+fi
+
+echo "── Test 49: migrate --lift-serves --write lifts real claims into frontmatter, skips disclaimers"
+OUT="$(python3 "$GRAPH" migrate "$LS" --lift-serves --write 2>&1 || true)"
+S004_FM="$(sed -n '1,6p' "$LS/epics/001-e/stories/S004-real/spec.md")"
+S008_FM="$(sed -n '1,6p' "$LS/epics/001-e/stories/S008-disclaimer/spec.md")"
+if grep -q "serves: \[MM-2\]" <<<"$S004_FM" && ! grep -q "serves:" <<<"$S008_FM"; then
+  ok "the §1d claim was lifted; the 'None.' disclaimer was left for a human"
+else
+  bad "lift wrote the wrong claims" "S004: $S004_FM / S008: $S008_FM"
+fi
+# idempotent: a second --write must not duplicate or re-lift
+python3 "$GRAPH" migrate "$LS" --lift-serves --write >/dev/null 2>&1 || true
+if [[ "$(grep -c "serves:" "$LS/epics/001-e/stories/S004-real/spec.md")" == "1" ]]; then
+  ok "lift is idempotent (a second --write adds nothing)"
+else
+  bad "lift duplicated the frontmatter key" "$(sed -n '1,8p' "$LS/epics/001-e/stories/S004-real/spec.md")"
 fi
 
 echo ""

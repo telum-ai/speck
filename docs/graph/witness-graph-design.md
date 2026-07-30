@@ -2,6 +2,10 @@
 
 *Owner: Kjetil · Arc: identity → extractor → forcing gates → context packs → tests-as-join*
 
+**Status (v10):** Every proof the graph derives now comes from a **structured slot**, never from
+prose — see §4a for the full edge table and `migrate --lift-serves` in §7 for how existing repos
+carry over. The `serves`/`judges` repair is issue #97.
+
 **Status (v9.4):** Shipped — the witness graph is the **spine** (v9). `build`/`lint-refs`/`query`/
 `context`/`check`/`gate`/`road`/`gap`/`cascade`/`migrate` subcommands; forcing at 4 boundaries
 (First-Actions, story-prereqs reachability, validate, pre-commit) with the block-vs-guide adoption
@@ -108,8 +112,41 @@ authored markdown  ──►  extractor (python, stdlib)  ──►  witness.jso
 - **Identity resolver** — the node-id scheme below. Bare ids resolve within their owning scope;
   cross-scope references MUST qualify. A failed resolve is `DANGLING_REF.P1`.
 - **Node/edge model** — nodes: `job`, `magic-moment`, `persona`, `contract-clause`, `epic`, `story`,
-  `ac`, `task`, `dec`, `gate`, `evidence`, `verdict` (v9.4), `test`, `code`, `pattern`. Typed edges:
-  `sources · discharges · proves · guards · constrains · covers · judges · supersedes · depends-on`.
+  `ac`, `task`, `dec`, `gate`, `evidence`, `verdict` (v9.4), `test`, `code`, `pattern`.
+
+### 4a. Edge kinds — every one, and the SLOT it is derived from (v10)
+
+Each edge kind below is **shipped** (the extractor emits it today) or **designed** (reserved by this
+document, not yet emitted). The `derived from` column is the contract with authors: it names the one
+place a claim may be written. **A claim needs a slot, not a rule.**
+
+| edge | src → dst | shipped? | derived from — the authored SLOT |
+|------|-----------|----------|----------------------------------|
+| `serves` | story → MM / JOB | ✅ | story frontmatter `serves: [MM-2, JOB-1]`. Migration-era fallback: the §1d line `- [x] Magic Moment: MM-2 — Name`, id first after the label. **Never from prose.** |
+| `judges` | verdict → MM | ✅ | a validation artifact's `- **VERDICT** MM-1 = GOOD` line, or its frontmatter `mm_verdicts: MM-1=GOOD`. **Never from a sentence containing a verdict word.** |
+| `sources` | PRM → MM / JOB / FR / NFR | ✅ | the traceability-matrix **Source** cell |
+| `discharges` | PRM → story / AC | ✅ | the traceability-matrix **Discharge** cell (multi-target) |
+| `descoped-by` | PRM → DEC | ✅ | the traceability-matrix **DEC** cell |
+| `depends-on` | story → story | ✅ | story frontmatter `depends_on:` |
+| `blocks` | story → story | ✅ | story frontmatter `blocks:` |
+| `proves` · `guards` · `constrains` · `covers` · `supersedes` | — | designed | reserved for P5 (tests-as-join) and the gate/evidence nodes |
+
+**The rule this table encodes (issue #97).** `serves` was invented in implementation — it appeared in
+no template, no skill and no version of this table — and was minted by `re.findall` over a story's
+whole body, so *naming* an id was *claiming* it. In one committed graph 10 of 15 distinct MM `serves`
+edges were false and 8 came from lines reading "None claimed" or "MM-1 and MM-2 are not claimed
+here": a disclaimer read as an assertion, and deleting the disclaiming sentence turned the graph
+green. No author could have known, because the rule was written nowhere. **An edge kind that is not
+in this table does not exist.** Add the row before the code.
+
+Two corollaries the extractor now holds:
+
+- A bare id mentioned anywhere else is `UNCLAIMED_MM_REF.P3` — a located hint (`path:line`), never a
+  block. Specs must stay free to *explain* where a promise lives; a gate that convicted them for it
+  would teach authors to delete the explanation.
+- An id shape the schema cannot node-ify is `HETEROGENEOUS_ID.P3`, never a silent census drop.
+  `MM-5a` node-ifies (same shape `AC-1a` always had) — a founder-facing promise was once renumbered
+  across 19 files to satisfy this regex, which is the tool setting the product's vocabulary.
 
 ## 5. Identity model (Phase 1 — the prerequisite)
 
@@ -149,6 +186,20 @@ verified state; prose restatements render from it.
 Generic to **any** live Speck project (not Streb-specific). Ships with Phase 1: an ID-qualification
 reconcile + extractor bootstrap that upgrades Streb, Splang, keegt, and every future repo — same
 family as `reconcile-matrix-grain.sh` (idempotent, `--dry-run`, never destructive).
+
+**v10 — `migrate <PROJECT_DIR> --lift-serves`.** Before v10 *every* `serves` edge in every repo was
+prose-derived. Landing §4a's structured rule alone would convert every wired magic moment into
+`PHANTOM_PROMISE.P1` and every wired story into `ORPHAN_STORY.P1` — and `ORPHAN_STORY` blocks
+`/story-implement` via `check-story-prereqs.sh`, so it would stop real work everywhere on upgrade
+day. The lift is therefore part of the change, not an afterthought:
+
+- **dry-run by default.** It prints every edge the old extractor would have minted, with its
+  `path:line` and the source line itself, so a human reads what is about to be asserted on their
+  behalf before anything is written. On the measured field numbers that review is ~15 lines.
+- `--write` lifts them into each story's `serves:` frontmatter. Lines that read as disclaimers are
+  printed `SKIP` with the reason and left alone (`--include-disclaimed` forces them in) — writing
+  known-false claims into a structured slot would migrate the bug instead of the data.
+- Idempotent: a story that already has `serves:` is left untouched.
 
 ## 8. Phasing (each a shippable arc, verified + committed)
 

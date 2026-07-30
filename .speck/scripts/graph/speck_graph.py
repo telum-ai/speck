@@ -48,7 +48,7 @@ SCHEMA_VERSION = "1.0"
 RE_STORY_BARE = re.compile(r"^S\d{2,}$")
 RE_AC_BARE = re.compile(r"^AC-\d+[a-z]?$")            # sub-lettered ACs (AC-1a) are real
 RE_PRM_BARE = re.compile(r"^PRM-\d+$")
-RE_MM = re.compile(r"^MM-\d+$")
+RE_MM = re.compile(r"^MM-\d+[a-z]?$")           # sub-lettered MMs (MM-5a) are real, like AC-1a
 RE_JOB = re.compile(r"^JOB-\d+$")
 RE_DEC = re.compile(r"^DEC-\d+$")
 RE_FR = re.compile(r"^FR-[A-Za-z0-9-]+-\d+$")         # tolerate hyphenated middles (FR-auth-svc-014)
@@ -61,17 +61,30 @@ RE_STORY_REF = re.compile(
     r"(?:(?P<epic>[A-Za-z0-9][A-Za-z0-9-]*)/)?(?P<story>S\d{2,})(?:\s*/\s*(?P<ac>AC-\d+[a-z]?))?")
 
 
-def strip_noncontent(text):
-    """Remove fenced code blocks and HTML comments so id scans don't harvest example ids.
+def content_lines(text, skip_frontmatter=False):
+    """Yield (file_lineno, line) for every CONTENT line — fenced code and HTML comments dropped.
 
-    parse_tables already does this for tables; the free-text id scans (MM/JOB/DEC/FR) must too,
-    or a `DEC-9999` inside ``` or <!-- --> pollutes kind_counts and flips a ref's P3→P1 tier.
+    The line number is 1-based IN THE FILE, which is the whole point: a finding that says
+    "this id is mentioned but claims nothing" is only actionable if it can hand a human a
+    `path:line` to open. Carrying the number here (rather than re-deriving it from a stripped
+    string later) is what keeps the hint honest across fences, comments and frontmatter.
     """
     out = []
     in_fence = False
     in_comment = False
-    for line in text.splitlines():
+    in_fm = False
+    lines = text.splitlines()
+    for idx, line in enumerate(lines):
+        lineno = idx + 1
         s = line.strip()
+        if skip_frontmatter:
+            if idx == 0 and s == "---":
+                in_fm = True
+                continue
+            if in_fm:
+                if s == "---":
+                    in_fm = False
+                continue
         if not in_fence and "<!--" in line and "-->" not in line:
             in_comment = True
             continue
@@ -85,9 +98,17 @@ def strip_noncontent(text):
         if in_fence:
             continue
         # single-line <!-- ... --> comment
-        line = re.sub(r"<!--.*?-->", "", line)
-        out.append(line)
-    return "\n".join(out)
+        out.append((lineno, re.sub(r"<!--.*?-->", "", line)))
+    return out
+
+
+def strip_noncontent(text):
+    """Remove fenced code blocks and HTML comments so id scans don't harvest example ids.
+
+    parse_tables already does this for tables; the free-text id scans (MM/JOB/DEC/FR) must too,
+    or a `DEC-9999` inside ``` or <!-- --> pollutes kind_counts and flips a ref's P3→P1 tier.
+    """
+    return "\n".join(line for _lineno, line in content_lines(text))
 
 
 def story_refs(raw):
@@ -357,11 +378,41 @@ def project_id_of(project_dir):
     return os.path.basename(os.path.normpath(project_dir))
 
 
+RE_MM_HEADING = re.compile(r"^#{2,4}\s+(MM-\d+[a-z]?)\b")
+RE_MM_SECTION = re.compile(r"^##\s+\d*\.?\s*.*magic\s+moment", re.IGNORECASE)
+
+
+def _heterogeneous_mm_headings(text, contract):
+    """§5 headings that name a moment the schema still cannot node-ify → founder-visible drops.
+
+    Only reported once the contract HAS adopted the `MM-N` scheme: in a free-text-era contract
+    every §5 heading is un-node-ifiable and `GRAPH_UNMIGRATED` already says so. Here the census
+    disagrees with the contract's own heading count and NOTHING said so — Streb's read 9/10 against
+    a contract declaring 10, which is exactly the silence a witness graph exists to break.
+    """
+    lines = content_lines(text)
+    if not any(RE_MM_HEADING.match(l) for _n, l in lines):
+        return []
+    out = []
+    in_mm_section = False
+    for lineno, line in lines:
+        if line.startswith("## "):
+            in_mm_section = bool(RE_MM_SECTION.match(line))
+            continue
+        if not in_mm_section:
+            continue
+        m = re.match(r"^#{3,4}\s+(.+?)\s*$", line)
+        if m and not RE_MM_HEADING.match(line):
+            out.append({"heading": m.group(1), "source_file": contract, "line": lineno})
+    return out
+
+
 def extract(project_dir):
     """Walk a project's specs tree → (nodes: dict[id]->Node, edges: list[Edge], meta: dict)."""
     nodes = {}
     edges = []
-    meta = {"project_id": project_id_of(project_dir), "missing_sources": []}
+    meta = {"project_id": project_id_of(project_dir), "missing_sources": [],
+            "heterogeneous_ids": []}
 
     def add_node(node):
         # First definition wins; a genuine duplicate id is recorded for the resolver to flag.
@@ -374,10 +425,14 @@ def extract(project_dir):
     contract = os.path.join(project_dir, "product-contract.md")
     if os.path.isfile(contract):
         text = strip_noncontent(read_text(contract))
-        # MM heading, title optional: "### MM-1 — Name", "### MM-1", "#### MM-2: Name"
-        for m in re.finditer(r"^#{2,4}\s+(MM-\d+)\b\s*(?:[—\-:]\s*(.*))?$", text, re.MULTILINE):
+        # MM heading, title optional: "### MM-1 — Name", "### MM-1", "#### MM-2: Name",
+        # "### MM-5a — Name". Sub-lettered ids node-ify (scar: Streb renamed a founder-facing
+        # promise across 19 files — MM-5a → MM-10 — because this pattern pinned `MM-\d+` while the
+        # AC parser five lines away already accepted `AC-1a`. The tool set the product vocabulary.)
+        for m in re.finditer(r"^#{2,4}\s+(MM-\d+[a-z]?)\b\s*(?:[—\-:]\s*(.*))?$", text, re.MULTILINE):
             add_node(Node(m.group(1), "magic-moment", None, (m.group(2) or "").strip(),
                           contract, m.group(1), content_hash(m.group(0))))
+        meta["heterogeneous_ids"] = _heterogeneous_mm_headings(read_text(contract), contract)
         for m in re.finditer(r"(JOB-\d+)", text):
             if m.group(1) not in nodes:
                 add_node(Node(m.group(1), "job", None, "", contract, m.group(1), content_hash(m.group(1))))
@@ -472,7 +527,10 @@ def _extract_matrix(matrix, epic_id, nodes, edges, add_node):
                           {"status": status, "grain": grain}))
             # sources edge — the Source cell may name MM-N / JOB-N / FR-... / screen ids
             if h_src:
-                for tok in re.findall(r"(MM-\d+|JOB-\d+|FR-[A-Za-z0-9-]+-\d+|NFR-\d+)", row.get(h_src, "")):
+                # `MM-\d+[a-z]?` here too, or a Source cell naming MM-5a matches the prefix `MM-5`
+                # and mints a DANGLING_REF.P1 at a node that never existed.
+                for tok in re.findall(r"(MM-\d+[a-z]?|JOB-\d+|FR-[A-Za-z0-9-]+-\d+|NFR-\d+)",
+                                      row.get(h_src, "")):
                     edges.append(Edge(prm_id, "sources", tok, source_file=matrix,
                                       attrs={"epic_scope": epic_id}))
             # discharge edges — a cell may list SEVERAL story/AC targets (multi-target discharge)
@@ -485,6 +543,94 @@ def _extract_matrix(matrix, epic_id, nodes, edges, add_node):
                 for tok in re.findall(r"(DEC-\d+)", row.get(h_dec, "")):
                     edges.append(Edge(prm_id, "descoped-by", tok, source_file=matrix,
                                       attrs={"epic_scope": epic_id}))
+
+
+# ---------------------------------------------------------------------------
+# Delivery claims (issue #97) — `serves` derives from a STRUCTURED SLOT, never from prose.
+#
+# THE SCAR. `serves` used to be `re.findall(r"(MM-\d+|JOB-\d+)", body)` over the whole story spec,
+# so naming an id WAS claiming it. In one committed graph 10 of 15 distinct MM serves edges were
+# false and 8 came from lines reading "None claimed" or "MM-1 and MM-2 are not claimed here." —
+# a disclaimer read as an assertion. Two workarounds had already grown in product artifacts: one
+# spec documented the bug inside itself ("its id is deliberately not written out here"), and another
+# repo wrote ids hyphen-less (`MM8`) in 209 places to dodge the matcher. The product's vocabulary was
+# deforming around a regex.
+#
+# WHY A SLOT AND NOT A BETTER REGEX. A delivery claim is irreducibly the author's own statement, so
+# there is no unauthorable medium to switch to — the repair is to give the claim a NAMED PLACE.
+# A slot can be empty (`serves: []` means "this story claims nothing", and is honoured as such);
+# a rule over free text is satisfiable by accident by every sentence in the repo. The same file
+# already works this way one function up: `sources` reads a named Source CELL, `depends_on`/`blocks`
+# read frontmatter. `serves` was the one edge kind that guessed.
+#
+# PRECEDENCE, and why the fallback exists:
+#   1. frontmatter `serves: [MM-2, JOB-1]` — the single source of truth. PRESENT-BUT-EMPTY is an
+#      explicit "none" and stops here; it never falls through.
+#   2. else the §1d checklist line the story template emits — `- [x] Magic Moment: MM-2 — Name`.
+#      The id must be the FIRST token after the label, so "None claimed. MM-1 and MM-2 are …"
+#      claims nothing. This is the migration-era bridge: in the field every genuine claim already
+#      sat on this line, so a repo that has not run `migrate --lift-serves` yet stays wired.
+# ---------------------------------------------------------------------------
+
+# A leading boundary that is neither alphanumeric NOR a hyphen: `YYYY-MM-01` in a date format is
+# not a magic moment, and it used to mint a hard `DANGLING_REF.P1` BLOCK out of a table placeholder.
+RE_PROMISE_ID = re.compile(r"(?<![A-Za-z0-9-])(MM-\d+[a-z]?|JOB-\d+)\b")
+RE_CODE_SPAN = re.compile(r"`[^`]*`")
+
+# The §1d claim line. The id sits IMMEDIATELY after the label — that adjacency is the claim.
+RE_SERVES_CHECKLIST = re.compile(
+    r"^\s*[-*+]\s*\[[ xX]\]\s*(?:\*\*)?Magic\s+Moment(?:\*\*)?\s*:\s*\**\s*(MM-\d+[a-z]?|JOB-\d+)\b")
+
+
+def _dedup(seq):
+    """Order-preserving dedup. A claim is a SET — an id named three times is one promise, not
+    three edges (the old extractor appended per occurrence: 122 of one repo's 800 edges were
+    duplicate serves rows, and those counts got quoted onward as graph size)."""
+    seen = set()
+    out = []
+    for x in seq:
+        if x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out
+
+
+def promise_refs(raw):
+    """MM/JOB ids out of a structured frontmatter value: `serves: [MM-2, JOB-1]`."""
+    return _dedup(RE_PROMISE_ID.findall(raw or ""))
+
+
+def story_promise_claims(fm, text):
+    """Return (claimed_ids, source) for one story spec. See the precedence note above."""
+    if "serves" in fm:
+        return promise_refs(fm.get("serves", "")), "frontmatter"
+    claims = []
+    for _lineno, line in content_lines(text, skip_frontmatter=True):
+        m = RE_SERVES_CHECKLIST.match(line)
+        if m:
+            claims.append(m.group(1))
+    return _dedup(claims), "checklist"
+
+
+def unclaimed_promise_mentions(text, claimed):
+    """Bare id mentions in prose that no structured claim covers → [{id, line, text}].
+
+    Reported as `UNCLAIMED_MM_REF.P3` — a located hint, NEVER a finding. Specs legitimately discuss
+    ids: cross-references, epic narrative, explicit non-claims, retro prose, decision logs. A gate
+    that convicted a spec for EXPLAINING where a promise lives would teach authors to delete the
+    explanation, which is the failure direction this whole repair exists to avoid.
+    """
+    out = []
+    claimed_set = set(claimed)
+    for lineno, line in content_lines(text, skip_frontmatter=True):
+        if RE_SERVES_CHECKLIST.match(line):
+            continue
+        scan = RE_CODE_SPAN.sub(" ", line)  # an id inside `backticks` is an example, not a mention
+        for tok in _dedup(RE_PROMISE_ID.findall(scan)):
+            if tok in claimed_set:
+                continue
+            out.append({"id": tok, "line": lineno, "text": line.strip()[:120]})
+    return out
 
 
 def _extract_story(spec, story_path, epic_id, story_qual, nodes, edges, add_node):
@@ -506,10 +652,16 @@ def _extract_story(spec, story_path, epic_id, story_qual, nodes, edges, add_node
         ac_id = "%s/%s" % (story_qual, m.group(1))
         add_node(Node(ac_id, "ac", epic_id, (m.group(2) or "").strip(), spec, m.group(1),
                       content_hash(m.group(0))))
-    # magic-moment / job references (serves edges)
-    for tok in re.findall(r"(MM-\d+|JOB-\d+)", body):
+    # --- serves edges: a DELIVERY CLAIM, and a claim needs a SLOT, not a sentence ---
+    claims, claim_source = story_promise_claims(fm, text)
+    for tok in claims:
         edges.append(Edge(story_qual, "serves", tok, source_file=spec,
-                          attrs={"epic_scope": epic_id, "story_scope": story_qual}))
+                          attrs={"epic_scope": epic_id, "story_scope": story_qual,
+                                 "claim_source": claim_source}))
+    # every OTHER id occurrence is prose: recorded with path:line as a hint, never as an edge
+    unclaimed = unclaimed_promise_mentions(text, claims)
+    if unclaimed:
+        nodes[story_qual].attrs["unclaimed_promise_refs"] = unclaimed
     # depends_on / blocks from frontmatter — story_refs preserves ordinal/full-dir qualifiers
     for key, kind in (("depends_on", "depends-on"), ("blocks", "blocks")):
         for tok in story_refs(fm.get(key, "")):
@@ -523,10 +675,54 @@ def _extract_story(spec, story_path, epic_id, story_qual, nodes, edges, add_node
     _extract_verdicts(story_path, story_qual, epic_id, nodes, edges, add_node)
 
 
-# a line that judges a magic moment: an MM reference within reach of an explicit verdict token
-RE_MM_VERDICT = re.compile(
-    r"(MM-?\d+)\b(?:(?!MM-?\d).){0,80}?(GOOD|BAD|PASS|FAIL|CONDITIONAL[_ ]?PASS|✅|❌|judged|scored)",
+# ---------------------------------------------------------------------------
+# Verdicts (v9.4, repaired for issue #97) — a `judges` edge needs an EXPLICIT, machine-readable line.
+#
+# THE SCAR. The old matcher took an MM id within 80 characters of GOOD|PASS|judged|scored — and a
+# negation sits well inside 80 characters. A validation report reading
+#     `MM-1 was NOT judged in this story — no LARP has run`
+# minted a `judges` edge, cleared `UNJUDGED_SURFACE` and lifted `GRAPH_CAP` from INTEGRATION-GREEN
+# to SHIP. The sentence that says the machinery did not run is not evidence that it did.
+#
+# The canonical form the skills write and this reads:
+#     - **VERDICT** MM-1 = GOOD — pixel-anchored, connoisseur Job B
+# or, in the report's own frontmatter:
+#     mm_verdicts: MM-1=GOOD, MM-2=BAD
+# The old loose pattern survives as a HINT ONLY (`UNPARSED_VERDICT.P3`): verdict-shaped prose with
+# no machine-readable line is surfaced so the author can convert it — it can no longer clear a gate.
+# As before, the graph proves a verdict was RECORDED, never that it is honest; that stays with /audit.
+# ---------------------------------------------------------------------------
+
+VERDICT_WORDS = r"GOOD|BAD|PASS|FAIL|CONDITIONAL[ _-]?PASS"
+
+RE_VERDICT_LINE = re.compile(
+    r"^\s*(?:[-*+]\s*)?(?:\*\*|`)?VERDICT(?:\*\*|`)?\s*:?\s*"
+    r"(?:\*\*)?(MM-\d+[a-z]?)(?:\*\*)?\s*(?:=|:|—|–|-)\s*(?:\*\*|`)?(" + VERDICT_WORDS + r")\b",
     re.IGNORECASE)
+
+RE_FM_VERDICT = re.compile(r"(MM-\d+[a-z]?)\s*[=:]\s*(" + VERDICT_WORDS + r")\b", re.IGNORECASE)
+
+# Verdict-SHAPED prose. Kept only to tell an author "this looks like a verdict but proves nothing".
+RE_MM_VERDICT = re.compile(
+    r"(MM-?\d+[a-z]?)\b(?:(?!MM-?\d).){0,80}?(GOOD|BAD|PASS|FAIL|CONDITIONAL[_ ]?PASS|✅|❌|judged|scored)",
+    re.IGNORECASE)
+
+
+def _norm_mm(mm):
+    return mm if mm.upper().startswith("MM-") else "MM-" + mm[2:]  # normalize MM3 → MM-3
+
+
+def _structured_verdicts(text):
+    """Every machine-readable verdict in one artifact → [(mm_id, verdict, lineno)]."""
+    out = []
+    fm, _body = strip_frontmatter(text)
+    for mm, verdict in RE_FM_VERDICT.findall(fm.get("mm_verdicts", "") or ""):
+        out.append((_norm_mm(mm), verdict.upper(), 0))
+    for lineno, line in content_lines(text, skip_frontmatter=True):
+        m = RE_VERDICT_LINE.match(line)
+        if m:
+            out.append((_norm_mm(m.group(1)), m.group(2).upper(), lineno))
+    return out
 
 
 def _extract_verdicts(story_path, story_qual, epic_id, nodes, edges, add_node):
@@ -538,20 +734,36 @@ def _extract_verdicts(story_path, story_qual, epic_id, nodes, edges, add_node):
             if f.endswith(".md") and ("finding" in f or "critique" in f or "larp" in f):
                 artifacts.append(os.path.join(lrp, f))
     seen = set()
+    hints = []
     for art in artifacts:
         if not os.path.isfile(art):
             continue
-        text = strip_noncontent(read_text(art))
-        for m in RE_MM_VERDICT.finditer(text):
-            mm = m.group(1)
-            mm_id = mm if mm.startswith("MM-") else "MM-" + mm[2:]  # normalize MM3 → MM-3
+        raw = read_text(art)
+        structured = _structured_verdicts(raw)
+        recorded = set(mm for mm, _v, _ln in structured)
+        for mm_id, verdict, lineno in structured:
             key = (mm_id, art)
             if key in seen:
                 continue
             seen.add(key)
             vnode = "verdict:%s@%s" % (mm_id, story_qual)
-            add_node(Node(vnode, "verdict", epic_id, m.group(2).upper(), art, mm_id, content_hash(m.group(0))))
-            edges.append(Edge(vnode, "judges", mm_id, dst=mm_id, source_file=art))
+            add_node(Node(vnode, "verdict", epic_id, verdict, art, mm_id,
+                          content_hash("%s=%s" % (mm_id, verdict))))
+            edges.append(Edge(vnode, "judges", mm_id, dst=mm_id, source_file=art,
+                              attrs={"line": lineno}))
+        # verdict-shaped prose with no machine-readable line behind it: a hint, never an edge
+        for lineno, line in content_lines(raw, skip_frontmatter=True):
+            if RE_VERDICT_LINE.match(line):
+                continue
+            for m in RE_MM_VERDICT.finditer(line):
+                mm_id = _norm_mm(m.group(1))
+                if mm_id in recorded:
+                    continue
+                hints.append({"mm": mm_id, "source_file": art, "line": lineno,
+                              "text": line.strip()[:120]})
+                break
+    if hints and story_qual in nodes:
+        nodes[story_qual].attrs["unparsed_verdicts"] = hints
 
 
 # ---------------------------------------------------------------------------
@@ -577,6 +789,10 @@ def build_graph(project_dir):
         },
         "nodes": [nodes[k].to_dict() for k in sorted(nodes.keys())],
         "edges": [e.to_dict() for e in edges],
+        # extractor observations that are NOT graph facts (a §5 heading with no id has no node to
+        # hang off). Deliberately outside the nodes/edges signature `_sig` compares, so adding them
+        # can never read as staleness in an otherwise-fresh committed witness.
+        "extractor_notes": {"heterogeneous_ids": meta.get("heterogeneous_ids", [])},
     }
     return graph, nodes, edges
 
@@ -899,6 +1115,46 @@ def check_graph(project_dir):
     caps = []
     cap_state = "ship"
 
+    def _rel(p):
+        try:
+            return os.path.relpath(p, project_dir)
+        except ValueError:
+            return p
+
+    # UNCLAIMED_MM_REF — bare id mentions in prose. A HINT, and deliberately non-capping (issue #97).
+    # This is the exact line where the old bug lived: a mention used to BE a claim. It is now
+    # visible instead of authoritative, and it must not move the number — otherwise appending an
+    # explanatory sentence to a story would still change the project's readiness ceiling, which is
+    # the property the test file pins ("prose changes nothing").
+    unclaimed = []
+    for n in sorted(nodes.values(), key=lambda x: x.id):
+        for h in n.attrs.get("unclaimed_promise_refs", []) or []:
+            unclaimed.append("%s:%d %s" % (_rel(n.source_file), h["line"], h["id"]))
+    if unclaimed:
+        caps.append("UNCLAIMED_MM_REF.P3: %d bare promise id(s) mentioned in prose that claim "
+                    "nothing (%s%s) — a mention is not a claim; if a story DOES deliver one, put it "
+                    "in that story's `serves:` frontmatter (does not cap)"
+                    % (len(unclaimed), ", ".join(unclaimed[:5]),
+                       ", …" if len(unclaimed) > 5 else ""))
+
+    # UNPARSED_VERDICT — verdict-shaped prose with no machine-readable line behind it. Also a hint:
+    # the prose is not proof, but silently dropping it would hide that someone tried to record one.
+    unparsed = []
+    for n in sorted(nodes.values(), key=lambda x: x.id):
+        for h in n.attrs.get("unparsed_verdicts", []) or []:
+            unparsed.append("%s:%d %s" % (_rel(h["source_file"]), h["line"], h["mm"]))
+    if unparsed:
+        caps.append("UNPARSED_VERDICT.P3: %d verdict-shaped line(s) prove nothing (%s%s) — record "
+                    "the judgement as `- **VERDICT** MM-N = GOOD|BAD` (or `mm_verdicts:` in the "
+                    "report frontmatter) so the graph can read it (does not cap)"
+                    % (len(unparsed), ", ".join(unparsed[:5]), ", …" if len(unparsed) > 5 else ""))
+
+    # HETEROGENEOUS_ID — a §5 heading the schema cannot node-ify. Loud instead of a silent census drop.
+    for h in graph.get("extractor_notes", {}).get("heterogeneous_ids", []):
+        caps.append("HETEROGENEOUS_ID.P3: product-contract §5 heading '%s' (%s:%d) has no `MM-N` id, "
+                    "so it is NOT in the census — give it one (`MM-5a` is accepted) (does not cap)"
+                    % (h["heading"], _rel(h["source_file"]), h["line"]))
+
     # unmigrated schemes cap honestly at integration-green (an un-hardened graph can't back ux-rc)
     if cap_reasons:
         detail = ", ".join("%d %s" % (v, k) for k, v in sorted(cap_reasons.items()))
@@ -947,7 +1203,10 @@ def check_graph(project_dir):
                     "code": "PHANTOM_PROMISE.P1", "src": n.id, "edge": "serves", "ref": n.id,
                     "resolved_to": n.id, "source_file": n.source_file,
                     "detail": "%s '%s' is promised in the contract but NO story delivers it — no "
-                              "story serves it and no discharged PRM sources it (build the right thing)"
+                              "story serves it and no discharged PRM sources it (build the right "
+                              "thing). Since v10 a claim lives in a story's `serves:` frontmatter; "
+                              "naming the id in prose claims nothing. Carrying pre-v10 claims over: "
+                              "`speck_graph.py migrate <PROJECT_DIR> --lift-serves`"
                               % (n.id, n.title),
                 })
 
@@ -994,15 +1253,29 @@ def check_graph(project_dir):
     # everything-must-be-terminal check is /epic-validate's job (see MATRIX grain cap).
     discharged_prms = set(e.src for e in edges if e.kind == "discharges")
     descoped_prms = set(e.src for e in edges if e.kind == "descoped-by")
-    TERMINAL_STATUS = ("discharged", "descoped", "pilot-gated")
-    for n in nodes.values():
+    for n in sorted(nodes.values(), key=lambda x: x.id):
         if n.kind != "prm":
             continue
         status = (n.attrs.get("status") or "").strip().lower()
-        # Resolved by a terminal STATUS (matches the script) OR by an actual edge (robust to
-        # mislabeled rows). `mapped` is not terminal but carries a discharge edge → resolved.
-        resolved = (status in TERMINAL_STATUS or n.id in discharged_prms or n.id in descoped_prms)
-        if resolved:
+        # Resolution is judged by EDGE PRESENCE. `mapped` is not a terminal word but carries a
+        # discharge edge → resolved. `pilot-gated` is the one status with no edge to point at.
+        has_edge = n.id in discharged_prms or n.id in descoped_prms
+        if has_edge or status == "pilot-gated":
+            continue
+        # A terminal WORD with no edge behind it (issue #97): the status is the author's own text,
+        # the edge is the artifact. This used to resolve the row in silence — the same class as
+        # prose-as-proof, one function over. It does not become a hard block (no migration can
+        # invent the missing discharge, and the row may well be honest), but it stops buying green:
+        # it caps, loudly, and the message names the cell to fill.
+        if status in ("discharged", "descoped"):
+            caps.append("STATUS_WITHOUT_EDGE.P2: PRM %s says '%s' but carries no %s edge — fill the "
+                        "%s cell for that row in %s (or correct the status). A status WORD is not "
+                        "resolution."
+                        % (n.id, status,
+                           "discharge" if status == "discharged" else "descoped-by",
+                           "Discharge (story-id + AC-ref)" if status == "discharged" else "DEC",
+                           _rel(n.source_file)))
+            cap_state = _min_readiness(cap_state, "integration-green")
             continue
         epic_node = nodes.get(n.scope)
         has_breakdown = bool(epic_node and epic_node.attrs.get("has_breakdown"))
@@ -1149,7 +1422,11 @@ def gate_graph(project_dir, story=None, epic=None):
                 "code": "ORPHAN_STORY.P1", "src": scope, "edge": "reaches", "ref": scope,
                 "resolved_to": scope, "source_file": nodes[scope].source_file,
                 "detail": "story is specified but wired to NO promise — no PRM discharges to it and it "
-                          "serves no MM/JOB. Wire it to what it delivers, or it's building the wrong thing.",
+                          "serves no MM/JOB. Wire it to what it delivers, or it's building the wrong "
+                          "thing: add `serves: [MM-N, JOB-N]` to its frontmatter, or give it a "
+                          "traceability-matrix row. Since v10 naming an id in PROSE wires nothing — "
+                          "run `speck_graph.py migrate <PROJECT_DIR> --lift-serves` to carry pre-v10 "
+                          "claims into the frontmatter slot.",
             })
         elif not epic_has_promises:
             notes.append("GRAPH_UNMIGRATED: epic %s has no promise ledger yet — reachability not "
@@ -1334,8 +1611,12 @@ ROAD_ROUTING = {
     "UNMAPPED_PROMISE": ("BUILD", "discharge it (story+AC), descope it (DEC), or pilot-gate it — no open rows"),
     "ORPHAN_STORY": ("BUILD", "wire the story to a promise (add its PRM row / MM-serve), or descope it"),
     "PHANTOM_PROMISE": ("BUILD", "/story-specify → … → /story-validate the delivering story"),
+    "STATUS_WITHOUT_EDGE": ("TIDY", "fill the row's Discharge (story+AC) or DEC cell — the word is not the edge"),
+    "UNCLAIMED_MM_REF": ("TIDY", "if the story delivers it, add `serves: [MM-N]` to its frontmatter — else ignore"),
+    "HETEROGENEOUS_ID": ("TIDY", "give the §5 heading an `MM-N —` id (`MM-5a` is accepted)"),
     "ORPHAN_CODE": ("REMOVE", "remove the code no promise asked for (or wire it) — pending tests-as-join P5"),
     "UNJUDGED_SURFACE": ("PROVE", "/larp connoisseur Job B — judge this surface (pending verdict extraction)"),
+    "UNPARSED_VERDICT": ("PROVE", "record it as `- **VERDICT** MM-N = GOOD|BAD` in the validation report"),
     "PRE_V9_PROOF": ("PROVE", "/speck-reprove — re-earn the claim under v9 evidence"),
     "GRAIN_DEFICIT": ("PROVE", "collect product-grain evidence (cold-start build-LARP) and re-grade the row"),
 }
@@ -1508,6 +1789,133 @@ def report_missing_ids(project_dir):
     return notes
 
 
+# ---------------------------------------------------------------------------
+# migrate --lift-serves — carry the pre-#97 prose-derived claims into the structured slot.
+#
+# WHY THIS CANNOT BE A HARD FLIP. Before this release EVERY `serves` edge in every repo was
+# prose-derived (measured: 11 distinct in one repo, 15 in another, 35 in a third). Landing the
+# structured rule alone would turn every wired magic moment into `PHANTOM_PROMISE.P1` and every
+# wired story into `ORPHAN_STORY.P1` — and ORPHAN_STORY blocks `/story-implement` through
+# check-story-prereqs.sh, so it would stop real work in every project on upgrade day. That is a
+# worse failure than the bug. So the switch ships with the lift.
+#
+# WHY DRY-RUN IS THE DEFAULT AND THE LINE IS PRINTED. The whole point of the repair is that a
+# human, not a regex, decides what a story claims. The dry-run prints every edge the old extractor
+# would have minted WITH its source line, so the author reads what is about to be asserted on their
+# behalf. On the measured numbers that review is ~15 lines and ~10 deletions.
+#
+# WHAT `--write` LIFTS. §1d checklist claims always (in the field, every genuine claim already sat
+# there). Loose prose mentions too — EXCEPT lines that read as disclaimers, which are printed as
+# SKIP with the reason and left for a human; `--include-disclaimed` forces them in. Writing 10 known
+# -false claims into frontmatter because the old extractor believed them would migrate the bug.
+# ---------------------------------------------------------------------------
+
+# Lines whose plain reading is "this story does NOT claim these ids". Every one of these shapes was
+# observed minting a false edge in a committed graph.
+RE_DISCLAIMER = re.compile(
+    r"(\bnot\s+claimed\b|\bnone\s+claimed\b|^\s*(?:[-*+]\s*)?\**None\b|\bno\s+magic\s+moment"
+    r"|\bnot\s+delivered\s+here\b|\bdelivered\s+(?:and\s+judged\s+)?(?:by|in)\b"
+    r"|\bjudged\s+in\b|\bclaimed\s+(?:by|in)\b|\belsewhere\b|\banother\s+(?:epic|story|project)\b)",
+    re.IGNORECASE)
+
+
+def lift_serves_plan(project_dir):
+    """Per story spec: what the OLD prose rule claimed, classified, with `path:line` provenance."""
+    plans = []
+    epics_dir = os.path.join(project_dir, "epics")
+    if not os.path.isdir(epics_dir):
+        return plans
+    for ep in sorted(os.listdir(epics_dir)):
+        sdir = os.path.join(epics_dir, ep, "stories")
+        if not os.path.isdir(sdir):
+            continue
+        for st in sorted(os.listdir(sdir)):
+            spec = os.path.join(sdir, st, "spec.md")
+            if not os.path.isfile(spec):
+                continue
+            text = read_text(spec)
+            fm, _body = strip_frontmatter(text)
+            rows = []
+            seen = set()
+            for lineno, line in content_lines(text, skip_frontmatter=True):
+                m = RE_SERVES_CHECKLIST.match(line)
+                scan = RE_CODE_SPAN.sub(" ", line)
+                for tok in _dedup(RE_PROMISE_ID.findall(scan)):
+                    if tok in seen:
+                        continue
+                    seen.add(tok)
+                    if m and m.group(1) == tok:
+                        verdict, why = "LIFT", "§1d claim line"
+                    elif RE_DISCLAIMER.search(line):
+                        verdict, why = "SKIP", "reads as a disclaimer"
+                    else:
+                        verdict, why = "LIFT", "prose mention"
+                    rows.append({"id": tok, "line": lineno, "text": line.strip()[:100],
+                                 "verdict": verdict, "why": why})
+            plans.append({"spec": spec, "rel": os.path.relpath(spec, project_dir),
+                          "rows": rows, "already": "serves" in fm,
+                          "has_frontmatter": text.startswith("---")})
+    return plans
+
+
+def insert_serves_frontmatter(text, ids):
+    """Add `serves: [...]` to a spec's frontmatter. Returns (new_text, ok). Never overwrites."""
+    if not text.startswith("---"):
+        return text, False
+    end = text.find("\n---", 3)
+    if end == -1:
+        return text, False
+    line = "serves: [%s]   # structured delivery claim (speck v10) — the ONLY source of a `serves` edge\n" % ", ".join(ids)
+    return text[:end + 1] + line + text[end + 1:], True
+
+
+def cmd_lift_serves(project_dir, write=False, include_disclaimed=False):
+    plans = lift_serves_plan(project_dir)
+    lifted_files = 0
+    lifted_ids = 0
+    skipped = 0
+    for p in plans:
+        if not p["rows"]:
+            continue
+        sys.stdout.write("\n%s\n" % p["rel"])
+        if p["already"]:
+            sys.stdout.write("  ALREADY structured (`serves:` present) — left alone\n")
+            continue
+        take = []
+        for r in p["rows"]:
+            keep = r["verdict"] == "LIFT" or include_disclaimed
+            sys.stdout.write("  %-5s %-7s :%-4d %s\n"
+                             % ("LIFT" if keep else "SKIP", r["id"], r["line"], r["text"]))
+            if not keep:
+                sys.stdout.write("        ↳ %s — decide by hand; `--include-disclaimed` forces it\n" % r["why"])
+                skipped += 1
+            else:
+                take.append(r["id"])
+        take = _dedup(take)
+        if not take:
+            continue
+        sys.stdout.write("  → serves: [%s]\n" % ", ".join(take))
+        if not p["has_frontmatter"]:
+            sys.stdout.write("  ⚠️  no frontmatter block — add the key by hand\n")
+            continue
+        lifted_files += 1
+        lifted_ids += len(take)
+        if write:
+            new_text, ok = insert_serves_frontmatter(read_text(p["spec"]), take)
+            if ok:
+                with open(p["spec"], "w", encoding="utf-8") as fh:
+                    fh.write(new_text)
+    mode = "APPLIED" if write else "DRY-RUN (no files written — pass --write to apply)"
+    sys.stdout.write("\n%s: %d claim(s) into %d story frontmatter block(s); %d line(s) left for a human.\n"
+                     % (mode, lifted_ids, lifted_files, skipped))
+    sys.stdout.write("Read every LIFT line above: before v10 a bare mention WAS a claim, so this list "
+                     "is what the old extractor asserted on your behalf. Delete what is not a claim.\n")
+    if write:
+        sys.stdout.write("Next: `speck_graph.py build %s && speck_graph.py check %s`.\n"
+                         % (project_dir, project_dir))
+    return 0
+
+
 def cmd_migrate(project_dir, apply=False):
     story_specs = []
     epics_dir = os.path.join(project_dir, "epics")
@@ -1612,6 +2020,10 @@ Usage:
   speck_graph.py build     <PROJECT_DIR> [--stdout]   Compile the graph → graph/witness.json
   speck_graph.py lint-refs <PROJECT_DIR>              Fail on any dangling/ambiguous reference
   speck_graph.py migrate   <PROJECT_DIR> [--apply]    Harden ids (AC-N numbering); dry-run by default
+  speck_graph.py migrate   <PROJECT_DIR> --lift-serves [--write] [--include-disclaimed]
+                                                      v10: lift pre-#97 prose-derived delivery claims
+                                                      into story `serves:` frontmatter. DRY-RUN by
+                                                      default; prints every claim with its source line.
   speck_graph.py query     <PROJECT_DIR> <node-id>    Raw in/out edges of a node (story, MM-N, DEC…)
   speck_graph.py context   <PROJECT_DIR> <story-id>   The story's context pack — one lookup, no tree walk
   speck_graph.py check     <PROJECT_DIR>              Forcing gates: dangling/dup BLOCK; phantom/stale CAP
@@ -1645,6 +2057,10 @@ def main(argv):
         if not project_dir:
             sys.stderr.write("ERROR: migrate requires an existing PROJECT_DIR\n")
             return 2
+        if "--lift-serves" in args:
+            return cmd_lift_serves(project_dir,
+                                   write=("--write" in args or "--apply" in args),
+                                   include_disclaimed="--include-disclaimed" in args)
         return cmd_migrate(project_dir, apply="--apply" in args)
     if cmd in ("query", "context"):
         if not project_dir or len(args) < 2:

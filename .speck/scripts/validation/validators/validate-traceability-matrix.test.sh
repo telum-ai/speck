@@ -437,5 +437,181 @@ echo "$OUT16" | grep -qi "grain warning" || { echo "ERROR: expected fast-path wa
 echo "  ✓ Passed Test 16"
 
 
+echo "Test 17: prose-only Discharge cell does NOT resolve conservation — BLOCKS after epic-breakdown"
+# The verified defect: has_discharge was set from cell NON-EMPTINESS, so an honest, correct
+# explanation like "OPEN — not discharged; blocked on vendor API" silently RESOLVED the gate.
+# It must now fall through to the SAME "unmapped" fate as a truly-open row once breakdown
+# exists, with a finding naming the row + quoting the offending cell.
+POST17="$TMP/postbreak-17"
+mkdir -p "$POST17"
+touch "$POST17/epic-breakdown.md"
+cat > "$POST17/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|--------|
+| PRM-101 | product-contract §3 | vendor sync must complete | OPEN — not discharged; blocked on vendor API | — | — | open |
+EOF
+if OUT17="$(bash "$VALIDATOR" "$POST17/traceability-matrix.md" 2>&1)"; then
+  echo "ERROR: expected prose-only Discharge cell to FAIL conservation post-breakdown"; echo "$OUT17"; exit 1
+fi
+echo "$OUT17" | grep -q "PRM-101" || { echo "ERROR: expected the finding to NAME the row (PRM-101)"; echo "$OUT17"; exit 1; }
+echo "$OUT17" | grep -qF "OPEN — not discharged; blocked on vendor API" || { echo "ERROR: expected the finding to quote the offending cell"; echo "$OUT17"; exit 1; }
+echo "$OUT17" | grep -qi "no structured token" || { echo "ERROR: expected the finding to say WHAT is missing"; echo "$OUT17"; exit 1; }
+echo "  ✓ Passed Test 17"
+
+
+echo "Test 18: each has_structured_token branch INDEPENDENTLY resolves conservation post-breakdown"
+POST18="$TMP/postbreak-18"
+mkdir -p "$POST18"
+touch "$POST18/epic-breakdown.md"
+# One row per branch of has_structured_token(), each matching ONLY its own branch, so deleting any
+# one branch turns this test RED. PRM-102's Discharge is a BARE `S012` (no ` / AC-1`) on purpose:
+# with the AC-ref present, the AC-[0-9]+ branch satisfied the row and the S[0-9]+ branch this test
+# names was never actually exercised — the branch could be deleted with the suite still exit 0.
+cat > "$POST18/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|--------|
+| PRM-102 | product-contract §3 | story-id branch only | S012 | — | — | discharged |
+| PRM-103 | product-contract §3 | legal descope | — | DEC-0031 | — | descoped |
+| PRM-104 | product-contract §3 | ac-ref branch only | AC-7 | — | — | discharged |
+| PRM-105 | product-contract §3 | bare-path branch only | evidence/larp/home.png | — | — | discharged |
+EOF
+OUT18="$(bash "$VALIDATOR" "$POST18/traceability-matrix.md")"
+echo "$OUT18" | grep -qi "Promise conservation holds" || { echo "ERROR: expected structured-token rows to resolve"; echo "$OUT18"; exit 1; }
+if echo "$OUT18" | grep -qE "❌ PRM-10[2345]"; then echo "ERROR: PRM-102..105 must not be flagged"; echo "$OUT18"; exit 1; fi
+echo "  ✓ Passed Test 18"
+
+
+echo "Test 19: a genuinely empty cell behaves as today — silent, pre-breakdown open, no [prose] finding"
+PRE19="$TMP/prebreak-19"
+mkdir -p "$PRE19"
+cat > "$PRE19/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|--------|
+| PRM-104 | product-contract §3 | vendor sync must complete | — | — | — | open |
+EOF
+OUT19="$(bash "$VALIDATOR" "$PRE19/traceability-matrix.md")"
+if echo "$OUT19" | grep -q "PRM-104"; then echo "ERROR: a truly-empty cell must stay silent (unchanged)"; echo "$OUT19"; exit 1; fi
+echo "$OUT19" | grep -q "1 open (pre-breakdown" || { echo "ERROR: expected the row counted as open"; echo "$OUT19"; exit 1; }
+echo "  ✓ Passed Test 19"
+
+
+echo "Test 20: prose-only cell pre-breakdown is treated as open (allowed) but SURFACED, not silent"
+PRE20="$TMP/prebreak-20"
+mkdir -p "$PRE20"
+cat > "$PRE20/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|--------|
+| PRM-105 | product-contract §3 | vendor sync must complete | OPEN — not discharged; blocked on vendor API | — | — | open |
+EOF
+OUT20="$(bash "$VALIDATOR" "$PRE20/traceability-matrix.md")"   # pre-breakdown open is allowed → exit 0
+echo "$OUT20" | grep -q "PRM-105" || { echo "ERROR: expected an explicit finding naming PRM-105 (not a silent pass)"; echo "$OUT20"; exit 1; }
+echo "$OUT20" | grep -qi "no structured token" || { echo "ERROR: expected the finding to say what token to add"; echo "$OUT20"; exit 1; }
+echo "  ✓ Passed Test 20"
+
+
+echo "Test 21: --require-evidence inspects the DEC cell's CONTENT for a descoped row (no inversion)"
+# The verified defect: --require-evidence resolved `descoped` on the status WORD alone and never
+# looked at the DEC cell, so the STRICTEST gate — the one /epic-validate actually invokes
+# (.cursor/skills/epic-validate/SKILL.md) — was WEAKER than the routine default one. On this exact
+# fixture default mode exited 1 with "prose alone does not resolve conservation" while BOTH
+# --require-evidence and --require-evidence --status-only printed "✅ Promise conservation holds"
+# and exited 0. Prose-as-proof bought green at epic close.
+INV21="$TMP/inversion-21"
+mkdir -p "$INV21"
+touch "$INV21/epic-breakdown.md"
+cat > "$INV21/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|--------|
+| PRM-202 | product-contract §3 | legal descope | — | not descoped yet, waiting on legal review | — | descoped |
+EOF
+for mode in "--require-evidence" "--require-evidence --status-only" ""; do
+  # shellcheck disable=SC2086
+  if OUT21="$(bash "$VALIDATOR" $mode "$INV21/traceability-matrix.md" 2>&1)"; then
+    echo "ERROR: prose DEC cell must BLOCK in mode '${mode:-<default>}' — it exited 0"; echo "$OUT21"; exit 1
+  fi
+  echo "$OUT21" | grep -q "PRM-202" || { echo "ERROR: mode '${mode:-<default>}' must NAME the row"; echo "$OUT21"; exit 1; }
+  echo "$OUT21" | grep -qF "not descoped yet, waiting on legal review" || { echo "ERROR: mode '${mode:-<default>}' must quote the offending cell"; echo "$OUT21"; exit 1; }
+  echo "$OUT21" | grep -qi "no structured token" || { echo "ERROR: mode '${mode:-<default>}' must say WHAT is missing"; echo "$OUT21"; exit 1; }
+done
+# Control: a real DEC still resolves under every mode (the fix must not blanket-block descopes).
+cat > "$INV21/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|--------|
+| PRM-203 | product-contract §3 | legal descope | — | DEC-0207 | — | descoped |
+EOF
+for mode in "--require-evidence" "--require-evidence --status-only" ""; do
+  # shellcheck disable=SC2086
+  bash "$VALIDATOR" $mode "$INV21/traceability-matrix.md" >/dev/null || {
+    echo "ERROR: a real DEC-0207 descope must still PASS in mode '${mode:-<default>}'"; exit 1; }
+done
+echo "  ✓ Passed Test 21"
+
+
+echo "Test 22: PROPERTY — every row default mode blocks, --require-evidence must block too"
+# The invariant that prevents the inversion class from recurring, stated once over a fixture set
+# instead of case by case: --require-evidence is a strict SUPERSET of default mode. It may block
+# MORE (it cross-references story validation reports); it may never block LESS. Only add rows here
+# that default mode is expected to BLOCK — the anti-vacuity assertion below enforces that.
+PROP="$TMP/property-22"
+mkdir -p "$PROP"
+touch "$PROP/epic-breakdown.md"
+PROP_HEADER='| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing | Status |
+|--------|--------|---------|-------------------------------|-------------------|---------|--------|'
+PROP_ROWS=(
+  "| PRM-301 | product-contract §3 | legal descope | — | not descoped yet, waiting on legal review | — | descoped |"
+  "| PRM-302 | product-contract §3 | legal descope | — | — | — | descoped |"
+  "| PRM-303 | product-contract §3 | vendor sync | OPEN — not discharged; blocked on vendor API | — | — | discharged |"
+  "| PRM-304 | product-contract §3 | vendor sync | — | — | — | discharged |"
+  "| PRM-305 | product-contract §3 | vendor sync | still deciding with the vendor | — | — | open |"
+  "| PRM-306 | product-contract §3 | vendor sync | — | — | — | open |"
+  "| PRM-307 | product-contract §3 | complex flow | — | — | — | pilot-gated |"
+)
+blocked_by_default=0
+for row in "${PROP_ROWS[@]}"; do
+  printf '# Promise Traceability Matrix\n\n%s\n%s\n' "$PROP_HEADER" "$row" > "$PROP/traceability-matrix.md"
+  default_rc=0; bash "$VALIDATOR" "$PROP/traceability-matrix.md" >/dev/null 2>&1 || default_rc=$?
+  [[ $default_rc -eq 0 ]] && continue
+  blocked_by_default=$((blocked_by_default + 1))
+  ev_rc=0;   bash "$VALIDATOR" --require-evidence "$PROP/traceability-matrix.md" >/dev/null 2>&1 || ev_rc=$?
+  so_rc=0;   bash "$VALIDATOR" --require-evidence --status-only "$PROP/traceability-matrix.md" >/dev/null 2>&1 || so_rc=$?
+  if [[ $ev_rc -eq 0 || $so_rc -eq 0 ]]; then
+    echo "ERROR: GATE INVERSION — default mode blocked this row (exit $default_rc) but the STRICTER"
+    echo "       gate let it through: --require-evidence exit $ev_rc, --status-only exit $so_rc"
+    echo "       row: $row"
+    exit 1
+  fi
+done
+if [[ $blocked_by_default -ne ${#PROP_ROWS[@]} ]]; then
+  echo "ERROR: property loop went vacuous — only $blocked_by_default of ${#PROP_ROWS[@]} fixtures were blocked by default mode,"
+  echo "       so the superset invariant was asserted on fewer rows than intended."
+  exit 1
+fi
+echo "  ✓ Passed Test 22 ($blocked_by_default rows, superset invariant held in both evidence modes)"
+
+
 echo "All validate-traceability-matrix tests passed successfully!"
 exit 0

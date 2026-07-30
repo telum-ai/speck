@@ -4,6 +4,8 @@ template_version: "8.7.0"
 artifact_type: story-spec
 depends_on: []         # scope-qualified for cross-epic, bare within own epic. e.g., [S001, E010/S003]
 blocks: []             # e.g., [S005, E012/S002]
+serves: []             # the promises THIS story delivers — e.g., [MM-2, JOB-1]. The single source of
+                       # a `serves` edge; empty means "claims none". Naming an id in prose claims nothing.
 persona: [persona-id]  # primary persona this story serves
 readiness_target: [IMPL-GREEN | UX-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
 readiness_state_verified: NO-SHIP   # canonical machine field — the single source for this story's verified state
@@ -43,7 +45,16 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 *Which magic moments from `product-contract.md` does this story deliver? Each gets a verification step.*
 
-- [ ] Magic Moment: [Name from product-contract.md]
+> **A claim lives in the `serves:` frontmatter above (Speck v10, witness graph).** `serves: [MM-2, JOB-1]`
+> is the ONLY thing that makes this story claim a promise; `serves: []` means it claims none.
+> Naming an id anywhere else in this spec — a cross-reference, an aside, an explicit non-claim —
+> creates no claim (it surfaces as a `UNCLAIMED_MM_REF.P3` hint, never a block). Before v10 a bare
+> mention WAS the claim, so a sentence saying "MM-1 is not claimed here" asserted MM-1; write freely
+> now. The checklist line below is read as a fallback only while a project migrates, and only when
+> the id is the first token after the label — run `speck_graph.py migrate <PROJECT_DIR> --lift-serves`
+> to move existing claims into the frontmatter.
+
+- [ ] Magic Moment: MM-N — [Name from product-contract.md]
   - Surface: [Where it lands]
   - Verification: [LARP step that proves it]
 

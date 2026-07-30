@@ -33,7 +33,7 @@ import { reconcileSettingsCommand } from '../lib/commands/reconcile-settings.js'
 import { larpPlay } from '../lib/commands/larp-play.js';
 import { compressCommand, decompressCommand } from '../lib/commands/compress.js';
 import { validateCommand } from '../lib/commands/validate.js';
-import { migrateToV7 } from '../lib/migrate.js';
+import { migrateToV7, migrateCommand } from '../lib/migrate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -50,6 +50,8 @@ COMMANDS
   init              Initialize Speck in current directory
   upgrade [version] Upgrade to latest (or specified) version (auto-migrates v6→v7 projects)
   migrate           Manually re-run v7 migration on every project (idempotent)
+                    --list  Show pending vs applied named migrations
+                    --run   Run every pending named migration (resumable)
   check             Check for available updates
   version           Show current and latest versions
   promote           Bump play level (--to sprint|build|platform)
@@ -169,6 +171,20 @@ async function main() {
         break;
 
       case 'migrate': {
+        // --list / --run drive the NAMED-migration lane (v10+): individually named,
+        // individually resumable artifact migrations tracked in .speck/project.json.
+        // Bare `speck migrate` keeps its original meaning — re-run v7 scaffolding.
+        if (args.includes('--list') || args.includes('--run')) {
+          const fromIndex = args.indexOf('--from');
+          const toIndex = args.indexOf('--to');
+          migrateCommand(process.cwd(), {
+            list: args.includes('--list'),
+            run: args.includes('--run'),
+            from: fromIndex !== -1 ? args[fromIndex + 1] : undefined,
+            to: toIndex !== -1 ? args[toIndex + 1] : undefined,
+          });
+          break;
+        }
         const summary = migrateToV7(process.cwd(), { verbose: true });
         if (summary.projects.length === 0) {
           console.log('✅ Nothing to migrate — no projects found under specs/projects/, or already on v7.');

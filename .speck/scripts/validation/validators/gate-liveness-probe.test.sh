@@ -239,6 +239,53 @@ A="$(PATH= cl_digest abc 2>/dev/null)"; B="$(PATH= cl_digest xyz 2>/dev/null)"
 [[ "$A" != "$B" ]] || fail "cl_digest collapsed to a constant with no hashers on PATH (fail-open!)" "A=$A B=$B"
 ok "digest is content-sensitive even with no hasher available (fail-closed)"
 
+# ---------------------------------------------------------------------------------------------------
+echo "Test 14: MECHANISM PROOF (header-keyed conversion) — a 7th column (\"Scope\") inserted between"
+echo "Domain and Canary must not desync the Canary/Waiver reads. Under the old \$6/\$5 positional"
+echo "reads, this insertion makes the probe read the Scope cell ('widget') as the canary key — an"
+echo "unknown key, degrading to UNVERIFIED instead of actually probing the gate."
+D="$TMP/t14"; scaffold "$D"
+cat > "$D/gate.sh" <<'EOF'
+#!/usr/bin/env bash
+if grep -rIn "frobnicate" src 2>/dev/null | grep -q .; then exit 1; fi
+exit 0
+EOF
+cat > "$D/specs/projects/001-x/evidence-contract.md" <<'EOF'
+# Evidence Contract
+
+### 6a. CI-Enforced Gate Registry
+
+| Gate ID | Command / Script | Stage | Domain | Scope | Canary | Waiver |
+|---------|------------------|-------|--------|-------|--------|--------|
+| test-gate | bash gate.sh | pre-commit | copy | widget | banned-language | — |
+EOF
+commit "$D"
+OUT="$(bash "$PROBE" "$D/specs/projects/001-x" 2>&1)"
+echo "$OUT" | grep -q "unknown canary key" && fail "canary must resolve from its REAL (shifted) column, not the old fixed position" "$OUT"
+echo "$OUT" | grep -q "GATE_LIVE.*test-gate" || fail "expected GATE_LIVE once Canary/Domain resolve correctly despite the inserted column" "$OUT"
+ok "7-col mechanism proof: Canary resolved from its real column, gate probed LIVE"
+
+# ---------------------------------------------------------------------------------------------------
+echo "Test 15: LEGACY FALLBACK — a §6a table with NO header row at all still probes correctly via"
+echo "the historical fixed-position fallback (do not strand a pre-header-keyed project)."
+D="$TMP/t15"; scaffold "$D"
+cat > "$D/gate.sh" <<'EOF'
+#!/usr/bin/env bash
+if grep -rIn "frobnicate" src 2>/dev/null | grep -q .; then exit 1; fi
+exit 0
+EOF
+cat > "$D/specs/projects/001-x/evidence-contract.md" <<'EOF'
+# Evidence Contract
+
+### 6a. CI-Enforced Gate Registry
+
+| test-gate | bash gate.sh | pre-commit | copy | banned-language | — |
+EOF
+commit "$D"
+OUT="$(bash "$PROBE" "$D/specs/projects/001-x" 2>&1)"
+echo "$OUT" | grep -q "GATE_LIVE.*test-gate" || fail "headerless legacy table should still probe correctly via positional fallback" "$OUT"
+ok "headerless legacy table → positional fallback still probes correctly"
+
 echo ""
 echo "All gate-liveness-probe tests passed ($PASS assertions)."
 exit 0

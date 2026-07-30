@@ -13,7 +13,9 @@
 # Modes:
 #   default            : once epic-breakdown.md exists, NO row may be open — each row needs a
 #                        discharge (story+AC), a DEC, or a pilot-gated status. Pre-breakdown, open rows are allowed.
-#   --require-evidence : (epic-validate) every row must be `discharged`, `descoped`, or `pilot-gated`.
+#   --require-evidence : (epic-validate) every row must be `discharged`, `descoped`, or `pilot-gated`
+#                        AND cite a structured token for it (story+AC / DEC / path) — a strict
+#                        SUPERSET of default mode: anything default mode blocks, this blocks too.
 #   --check-fidelity   : (opt-in, #86) WARN-only Promise↔Source structural check (presence + vocabulary
 #                        overlap). NEVER touches the conservation exit code.
 #
@@ -138,6 +140,23 @@ is_empty_cell() {
   local v; v="$(trim "$1")"
   [[ -z "$v" || "$v" == "—" || "$v" == "-" || "$v" == "–" || "$v" == "N/A" ]] && return 0
   case "$v" in '['*']') return 0 ;; esac
+  return 1
+}
+
+# A Discharge/DEC cell resolves conservation only if it cites something REAL, not merely
+# something PRESENT. Non-emptiness alone let a cell reading "OPEN — not discharged; blocked
+# on vendor API" — an honest, correct explanation of why the row is NOT resolved — silently
+# RESOLVE the conservation gate, because the code only checked whether the cell had text in
+# it. This is the same structural predicate the file already applies at ~322/326 to parse
+# story_id/ac_id out of a Discharge cell under --require-evidence — extended here to gate
+# resolution itself, in BOTH modes, so a prose-only cell can no longer pass by mere presence.
+# A "path" reference must carry a file extension (so "n/a" or "24/7" don't false-positive).
+has_structured_token() {
+  local v="$1"
+  [[ "$v" =~ S[0-9]+ ]] && return 0
+  [[ "$v" =~ AC-[0-9]+ ]] && return 0
+  [[ "$v" =~ DEC-[0-9]+ ]] && return 0
+  [[ "$v" =~ [A-Za-z0-9_.-]+/[A-Za-z0-9_./-]*\.[A-Za-z0-9]+ ]] && return 0
   return 1
 }
 
@@ -276,9 +295,21 @@ while IFS= read -r line; do
 
   total=$((total + 1))
 
-  has_discharge=false; is_empty_cell "$discharge" || has_discharge=true
-  has_dec=false;       is_empty_cell "$dec_cell" || has_dec=true
+  # Non-emptiness is necessary but NOT sufficient — see has_structured_token() above.
+  has_discharge=false
+  if ! is_empty_cell "$discharge" && has_structured_token "$discharge"; then has_discharge=true; fi
+  has_dec=false
+  if ! is_empty_cell "$dec_cell" && has_structured_token "$dec_cell"; then has_dec=true; fi
   has_backing=false;   is_empty_cell "$backing" || has_backing=true
+
+  # A cell that carries TEXT but no structured token is neither "resolved" nor genuinely
+  # "empty/open" — it is prose masquerading as either. Track it separately so the row gets an
+  # EXPLICIT finding (naming the row + the offending cell + what token to add) instead of
+  # silently falling into the same bucket as a truly blank cell.
+  discharge_prose=false
+  if ! is_empty_cell "$discharge" && ! has_structured_token "$discharge"; then discharge_prose=true; fi
+  dec_prose=false
+  if ! is_empty_cell "$dec_cell" && ! has_structured_token "$dec_cell"; then dec_prose=true; fi
 
   # --- GRAIN accounting (soft, all modes) — for MATRIX_GRAIN_CAP + the surface line. -------------
   # Only discharged rows carry grain; descoped/pilot-gated are '—' by contract.
@@ -315,6 +346,30 @@ while IFS= read -r line; do
   if [[ "$REQUIRE_EVIDENCE" == true ]]; then
     if [[ "$status" != "discharged" && "$status" != "descoped" && "$status" != "pilot-gated" ]]; then
       echo -e "${RED}❌ $id${NC}: status '${status:-<blank>}' — at epic-validate every promise must be 'discharged', 'descoped' (DEC), or 'pilot-gated' (with backing)."
+      violations=$((violations + 1))
+    elif [[ "$status" == "descoped" ]] && ! has_structured_token "$dec_cell" && ! has_structured_token "$discharge"; then
+      # STRICT SUPERSET (v9.6). --require-evidence used to accept `descoped` on the STATUS WORD
+      # ALONE — it never looked at the DEC cell's content. Default mode meanwhile already refused a
+      # prose-only or empty cell (has_structured_token, below). That made the STRICTEST gate weaker
+      # than the routine one: a DEC cell reading "not descoped yet, waiting on legal review" exited
+      # 1 in default mode and 0 under --require-evidence (and under --status-only), so prose-as-proof
+      # bought green at epic close — the exact hole this predicate was introduced to shut. The
+      # predicate is now the SAME in both modes; the property test pins the invariant (any row
+      # default mode blocks, --require-evidence must also block).
+      if is_empty_cell "$dec_cell"; then
+        echo -e "${RED}❌ $id${NC}: status 'descoped' but the DEC cell is empty — a descope must cite its DEC (e.g. 'DEC-0031')."
+      else
+        echo -e "${RED}❌ $id${NC}: DEC cell reads '${dec_cell}' — prose alone does not resolve conservation (no structured token found). Cite a DEC (e.g. 'DEC-0031')."
+      fi
+      violations=$((violations + 1))
+    elif [[ "$status" == "discharged" ]] && ! has_structured_token "$discharge"; then
+      # Same superset law for `discharged`, and BEFORE the story-report parse so it also holds under
+      # --status-only (which skips that parse entirely — the second half of the same inversion).
+      if is_empty_cell "$discharge"; then
+        echo -e "${RED}❌ $id${NC}: status 'discharged' but the Discharge cell is empty — cite the discharging story+AC (e.g. 'S012 / AC-3')."
+      else
+        echo -e "${RED}❌ $id${NC}: Discharge cell reads '${discharge}' — prose alone does not resolve conservation (no structured token found). Cite a story+AC (e.g. 'S012 / AC-3')."
+      fi
       violations=$((violations + 1))
     elif [[ "$status" == "discharged" && "$STATUS_ONLY" == false ]]; then
       # Parse story_id and ac_id
@@ -411,7 +466,23 @@ while IFS= read -r line; do
   else
     if [[ "$status" != "pilot-gated" ]]; then
       if [[ "$has_discharge" == false && "$has_dec" == false ]]; then
-        if [[ "$BREAKDOWN_EXISTS" == true ]]; then
+        if [[ "$discharge_prose" == true || "$dec_prose" == true ]]; then
+          # Text is present but names no story/AC/DEC/path — a prose explanation, not a
+          # discharge. Always an EXPLICIT finding (never folds silently into "open" or
+          # "unmapped"): breakdown existing still blocks (same as an unmapped row); pre-
+          # breakdown it is treated as open (consistent with the "visibly open" allowance)
+          # but is SURFACED, not swallowed — the defect this fixes was exactly a cell like
+          # this vanishing from every count.
+          prose_col="Discharge"; prose_cell="$discharge"
+          [[ "$discharge_prose" == false ]] && { prose_col="DEC"; prose_cell="$dec_cell"; }
+          if [[ "$BREAKDOWN_EXISTS" == true ]]; then
+            echo -e "${RED}❌ $id${NC}: ${prose_col} cell reads '${prose_cell}' — prose alone does not resolve conservation (no structured token found). Add a story+AC (e.g. 'S012 / AC-3'), a DEC (e.g. 'DEC-0031'), or a path to backing evidence."
+            violations=$((violations + 1))
+          else
+            echo -e "${YELLOW}⚠️  $id${NC}: ${prose_col} cell reads '${prose_cell}' — prose alone does not resolve conservation (no structured token found); treated as open (pre-breakdown). Add a story+AC (e.g. 'S012 / AC-3'), a DEC (e.g. 'DEC-0031'), or a path to backing evidence."
+            open_rows=$((open_rows + 1))
+          fi
+        elif [[ "$BREAKDOWN_EXISTS" == true ]]; then
           echo -e "${RED}❌ $id${NC}: unmapped (no story+AC, no DEC) after epic-breakdown — promises cannot evaporate. Assign a story+AC, a DEC, or set to pilot-gated (with backing)."
           violations=$((violations + 1))
         else

@@ -24,6 +24,9 @@
 
 set -euo pipefail
 
+# shellcheck source=../../lib/text.sh
+. "$(dirname "$0")/../../lib/text.sh"
+
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 strict=false
 [[ "${1:-}" == "--strict" ]] && { strict=true; shift; }
@@ -53,12 +56,72 @@ emit_p1() { echo -e "${RED}$1${NC}  $2" >&2; errors=$((errors + 1)); }
 emit_p2() { echo -e "${YELLOW}$1${NC}  $2"; warnings=$((warnings + 1)); }
 emit_note() { echo -e "${BLUE}$1${NC}  $2"; }
 
+# --- Header-keyed column resolution (Speck v9.6, #header-keyed-6a) -------------------------------
+# VERIFIED before this conversion: this validator read $2/$3/$4/$7 (Gate ID/Command/Stage/Waiver),
+# gate-liveness-probe.sh read $2/$3/$5/$6 (Gate ID/Command/Domain/Canary), and seed-gate-registry.sh
+# (the producer) hardcoded a separate 6-field printf — three independent positional contracts that
+# had ALREADY drifted from each other. Resolve every column by NAME from the header row instead, so
+# inserting a column can never again silently re-map Canary→Waiver underneath a reader that assumed
+# a fixed position. Falls back to the historical fixed layout when no recognizable header is found,
+# so a legacy/hand-authored table with no header row still parses exactly as before.
+ROW_CELLS=()
+split_row() {
+  local line="$1" i cell
+  local -a raw=()
+  IFS='|' read -r -a raw <<< "$line" || true
+  ROW_CELLS=()
+  for (( i=1; i<${#raw[@]}; i++ )); do
+    cell="$(sp_trim "${raw[$i]}")"
+    ROW_CELLS+=("$cell")
+  done
+}
+
+COL_ID=-1; COL_CMD=-1; COL_STAGE=-1; COL_DOMAIN=-1; COL_CANARY=-1; COL_WAIVER=-1
+
+resolve_columns_from_header() {
+  split_row "$1"
+  COL_ID=-1; COL_CMD=-1; COL_STAGE=-1; COL_DOMAIN=-1; COL_CANARY=-1; COL_WAIVER=-1
+  local i lc
+  for (( i=0; i<${#ROW_CELLS[@]}; i++ )); do
+    lc="$(printf '%s' "${ROW_CELLS[$i]}" | tr '[:upper:]' '[:lower:]')"
+    case "$lc" in
+      "gate id"*) COL_ID=$i ;;
+      command*)   COL_CMD=$i ;;
+      stage*)     COL_STAGE=$i ;;
+      domain*)    COL_DOMAIN=$i ;;
+      canary*)    COL_CANARY=$i ;;
+      waiver*)    COL_WAIVER=$i ;;
+    esac
+  done
+  [[ $COL_ID -ge 0 && $COL_CMD -ge 0 && $COL_STAGE -ge 0 ]]
+}
+
+# Historical fixed layout: Gate ID | Command / Script | Stage | Domain | Canary | Waiver.
+resolve_columns_positional() {
+  COL_ID=0; COL_CMD=1; COL_STAGE=2; COL_DOMAIN=3; COL_CANARY=4; COL_WAIVER=5
+}
+
+cell_at() {
+  local idx="$1"
+  [[ "$idx" -ge 0 && "$idx" -lt ${#ROW_CELLS[@]} ]] && printf '%s' "${ROW_CELLS[$idx]}" || printf ''
+}
+
 # --- §6a table extraction ---
-rows="$(awk '
+block="$(awk '
   /^### 6a\./ { ins=1; next }
   ins && /^#{2,3} / { ins=0 }
   ins && /^\|/ { print }
-' "$CONTRACT" 2>/dev/null | grep -vE '^\|[- :]+\||Gate ID|REPLACE_BEFORE_SHIP' || true)"
+' "$CONTRACT" 2>/dev/null || true)"
+
+header_lines="$(printf '%s\n' "$block" | grep -iE '\|[[:space:]]*Gate ID[[:space:]]*\|' || true)"
+header_row="$(sp_head 1 "$header_lines")"
+if [[ -n "$header_row" ]] && resolve_columns_from_header "$header_row"; then
+  :
+else
+  resolve_columns_positional
+fi
+
+rows="$(printf '%s\n' "$block" | grep -vE '^\|[- :]+\||Gate ID|REPLACE_BEFORE_SHIP' || true)"
 
 if [[ -z "$rows" ]]; then
   echo -e "${YELLOW}GATE_WIRING.P3${NC}  no §6a CI-Enforced Gate Registry found — run seed-gate-registry.sh to generate it from the recipe. (A missing registry hard-blocks only at COMMERCIAL-RC/SHIP-RC.)"
@@ -152,10 +215,11 @@ echo ""
 
 while IFS= read -r row; do
   [[ -z "$row" ]] && continue
-  gid=$(printf '%s' "$row"    | awk -F'|' '{print $2}' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
-  cmd=$(printf '%s' "$row"    | awk -F'|' '{print $3}' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
-  stage=$(printf '%s' "$row"  | awk -F'|' '{print $4}' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
-  waiver=$(printf '%s' "$row" | awk -F'|' '{print $7}' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+  split_row "$row"
+  gid="$(cell_at "$COL_ID")"
+  cmd="$(cell_at "$COL_CMD")"
+  stage="$(cell_at "$COL_STAGE")"
+  waiver="$(cell_at "$COL_WAIVER")"
   [[ -z "$gid" || -z "$stage" ]] && continue
   sig="$(gate_sig "$cmd")"
 

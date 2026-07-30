@@ -70,6 +70,13 @@ NEEDS_AGENT=()
 # reported 7.0.0 forever, however many upgrades later, while profile-lib.sh read VERSION and
 # answered differently for the same repo. The field is advisory; it must mirror the
 # authoritative file, never assert a version of its own.
+#
+# THE SAME SCAR, ONE LAYER DOWN: the repair kept the original delivery mechanism, a
+# python3 -c with the path interpolated into a string literal. At `.../kjetil's ws` that
+# literal closes early, python3 dies on a SyntaxError, and `set -euo pipefail` takes the
+# whole migration with it — leaving the field frozen at exactly the stale value this block
+# exists to unfreeze. Path and version are ARGUMENTS now, read from sys.argv, the same
+# idiom profile-lib.sh and banned-language-lint.sh already use. Pinned by migrate.test.sh.
 PROJECT_JSON="$WORKSPACE_ROOT/.speck/project.json"
 # 7.0.0 is the floor, not the answer: it is what this migration produces when the workspace
 # predates .speck/VERSION entirely (a true v6 install with no installer-written marker).
@@ -78,15 +85,17 @@ MIGRATED_TO="$(speck_workspace_version "$WORKSPACE_ROOT")"
 
 if [[ -f "$PROJECT_JSON" ]]; then
   # Update in-place via Python (most portable JSON-aware edit)
-  python3 -c "
-import json
-with open('$PROJECT_JSON') as f:
+  python3 - "$PROJECT_JSON" "$MIGRATED_TO" <<'PY'
+import json, sys
+
+path, version = sys.argv[1], sys.argv[2]
+with open(path) as f:
     d = json.load(f)
-d['speck_version'] = '$MIGRATED_TO'
-with open('$PROJECT_JSON', 'w') as f:
+d['speck_version'] = version
+with open(path, 'w') as f:
     json.dump(d, f, indent=2)
     f.write('\n')
-"
+PY
   echo "✅ Reconciled .speck/project.json speck_version → $MIGRATED_TO (mirrors .speck/VERSION)"
 else
   cat > "$PROJECT_JSON" <<EOF

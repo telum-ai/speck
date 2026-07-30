@@ -36,6 +36,8 @@ LIB="$(cd "$(dirname "$0")/.." && pwd)/canary-lib.sh"
 [[ -f "$LIB" ]] || { echo "ERROR: canary-lib.sh not found at $LIB" >&2; exit 2; }
 # shellcheck disable=SC1090
 . "$LIB"
+# shellcheck source=../../lib/text.sh
+. "$(dirname "$0")/../../lib/text.sh"
 
 strict=false
 while [[ $# -gt 0 ]]; do
@@ -61,12 +63,69 @@ while [[ "$ROOT" != "/" && ! -d "$ROOT/.git" ]]; do ROOT="$(dirname "$ROOT")"; d
 CANARY_DIR="$(cd "$(dirname "$0")/.." && pwd)/canaries"
 PCC="$ROOT/.pre-commit-config.yaml"
 
-# --- §6a row extraction + gate_sig (verbatim from Phase 1 for coherence) --------------------------
-rows="$(awk '
+# --- Header-keyed column resolution (verbatim from validate-gate-liveness.sh for coherence — #88 /
+# Speck v9.6 #header-keyed-6a). See that file's copy of this block for the full rationale: three
+# independently hardcoded positional reads had already drifted from each other and from the
+# producer; resolving by header NAME instead makes a future column insert safe, with a positional
+# fallback for a legacy table whose header row is missing/unrecognized. -------------------------
+ROW_CELLS=()
+split_row() {
+  local line="$1" i cell
+  local -a raw=()
+  IFS='|' read -r -a raw <<< "$line" || true
+  ROW_CELLS=()
+  for (( i=1; i<${#raw[@]}; i++ )); do
+    cell="$(sp_trim "${raw[$i]}")"
+    ROW_CELLS+=("$cell")
+  done
+}
+
+COL_ID=-1; COL_CMD=-1; COL_STAGE=-1; COL_DOMAIN=-1; COL_CANARY=-1; COL_WAIVER=-1
+
+resolve_columns_from_header() {
+  split_row "$1"
+  COL_ID=-1; COL_CMD=-1; COL_STAGE=-1; COL_DOMAIN=-1; COL_CANARY=-1; COL_WAIVER=-1
+  local i lc
+  for (( i=0; i<${#ROW_CELLS[@]}; i++ )); do
+    lc="$(printf '%s' "${ROW_CELLS[$i]}" | tr '[:upper:]' '[:lower:]')"
+    case "$lc" in
+      "gate id"*) COL_ID=$i ;;
+      command*)   COL_CMD=$i ;;
+      stage*)     COL_STAGE=$i ;;
+      domain*)    COL_DOMAIN=$i ;;
+      canary*)    COL_CANARY=$i ;;
+      waiver*)    COL_WAIVER=$i ;;
+    esac
+  done
+  [[ $COL_ID -ge 0 && $COL_CMD -ge 0 && $COL_DOMAIN -ge 0 && $COL_CANARY -ge 0 ]]
+}
+
+# Historical fixed layout: Gate ID | Command / Script | Stage | Domain | Canary | Waiver.
+resolve_columns_positional() {
+  COL_ID=0; COL_CMD=1; COL_STAGE=2; COL_DOMAIN=3; COL_CANARY=4; COL_WAIVER=5
+}
+
+cell_at() {
+  local idx="$1"
+  [[ "$idx" -ge 0 && "$idx" -lt ${#ROW_CELLS[@]} ]] && printf '%s' "${ROW_CELLS[$idx]}" || printf ''
+}
+
+# --- §6a row extraction (verbatim from Phase 1 for coherence) --------------------------------------
+block="$(awk '
   /^### 6a\./ { ins=1; next }
   ins && /^#{2,3} / { ins=0 }
   ins && /^\|/ { print }
-' "$CONTRACT" 2>/dev/null | grep -vE '^\|[- :]+\||Gate ID|REPLACE_BEFORE_SHIP' || true)"
+' "$CONTRACT" 2>/dev/null || true)"
+
+header_lines="$(printf '%s\n' "$block" | grep -iE '\|[[:space:]]*Gate ID[[:space:]]*\|' || true)"
+header_row="$(sp_head 1 "$header_lines")"
+if [[ -n "$header_row" ]] && resolve_columns_from_header "$header_row"; then
+  :
+else
+  resolve_columns_positional
+fi
+
+rows="$(printf '%s\n' "$block" | grep -vE '^\|[- :]+\||Gate ID|REPLACE_BEFORE_SHIP' || true)"
 
 if [[ -z "$rows" ]]; then
   echo -e "${YELLOW}GATE_LIVENESS.P3${NC}  no §6a CI-Enforced Gate Registry found — nothing to probe."
@@ -130,10 +189,11 @@ trap cleanup EXIT
 
 while IFS= read -r row; do
   [[ -z "$row" ]] && continue
-  gid=$(printf '%s' "$row"    | awk -F'|' '{print $2}' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
-  cmd=$(printf '%s' "$row"    | awk -F'|' '{print $3}' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
-  domain=$(printf '%s' "$row" | awk -F'|' '{print $5}' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
-  canary=$(printf '%s' "$row" | awk -F'|' '{print $6}' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+  split_row "$row"
+  gid="$(cell_at "$COL_ID")"
+  cmd="$(cell_at "$COL_CMD")"
+  domain="$(cell_at "$COL_DOMAIN")"
+  canary="$(cell_at "$COL_CANARY")"
   [[ -z "$gid" ]] && continue
 
   # No canary declared → un-probed-honest (never a finding). `exempt:` → deliberately un-probeable.

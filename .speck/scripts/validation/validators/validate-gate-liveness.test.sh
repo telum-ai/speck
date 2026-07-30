@@ -103,4 +103,54 @@ d="$T/t8"; mkdir -p "$d/.speck"; printf '## 6. Required Static Evidence\n\n## 7.
 run "$d/evidence-contract.md"
 { [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "GATE_WIRING.P3"; } && pass "no §6a → P3 nudge, non-blocking" || fail "missing registry should be a P3 nudge"
 
+# 9. MECHANISM PROOF (header-keyed conversion, #header-keyed-6a) — insert a 7th column ("Scope") in
+# the MIDDLE of the table, between Domain and Canary. Under the OLD positional read ($7 = Waiver),
+# a 7-column row shifts Waiver's real cell to index 6 while $7 (0-indexed 5) now lands on the
+# CANARY cell — exactly the "insert a column and Canary silently re-maps to Waiver" bug this
+# conversion exists to kill. The waiver text only matches `waived DEC-\d+` in its REAL cell, so a
+# wrong column read here falls through to ordinary (non-waiver) stage classification instead.
+d="$T/t9"
+mkdir -p "$d/.speck"
+{
+  echo "## 6. Required Static Evidence"
+  echo ""
+  echo "### 6a. CI-Enforced Gate Registry"
+  echo "| Gate ID | Command / Script | Stage | Domain | Scope | Canary | Waiver |"
+  echo "|---------|------------------|-------|--------|-------|--------|--------|"
+  echo "| proof-gate | \`scripts/proof.sh\` | pre-commit | frontend | widget | banned-language | waived DEC-707 |"
+  echo ""
+  echo "## 7. Required Live-Service Evidence"
+} > "$d/evidence-contract.md"
+run "$d/evidence-contract.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "GATE_WAIVER_UNBACKED.P2.*proof-gate" && echo "$OUT" | grep -q "DEC-707"; } \
+  && pass "7-col mechanism proof: Waiver still resolved from its REAL (shifted) column" \
+  || fail "7-col table: Waiver column must resolve by name, not by the old fixed \$7 position"
+
+# 10. LEGACY FALLBACK — a table with NO header row at all (no line contains "Gate ID") still
+# classifies correctly via the historical fixed-position fallback. Proves the header-keyed
+# conversion doesn't strand a hand-authored/legacy project whose §6a table has no recognizable
+# header for resolve_columns_from_header to key off of.
+d="$T/t10"
+mkdir -p "$d/.speck"
+{
+  echo "## 6. Required Static Evidence"
+  echo ""
+  echo "### 6a. CI-Enforced Gate Registry"
+  echo "| eslint | eslint | pre-commit | frontend | — | — |"
+  echo ""
+  echo "## 7. Required Live-Service Evidence"
+} > "$d/evidence-contract.md"
+cat > "$d/.pre-commit-config.yaml" <<'EOF'
+repos:
+  - repo: local
+    hooks:
+      - id: eslint
+        entry: eslint --max-warnings 0
+        stages: [pre-commit]
+EOF
+run "$d/evidence-contract.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "GATE_OK"; } \
+  && pass "headerless legacy table → positional fallback still classifies correctly" \
+  || fail "a table with no header row should fall back to the historical fixed positions"
+
 if [[ "$FAILED" == 0 ]]; then echo "✅ validate-gate-liveness: all tests passed"; else echo "❌ validate-gate-liveness: FAILURES"; exit 1; fi
