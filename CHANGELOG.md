@@ -1,5 +1,167 @@
 # Speck Changelog
 
+## v9.6.0 — 2026-07-30 — Gates that inspected nothing stop reporting green
+
+Fourteen field-filed issues from three Speck-managed products collapsed into a handful of
+mechanisms, and the same one dominated: **a gate that reports green having inspected nothing.**
+A lint whose terms could never match. A `--staged` scan matching 0 of 1194 files. A schema probe
+printing `Found 0 database objects` and exiting 0. A witness graph printing `GRAPH_CAP = SHIP`
+because someone deleted the file that caps it. In every case the gate ran, passed, and was honest.
+
+This release fixes the instances **and** lands the chokepoints — one shared text library, one
+telemetry contract, and the first tests several of these scripts have ever had.
+
+Everything here is script-side. Nothing requires a downstream artifact to change: a v9.x minor
+runs no migration (`detectMigration()` keys off the major), so anything needing artifact changes —
+the §6a `Scope`/`Subject` columns, the `GATE_VACUOUS` verdict, structured `serves:` frontmatter,
+the mutation-record slot — is deferred to v10, where a real migration can carry it.
+
+### ⚠️ What goes red on upgrade day — read this first
+
+- **Your `.git/hooks/pre-commit` gates may have been dark, and this turns them on.** Speck appended
+  its loader to the END of an existing hook. A hook from pre-commit.com, Husky v0.x, or any hand-rolled
+  one ending in `exec …`/`exit 0` ends the shell process, so everything appended was structurally
+  unreachable — chmod succeeded, the marker was in the file, and every commit-path gate was silently
+  dark. The loader is now spliced immediately ABOVE the terminator. From your next sync,
+  `validate-template.sh --strict`, `validate-profile.sh`, `speck_graph.py lint-refs` and the staged
+  banned-language lint run for the first time. Expect them to have something to say. Escapes, in order:
+  fix what they report · `git commit --no-verify` for one commit · move the gate into
+  `.pre-commit-config.yaml` as a `repo: local` hook (the warning prints the YAML).
+- **CRLF (Windows/WSL) hooks are rescued too**, with the same consequence — `exec …\r` never matched
+  the terminator scan, so those repos were 100% dark with no warning at all.
+- **Speck's block now runs LATER in your hook.** Inserted above the terminator rather than near the top,
+  so it lands after your `export PATH`/nvm/asdf setup and after your own `if [ -n "$SKIP_HOOKS" ]; then
+  exit 0; fi` guard. Your documented bypass now correctly exempts Speck's gates — it previously did not,
+  and with `|| exit $?` Speck would block a commit you had deliberately exempted.
+- **A malformed `## 7. Banned Language` row now fails the full scan and CI.** The extractor split column 1
+  on `/` and `,` with no paren awareness, so `| "sett" (Norwegian for rep/set) |` became two unmatchable
+  fragments. Both reported zero hits — indistinguishable from compliance; one project had 12 of 64 rows
+  dead. An unmatchable term is now a **PARSE DEFECT**: `🧨 1 §7 term(s) can NEVER match`, exit 1. Fix the
+  row by balancing the parentheses. **Pre-commit is advisory for this** (`--staged` implies the new
+  `--advisory-parse-defects`), so a typo'd row can never make your repo uncommittable — including the
+  commit that fixes it.
+- **Terms that were silently dead will start firing, on code nobody changed.** The same fix means
+  `"sett" (Norwegian for rep/set)` now extracts as the live term `sett`. Measured: HEAD exit 0 →
+  v9.6 `❌ "sett" — 1 hit(s)`, exit 1. Fix the copy, narrow the §7 row, or exclude the file via
+  `banned_language.exclude`. Terms appearing in both the §7 table and the Banned Phrase Classes list
+  are now deduplicated (+16 phantom hits on one project's total).
+- **Matching is a fixed string (`-F`) now, not a half-escaped regex.** The old hand-rolled `sed` escape
+  left `]`, `-` and others live, so `C++` or `a|b` behaved as a regex.
+- **`speck_graph.py check` exits non-zero on a stale or corrupt witness.** It returned 0 before, so
+  `build && check` chains read a 142-commits-behind witness as a pass. No Speck-shipped hook calls
+  `check`, so no automated Speck gate newly blocks — but if you wired it into your own CI, run `build`
+  and commit the witness first. It now prints `GRAPH_CAP = STALE` rather than a number: a report about a
+  different tree has no cap worth quoting onward.
+- **A corrupt or unreadable `witness.json` caps GRAPH_CAP at INTEGRATION-GREEN.** Destroying the
+  tamper-evidence artifact used to REMOVE the ceiling it exists to enforce — `check`, `gap` and the
+  written `road-to-completion.md` all printed `SHIP` next to the warning.
+- **`--live --strict` on `validate-schema-drift.sh` now requires `--target`.** `--live` used to connect
+  to whatever was ambient and was once measured emitting 32 confident `SCHEMA_DRIFT.P0` lines against an
+  unrelated project's database. One-line CI fix: `--live --strict --target "$DATABASE_URL" .`. The live
+  leg is psql-only now.
+- **An UNPROVEN or SKIPPED schema-drift run no longer reads as a pass.** Three-valued verdict —
+  VERIFIED / UNPROVEN / SKIPPED. Under `--strict`, UNPROVEN and "asked for `--live`, got SKIPPED" both
+  exit 1. The unconditional `✅ Schema verification complete.` line is gone.
+- **check-replace-markers.sh catches genuine markers it used to miss.** A marker ending the line, or whose
+  hint opens with a quote or backtick, is now correctly caught — on artifacts previously reported clean.
+
+### New configuration
+
+- **`banned_language.scope`** (`.speck/project.json`) — `"legacy-root"` (**default**: product surfaces
+  recognised only at the repo root, exactly as ≤9.5) or `"any-depth"` (a `src`/`app`/`pages`/… directory
+  is in scope wherever it sits, so a monorepo's `frontend/src/**` is reached). **Monorepos should opt in**
+  — measured, the root-anchored globs matched 0 of 1194 tracked files in one repo and 0 of 590 in another,
+  so the commit-path gate was always-green. An unrecognised value warns and falls back rather than failing
+  the gate. Note: under `legacy-root`, a repo with no root-level product directory still falls back to
+  scanning the whole workspace minus the deny list — pre-existing behaviour, unchanged, not something
+  `scope` defuses.
+  *Why opt-in and not the default:* combined with whole-file scanning it convicts ordinary code using
+  Speck's OWN shipped phrase class `❌ Technical architecture language ("our backend", "API", "database")`.
+  A `frontend/src/lib/client.ts` holding `import { createClient } from "./api"` goes from exit 0 to two
+  hits. Flipping the default is a v10 item, gated on a user-visible-string filter landing first.
+- **`banned_language.exclude`** (array, additive) and **`banned_language.exclude_defaults`** (bool), plus
+  a repeatable **`--exclude-glob`**.
+- **`--advisory-parse-defects`** — report an unmatchable §7 term but exit 0. Implied by `--staged`.
+
+### Gates that stop lying — no action needed
+
+- **A fully-filled `evidence-contract.md` or `product-contract.md` passes validation for the first time.**
+  Both validators ran an unanchored `grep -q "REPLACE_BEFORE_SHIP"` matching the bare word inside those
+  artifacts' own PLACEHOLDER CONVENTION prose, so a correctly-completed artifact still failed — and since
+  `pre-commit-hook.sh` routes staged specs through `validate-template.sh --strict`, projects reached a
+  state where **Speck's own generated output could not be committed**. Both now delegate to
+  `check-replace-markers.sh` instead of keeping a second, independently-buggy copy of the rule.
+- **`[NEEDS USER REVIEW]` is no longer rejected as scaffold residue** — a marker Speck's own templates
+  mandate agents emit, and which `project-state-template.md` greps for to build a section. The allowlist
+  lives in one shared file, `.speck/scripts/lib/sanctioned-markers.txt`, read rather than duplicated, so
+  emitter and rejecter cannot drift apart again.
+- **`check-replace-markers.sh` no longer convicts Speck's own template text** — `project-state-template.md`'s
+  permanently-required "Outstanding REPLACE_BEFORE_SHIP markers" section produced 3 permanent,
+  un-clearable hits in every scaffolded project. Citations are recognised structurally; the fenced-code
+  exemption is scoped to shell fences only, so a genuine marker in a YAML fence is still caught.
+- **The banned-language verdict no longer depends on whether ripgrep is installed.** `rg --files` honours
+  `.gitignore` and `find` did not — the same tree scored exit 0 with rg and exit 1 without it. The fallback
+  now drops VCS-ignored files via `git check-ignore` (which consults the index, so tracked files are never
+  dropped). Aligned fallback→rg deliberately: that direction can only remove files from a scan, so it
+  cannot turn a green repo red.
+- **Speck's own machinery, vendored trees and test files are no longer scanned.** `.speck`, `specs`,
+  `.cursor`, `.venv`, `venv`, `.tox`, `Pods`, `target`, `.build`, `DerivedData`, `.gradle`, `coverage`
+  join the deny list — the fallback scan reported 4025 hits for `plan` on one repo, top hits being Speck's
+  own templates. Default test exclusions are language-agnostic now (`**/test_*.py`, `**/tests.py`,
+  `**/*_test.*`, `**/*Test.*`, `**/*_spec.*`, `**/tests/**`, `**/spec/**`, `**/__mocks__/**`, `**/e2e/**`),
+  because a vocabulary guard whose regex literals ARE the banned words must not be convicted by the gate
+  it protects — and Speck ships django-htmx, go-templ-htmx and expo-fastapi recipes, not just JS/TS.
+- **A `>10`-hit term no longer aborts the run.** `echo "$out" | head -n 10` SIGPIPEs the producer and,
+  under `set -o pipefail`, killed the run at 141 with every remaining term unscanned.
+- **An ABSENT `witness.json` is no longer reported as GRAPH_STALE.** It gets its own honest, non-capping
+  code, `GRAPH_UNBUILT.P3`. Two absences, two facts: a destroyed witness is tampering and caps; a
+  never-built one just needs `build`. Every project migrating from v8 has no witness on upgrade day, and
+  capping them would have demoted the whole installed base on a minor bump.
+- **`/epic-validate` and `/story-validate` stop letting the schema-parity row be ticked without evidence.**
+  The instruction said `--strict`, which never asks the live leg to run — reporting SKIPPED and exiting 0
+  while the template lets the agent check "Live DB schema matches migrations" as a pass.
+- **Speck read the wrong version for any workspace whose path contains an apostrophe** —
+  `.speck/project.json` was read by interpolating the path into Python source, so the read died on a
+  SyntaxError that `2>/dev/null` swallowed. Separately, **`.speck/VERSION` is now authoritative** and
+  `project.json`'s `speck_version` advisory: `migrate.sh` wrote a hardcoded `7.0.0` there and nothing ever
+  updated it, so `detect-version.sh` reported **7.0.0 for a workspace on 9.5.0** while `profile-lib.sh`
+  reported 9.5.0 for the same repo. Disagreement now warns loudly.
+- **Every banned-language and schema-drift exit path publishes `SPECK_GATE_SCOPE` / `SPECK_GATE_SUBJECT` /
+  `SPECK_GATE_PREDICATES`,** so a caller can tell a real green from a vacuous one without parsing prose.
+  The lint also prints term health — `evaluated · fired · zero-hit (compliant) · could not match` —
+  because zero hits is only evidence when the term COULD have matched. `PREDICATES` is load-bearing: this
+  gate's vacuity is a dead predicate set, not an empty subject set.
+- **`validate-visual-assets.sh`**: WebP assets could never pass on macOS (BSD `od` piped through
+  `cut -d' '`, which does not collapse repeated delimiters, truncated the signature to `52`). And a single
+  apostrophe anywhere on a manifest row — even in an uncaptured column — made `xargs` exit on an
+  unterminated quote and `set -e` kill the validator. Measured: 7 of 23 `ui-spec.md` files in one project
+  failed strict validation for that reason alone.
+- **`validate-felt-axis.sh` / `validate-taste-axis.sh`** accepted `## 🧭 Four-Axis Readiness` only with a
+  parenthetical axis list, rejecting a template-conformant header at the FIRST check so no real assertion
+  was ever reached. Both files' own comments called the match "loose"; the regex disagreed.
+
+### New — `.speck/scripts/lib/text.sh`
+
+Five defects across four validators were one class: a bash text idiom used for structured-data work
+without accounting for `set -euo pipefail`. The idioms now live in one tested library —
+`sp_trim` (no `xargs`, which does shell QUOTE PROCESSING and both crashes on an apostrophe and silently
+strips quotes/unescapes backslashes on the success path), `sp_head` (never SIGPIPEs its producer),
+`sp_split_toplevel` (paren- and quote-aware), `sp_strip_qualifier`, `sp_strip_decoration`,
+`sp_normalize_term`, `sp_parens_balanced` (the dead-term tell), `sp_match_exact` (fixed-string
+whole-line, so `table:order` cannot false-PASS against a catalog holding only `table:orders`).
+
+### Tests
+
++7 suites wired into `npm test`, several for scripts that had never had one: `lib/text.test.sh`,
+`detect-version.test.sh`, `check-replace-markers.test.sh`, `validation/scaffold-clean.test.sh`,
+`validate-visual-assets.test.sh`, `validate-schema-drift.test.sh`, `sync.hooks.test.js`.
+
+`scaffold-clean.test.sh` is the one that ends the class: it builds a project from the current templates
+verbatim and asserts every shipped scanner returns zero findings — **paired with a negative control**,
+because a scaffold-clean assertion alone is passed by a scanner that over-excludes and certifies nothing.
+Hook reachability is asserted BY EXECUTION, not by grepping for the marker; a grep passes on exactly the
+dead-block case it fixes. npm test green.
+
 ## v9.5.0 — 2026-07-21 — Per-harness agent tiering (decoupled, generated)
 
 `speck-*` agents are now tiered by role and generated per harness, replacing the symlink layout

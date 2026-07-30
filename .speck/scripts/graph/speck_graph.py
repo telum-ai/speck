@@ -952,6 +952,17 @@ def check_graph(project_dir):
                 })
 
     # GRAPH_STALE — the on-disk graph must equal a fresh compile (freshness computed, not asserted)
+    #
+    # Two absences, two different facts — never the same code (scar, issue #96 findings 1-2):
+    #   TAMPERED (unreadable, or content ≠ a fresh compile) — the tamper-evidence artifact was
+    #     destroyed or hand-edited. Both branches once appended only the cap STRING and skipped
+    #     _min_readiness, so `rm graph/witness.json` printed GRAPH_STALE next to GRAPH_CAP = SHIP:
+    #     destroying the evidence REMOVED the ceiling it exists to enforce. Caps, always.
+    #   UNBUILT (no file at all) — the project simply has not run `build` yet. That is the state of
+    #     the entire v8→v9 installed base (migrate.js writes .speck/.v9-graph-needed to every
+    #     upgrader), and the engagement gate already blocks feature work there. Capping it too would
+    #     drop every such project to INTEGRATION-GREEN on a patch bump and double-punish greenfield.
+    #     So: an honest, DISTINCT, non-capping signal (GRAPH_UNBUILT.P3) — never a wall.
     on_disk = graph_path(project_dir)
     if os.path.isfile(on_disk):
         try:
@@ -967,9 +978,12 @@ def check_graph(project_dir):
                             "regenerate with `speck_graph.py build` (never hand-edit it)")
                 cap_state = _min_readiness(cap_state, "integration-green")
         except (ValueError, OSError):
-            caps.append("GRAPH_STALE.P2: witness.json is unreadable — regenerate with `build`")
+            caps.append("GRAPH_STALE.P2: witness.json is unreadable/corrupt — the tamper-evidence "
+                        "artifact itself is destroyed; regenerate with `speck_graph.py build`")
+            cap_state = _min_readiness(cap_state, "integration-green")
     else:
-        caps.append("GRAPH_STALE.P2: no committed witness.json — run `speck_graph.py build`")
+        caps.append("GRAPH_UNBUILT.P3: no committed witness.json — this project's graph has never "
+                    "been built; run `speck_graph.py build` (not tampering, so it does not cap)")
 
     # UNMAPPED_PROMISE — conservation anti-join (the graph form of validate-traceability-matrix.sh's
     # DEFAULT-mode open-row check): once an epic has an epic-breakdown.md, every PRM must RESOLVE —
@@ -1053,6 +1067,15 @@ def check_graph(project_dir):
 def cmd_check(project_dir):
     findings, caps, pending, cap_state = check_graph(project_dir)
     hard = [f for f in findings if f["code"].endswith(".P1")]
+    # A stale graph is a REPORT ABOUT A DIFFERENT TREE. Two consequences (issue #96 finding 1):
+    #   • exit non-zero — `check` used to return `1 if hard else 0`, so `build && check` chains and
+    #     CI both read a 142-commits-behind witness as a pass. GRAPH_UNBUILT deliberately does NOT
+    #     land here: exiting non-zero on a never-built graph would brick every greenfield project
+    #     before it can run `build` / `/speck-graph-up`.
+    #   • withhold the cap NUMBER — the number is what gets quoted onward into project-state and
+    #     pickups, where it outlives the warning printed beside it (brightstance read `SHIP` off a
+    #     road that a fresh compile scored NO-SHIP, 227 nodes out of date). Say STALE instead.
+    stale = any(c.startswith("GRAPH_STALE") for c in caps)
     sys.stdout.write("Speck Witness Graph — forcing gates (structural: traceable · complete · fresh)\n")
     sys.stdout.write("(faithful · good · excellent are NOT graph-provable — owned by /audit + LARP)\n\n")
     if hard:
@@ -1068,9 +1091,13 @@ def cmd_check(project_dir):
     sys.stdout.write("ℹ️  not-yet-evaluated (honest — never counted as a pass):\n")
     for p in pending:
         sys.stdout.write("  • %s\n" % p)
-    sys.stdout.write("\nGRAPH_CAP = %s  (the ceiling this graph can back; caps never grant)\n"
-                     % cap_state.upper())
-    return 1 if hard else 0
+    if stale:
+        sys.stdout.write("\nGRAPH_CAP = STALE (unknowable until rebuilt — the committed witness "
+                         "does not match this tree; rebuild, then re-read)\n")
+    else:
+        sys.stdout.write("\nGRAPH_CAP = %s  (the ceiling this graph can back; caps never grant)\n"
+                         % cap_state.upper())
+    return 1 if (hard or stale) else 0
 
 
 # ---------------------------------------------------------------------------
@@ -1299,6 +1326,7 @@ def cmd_gap(project_dir, emit=False, target=None, punch=False):
 # gate-code → (bucket, resolving-skill). Buckets are ordered; a code not listed defaults to TIDY.
 ROAD_ROUTING = {
     "GRAPH_STALE": ("TIDY", "speck_graph.py build"),
+    "GRAPH_UNBUILT": ("TIDY", "speck_graph.py build (first build — or /speck-graph-up if migrating)"),
     "GRAPH_UNMIGRATED": ("TIDY", "/speck-graph-up (harden ids) — or fill the promise ledger"),
     "DANGLING_REF": ("TIDY", "fix the reference (repoint or restore the target)"),
     "DUP_ID": ("TIDY", "rename one of the colliding dirs to a free S-number"),

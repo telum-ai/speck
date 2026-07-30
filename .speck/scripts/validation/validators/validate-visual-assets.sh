@@ -8,6 +8,9 @@
 
 set -euo pipefail
 
+# shellcheck source=../../lib/text.sh
+. "$(dirname "$0")/../../lib/text.sh"
+
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
@@ -42,11 +45,17 @@ echo -e "🎨 Validating Visual Assets Pipeline for $(basename "$(dirname "$ui_s
 failed=false
 
 while IFS= read -r line; do
-  trimmed=$(echo "$line" | xargs)
+  # sp_trim, not `$(echo "$line" | xargs)` (#91): xargs does shell-style quote
+  # processing, so a lone apostrophe anywhere on the line — even in an uncaptured
+  # column like Visual Intent — is an unterminated quote, xargs exits 1, and set -e
+  # kills the whole validator. sp_trim is pure parameter expansion: it strips the
+  # same outer whitespace (still feeding the regex's `^\|` anchor on indented rows)
+  # with no quote semantics and nothing corrupted on the success path either.
+  trimmed=$(sp_trim "$line")
   if [[ "$trimmed" =~ ^\|[[:space:]]*(ASSET-[A-Za-z0-9_-]+)[[:space:]]*\|[[:space:]]*([^|]+)\|[[:space:]]*([^|]+)\|[[:space:]]*([^|]+)\| ]]; then
     asset_id="${BASH_REMATCH[1]}"
-    asset_path=$(echo "${BASH_REMATCH[2]}" | xargs)
-    asset_format=$(echo "${BASH_REMATCH[3]}" | xargs | tr '[:lower:]' '[:upper:]')
+    asset_path=$(sp_trim "${BASH_REMATCH[2]}")
+    asset_format=$(sp_trim "${BASH_REMATCH[3]}" | tr '[:lower:]' '[:upper:]')
     
     # Skip template placeholders
     if [[ "$asset_path" == *"..."* || "$asset_id" == *"ASSET-[ID]"* ]]; then
@@ -76,7 +85,12 @@ while IFS= read -r line; do
     # Format-specific validation
     if [[ "$asset_format" == "SVG" ]]; then
       # Enforce clean SVG-First rules
-      content=$(cat "$abs_asset_path" | tr '\n' ' ' | xargs || true)
+      # sp_trim, not `| xargs` (#91 — same idiom as the row trim above): a `'` inside
+      # the SVG (an apostrophe in a comment, an aria-label, a brand string) is an
+      # unterminated quote to xargs. It also strips quotes and unescapes backslashes
+      # on the success path, which would silently rewrite the very content the
+      # anti-pattern checks below are matching against.
+      content=$(sp_trim "$(cat "$abs_asset_path" | tr '\n' ' ')" || true)
       
       # 1. Basic tags check — glob match (robust across bash versions; the prior
       #    `=~ \<svg[[:space:]>]*` regex was a syntax-error risk on some bashes).
@@ -105,10 +119,25 @@ while IFS= read -r line; do
     elif [[ "$asset_format" == "WEBP" ]]; then
       # WebP file starts with RIFF (4 bytes), then size (4 bytes), then WEBP (4 bytes)
       # We inspect the hex signature: 52 49 46 46 (RIFF) and 57 45 42 50 (WEBP)
-      magic_riff=$(od -t x1 -N 4 "$abs_asset_path" | head -n 1 | cut -d' ' -f2-5 | tr -d ' ' | tr '[:lower:]' '[:upper:]' || true)
+      # `-An` (no offset column) + sp_trim + `tr -d ' '`, not `od -t x1 ... | cut -d' '
+      # -f2-5`: found live while proving this site's own test non-vacuous. BSD od (macOS
+      # — Kjetil's own `npm test` box, no CI config in this repo) pads the offset/hex
+      # columns with a variable run of spaces, not the single space GNU od emits, so
+      # `cut -d' '` (which does not collapse repeated delimiters) lands on empty fields
+      # and silently truncates the hash to "52" — every well-formed WebP fails as
+      # "Invalid WebP" on macOS today, unconditionally. `-An` removes the offset column
+      # that made the field position matter in the first place, so the same
+      # trim-then-squeeze idiom already proven correct for magic_webp two lines below
+      # works here too, on either od dialect.
+      magic_riff=$(sp_trim "$(od -An -t x1 -N 4 "$abs_asset_path")" | tr -d ' ' | tr '[:lower:]' '[:upper:]' || true)
       
       # Look for WEBP in bytes 8-11 (hex: 57454250)
-      magic_webp=$(od -An -t c -j 8 -N 4 "$abs_asset_path" | xargs | tr -d ' ' || true)
+      # sp_trim, not `| xargs` (#91): od -t c renders a printable byte as itself, so a
+      # single-quote-valued byte in this window would hit the same unterminated-quote
+      # crash. The trailing `tr -d ' '` already removes every space regardless of how
+      # many sit between od's per-byte columns, so swapping the trim step changes
+      # nothing else here.
+      magic_webp=$(sp_trim "$(od -An -t c -j 8 -N 4 "$abs_asset_path")" | tr -d ' ' || true)
 
       if [[ "$magic_riff" != "52494646" || "$magic_webp" != "WEBP" ]]; then
         echo -e "   ${RED}❌ Invalid WebP: Magic byte signature 'RIFF...WEBP' not found. Is it actually a WebP?${NC}"

@@ -1,0 +1,22 @@
+# sanctioned-markers.txt — bracket markers Speck's OWN templates mandate
+# agents to emit as a FEATURE, not scaffold residue that must be replaced.
+#
+# validate-template.sh's placeholder scanner reads this file and exempts
+# every marker listed here from the unreplaced-placeholder check, checked
+# BEFORE its generic all-caps-bracket heuristic runs. Whatever EMITS a
+# marker — a template instructing agents to write it, e.g.
+# project-state-template.md's "Sections Awaiting User Review" section, which
+# is built by grepping truth artifacts for [NEEDS USER REVIEW] — and
+# whatever REJECTS one (this scanner) read from this ONE list, so an agent
+# emitting the mandated marker and the scanner convicting it as scaffold
+# residue can never drift apart again (#92). A project that wires strict
+# template validation into pre-commit was reaching a state where Speck's
+# own generated output could not be committed.
+#
+# Format: one full bracket form per line, e.g. "[NEEDS USER REVIEW]".
+# Matched as an EXACT string against the bracket's inner content (no regex,
+# no partial-substring risk — see text.sh's sp_match_exact for the bash
+# analog of this fixed-string discipline).
+# Blank lines and lines starting with # are ignored.
+
+[NEEDS USER REVIEW]

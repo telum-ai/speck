@@ -22,8 +22,9 @@ DEC ID BANDS (concurrent multi-epic execution):
 - Log via /speck-decision-log only — never hand-assign IDs on parallel branches
 
 PLACEHOLDER CONVENTION:
-  Tokens marked  REPLACE_BEFORE_SHIP: <hint>  MUST be filled before this artifact
-  can claim ship-readiness. /speck-recheck greps for them.
+  Tokens of the form REPLACE_BEFORE_SHIP followed by a colon and a hint MUST
+  be filled before this artifact can claim ship-readiness. /speck-recheck
+  greps for them.
 -->
 
 **Project**: REPLACE_BEFORE_SHIP: PROJECT_NAME

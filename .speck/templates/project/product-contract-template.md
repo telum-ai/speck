@@ -22,7 +22,7 @@ If you find yourself wanting to write a value-judgment in another doc (what's "p
 
 PLACEHOLDER CONVENTION:
   Any value that MUST be replaced before this artifact can claim ship-readiness
-  is marked  REPLACE_BEFORE_SHIP: <hint>
+  is marked with REPLACE_BEFORE_SHIP followed by a colon and a hint.
   Generic [bracketed] hints elsewhere are guidance — agents fill them in but they
   don't gate ship. The REPLACE_BEFORE_SHIP markers ARE gates: /speck-recheck
   greps for them and refuses to mark the artifact "real" while any remain.

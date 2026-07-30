@@ -517,6 +517,211 @@ function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** Shell words that open a nesting level, and the words that close one again. */
+const BLOCK_OPENERS = new Set(['if', 'case', 'while', 'until', 'for', 'select', '{']);
+const BLOCK_CLOSERS = new Set(['fi', 'esac', 'done', '}']);
+
+/**
+ * Strip a trailing `\r` and a trailing comment so a line can be read as shell WORDS.
+ * The comment strip only fires on a `#` that starts a word, so `echo "# not a comment"` and
+ * `${VAR#prefix}` are left alone.
+ */
+function hookCodeOf(line) {
+  return line.replace(/\r$/, '').replace(/(^|[\s;])#.*$/, '$1');
+}
+
+/**
+ * How much this line changes the shell's block-nesting depth.
+ *
+ * Deliberately keyword-only: `(` and `)` are NOT counted, because `case` patterns (`a) … ;;`),
+ * array assignments (`ARGS=(hook-impl …)`) and command substitution make paren arithmetic wrong
+ * far more often than right. A miscount that reads too DEEP only costs a relocation we then
+ * decline — the block appends at the end, exactly as pre-9.6 Speck did — whereas a miscount that
+ * reads too SHALLOW is the defect this exists to prevent. So the conservative direction is the
+ * default direction.
+ */
+function hookBlockDepthDelta(line) {
+  let delta = 0;
+  for (const token of hookCodeOf(line).split(/[\s;&|]+/)) {
+    if (!token) continue;
+    if (BLOCK_OPENERS.has(token)) delta++;
+    else if (BLOCK_CLOSERS.has(token)) delta--;
+  }
+  return delta;
+}
+
+/**
+ * Find the first line of a hook after which nothing can ever run.
+ *
+ * THE SCAR: Speck appended its loader block to the END of an existing hook, unconditionally.
+ * A pre-commit.com generated hook terminates in `exec … -mpre_commit "${ARGS[@]}"`, and `exec`
+ * REPLACES the shell process — so the appended block was structurally unreachable. chmod +x
+ * succeeded, the marker was in the file, and every commit-path gate in that repo was silently
+ * dark. This is the whole backlog's thesis living in Speck's own installer: a guard that never
+ * executes because a broad adjacent default shadows it.
+ *
+ * Only genuinely TOP-LEVEL terminators count, and top level is a matter of NESTING, not of
+ * column. The first cut read column 0 as top level, which is wrong for every hand-rolled hook
+ * whose body simply is not indented:
+ *
+ *     if [ -n "$SKIP_HOOKS" ]; then
+ *     exit 0
+ *     fi
+ *
+ * That `exit 0` fires only on the repo's own documented bypass, but at column 0 it read as
+ * unconditional — so the block was spliced ABOVE the guard, and with `|| exit $?` making the
+ * block fatal the bypass stopped exempting Speck's gates entirely. Speck would then block a
+ * commit the project had deliberately exempted. So we track depth while scanning and accept a
+ * candidate only at depth 0. Indentation is still respected on top of that (the regexes are
+ * anchored at column 0), because an indented terminator is conditional either way.
+ *
+ * `exec` with only redirections (`exec >log 2>&1`, `exec 3<&0`) does NOT replace the process —
+ * it rewires the current shell's file descriptors and execution continues. Treating that as a
+ * terminator would relocate the Speck block for no reason, so it is excluded explicitly.
+ *
+ * CRLF is handled explicitly: in JS `.` does not match `\r`, so `/^exec[ \t]+(.+)$/` silently
+ * failed on `exec echo "…"\r` and a Windows/WSL-generated hook came back with the block appended
+ * BELOW the exec — still dark, and with no warning to say so. The raw line is what is returned,
+ * so the operator sees their file, not our normalisation.
+ *
+ * Returns { index, line } or null.
+ */
+function findHookTerminator(hookContent) {
+  const lines = hookContent.split('\n');
+  let depth = 0;
+  let heredoc = null;
+  let continued = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const code = line.replace(/\r$/, '');
+
+    // A heredoc body is DATA, not code. `exit 0` printed inside `cat <<EOF … EOF` is text the
+    // hook emits, and since the loader is now spliced immediately above the terminator, reading
+    // one as code would splice Speck's block into the middle of someone's heredoc.
+    if (heredoc) {
+      const end = heredoc.stripTabs ? code.replace(/^\t+/, '') : code;
+      if (end === heredoc.tag) heredoc = null;
+      continue;
+    }
+
+    // `continued` means the PREVIOUS line ended in a backslash, so this line's words are
+    // arguments to that command — `printf '%s\n' \` / `exec echo x` is an argument list, not a
+    // process replacement. Splicing between the halves would break the command outright, and its
+    // words are not keywords either, so it contributes no depth.
+    if (depth === 0 && !continued) {
+      const execMatch = /^exec[ \t]+(.+)$/.exec(code);
+      if (execMatch && !/^[0-9]*[<>&|]/.test(execMatch[1].trim())) {
+        return { index: i, line };
+      }
+      // `exit`, `exit 0`, `exit $rc`, with an optional trailing comment.
+      if (/^exit([ \t]+[^#\s]+)?[ \t]*(#.*)?$/.test(code)) {
+        return { index: i, line };
+      }
+    }
+
+    if (!continued) {
+      // Clamped at 0: an unbalanced closer we mispaired must not drive the counter negative and
+      // hand us a phantom top level further down the file.
+      depth = Math.max(0, depth + hookBlockDepthDelta(code));
+    }
+    heredoc = heredocOpenerOf(code);
+    continued = /(?:^|[^\\])(?:\\\\)*\\$/.test(code);
+  }
+  return null;
+}
+
+/** The heredoc this line opens, or null. `<<<` is a herestring and opens nothing. */
+function heredocOpenerOf(line) {
+  const m = /(?:^|[^<])<<(-?)[ \t]*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\2/.exec(hookCodeOf(line));
+  return m ? { tag: m[3], stripTabs: m[1] === '-' } : null;
+}
+
+/**
+ * Splice the loader block into a hook so that it actually runs.
+ *
+ * With no terminator, appending is right: the Speck gate runs last, after whatever the project
+ * already does. With a terminator, the block goes IMMEDIATELY ABOVE it — as late as it legally
+ * can, not as early as it legally can.
+ *
+ * THE SECOND SCAR: the first cut inserted as early as possible, skipping only the shebang and
+ * `set`/`shopt`. That is wrong twice over.
+ *
+ *   1. Environment. A hook that exports a PATH or sources nvm/asdf/pyenv before its terminator
+ *      ran Speck's gates in a different environment than every other line of that hook — and
+ *      Speck's sub-gates DEGRADE rather than fail when python3 or rg is missing, so the effect
+ *      was not a crash but a quietly smaller gate.
+ *   2. Guards. A hook shaped `if [ -n "$SKIP_HOOKS" ]; then` / `exit 0` / `fi` / `exec …` has a
+ *      real terminator below a real bypass. Inserting at the top put Speck's block ABOVE the
+ *      bypass, and with `|| exit $?` making the block fatal, the repo's documented escape hatch
+ *      stopped exempting Speck's gates — Speck would block a commit the project had deliberately
+ *      exempted. Both are the same mistake: assuming everything above the terminator is preamble.
+ *
+ * Inserting immediately above the terminator is also the most conservative position available:
+ * pre-9.6 Speck appended at the very end, so the latest legal spot is the smallest possible
+ * change in gate ordering for every repo that upgrades.
+ *
+ * Returns { content, shadow } where `shadow` is the terminator that forced the relocation.
+ */
+function insertHookLoader(hookContent, loaderContent) {
+  const shadow = findHookTerminator(hookContent);
+  if (!shadow) {
+    return { content: hookContent.trimEnd() + `\n\n${loaderContent}\n`, shadow: null };
+  }
+
+  const lines = hookContent.split('\n');
+  // Never above the shebang — it has to stay line 1 for the kernel to honour it.
+  const floor = lines[0] && lines[0].replace(/\r$/, '').startsWith('#!') ? 1 : 0;
+  const at = Math.max(shadow.index, floor);
+  lines.splice(at, 0, ...loaderContent.split('\n'), '');
+  return { content: lines.join('\n').trimEnd() + '\n', shadow };
+}
+
+/**
+ * Produce the new hook body: fresh install, in-place update, or rescue.
+ *
+ * An already-installed block is REMOVED before re-inserting rather than replaced in place —
+ * because a block installed by an older Speck may itself be sitting in the dead zone, and
+ * replacing it there would faithfully keep it dead. Removing and re-inserting re-runs the
+ * reachability decision on every sync, which is what makes the upgrade self-healing.
+ */
+function applyHookLoader(existingContent, loaderStart, loaderEnd, loaderContent) {
+  if (!existingContent.trim()) {
+    return { content: `#!/usr/bin/env bash\n\n${loaderContent}\n`, shadow: null, isNew: true };
+  }
+  const blockRegex = new RegExp(`\\n*${escapeRegExp(loaderStart)}[\\s\\S]*?${escapeRegExp(loaderEnd)}\\n*`);
+  const hadBlock = blockRegex.test(existingContent);
+  const body = hadBlock ? existingContent.replace(blockRegex, '\n') : existingContent;
+  const { content, shadow } = insertHookLoader(body, loaderContent);
+  return { content, shadow, isNew: false, hadBlock };
+}
+
+/**
+ * Report a relocation loudly. NOT gated on `verbose`: a shadowed hook means the project's
+ * commit-path gates were dark, and silence is precisely the failure mode being repaired.
+ */
+function warnHookShadow(targetDir, hookName, shadow) {
+  console.log(`  ⚠️  .git/hooks/${hookName} line ${shadow.index + 1} is \`${shadow.line.trim()}\` — nothing below it can ever run.`);
+  console.log(`      Speck's block was inserted immediately ABOVE that line so the ${hookName} gates stay live —`);
+  console.log(`      after everything else this hook does, so your environment setup and your own`);
+  console.log(`      skip guards still apply to it.`);
+  if (existsSync(join(targetDir, '.pre-commit-config.yaml'))) {
+    console.log(`      This hook is managed by pre-commit.com. The durable fix is to let pre-commit own the gate —`);
+    console.log(`      add to .pre-commit-config.yaml:`);
+    console.log(`        - repo: local`);
+    console.log(`          hooks:`);
+    console.log(`            - id: speck-${hookName}`);
+    console.log(`              name: Speck ${hookName} gates`);
+    console.log(`              entry: bash .speck/scripts/validation/${hookName}-hook.sh`);
+    console.log(`              language: system`);
+    if (hookName === 'commit-msg') {
+      // pre-commit passes the message file as the single argument, which is what the gate reads.
+      console.log(`              stages: [commit-msg]`);
+    } else {
+      console.log(`              pass_filenames: false`);
+    }
+  }
+}
+
 /**
  * Install or update the Git pre-commit hook loader safely and non-destructively
  */
@@ -538,38 +743,30 @@ function installPreCommitHook(targetDir, verbose = false) {
   const loaderStart = '# === SPECK HOOK START ===';
   const loaderEnd = '# === SPECK HOOK END ===';
   
+  // `|| exit $?` is load-bearing, not belt-and-braces. When the block is the LAST thing in
+  // the hook, the hook's exit status is the gate's status for free. The moment the block is
+  // relocated above a terminator (see insertHookLoader) that stops being true — a failing
+  // gate would print its complaint and the commit would sail through anyway. Same dead-guard
+  // failure, different hat. Propagating the status explicitly makes the block fatal wherever
+  // it sits.
   const loaderContent = `${loaderStart}
 if [ -f .speck/scripts/validation/pre-commit-hook.sh ]; then
-  bash .speck/scripts/validation/pre-commit-hook.sh
+  bash .speck/scripts/validation/pre-commit-hook.sh || exit $?
 fi
 ${loaderEnd}`;
 
   try {
-    let hookContent = '';
-    let isNew = true;
+    const existing = existsSync(preCommitPath) ? readFileSync(preCommitPath, 'utf-8') : '';
+    const { content, shadow, isNew, hadBlock } = applyHookLoader(existing, loaderStart, loaderEnd, loaderContent);
+    writeFileSync(preCommitPath, content, { mode: 0o755 });
 
-    if (existsSync(preCommitPath)) {
-      hookContent = readFileSync(preCommitPath, 'utf-8');
-      isNew = false;
+    if (shadow) warnHookShadow(targetDir, 'pre-commit', shadow);
+    if (verbose) {
+      console.log(hadBlock
+        ? '  ✅ Updated Speck pre-commit Git hook loader'
+        : `  ✅ Installed Speck pre-commit Git hook loader${isNew ? '' : ' into the existing hook'}`);
     }
 
-    if (hookContent.includes(loaderStart) && hookContent.includes(loaderEnd)) {
-      // Safely replace the old block with the new block (keeps it updated)
-      const regex = new RegExp(`${escapeRegExp(loaderStart)}[\\s\\S]*?${escapeRegExp(loaderEnd)}`);
-      hookContent = hookContent.replace(regex, loaderContent);
-      writeFileSync(preCommitPath, hookContent, { mode: 0o755 });
-      if (verbose) console.log('  ✅ Updated Speck pre-commit Git hook loader');
-    } else {
-      // Append the block to existing hook or write new
-      if (isNew) {
-        hookContent = `#!/usr/bin/env bash\n\n${loaderContent}\n`;
-      } else {
-        hookContent = hookContent.trimEnd() + `\n\n${loaderContent}\n`;
-      }
-      writeFileSync(preCommitPath, hookContent, { mode: 0o755 });
-      if (verbose) console.log('  ✅ Installed Speck pre-commit Git hook loader');
-    }
-    
     // Ensure it is executable on Unix
     try {
       execSync(`chmod +x "${preCommitPath}"`, { stdio: 'ignore' });
@@ -600,38 +797,28 @@ function installCommitMsgHook(targetDir, verbose = false) {
   const loaderStart = '# === SPECK COMMIT-MSG HOOK START ===';
   const loaderEnd = '# === SPECK COMMIT-MSG HOOK END ===';
   
+  // `|| exit $?` — see the pre-commit loader: relocation above a terminator costs the block
+  // its position as the hook's last command, and with it the free exit-status propagation.
   const loaderContent = `${loaderStart}
 if [ -f .speck/scripts/validation/commit-msg-hook.sh ]; then
-  bash .speck/scripts/validation/commit-msg-hook.sh "$1"
+  bash .speck/scripts/validation/commit-msg-hook.sh "$1" || exit $?
 fi
 ${loaderEnd}`;
 
   try {
-    let hookContent = '';
-    let isNew = true;
+    // Same shadow, same rescue — commit-msg hooks are generated by pre-commit.com with the
+    // identical `exec … hook-impl` tail, so the defect and the fix are one and the same.
+    const existing = existsSync(commitMsgPath) ? readFileSync(commitMsgPath, 'utf-8') : '';
+    const { content, shadow, isNew, hadBlock } = applyHookLoader(existing, loaderStart, loaderEnd, loaderContent);
+    writeFileSync(commitMsgPath, content, { mode: 0o755 });
 
-    if (existsSync(commitMsgPath)) {
-      hookContent = readFileSync(commitMsgPath, 'utf-8');
-      isNew = false;
+    if (shadow) warnHookShadow(targetDir, 'commit-msg', shadow);
+    if (verbose) {
+      console.log(hadBlock
+        ? '  ✅ Updated Speck commit-msg Git hook loader'
+        : `  ✅ Installed Speck commit-msg Git hook loader${isNew ? '' : ' into the existing hook'}`);
     }
 
-    if (hookContent.includes(loaderStart) && hookContent.includes(loaderEnd)) {
-      // Safely replace the old block with the new block (keeps it updated)
-      const regex = new RegExp(`${escapeRegExp(loaderStart)}[\\s\\S]*?${escapeRegExp(loaderEnd)}`);
-      hookContent = hookContent.replace(regex, loaderContent);
-      writeFileSync(commitMsgPath, hookContent, { mode: 0o755 });
-      if (verbose) console.log('  ✅ Updated Speck commit-msg Git hook loader');
-    } else {
-      // Append the block to existing hook or write new
-      if (isNew) {
-        hookContent = `#!/usr/bin/env bash\n\n${loaderContent}\n`;
-      } else {
-        hookContent = hookContent.trimEnd() + `\n\n${loaderContent}\n`;
-      }
-      writeFileSync(commitMsgPath, hookContent, { mode: 0o755 });
-      if (verbose) console.log('  ✅ Installed Speck commit-msg Git hook loader');
-    }
-    
     // Ensure it is executable on Unix
     try {
       execSync(`chmod +x "${commitMsgPath}"`, { stdio: 'ignore' });

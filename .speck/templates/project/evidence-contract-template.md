@@ -23,9 +23,10 @@ Common failure modes this contract prevents: browser screenshots passed off as n
 200-line target.
 
 PLACEHOLDER CONVENTION:
-  Tokens marked  REPLACE_BEFORE_SHIP: <hint>  MUST be filled before this artifact
-  can claim ship-readiness. /speck-recheck greps for them. Other [bracketed]
-  hints are guidance for the agent but don't gate ship.
+  Tokens of the form REPLACE_BEFORE_SHIP followed by a colon and a hint MUST
+  be filled before this artifact can claim ship-readiness. /speck-recheck
+  greps for them. Other [bracketed] hints are guidance for the agent but
+  don't gate ship.
 -->
 
 **Project**: REPLACE_BEFORE_SHIP: PROJECT_NAME

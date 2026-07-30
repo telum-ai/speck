@@ -61,9 +61,15 @@ if [[ "$file_path" != *"specs/"* ]] || [[ "$file_path" != *".md" ]]; then
   exit 0
 fi
 
+# Computed early (not just before the routing switch below) because STEP 1
+# needs it too: the sanctioned-markers allowlist lives in ../lib, and STEP 1
+# passes its path into the Python scanner as argv[2].
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SANCTIONED_MARKERS_FILE="$SCRIPT_DIR/../lib/sanctioned-markers.txt"
+
 # === STEP 1: Run Python-based Template Placeholder Scanner ===
 if command -v python3 >/dev/null 2>&1; then
-  if ! python3 - "$file_path" << 'EOF'
+  if ! python3 - "$file_path" "$SANCTIONED_MARKERS_FILE" << 'EOF'
 import sys
 import re
 
@@ -72,6 +78,29 @@ with open(file_path, "r", encoding="utf-8") as f:
     content = f.read()
 
 errors = []
+
+# SANCTIONED_MARKERS — bracket tokens Speck's OWN templates mandate agents to
+# emit as a FEATURE (e.g. project-state-template.md instructs agents to write
+# [NEEDS USER REVIEW] and then greps for it to build the "Sections Awaiting
+# User Review" section). Rejecting a marker Speck itself mandates makes
+# Speck's own generated output uncommittable under strict validation (#92).
+# Read from the SAME file the marker-emitting templates document, sourced by
+# path (argv[2]) rather than duplicated here, so whatever emits a marker and
+# whatever rejects one cannot drift apart. Exact string match only (a
+# sanctioned marker is checked before, and short-circuits, the generic
+# all-caps heuristic below).
+SANCTIONED_MARKERS = set()
+if len(sys.argv) > 2:
+    try:
+        with open(sys.argv[2], "r", encoding="utf-8") as mf:
+            for raw_line in mf:
+                raw_line = raw_line.strip()
+                if not raw_line or raw_line.startswith("#"):
+                    continue
+                if raw_line.startswith("[") and raw_line.endswith("]"):
+                    SANCTIONED_MARKERS.add(raw_line[1:-1])
+    except OSError:
+        pass
 
 SHA_STAMP_LINE = re.compile(
     r'^\s*\*?\[?as of SHA\b.*\bverified\b.*\bspeck\b',
@@ -96,6 +125,14 @@ CITATION_LINE_PHRASES = (
     "(resolved",
     "markers (",
     "marker is being",
+    # This validator's OWN remediation message ("...and replacing every
+    # [PLACEHOLDER] with real content...", printed below on failure) has
+    # itself been observed quoted back inside a downstream analysis-report
+    # explaining what happened — which then re-triggered this same scanner
+    # on the quote (#92). The clause is specific enough that it doesn't
+    # collide with a genuine unfilled [PLACEHOLDER] line, which never reads
+    # this way.
+    "replacing every",
 )
 
 TEMPLATE_BRACKET_MARKERS = (
@@ -182,6 +219,45 @@ def is_template_bracket(bracket_content):
     return False
 
 
+def is_legend_definition(line, local_start, local_end, bracket_content):
+    """A legend/key line DEFINES an all-caps convention tag rather than
+    containing a live, unfilled instance of it, e.g. a provenance legend:
+        **[FROM RESEARCH]** — content sourced from due-diligence research.
+    (#92: this over-match is real — the ALL-CAPS-with-space fallback above
+    convicts it exactly like a genuine unreplaced placeholder.)
+
+    Scoped deliberately tight, because a broad version of this rule recreates
+    the #89 trap in a new spot: turning a real false positive into a false
+    negative. Three guards, all required:
+      (a) bracket_content is ALL-CAPS. Every glossary/legend tag Speck's own
+          templates use — [NEEDS USER REVIEW] among them — takes this shape;
+          no genuine unfilled placeholder in any current Speck template does
+          (verified: mixed-case placeholders like [Option A name] and
+          [Item] fall through this guard untouched).
+      (b) the bracket sits at the very start of the line once leading
+          bullet/numbering and bold decoration are stripped — a definition
+          names its subject first. A numbered list item ("1. **[Option A
+          name]** — ...", project-decisions-log-template.md) or a preceding
+          sibling bracket ("- [ ] [Consumer FELT-GOOD] — ...",
+          project-v8-reprove-report-template.md) both leave a non-empty
+          remainder here and are correctly NOT treated as a legend.
+      (c) it is followed specifically by a TYPOGRAPHIC dash (— or –) — never
+          a plain hyphen and never a colon. Colon is the live separator in
+          genuine "[LABEL]: [value]" template rows (feedback/template.md's
+          `- **[SIGNAL_ID]**: [description]`) — accepting colon here would
+          silently blind exactly that kind of real unfilled field.
+    """
+    if not bracket_content.isupper():
+        return False
+    prefix = line[:local_start]
+    suffix = line[local_end:]
+    prefix_stripped = re.sub(r'^[\s]*[-*]?\s*\*{0,2}', '', prefix).strip()
+    if prefix_stripped != '':
+        return False
+    suffix_stripped = re.sub(r'^\*{0,2}', '', suffix).lstrip()
+    return bool(re.match(r'^[—–]', suffix_stripped))
+
+
 # Pre-compute byte ranges of fenced code blocks (```...```). The placeholder
 # scanner should never flag content inside fenced code blocks — that's literal
 # code/JSON/config, not template placeholders.
@@ -205,11 +281,22 @@ matches = re.finditer(r'\\?\[([^\]\n]+)\]', content)
 for m in matches:
     full_match = m.group(0)
     bracket_content = m.group(1).strip()
-    line, _ = line_at(content, m.start())
+    line, line_start = line_at(content, m.start())
 
     # Skip matches inside fenced code blocks — those are literal code,
     # not template placeholders.
     if is_in_code_block(m.start()):
+        continue
+
+    # SANCTIONED MARKERS short-circuit BEFORE every other heuristic (#92) —
+    # see SANCTIONED_MARKERS above for why this is a shared-list allowlist
+    # rather than a hardcoded exception.
+    if bracket_content in SANCTIONED_MARKERS:
+        continue
+
+    # Legend/glossary definition of an ALL-CAPS tag, not a live unfilled
+    # instance of it (#92) — see is_legend_definition for the tight scoping.
+    if is_legend_definition(line, m.start() - line_start, m.end() - line_start, bracket_content):
         continue
 
     if is_sha_stamp_line(line):
@@ -345,7 +432,6 @@ case "$filename" in
     ;;
 esac
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 strict_flag=""
 if [[ "$strict" == true ]]; then
   strict_flag="--strict"

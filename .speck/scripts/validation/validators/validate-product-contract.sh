@@ -131,11 +131,27 @@ else
 fi
 
 # 9. Scan for unreplaced REPLACE_BEFORE_SHIP placeholders
-if echo "$content" | grep -q "REPLACE_BEFORE_SHIP"; then
+#
+# P2-4 (#93): this used to be `grep -q "REPLACE_BEFORE_SHIP"` — unanchored,
+# no colon required — which matches the bare word inside this artifact's
+# OWN PLACEHOLDER CONVENTION prose (product-contract-template.md's "...is
+# marked with REPLACE_BEFORE_SHIP followed by a colon and a hint... The
+# REPLACE_BEFORE_SHIP markers ARE gates..."), so a fully-filled
+# product-contract.md still failed this check. Same class of bug as #89 (a
+# plain grep convicting Speck's own template text), just living here
+# instead of check-replace-markers.sh — and that script already carries the
+# fix (genuine-marker detection: a real marker has hint content after its
+# colon; a citation form doesn't). Delegate to it instead of maintaining a
+# second, independently-buggy reimplementation of the same rule.
+CRM_SCRIPT="$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd)/check-replace-markers.sh"
+if [[ ! -f "$CRM_SCRIPT" ]]; then
+  log_error "check-replace-markers.sh not found at expected path" \
+    "This check depends on .speck/scripts/check-replace-markers.sh — restore it before validating."
+elif bash "$CRM_SCRIPT" "$file_path" >/dev/null 2>&1; then
+  log_success "No 'REPLACE_BEFORE_SHIP' placeholders found"
+else
   log_error "Found unreplaced 'REPLACE_BEFORE_SHIP' placeholders" \
     "Search for all occurrences of 'REPLACE_BEFORE_SHIP' and fill in concrete values."
-else
-  log_success "No 'REPLACE_BEFORE_SHIP' placeholders found"
 fi
 
 # 10. Self-banned language check (smart-exclude Section 7 itself)

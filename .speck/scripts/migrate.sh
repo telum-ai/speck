@@ -10,7 +10,7 @@
 #   ./migrate.sh specs/projects/my-product
 #
 # Output:
-#   - .speck/project.json updated with speck_version: 7.0.0
+#   - .speck/project.json speck_version reconciled to the installed version (.speck/VERSION)
 #   - product-contract.md scaffolded (if missing)
 #   - evidence-contract.md scaffolded (if missing)
 #   - project-decisions-log.md scaffolded (if missing)
@@ -49,6 +49,10 @@ SCRIPTS="$WORKSPACE_ROOT/.speck/scripts"
 REPORT="$PROJECT_DIR/migration-report.md"
 DATE="$(date -u +%Y-%m-%d)"
 
+# speck_workspace_version() — the single read of which version this workspace is actually on.
+# shellcheck source=profile-lib.sh
+. "$SCRIPTS/profile-lib.sh"
+
 echo "🥓 Speck v6 → v7 migration"
 echo "  Project: $PROJECT_DIR"
 echo "  Workspace: $WORKSPACE_ROOT"
@@ -58,38 +62,37 @@ CREATED=()
 SKIPPED=()
 NEEDS_AGENT=()
 
-# --- 1. Update project.json speck_version ---
+# --- 1. Reconcile project.json speck_version with the version actually installed ---
+#
+# THE SCAR: this block wrote the literal '7.0.0' into project.json. That field was the
+# FIRST thing detect-version.sh read, and nothing else in Speck ever updates it — the CLI's
+# saveVersion() writes only .speck/VERSION. So every project that ever ran this script
+# reported 7.0.0 forever, however many upgrades later, while profile-lib.sh read VERSION and
+# answered differently for the same repo. The field is advisory; it must mirror the
+# authoritative file, never assert a version of its own.
 PROJECT_JSON="$WORKSPACE_ROOT/.speck/project.json"
+# 7.0.0 is the floor, not the answer: it is what this migration produces when the workspace
+# predates .speck/VERSION entirely (a true v6 install with no installer-written marker).
+MIGRATED_TO="$(speck_workspace_version "$WORKSPACE_ROOT")"
+[[ -n "$MIGRATED_TO" ]] || MIGRATED_TO="7.0.0"
+
 if [[ -f "$PROJECT_JSON" ]]; then
-  if grep -q '"speck_version"' "$PROJECT_JSON"; then
-    # Update in-place via Python (most portable JSON-aware edit)
-    python3 -c "
-import json, sys
-with open('$PROJECT_JSON') as f:
-    d = json.load(f)
-d['speck_version'] = '7.0.0'
-with open('$PROJECT_JSON', 'w') as f:
-    json.dump(d, f, indent=2)
-    f.write('\n')
-"
-    echo "✅ Updated .speck/project.json speck_version → 7.0.0"
-  else
-    python3 -c "
+  # Update in-place via Python (most portable JSON-aware edit)
+  python3 -c "
 import json
 with open('$PROJECT_JSON') as f:
     d = json.load(f)
-d['speck_version'] = '7.0.0'
+d['speck_version'] = '$MIGRATED_TO'
 with open('$PROJECT_JSON', 'w') as f:
     json.dump(d, f, indent=2)
     f.write('\n')
 "
-    echo "✅ Added speck_version to .speck/project.json"
-  fi
+  echo "✅ Reconciled .speck/project.json speck_version → $MIGRATED_TO (mirrors .speck/VERSION)"
 else
   cat > "$PROJECT_JSON" <<EOF
 {
   "play_level": "build",
-  "speck_version": "7.0.0",
+  "speck_version": "$MIGRATED_TO",
   "migrated_from_v6": true,
   "migrated_at": "$DATE"
 }
@@ -260,7 +263,7 @@ $(printf '%s\n' "${NEEDS_AGENT[@]:-(none)}" | sed 's/^/1. /')
 
 The agent will operate in **v7 mode** but will read v6 artifacts as inputs where v7 equivalents don't yet exist (e.g., reading \`ux-strategy.md\` if \`product-contract.md\` Section 6 isn't filled in yet).
 
-*[as of SHA $(git -C "$WORKSPACE_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown) | verified $DATE | speck v7.0.0]*
+*[as of SHA $(git -C "$WORKSPACE_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown) | verified $DATE | speck v$MIGRATED_TO]*
 EOF
 
 bash "$SCRIPTS/stamp-truth.sh" "$REPORT" 2>/dev/null || true

@@ -62,11 +62,93 @@ profile_extract_readme_oneliner() {
   grep -m1 '^> ' "$readme" 2>/dev/null | sed 's/^> //' || true
 }
 
+# speck_workspace_version <workspace_root>
+# The ONE read of "which Speck version is this workspace on".
+#
+# THE SCAR: two files answered this question from two different sources and disagreed by
+# construction. detect-version.sh read `.speck/project.json` → `speck_version` FIRST and
+# returned it; migrate.sh wrote that field as the literal '7.0.0'; the CLI's saveVersion()
+# only ever writes `.speck/VERSION`. So every upgrade advanced VERSION and left the field
+# frozen — a workspace on 9.5.0 reported 7.0.0 — while profile-lib.sh, reading the OTHER
+# file, quietly returned a different answer for the same repo.
+#
+# `.speck/VERSION` is what the installer writes on every init and upgrade, so `.speck/VERSION`
+# is authoritative. The project.json field is ADVISORY: it is used only when there is no
+# VERSION file at all (a genuinely pre-VERSION legacy install), and otherwise only compared —
+# loudly, on stderr, because a stale advisory field is a real defect and the operator is the
+# only one who can fix it.
+#
+# Prints the version on stdout, or the empty string when the workspace carries no marker at
+# all. The caller owns the fallback: "6" and "unknown" are different right answers.
+speck_workspace_version() {
+  local workspace_root="$1"
+  local version_file="$workspace_root/.speck/VERSION"
+  local project_json="$workspace_root/.speck/project.json"
+  local authoritative="" advisory=""
+
+  if [[ -f "$version_file" ]]; then
+    authoritative="$(tr -d '[:space:]' < "$version_file")"
+  fi
+
+  if [[ -f "$project_json" ]]; then
+    # The path is an ARGUMENT, never interpolated into the source. Interpolating it into a
+    # Python string literal — open('$project_json') — made a workspace at `.../kjetil's ws`
+    # close the literal early; python3 died on a SyntaxError and `2>/dev/null || echo ''`
+    # swallowed it whole. Silent and asymmetric: with a VERSION file the disagreement warning
+    # simply stopped firing, and with no VERSION file the only signal there was got lost, so an
+    # 8.2.0 legacy workspace reported the v6 default and mis-routed migration and gate logic.
+    # Same idiom as read_config_excludes in banned-language-lint.sh.
+    advisory="$(python3 - "$project_json" 2>/dev/null <<'PY' || echo ''
+import json, sys
+try:
+    with open(sys.argv[1]) as f:
+        d = json.load(f)
+    print(d.get('speck_version', '') or '')
+except Exception:
+    print('')
+PY
+)"
+    advisory="${advisory//[[:space:]]/}"
+  fi
+
+  if [[ -n "$authoritative" ]]; then
+    if [[ -n "$advisory" && "$advisory" != "$authoritative" ]]; then
+      speck_warn_version_disagreement "$workspace_root" "$authoritative" "$advisory"
+    fi
+    printf '%s' "$authoritative"
+    return
+  fi
+
+  # No VERSION file: pre-VERSION legacy install, where the advisory field is the only signal.
+  printf '%s' "$advisory"
+}
+
+# speck_warn_version_disagreement <workspace_root> <authoritative> <advisory>
+# Warn ONCE per process per workspace, on stderr only — every caller of the version helpers
+# captures stdout with $(…), so a warning on stdout would corrupt the value it is warning about.
+speck_warn_version_disagreement() {
+  local workspace_root="$1" authoritative="$2" advisory="$3"
+  local key
+  key="$(printf '%s' "$workspace_root" | tr -c '[:alnum:]' '_')"
+  local guard="SPECK_VERSION_WARNED_${key}"
+  [[ -n "${!guard:-}" ]] && return 0
+  printf -v "$guard" '%s' 1
+  export "${guard}"
+  {
+    echo "⚠️  Speck version disagreement in $workspace_root"
+    echo "      .speck/VERSION              = $authoritative   (authoritative — written by every init/upgrade)"
+    echo "      project.json speck_version  = $advisory   (advisory — stale)"
+    echo "    Using $authoritative. Fix: set \"speck_version\": \"$authoritative\" in .speck/project.json,"
+    echo "    or delete the field entirely — .speck/VERSION is the source of truth."
+  } >&2
+}
+
 profile_read_speck_version() {
   local workspace_root="$1"
-  local v="$workspace_root/.speck/VERSION"
-  if [[ -f "$v" ]]; then
-    tr -d '\n' < "$v"
+  local v
+  v="$(speck_workspace_version "$workspace_root")"
+  if [[ -n "$v" ]]; then
+    printf '%s' "$v"
   else
     echo "unknown"
   fi

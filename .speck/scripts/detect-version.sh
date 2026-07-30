@@ -1,21 +1,33 @@
 #!/usr/bin/env bash
 # Detect which Speck version a project/artifact uses.
 #
-# Reads (in order):
-# 1. .speck/project.json speck_version field
-# 2. The file's frontmatter speck_version: field
-# 3. The file's SHA stamp footer "speck vX.Y.Z" marker
+# Project mode (no argument) reads `.speck/VERSION` — the file the installer writes on
+# every init and upgrade. `.speck/project.json`'s `speck_version` is ADVISORY only; it is
+# consulted when there is no VERSION file, and otherwise only compared (loudly, on stderr).
+# That precedence is not cosmetic: this script used to read project.json FIRST, migrate.sh
+# wrote that field as the literal '7.0.0', and nothing has updated it since — so an upgraded
+# 9.5.0 workspace reported 7.0.0 while profile-lib.sh, reading VERSION, reported 9.5.0 for
+# the same repo. One read now, in speck_workspace_version() over in profile-lib.sh.
+#
+# Artifact mode (with a file argument) reads, in order:
+# 1. The file's frontmatter speck_version: field
+# 2. The file's SHA stamp footer "speck vX.Y.Z" marker
+# 3. Falls back to project mode
 #
 # Prints one of:
-#   7.0.0   (or whatever version is detected)
+#   9.5.0   (or whatever version is detected)
 #   6       (legacy v6 — no version marker found, but Speck dir exists)
 #   none    (no Speck markers found)
 #
 # Usage:
-#   detect-version.sh            # check .speck/project.json
+#   detect-version.sh            # workspace version
 #   detect-version.sh <file>     # check a specific artifact
 
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=profile-lib.sh
+. "$SCRIPT_DIR/profile-lib.sh"
 
 TARGET="${1:-}"
 
@@ -30,27 +42,11 @@ if [[ ! -d "$ROOT/.speck" ]]; then
   exit 0
 fi
 
-# Mode 1: no arg — check project.json, then .speck/VERSION, then fall back
+# Mode 1: no arg — the workspace version, via the single shared read
 if [[ -z "$TARGET" ]]; then
-  PROJECT_JSON="$ROOT/.speck/project.json"
-  if [[ -f "$PROJECT_JSON" ]]; then
-    VERSION=$(python3 -c "
-import json
-try:
-    with open('$PROJECT_JSON') as f:
-        d = json.load(f)
-    print(d.get('speck_version', ''))
-except Exception:
-    print('')
-" 2>/dev/null)
-    if [[ -n "$VERSION" ]]; then
-      echo "$VERSION"
-      exit 0
-    fi
-  fi
-  # Framework-level version (set by the CLI on upgrade)
-  if [[ -f "$ROOT/.speck/VERSION" ]]; then
-    cat "$ROOT/.speck/VERSION"
+  VERSION="$(speck_workspace_version "$ROOT")"
+  if [[ -n "$VERSION" ]]; then
+    echo "$VERSION"
     exit 0
   fi
   # No markers anywhere — legacy v6 default for backward compat

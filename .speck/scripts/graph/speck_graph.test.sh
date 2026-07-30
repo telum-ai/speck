@@ -649,6 +649,130 @@ else
   bad "a recorded verdict (even BAD) should clear UNJUDGED" "$OUT"
 fi
 
+# ── Tests 35-37: the readiness-cap defect (issue #96 findings 1-2).
+# Scar: the sig-differs branch capped (Test 20 proves it fires — the cap NUMBER it sets is proved
+# below, on `gap`, because Test 20's `check` surface masks it), but the UNREADABLE and ABSENT only
+# appended the cap STRING — never calling _min_readiness — so DELETING or CORRUPTING witness.json
+# printed `GRAPH_STALE.P2` next to `GRAPH_CAP = SHIP`: destroying the tamper-evidence artifact
+# REMOVED the ceiling it was supposed to enforce, on check, road and gap alike. And `cmd_check`
+# returned `1 if hard else 0`, so a stale graph exited 0 — invisible to every && chain.
+# The two absences are NOT the same fact and must not print the same code:
+#   corrupt/differs = someone destroyed or hand-edited the evidence → cap + non-zero exit
+#   absent          = this project has not been built yet (the whole v8→v9 installed base, which
+#                     migrate.js marks with .v9-graph-needed) → honest signal, NO cap, exit 0
+CAPP="$TMP/projects/012-cap"
+mkdir -p "$CAPP/epics/001-e/stories/S001-a"
+cat > "$CAPP/product-contract.md" <<'EOF'
+# C
+## 2. Primary Persona
+**JTBD** (`JOB-1`): When X, I want Y, so that Z.
+## 5. Magic Moments
+### MM-1 — judged good
+EOF
+printf -- '---\nartifact_type: story-spec\n---\n# A\nDelivers MM-1 and serves JOB-1.\n#### AC-1 — a\n' > "$CAPP/epics/001-e/stories/S001-a/spec.md"
+cat > "$CAPP/epics/001-e/stories/S001-a/validation-report.md" <<'EOF'
+---
+readiness_state_verified: UX-RC
+---
+## Magic Moment Validation
+- MM-1 scored **GOOD**
+EOF
+cat > "$CAPP/epics/001-e/traceability-matrix.md" <<'EOF'
+# M
+## 2. Traceability Matrix
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |
+|--------|--------|---------|-------------------------------|-----|-------|--------|
+| PRM-001 | §5 MM-1 | wow | S001 / AC-1 | — | ux-rc | discharged |
+EOF
+python3 "$GRAPH" build "$CAPP" >/dev/null 2>&1
+# sanity: this fixture is a clean SHIP graph, so any cap below is caused by the witness state alone
+OUT="$(python3 "$GRAPH" check "$CAPP" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && echo "$OUT" | grep -q "GRAPH_CAP = SHIP"; then
+  ok "fixture baseline: fresh witness → GRAPH_CAP = SHIP, exit 0"
+else
+  bad "cap fixture is not a clean SHIP baseline" "$OUT (rc=$RC)"
+fi
+
+# Where the cap NUMBER is observable — and why `check` alone cannot test this (scar-on-the-scar).
+# `cmd_check` sets a separate `stale` flag and prints `GRAPH_CAP = STALE` INSTEAD of the number, so
+# on that surface the cap value is masked either way: an assertion there passes whether or not the
+# branch ever called `_min_readiness`. Deleting the `_min_readiness(cap_state, "integration-green")`
+# from the corrupt branch left all 38 tests green — the fix for #96 was VACUOUSLY tested, which is
+# the exact sin the graph exists to name. `gap` is the surface that survives: it prints the raw
+# `CAP=<state>`, and that is the token quoted onward into project-state, pickups and /goal. Assert
+# the number where the number lives.
+echo "── Test 35: a CORRUPT witness.json caps (destroying the evidence must not remove the ceiling)"
+echo 'not json {' > "$CAPP/graph/witness.json"
+OUT="$(python3 "$GRAPH" check "$CAPP" 2>&1)" && RC=0 || RC=$?
+GAPOUT="$(python3 "$GRAPH" gap "$CAPP" 2>&1 || true)"
+if [[ $RC -ne 0 ]] && echo "$OUT" | grep -q "GRAPH_STALE.P2" && ! echo "$OUT" | grep -q "GRAPH_CAP = SHIP"; then
+  ok "corrupt witness → GRAPH_STALE.P2, cap withheld, non-zero exit"
+else
+  bad "corrupting witness.json must not leave GRAPH_CAP = SHIP / exit 0" "$OUT (rc=$RC)"
+fi
+if echo "$GAPOUT" | grep -q "CAP=INTEGRATION-GREEN" && ! echo "$GAPOUT" | grep -q "CAP=SHIP"; then
+  ok "corrupt witness → the cap NUMBER itself is lowered (gap: CAP=INTEGRATION-GREEN, never SHIP)"
+else
+  bad "corrupt witness must lower cap_state, not merely print a warning beside CAP=SHIP" "$GAPOUT"
+fi
+# road is the OTHER unmasked surface, and the one that gets written to disk (road-to-completion.md)
+# and re-read weeks later long after the warning beside it has scrolled away — the literal
+# brightstance scar. Same fact, checked where it outlives the session.
+ROADOUT="$(python3 "$GRAPH" road "$CAPP" --stdout 2>&1 || true)"
+if echo "$ROADOUT" | grep -qE '^\*\*GRAPH_CAP\*\* = `INTEGRATION-GREEN`'; then
+  ok "corrupt witness → the written road quotes the lowered cap, not SHIP"
+else
+  bad "road must not hand a SHIP cap onward from a destroyed witness" "$ROADOUT"
+fi
+
+echo "── Test 36: an ABSENT witness.json is UNBUILT, not tampered — honest, distinct, NON-capping"
+rm -f "$CAPP/graph/witness.json"
+OUT="$(python3 "$GRAPH" check "$CAPP" 2>&1)" && RC=0 || RC=$?
+GAPOUT="$(python3 "$GRAPH" gap "$CAPP" 2>&1 || true)"
+if [[ $RC -eq 0 ]] && echo "$OUT" | grep -q "GRAPH_UNBUILT.P3" \
+   && ! echo "$OUT" | grep -q "GRAPH_STALE" && echo "$OUT" | grep -q "GRAPH_CAP = SHIP"; then
+  ok "never-built graph is signalled (GRAPH_UNBUILT.P3) without capping or bricking (exit 0)"
+else
+  bad "absent witness must not be conflated with tampering, and must not cap" "$OUT (rc=$RC)"
+fi
+# PIN the non-cap, on the surface where the number is observable. This is the asymmetry, deliberate:
+# corrupt/differs lowers the number, ABSENT must not. migrate.js writes `.speck/.v9-graph-needed` to
+# every v8→v9 upgrader, so the entire installed base has no committed witness on upgrade day —
+# capping absent would drop all of them to INTEGRATION-GREEN on a patch bump, for code nobody
+# touched. The engagement gate already blocks feature work there; a cap would be a second, silent
+# punishment. Pinned so a future "make it symmetric" tidy-up cannot land unnoticed.
+if [[ $RC -eq 0 ]] && echo "$GAPOUT" | grep -q "CAP=SHIP" \
+   && ! echo "$GAPOUT" | grep -q "CAP=INTEGRATION-GREEN"; then
+  ok "absent witness leaves the cap NUMBER untouched (gap: CAP=SHIP) — installed base not demoted"
+else
+  bad "an absent witness must NOT lower cap_state (the whole v8→v9 base would drop)" "$GAPOUT (rc=$RC)"
+fi
+
+echo "── Test 37: a witness that DIFFERS from a fresh compile exits non-zero, cap unknowable"
+python3 "$GRAPH" build "$CAPP" >/dev/null 2>&1
+python3 - "$CAPP/graph/witness.json" <<'PY'
+import json, sys
+p = sys.argv[1]; g = json.load(open(p))
+for n in g["nodes"]:
+    if n["kind"] == "story":
+        n["title"] = n["title"] + " (hand-edited)"; break
+json.dump(g, open(p, "w"), indent=2)
+PY
+OUT="$(python3 "$GRAPH" check "$CAPP" 2>&1)" && RC=0 || RC=$?
+GAPOUT="$(python3 "$GRAPH" gap "$CAPP" 2>&1 || true)"
+if [[ $RC -ne 0 ]] && echo "$OUT" | grep -q "GRAPH_CAP = STALE" && ! echo "$OUT" | grep -q "GRAPH_CAP = SHIP"; then
+  ok "hand-edited witness → exit non-zero and no confident cap NUMBER to quote onward"
+else
+  bad "a stale graph must not exit 0 nor print a cap number" "$OUT (rc=$RC)"
+fi
+# Same masking problem as Test 35: `check` swaps the number for STALE, so only `gap` can witness
+# that the sig-differs branch actually lowered cap_state rather than just appending a warning.
+if echo "$GAPOUT" | grep -q "CAP=INTEGRATION-GREEN" && ! echo "$GAPOUT" | grep -q "CAP=SHIP"; then
+  ok "hand-edited witness → the cap NUMBER itself is lowered (gap: CAP=INTEGRATION-GREEN)"
+else
+  bad "sig-differs must lower cap_state, not merely warn beside CAP=SHIP" "$GAPOUT"
+fi
+
 echo ""
 echo "════════════════════════════════════════════"
 echo "  speck_graph: $PASS passed, $FAIL failed"
