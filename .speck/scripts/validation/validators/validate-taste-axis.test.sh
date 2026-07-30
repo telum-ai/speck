@@ -121,4 +121,25 @@ Claiming: IMPL-GREEN. The UI is premium and polished.
 EOF
 bash "$VALIDATOR" --strict "$TMP/r8.md" >/dev/null 2>&1 && fail "premium claim with uncovered TASTE should fail" || pass "premium claim with uncovered TASTE fails"
 
+# 9. bare 'Four-Axis Readiness' header, no parenthetical axis list → still recognised (issue #102)
+cat > "$TMP/r9.md" <<EOF
+---
+readiness_state_claimed: UX-RC
+felt_axis: ai-verified
+taste_axis: ai-critiqued
+taste_anchor: product+universal
+---
+
+## 🧭 Four-Axis Readiness
+- TASTE: ai-critiqued (connoisseur pass recorded)
+EOF
+# NOTE: capture, then grep — piping into `grep -q` lets the validator's own exit status mask
+# the match under pipefail, turning this into an assertion that can never fail.
+R9_OUT="$(bash "$VALIDATOR" --strict "$TMP/r9.md" 2>&1 || true)"
+if grep -q "Missing the Readiness axes header" <<<"$R9_OUT"; then
+  fail "bare 'Four-Axis Readiness' header rejected — the match is not loose (issue #102)"
+else
+  pass "bare 'Four-Axis Readiness' header accepted (no parenthetical required)"
+fi
+
 if [[ "$FAILED" == 0 ]]; then echo "✅ validate-taste-axis: all tests passed"; else echo "❌ validate-taste-axis: FAILURES"; exit 1; fi

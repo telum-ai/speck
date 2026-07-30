@@ -64,7 +64,7 @@ is_ux_rc_or_higher() {
 # === VALIDATION RULES ===
 
 # 1. Four-Axis block header exists (loose match — the exact axis list may evolve).
-if echo "$content" | grep -qE "^## 🧭 .*Readiness \("; then
+if echo "$content" | grep -qE "^## 🧭 .*Readiness\b"; then
   log_success "Readiness axes header found"
 else
   log_error "Missing the Readiness axes header (e.g. '## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)')" \

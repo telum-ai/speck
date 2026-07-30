@@ -154,5 +154,34 @@ else
 fi
 
 
+echo "Test 7: Bare 'Four-Axis Readiness' header (no parenthetical axis list) is accepted (issue #102)"
+cat > "$TMP/validation-report-bare-header.md" <<'EOF'
+---
+artifact_type: validation-report
+readiness_state_claimed: UX-RC
+felt_axis: ai-verified
+---
+
+## 🎯 Readiness State Claim
+Claiming: UX-RC
+
+## 🧭 Four-Axis Readiness
+- CORRECT: tests pass
+- ON-CONTRACT: LARP findings
+- FELT-GOOD: naive-hostile taste verdict recorded in larp-recordings/abc-naive-hostile-findings.md
+EOF
+
+# NOTE: capture, then grep. Under `set -o pipefail` a `$VALIDATOR ... | grep -q` pipeline
+# reports the validator's own non-zero exit, so the match result is masked and the assertion
+# silently inverts into a test that can never fail.
+BARE_OUT="$(bash "$VALIDATOR" --strict "$TMP/validation-report-bare-header.md" 2>&1 || true)"
+if grep -q "Missing the Readiness axes header" <<<"$BARE_OUT"; then
+  echo "ERROR: Bare 'Four-Axis Readiness' header was rejected — the match is not loose (issue #102)!"
+  exit 1
+else
+  echo "  ✓ Passed Test 7"
+fi
+
+
 echo "All validate-felt-axis tests passed successfully!"
 exit 0

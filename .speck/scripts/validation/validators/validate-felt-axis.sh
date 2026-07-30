@@ -73,7 +73,7 @@ is_ux_rc_or_higher() {
 
 # 1. Assert the Readiness axes block header exists (loose match — v8.2.0 adds a 4th
 #    axis, so accept both "Three-Axis …" and "Four-Axis … (… / TASTE)").
-if echo "$content" | grep -qE "^## 🧭 .*Readiness \("; then
+if echo "$content" | grep -qE "^## 🧭 .*Readiness\b"; then
   log_success "Readiness axes header found"
 else
   log_error "Missing the Readiness axes header (e.g. '## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)')" \
