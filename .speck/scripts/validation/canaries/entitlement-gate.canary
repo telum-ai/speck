@@ -1,0 +1,45 @@
+# entitlement-gate.canary — Speck gate-liveness canary (#88 Phase 2 idiom; class from #101 P4(a)).
+# Tier B, declared-degrading — same shape as a11y-role: ships in the closed vocabulary so a project
+# can DECLARE its money path as a probed gate; degrades to GATE_LIVENESS_UNVERIFIED.P2 until the
+# target is seeded. Never auto-DISARMED, never false-green.
+#
+# WHAT IT IS FOR. #101 P4(a): "delete or flip the entitlement gate and require EVERY revenue endpoint
+# to go red. A suite that stays green with authentication or entitlement deleted IS the defect."
+# Verified at Brightstance `264fb33`: an independent audit flipped `analyze-belief` to
+# `requireEntitlement: false` and ran the whole edge suite — 170 passed, 0 failed. The handler tests
+# inject a pass-through guard and the shared auth-guard tests build their own options literals, so
+# the one word standing between a non-paying user and the paid coach was read by no test at all.
+# The mirror case is the same defect in the other direction and it is why this canary is scoped to
+# ENTITLEMENT and not to guards generally: `detect-crisis/index.ts` pins `requireEntitlement: false`
+# because crisis detection must NEVER require an entitlement, and flipping THAT to `true` also left
+# both suites green. A safety gate is out of scope by construction — this canary flips a gate OPEN
+# and demands red; it must never be pointed at a gate whose correct value is `false`.
+#
+# TARGET A PROJECT MUST SEED (the two halves, both required):
+#   1. the entitlement flag site — the literal the guard reads (`requireEntitlement: true`,
+#      `requiresSubscription: true`, an `@requires_entitlement` decorator, a plan-tier predicate),
+#      named per revenue path, NOT one representative path; and
+#   2. the suite that must go red when it is flipped — which is the actual claim, since the
+#      Brightstance scar was 170 green tests that all injected their own pass-through guard.
+#   Keep the always-requires and the never-may-require paths pinned in ONE file, as Brightstance
+#   does deliberately: co-location is what stops a well-meaning agent from "fixing" the safety path
+#   into requiring an entitlement and paywalling a crisis surface.
+#
+# WHY IT DEGRADES TODAY (honest, not a placeholder). MECHANISM=modify is not yet executable on the
+# shipped probe: gate-liveness-probe.sh's injection loop is ADD-only — it writes the planned file,
+# runs the gate, then `git reset` + `rm -f`s that path. Pointed at a real source file it would
+# DELETE the original rather than restore it. Both canaries that already declare `modify`
+# (a11y-role, integration-invariant) degrade for exactly this reason. So the P2 here is a property
+# of the machinery, not a stub: the probe caps the ship claim and never certifies liveness it did
+# not watch. The provider (`provide_entitlement_gate_plan`/`_write` — plan the flag site, flip
+# true→false, fingerprint on the revenue-suite failure) belongs in canary-lib.sh alongside the other
+# providers, and needs a modify-safe restore in the probe loop before it can do anything but degrade.
+DOMAIN=entitlement
+MECHANISM=modify
+TIER=B
+STAGE_IT=true
+# Residual fallback only (#98 §1) — overridden by SPECK_GATE_SCOPE from the gate's own baseline run.
+REQUIRED_SCOPE="supabase functions api server backend src app lib"
+EXT_CLASSES="ts js tsx py go rb kt swift"
+PROVIDER=provide_entitlement_gate
+DESC="Flip the entitlement gate open -> EVERY revenue path's suite must go red. A suite that stays green with entitlement deleted is the defect. Entitlement only — never a safety gate. Needs a declared flag site + revenue suite."

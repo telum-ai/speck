@@ -90,6 +90,29 @@ Full rationale: `docs/v8/v8-north-star.md`.
 - ✅ Integration tests against the binary (NOT the source tree)
 - ✅ Recorded API responses against deployed staging/prod
 
+### 2a. The claim-type axis — which INSTRUMENT is admissible for which KIND of claim
+
+*Everything above is indexed by **platform**. Platform answers "which build"; it never answers "which instrument can observe this claim." That gap is the whole mechanism behind a recurring defect class: a green, honestly-authored, mutation-verified suite gets cited for a claim it is **structurally incapable of observing**, and nothing written down was violated. #87 gave evidence a **grain** field (at what altitude it was collected); this gives it **admissibility** (which substrate may back which claim at all).*
+
+**How to route a claim.** Read the claim's verb → find its row → cite a substrate from **Admissible**. Citing anything in that row's **Does NOT count** column is anti-proof (§3) no matter how green it is, and caps the claim at surrogate proof (§13). A claim whose verb matches no row below is routed by the same test: *what would have to be true for this instrument to be able to see this claim being false?*
+
+| Claim type (the verb) | Admissible | Does NOT count |
+|---|---|---|
+| **"What can this principal SEE?"** — visibility, authorization, tenancy, RLS | A **live read executed as the real principal, in both directions**: one principal who must see the row, one who must not, against the real security layer | A green suite, however mutation-verified · a read performed by a **bypass-capable** (`service_role`/superuser) or **mocked** client · a 404 from an endpoint (refusals are 404-shaped by design, so an endpoint is not a membership oracle) |
+| **"Does the deployment ACCEPT this?"** — request/payload/schema conformance | The request issued **against the deployed target (or the real engine)** and observed at that boundary — the response the deployment actually returns | A mocked client (a mock encodes what we *believe* the deployment accepts, so it can only ever confirm our own belief) · a hand-written vendor fixture with no provenance — a vendor payload fixture is admissible only when **cited to the vendor's own field reference (URL + retrieval date on the fixture)** |
+| **"Did the walk actually WRITE it?"** — persistence | A **pre-walk baseline query** plus a post-walk read-back **out of the datastore** | A screenshot of a success state · a post-walk read **with no baseline** (rows persist across seeds and fires, so stale rows read as a green pass) |
+| **"Does it FIT / is it reachable / is it announced?"** — geometry, platform announcement | Measured on a **running screen from a baked build**: a **platform AX dump** (the OS tree assistive tech actually walks) **plus container-vs-content geometry at ≥3 widths, with the numbers in the artifact**, from a harness that refuses to print a number unless its subject is present | A **rule-engine pass** (an a11y engine evaluates the node it is handed and has no model of containment or overflow) · a **props-level** a11y assertion (props are not the platform tree; and jsdom performs no layout, so every `getBoundingClientRect` there is zeros and every geometric claim is an arithmetic model of the CSS rather than the CSS's behaviour) · an un-measured screenshot |
+| **"Does a prompt change BEHAVIOUR?"** — generative surfaces | **Control-vs-treatment on the composed prompt with the shipped model, n reported** | A source-text assertion that the rule string is present in the prompt |
+
+**The three scars these rows are earned from** (each cost a shipped defect, none was visible to a green suite):
+- *Principal.* A server-side Supabase client built from the **anon key carries no JWT**, so an RLS policy of the form `auth.uid() = <col>` returned **zero rows for every user, always** — silently, with no error. The read looks exactly like "no record exists." Paying subscribers read as free, hit the free cap, and were told to upgrade to the tier they had already bought. Two mutation-verified suites could not see it; a live read as each principal settled it in one query.
+- *Geometry.* A week grid whose content came to `34px gutter + 7×44px cells + 6×6px gaps = 378px in a 343px box` spilled and was cut away by `overflow-clip` — one column lost its border and ~5px of hit area, on every phone, for months. Full-page axe was **0/0/0/0 and a11y 9/9, identical before and after the fix**: contrast, roles, names and focus order were all genuinely fine. *(Scope fact worth stating with every axe number: `landmark-one-main` is tagged `cat.semantics`/`best-practice`, **not** `wcag2a`/`wcag2aa`. An "axe: 0 violations" report scoped to `wcag2aa` is silent about an entire tag class — always report the tag scope alongside the count.)*
+- *Boundary.* Mocked clients are blind to what a deployment **accepts**: the mock passes because it was written from the same belief the code was written from. Only the real boundary can contradict that belief.
+
+**Two standing rules.**
+- **Never inherit a magnitude from a report — measure it.** The naive fix to a mis-measured defect is routinely a worse defect (shrinking the grid's gap would have kept the unyieldable `min-width` and moved the amputation to a narrower phone).
+- **A green suite remains the right and sufficient instrument for CORRECTNESS claims.** This is an admissibility rule for the claim a report *makes* — not a requirement to collect every substrate for every AC. The sin is citing one row's instrument for another row's claim.
+
 ---
 
 ## 3. Invalid Proof Sources (anti-proof)
@@ -124,6 +147,15 @@ Full rationale: `docs/v8/v8-north-star.md`.
 - ❌ **Un-adjudicated capture (P1)**: a screenshot/recording stored as evidence of *quality* with no substantive per-screen critique. Twenty un-judged screenshots are surrogate proof of felt quality, not proof (#78).
 - ❌ **Claim without mechanism (P2)**: any product/AI-surface claim of an action or completed state (built, generated, scheduled, "done") with no observed mechanism behind it (endpoint hit, row written, state change). A first-person action claim on a no-tools LLM surface is an automatic FELT-GOOD fail + P0 (#75-G1).
 - ❌ **Bypass-role / dead-guard tests (P2)**: a negative test asserting an authz/RLS/tenant-isolation guard while running as a bypass-capable role (e.g. `service_role`/superuser) or behind a silent collect-time skip — it stays green even if the guard clause is deleted. Guard tests MUST run as a real least-privileged principal and actually attempt the forbidden op (#77.2).
+
+### Universal Substrate-Mismatch Anti-Proof (All Platforms)
+*The §2a claim-type axis restated as anti-proof. Each bullet is a **real** instrument producing a **real** green — the defect is the claim it is attached to, not the instrument. Cite one of these for the named claim type and the claim is surrogate proof (§13), capped at NO-SHIP for that AC until re-collected on an admissible substrate.*
+- ❌ **A green suite cited for a visibility claim** ("this principal can/cannot see X"), however mutation-verified — including a read performed by a bypass-capable or mocked client. Only a live read as the real principal, both directions, can observe it.
+- ❌ **A mock cited for what the deployment ACCEPTS.** A mock confirms the belief it was written from; it cannot contradict it. Same for a vendor payload fixture carrying no provenance (needs the vendor's field-reference URL + retrieval date on the fixture).
+- ❌ **A post-walk read with no pre-walk baseline** cited as proof the walk wrote something — stale rows from an earlier seed are indistinguishable from a fresh write. Likewise a screenshot of a success state.
+- ❌ **A rule-engine pass or a props-level assertion cited for fit / reachability / announcement.** The engine has no model of containment or overflow; props are not the platform accessibility tree; jsdom performs no layout, so its geometry numbers are zeros and its geometric claims are arithmetic models of the CSS, not the CSS's behaviour. An axe count with no tag scope stated is silent about every rule outside that scope.
+- ❌ **A source-text assertion that a prompt rule string is present**, cited as proof the prompt changed behaviour. Behaviour is control-vs-treatment on the composed prompt with the shipped model, n reported.
+- ❌ **A magnitude inherited from a report rather than measured** (a number quoted from a fire log, retro, or prior audit and then acted on). Re-measure before fixing; the naive fix to a mis-measured defect is routinely a worse defect.
 
 ### Universal Evidence-Integrity Anti-Proof — Reward Hacking (All Platforms)
 *A green check is proof ONLY if the agent under test could not have manufactured it. The implementer/validator MUST be isolated from the evaluator. Any green gate produced through the channels below is anti-proof and caps the claim at NO-SHIP until re-run under isolation. (Industry audits found EVERY major coding benchmark could be driven to near-100% without solving a single task — Berkeley RDI, 2026.)*
@@ -246,7 +278,8 @@ For every validation report at UX-RC or higher:
 - The sin the validator hunts is the silent third case: §6a says `pre-push` / `ci:` while the wiring says `manual` / nowhere — with **neither** a `manual` declaration **nor** a waiver. Either arm the gate or amend the contract; the sin is the divergence, not being off the fast path.
 
 **Canary** (Speck v8.6, #88 Phase 2 — the *liveness* half). Wiring proves a gate is reachable; the canary proves it is **load-bearing**. `gate-liveness-probe.sh` (opt-in, `--require-liveness`) injects a deliberate defect in the gate's domain inside a throwaway git worktree, runs the gate, and asserts it goes **red for the right reason**. The Canary cell is a single **library key** (seeded from the recipe's `canary:` tag), NOT project-authored mutation code — it resolves to `.speck/scripts/validation/canaries/<key>.canary`, a Speck-owned+reviewed definition. Values:
-- a library key (`banned-language` | `lint-error` | `unit-tripwire` | `a11y-role` | `integration-invariant`, …) — the gate is probed.
+- a library key (`banned-language` | `lint-error` | `unit-tripwire` | `a11y-role` | `integration-invariant` | `entitlement-gate`, …) — the gate is probed.
+  - `entitlement-gate` (Domain `entitlement`) is the money-path row: flip the entitlement gate **open** and **every** revenue path's suite must go red. A suite that stays green with entitlement deleted **is** the defect — measured in the field at 170 passed / 0 failed after flipping one handler's `requireEntitlement` to `false`, because the handler tests injected their own pass-through guard. Entitlement **only** — never point it at a safety gate whose correct value is `false` (pin the always-requires and the never-may-require paths in one file so nobody "fixes" a crisis surface into a paywall).
 - `exempt:<reason>` — deliberately un-probeable (destructive / infra-bound, e.g. an e2e or deploy gate); first-class, distinct from blank.
 - `—` — un-probed-honest (default; never a finding).
 

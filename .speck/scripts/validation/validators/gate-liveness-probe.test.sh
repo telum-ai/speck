@@ -600,6 +600,86 @@ fi
 echo "$OUT27" | grep -q "GATE_VACUOUS.P1.*test-gate" || fail "expected GATE_VACUOUS.P1 on the SUBJECT dimension despite MODE=notice" "$OUT27"
 ok "MODE=notice exempts only the PREDICATES dimension, never SUBJECT"
 
+# ===================================================================================================
+# v10 FINISH PASS (cluster Z2, item 1) — the MODE exemption is opt-in for a gate that self-declares
+# "notice" (nothing to compare against a live target, by design). A gate claiming MODE=live — i.e.
+# it says it DID reach a live comparison — reporting PREDICATES=0 in the same breath is the exact
+# hole the mechanism exists to close one level in: it must convict, never launder through the
+# notice-mode exemption just because a MODE line is present at all.
+# ===================================================================================================
+
+echo "Test 28: BOUNDED, NOT BLANKET (MODE dimension) — a stub gate that claims SPECK_GATE_MODE=live"
+echo "but reports PREDICATES=0 must still convict as GATE_VACUOUS.P1. MODE=live means the gate says it"
+echo "reached a real live comparison; PREDICATES=0 alongside that claim is worse than an honest"
+echo "notice-mode run, and must never be excused by the same exemption notice-mode gets."
+D28="$TMP/t28"; scaffold "$D28"
+cat > "$D28/gate.sh" <<'EOF'
+#!/usr/bin/env bash
+echo "SPECK_GATE_SCOPE=src/**"
+echo "SPECK_GATE_SUBJECT=180"
+echo "SPECK_GATE_PREDICATES=0"
+echo "SPECK_GATE_MODE=live"
+echo "✅ No banned-language violations found."
+exit 0
+EOF
+registry "$D28" "bash gate.sh" "copy" "banned-language"; commit "$D28"
+if OUT28="$(bash "$PROBE" --strict "$D28/specs/projects/001-x" 2>&1)"; then
+  fail "expected --strict to exit 1 — MODE=live does not exempt PREDICATES=0" "$OUT28"
+fi
+echo "$OUT28" | grep -q "GATE_VACUOUS.P1.*test-gate" || fail "expected GATE_VACUOUS.P1 despite MODE=live" "$OUT28"
+echo "$OUT28" | grep -q "GATE_PREDICATES_LEGITIMATE" && fail "MODE=live must never earn the notice-mode exemption" "$OUT28"
+ok "MODE=live + PREDICATES=0 still convicts GATE_VACUOUS.P1 (exemption is notice-only, not any-mode)"
+
+echo "Test 29: MUTATION PROOF (probe side, MODE dimension) — widening the exemption's mode check from"
+echo "an exact 'notice' match to 'any non-empty mode' in a SCRATCH COPY turns Test 28's own fixture"
+echo "into a false GATE_PREDICATES_LEGITIMATE, confirming the exact-match condition — not merely the"
+echo "presence of a MODE line — is the real control point."
+SCRATCHROOT29="$TMP/scratch-probe-tree-29"
+mkdir -p "$SCRATCHROOT29/.speck/scripts/validation/validators" "$SCRATCHROOT29/.speck/scripts/lib"
+cp "$ROOT_REPO/.speck/scripts/validation/canary-lib.sh" "$SCRATCHROOT29/.speck/scripts/validation/canary-lib.sh"
+cp -R "$ROOT_REPO/.speck/scripts/validation/canaries" "$SCRATCHROOT29/.speck/scripts/validation/canaries"
+cp "$ROOT_REPO/.speck/scripts/lib/text.sh" "$SCRATCHROOT29/.speck/scripts/lib/text.sh"
+SCRATCH_PROBE29="$SCRATCHROOT29/.speck/scripts/validation/validators/gate-liveness-probe.sh"
+cp "$ROOT_REPO/.speck/scripts/validation/validators/gate-liveness-probe.sh" "$SCRATCH_PROBE29"
+sed -i.bak 's/\[\[ "\$rep_mode" == "notice" \]\]/[[ -n "$rep_mode" ]]/' "$SCRATCH_PROBE29"
+grep -q '"\$rep_mode" == "notice"' "$SCRATCH_PROBE29" && fail "mutation did not actually widen the MODE exemption (control point not found)" ""
+OUT29="$(bash "$SCRATCH_PROBE29" "$D28/specs/projects/001-x" 2>&1)"
+echo "$OUT29" | grep -q "GATE_PREDICATES_LEGITIMATE.*test-gate" \
+  || fail "MUTATION PROOF FAILED — widening the MODE check to any non-empty value should wrongly exempt MODE=live, but it stayed convicted" "$OUT29"
+ok "revert-and-confirm-RED: the exact MODE==\"notice\" match (not mere presence) is the real control point"
+
+# ── The canary LIBRARY itself is a control point ────────────────────────────────────────────
+# Deleting any .canary file left every suite in the repo green: no shipped recipe references a
+# key by name, and nothing asserted the library's contents. So the library that exists to prove
+# gates are load-bearing was not itself load-bearing — a canary can vanish and the only symptom
+# is a §6a Canary cell that silently resolves to nothing.
+CANARY_DIR="$ROOT_REPO/.speck/scripts/validation/canaries"
+EXPECTED_CANARIES="a11y-role banned-language entitlement-gate integration-invariant lint-error unit-tripwire"
+for _key in $EXPECTED_CANARIES; do
+  if [[ -f "$CANARY_DIR/$_key.canary" ]]; then
+    ok "canary library carries $_key"
+  else
+    fail "canary library is MISSING $_key.canary — a §6a row citing it resolves to nothing" "$CANARY_DIR"
+  fi
+done
+
+# Each record must SOURCE cleanly under the same strictness the probe runs with, and resolve the
+# four fields the probe reads. A canary that exists but cannot be sourced is worse than absent:
+# absent is a visible finding, unsourceable degrades to an exemption.
+for _key in $EXPECTED_CANARIES; do
+  _out="$(bash -c "set -euo pipefail; . '$CANARY_DIR/$_key.canary'; printf '%s|%s|%s|%s' \"\${DOMAIN:-}\" \"\${MECHANISM:-}\" \"\${TIER:-}\" \"\${PROVIDER:-}\"" 2>&1 || true)"
+  case "$_out" in
+    *'|'*'|'*'|'*)
+      if [[ "$_out" == *"||"* || "$_out" == "|||" ]]; then
+        fail "$_key.canary sources but leaves a required field empty (DOMAIN|MECHANISM|TIER|PROVIDER)" "$_out"
+      else
+        ok "$_key.canary sources cleanly and resolves all four fields"
+      fi
+      ;;
+    *) fail "$_key.canary did not source cleanly under set -euo pipefail" "$_out" ;;
+  esac
+done
+
 echo ""
 echo "All gate-liveness-probe tests passed ($PASS assertions)."
 exit 0

@@ -26,6 +26,26 @@ Patterns are organized by type:
 - `process/` - Development process patterns
 - `gotchas/` - Anti-patterns and pitfalls to avoid
 
+### `testing/` — class-gate patterns (seeded directly, not via the retrospective cascade)
+
+These nine were extracted in one pass from ISSUE #100 (a cross-product retrospective over Streb,
+Brightstance and Splang at Speck v9.5.0) rather than promoted through the story→epic→project cascade
+below — worth stating explicitly, since "Patterns are NOT added manually" is this directory's default
+governance rule and this is the disclosed exception to it. Read `class-gate-not-a-third-fix.md` first;
+it is the umbrella doctrine the other eight instantiate.
+
+| Pattern | What it closes |
+|---|---|
+| `class-gate-not-a-third-fix.md` | Doctrine: a defect class that bites twice needs a chokepoint gate, not a third instance fix — grounded in five of this repo's own scars (hook-loader shadowing, hardcoded gate-scope drift, vacuous section-body greps, `&&`-chain suppression, awk portability) |
+| `mirror-sweep.md` | Discovery discipline: find the second instance (surface / representation / moment / direction) before a user does |
+| `inverted-polarity-exception-registry.md` | The reusable chokepoint-gate shape — detection-is-proof, exceptions not instances, seven decay-resistance mechanics |
+| `recipe-production-writer-registry.md` | A column read by production and written only by seed/fixture/migration code |
+| `recipe-growth-table-bounded-select.md` | PostgREST `max_rows` silently truncating an unbounded `.select()` |
+| `recipe-raw-enum-label-shape.md` | A PGENUM written as the Python member instead of `.value` |
+| `recipe-pii-redaction-chokepoint.md` | PII reaching a log call, plus the scanner's own recorded blind spots |
+| `recipe-failed-read-is-not-empty.md` | A caught read failure rendered as a genuine empty/zero |
+| `recipe-duplicated-rule-schema-type-parity.md` | A constant/enum/predicate legitimately living in two files, joined by nothing but a comment |
+
 ## Pattern File Format
 
 Each pattern file should follow this structure:

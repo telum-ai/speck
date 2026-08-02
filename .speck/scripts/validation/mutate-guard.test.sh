@@ -454,6 +454,72 @@ grep -q 'stronger verdict' <<<"$OUT" || { echo "  ✗ a different branch fired t
 echo "  ✓ the rank check is what fired"
 PASS=$((PASS + 1))
 
+# =================================================================================================
+# THE GATE WIRING. --verify-receipt existed with NO caller anywhere in validate-template.sh: it was
+# invoked only from SKILL.md prose, i.e. agent-driven, so a forged or absent receipt blocked nothing
+# at the pre-commit/validate boundary. That is the same "a rule stated in a skill cannot fail a
+# build" shape the whole cluster was filed about, one altitude up. These two cases drive the ROUTER,
+# not the guard, because the router is the control point — deleting the mutate-guard line from
+# validate-template.sh's readiness-evidence branch is what has to turn them red.
+# =================================================================================================
+
+ROUTER="$ROOT/.speck/scripts/validation/validate-template.sh"
+
+# The report is DERIVED FROM THE SHIPPED TEMPLATE's own Mutation Record section — never hand-typed —
+# for the reason stated at the top of the receipts block: a hand-typed minimal report omits the
+# "**Verdicts.**" boilerplate that defeated the previous section-body grep.
+make_router_report() { # <repo> <site> <verdict> → prints the report path
+  local d="$1/specs/projects/p/epics/E001-x/stories/S001-x"
+  mkdir -p "$d"
+  python3 - "$TEMPLATE" "$d/validation-report.md" "$2" "$3" <<'PY'
+import re, sys, pathlib
+tpl = pathlib.Path(sys.argv[1]).read_text()
+i = tpl.index("## 🧬 Mutation Record")
+rest = tpl[i + 5:]
+j = rest.index("\n## ")
+sect = tpl[i:i + 5 + j]
+assert "**Verdicts.**" in sect, "the shipped section no longer carries the Verdicts paragraph"
+assert "[MUTATION_SITE PATH AND LINE]" in sect and "[VERDICT_CODE FROM MUTATE GUARD]" in sect, \
+    "the shipped Mutation Record row changed shape — update make_router_report"
+sect = sect.replace("[MUTATION_SITE PATH AND LINE]", sys.argv[3])
+sect = sect.replace("[VERDICT_CODE FROM MUTATE GUARD]", sys.argv[4])
+sect = re.sub(r"\[([^\]\n]+)\]", "filled", sect)
+head = "---\nartifact_type: validation-report\nmutation_record: required\n---\n\n# Validation Report\n\n"
+pathlib.Path(sys.argv[2]).write_text(head + sect)
+PY
+  printf '%s' "$d/validation-report.md"
+}
+
+route() { # <report> → sets ROUT / RRC
+  set +e
+  ROUT="$(bash "$ROUTER" "$1" --strict 2>&1)"
+  RRC=$?
+  set -e
+}
+
+echo "Test 25: a repo that has NEVER emitted a receipt stays GREEN through the router"
+# The adoption gradient is what makes wiring this in safe. If it did not hold, every project
+# predating receipts would start failing validation the moment it upgraded.
+NR_REPORT="$(make_router_report "$NREPO" "src/prod.sh:$ADD_LINE" GUARD_MUTATION_PROVEN)"
+route "$NR_REPORT"
+[ "$RRC" -eq 0 ] || { echo "  ✗ an un-adopted repo was BLOCKED by the receipt gate (exit $RRC)"; echo "$ROUT"; exit 1; }
+# Proves the wiring FIRED rather than the case passing because nothing ran.
+grep -q '^SPECK_RECEIPT_VERDICT=RECEIPT_MISSING.P2$' <<<"$ROUT" \
+  || { echo "  ✗ the router never ran the receipt check — this case would pass with the gate deleted"; echo "$ROUT"; exit 1; }
+echo "  ✓ un-adopted repo degrades, does not block, and the check demonstrably ran"
+PASS=$((PASS + 1))
+
+echo "Test 26: in an ADOPTED repo, a citation whose receipt does not match the cited site goes RED"
+R_REPORT="$(make_router_report "$RREPO" "src/prod.sh:999" GUARD_MUTATION_PROVEN)"
+route "$R_REPORT"
+[ "$RRC" -eq 1 ] || { echo "  ✗ the router passed a report contradicting the receipts on disk (exit $RRC)"; echo "$ROUT"; exit 1; }
+grep -q '^SPECK_RECEIPT_VERDICT=RECEIPT_MISMATCH.P1$' <<<"$ROUT" \
+  || { echo "  ✗ a different validator produced the failure — the receipt gate is not what fired"; echo "$ROUT"; exit 1; }
+grep -q 'no receipt names this site' <<<"$ROUT" \
+  || { echo "  ✗ the finding does not name the contradiction"; echo "$ROUT"; exit 1; }
+echo "  ✓ a fabricated citation now fails the build, not just the skill's conscience"
+PASS=$((PASS + 1))
+
 echo ""
 echo "All mutate-guard tests passed ($PASS assertions)."
 exit 0

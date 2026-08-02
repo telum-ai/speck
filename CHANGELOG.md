@@ -80,6 +80,22 @@ the artifact changes on a real migration lane rather than deferring them.
   `grep -rLE '^## 1\. Defect Description' --include='*harden-report*.md' specs/`
 - **`check-replace-markers.sh` catches genuine markers it used to miss** — one ending the line, or
   whose hint opens with a quote or backtick, on artifacts previously reported clean.
+- **`--verify-receipt` is a gate now, not a suggestion.** `validate-template.sh` calls
+  `mutate-guard.sh --verify-receipt` on every validation report and combines its exit code. Until
+  now the cross-check had no caller outside SKILL.md prose — a rule stated in a skill cannot fail a
+  build, which is the shape this release exists to remove. The adoption gradient is unchanged: a
+  repo that never emitted a receipt degrades to `RECEIPT_MISSING.P2` at exit 0, and a report with no
+  Mutation Record rows to `RECEIPT_NO_CITATIONS.P2` at exit 0. **Only a contradiction blocks** — a
+  cited site whose pinned content does not recompute at the pinned SHA, or a claimed verdict
+  stronger than the one recorded.
+- **A report can no longer declare itself pre-v10 to escape the v10 rules.** Deleting
+  `mutation_record: required` and the `## 2b.` heading used to drop a whole report to pre-v10
+  vintage, turning every v10 rule into a NOTICE — findable in about a minute by anyone under a
+  blocking pre-commit, and indistinguishable from an honest legacy artifact. Vintage is now DERIVED
+  from the project's `.speck/VERSION` plus whether the file is untracked or modified, so a v10
+  workspace produces v10 artifacts whatever the frontmatter claims. **Artifacts already on disk —
+  tracked and unmodified — keep their self-declared vintage**, which is what keeps "no data
+  migration needed" true. Editing and re-staging a legacy report brings it into scope.
 
 ### New — mutation as evidence (CP-6)
 
@@ -166,6 +182,31 @@ workspace identity.
   a template-conformant `## 🧭 Four-Axis Readiness` at the FIRST check so no real assertion was
   reached. Both files' own comments called the match "loose"; the regex disagreed.
 
+### New — learned patterns, and four probe extractions
+
+`.speck/patterns/learned/testing/` was a directory Speck created and never filled. It now carries
+**#100's six class-gate recipes**, each as mechanism → tell → gate shape → **bounding exception** —
+the exception is not optional, because #93 and #100 are both explicit that several of these repairs
+are wrong applied universally, and a pattern file that drops its boundary gets applied by an agent
+that cannot see one. The **mirror sweep** ships alongside them: grep the *shape*, not the symbol that
+happened to be wrong.
+
+From **#101**, the four increments that are implementable today (its §11a registry stays an open
+design question — `PROBE_SUBSTRATE_MISMATCH.P1` cannot be computed from a `path@sha` string carrying
+no type):
+
+- A **claim-type admissibility axis** in the evidence contract. §2 was indexed by PLATFORM and never
+  by CLAIM TYPE, so nothing said that a green mutation-verified suite is inadmissible for *"what can
+  this principal SEE"*, or that a props-level a11y assertion is inadmissible for *"does it fit"*.
+- Two missing personas — **`second-actor`** and `impatient`. #84's set is consumer breadth: one
+  identity in many states. None of its personas is a second ACTOR, which makes identity and tenancy
+  defects as invisible to it as to a single-user suite. `second-actor` is the persona that would have
+  caught the cross-user write.
+- An **`entitlement-gate.canary`**, riding the shipped #88 machinery.
+- A **post-merge semantic gate** for parallel execution. #68.1 prevents an Alembic head collision at
+  plan time and has no gate that catches one after a merge — its framing is that a git-clean merge is
+  clean. Two heads arrived from a git-clean merge six weeks after #68 closed.
+
 ### New — `.speck/scripts/lib/text.sh`
 
 Five defects across four validators were one class: a bash text idiom used for structured-data work
@@ -183,6 +224,23 @@ scanner that over-excludes. Hook reachability is asserted BY EXECUTION, not by g
 marker; a grep passes on exactly the dead-block case it fixes. `version-parity.test.js` fails when a
 `*.test.sh` exists but is not in the chain, and runs LAST so it can never suppress the suites it
 asserts about.
+
+Three control points that shipped unpinned are pinned now: `GATE_MODE` (the exemption KEY — mutating
+`live`→`notice` left both suites green, which would let a `--live` run evaluating zero predicates be
+excused as legitimate), `gate_registry_separator()` (a hardcoded separator silently yields a 7-column
+header over a 6-column separator), and **the canary library itself** — deleting any `.canary` file
+left every suite in the repo green, so the library that exists to prove gates are load-bearing was
+not itself load-bearing.
+
+One portability bug worth naming because it would have fired on someone else's machine, not ours: a
+mutation assertion pinned the literal stderr `awk: not enough args in printf`, which is BSD awk. Under
+**mawk** — the Debian/Ubuntu default — a short printf prints empty fields and exits 0, so the
+assertion would have gone RED against a perfectly correct producer. Re-asserted on column count.
+
+`validate-template.sh` now prints ONE final verdict on the readiness-evidence branch. Combining exit
+codes meant a green `✅ Validation PASSED` from one sub-check could sit directly above a blocking
+`RECEIPT_MISMATCH.P1` from the next — the exit code was right and the finding was printed, but the
+last words on the log said the opposite.
 
 Cross-repo acceptance vs v9.5.0 across five real projects: no green→red flip. npm test green.
 

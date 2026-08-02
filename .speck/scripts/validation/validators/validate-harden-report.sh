@@ -30,13 +30,40 @@
 #   grep -rLE '^## 1\. Defect Description' --include='*harden-report*.md' specs/
 #
 # Vintage-gated: the v10 additions only.
-# The new sections are required only of a report that DECLARES itself v10-vintage, by carrying
-# `mutation_record: required` in its frontmatter or `speck_version: 10`+. Both ship in the
-# templates, so every report produced from here on is bound. Every report already on disk predates
-# them and is exempt — which is why this change needs no data migration (see the report's
-# migration_id justification). The exemption is deliberately keyed on a field NO migration
-# backfills: `template_version` is backfilled to the current version by the v10 stamp migration, so
-# keying on it would retroactively convict every pre-v10 artifact it touched.
+# The new sections are required of a report that DECLARES itself v10-vintage (`mutation_record:
+# required` or `speck_version: 10`+ in its frontmatter), of a report that CARRIES the v10 sections
+# whatever it declares, and — see the next block — of a report that a v10 workspace is producing
+# right now. Every report already on disk predates them and is exempt, which is why this change
+# needs no data migration (see the report's migration_id justification). The exemption is
+# deliberately keyed on a field NO migration backfills: `template_version` is backfilled to the
+# current version by the v10 stamp migration, so keying on it would retroactively convict every
+# pre-v10 artifact it touched.
+#
+# VINTAGE IS DERIVED WHERE IT CAN BE — self-declaration alone was trivially exploitable.
+# VERIFIED live: deleting the single frontmatter line `mutation_record: required` and the `## 2b.`
+# heading dropped a full v10 report to pre-v10, and every v10 rule silently became a NOTICE
+# ("pre-v10 harden report … not required of it", EXIT=0). An author under a blocking pre-commit
+# finds that in about a minute, and the result is indistinguishable from an honest legacy artifact.
+# A vintage an author can delete is not a vintage.
+#
+# So vintage is also derived, from two facts read out of GIT rather than out of the artifact:
+#   (a) the PROJECT's `.speck/VERSION` at the report's repository root — what workspace this is;
+#   (b) whether the file is being AUTHORED NOW — untracked, or carrying uncommitted changes.
+# Both true ⇒ v10-bound. Neither is a line that can be deleted from the report.
+#
+# THE EXCEPTION, and it is the one that keeps "no data migration needed" true: a file that is
+# TRACKED and UNMODIFIED is an artifact already on disk, and keeps its self-declared vintage. Every
+# pre-v10 report in every repo is exactly that, so none is retroactively convicted. It is not an
+# escape: reaching tracked-and-unmodified requires having been committed, and at commit time the
+# file is staged — authored-now — and therefore bound. (`--no-verify` still escapes, as it escapes
+# every gate in the repo; that is a disclosed property of the hook boundary, not of this rule.)
+#
+# SECOND EXCEPTION, disclosed: outside a git repository neither fact is knowable, so the derivation
+# is skipped and self-declaration stands. Leaving version control is not a quiet one-line edit, and
+# an artifact outside git is not one the pre-commit boundary is ever asked about.
+#
+# This is the same break already taken for the base sections, extended consistently: editing and
+# re-staging a legacy report brings it into scope. That was already true of §1–§4 above.
 #
 # Portable bash 3.2 / macOS.
 
@@ -98,6 +125,36 @@ if [[ "$bound" == false ]]; then
     bound=true
     log_notice "no v10 vintage declared, but the v10 sections are present — enforcing them anyway"
   fi
+fi
+
+# --- vintage DERIVED from the workspace (see VINTAGE BINDING above for why, and for the two
+# --- exceptions this deliberately keeps).
+file_dir="$(cd "$(dirname "$file_path")" && pwd)"
+file_base="$(basename "$file_path")"
+repo_root="$(git -C "$file_dir" rev-parse --show-toplevel 2>/dev/null || true)"
+
+project_major=""
+authored_now=false
+if [[ -n "$repo_root" ]]; then
+  if [[ -f "$repo_root/.speck/VERSION" ]]; then
+    project_major="$(head -n1 "$repo_root/.speck/VERSION" | sed -E 's/^[[:space:]]*v?([0-9]+).*/\1/')"
+  fi
+  # Untracked = newly added, i.e. produced by THIS workspace. `ls-files --error-unmatch` is the
+  # tracked/untracked question stated directly; `status --porcelain` on the same single pathspec
+  # then answers "modified or staged". Both are scoped to the one file — a dirty sibling must never
+  # change this file's vintage.
+  if ! git -C "$file_dir" ls-files --error-unmatch -- "$file_base" >/dev/null 2>&1; then
+    authored_now=true
+  elif [[ -n "$(git -C "$file_dir" status --porcelain -- "$file_base" 2>/dev/null || true)" ]]; then
+    authored_now=true
+  fi
+fi
+
+if [[ "$bound" == false ]] \
+   && [[ "$project_major" =~ ^[0-9]+$ ]] && [[ "$project_major" -ge 10 ]] \
+   && [[ "$authored_now" == true ]]; then
+  bound=true
+  log_notice "no v10 vintage declared in the frontmatter, but .speck/VERSION says this is a v10 workspace (major $project_major) and this file is untracked or modified — it is being authored now, so its vintage is derived rather than self-declared"
 fi
 
 VERDICT_CODES='GUARD_MUTATION_PROVEN|GUARD_MUTATION_GREEN\.P2|GUARD_UNMUTATED\.P2'
@@ -206,15 +263,26 @@ else
       # **Guardrail Mutation-Proof** check below, which is why that one is not vacuous.
       red_line="$(grep -iE '\*\*Pre-Existing Tests That Went Red\*\*' <<<"$local_body" | head -n1 || true)"
       red_cell="${red_line#*:}"
-      # ASCII-only strip: a bracket expression containing a multibyte glyph splits into its bytes
-      # under LC_ALL=C and would chew unrelated UTF-8. Anything left non-empty stays a CLAIM, which
-      # is the safe direction — it demands a classification rather than granting an exemption.
-      red_cell_norm="$(sed -E 's/[[:space:]`*_]//g' <<<"$red_cell" | tr '[:upper:]' '[:lower:]')"
+      # NOTHING-SYNONYM MATCHING, DELIBERATELY FORGIVING.
+      # The old list matched only exact tokens (none / n-a / nil / nothing / - / not applicable), so
+      # an honest author writing `Pre-Existing Tests That Went Red: None went red` was CONVICTED
+      # with "names pre-existing tests but classifies none of them" — VERIFIED live. A gate that
+      # convicts an honest author teaches people to game it, which costs more than the leniency it
+      # was buying. So: normalise, drop a trailing "went red"-shaped predicate that adds no claim,
+      # then match the nothing-tokens WITH their natural qualifiers.
+      # ASCII-only deletions: a bracket expression containing a multibyte glyph splits into its
+      # bytes under LC_ALL=C and would chew unrelated UTF-8. The dash synonyms below are matched as
+      # whole literals in an alternation, never inside a bracket expression, for the same reason.
+      red_cell_norm="$(tr -d '`*_' <<<"$red_cell" | tr '[:upper:]' '[:lower:]')"
+      red_cell_norm="$(sed -E 's/[[:space:]]+/ /g; s/^ +//; s/ +$//; s/[.!]+$//' <<<"$red_cell_norm")"
+      red_cell_norm="$(sed -E 's/ ?(that )?(went|were|was|are|is|turned|came back) red$//' <<<"$red_cell_norm")"
+      red_cell_norm="$(sed -E 's/^(no|none|nil|nothing|n\/a|na|not applicable|-|—|–)( of (them|these))?( (pre-existing|preexisting|existing))?( tests?)?$/NOTHING/' <<<"$red_cell_norm")"
       # The cell is a CLAIM unless it is empty or an explicit nothing — only then does the
-      # zero-red sentence become the thing that answers §2b.
+      # zero-red sentence become the thing that answers §2b. Anything left unmatched stays a CLAIM,
+      # which is the safe direction: it demands a classification rather than granting an exemption.
       claims_red=true
       case "$red_cell_norm" in
-        ''|none|none.|n/a|n/a.|na|nil|nothing|nothing.|-|—|notapplicable|notapplicable.) claims_red=false ;;
+        ''|NOTHING) claims_red=false ;;
       esac
       has_class=false
       if [[ "$claims_red" == true ]] && grep -qE "($CLASS_CODES)" <<<"$red_cell"; then
@@ -222,18 +290,27 @@ else
       fi
       zero_red_line="$(grep -iE '\*\*If None Went Red\*\*' <<<"$local_body" | head -n1 || true)"
       zero_red_answered=false
-      if [[ -n "$zero_red_line" ]]; then
-        # "answered" = the line says WHY, in prose, with no bracket placeholder left on it.
-        if grep -qiE 'because' <<<"$zero_red_line" && ! grep -qE '\[[A-Z][A-Z0-9_ ]+\]' <<<"$zero_red_line"; then
+      because_words=0
+      if [[ -n "$zero_red_line" ]] && ! grep -qE '\[[A-Z][A-Z0-9_ ]+\]' <<<"$zero_red_line"; then
+        # "answered" = the line says WHY, in prose, with no bracket placeholder left on it. The
+        # word `because` is not the sentence: VERIFIED live, `**If None Went Red**: because` PASSED,
+        # because the whole check was `grep -qiE 'because'` plus the placeholder scan. Count what
+        # actually FOLLOWS the first `because`; three real words is the floor at which the line can
+        # carry a reason at all, and it is the control point for this rule.
+        because_words="$(awk '
+          { l = tolower($0); i = index(l, "because"); if (i == 0) next; $0 = substr($0, i + 7) }
+          { for (j = 1; j <= NF; j++) if ($j ~ /[[:alnum:]]/) n++ }
+          END { print n + 0 }' <<<"$zero_red_line")"
+        if [[ "$because_words" -ge 3 ]]; then
           zero_red_answered=true
         fi
       fi
       if [[ "$claims_red" == true && "$has_class" == false ]]; then
         log_error "§2b names pre-existing tests that went red but classifies none of them" \
-          "Every entry on the **Pre-Existing Tests That Went Red** line carries its class: DEFECT-PINNING, DECISION-RECORD or SCOPE-NARROWING. The class IS the finding — an unclassified red test is the one someone deletes to get green. If nothing went red, write 'none' here and answer **If None Went Red**."
+          "Every entry on the **Pre-Existing Tests That Went Red** line carries its class: DEFECT-PINNING, DECISION-RECORD or SCOPE-NARROWING. The class IS the finding — an unclassified red test is the one someone deletes to get green. If nothing went red, say so on this line and answer **If None Went Red**; the accepted forms are 'none', 'nothing', 'nil', 'n/a', 'not applicable', '-', or any of those followed by 'went red' (e.g. 'none went red', 'no pre-existing tests went red')."
       elif [[ "$has_class" == false && "$zero_red_answered" == false ]]; then
         log_error "§2b answers neither branch: no counter-test is classified, and the zero-red sentence is unanswered" \
-          "Either classify each pre-existing test that went red as DEFECT-PINNING, DECISION-RECORD or SCOPE-NARROWING, or complete 'No pre-existing test went red, because …'. A fix that turns nothing red is suspect: the two causes — a genuinely uncovered path, or a fix that does not do what its author thinks — look identical in a report. The requirement is the sentence, never a hunt for something to break."
+          "Either classify each pre-existing test that went red as DEFECT-PINNING, DECISION-RECORD or SCOPE-NARROWING, or complete 'No pre-existing test went red, because …' with a real reason — at least three words after 'because', since the bare word is not the sentence. A fix that turns nothing red is suspect: the two causes — a genuinely uncovered path, or a fix that does not do what its author thinks — look identical in a report. The requirement is the sentence, never a hunt for something to break."
       else
         log_success "§2b answers the counter-test sweep"
       fi

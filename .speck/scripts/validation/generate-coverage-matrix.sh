@@ -75,7 +75,22 @@ if [[ -n "$RECIPE_FILE" ]]; then
 fi
 
 STATES="happy, error, empty, loading"
-PERSONAS="naive-hostile, connoisseur-hostile, returning-user, skeptical-buyer, power-user, a11y-first, locale-switcher, low-bandwidth"
+# Persona universe = #84's breadth set + the two rows #101 P3 showed it structurally cannot reach.
+# #84's set is CONSUMER BREADTH — ONE identity in many states (day-0, returning, paused, a11y-first,
+# low-bandwidth…). None of its personas is a second ACTOR and none of them is in a hurry, so two
+# whole defect families are as invisible to this matrix as they are to a single-user happy-path suite:
+#
+#   second-actor — a DIFFERENT principal on the SAME install. Sign in as A, write, sign out, sign in
+#                  as B (offline), assert B observes NOTHING of A's — run ONCE PER PERSISTENCE LAYER
+#                  (server row · cache · queue/outbox · local DB · notification schedule · draft ·
+#                  store receipt · in-memory store · billing-SDK identity · analytics), because
+#                  ownership is per-layer, not per-endpoint. This is the persona that catches the
+#                  cross-user write; no other row in this list can see it.
+#   impatient    — the user who does not wait. Double-taps the primary action, backgrounds mid-write,
+#                  kills the app between request and response, navigates away before the spinner
+#                  resolves. Surfaces the state-claim and partial-write defects a patient walk never
+#                  reaches (a surface that renders total/partial failure identically to success).
+PERSONAS="naive-hostile, connoisseur-hostile, returning-user, skeptical-buyer, power-user, a11y-first, locale-switcher, low-bandwidth, second-actor, impatient"
 TODAY=$(date +%Y-%m-%d)
 OUT="$DIR/coverage-matrix.md"
 
@@ -93,6 +108,8 @@ OUT="$DIR/coverage-matrix.md"
   echo "## Coverage universe (dimensions)"
   echo ""
   echo "- **personas**: $PERSONAS (+ evidence-contract §4 named personas)"
+  echo "  - \`second-actor\` — a DIFFERENT principal on the SAME install: sign in as A, write, sign out, sign in as B **offline**, assert B observes **nothing** of A's. Run once **per persistence layer** (server row · cache · queue/outbox · local DB · notification schedule · draft · store receipt · in-memory store · billing-SDK identity · analytics) — ownership is per-layer, not per-endpoint. Every other persona in this list is one identity in a different state, so a cross-user write is invisible without this row."
+  echo "  - \`impatient\` — the user who does not wait: double-tap the primary action, background mid-write, kill the app between request and response, navigate away before the spinner resolves. Reaches the total- and partial-failure renders a patient walk never sees."
   echo "- **states**: $STATES"
   echo "- **viewports**: $VIEWPORTS  ·  **themes**: light, dark"
   echo "- **input-sample**: N=5 on §8 AI-generative surfaces only"

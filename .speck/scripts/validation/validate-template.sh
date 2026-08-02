@@ -476,6 +476,43 @@ case "$validation_type" in
     # only to v10-vintage reports (see validate-harden-report.sh) — every report already on disk
     # is exempt, which is why this needs no data migration.
     bash "$SCRIPT_DIR/validators/validate-harden-report.sh" --mutation-record-only $strict_flag "$file_path" || rc=1
+    # THE RECEIPT CROSS-CHECK, WIRED AS A GATE RATHER THAN NAMED IN PROSE.
+    # `--verify-receipt` shipped with no caller anywhere in this router: it was invoked only from
+    # SKILL.md, i.e. agent-driven. A rule stated in a skill cannot fail a build — the exact shape
+    # this cluster exists to kill — so a forged or absent receipt blocked nothing at the
+    # pre-commit/validate boundary. It has a caller now.
+    #
+    # Safe by the adoption gradient, not by hope. Verified live: a repo that has never emitted a
+    # receipt returns RECEIPT_MISSING.P2 at exit 0, and a report whose Mutation Record has no table
+    # rows returns RECEIPT_NO_CITATIONS.P2 at exit 0. Only a CONTRADICTION blocks — a cited site
+    # whose pinned content does not recompute at the pinned SHA, a cited site no receipt names in a
+    # repo that does emit them, or a claimed verdict stronger than the one recorded.
+    #
+    # Unconditionally hard, unlike the two checks above which soften without --strict. Those say
+    # "you have not filled this in yet", which is a reasonable thing to be gentle about mid-edit.
+    # This one says "your report contradicts evidence this repo itself produced", and there is no
+    # draft state in which that is acceptable.
+    #
+    # --root comes from the REPORT's repository, never from $PWD: the check recomputes a line's
+    # content with `git show <sha>:<file>`, so it must run against the repo the report lives in.
+    # Outside a git repository a SHA cannot be resolved at all, so the check is skipped rather than
+    # failed — the one place it cannot run is the one place it has nothing to say.
+    report_repo="$(git -C "$(dirname "$file_path")" rev-parse --show-toplevel 2>/dev/null || true)"
+    if [[ -n "$report_repo" ]]; then
+      bash "$SCRIPT_DIR/mutate-guard.sh" --verify-receipt "$file_path" --root "$report_repo" || rc=1
+    fi
+    # ONE final verdict, after all three. Each sub-validator prints its own terminal line, so a
+    # branch that combines exit codes was ending with a green `Validation PASSED.` from check two
+    # sitting directly above a blocking RECEIPT_MISMATCH.P1 from check three. The exit code was
+    # right and the finding was printed — but the last words on the log said the opposite, and a
+    # reader (or an agent) scanning the tail takes the last verdict as the verdict. Printing a
+    # PASS above a block is the same reporting defect this release exists to remove, one altitude
+    # up: the artifact disagreed with itself and only the exit code was honest.
+    if [[ $rc -ne 0 ]]; then
+      echo ""
+      echo "❌ Validation FAILED — one or more readiness-evidence checks above did not pass."
+      echo "   (An earlier '✅ Validation PASSED' line belongs to a single sub-check, not to this file.)"
+    fi
     exit $rc
     ;;
   traceability-matrix)

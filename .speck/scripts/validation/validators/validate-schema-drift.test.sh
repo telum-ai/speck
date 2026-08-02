@@ -507,4 +507,46 @@ done
   && pass "Tranche B: the live introspection SQL projects every grain the scanner inventories" \
   || fail "Tranche B: live projection is missing grain(s):${missing:- (introspection_sql block not found)}"
 
+# =================================================================================================
+# v10 FINISH PASS (cluster Z2, item 1) — GATE_MODE is the exemption KEY gate-liveness-probe.sh uses
+# to tell "notice mode, honestly nothing to compare" (GATE_PREDICATES_LEGITIMATE) apart from "claimed
+# a live comparison but evaluated ZERO predicates" (must convict GATE_VACUOUS.P1) — but until now
+# nothing in this suite observed the MODE line at all: mutating GATE_MODE="live" -> GATE_MODE="notice"
+# at the one live-VERDICT=VERIFIED site (validate-schema-drift.sh:~1063) left every test above green.
+# =================================================================================================
+
+# 29. A --live run that reaches VERDICT=VERIFIED must emit SPECK_GATE_MODE=live — the signal the
+#     probe relies on to tell a genuine live comparison apart from an honest non-live notice run.
+d="$T/t29"; mk_supabase_1_table "$d" orders
+mk_fake_psql "$T/t29env" "$T/t29env/catalog.txt"
+printf 'table:orders\ncolumn:orders.id\n' > "$T/t29env/catalog.txt"
+PATH="$T/t29env/bin:$PATH" run "$d" --live --strict --target "postgres://fake/db"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "^SPECK_GATE_MODE=live$"; } \
+  && pass "GATE_MODE: a --live run reaching VERDICT=VERIFIED emits SPECK_GATE_MODE=live" \
+  || fail "GATE_MODE: expected SPECK_GATE_MODE=live on a VERIFIED --live run (rc=$RC)"
+
+# 30. MUTATION PROOF for #29 — reverting the live-VERDICT GATE_MODE assignment in a SCRATCH COPY
+#     (never the shipped script) must turn test 29's own fixture back into a MODE=notice report,
+#     confirming that assignment is the real control point and not a default/unreached branch. This
+#     is the exact mutation the maintainer verified against the shipped script (asserted below to
+#     match exactly once, so the sed can't silently touch the wrong site or several).
+[[ "$(grep -c 'GATE_MODE="live"' "$VAL")" == "1" ]] \
+  || fail "mutation setup: expected exactly one 'GATE_MODE=\"live\"' site in $VAL — script structure changed?" ""
+# The scratch copy must live at the SAME relative depth as the shipped script — it sources
+# ../../lib/text.sh by a path relative to its own location (line 82), which a bare $T/*.sh copy
+# cannot resolve.
+SCRATCHROOT30="$T/scratch-schema-drift-tree-30"
+mkdir -p "$SCRATCHROOT30/.speck/scripts/validation/validators" "$SCRATCHROOT30/.speck/scripts/lib"
+cp "$ROOT/.speck/scripts/lib/text.sh" "$SCRATCHROOT30/.speck/scripts/lib/text.sh"
+SCRATCH30="$SCRATCHROOT30/.speck/scripts/validation/validators/validate-schema-drift.sh"
+cp "$VAL" "$SCRATCH30"
+sed -i.bak 's/GATE_MODE="live"/GATE_MODE="notice"/' "$SCRATCH30"
+grep -q 'GATE_MODE="live"' "$SCRATCH30" && fail "mutation setup: sed did not remove GATE_MODE=\"live\" from the scratch copy" ""
+d="$T/t30"; mk_supabase_1_table "$d" orders
+RC=0
+OUT="$(cd "$d" && PATH="$T/t29env/bin:$PATH" bash "$SCRATCH30" --live --strict --target "postgres://fake/db" . 2>&1)" || RC=$?
+{ echo "$OUT" | grep -q "^SPECK_GATE_MODE=notice$" && ! echo "$OUT" | grep -q "^SPECK_GATE_MODE=live$"; } \
+  && pass "MUTATION PROOF: reverting the live-VERDICT GATE_MODE assignment makes a VERIFIED run report MODE=notice (real control point)" \
+  || fail "MUTATION PROOF FAILED: reverting GATE_MODE=\"live\" did not change the emitted MODE line" "$OUT"
+
 if [[ "$FAILED" == 0 ]]; then echo "✅ validate-schema-drift: all tests passed"; else echo "❌ validate-schema-drift: FAILURES"; exit 1; fi

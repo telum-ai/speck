@@ -285,6 +285,20 @@ echo "$MUT_B_OUT" | head -n1 | grep -qE '^\| Gate ID \| Command / Script \| Stag
   && pass "mutation B: header row is DERIVED from GATE_REGISTRY_COLUMNS (appended column appears automatically)" \
   || fail "mutation B: header did not pick up the appended column — may be hardcoded" "$MUT_B_OUT"
 
+# Mutation B is also the self-consistent shape item 2's audit called for: it appends a column AND a
+# matching flush() value, so it's the fixture that proves gate_registry_separator() itself is
+# derived, not hardcoded. Assert the emitted SEPARATOR row's column count equals the (also-grown)
+# header's AND has gone up by exactly one versus the UNMUTATED $SEED run — a hardcoded separator
+# string that merely happens to have the right column count for THIS run would satisfy "matches the
+# header" without ever proving it tracks a genuine column addition; the cross-run delta is what closes
+# that gap (this is the case Mutation C's `separator_tracks_header` predicate proved was previously
+# unpinned — a literal hardcoded body left the whole suite green).
+mut_b_hdr_cols=$(echo "$MUT_B_OUT" | head -n1 | awk -F'|' '{print NF}')
+mut_b_sep_cols=$(echo "$MUT_B_OUT" | sed -n '2p' | awk -F'|' '{print NF}')
+{ [[ "$mut_b_sep_cols" == "$mut_b_hdr_cols" ]] && [[ "$mut_b_sep_cols" == "$((hdr_cols + 1))" ]]; } \
+  && pass "mutation B: separator column count matches the grown header, up by one from the unmutated run ($hdr_cols -> $mut_b_sep_cols)" \
+  || fail "mutation B: separator did not track the appended column (unmutated=$hdr_cols mutated_hdr=$mut_b_hdr_cols mutated_sep=$mut_b_sep_cols)" "$MUT_B_OUT"
+
 # --- Mutation C (separator pinning) ----------------------------------------------------------------
 # The P2 an audit left in this file: gate_registry_separator() was UNPINNED — swap its body for a
 # hardcoded string and the whole suite still exited 0. Redefine the function AFTER its real

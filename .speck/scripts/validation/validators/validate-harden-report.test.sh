@@ -547,6 +547,170 @@ grep -q "Missing required harden-report section" <<<"$OUT" || bad "the failure d
 grep -q "pre-v10 harden report" <<<"$OUT" || bad "the v10 exemption notice should still print for this vintage: $OUT"
 ok "base sections bind all vintages; the v10 additions do not (both asserted together)"
 
+# --- §2b prose, both directions ---------------------------------------------------------------
+# All of these run on a TEMPLATE-DERIVED fixture. §2b of harden-template.md explains the three
+# classes in its own bullets and frames the zero-red sentence in its own italics, so a hand-typed
+# fixture omitting that boilerplate cannot see either failure mode.
+
+echo "Test 18: the bare word 'because' is not the zero-red sentence"
+# VERIFIED live before this fix: `**If None Went Red**: because` PASSED, because the whole check was
+# `grep -qiE 'because'` plus the placeholder scan. The word satisfied "the sentence".
+set_2b() { # <red-cell> <if-none-cell>
+  python3 - "$R" "$1" "$2" <<'PY'
+import sys
+p, red, none = sys.argv[1], sys.argv[2], sys.argv[3]
+s = open(p).read()
+old_red = '`pendingWriteOutbox.test.ts:214` · "turns the unverifiable entry into a deliberate claim by the tapper" · DEFECT-PINNING'
+assert old_red in s, "fixture drift: the template-derived red cell is not what this test edits"
+s = s.replace(old_red, red)
+old_none = "- **If None Went Red**: not applicable — one pre-existing test went red."
+assert old_none in s, "fixture drift: the template-derived zero-red line is not what this test edits"
+s = s.replace(old_none, "- **If None Went Red**: " + none)
+open(p, "w").write(s)
+PY
+}
+write_report_from_template "$R"
+set_2b "none" "because"
+grep -Fq -e "- **If None Went Red**: because" "$R" || bad "fixture setup failed: the bare-because line is absent"
+OUT="$(bash "$VALIDATOR" --strict "$R" 2>&1 || true)"
+[ "$(rc_of bash "$VALIDATOR" --strict "$R")" = "1" ] || bad "'because' with nothing after it passed as the zero-red sentence: $OUT"
+grep -q "answers neither branch" <<<"$OUT" || bad "the failure does not name the unanswered §2b: $OUT"
+ok "the bare word 'because' is not a reason"
+
+echo "Test 18b: the boundary is the WORD COUNT after 'because', not the presence of the word"
+# Two words red, three words green, one edit apart — so the count is provably the control point and
+# not some neighbouring condition doing the work.
+write_report_from_template "$R"
+set_2b "none" "No pre-existing test went red, because nothing covered"
+[ "$(rc_of bash "$VALIDATOR" --strict "$R")" = "1" ] || bad "two words after 'because' passed as a reason"
+write_report_from_template "$R"
+set_2b "none" "No pre-existing test went red, because nothing covered it"
+OUT="$(bash "$VALIDATOR" --strict "$R" 2>&1 || true)"
+[ "$(rc_of bash "$VALIDATOR" --strict "$R")" = "0" ] || bad "three words after 'because' should be accepted as a reason: $OUT"
+ok "≥3 words after 'because' is the line, and it is what moves the verdict"
+
+echo "Test 19: an honest zero-red phrasing is not convicted for failing to classify"
+# VERIFIED live before this fix: `Pre-Existing Tests That Went Red: None went red` was CONVICTED
+# with "names pre-existing tests but classifies none of them", because the nothing-synonym list
+# matched only exact tokens. A gate that convicts an honest author teaches people to game it.
+for PHRASE in 'None went red' 'none' 'No pre-existing tests went red' 'Nothing went red' 'n/a' '—' 'No tests went red'; do
+  write_report_from_template "$R"
+  set_2b "$PHRASE" "No pre-existing test went red, because the outbox retry path had no coverage at all."
+  OUT="$(bash "$VALIDATOR" --strict "$R" 2>&1 || true)"
+  [ "$(rc_of bash "$VALIDATOR" --strict "$R")" = "0" ] || bad "an honest zero-red phrasing was convicted: '$PHRASE' — $OUT"
+done
+ok "natural zero-red phrasings are read as 'nothing', not as an unclassified claim"
+
+echo "Test 19b: a REAL unclassified claim is still convicted, and the message names the forms it accepts"
+# The negative control for Test 19 — the forgiving matching must not have swallowed the rule — plus
+# the message-truth assertion: a convicting message that does not say what it would have accepted is
+# how an author learns to game the gate instead of satisfying it.
+write_report_from_template "$R"
+set_2b '`pendingWriteOutbox.test.ts:214` · "turns the unverifiable entry into a deliberate claim by the tapper"' \
+       "not applicable — one pre-existing test went red."
+OUT="$(bash "$VALIDATOR" --strict "$R" 2>&1 || true)"
+[ "$(rc_of bash "$VALIDATOR" --strict "$R")" = "1" ] || bad "an unclassified real claim passed: $OUT"
+grep -q "classifies none of them" <<<"$OUT" || bad "the failure does not name the missing classification: $OUT"
+grep -q "'none went red'" <<<"$OUT" || bad "the Fix text does not quote the forms it accepts — the message is not true: $OUT"
+ok "the rule survives the leniency, and the error states the accepted forms verbatim"
+
+# --- vintage, DERIVED rather than self-declared ------------------------------------------------
+echo "Test 20: deleting the frontmatter vintage no longer demotes a report in a v10 workspace"
+# THE ESCAPE HATCH, reproduced exactly as the auditor drove it: delete `mutation_record: required`
+# and the `## 2b.` heading and every v10 rule became a NOTICE at EXIT=0. Vintage is now derived from
+# (a) the project's .speck/VERSION and (b) whether the file is being authored now — neither of which
+# is a line an author can delete from the report.
+GREPO="$TMP/v10-workspace"
+mkdir -p "$GREPO/.speck" "$GREPO/specs"
+printf '10.0.0\n' > "$GREPO/.speck/VERSION"
+git -C "$GREPO" init -q
+git -C "$GREPO" config user.email t@example.com
+git -C "$GREPO" config user.name  T
+git -C "$GREPO" add -A
+git -C "$GREPO" -c commit.gpgsign=false commit -qm init
+
+G="$GREPO/specs/project-harden-report-20260802.md"
+write_report "$G"
+python3 - "$G" <<'PY'
+import sys, re
+p = sys.argv[1]
+s = "".join(l for l in open(p) if not l.startswith("mutation_record:") and not l.startswith("speck_version:"))
+s = re.sub(r"\n## 2b\..*?\n---\n", "\n", s, flags=re.S)
+s = "".join(l for l in s.splitlines(keepends=True)
+           if "Guardrail Mutation-Proof" not in l and "Class Recurrence Check" not in l)
+open(p, "w").write(s)
+PY
+if grep -qE '^## 2b\.|^mutation_record:|^speck_version:' "$G"; then bad "fixture setup failed: the exploit did not apply"; fi
+OUT="$(bash "$VALIDATOR" --strict "$G" 2>&1 || true)"
+[ "$(rc_of bash "$VALIDATOR" --strict "$G")" = "1" ] || bad "the vintage escape hatch is still open — a v10 workspace accepted a self-demoted report: $OUT"
+grep -q "vintage is derived rather than self-declared" <<<"$OUT" || bad "the derivation fired silently — it must be printed: $OUT"
+grep -q "Missing required section '## 2b" <<<"$OUT" || bad "bound, but the v10 rules did not actually run: $OUT"
+ok "an UNTRACKED report in a v10 workspace is v10 whatever its frontmatter claims"
+
+git -C "$GREPO" add specs
+[ "$(rc_of bash "$VALIDATOR" --strict "$G")" = "1" ] || bad "a STAGED report escaped — staged is the exact state pre-commit-hook.sh validates"
+ok "staged counts as authored-now (the state the pre-commit boundary actually sees)"
+
+echo "Test 20b: a pre-v10 report ALREADY ON DISK stays exempt — the exemption that makes 'no migration' true"
+L="$GREPO/specs/legacy-harden-report.md"
+cat > "$L" <<'EOF'
+---
+speck_version: 8.0
+template_version: "7.13.2"
+artifact_type: harden-report
+---
+
+# Post-Validation Hardening Report: legacy
+
+## 1. Defect Description (The Truth)
+- **Observed Behavior**: something
+## 2. Root Cause Analysis (The Gap)
+- **Technical Root Cause**: something
+## 3. Remediations & Hardening Guardrails (The Fix)
+- **Implementation Fix**: something
+## 4. Readiness Re-assessment
+- **Prior State**: SHIP-RC
+EOF
+git -C "$GREPO" add specs
+git -C "$GREPO" -c commit.gpgsign=false commit -qm "legacy artifacts already on disk"
+# Tracked AND unmodified now — the shape every pre-v10 artifact in every repo has.
+OUT="$(bash "$VALIDATOR" --strict "$L" 2>&1 || true)"
+[ "$(rc_of bash "$VALIDATOR" --strict "$L")" = "0" ] || bad "a pre-v10 report already on disk was convicted — this is the data migration the design promises not to need: $OUT"
+grep -q "pre-v10 harden report" <<<"$OUT" || bad "the exemption is silent: $OUT"
+ok "tracked and unmodified = already on disk = exempt, in a v10 workspace"
+
+echo "Test 20c: editing that legacy report brings it into scope — the disclosed break, pinned"
+# Same break already taken for the four base sections. Stated so it stays a decision: reaching
+# 'tracked and unmodified' requires having been committed, and at commit time the file is staged
+# and therefore bound — so the exemption cannot be entered from outside.
+printf '\n<!-- edited -->\n' >> "$L"
+OUT="$(bash "$VALIDATOR" --strict "$L" 2>&1 || true)"
+[ "$(rc_of bash "$VALIDATOR" --strict "$L")" = "1" ] || bad "a MODIFIED legacy report kept its exemption — the exemption is enterable from outside: $OUT"
+grep -q "vintage is derived rather than self-declared" <<<"$OUT" || bad "the derivation did not fire on the modified file: $OUT"
+ok "editing a legacy artifact in a v10 workspace re-vintages it"
+
+echo "Test 20d: outside a git repository, self-declaration still stands (the disclosed second exception)"
+# $TMP is not a git repo, so every fixture above ran on self-declaration alone — Tests 9, 15 and 17
+# are that assertion. Named here so the exception is a decision rather than an accident.
+cat > "$R" <<'EOF'
+---
+speck_version: 8.0
+artifact_type: harden-report
+---
+# Post-Validation Hardening Report: ungit
+## 1. Defect Description (The Truth)
+- x
+## 2. Root Cause Analysis (The Gap)
+- x
+## 3. Remediations & Hardening Guardrails (The Fix)
+- x
+## 4. Readiness Re-assessment
+- x
+EOF
+if git -C "$TMP" rev-parse --show-toplevel >/dev/null 2>&1; then bad "fixture assumption broken: \$TMP is inside a git repo"; fi
+[ "$(rc_of bash "$VALIDATOR" --strict "$R")" = "0" ] || bad "a non-git artifact lost its self-declared vintage — the derivation is not being skipped"
+ok "no repo, no derivation: the artifact's own declaration is all there is"
+
 echo ""
 echo "All validate-harden-report tests passed ($PASS assertions)."
 exit 0
