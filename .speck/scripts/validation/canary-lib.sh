@@ -259,8 +259,34 @@ provide_banned_language_plan() {
 provide_banned_language_write() {
   local wt="$1" rel="$2" ext="$3" project_dir="$4" term="$5"
   mkdir -p "$(dirname "$wt/$rel")" 2>/dev/null || true
-  # A plain user-visible line carrying the banned term (the gate scans textual surfaces).
-  printf 'Speck gate-liveness canary — banned term below (safe, worktree-only):\n%s\n' "$term" > "$wt/$rel"
+  # The injected defect has to be a defect ON THE SURFACE IT IS INJECTED INTO. From v10 the
+  # gate reads user-visible strings rather than whole files, so a bare line of prose in a
+  # .ts/.py/.go file is NOT copy — it is a run of identifiers. Writing one there produced a
+  # gate that stayed (correctly) green and a canary that read that green as GATE_DISARMED.P1,
+  # on every source extension class at once. A canary whose "defect" the gate is right to
+  # ignore measures nothing; it just manufactures a P1.
+  #
+  # So the term is placed where a USER would see it, per surface family: a string literal in
+  # source, a text node in markup, a bare line in prose (where every line is copy).
+  case "$ext" in
+    md|mdx|markdown|txt|rst|adoc)
+      printf 'Speck gate-liveness canary — banned term below (safe, worktree-only):\n%s\n' "$term" > "$wt/$rel"
+      ;;
+    html|htm|astro|vue|svelte|templ|php|erb|ejs|hbs|njk|twig|xml)
+      printf '<p>Speck gate-liveness canary (safe, worktree-only): %s</p>\n' "$term" > "$wt/$rel"
+      ;;
+    json|arb)
+      printf '{ "__speck_canary__": "Speck gate-liveness canary: %s" }\n' "$term" > "$wt/$rel"
+      ;;
+    yaml|yml)
+      printf '__speck_canary__: "Speck gate-liveness canary: %s"\n' "$term" > "$wt/$rel"
+      ;;
+    *)
+      # Source families. A quoted literal reads as a string in every lexer Speck models
+      # (C-like and hash-like alike), which is all this file needs to be.
+      printf 'const __speck_canary__ = "Speck gate-liveness canary (safe, worktree-only): %s";\n' "$term" > "$wt/$rel"
+      ;;
+  esac
   return 0
 }
 

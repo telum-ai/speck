@@ -151,11 +151,30 @@ is_empty_cell() {
 # story_id/ac_id out of a Discharge cell under --require-evidence — extended here to gate
 # resolution itself, in BOTH modes, so a prose-only cell can no longer pass by mere presence.
 # A "path" reference must carry a file extension (so "n/a" or "24/7" don't false-positive).
+# PRM-NNN is the Backing column's own currency ("fine-grained PRM/audit refs") — the same token
+# family as the PRM-ID column itself, e.g. "AUDIT-E002-42, E002/PRM-054" resolves on the PRM-054
+# (or, since v9.6, on the AUDIT-E002-42 alone — see the AUDIT branch below).
+#
+# BREAKING (v9.6, undeclared until now): every finding this predicate feeds for a pilot-gated
+# Backing cell tells the author to "Cite fine-grained audit/matrix refs (e.g. AUDIT-E002-42,
+# PRM-054)" — but until this branch existed, an AUDIT-* token ALONE (with no S/AC/DEC/PRM token
+# riding along) matched NONE of the branches above and the row stayed blocked even after the
+# author did exactly what the message said. The template's own example row (§2, PRM-005) only
+# ever passed because it also carries "E002/PRM-054" — a real project citing ONLY an audit ref, the
+# thing the message names as sufficient, could not pass. Verified: a Backing cell of literally
+# "AUDIT-E002-42" and nothing else — pre-fix — failed has_structured_token. Fixed by adding the
+# AUDIT branch below so every token the message suggests is actually accepted (the durable
+# property test18b pins). A downstream project affected by this gap can find its rows with:
+#   grep -n "status 'pilot-gated'" **/traceability-matrix.md | grep -B0 "AUDIT-"
+# (or, more directly: any pilot-gated row whose Backing cell matches AUDIT-[A-Za-z0-9-]*[0-9] and
+# NO S/AC/DEC/PRM/path token — those rows were failing under v9.6 pre-fix and now pass.)
 has_structured_token() {
   local v="$1"
   [[ "$v" =~ S[0-9]+ ]] && return 0
   [[ "$v" =~ AC-[0-9]+ ]] && return 0
   [[ "$v" =~ DEC-[0-9]+ ]] && return 0
+  [[ "$v" =~ PRM-[0-9]+ ]] && return 0
+  [[ "$v" =~ AUDIT-[A-Za-z0-9-]*[0-9] ]] && return 0
   [[ "$v" =~ [A-Za-z0-9_.-]+/[A-Za-z0-9_./-]*\.[A-Za-z0-9]+ ]] && return 0
   return 1
 }
@@ -337,10 +356,20 @@ while IFS= read -r line; do
     if [[ "$r" -ge 0 && "$r" -lt "$grain_cap_rank" ]]; then grain_cap_rank="$r"; grain_cap_token="$eff_grain"; fi
   fi
 
-  # If pilot-gated, it MUST have a backing reference (cannot silently defer without citing details)
-  if [[ "$status" == "pilot-gated" && "$has_backing" == false ]]; then
-    echo -e "${RED}❌ $id${NC}: status 'pilot-gated' but has no backing reference! Cite fine-grained audit/matrix refs (e.g. AUDIT-E002-42) in the Backing column."
-    violations=$((violations + 1))
+  # If pilot-gated, it MUST have a backing reference (cannot silently defer without citing details).
+  # Non-emptiness alone is NOT sufficient — see has_structured_token() above: a Backing cell reading
+  # "we will decide this in the pilot" is present but names nothing, and must not silently resolve
+  # conservation. This check is unconditional (both modes at once) — it is not gated on
+  # REQUIRE_EVIDENCE, so the superset property (default blocks ⇒ --require-evidence blocks) holds by
+  # construction rather than needing to be duplicated per mode.
+  if [[ "$status" == "pilot-gated" ]]; then
+    if [[ "$has_backing" == false ]]; then
+      echo -e "${RED}❌ $id${NC}: status 'pilot-gated' but has no backing reference! Cite fine-grained audit/matrix refs (e.g. AUDIT-E002-42, PRM-054) in the Backing column."
+      violations=$((violations + 1))
+    elif ! has_structured_token "$backing"; then
+      echo -e "${RED}❌ $id${NC}: Backing cell reads '${backing}' — prose alone does not resolve conservation (no structured token found). Cite fine-grained audit/matrix refs (e.g. AUDIT-E002-42, PRM-054) in the Backing column."
+      violations=$((violations + 1))
+    fi
   fi
 
   if [[ "$REQUIRE_EVIDENCE" == true ]]; then

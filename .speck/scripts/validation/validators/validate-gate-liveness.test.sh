@@ -3,7 +3,10 @@
 
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../../../../" && pwd)"
-VAL="$ROOT/.speck/scripts/validation/validators/validate-gate-liveness.sh"
+# SPECK_VALIDATOR_UNDER_TEST is the mutation-harness hook: point it at a SCRATCH COPY of the
+# validator to confirm a given assertion actually goes red when its fix is reverted. Unset in every
+# normal run (npm test, CI, a developer's shell), where it resolves to the shipped validator.
+VAL="${SPECK_VALIDATOR_UNDER_TEST:-$ROOT/.speck/scripts/validation/validators/validate-gate-liveness.sh}"
 FAILED=0
 pass() { echo "  ✓ $1"; }
 fail() { echo "  ✗ $1"; echo "----- output -----"; echo "$OUT"; echo "------------------"; FAILED=1; }
@@ -152,5 +155,46 @@ run "$d/evidence-contract.md"
 { [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "GATE_OK"; } \
   && pass "headerless legacy table → positional fallback still classifies correctly" \
   || fail "a table with no header row should fall back to the historical fixed positions"
+
+# 11. #98 — the DECLARED Scope column must be able to reach a subject. A §6a row can name a scope
+# the repo cannot resolve (root-anchored `src/**` in a repo whose product lives under
+# `frontend/src/**` — measured at 0 of 1194 tracked files in one repo, 0 of 590 in another), and
+# every other check in this validator stays green: the gate IS wired, it just cannot ever look at
+# anything. git ls-files is the mechanical discriminator, independent of any diff.
+d="$T/t11"
+mkdir -p "$d/.speck" "$d/frontend/src"
+git -C "$d" init -q
+git -C "$d" config user.email t@t.co; git -C "$d" config user.name t
+printf 'export const App = () => null\n' > "$d/frontend/src/App.tsx"
+{
+  echo "## 6. Required Static Evidence"
+  echo ""
+  echo "### 6a. CI-Enforced Gate Registry"
+  echo "| Gate ID | Command / Script | Stage | Domain | Scope | Subject | Canary | Waiver |"
+  echo "|---------|------------------|-------|--------|-------|---------|--------|--------|"
+  echo "| dark-scope | \`lint.sh\` | manual | copy | src/**,app/** | files>0 | — | — |"
+  echo "| live-scope | \`lint.sh\` | manual | copy | frontend/src/** | files>0 | — | — |"
+  echo ""
+  echo "## 7. Required Live-Service Evidence"
+} > "$d/evidence-contract.md"
+git -C "$d" add -A >/dev/null 2>&1; git -C "$d" commit -q -m init >/dev/null 2>&1
+run "$d/evidence-contract.md"
+{ echo "$OUT" | grep -q "GATE_SCOPE_UNRESOLVABLE.P2.*dark-scope" \
+  && ! echo "$OUT" | grep -q "GATE_SCOPE_UNRESOLVABLE.P2.*live-scope"; } \
+  && pass "declared scope resolved against git ls-files: unreachable → P2, reachable → silent" \
+  || fail "an unreachable declared Scope must be a finding, and a reachable one must not"
+
+# 12. A row that declares NO scope (em-dash, or a legacy 6-column table with no Scope column at all)
+# must stay silent. The migration is what adds the column; a pre-v10 contract is not a defect.
+d="$T/t12"
+mkdir -p "$d/.speck"
+git -C "$d" init -q
+git -C "$d" config user.email t@t.co; git -C "$d" config user.name t
+mkctr "$d" "| no-scope | eslint | manual | frontend | — | — |"
+git -C "$d" add -A >/dev/null 2>&1; git -C "$d" commit -q -m init >/dev/null 2>&1
+run "$d/evidence-contract.md"
+{ [[ "$RC" == 0 ]] && ! echo "$OUT" | grep -q "GATE_SCOPE_UNRESOLVABLE"; } \
+  && pass "legacy row with no Scope column → no scope finding (the migration adds it, not a P2)" \
+  || fail "a pre-v10 6-column row must not be convicted of an unresolvable scope"
 
 if [[ "$FAILED" == 0 ]]; then echo "✅ validate-gate-liveness: all tests passed"; else echo "❌ validate-gate-liveness: FAILURES"; exit 1; fi

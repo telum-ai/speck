@@ -93,12 +93,18 @@ assert_ok "V6: --staged skips .speck/.cursor/specs (no false positives)" \
   bash -c "cd '$WORK/staged-scope' && bash '$LINT' --staged"
 
 # V6b: staged product-surface files are still scanned
+#
+# The fixture used to be a bare sentence in a .ts file — `We deliver synergy for teams`,
+# no quotes. That is not TypeScript, and from v10 the gate reads user-visible strings
+# rather than whole files, so the sentence is (correctly) a syntax error's worth of bare
+# identifiers, not copy. Held as real code, the assertion keeps testing what it names:
+# that a staged product-surface file is reached at all.
 write_product_contract "$WORK/staged-product"
 init_git "$WORK/staged-product"
 (
   cd "$WORK/staged-product"
   mkdir -p src
-  echo 'We deliver synergy for teams' > src/marketing.ts
+  echo 'export const marketing = "We deliver synergy for teams";' > src/marketing.ts
   git add src/marketing.ts specs .speck
 )
 assert_fail "V6b: --staged still scans src/* for banned terms" \
@@ -320,12 +326,11 @@ assert_out_has "V13e: zero-hit terms are reported as compliant" "compliant"
 # so a monorepo laying out frontend/src/** matched ZERO staged files and exited 0
 # green. Measured 0 of 1194 files in Splang, 0 of 590 in Streb.
 #
-# The any-depth resolution is correct and monorepos need it — but it cannot be the DEFAULT
-# in a minor: it newly reaches files the team did not change, and a gate that was green in
-# a downstream repo must not go red on the upgrade commit. So it ships behind
-# `banned_language.scope: "any-depth"`, with legacy-root (the pre-9.6 root anchoring) as
-# the default. Both modes are asserted here so the flip in v10 is a one-line default change
-# against a suite that already covers the destination.
+# v9.6 shipped the any-depth resolution OPT-IN, because reaching frontend/src/** while
+# scanning whole files newly convicted untouched code (see V19). v10 removes that cause and
+# flips the default: the blindness is the more serious defect once the false convictions are
+# gone. Both directions are asserted — the default must reach the monorepo, and an explicit
+# `legacy-root` must still reproduce the pre-9.6 anchoring for a repo that wants it.
 mkproj "$WORK/v14" <<'EOF'
 | revolutionize | UI | hype verb | improve |
 EOF
@@ -334,13 +339,17 @@ mkdir -p "$WORK/v14/frontend/src/components"
 echo 'export const tagline = "revolutionize";' > "$WORK/v14/frontend/src/components/A.tsx"
 (cd "$WORK/v14" && git add frontend specs .speck)
 run_lint "$WORK/v14" --staged
-assert_rc      "V14a: default scope=legacy-root keeps the pre-9.6 root anchoring" 0
-assert_out_has "V14b: … and publishes the root-anchored scope it actually used" "SPECK_GATE_SCOPE=src/**"
+assert_rc      "V14a: the v10 DEFAULT reaches frontend/src/** by path SEGMENT (#98.1)" 1
+assert_out_has "V14b: … and publishes the any-depth scope it actually used" "SPECK_GATE_SCOPE=**/src/**"
+assert_out_has "V14c: … having actually inspected the staged file" "SPECK_GATE_SUBJECT=1"
+set_scope "$WORK/v14" legacy-root
+run_lint "$WORK/v14" --staged
+assert_rc      "V14d: banned_language.scope=legacy-root restores the pre-9.6 root anchoring" 0
+assert_out_has "V14e: … and publishes it, so that green is legible as blindness" "SPECK_GATE_SCOPE=src/**"
+assert_out_has "V14f: … with an honestly empty subject" "SPECK_GATE_SUBJECT=0"
 set_scope "$WORK/v14" any-depth
 run_lint "$WORK/v14" --staged
-assert_rc      "V14c: scope=any-depth reaches frontend/src/** by path SEGMENT (#98.1)" 1
-assert_out_has "V14d: telemetry reports the file it actually scanned" "SPECK_GATE_SUBJECT=1"
-assert_out_has "V14e: … and publishes the any-depth scope" "SPECK_GATE_SCOPE=**/src/**"
+assert_rc      "V14g: an explicit any-depth is honoured identically to the default" 1
 
 # V15 (#90 secondary, #98 pairing) — broadening scope without an exclude mechanism
 # newly convicts test files, including the vocabulary guard whose own regex
@@ -540,15 +549,21 @@ assert_out_has "V18d: … and the empty subject is still reported honestly" "Fil
 run_lint "$WORK/v18"
 assert_rc      "V18e: the full-scan / CI invocation still exits 1 on the same typo" 1
 
-# V19 — v9.6 broadened the scan to product-surface dirs at ANY depth AND scans whole files
-# with no user-visible-string filter. Those two together convict ordinary code using Speck's
-# OWN shipped default terms: product-contract-template.md §7 ships
+# V19 — THE ACCEPTANCE TEST FOR THE v10 DEFAULT FLIP. Both halves live in ONE fixture,
+# because either one alone is satisfiable by a gate that is simply wrong in the other
+# direction: a gate that never convicts passes (a), a gate that convicts everything
+# passes (b).
+#
+# The exact v9.6 counter-example. Speck's OWN shipped product-contract-template.md §7 has
 #   - ❌ Technical architecture language ("our backend", "API", "database")
-# and the phrase-class extractor pulls each quoted phrase. On a monorepo,
-# frontend/src/lib/client.ts holding `import { createClient } from "./api"` scored exit 0
-# before the change and ❌ "API" — 4 hit(s), exit 1 after it. The team changed none of that
-# code. So the any-depth resolver ships opt-in for one minor; the implementation is right
-# and stays whole.
+# and the phrase-class extractor pulls each quoted phrase, scanned -i -w -F. With whole-file
+# scanning, `frontend/src/lib/client.ts` holding `import { createClient } from "./api"` went
+# from exit 0 to ❌ "API" — 4 hit(s), exit 1, on code the team never wrote that week. That
+# single false-conviction class is the entire reason any-depth shipped opt-in.
+#
+# v10 fixes the CAUSE: hits are filtered through a per-file visibility mask, so an import
+# specifier is not copy and an identifier named `database` is not copy. The reach is then
+# safe to make the default — which is what (b) has to keep honest.
 mkproj "$WORK/v19" <<'EOF'
 | synergy | UI | generic pitch | collaboration |
 EOF
@@ -558,24 +573,41 @@ cat >> "$WORK/v19/specs/projects/test/product-contract.md" <<'EOF'
 
 - ❌ Technical architecture language ("our backend", "API", "database") in user-facing surfaces
 EOF
-mkdir -p "$WORK/v19/src" "$WORK/v19/frontend/src/lib"
+mkdir -p "$WORK/v19/src" "$WORK/v19/frontend/src/lib" "$WORK/v19/frontend/src/components"
 echo 'export const ok = "hello";' > "$WORK/v19/src/ok.ts"
-printf 'import { createClient } from "./api";\nconst database = createClient();\n' \
+printf 'import { createClient } from "./api";\nconst database = createClient();\nexport const client = database;\n' \
   > "$WORK/v19/frontend/src/lib/client.ts"
-run_lint "$WORK/v19"
-assert_rc        "V19a: default scope=legacy-root does not newly convict deep dirs" 0
-assert_out_lacks "V19b: … so the team's untouched client.ts stays untouched" '"API"'
-assert_out_has   "V19c: … and the published scope names the mode that ran" "SPECK_GATE_SCOPE=src/**"
-set_scope "$WORK/v19" any-depth
-run_lint "$WORK/v19"
-assert_rc      "V19d: scope=any-depth opts in to the monorepo-correct resolution" 1
-assert_out_has "V19e: … and frontend/src/** is then reached" '"API"'
 
-# V19f — an unrecognised scope value must not silently pick a mode. Warn, keep the default.
+# (a) the counter-example, under the DEFAULT scope, must be green.
+run_lint "$WORK/v19"
+assert_rc        "V19a: the v9.6 counter-example exits 0 under the v10 default" 0
+assert_out_lacks "V19b: … the import specifier \"./api\" is not user-visible copy" '"API"'
+assert_out_lacks "V19c: … nor is an identifier named database" '"database"'
+assert_out_has   "V19d: … and it was NOT green by blindness — frontend/src was reached" "SPECK_GATE_SCOPE=**/src/**"
+assert_out_has   "V19e: … with client.ts actually among the files inspected" "SPECK_GATE_SUBJECT=2"
+assert_out_has   "V19f: … and nothing fell back to a whole-file read" "SPECK_GATE_UNPARSED=0"
+
+# (b) genuine user-visible copy in the SAME tree must still exit 1.
+echo 'export const banner = "Our backend is slow — check the API status";' \
+  > "$WORK/v19/frontend/src/components/Banner.tsx"
+run_lint "$WORK/v19"
+assert_rc      "V19g: genuine copy in the same tree still exits 1" 1
+assert_out_has "V19h: … \"API\" inside a real string literal is convicted" '"API"'
+assert_out_has "V19i: … and so is the multi-word phrase class" '"our backend"'
+
+# (c) the mask is the load-bearing part, not the scope. Turn it off on the same tree and
+# the false conviction comes straight back — the discriminator that keeps V19a from being
+# satisfiable by a gate that simply stopped reaching frontend/src.
+run_lint "$WORK/v19" --no-strings-only
+assert_out_has "V19j: --no-strings-only reproduces the v9.6 false conviction on client.ts" 'client.ts'
+assert_out_has "V19k: … proving the visibility mask, not the scope, is what made it green" "SPECK_GATE_FILTER=whole-file"
+
+# V19l — an unrecognised scope value must not silently pick a mode. Warn, keep the default.
+rm -f "$WORK/v19/frontend/src/components/Banner.tsx"
 set_scope "$WORK/v19" everywhere
 run_lint "$WORK/v19"
-assert_rc      "V19f: an unrecognised banned_language.scope falls back to the default" 0
-assert_out_has "V19g: … loudly, never silently" "not recognised"
+assert_rc      "V19l: an unrecognised banned_language.scope falls back to the default" 0
+assert_out_has "V19m: … loudly, never silently" "not recognised"
 
 # V20 — DEFAULT_EXCLUDES exists so the gate does not convict its own guard: a test file
 # holds assertions that a banned word is ABSENT, and a vocabulary guard whose regex literals
@@ -623,6 +655,332 @@ assert_out_has "V21b: … and only the real product file is the subject" "SPECK_
 run_lint_nrg "$WORK/v21"
 assert_rc      "V21c: … and the grep fallback prunes exactly the same trees" 0
 assert_out_has "V21d: … down to the same subject count" "SPECK_GATE_SUBJECT=1"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# v10 — --strings-only. The precondition for the any-depth default (V19), asserted on
+# its own terms: what the mask reveals, what it hides, and what it admits it cannot read.
+# ─────────────────────────────────────────────────────────────────────────────────
+
+# V22 — locale files: scan VALUES, never keys. `revolutionize_button_label` is an
+# identifier a translator never sees; the string it points at is the copy.
+mkproj "$WORK/v22" <<'EOF'
+| revolutionize | UI | hype verb | improve |
+EOF
+mkdir -p "$WORK/v22/src/locales"
+cat > "$WORK/v22/src/locales/en.json" <<'EOF'
+{
+  "revolutionize_button_label": "Improve your day",
+  "hero": { "revolutionize": "Make it better" }
+}
+EOF
+run_lint "$WORK/v22"
+assert_rc        "V22a: a banned word in a locale KEY is not a violation" 0
+assert_out_lacks "V22b: … it is never reported" '"revolutionize"'
+assert_out_has   "V22c: … and the locale file was genuinely read, not skipped" "SPECK_GATE_SUBJECT=1"
+cat > "$WORK/v22/src/locales/en.json" <<'EOF'
+{
+  "hero_title": "We revolutionize teams"
+}
+EOF
+run_lint "$WORK/v22"
+assert_rc      "V22d: the same word in the VALUE is a violation" 1
+assert_out_has "V22e: … reported once" "Total banned-language hits: 1"
+
+# V22f — YAML locales take the same rule.
+mkproj "$WORK/v22y" <<'EOF'
+| revolutionize | UI | hype verb | improve |
+EOF
+mkdir -p "$WORK/v22y/src/i18n"
+# The key is the BARE banned word, not `revolutionize_cta`: grep -w treats "_" as a word
+# character, so a suffixed key would never have matched and the assertion would pass on a
+# filter that does nothing at all.
+printf 'en:\n  revolutionize: Improve your day\n  # revolutionize in a comment\n' \
+  > "$WORK/v22y/src/i18n/en.yaml"
+run_lint "$WORK/v22y"
+assert_rc "V22f: a YAML key and a YAML comment are not copy" 0
+printf 'en:\n  cta: We revolutionize teams\n' > "$WORK/v22y/src/i18n/en.yaml"
+run_lint "$WORK/v22y"
+assert_rc "V22g: … while the YAML value is" 1
+
+# V23 — source files: identifiers, imports, comments and type names are not copy;
+# string literals, template literals and JSX text are.
+mkproj "$WORK/v23" <<'EOF'
+| revolutionize | UI | hype verb | improve |
+EOF
+mkdir -p "$WORK/v23/src"
+# Every line here is a DIFFERENT control point, chosen so no single rule masks another:
+#   line 1  comment stripping ALONE — the term is written inside QUOTES in the comment, so
+#           without stripping it lexes as a real string literal. `// revolutionize later`
+#           would have proved nothing: bare words in a comment are already invisible for
+#           being outside a string, and the assertion would survive deleting the rule.
+#   line 2  the module-specifier rule ALONE — a bare package name carries no "/" and no
+#           leading ".", so the technical-token rule cannot rescue it
+#   line 3  the mask itself (a type name is never inside a string)
+#   line 4  the mask itself (an identifier)
+#   line 5  the technical-token rule ALONE — a route string is a string literal, and only
+#           "no whitespace + a path separator" keeps it out of the copy set
+cat > "$WORK/v23/src/machinery.ts" <<'EOF'
+// TODO: replace "revolutionize" with "improve"
+import { revolutionize } from "revolutionize";
+type Revolutionize = { revolutionize: string };
+const revolutionize_count = 1;
+export const endpoint = "/revolutionize/v1";
+EOF
+run_lint "$WORK/v23"
+assert_rc        "V23a: comments, module specifiers, type names, identifiers and routes are not copy" 0
+assert_out_lacks "V23b: … none of them is reported" '"revolutionize"'
+assert_out_has   "V23c: … and the file was lexed, not waved through" "SPECK_GATE_UNPARSED=0"
+
+cat > "$WORK/v23/src/copy.tsx" <<'EOF'
+export const Hero = () => <p>We revolutionize teams</p>;
+EOF
+run_lint "$WORK/v23"
+assert_rc      "V23d: a JSX text node IS copy" 1
+assert_out_has "V23e: … reported from the .tsx surface" "copy.tsx"
+
+rm -f "$WORK/v23/src/copy.tsx"
+printf 'export const t = `We revolutionize ${teams}`;\n' > "$WORK/v23/src/tpl.ts"
+run_lint "$WORK/v23"
+assert_rc "V23f: a template literal IS copy" 1
+
+# V24 — the honesty half. A file the lexer does not model is scanned WHOLE (pre-v10
+# behaviour, so the mode cannot create a blind spot) AND counted, so a caller can see
+# how much of a green rests on the mask. Silently skipping it, or silently scanning it
+# whole, are the two failures this release exists to end.
+mkproj "$WORK/v24" <<'EOF'
+| revolutionize | UI | hype verb | improve |
+EOF
+mkdir -p "$WORK/v24/src"
+echo 'export const ok = "hello";' > "$WORK/v24/src/ok.ts"
+echo 'weird-format: revolutionize' > "$WORK/v24/src/config.xyzzy"
+run_lint "$WORK/v24"
+assert_rc      "V24a: an unlexable file is still SCANNED, not skipped" 1
+assert_out_has "V24b: … and the telemetry counts it as unparsed" "SPECK_GATE_UNPARSED=1"
+assert_out_has "V24c: … and names it in the human output" "config.xyzzy"
+assert_out_has "V24d: … alongside the file that WAS lexed" "SPECK_GATE_SUBJECT=2"
+
+# V25 — the escape hatch, both spellings, and the mode published either way.
+mkproj "$WORK/v25" <<'EOF'
+| revolutionize | UI | hype verb | improve |
+EOF
+mkdir -p "$WORK/v25/src"
+echo 'const revolutionize = 1;' > "$WORK/v25/src/a.ts"
+run_lint "$WORK/v25"
+assert_rc      "V25a: an identifier is green under the default" 0
+assert_out_has "V25b: … and the mode is published" "SPECK_GATE_FILTER=strings-only"
+run_lint "$WORK/v25" --no-strings-only
+assert_rc      "V25c: --no-strings-only restores the pre-v10 whole-file read" 1
+assert_out_has "V25d: … and publishes THAT mode" "SPECK_GATE_FILTER=whole-file"
+cat > "$WORK/v25/.speck/project.json" <<'EOF'
+{"project_id":"test","play_level":"sprint","banned_language":{"strings_only":false}}
+EOF
+run_lint "$WORK/v25"
+assert_rc      "V25e: banned_language.strings_only=false does the same from config" 1
+run_lint "$WORK/v25" --strings-only
+assert_rc      "V25f: … and the flag still outranks the config" 0
+
+# V26/V27 — the filter is a load-bearing dependency, not a decoration. When it cannot run,
+# an EMPTY result reads as "term compliant": a crashing filter used to render the whole gate
+# green. It is an invocation error now.
+#
+# The lint calls the filter on TWO paths — once for --parse-report, then once per term — and
+# they must be pinned SEPARATELY. A single fixture whose filter dies on everything only ever
+# reaches the first one, so the per-term guard could be deleted and the assertion stay green.
+# V27's stub therefore answers --parse-report correctly and dies only on a term.
+mk_broken_filter_rig() { # <dir> <python-body-file-content>
+  local d="$1" body="$2"
+  mkdir -p "$d/fakebin/lib"
+  cp "$SCRIPT_DIR/banned-language-lint.sh" "$d/fakebin/lint.sh"
+  cp "$SCRIPT_DIR/lib/text.sh" "$d/fakebin/lib/text.sh"
+  printf '%s' "$body" > "$d/fakebin/filter-forbidding-context.py"
+}
+run_rig() { # <dir>
+  set +e
+  LAST_OUT="$(cd "$1" && bash "$1/fakebin/lint.sh" 2>&1)"
+  LAST_RC=$?
+  set -e
+}
+
+mkproj "$WORK/v26" <<'EOF'
+| revolutionize | UI | hype verb | improve |
+EOF
+mkdir -p "$WORK/v26/src"
+echo 'export const t = "revolutionize";' > "$WORK/v26/src/a.ts"
+mk_broken_filter_rig "$WORK/v26" 'import sys
+sys.stderr.write("boom\n")
+raise SystemExit(3)
+'
+run_rig "$WORK/v26"
+assert_rc      "V26a: a filter that cannot report parse status is an invocation error" 2
+assert_out_has "V26b: … rather than an unbacked SPECK_GATE_UNPARSED=0" "could not report parse status"
+
+# V27 — the per-term call, isolated: --parse-report succeeds, the term call dies.
+mkproj "$WORK/v27" <<'EOF'
+| revolutionize | UI | hype verb | improve |
+EOF
+mkdir -p "$WORK/v27/src"
+echo 'export const t = "revolutionize";' > "$WORK/v27/src/a.ts"
+mk_broken_filter_rig "$WORK/v27" 'import sys
+if "--parse-report" in sys.argv:
+    for ln in sys.stdin.read().splitlines():
+        if ln.strip():
+            print("strings\t" + ln.strip())
+    raise SystemExit(0)
+sys.stderr.write("boom on a term\n")
+raise SystemExit(3)
+'
+run_rig "$WORK/v27"
+assert_rc        "V27a: a hit filter that dies on a TERM is an invocation error too" 2
+assert_out_has   "V27b: … naming the filter it refused to proceed without" "hit filter"
+assert_out_lacks "V27c: … and never prints the green it would have inherited" "No banned-language violations found"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# V29–V31 (#98.2) — the two mechanisms that turned a real downstream repo RED under the
+# v10 any-depth default, on code the team did not write.
+#
+#   REAL EXIT=1 · ❌ "QA" — 58 hit(s) · SUBJECT=230 · UNPARSED=142
+#   …/android/app/.cxx/Debug/…/components/Props.cpp.o: binary file matches
+#
+#   1. `app` is a SCOPE_SEGMENT, so `android/app/**` became a scope ROOT — and the CMake
+#      object cache under it, `android/app/.cxx/**`, contains directories literally named
+#      `src` and `components`, which became scope roots of their own (~30 of them).
+#   2. rg's binary-match line carries NO `:line:`, and the visibility mask is applied PER
+#      LINE. 142 of 230 subject files were therefore read WHOLE — 62% of a scan reporting
+#      SPECK_GATE_FILTER=strings-only.
+#
+# THE FIXTURE IS DERIVED FROM THE SHIPPED TEMPLATE. Every other fixture in this file
+# invents a one-row §7, and that is structurally why 12 mutations and 107 assertions never
+# saw this class: nobody writes "QA" into a hand-typed fixture. It arrives in
+# product-contract-template.md's OWN boilerplate —
+#     - ❌ QA/simulator/evidence language ("test mode", "QA", "fixture", "simulator")
+# — so every project generated from the template carries it, and a fixture that omits the
+# boilerplate cannot reproduce what the shipped template actually produces.
+TEMPLATE_PC="$SCRIPT_DIR/../templates/project/product-contract-template.md"
+TEMPLATE_CLASSES="$(awk '
+  /^### Banned Phrase Classes/ { in_s=1; print; next }
+  /^### / && in_s { in_s=0 }
+  in_s { print }
+' "$TEMPLATE_PC" 2>/dev/null || true)"
+
+if ! grep -qF '"QA"' <<<"$TEMPLATE_CLASSES"; then
+  # Not a skip. A fixture that silently degrades to hand-typed terms is the defect.
+  _bad "V29-pre: could not read the shipped Banned Phrase Classes out of $TEMPLATE_PC"
+else
+  _ok "V29-pre: the fixture's §7 is the SHIPPED template's boilerplate, not hand-typed"
+
+  # V29 — a nested build cache under a product-surface segment. The dot-directory is named
+  # `.buildcache`, NOT `.cxx`: `.cxx` is in DENY_SEGMENTS for speed, and a fixture that used
+  # it would stay green with the general rule deleted. The SHAPE is what is under test.
+  mkproj "$WORK/v29" <<'EOF'
+| revolutionize | UI | hype verb | improve |
+EOF
+  printf '\n%s\n' "$TEMPLATE_CLASSES" >> "$WORK/v29/specs/projects/test/product-contract.md"
+  CACHE="$WORK/v29/android/app/.buildcache/Debug/arm64-v8a/CMakeFiles/appmodules.dir"
+  mkdir -p "$WORK/v29/android/app/src/main/java/com/x" \
+           "$CACHE/react/renderer/components" "$CACHE/_CMakeLTOTest/src"
+  echo 'public class App { String s = "Improve your day"; }' \
+    > "$WORK/v29/android/app/src/main/java/com/x/App.java"
+  # Text copy inside the cache, in dirs named `components` and `src` — the two segments
+  # that made ~30 cache directories into scope roots on the real repo.
+  echo 'static const char *k = "QA fixture in test mode";' \
+    > "$CACHE/react/renderer/components/Props.cpp"
+  echo 'static const char *g = "simulator";' > "$CACHE/_CMakeLTOTest/src/gen.cpp"
+  # …and a compiled object beside them, so the fixture carries BOTH mechanisms where the
+  # real repo carried both.
+  printf 'ELF\0\0\0 QA release build\n' > "$CACHE/react/renderer/components/Props.cpp.o"
+  run_lint "$WORK/v29"
+  assert_rc        "V29a: a build cache under a scope segment does not turn the gate red" 0
+  assert_out_lacks "V29b: … no term fires out of it" '"QA"'
+  assert_out_lacks "V29c: … including the multi-word one" '"test mode"'
+  assert_out_lacks "V29d: … and the cache never became a scope ROOT" ".buildcache"
+  assert_out_has   "V29e: … while the real surface under android/app IS the subject" "SPECK_GATE_SUBJECT=1"
+  assert_out_has   "V29f: … and it was reached at any depth, not by giving up on scope" \
+    "SPECK_GATE_SCOPE=**/src/**"
+
+  # V30 — the binary half, ISOLATED: a binary file directly under a real `components/`
+  # surface, no dot-directory anywhere. V29's scope fix cannot reach it, so this pins the
+  # `path:line:` shape enforcement in scan_term on its own.
+  mkproj "$WORK/v30" <<'EOF'
+| revolutionize | UI | hype verb | improve |
+EOF
+  printf '\n%s\n' "$TEMPLATE_CLASSES" >> "$WORK/v30/specs/projects/test/product-contract.md"
+  mkdir -p "$WORK/v30/components/assets"
+  echo 'export const Logo = () => <p>Improve your day</p>;' > "$WORK/v30/components/Logo.tsx"
+  printf 'icns\0\0\0 QA release build\n' > "$WORK/v30/components/assets/logo.icns"
+  run_lint "$WORK/v30"
+  assert_rc        "V30a: a binary asset under a scope dir does not convict the repo" 0
+  assert_out_lacks "V30b: … rg's line-number-less binary notice never reaches the tally" \
+    "binary file matches"
+  assert_out_lacks "V30c: … so the term does not fire" '"QA"'
+  assert_out_has   "V30d: … and it was NOT green by skipping the file — it is in the subject set" \
+    "SPECK_GATE_SUBJECT=2"
+  assert_out_has   "V30e: … counted honestly as a file the lexer could not read" \
+    "SPECK_GATE_UNPARSED=1"
+  # grep's -I skips binaries and rg's does not, so this is exactly #85's shape: without the
+  # shape enforcement the gate's verdict depends on which binary is on PATH.
+  if command -v rg >/dev/null 2>&1; then
+    assert_branches_agree "V30f: rg and the grep fallback agree on a binary asset (#85)" "$WORK/v30"
+  else
+    echo "SKIP: V30f — ripgrep not installed"
+  fi
+
+  # V31 — the discriminator. V29 and V30 are both satisfiable by a gate that stopped
+  # convicting anything; genuine copy in the SAME two trees has to still exit 1.
+  echo 'public class Hype { String s = "We revolutionize your QA in test mode"; }' \
+    > "$WORK/v29/android/app/src/main/java/com/x/Hype.java"
+  run_lint "$WORK/v29"
+  assert_rc      "V31a: real copy in the same tree still exits 1" 1
+  assert_out_has "V31b: … the template's own phrase class fires on it" '"QA"'
+  echo 'export const Hero = () => <p>Try test mode in the simulator</p>;' \
+    > "$WORK/v30/components/Hero.tsx"
+  run_lint "$WORK/v30"
+  assert_rc      "V31c: … and so does copy beside the binary asset" 1
+  assert_out_has "V31d: … reported from the real surface, never from the binary" "Hero.tsx"
+fi
+
+# V28 — the gate-liveness canary must inject a defect THIS gate is right to catch.
+#
+# The canary writes one file per extension-class present under the gate's scope and asserts the
+# gate goes red on every one. Before v10 it wrote a bare line of prose into `src/__speck_canary__.ts`
+# — which from v10 is not copy but a run of identifiers, so the gate stayed (correctly) green and
+# the probe read that green as GATE_DISARMED.P1 on EVERY source surface at once. A canary whose
+# "defect" the gate is right to ignore measures nothing; it manufactures a P1.
+#
+# This asserts the contract across the canary's own EXT_CLASSES, by calling the real provider —
+# not a copy of it — so the two cannot drift apart again.
+CANARY_LIB="$SCRIPT_DIR/validation/canary-lib.sh"
+CANARY_DEF="$SCRIPT_DIR/validation/canaries/banned-language.canary"
+if [[ -f "$CANARY_LIB" && -f "$CANARY_DEF" ]]; then
+  mkproj "$WORK/v28" <<'EOF'
+| revolutionize | UI | hype verb | improve |
+EOF
+  mkdir -p "$WORK/v28/src"
+  # shellcheck source=/dev/null
+  ( set +u; . "$CANARY_LIB" ) >/dev/null 2>&1 || true
+  set +u
+  . "$CANARY_LIB" >/dev/null 2>&1
+  CANARY_EXTS="$(grep -E '^EXT_CLASSES=' "$CANARY_DEF" | head -n1 | sed -e 's/^EXT_CLASSES="//' -e 's/"$//')"
+  set -u
+  dark=""
+  for ext in $CANARY_EXTS; do
+    rm -f "$WORK/v28/src/__speck_canary__".*
+    provide_banned_language_write "$WORK/v28" "src/__speck_canary__.$ext" "$ext" \
+      "$WORK/v28/specs/projects/test" "revolutionize" >/dev/null 2>&1
+    run_lint "$WORK/v28"
+    [[ "$LAST_RC" -eq 1 ]] || dark="$dark $ext"
+  done
+  rm -f "$WORK/v28/src/__speck_canary__".*
+  if [[ -z "$CANARY_EXTS" ]]; then
+    _bad "V28: could not read EXT_CLASSES from the canary record"
+  elif [[ -z "$dark" ]]; then
+    _ok "V28: the banned-language canary's injected defect is caught on every EXT_CLASS it declares"
+  else
+    echo "  dark surfaces:$dark" >&2
+    _bad "V28: the banned-language canary injects a defect this gate does not catch"
+  fi
+else
+  echo "SKIP: V28 — canary-lib.sh / banned-language.canary not present in this sync"
+fi
 
 echo ""
 echo "Results: $pass passed, $fail failed"

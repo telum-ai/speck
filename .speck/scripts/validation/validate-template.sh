@@ -464,13 +464,32 @@ case "$validation_type" in
     bash "$SCRIPT_DIR/validators/validate-visual-assets.sh" "$file_path" "$strict"
     ;;
   readiness-evidence)
-    bash "$SCRIPT_DIR/validators/validate-readiness-evidence.sh" "$(dirname "$file_path")" "$strict"
+    # BOTH run, and the exit codes are COMBINED. Under `set -e` a sequential pair means the second
+    # check is unreachable whenever the first aborts: a report claiming SHIP-RC with no LARP
+    # evidence printed only the readiness failure, and its MISSING Mutation Record section was
+    # never reported at all — the section-level defect hid behind an unrelated one, and surfaced
+    # only once the claim was lowered to IMPL-GREEN. A validator you cannot reach is not a gate.
+    rc=0
+    bash "$SCRIPT_DIR/validators/validate-readiness-evidence.sh" "$(dirname "$file_path")" "$strict" || rc=1
+    # The §🧬 Mutation Record lives in the SAME primitive as the harden report's Mutation-Proof
+    # line, so it is enforced by the SAME script rather than by a second copy that drifts. Binds
+    # only to v10-vintage reports (see validate-harden-report.sh) — every report already on disk
+    # is exempt, which is why this needs no data migration.
+    bash "$SCRIPT_DIR/validators/validate-harden-report.sh" --mutation-record-only $strict_flag "$file_path" || rc=1
+    exit $rc
     ;;
   traceability-matrix)
     # Default (conservation) mode here; epic-validate invokes the validator directly with --require-evidence.
     bash "$SCRIPT_DIR/validators/validate-traceability-matrix.sh" "$file_path"
     ;;
-  harden-report|story-adjust-report|epic-adjust-report|project-adjust-report|seam-contract)
+  harden-report)
+    # WAS: exempt from ALL structural validation ("passed placeholder check, no additional
+    # structural sub-validator needed"). That exemption made every section /harden's own template
+    # declares unenforceable by construction — an agent could delete §2b and the Mutation-Proof
+    # line and every gate stayed green. This is the chokepoint the mutation-record work needed.
+    bash "$SCRIPT_DIR/validators/validate-harden-report.sh" $strict_flag "$file_path"
+    ;;
+  story-adjust-report|epic-adjust-report|project-adjust-report|seam-contract)
     # Passed placeholder check, no additional structural sub-validator needed
     exit 0
     ;;

@@ -261,6 +261,29 @@ test('runPostUpgradeMigrations: 9.6 → 9.7 runs NOTHING (old no-op behaviour he
   }
 });
 
+test('runPostUpgradeMigrations: refuses a non-workspace dir directly, and scaffolds nothing', () => {
+  // Defense-in-depth, not the primary guard: migrateCommand() already refuses a non-workspace
+  // dir before it ever reaches this function, and the only shipped caller (upgrade.js) invokes
+  // it after saveVersion() has written .speck/VERSION. This test targets runPostUpgradeMigrations
+  // itself so a FUTURE direct caller (bypassing migrateCommand) cannot silently scaffold
+  // .speck/project.json into a directory that was never a Speck workspace — recordMigration()
+  // does `mkdirSync(dirname(p), { recursive: true })` on whatever targetDir it is handed.
+  const dir = tempTarget(false); // no .speck/ at all
+  try {
+    writeFileSync(join(dir, 'readme.txt'), 'just some directory\n');
+    let ran = 0;
+    const registry = [fakeMigration('m-should-not-run-either', () => { ran += 1; })];
+    assert.throws(
+      () => runPostUpgradeMigrations(dir, '9.6.0', '10.0.0', { registry }),
+      /Not a Speck workspace/,
+    );
+    assert.equal(ran, 0, 'no migration may execute outside a workspace');
+    assert.ok(!existsSync(join(dir, '.speck')), 'runPostUpgradeMigrations must not create .speck/');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('registerMigration: the module registry accepts a migration and rejects a bad one', () => {
   const before = getRegisteredMigrations().length;
   assert.ok(before >= 1, 'the built-in template_version migration ships registered');
@@ -728,6 +751,181 @@ test('readAppliedLedger: a BARE-STRING entry counts as applied, so it never re-r
     assert.deepEqual(result.skipped, ['m-legacy']);
     assert.deepEqual(result.applied, []);
     assert.equal(ran, 0, 'a completed migration must never re-run');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* ===========================================================================
+ * #98 — the §6a Scope + Subject column insert.
+ *
+ * These use a dynamic import rather than extending the module's top-level import list, purely to
+ * keep the edit surface of this file to one appended block.
+ * =========================================================================== */
+
+const LEGACY_6A = [
+  '# Evidence Contract',
+  '',
+  '## 6. Required Static Evidence',
+  '',
+  '### 6a. CI-Enforced Gate Registry',
+  '',
+  '| Gate ID | Command / Script | Stage | Domain | Canary | Waiver |',
+  '|---------|------------------|-------|--------|--------|--------|',
+  '| banned | `.speck/scripts/banned-language-lint.sh` | pre-commit | copy | banned-language | — |',
+  '| slow-e2e | `npx playwright test` | ci:push | e2e | — | waived DEC-123 |',
+  '',
+  '## 7. Required Live-Service Evidence',
+  '',
+  '| Endpoint | Expected |',
+  '|----------|----------|',
+  '| /health | 200 |',
+  '',
+].join('\n');
+
+test('#98: inserts Scope + Subject after Domain, preserving every existing cell', async () => {
+  const { insertGateRegistryColumns } = await import('./migrate.js');
+  const dir = tempTarget(true);
+  try {
+    const f = join(dir, 'evidence-contract.md');
+    writeFileSync(f, LEGACY_6A);
+    assert.equal(insertGateRegistryColumns(f), true, 'a legacy 6-column §6a must be widened');
+
+    const out = readFileSync(f, 'utf-8').split('\n');
+    assert.equal(
+      out[6],
+      '| Gate ID | Command / Script | Stage | Domain | Scope | Subject | Canary | Waiver |',
+      'the two new labels go between Domain and Canary',
+    );
+    assert.match(out[7], /^\|[-| ]+\|$/, 'separator stays a well-formed markdown separator');
+    assert.equal(
+      out[7].split('|').length,
+      out[6].split('|').length,
+      'separator column count must track the widened header',
+    );
+
+    // THE ASSERTION THAT MATTERS: the pre-existing cells did not shift a column. A canary key that
+    // lands in the Scope cell reads as an un-canaried gate; a `waived DEC-123` that lands in Canary
+    // reads as an unknown canary key AND an unwaived dark gate.
+    assert.equal(
+      out[8],
+      '| banned | `.speck/scripts/banned-language-lint.sh` | pre-commit | copy | — | — | banned-language | — |',
+    );
+    assert.equal(
+      out[9],
+      '| slow-e2e | `npx playwright test` | ci:push | e2e | — | — | — | waived DEC-123 |',
+    );
+
+    // The §7 table in the same document is NOT a gate registry and must be untouched.
+    assert.ok(readFileSync(f, 'utf-8').includes('| Endpoint | Expected |'), '§7 header untouched');
+    assert.ok(readFileSync(f, 'utf-8').includes('| /health | 200 |'), '§7 row untouched');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('#98: the column insert is idempotent by inspection, not only by ledger', async () => {
+  const { insertGateRegistryColumns } = await import('./migrate.js');
+  const dir = tempTarget(true);
+  try {
+    const f = join(dir, 'evidence-contract.md');
+    writeFileSync(f, LEGACY_6A);
+    insertGateRegistryColumns(f);
+    const once = readFileSync(f, 'utf-8');
+    // A `.speck/` re-sync can lose the ledger. If a second run widened the table again, every
+    // consumer would read Canary out of the Subject cell — a corrupted artifact with no ledger
+    // entry to explain it.
+    assert.equal(insertGateRegistryColumns(f), false, 'a second run must report no change');
+    assert.equal(readFileSync(f, 'utf-8'), once, 'and must leave the file byte-identical');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('#98: a migrated contract still parses correctly in validate-gate-liveness.sh', async () => {
+  // The producer/consumer round-trip, across the migration. Asserting on the markdown alone proves
+  // the string is shaped right; this proves the CONSUMER agrees — the waiver must still be found in
+  // its (now shifted) real column, which is the failure mode a mid-table insert causes.
+  const { insertGateRegistryColumns } = await import('./migrate.js');
+  const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+  const validator = join(repoRoot, '.speck', 'scripts', 'validation', 'validators', 'validate-gate-liveness.sh');
+  if (!existsSync(validator)) return;   // running from a consumer sync without the validators
+
+  const dir = tempTarget(true);
+  try {
+    const f = join(dir, 'evidence-contract.md');
+    writeFileSync(f, LEGACY_6A);
+    insertGateRegistryColumns(f);
+    const r = spawnSync('bash', [validator, f], { encoding: 'utf-8' });
+    const out = `${r.stdout}${r.stderr}`;
+    assert.match(out, /GATE_WAIVER_UNBACKED\.P2.*slow-e2e/, 'the Waiver cell must still be read as a waiver');
+    assert.match(out, /DEC-123/, 'and its DEC must survive the insert intact');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('#98: the column insert is registered on the v10 lane', async () => {
+  const { getRegisteredMigrations: reg, GATE_REGISTRY_SCOPE_SUBJECT_ID } = await import('./migrate.js');
+  const m = reg().find(x => x.id === GATE_REGISTRY_SCOPE_SUBJECT_ID);
+  assert.ok(m, 'a breaking §6a schema change with no registered migration is not shippable');
+  assert.equal(m.appliesTo(9, 10), true, 'must fire on the 9 → 10 crossing');
+  assert.equal(m.appliesTo(null, 10), true, 'and on an unknown origin (a hand-run `speck migrate`)');
+  assert.equal(m.appliesTo(10, 10), false, 'but not on a 10.x → 10.y upgrade');
+});
+
+/* --- v10 banned_language.scope default flip (cluster W5) ------------------------------
+ *
+ * The flip itself is a code default, not an artifact edit, so it is tempting to ship it with
+ * no migration at all. That is exactly the failure: a DEFAULT is invisible, and a team whose
+ * pre-commit gate silently starts inspecting a thousand previously-unreached files has nothing
+ * in the diff to explain why. The migration writes the resolution down per project, so the
+ * change is legible and the opt-out is one word.
+ */
+
+test('#98.1: the banned_language.scope flip is registered on the v10 lane', async () => {
+  const { getRegisteredMigrations: reg, BANNED_LANGUAGE_SCOPE_ID } = await import('./migrate.js');
+  const m = reg().find(x => x.id === BANNED_LANGUAGE_SCOPE_ID);
+  assert.ok(m, 'a default flip that changes what a shipped gate inspects needs a migration');
+  assert.equal(m.appliesTo(9, 10), true, 'must fire on the 9 → 10 crossing');
+  assert.equal(m.appliesTo(null, 10), true, 'and on an unknown origin (a hand-run `speck migrate`)');
+  assert.equal(m.appliesTo(10, 10), false, 'but not on a 10.x → 10.y upgrade');
+});
+
+test('#98.1: records the new default for a project that never declared a scope', async () => {
+  const { pinBannedLanguageScope } = await import('./migrate.js');
+  const dir = tempTarget(true);
+  try {
+    const p = join(dir, '.speck', 'project.json');
+    writeFileSync(p, JSON.stringify({ project_id: 'x', play_level: 'sprint' }, null, 2) + '\n');
+    assert.equal(pinBannedLanguageScope(dir), true);
+    const pj = JSON.parse(readFileSync(p, 'utf-8'));
+    assert.equal(pj.banned_language.scope, 'any-depth', 'the new default must be legible in the diff');
+    assert.equal(pj.project_id, 'x', 'and every other key must survive');
+    // Idempotent by INSPECTION, not only by the ledger: a mid-run crash re-runs this.
+    assert.equal(pinBannedLanguageScope(dir), false, 'a second run must be a no-op');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('#98.1: never overrides a scope the project already declared', async () => {
+  const { pinBannedLanguageScope } = await import('./migrate.js');
+  const dir = tempTarget(true);
+  try {
+    const p = join(dir, '.speck', 'project.json');
+    writeFileSync(
+      p,
+      JSON.stringify(
+        { project_id: 'x', banned_language: { scope: 'legacy-root', exclude: ['**/legacy/**'] } },
+        null,
+        2,
+      ) + '\n',
+    );
+    assert.equal(pinBannedLanguageScope(dir), false, 'a deliberate opt-out is an opinion, not a gap');
+    const pj = JSON.parse(readFileSync(p, 'utf-8'));
+    assert.equal(pj.banned_language.scope, 'legacy-root');
+    assert.deepEqual(pj.banned_language.exclude, ['**/legacy/**'], 'sibling keys untouched');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -1,11 +1,30 @@
 # banned-language.canary — Speck gate-liveness canary (#88 Phase 2). Tier A, the reference.
 # Injects a REAL product-contract §7 banned term into one file per extension-class PRESENT under the
-# gate's required scan roots (multi-surface). A gate dark for any surface (the #85 shape) is caught.
+# gate's scan roots (multi-surface). A gate dark for any surface (the #85 shape) is caught.
 DOMAIN=copy
 MECHANISM=add
 TIER=A
 STAGE_IT=true
-REQUIRED_SCOPE="src app pages components public locales content lib"
+#
+# REQUIRED_SCOPE IS A RESIDUAL FALLBACK, NOT THE CONTRACT (#98 §1 / (d)).
+#
+# It used to be the canary's own answer to "where does this gate look", restated independently of
+# the gate. That is precisely the defect #98 filed: this file declared
+#     src app pages components public locales content lib
+# while banned-language-lint.sh's SCOPE_SEGMENTS was
+#     src app pages components public locales i18n
+# — `content` and `lib` canaried and never scanned, `i18n` scanned and never canaried. Two hardcoded
+# lists, already drifted, giving the gate and its own liveness probe a CORRELATED blind spot: in a
+# monorepo neither list resolved, so the canary degraded to GATE_LIVENESS_UNVERIFIED.P2 for the very
+# reason the gate was inert.
+#
+# gate-liveness-probe.sh now reads SPECK_GATE_SCOPE from the gate's own baseline run and overrides
+# this value. This list is used ONLY when a gate publishes no scope at all, and every such use emits
+# GATE_SCOPE_UNREPORTED.P3 so the residue is countable rather than invisible.
+#
+# It is kept BYTE-EQUAL to banned-language-lint.sh's SCOPE_SEGMENTS (pinned by a test in
+# gate-liveness-probe.test.sh) so that even the fallback cannot drift from the gate again.
+REQUIRED_SCOPE="src app pages components public locales i18n"
 EXT_CLASSES="tsx jsx ts js astro vue svelte html htm md mdx php dart swift kt rb py go templ"
 PROVIDER=provide_banned_language
 DESC="A shipped banned term in a rendered surface MUST be caught on every extension-class the gate is contracted to scan."

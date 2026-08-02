@@ -103,10 +103,30 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | GATE_WIRING_DRIFT.P1 | CI_TRUNK_EXCLUDED.P1 | SCRIPT_UNREFERENCED.P1 | GATE_WAIVER_UNBACKED.P2 | GATE_DISARMED.P1 | GATE_LIVENESS_UNVERIFIED.P2 | V8_REPROVE.P1
+- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | GATE_WIRING_DRIFT.P1 | CI_TRUNK_EXCLUDED.P1 | SCRIPT_UNREFERENCED.P1 | GATE_WAIVER_UNBACKED.P2 | GATE_DISARMED.P1 | GATE_LIVENESS_UNVERIFIED.P2 | GUARD_MUTATION_PROVEN | GUARD_MUTATION_GREEN.P2 | GUARD_UNMUTATED.P2 | V8_REPROVE.P1
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix
+
+**Mutation codes (`GUARD_*`) — the one registered set.** They are emitted by
+`.speck/scripts/validation/mutate-guard.sh` as `SPECK_MUTATION_VERDICT=<code>` and consumed here,
+so a mutation record is a value a pipeline can read rather than a markdown cell it cannot. They are
+registered alongside the other finding codes on purpose: the cap mechanism reads codes, and a
+mutation claim that lives only in prose is invisible to it.
+
+- `GUARD_MUTATION_PROVEN` — not a finding. The guard was watched failing at a real, executable
+  production line, with a control that stayed green. Carry it as the evidence for the AC.
+- `GUARD_MUTATION_GREEN.P2` — the mutation provably happened and the suite did not notice. **Honest
+  and non-blocking by design**: making it blocking is what creates the incentive to tune a mutation
+  until it reddens. Record it green, write the scope onto the test, and do not adjust the mutation.
+  Same ethos as `GATE_LIVENESS_UNVERIFIED.P2` — degrade-to-honest on applicability, fail-closed on
+  claims.
+- `GUARD_UNMUTATED.P2` — nothing was measured (no match, a comment or docstring line, a test or
+  fixture path, an already-red target, or a control that reddened too). The guard does **not**
+  discharge its AC at this state; a validation report citing it as proven is drift.
+
+A validation report or harden report whose cited guard carries no `GUARD_*` verdict at all is the
+same class one level up — the claim exists and the measurement does not.
 
 ### 5. Update project-state.md
 

@@ -1,6 +1,192 @@
 # Speck Changelog
 
-## v9.6.0 — 2026-07-30 — Gates that inspected nothing stop reporting green
+## v10.0.0 — 2026-08-02 — Evidence has to be evidence
+
+Fourteen field-filed issues from three Speck-managed products (Streb, Brightstance, Splang)
+collapsed into a handful of mechanisms, and two dominated:
+
+**A gate that reports green having inspected nothing.** A lint whose terms could never match. A
+`--staged` scan matching 0 of 1194 files. A schema probe printing `Found 0 database objects` and
+exiting 0. A witness graph printing `GRAPH_CAP = SHIP` because someone deleted the file that caps it.
+
+**A proof derived from prose the gated party wrote.** `serves` edges minted from any bare `MM-N`
+token in a story body — 10 of 15 false in one project, 8 of them from sentences reading *"None
+claimed"*. A verdict regex that matched negations, so *"MM-1 was NOT judged"* cleared the gate. A
+Discharge cell reading *"OPEN — not discharged"* resolving promise conservation.
+
+In every case the gate ran, passed, and was honest.
+
+This release fixes the instances, lands the chokepoints, and — because it crosses a major — carries
+the artifact changes on a real migration lane rather than deferring them.
+
+> **The v9.6.0 work is included here.** It was developed and committed as 9.6.0 but never tagged;
+> the version was folded into this major so the whole set ships behind one migration.
+
+### ⚠️ What goes red on upgrade day — read this first
+
+- **Your `.git/hooks/pre-commit` gates may have been dark, and this turns them on.** Speck appended
+  its loader to the END of an existing hook. A hook from pre-commit.com, Husky v0.x, or any
+  hand-rolled one ending in `exec …`/`exit 0` ends the shell process, so everything appended was
+  structurally unreachable — chmod succeeded, the marker was in the file, and every commit-path gate
+  was silently dark. The loader is now spliced immediately ABOVE the terminator. From your next sync,
+  `validate-template.sh --strict`, `validate-profile.sh`, `speck_graph.py lint-refs` and the staged
+  banned-language lint run for the first time. Expect them to have something to say. Escapes, in
+  order: fix what they report · `git commit --no-verify` for one commit · move the gate into
+  `.pre-commit-config.yaml` as a `repo: local` hook (the warning prints the YAML).
+  **CRLF (Windows/WSL) hooks are rescued too** — `exec …\r` never matched the terminator scan, so
+  those repos were 100% dark with no warning at all.
+  Speck's block now runs LATER in your hook (above the terminator, not near the top), so it lands
+  after your `export PATH`/nvm/asdf setup and after your own `SKIP_HOOKS` guard — your documented
+  bypass now correctly exempts Speck's gates, which it previously did not.
+- **A malformed `## 7. Banned Language` row now fails the full scan and CI.** The extractor split
+  column 1 on `/` and `,` with no paren awareness, so `| "sett" (Norwegian for rep/set) |` became
+  two unmatchable fragments. Both reported zero hits — indistinguishable from compliance; one project
+  had 12 of 64 rows dead. An unmatchable term is now a **PARSE DEFECT**. Fix the row by balancing the
+  parentheses. **Pre-commit is advisory for this**, so a typo'd row can never make your repo
+  uncommittable — including the commit that fixes it.
+- **Terms that were silently dead will start firing, on code nobody changed.** `"sett" (Norwegian for
+  rep/set)` now extracts as the live term `sett`. Fix the copy, narrow the §7 row, or exclude the
+  file via `banned_language.exclude`. Matching is a fixed string (`-F`) now, not a half-escaped
+  regex, so a term like `C++` or `a|b` no longer behaves as one.
+- **`speck_graph.py check` exits non-zero on a stale or corrupt witness**, and a corrupt or
+  unreadable `witness.json` caps `GRAPH_CAP` at INTEGRATION-GREEN. Destroying the tamper-evidence
+  artifact used to REMOVE the ceiling it exists to enforce. No Speck-shipped hook calls `check`, so
+  no automated gate newly blocks — but if you wired it into CI, run `build` and commit the witness
+  first. An ABSENT witness is a different fact: `GRAPH_UNBUILT.P3`, non-capping, so the v8→v9
+  installed base is not demoted.
+- **`--live --strict` on `validate-schema-drift.sh` now requires `--target`.** `--live` used to
+  connect to whatever was ambient and was once measured emitting 32 confident `SCHEMA_DRIFT.P0` lines
+  against an unrelated project's database. One-line CI fix:
+  `--live --strict --target "$DATABASE_URL" .`. An UNPROVEN or SKIPPED run no longer reads as a pass.
+- **Schema drift is now COLUMN and CONSTRAINT grain.** #64 G1 was filed, closed, and its repair
+  shipped in v7.15 — then the class recurred six weeks later with database WRITES DESTROYED, because
+  the probe inventoried objects while both divergences were a column and a constraint. The column
+  that destroyed every write was `coaching_sessions.draft_id`. A project passing this gate since
+  v7.15 can now report real drift; the finding names the table, the column, and the declaring
+  migration file.
+- **`serves` edges now come from story frontmatter, not prose.** Run
+  `speck_graph.py migrate --lift-serves` — it DRY-RUNS by default and prints every current
+  prose-derived edge with its source line, so you can see what would be asserted on your behalf
+  before writing it. Registered on the v10 lane.
+- **Promise conservation requires a structured token.** A Discharge, DEC or pilot-gated Backing cell
+  carrying only prose no longer resolves a row. Find yours with:
+  `bash .speck/scripts/validation/validators/validate-traceability-matrix.sh specs/projects/<id>`
+- **Harden reports are structurally validated for the first time, at EVERY vintage.** The four base
+  sections (`## 1. Defect Description` / `## 2. Root Cause Analysis` / `## 3. Remediations` /
+  `## 4. Readiness Re-assessment`) are now required unconditionally — deliberate, and disclosed
+  rather than vintage-gated, because those four headings have been byte-identical in the template
+  since v7.13.0, so only a hand-written report that never followed the structure is convicted. Find
+  affected files with:
+  `grep -rLE '^## 1\. Defect Description' --include='*harden-report*.md' specs/`
+- **`check-replace-markers.sh` catches genuine markers it used to miss** — one ending the line, or
+  whose hint opens with a quote or backtick, on artifacts previously reported clean.
+
+### New — mutation as evidence (CP-6)
+
+Three issues asked for "prove the guard actually fires" in three vocabularies. One primitive:
+
+- **`mutate-guard.sh`** mutates in a THROWAWAY WORKTREE, so there is nothing to revert and an
+  interrupted run cannot leave a mutated production file behind. It refuses a pattern that does not
+  match exactly `--match-count` times, a comment or docstring, a test/fixture target, a byte-identical
+  edit, an already-red target, and a run with no GREEN CONTROL — the control is what distinguishes
+  "I broke the file" from "I hit the predicate".
+- **`## 🧬 Mutation Record`** in the story and epic validation-report templates, and a Counter-Test
+  sweep (§2b) plus Guardrail Mutation-Proof and Class Recurrence Check in the harden template.
+  Verdicts: `GUARD_MUTATION_PROVEN` · `GUARD_MUTATION_GREEN.P2` · `GUARD_UNMUTATED.P2`.
+- **`harden-report` is no longer exempt from structural validation.** It previously fell through
+  `validate-template.sh` to `exit 0`, which meant any section these rules added was unenforceable
+  prose by construction. That routing was the actual chokepoint.
+- **KNOWN LIMIT, stated rather than implied:** the validator enforces that a verdict was RECORDED,
+  not that a mutation was RUN. `--verify-receipt` cross-checks a receipt where one exists and
+  degrades to `RECEIPT_MISSING.P2` (non-blocking) where it does not.
+
+### New — `GATE_VACUOUS` (the third verdict)
+
+v9-era §6a proved a gate was WIRED and LOAD-BEARING. Neither answers the third question: **did it
+look at anything?** Gates now publish `SPECK_GATE_SCOPE` / `SUBJECT` / `PREDICATES` / `MODE` on every
+exit path, §6a carries `Scope` and `Subject` columns, and `GATE_VACUOUS.P1` fires when a gate exits 0
+having inspected an empty corpus over a non-empty scope — **or** having evaluated zero predicates.
+Both dimensions are required: this family's vacuity is usually a dead predicate set, not an empty
+subject set. A legitimately empty run (`GATE_EMPTY_LEGITIMATE`) is a note, never a finding.
+
+### New — the migration lane
+
+`registerMigration()` + a per-project applied ledger in `.speck/project.json`. Each migration runs at
+most once, records after EACH step so a crash mid-run resumes, and a throw records `failed` (never
+`applied`) so siblings continue and the id stays pending. `speck migrate --list/--run`, guarded on
+workspace identity.
+
+### New configuration
+
+- **`banned_language.scope`** — `"any-depth"` is now the DEFAULT (a `src`/`app`/… directory is in
+  scope wherever it sits, so a monorepo's `frontend/src/**` is finally reached; the old root-anchored
+  globs matched 0 of 1194 tracked files in one repo and 0 of 590 in another). `"legacy-root"` restores
+  the old behaviour. Carried by `v10-banned-language-scope-any-depth`.
+- **`--strings-only`** (default) — §7 terms match locale VALUES and string literals / JSX text, never
+  keys, identifiers, imports or comments. This is what made the scope default safe to flip: without
+  it, Speck's own shipped phrase class `("our backend", "API", "database")` convicted
+  `import { createClient } from "./api"`. Files the lexer cannot parse are reported in
+  `SPECK_GATE_UNPARSED` rather than silently scanned whole or silently skipped.
+- **`banned_language.exclude`** (array, additive), **`exclude_defaults`** (bool), `--exclude-glob`,
+  and `--advisory-parse-defects` (implied by `--staged`).
+
+### Gates that stop lying — no action needed
+
+- **A fully-filled `evidence-contract.md` or `product-contract.md` passes validation for the first
+  time.** Both validators ran an unanchored `grep -q "REPLACE_BEFORE_SHIP"` matching the bare word
+  inside those artifacts' OWN convention prose — and since `pre-commit-hook.sh` routes staged specs
+  through `validate-template.sh --strict`, projects reached a state where **Speck's own generated
+  output could not be committed**.
+- **`[NEEDS USER REVIEW]` is no longer rejected as scaffold residue** — a marker Speck's own templates
+  mandate agents emit. The allowlist now lives in one file read by both sides.
+- **The banned-language verdict no longer depends on whether ripgrep is installed.** `rg --files`
+  honours `.gitignore` and `find` did not — the same tree scored exit 0 with rg and exit 1 without it.
+- **Build caches and binaries are never scanned.** A dot-directory is refused as a scope root under
+  any-depth (an `android/app/.cxx/**` cache produced 58 convictions on compiled `.o` files), and
+  binary matches — which carry no line number, so the visibility mask provably cannot reach them —
+  are dropped.
+- **Speck's own machinery, vendored trees and test files are excluded** — `.speck`, `specs`, `.venv`,
+  `Pods`, `target`, `DerivedData`, `.gradle`, `coverage`, and language-agnostic test globs, because a
+  vocabulary guard whose regex literals ARE the banned words must not be convicted by the gate it
+  protects.
+- **A `>10`-hit term no longer aborts the run** (SIGPIPE under `pipefail` killed it at 141 with every
+  remaining term unscanned).
+- **A §6a Domain like `backend-tests` now matches its canary.** BSD `tr` parsed the leading `-` of
+  `tr '-_ '` as an option and died, so the domain split produced nothing and THE CANARY NEVER RAN.
+  Failed closed, which is why it survived — the symptom was a cap nobody traced to a quoting bug.
+- **Speck read the wrong version for any workspace whose path contains an apostrophe**, and
+  `.speck/VERSION` is now authoritative over `project.json`'s advisory `speck_version` — `migrate.sh`
+  wrote a hardcoded `7.0.0` there and nothing updated it, so `detect-version.sh` reported **7.0.0 for
+  a workspace on 9.5.0**.
+- **`validate-visual-assets.sh`**: WebP assets could never pass on macOS (BSD `od` through
+  `cut -d' '` truncated the signature), and a single apostrophe anywhere on a manifest row made
+  `xargs` exit on an unterminated quote and `set -e` kill the validator — 7 of 23 `ui-spec.md` files
+  in one project failed strict validation for that reason alone.
+- **`validate-felt-axis.sh` / `validate-taste-axis.sh`** required a parenthetical axis list, rejecting
+  a template-conformant `## 🧭 Four-Axis Readiness` at the FIRST check so no real assertion was
+  reached. Both files' own comments called the match "loose"; the regex disagreed.
+
+### New — `.speck/scripts/lib/text.sh`
+
+Five defects across four validators were one class: a bash text idiom used for structured-data work
+without accounting for `set -euo pipefail`. `sp_trim` (no `xargs` — it does shell QUOTE PROCESSING,
+crashing on an apostrophe and silently stripping quotes on the success path), `sp_head` (never
+SIGPIPEs), `sp_split_toplevel` (paren-aware), `sp_parens_balanced` (the dead-term tell),
+`sp_match_exact` (so `table:order` cannot false-PASS against `table:orders`).
+
+### Tests
+
++11 suites wired into `npm test`, several for scripts that had never had one. `scaffold-clean.test.sh`
+builds a project from the current templates verbatim and asserts every shipped scanner returns zero
+findings — **paired with a negative control**, because a scaffold-clean assertion alone is passed by a
+scanner that over-excludes. Hook reachability is asserted BY EXECUTION, not by grepping for the
+marker; a grep passes on exactly the dead-block case it fixes. `version-parity.test.js` fails when a
+`*.test.sh` exists but is not in the chain, and runs LAST so it can never suppress the suites it
+asserts about.
+
+Cross-repo acceptance vs v9.5.0 across five real projects: no green→red flip. npm test green.
+
+## v9.6.0 — folded into v10.0.0 (never tagged)
 
 Fourteen field-filed issues from three Speck-managed products collapsed into a handful of
 mechanisms, and the same one dominated: **a gate that reports green having inspected nothing.**

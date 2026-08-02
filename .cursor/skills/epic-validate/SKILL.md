@@ -292,6 +292,33 @@ Each auditor returns PASS | FAIL | PARTIAL with evidence.
    - Edge case verification
    - Stakeholder demos
 
+5b. Mutation-prove every guard you are about to CITE (fills `## 🧬 Mutation Record`):
+
+   - A green suite is not evidence. The report's Evidence column names specific guards as the reason
+     an epic-level AC is discharged, and a guard is not evidence until someone watched it fail.
+     **One row per guard whose path appears in the Evidence column**, not one per test in the suite —
+     a suite-wide version of this section would be filled in mostly with fiction and become the
+     surrogate proof it exists to kill.
+   - For each such guard, run:
+     ```
+     .speck/scripts/validation/mutate-guard.sh \
+       --file <production path> --pattern '<the shipped line>' --replacement '<the defect>' \
+       --red '<the cited guard invocation>' --green '<a control that must STAY green>' \
+       [--expect-count N]
+     ```
+     It mutates inside a **throwaway worktree**, so there is nothing to revert and an interrupted run
+     cannot leave a mutated production file behind. It refuses a pattern that does not match exactly
+     once, a comment or docstring line, and a test or fixture path — the three ways a mutation is
+     silently a no-op. **Transcribe its `SPECK_MUTATION_*` output into the Mutation Record; never
+     type a verdict by hand.**
+   - If the mutation comes back **`GUARD_MUTATION_GREEN.P2`, record it green** and write the honest
+     scope onto the test. **Never tune the mutation until it reddens.** A cited guard carrying
+     `GUARD_UNMUTATED.P2` measured nothing, so it does not discharge its AC at this state.
+   - **Merged-tree rule.** In a fan-out, the Mutation SHA is the MERGE commit and the conductor
+     re-runs each mutation itself, in the merged tree. A worktree-branch SHA is a finding: a mutation
+     proved in worktree *k* is a statement about a tree that no longer exists — and its receipt pins
+     a SHA that will not resolve, so the cross-check below reports it.
+
 6. Generate validation report:
 
    **CRITICAL**: Load and follow the template exactly:
@@ -300,6 +327,28 @@ Each auditor returns PASS | FAIL | PARTIAL with evidence.
    ```
 
    Write output to: `[EPIC_DIR]/epic-validation-report.md`
+
+   **Then cross-check the Mutation Record against the receipts:**
+   ```
+   .speck/scripts/validation/mutate-guard.sh --verify-receipt [EPIC_DIR]/epic-validation-report.md
+   ```
+   - `RECEIPT_VERIFIED` — every cited site resolves to a real line whose pinned content recomputes
+     at the receipt's SHA.
+   - `RECEIPT_MISMATCH.P1` — **blocks.** A cited site contradicts the receipts this repo itself
+     produces: an invented site, a site-less verdict row, a receipt whose content does not
+     recompute, or a report claiming a stronger verdict than the run recorded.
+   - `RECEIPT_MISSING.P2` / `RECEIPT_NO_CITATIONS.P2` — honest degrades, non-blocking. A project that
+     has never emitted a receipt is not held to one; a report with no filled row has recorded
+     nothing to check.
+
+   **Know exactly what this proves, and do not report more than it does.** The cross-check binds a
+   *citation* to a real line at a real SHA — it kills the invented site, the site-less row and the
+   silently-upgraded verdict. It **cannot** prove a mutation was actually run: the receipt is a local
+   file written by a local script, so an agent with shell access can synthesise one. The forgery cost
+   rises from "type a verdict into a cell" to "produce a receipt that recomputes against the real
+   line at the real SHA" — real, bounded, and not a proof of execution. **`RECEIPT_VERIFIED` means
+   the citation is real, never that the mutation happened.** The validator enforces that a verdict
+   was *recorded*, not that a mutation was *run*.
 
 7. Generate punch list:
 

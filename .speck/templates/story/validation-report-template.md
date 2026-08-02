@@ -2,6 +2,7 @@
 speck_version: 8.0
 template_version: "7.11.0"
 artifact_type: validation-report
+mutation_record: required
 readiness_state_claimed: [NO-SHIP | IMPL-GREEN | INTEGRATION-GREEN | UX-RC | API-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
 readiness_state_verified: [NO-SHIP | IMPL-GREEN | INTEGRATION-GREEN | UX-RC | API-RC | COMMERCIAL-RC | SHIP-RC | SHIP]
 felt_axis: [uncovered | ai-verified | human-verified]
@@ -88,6 +89,46 @@ clean_build: [yes/no]
 | Post-deploy healthcheck returns ok | Yes (SHIP) | [evidence] | ✅/⚠️/❌ |
 
 If any required-at-this-state gate is ❌: **Verified state = lower** (drop to highest state where all gates pass).
+
+---
+
+## 🧬 Mutation Record
+
+*A guard is not evidence until someone watched it fail. One row per guard whose path appears in the
+Evidence column above — NOT one row per test in the suite. A suite-wide version of this section
+would be filled in 1200 times, mostly with fiction, and become the surrogate proof it exists to
+kill. The suspect population is small (typically 1–3 per increment) and specific: the guard authored
+in the SAME increment as the fix it protects, because that guard was designed against the author's
+model of the defect — the same model that produced a wrong fix once.*
+
+*Produce each row by running `.speck/scripts/validation/mutate-guard.sh` and transcribing its
+`SPECK_MUTATION_*` output. It mutates inside a throwaway worktree (nothing to revert, and an
+interrupted run cannot leave a mutated production file behind), refuses a pattern that does not
+match exactly once, refuses a comment or docstring line, refuses a test or fixture path, and
+requires a green control so "I hit the predicate" is distinguishable from "I broke the file".*
+
+| Guard cited as evidence | Mutation site | Match count | Tests that went red | Green control that stayed green | Verdict |
+|---|---|---|---|---|---|
+| [GUARD_TEST PATH AND NAME] | [MUTATION_SITE PATH AND LINE] | [MATCH_COUNT] | [RED_TESTS NAMES AND COUNTS] | [GREEN_CONTROL TEST NAME] | [VERDICT_CODE FROM MUTATE GUARD] |
+
+**Verdicts.** `GUARD_MUTATION_PROVEN` · `GUARD_MUTATION_GREEN.P2` — report it green, write the honest
+scope onto the test, and never tune the mutation until it reddens · `GUARD_UNMUTATED.P2` — nothing
+was measured, so the guard does not discharge its AC at this state.
+
+**A guard cited as evidence must import and call the shipped function or the shipped SQL literal**,
+not a transcription of it. A guard that re-derives its own predicate cannot observe its own removal,
+so removing the fix leaves it green — which reads as "the fix is fine" instead of "the guard is
+blind". Source-text assertions are secondary evidence, never load-bearing.
+
+**For a drop / filter / redact guard the survival control outranks the catch control.** Proving bad
+content is caught is satisfied by a guard that drops everything. The bug that ships is over-removal,
+and only "legitimate content survives" can see it.
+
+**Merged-tree rule.** In a fan-out the SHA below is the MERGE commit and the conductor re-ran each
+mutation itself, in the merged tree. A worktree-branch SHA here is a finding: a mutation proved in
+worktree *k* is a statement about a tree that no longer exists.
+
+**Mutation SHA**: [MERGE_COMMIT SHA]
 
 ---
 

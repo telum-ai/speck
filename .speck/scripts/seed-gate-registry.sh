@@ -27,9 +27,15 @@ CONTRACT=""
 # that. GATE_REGISTRY_COLUMNS is now the one place the table's shape is declared; both the header
 # and the row FORMAT string below are derived from it, so a column insert here changes both in
 # lockstep instead of only one of them.
-GATE_REGISTRY_COLUMNS=("Gate ID" "Command / Script" "Stage" "Domain" "Canary" "Waiver")
+#
+# v9.6/v10 (#98) INSERTS `Scope` + `Subject` MID-TABLE, between Domain and Canary. That insert is
+# only safe because both consumers are header-keyed: `Scope`/`Subject` sit exactly where the old
+# positional readers expected `Canary`/`Waiver`, so a positional consumer would read the scope glob
+# as a canary key and the subject assertion as a waiver. The mid-table-insert round-trip test in
+# seed-gate-registry.test.sh is the proof, not this comment.
+GATE_REGISTRY_COLUMNS=("Gate ID" "Command / Script" "Stage" "Domain" "Scope" "Subject" "Canary" "Waiver")
 
-# "| Gate ID | Command / Script | Stage | Domain | Canary | Waiver |"
+# "| Gate ID | Command / Script | Stage | Domain | Scope | Subject | Canary | Waiver |"
 gate_registry_header() {
   local out="|" c
   for c in "${GATE_REGISTRY_COLUMNS[@]}"; do out="$out $c |"; done
@@ -60,19 +66,21 @@ gate_registry_row_fmt() {
 }
 
 # Parse the ci_gates: list-of-maps under evidence_contract: (awk, bash-3.2 safe).
-# Each item: `- id: X` then indented `command:/stage:/domain:/canary:`.
+# Each item: `- id: X` then indented `command:/stage:/domain:/scope:/subject:/canary:`.
 gen_rows() {
   local fmt; fmt="$(gate_registry_row_fmt)"
   awk -v fmt="$fmt" '
     function lead(s){ return match(s,/[^ ]/) ? match(s,/[^ ]/)-1 : 0 }
     function val(line,   v){ v=line; sub(/^[^:]*:[[:space:]]*/,"",v); gsub(/^["'"'"' ]+|["'"'"' ]+$/,"",v); return v }
-    function flush(){ if(id!=""){ c=(canary==""?"—":canary); printf fmt, id, command, stage, (domain==""?"—":domain), c, "—"; printf "\n" } id="";command="";stage="";domain="";canary="" }
+    function flush(){ if(id!=""){ c=(canary==""?"—":canary); printf fmt, id, command, stage, (domain==""?"—":domain), (scope==""?"—":scope), (subject==""?"—":subject), c, "—"; printf "\n" } id="";command="";stage="";domain="";canary="";scope="";subject="" }
     /^[[:space:]]*ci_gates:[[:space:]]*$/ { ins=1; base=lead($0); next }
     ins && /^[[:space:]]*[a-zA-Z_]+:/ && $0 !~ /^[[:space:]]*-/ { if (lead($0) <= base) { flush(); ins=0; next } }
     ins && /^[[:space:]]*-[[:space:]]*id:/ { flush(); id=val($0) }
     ins && /^[[:space:]]*command:/ { command=val($0) }
     ins && /^[[:space:]]*stage:/   { stage=val($0) }
     ins && /^[[:space:]]*domain:/  { domain=val($0) }
+    ins && /^[[:space:]]*scope:/   { scope=val($0) }
+    ins && /^[[:space:]]*subject:/ { subject=val($0) }
     ins && /^[[:space:]]*canary:/  { canary=val($0) }
     END { if (ins) flush() }
   ' "$RECIPE"

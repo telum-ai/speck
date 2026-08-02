@@ -234,11 +234,11 @@ For every validation report at UX-RC or higher:
 
 *The machine-readable registry of the gates this contract relies on — so Speck can check they are actually **wired**, not just declared. A gate that never runs is indistinguishable from a passing one; both leave every validator green, and the dark one manufactures a clean-looking evidence trail. `validate-gate-liveness.sh` diffs each gate's declared stage against what the **committed** hook/CI config actually runs (`GATE_WIRING_DRIFT` when they disagree). Seeded from the recipe's `evidence_contract.ci_gates` by `seed-gate-registry.sh` — don't hand-author unless amending.*
 
-| Gate ID | Command / Script | Stage | Domain | Canary | Waiver |
-|---------|------------------|-------|--------|--------|--------|
-| REPLACE_BEFORE_SHIP:unit-frontend | `npm run test` | pre-push | frontend-tests | — | — |
-| REPLACE_BEFORE_SHIP:banned-language | `.speck/scripts/banned-language-lint.sh` | pre-commit | copy | — | — |
-| REPLACE_BEFORE_SHIP:integration | `pytest tests/integration` | ci:push | backend | — | — |
+| Gate ID | Command / Script | Stage | Domain | Scope | Subject | Canary | Waiver |
+|---------|------------------|-------|--------|-------|---------|--------|--------|
+| REPLACE_BEFORE_SHIP:unit-frontend | `npm run test` | pre-push | frontend-tests | `frontend/src/**` | `tests_collected>0` | — | — |
+| REPLACE_BEFORE_SHIP:banned-language | `.speck/scripts/banned-language-lint.sh` | pre-commit | copy | `src/**,app/**,components/**` | `files>0` | — | — |
+| REPLACE_BEFORE_SHIP:integration | `pytest tests/integration` | ci:push | backend | `backend/**` | `tests_collected>0` | — | — |
 
 **Stage** ∈ `pre-commit | pre-push | commit-msg | ci:push | ci:pull_request | manual`.
 - `manual` = the contract honestly declares this gate off the automatic path (no divergence to detect).
@@ -251,6 +251,16 @@ For every validation report at UX-RC or higher:
 - `—` — un-probed-honest (default; never a finding).
 
 Outcomes: **`GATE_LIVE`** (watched it fail on every injected surface), **`GATE_DISARMED.P1`** (baseline green, defect in the gate's required scope, gate *still* green — the one positive block; hard-blocks only at COMMERCIAL-RC/SHIP-RC), **`GATE_LIVENESS_UNVERIFIED.P2`** (couldn't apply/attribute the canary — unknown key, no green baseline, unsafe-to-probe, infra-bound; degrade-to-honest, caps the ship claim, never blocks dev). Fail-closed on **safety** (a destructive command is never executed) and on **claims**; degrade-to-honest on **applicability**. Runs at `/epic-validate`, `/project-validate`, on-demand at `/audit` — never on push or in the always-on `/recheck` shell.
+
+**Scope + Subject** (Speck v10, #98 — the *vacuity* half). Wiring proves the gate runs; the canary proves it bites; neither answers **did it look at anything**. A gate can be correctly wired, correctly implemented, pass its canary, and inspect an empty corpus — output ✅, exit 0. Zero violations is only meaningful if something was there to violate them.
+- **Scope** — the glob the gate is contracted to cover, **asserted at runtime, never inherited from a tool default**. `validate-gate-liveness.sh` resolves it against `git ls-files`; a scope matching zero tracked files is **`GATE_SCOPE_UNRESOLVABLE.P2`** on its own, before the gate is ever run. (Measured in the field: root-anchored `src/**` in a repo whose product lives under `frontend/src/**` matched 0 of 1194 tracked files while the gate reported ✅ on every commit.)
+- **Subject** — the nonzero count the gate must observe before it may report PASS, or a named assertion: `files>0`, `tests_collected>0`, `not_error_boundary`, `rows_evaluated==rows_declared`.
+
+The mechanism that makes both real is the **gate output contract**: every canonical gate prints, on *every* exit path,
+```
+SPECK_GATE_SCOPE=src/**,app/**   SPECK_GATE_SUBJECT=17   SPECK_GATE_PREDICATES=59
+```
+and `gate-liveness-probe.sh` reads **that** — out of the baseline run it already performs — instead of re-deriving scope from its own list. The third verdict follows: **`GATE_VACUOUS.P1`** when the gate exits 0 with `SUBJECT=0` while its scope resolves to tracked files it should have read, with a scope that resolves to *no* tracked file at all (it can never reach a subject), or with `PREDICATES=0` (it read files and compared them against nothing — this family's vacuity is usually a dead predicate set, not an empty corpus). Bounded by **`GATE_EMPTY_LEGITIMATE`** — `SUBJECT=0` on a *diff-scoped* run whose scope does resolve — a NOTE, never a finding: a staged commit touching no product file is honest. A gate publishing no telemetry is **`GATE_SCOPE_UNREPORTED.P3`**, so the residual guessing is countable rather than invisible.
 
 ---
 

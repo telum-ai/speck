@@ -76,11 +76,11 @@ split_row() {
   done
 }
 
-COL_ID=-1; COL_CMD=-1; COL_STAGE=-1; COL_DOMAIN=-1; COL_CANARY=-1; COL_WAIVER=-1
+COL_ID=-1; COL_CMD=-1; COL_STAGE=-1; COL_DOMAIN=-1; COL_SCOPE=-1; COL_SUBJECT=-1; COL_CANARY=-1; COL_WAIVER=-1
 
 resolve_columns_from_header() {
   split_row "$1"
-  COL_ID=-1; COL_CMD=-1; COL_STAGE=-1; COL_DOMAIN=-1; COL_CANARY=-1; COL_WAIVER=-1
+  COL_ID=-1; COL_CMD=-1; COL_STAGE=-1; COL_DOMAIN=-1; COL_SCOPE=-1; COL_SUBJECT=-1; COL_CANARY=-1; COL_WAIVER=-1
   local i lc
   for (( i=0; i<${#ROW_CELLS[@]}; i++ )); do
     lc="$(printf '%s' "${ROW_CELLS[$i]}" | tr '[:upper:]' '[:lower:]')"
@@ -89,6 +89,8 @@ resolve_columns_from_header() {
       command*)   COL_CMD=$i ;;
       stage*)     COL_STAGE=$i ;;
       domain*)    COL_DOMAIN=$i ;;
+      scope*)     COL_SCOPE=$i ;;
+      subject*)   COL_SUBJECT=$i ;;
       canary*)    COL_CANARY=$i ;;
       waiver*)    COL_WAIVER=$i ;;
     esac
@@ -97,8 +99,36 @@ resolve_columns_from_header() {
 }
 
 # Historical fixed layout: Gate ID | Command / Script | Stage | Domain | Canary | Waiver.
+# Scope/Subject are v10 (#98) and have no pre-v10 position — a headerless legacy table simply has
+# no declared scope, which is honest, not a finding.
 resolve_columns_positional() {
   COL_ID=0; COL_CMD=1; COL_STAGE=2; COL_DOMAIN=3; COL_CANARY=4; COL_WAIVER=5
+  COL_SCOPE=-1; COL_SUBJECT=-1
+}
+
+# --- declared Scope, resolved against the repo (#98 §4) ------------------------------------------
+# The Scope cell is a contract: "these are the files this gate is supposed to cover." A declared
+# scope that resolves to ZERO TRACKED FILES is the Splang/Streb shape from #98 §1 — root-anchored
+# `src/**` in a repo whose product lives under `frontend/src/**`, matching 0 of 1194 files while
+# the gate reported ✅ on every commit. `git ls-files` is the mechanical discriminator, and it is
+# independent of any diff: it answers "can this scope EVER reach a subject", which is what makes it
+# safe to run on a docs-only commit.
+scope_tracked_count() {
+  local scope="$1" tok pathspec total=0 n
+  while IFS= read -r tok; do
+    tok="$(sp_trim "$tok")"
+    [[ -z "$tok" ]] && continue
+    # `src/**`, `**/src/**`, `src/` and `src` all mean "tracked files under a dir named src".
+    pathspec="${tok%/\*\*}"; pathspec="${pathspec%/\*}"; pathspec="${pathspec%/}"
+    case "$pathspec" in
+      '**/'*) pathspec="**/${pathspec#**/}/**" ;;
+      '')     pathspec="**" ;;
+      *)      pathspec="$pathspec/**" ;;
+    esac
+    n="$(git -C "$ROOT" ls-files -- ":(glob)$pathspec" 2>/dev/null | wc -l | tr -d ' ')"
+    total=$(( total + ${n:-0} ))
+  done <<< "$(printf '%s' "$scope" | tr ',' '\n')"
+  printf '%s' "$total"
 }
 
 cell_at() {
@@ -220,8 +250,20 @@ while IFS= read -r row; do
   cmd="$(cell_at "$COL_CMD")"
   stage="$(cell_at "$COL_STAGE")"
   waiver="$(cell_at "$COL_WAIVER")"
+  dscope="$(cell_at "$COL_SCOPE")"
   [[ -z "$gid" || -z "$stage" ]] && continue
   sig="$(gate_sig "$cmd")"
+
+  # Declared scope must be able to reach a subject. An unreachable scope is a finding on its own —
+  # it is the ONE thing a static reader can prove without running the gate, and it is exactly the
+  # case that made a wired, canaried, correctly-implemented gate report ✅ over 0 of 1194 files.
+  case "$dscope" in
+    ""|"—"|"-"|"–"|"N/A"|"n/a") : ;;
+    *)
+      if [[ "$(scope_tracked_count "$dscope")" -eq 0 ]]; then
+        emit_p2 "GATE_SCOPE_UNRESOLVABLE.P2" "$gid — §6a declares scope '$dscope' but it matches ZERO tracked files in this repo (git ls-files). The gate cannot reach a subject; a green run proves nothing."
+      fi ;;
+  esac
 
   # Waiver: skip wiring, but the cited DEC must resolve.
   if printf '%s' "$waiver" | grep -qE 'waived[[:space:]]+DEC-[0-9]+'; then

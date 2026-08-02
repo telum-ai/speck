@@ -246,6 +246,13 @@ Story validation fails if a user-facing story has no evidence for at least the f
 * **WHEN: consumer_product / b2b_saas / internal_tool**: Fill this out as **Banned Language** (user-visible terms, enforced by `banned-language-lint.sh`).
 * **WHEN: infra_service / backend_api**: Fill this out as **Banned System Anti-Patterns / Anti-Conventions** (forbidden architecture/payload practices, e.g., camelCase payload keys when snake_case is required, leaking DB error stacks, or raw SQL queries).
 
+**How the terms below are matched (Speck v10).** `banned-language-lint.sh` scans product-surface directories at any depth (`src/`, `app/`, `pages/`, `components/`, `public/`, `locales/`, `i18n/` — wherever they sit, so a monorepo's `frontend/src/**` is reached), and inside each file it reads only what a **user could read**: locale *values* (never keys), string literals and template literals, and markup text nodes. Identifiers, imports, comments and type names are not copy, so `import { createClient } from "./api"` is not a violation while `"Check the API status"` is. Markdown and plain text count as copy in full. A file the lexer cannot read is scanned whole and counted in `SPECK_GATE_UNPARSED`, so a green result is never quietly resting on files nobody parsed.
+
+Two consequences for how you WRITE this section:
+
+1. **Write each term as it would appear in copy**, not as it appears in code. A term is matched whole-word and case-insensitively, so `revolutionize` catches "Revolutionize"; underscore is a word character, so `revolutionize` does **not** catch `revolutionize_cta`.
+2. **A term that also names a real code symbol is now safe to ban.** Before v10 banning a word like `database` convicted every variable of that name; it no longer does. That is a reason to ban the word your users must not see, rather than a softer synonym.
+
 ### Option A: Banned Language (for UI/Human-facing products)
 
 | Banned Term | Where it appears | Why it's banned | Use instead |

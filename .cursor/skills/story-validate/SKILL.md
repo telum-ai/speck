@@ -222,6 +222,37 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
    - Parse test results: total, passed, failed, skipped
    - If any failures: HALT with detailed error report (unless `--force` flag)
 
+6b. Mutation-prove every guard you are about to CITE (fills `## 🧬 Mutation Record`):
+   - A green suite is not evidence. The report's Evidence column names specific guards as the reason
+     an AC is discharged, and a guard is not evidence until someone watched it fail. The suspect
+     population is small and specific — **one row per guard whose path appears in the Evidence
+     column**, not one per test in the suite. The highest-yield suspect is the guard authored in the
+     same increment as the code it protects, because it was designed against the same model of the
+     behaviour that could be wrong.
+   - For each such guard, run:
+     ```
+     .speck/scripts/validation/mutate-guard.sh \
+       --file <production path> --pattern '<the shipped line>' --replacement '<the defect>' \
+       --red '<the cited guard invocation>' --green '<a control that must STAY green>' \
+       [--expect-count N]
+     ```
+     It mutates inside a **throwaway worktree**, so there is nothing to revert and an interrupted run
+     cannot leave a mutated production file behind. It refuses a pattern that does not match exactly
+     once, a comment or docstring line, and a test or fixture path — the three ways a mutation is
+     silently a no-op. **Transcribe its `SPECK_MUTATION_*` output into the Mutation Record; never
+     type a verdict by hand.**
+   - If the mutation comes back **`GUARD_MUTATION_GREEN.P2`, record it green** and write the honest
+     scope onto the test ("this guard does not observe X"). **Never tune the mutation until it
+     reddens** — that manufactures exactly the evidence the section exists to prevent. A cited guard
+     carrying `GUARD_UNMUTATED.P2` measured nothing, so it does not discharge its AC at this state.
+   - A guard cited as evidence must **import and call the shipped function or the shipped SQL
+     literal**, not a transcription of it — a guard that re-derives its own predicate cannot observe
+     its own removal. For a **drop / filter / redact** guard the required control is that
+     **legitimate content survives**; proving bad content is caught is satisfied by a guard that
+     drops everything, and over-removal is the bug that actually ships.
+   - Each run drops a receipt in `.speck/mutation-receipts/` pinning the SHA, the site, and a content
+     hash of the mutated line. Cross-check the finished report at step 13.
+
 7. Performance validation (if targets specified in spec.md):
    - Extract performance targets from spec.md Non-Functional Requirements
    - Look for performance test files (tests/performance/, tests/load/, etc.)
@@ -507,6 +538,28 @@ Each auditor returns: PASS | FAIL | PARTIAL with evidence
    ```
    
    The template is self-documenting - follow all sections and guidelines within it.
+
+   **Then cross-check the Mutation Record against the receipts:**
+   ```
+   .speck/scripts/validation/mutate-guard.sh --verify-receipt {STORY_DIR}/validation-report.md
+   ```
+   - `RECEIPT_VERIFIED` — every cited site resolves to a real line whose pinned content recomputes
+     at the receipt's SHA.
+   - `RECEIPT_MISMATCH.P1` — **blocks.** A cited site contradicts the receipts this repo itself
+     produces: an invented site, a site-less verdict row, a receipt whose content does not
+     recompute, or a report claiming a stronger verdict than the run recorded.
+   - `RECEIPT_MISSING.P2` / `RECEIPT_NO_CITATIONS.P2` — honest degrades, non-blocking. A project that
+     has never emitted a receipt is not held to one; a report with no filled row has recorded
+     nothing to check.
+
+   **Know exactly what this proves, and do not report more than it does.** The cross-check binds a
+   *citation* to a real line at a real SHA — it kills the invented site, the site-less row and the
+   silently-upgraded verdict. It **cannot** prove a mutation was actually run: the receipt is a
+   local file written by a local script, so an agent with shell access can synthesise one. The
+   forgery cost rises from "type a verdict into a cell" to "produce a receipt that recomputes
+   against the real line at the real SHA" — real, bounded, and not a proof of execution.
+   **`RECEIPT_VERIFIED` means the citation is real, never that the mutation happened.** The
+   validator enforces that a verdict was *recorded*, not that a mutation was *run*.
 
 14. **Project Truth Update Prompt** (if PASS):
     

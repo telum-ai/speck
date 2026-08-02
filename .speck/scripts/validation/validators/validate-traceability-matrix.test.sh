@@ -589,6 +589,7 @@ PROP_ROWS=(
   "| PRM-305 | product-contract §3 | vendor sync | still deciding with the vendor | — | — | open |"
   "| PRM-306 | product-contract §3 | vendor sync | — | — | — | open |"
   "| PRM-307 | product-contract §3 | complex flow | — | — | — | pilot-gated |"
+  "| PRM-308 | product-contract §3 | complex flow | — | — | we will decide this in the pilot | pilot-gated |"
 )
 blocked_by_default=0
 for row in "${PROP_ROWS[@]}"; do
@@ -611,6 +612,48 @@ if [[ $blocked_by_default -ne ${#PROP_ROWS[@]} ]]; then
   exit 1
 fi
 echo "  ✓ Passed Test 22 ($blocked_by_default rows, superset invariant held in both evidence modes)"
+
+
+echo "Test 23: the message's OWN example (AUDIT-E002-42 ALONE) must resolve conservation — P1 fix"
+# VERIFIED DEFECT (v9.6, undeclared breaking change): a pilot-gated row with NO backing reference
+# fails with a finding that says "Cite fine-grained audit/matrix refs (e.g. AUDIT-E002-42,
+# PRM-054)" — but has_structured_token() had branches for S/AC/DEC/PRM/path and NO AUDIT branch,
+# so an author who cited EXACTLY "AUDIT-E002-42" (the message's own suggestion) still failed. The
+# template's own example row (traceability-matrix-template.md §2, PRM-005) only ever survived
+# because it ALSO carries "E002/PRM-054" riding along. This fixture is DERIVED FROM THAT SHIPPED
+# TEMPLATE ROW — same Source/Promise/Status — with the Backing cell reduced to the bare AUDIT
+# token the message names, so it exercises exactly the gap a hand-typed minimal fixture would miss.
+FIX23="$TMP/fix-23"
+mkdir -p "$FIX23"
+cat > "$FIX23/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: [Epic Name]
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Grain (proven-at) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|-------------------|--------|
+| PRM-005 | wireframes S05 / dashboard | consolidated complex visual flow | — | — | AUDIT-E002-42 | — | pilot-gated |
+EOF
+OUT23="$(bash "$VALIDATOR" --require-evidence --status-only "$FIX23/traceability-matrix.md" 2>&1)"; RC23=$?
+[[ "$RC23" -eq 0 ]] || { echo "ERROR: a Backing cell of the message's own example 'AUDIT-E002-42' must PASS, not fail"; echo "$OUT23"; exit 1; }
+echo "$OUT23" | grep -q "❌ PRM-005" && { echo "ERROR: PRM-005 must not be flagged"; echo "$OUT23"; exit 1; }
+echo "  ✓ Passed Test 23 (bare AUDIT-E002-42 resolves conservation)"
+
+
+echo "Test 24: MUTATION PROOF — reverting the AUDIT branch in a SCRATCH COPY turns Test 23 RED"
+# Confirms the mutation site is the REAL control point: has_structured_token() itself, not a
+# default arg or an unreached branch. Deleting exactly the AUDIT line must flip Test 23's fixture
+# from pass to fail — nothing else about the validator changes.
+SCRATCH24="$TMP/scratch-validator-24.sh"
+cp "$ROOT/.speck/scripts/validation/validators/validate-traceability-matrix.sh" "$SCRATCH24"
+# Remove the AUDIT branch line (portable: match on the literal regex text, not line number).
+sed -i.bak '/\[\[ "\$v" =~ AUDIT-\[A-Za-z0-9-\]\*\[0-9\] \]\] && return 0/d' "$SCRATCH24"
+grep -q '=~ AUDIT-\[A-Za-z0-9-\]\*\[0-9\] \]\] && return 0' "$SCRATCH24" && { echo "ERROR: mutation did not actually remove the AUDIT branch (control point not found)"; exit 1; }
+if bash "$SCRATCH24" --require-evidence --status-only "$FIX23/traceability-matrix.md" >/dev/null 2>&1; then
+  echo "ERROR: MUTATION PROOF FAILED — reverting the AUDIT branch should make the fixture fail (RED), but it still passed"
+  exit 1
+fi
+echo "  ✓ Passed Test 24 (revert-and-confirm-RED: the AUDIT branch is the real control point)"
 
 
 echo "All validate-traceability-matrix tests passed successfully!"

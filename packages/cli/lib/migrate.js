@@ -542,6 +542,159 @@ registerMigration({
   },
 });
 
+/* --- built-in migration: insert §6a's Scope + Subject columns (issue #98) ------------------- */
+
+export const GATE_REGISTRY_SCOPE_SUBJECT_ID = 'v10-gate-registry-scope-subject-columns';
+
+// The §6a header, as v10 defines it. seed-gate-registry.sh's GATE_REGISTRY_COLUMNS is the
+// authority; this migration only has to know WHERE the two new labels go relative to the old
+// six, which is what makes the insert positional rather than a re-seed.
+const GATE_REGISTRY_NEW_COLUMNS = ['Scope', 'Subject'];
+const GATE_REGISTRY_INSERT_AFTER = 'domain'; // lowercased header label
+
+/**
+ * Insert `Scope` and `Subject` into one §6a table, in place, preserving every existing cell.
+ *
+ * WHY NOT JUST RE-SEED. seed-gate-registry.sh can rewrite the table from the recipe, and that is
+ * the right tool when the registry is still scaffold. It is the wrong tool here: by the time a
+ * project upgrades, §6a rows have been hand-amended — waivers cited against real DECs, canary keys
+ * chosen, stages corrected against what CI actually does. Re-seeding would silently discard all of
+ * it and replace it with the recipe's defaults, and a lost `waived DEC-####` reads as an unwaived
+ * dark gate on the next run. So this walks the existing table and widens it.
+ *
+ * Idempotent by inspection, not by ledger: if the header already carries both labels the file is
+ * left byte-identical. The ledger stops a second RUN; this stops a second run from corrupting
+ * anything if the ledger is ever lost (a `.speck/` re-sync, a hand-edited project.json).
+ *
+ * Returns true when the file was rewritten.
+ */
+export function insertGateRegistryColumns(file) {
+  let text;
+  try {
+    text = readFileSync(file, 'utf-8');
+  } catch {
+    return false;
+  }
+  const lines = text.split('\n');
+
+  // Find the §6a table: the first `| Gate ID | …` header row under a `### 6a.` heading. Anchoring
+  // on the heading matters — an evidence contract can carry other pipe tables (§6 evidence lists,
+  // §7 banned-language tables), and widening one of those would corrupt a document that was fine.
+  let inSection = false;
+  let headerIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    if (/^### 6a\./.test(l)) { inSection = true; continue; }
+    if (inSection && /^#{2,3} /.test(l)) break;
+    if (inSection && /^\|\s*Gate ID\s*\|/i.test(l)) { headerIdx = i; break; }
+  }
+  if (headerIdx === -1) return false;
+
+  const cellsOf = (line) => line.replace(/^\|/, '').replace(/\|\s*$/, '').split('|');
+  const header = cellsOf(lines[headerIdx]).map(c => c.trim());
+  const lower = header.map(c => c.toLowerCase());
+  // Already migrated (or hand-authored against v10) → leave it exactly as it is.
+  if (GATE_REGISTRY_NEW_COLUMNS.every(c => lower.some(h => h.startsWith(c.toLowerCase())))) return false;
+
+  const anchor = lower.findIndex(h => h.startsWith(GATE_REGISTRY_INSERT_AFTER));
+  // No Domain column means this is not a table whose shape we can reason about positionally.
+  // Refusing is the honest answer: a wrong insert point silently re-maps every later cell, which
+  // is the exact class of bug the header-keyed conversion exists to prevent.
+  if (anchor === -1) return false;
+  const at = anchor + 1;
+
+  const widen = (line, fill) => {
+    const cells = cellsOf(line);
+    if (cells.length < header.length) return line;  // a ragged row: leave it, do not guess
+    cells.splice(at, 0, ...fill);
+    return '|' + cells.join('|') + '|';
+  };
+
+  const out = lines.slice();
+  out[headerIdx] = widen(lines[headerIdx], GATE_REGISTRY_NEW_COLUMNS.map(c => ` ${c} `));
+  for (let i = headerIdx + 1; i < out.length; i++) {
+    if (!/^\|/.test(out[i])) break;                       // end of the table
+    if (/^\|[-: |]+\|\s*$/.test(out[i])) {                // the markdown separator row
+      out[i] = widen(out[i], GATE_REGISTRY_NEW_COLUMNS.map(c => '-'.repeat(Math.max(3, c.length))));
+      continue;
+    }
+    // A data row. `—` is §6a's established "not declared" value (Canary/Waiver already use it) and
+    // reads as undeclared to every consumer: validate-gate-liveness skips it, the probe treats a
+    // missing runtime report as GATE_SCOPE_UNREPORTED.P3. Inventing a scope here would be worse
+    // than admitting there isn't one — a wrong Scope cell is a false green with a paper trail.
+    out[i] = widen(out[i], GATE_REGISTRY_NEW_COLUMNS.map(() => ' — '));
+  }
+
+  const next = out.join('\n');
+  if (next === text) return false;
+  writeFileSync(file, next);
+  return true;
+}
+
+// WHY THIS RIDES THE UPGRADE. #98 adds two REQUIRED columns to §6a. Without the insert, a v10
+// consumer reading a pre-v10 six-column table finds no Scope cell — which is handled (it degrades
+// to "undeclared", not to a false finding) — but the project never gets prompted to declare one,
+// and the whole point of the schema change is that the declaration is what makes vacuity visible.
+// Widening the table on upgrade day turns "nobody added the column" into a visible `—` a human can
+// fill, in every project, without anyone remembering to run a script.
+registerMigration({
+  id: GATE_REGISTRY_SCOPE_SUBJECT_ID,
+  description: "Insert the §6a Scope + Subject columns into existing evidence contracts (#98)",
+  appliesTo: (fromMajor, toMajor) => toMajor >= 10 && (fromMajor == null || fromMajor < 10),
+  run: (targetDir) => {
+    let widened = 0;
+    for (const file of findProjectMarkdown(targetDir)) {
+      if (!/evidence-contract\.md$/.test(file)) continue;
+      if (insertGateRegistryColumns(file)) widened += 1;
+    }
+    return widened;
+  },
+});
+
+/* --- built-in migration: pin banned_language.scope so the v10 default flip is a DIFF --- */
+
+export const BANNED_LANGUAGE_SCOPE_ID = 'v10-banned-language-scope-any-depth';
+
+// WHY A BEHAVIOUR FLIP NEEDS A MIGRATION AT ALL.
+// v10 changes `banned_language.scope` from "legacy-root" to "any-depth": product surfaces are
+// recognised by path SEGMENT, so a monorepo's frontend/src/** is finally reached. Measured
+// blindness under the old default was 0 of 1194 files in one repo and 0 of 590 in another, on a
+// gate wired into every commit — so the flip is the point of the major, not a side effect. It is
+// safe only because --strings-only removed the false-conviction class that blocked it in v9.6
+// (`import { createClient } from "./api"` reported ❌ "API" — 4 hit(s)).
+//
+// But a DEFAULT is invisible. Without this, a team upgrades and their pre-commit gate silently
+// starts inspecting a thousand files it never touched before, with nothing in the diff to explain
+// why. So the resolution is written down, per project, on upgrade day: the change shows up in
+// `.speck/project.json`, `speck migrate --list` names it, and a team that needs the old behaviour
+// edits one word to "legacy-root" instead of hunting for a flag.
+//
+// It is deliberately NON-DESTRUCTIVE: a project that already declares a scope — including one that
+// deliberately declares "legacy-root" — is left exactly as it is. The migration records the NEW
+// default for projects that never had an opinion, and never overrides one that did.
+export function pinBannedLanguageScope(targetDir, scope = 'any-depth') {
+  const p = projectJsonPath(targetDir);
+  if (!existsSync(p)) return false;
+  const pj = readProjectJson(targetDir);
+  if (!pj) return false;
+  const bl = pj.banned_language && typeof pj.banned_language === 'object' && !Array.isArray(pj.banned_language)
+    ? pj.banned_language
+    : {};
+  // An existing declaration is an OPINION. Overwriting it would be the migration deciding
+  // something the project already decided — including silently un-doing a deliberate opt-out.
+  if (typeof bl.scope === 'string' && bl.scope.trim() !== '') return false;
+  const next = { ...pj, banned_language: { ...bl, scope } };
+  writeFileSync(p, JSON.stringify(next, null, 2) + '\n');
+  return true;
+}
+
+registerMigration({
+  id: BANNED_LANGUAGE_SCOPE_ID,
+  description: 'Record the v10 banned_language.scope default (any-depth) in .speck/project.json',
+  appliesTo: (fromMajor, toMajor) => toMajor >= 10 && (fromMajor == null || fromMajor < 10),
+  run: (targetDir) => (pinBannedLanguageScope(targetDir) ? 1 : 0),
+});
+
 /**
  * `speck migrate --list` / `speck migrate --run` — the operator surface on the lane.
  *
@@ -631,6 +784,20 @@ function readWorkspaceVersion(targetDir) {
  *   { kind, targetMajor, actions: [...], projects: [...], v8Reprove, v9Graph, named }
  */
 export function runPostUpgradeMigrations(targetDir, currentVersion, targetVersion, options = {}) {
+  // Defense-in-depth (not the primary guard): the only shipped caller is upgrade.js, which
+  // invokes this AFTER saveVersion() has already written .speck/VERSION, so targetDir is always
+  // a real workspace on that path. But recordMigration() below does
+  // `mkdirSync(dirname(p), { recursive: true })` on whatever targetDir it is handed — so any
+  // future or direct caller passing a non-workspace dir would silently scaffold a `.speck/`
+  // there. Same identity check migrateCommand() applies at its own entry point (line ~569).
+  if (!existsSync(join(targetDir, '.speck'))) {
+    throw new Error(
+      `Not a Speck workspace: ${targetDir} has no .speck/ directory.\n` +
+        '   runPostUpgradeMigrations() writes migration state to .speck/project.json, so running\n' +
+        '   it here would scaffold state for a project that does not exist.',
+    );
+  }
+
   const { scaffoldV7, reproveV8, graphV9, migrateV10, targetMajor } = detectMigration(currentVersion, targetVersion);
   const summary = {
     kind: null,
