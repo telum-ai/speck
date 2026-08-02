@@ -127,6 +127,59 @@ verbatim excerpt of `validate-gate-liveness.sh` as it stood at commit `0e7ae68^`
 real false-positive risk in the same file family (`gate-liveness-probe.sh`'s own unrelated,
 single-clock internal pipe protocol, Test 2).
 
+### Where it runs (v10.2) — a check nobody calls is a check that certifies nothing
+
+Between v10.1 and v10.2 `validate-two-carrier.sh` had **zero references** outside its own test and
+two prose pattern files: no hook, no skill, no CI, no gate-registry row. It was correct, proven,
+mutation-pinned — and never executed against anything but its fixtures. That is the same species as
+the defect it detects: a thing that is true on both sides of an interval nobody observes. A release
+line about gates that certify what they never inspected cannot ship a gate that inspects nothing.
+
+It now runs from **`.speck/scripts/validation/pre-commit-hook.sh`**, over the `.sh` files in the
+current commit, advisory. Two placement facts are load-bearing and were verified rather than
+assumed:
+
+- **Staged-scoped, not repo-wide.** A whole-tree scan on every commit is slow and blocking; scoped
+  to the staged files it reports only what the author can act on now. The measured field value over
+  the full `.speck/scripts` tree at v10.2 is **0 findings / 92 files / 7 table readers**, so the
+  gate is green on arrival — the first thing it can ever say is about a reader someone just wrote.
+- **ABOVE the hook's early exit.** The hook returns early when no spec markdown and no README are
+  staged — which is the description of an ordinary code-only commit, i.e. the *entire* population
+  this check has an opinion about. Placed below that exit it would have been authored, correct and
+  structurally unreachable: #93 class 1, whose named instance is a Speck pre-commit block placed
+  after another `exit` **in this same file**. Reach was proven by driving the hook with only a
+  known-bad `.sh` staged, and the counterfactual was proven too — the identical block, moved below
+  the exit in a scratch copy, prints nothing at all.
+
+Advisory (never increments the hook's `errors`) on purpose: the field value gets measured before
+the check is allowed to stop a commit. Promote by adding `errors=$((errors + 1))` in its findings
+branch after it has run clean for a release.
+
+### What the wiring immediately proved — and the generalizable lesson
+
+**Within the hour of being pointed at the live tree, the check produced a false positive it had
+never produced against its own fixtures.** `seed-gate-registry.sh` — a header-keyed §6a reader, the
+exact good code this gate exists to leave alone — gained one ordinary line,
+
+```bash
+CITATIONS_VALIDATOR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/…"
+```
+
+and was convicted, because Evidence B's "literal `${arr[N]}` index" rule sees `${BASH_SOURCE[0]}` as
+`${name[integer]}`. `${BASH_SOURCE[0]}`, `${PIPESTATUS[0]}`, `${FUNCNAME[0]}`, `${BASH_REMATCH[1]}`
+are among the most common lines in careful bash — and careful bash is precisely the population that
+also reads §6a tables. The rule as written convicted good code at a rate that trains reviewers to
+wave it through, which is strictly worse than not shipping it. Fixed by excluding bash's own special
+arrays (they index interpreter state, never a table column), and pinned both directions: reverting
+the exclusion must convict the innocent fixture, deleting the rule must clear the guilty one.
+
+**The lesson is not "add an exclusion list."** It is that **a check's precision is unmeasured until
+it runs against code it did not anticipate.** Nine fixtures, a mutation-proven historical
+regression, a mechanically-verified WINDOW disclosure — none of it surfaced a defect that the first
+real file found instantly, because every fixture was written by the same author holding the same
+model of the rule. A validator that has only ever met its own fixtures has a precision claim
+resting on nothing. Wire it, then believe it.
+
 **What the check does NOT decide** — disclosed, not silently skipped: the "two deploy paths with
 different latencies" shape (a push-triggered job vs. a nightly, a fast app deploy vs. a manual DB
 step) needs to know what the slow carrier *does* with what the fast carrier shipped — a semantic

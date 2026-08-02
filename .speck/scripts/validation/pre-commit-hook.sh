@@ -29,7 +29,103 @@ done < <(git diff --cached --name-only --diff-filter=ACM || true)
 
 errors=0
 
-# Early-exit when nothing staged, before referencing the array (set -u safe)
+# ── Staged-scoped two-carrier check (#103) ───────────────────────────────────────────────────
+# THIS BLOCK SITS ABOVE THE EARLY EXIT ON PURPOSE, and that placement is the whole point of the
+# wiring. Its subject is STAGED SHELL FILES; the early exit below fires whenever no spec markdown
+# and no README are staged — which is the description of an ordinary code-only commit, i.e. the
+# exact commit that can introduce a positional table reader. Placed below the exit, this check
+# would be authored, correct, and structurally unreachable for its entire population: #93 class 1
+# ("a guard that never executes, because a broad adjacent default shadows it"), whose named
+# instance is a Speck pre-commit block placed after another `exit` in this same file. Reach is
+# proven, not assumed, by driving the hook with only a .sh file staged.
+#
+# WHAT IT CATCHES. A shell script that reads a markdown pipe-table by HARD-CODED COLUMN POSITION
+# is destructive in the interval between a schema edit and a reader edit — the two ride different
+# clocks and every gate is green on both sides of the window.
+#
+# WHY STAGED-SCOPED AND ADVISORY. A repo-wide scan on every commit is both slow and blocking, and
+# a gate that is red on arrival gets bypassed rather than fixed. Scoped to the .sh files in THIS
+# commit it reports only what the author can act on right now, and the measured finding count over
+# the whole `.speck/scripts` tree at v10.2 is 0 (92 files scanned, 7 table readers, all
+# header-resolved) — so it is green on arrival and the first thing it can ever say is about a
+# positional reader someone just wrote. ADVISORY means it never touches `errors`: the field value
+# gets measured before the check is allowed to stop a commit. Promote to blocking by adding
+# `errors=$((errors + 1))` in the findings branch below, once it has run clean for a release.
+two_carrier=".speck/scripts/validation/validators/validate-two-carrier.sh"
+if [[ -f "$two_carrier" ]]; then
+  staged_sh=()
+  while IFS= read -r file; do
+    [[ -n "$file" && -f "$file" ]] && staged_sh+=("$file")
+  done < <(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\.sh$' || true)
+
+  if [[ ${#staged_sh[@]} -gt 0 ]]; then
+    echo -e "${BLUE}🔍 Two-carrier positional-table-read check (${#staged_sh[@]} staged shell file(s))...${NC}"
+    two_carrier_findings=0
+    for sh_file in "${staged_sh[@]}"; do
+      # Capture first, test after. `if cmd | grep -q …` hides cmd's own exit status behind the
+      # pipe, which is how a check that crashed becomes a check that "found nothing".
+      tc_rc=0
+      tc_out="$(bash "$two_carrier" --strict "$sh_file" 2>&1)" || tc_rc=$?
+      if [[ $tc_rc -eq 1 ]]; then
+        two_carrier_findings=$((two_carrier_findings + 1))
+        echo "$tc_out"
+      elif [[ $tc_rc -ne 0 ]]; then
+        echo -e "${YELLOW}⚠ two-carrier check could not run on $sh_file (exit $tc_rc) — NOT counted as clean.${NC}"
+      fi
+    done
+    if [[ $two_carrier_findings -gt 0 ]]; then
+      echo -e "${YELLOW}⚠ ADVISORY: $two_carrier_findings staged shell file(s) read a markdown pipe-table by hard-coded position.${NC}"
+      echo -e "${BLUE}   Resolve the column index from the header row's NAME first (reference shape:${NC}"
+      echo -e "${BLUE}   validate-gate-liveness.sh's resolve_columns_from_header). Not blocking — advisory at v10.2.${NC}"
+    else
+      echo -e "${GREEN}✓ No positional pipe-table readers among the staged shell files.${NC}"
+    fi
+  fi
+fi
+
+# ── Staged-scoped bound-fusion check (#93 class 3) ───────────────────────────────────────────
+# ALSO ABOVE THE EARLY EXIT, for the same reason: its trigger is an edit to Speck's own gate
+# machinery — a validator or the validation-report template — which is a code commit, exactly what
+# the early exit below discards.
+#
+# WHAT IT DEFENDS. Speck's readiness ladder has an existence floor (NO-SHIP / IMPL-GREEN /
+# INTEGRATION-GREEN: does the code exist, run, integrate) and quality rungs above it (UX-RC+,
+# gated on FELT-GOOD / TASTE). Nothing structural keeps the quality axes off the existence floor —
+# only two files independently continuing to scope their enforcement to `UX-RC|…`. Widening one of
+# those `case` arms is a one-token edit that reads as a tightening, and the day it lands, a
+# built-but-rough story and a never-built story emit the same verdict: the quality bar has annexed
+# the go/no-go and the gate can no longer fail loudly (#93 class 3).
+#
+# TRIGGERED, NOT CONSTANT. The check reads the machinery, not the commit, so running it on every
+# commit would be noise; running it when someone edits that machinery is when its answer can
+# actually have changed. It is ADVISORY at v10.2 for the same reason as the two-carrier block.
+bound_fusion=".speck/scripts/validation/validators/validate-bound-fusion.sh"
+if [[ -f "$bound_fusion" ]]; then
+  machinery_touched=""
+  while IFS= read -r file; do
+    [[ -n "$file" ]] && machinery_touched="yes"
+  done < <(git diff --cached --name-only --diff-filter=ACM 2>/dev/null \
+    | grep -E '^\.speck/(scripts/validation/validators/.*\.sh|templates/story/validation-report-template\.md)$' || true)
+
+  if [[ -n "$machinery_touched" ]]; then
+    echo -e "${BLUE}🔍 Bound-fusion check (quality vs. existence rungs — gate machinery was edited)...${NC}"
+    bf_rc=0
+    bf_out="$(bash "$bound_fusion" --strict . 2>&1)" || bf_rc=$?
+    if [[ $bf_rc -eq 1 ]]; then
+      echo "$bf_out"
+      echo -e "${YELLOW}⚠ ADVISORY: a quality bound may now reach the existence floor (#93 class 3).${NC}"
+      echo -e "${BLUE}   Separate the two bounds; never raise the bar. Not blocking — advisory at v10.2.${NC}"
+    elif [[ $bf_rc -ne 0 ]]; then
+      echo -e "${YELLOW}⚠ bound-fusion check could not run (exit $bf_rc) — NOT counted as clean.${NC}"
+    else
+      echo -e "${GREEN}✓ Quality bounds stay above the existence floor.${NC}"
+    fi
+  fi
+fi
+
+# Early-exit when no spec/README is staged, before referencing the array (set -u safe).
+# Anything scoped to non-spec files must run ABOVE this line — see the two-carrier and
+# bound-fusion blocks.
 if [[ ${#staged_specs[@]} -eq 0 && "$staged_readme" == false ]]; then
   echo -e "${GREEN}✓ No Speck specifications or README staged for commit.${NC}"
   exit 0

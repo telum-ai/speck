@@ -381,10 +381,11 @@ run --strict "$T/placeholders.md"
   && pass "placeholders (— / n/a / TBD) are not reported as untyped citations" || fail "placeholders must not be findings"
 
 # ── 14. PRECISION: a slash is punctuation, not a path ────────────────────────────────────────
-# The measured defect: over two real projects' `specs/**` (1,646 markdown files) the gate reported
-# 1,199 "citations", 306 of them carrying no file extension at all — API routes, slash commands,
-# npm scopes and ordinary English written with a solidus. A P3 at that false-positive rate is a P3
-# that gets suppressed project-wide on first contact, which is the same as not shipping it.
+# The measured defect: over two real projects' `specs/**` the gate counted API routes, slash
+# commands, npm scopes and ordinary English written with a solidus as citations. The figures live
+# in ONE place — the header paragraph of validate-evidence-citations.sh — because a number restated
+# in two files drifts, and this pair had already disagreed with itself once. A P3 at that
+# false-positive rate is a P3 that gets suppressed project-wide on first contact.
 mkfixture "$T/fp.md" \
   "| PROBE:route | \`acceptance\` | \`/api/v1/coach/chat\` \`/health\` \`/model/correction\` | — |" \
   "| PROBE:cmd | \`correctness\` | \`/audit\` \`/check-in\` \`/suggest\` | — |" \
@@ -616,6 +617,281 @@ if mkmut "telem-nosubject.sh" \
 else
   fail "MUTATION SITE NOT FOUND — the stamp-path SUBJECT counter moved; this control is dead"
 fi
+
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# §11a STANDARD PROBE LIBRARY (issue #101, v10.2)
+#
+# THE FIXTURE RULE, AGAIN AND HARDER. Every fixture below is a COPY OF THE SHIPPED TEMPLATE with
+# one cell edited by a transform that ASSERTS it found all eight rows. A hand-typed §11a table
+# would be the shape-(a) vacuity this repo has shipped twice: the rule would pass on the fixture
+# and say nothing about the artifact projects actually get.
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "== §11a Standard Probe Library =="
+
+PFIX="$T/probefix.py"
+cat > "$PFIX" <<'PY'
+import sys
+src, dest = sys.argv[1], sys.argv[2]
+ops = [o.split('~') for o in sys.argv[3:]]
+lines = open(src).read().split('\n')
+out, n = [], 0
+for l in lines:
+    if l.startswith('| PROBE:'):
+        n += 1
+        c = l.split('|')          # ['', id, class, claim, substrate, controls, discharge, exception, '']
+        pid, drop = c[1].strip(), False
+        for op in ops:
+            k = op[0]
+            if k == 'fill':                                    c[7] = ' n/a:fixture reason '
+            elif k == 'delete'   and pid == op[1]:             drop = True
+            elif k == 'discharge' and pid == op[1]:            c[6] = ' `%s` ' % op[2]
+            elif k == 'claim'    and pid == op[1]:             c[3] = ' `%s` ' % op[2]
+            elif k == 'except'   and pid == op[1]:             c[7] = ' %s ' % op[2]
+            elif k == 'rename'   and pid == op[1]:             c[1] = ' %s ' % op[2]
+        if drop: continue
+        l = '|'.join(c)
+    out.append(l)
+assert n == 8, 'MUTATION SITE NOT FOUND — the shipped template has %d §11a PROBE rows, expected 8' % n
+open(dest, 'w').write('\n'.join(out))
+PY
+probefixture() { local dest="$1"; shift; python3 "$PFIX" "$TEMPLATE" "$dest" "$@"; }
+
+# ── 15. The library is closed, and the template renders it exactly ────────────────────────────
+run --print-probe-library
+{ [[ "$RC" == 0 ]] && [[ "$(echo "$OUT" | grep -c '^PROBE:')" == 8 ]]; } \
+  && pass "the probe library is 8 closed classes" || fail "--print-probe-library must list 8 classes"
+
+# PARITY against the SHIPPED template — the §11a analogue of test 2, and what stops the template's
+# table being decoration a project can edit into agreement with anything.
+run --check-probe-library "$TEMPLATE"
+{ [[ "$RC" == 0 ]] && [[ "$(count 'PROBE_LIBRARY_DRIFT')" == 0 ]]; } \
+  && pass "shipped template §11a matches the compiled library, cell for cell" \
+  || fail "shipped template §11a has drifted from the compiled library"
+
+# ── 16. The template ships UNDISCHARGED on purpose — the anti-vacuity property ────────────────
+# If the shipped boilerplate satisfied this gate, a green would mean "nobody edited the template",
+# not "the class was proved". So the unedited artifact must be the SIN.
+run --check-probe-library "$TEMPLATE"
+{ [[ "$RC" == 0 ]] && [[ "$(count 'PROBE_UNDECLARED.P1')" == 8 ]]; } \
+  && pass "the unedited template raises 8 PROBE_UNDECLARED.P1 — and still exits 0 (nudge, not block)" \
+  || fail "the unedited template must raise exactly 8 PROBE_UNDECLARED.P1 at exit 0"
+run --strict --check-probe-library "$TEMPLATE"
+[[ "$RC" == 1 ]] && pass "--strict escalates the same findings to exit 1 (the COMMERCIAL-RC/SHIP-RC posture)" \
+  || fail "--strict must exit 1 on undeclared classes"
+
+# The paired positive: declaring every row clears it. Without this the P1 above could be
+# unconditional — a rule that always fires proves nothing about the artifact.
+probefixture "$T/p11a-filled.md" fill
+run --strict --check-probe-library "$T/p11a-filled.md"
+{ [[ "$RC" == 0 ]] && [[ "$(count 'PROBE_UNDECLARED.P1')" == 0 ]] && [[ "$(count 'PROBE_EXCEPTION_DECLARED')" == 8 ]]; } \
+  && pass "declaring an exception on every row clears all 8 (the P1 is conditional, not unconditional)" \
+  || fail "a fully declared §11a must be green"
+
+# ── 17. PROBE_SUBSTRATE_MISMATCH.P1 is a real LOOKUP into §2b, per class ─────────────────────
+# The P6 scar, in the row that owns it: a props-level suite cited for `fit`.
+probefixture "$T/p11a-mismatch.md" fill "discharge~PROBE:geometry-ax~test:frontend/src/WeekGrid.fits.test.tsx@89468af1"
+run --strict --check-probe-library "$T/p11a-mismatch.md"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "PROBE_SUBSTRATE_MISMATCH.P1"; } \
+  && pass "PROBE:geometry-ax discharged by a \`test\` citation → P1 (axe is blind to geometry)" \
+  || fail "a fit class discharged by a test citation must be P1"
+
+# The admissible counterpart on the SAME row — so the P1 is about the substrate, not the row.
+probefixture "$T/p11a-ok.md" fill "discharge~PROBE:geometry-ax~geometry:specs/logs/89468af1-target-size.json"
+run --strict --check-probe-library "$T/p11a-ok.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "PROBE_DISCHARGED"; } \
+  && pass "the same row discharged by a \`geometry\` citation is admissible" || fail "geometry must discharge fit"
+
+# NEGATIVE CONTROL — the control point is §2b's admissibility table, and nothing else.
+if mkmut "probe-fit-admits-test.sh" \
+  '    fit)         printf '"'"'%s'"'"' "ax-dump geometry device-walk" ;;' \
+  '    fit)         printf '"'"'%s'"'"' "ax-dump geometry device-walk test" ;;'; then
+  runmut --strict --check-probe-library "$T/p11a-mismatch.md"
+  { [[ "$RC" == 0 ]] && ! echo "$OUT" | grep -q "PROBE_SUBSTRATE_MISMATCH.P1"; } \
+    && pass "negative control: admitting \`test\` for \`fit\` in §2b makes the §11a mismatch vanish" \
+    || fail "the §11a mismatch must be computed from the admissibility table"
+else
+  fail "MUTATION SITE NOT FOUND — claim_admissible_types' fit row moved; this control is dead"
+fi
+
+# ── 18. UNKNOWN NEVER CONVICTS — the load-bearing decision in (b) ─────────────────────────────
+probefixture "$T/p11a-unknown.md" fill "discharge~PROBE:geometry-ax~specs/logs/89468af1-target-size.json"
+run --strict --check-probe-library "$T/p11a-unknown.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "PROBE_SUBSTRATE_UNKNOWN.P3" && ! echo "$OUT" | grep -q "\.P1"; } \
+  && pass "an untyped discharge artifact is P3 and exits 0 — unknown is incomplete, not inadmissible" \
+  || fail "an unknown citation type must never convict"
+echo "$OUT" | grep -q -- "--stamp-types --write" \
+  && pass "the unknown-substrate P3 names the command that makes the verdict computable" \
+  || fail "PROBE_SUBSTRATE_UNKNOWN must name its fix"
+
+# NEGATIVE CONTROL — the P3 is a real branch, not the absence of a rule. Resolve unknown to
+# inadmissible in a scratch copy and the SAME fixture must go red.
+if mkmut "probe-unknown-convicts.sh" \
+  'emit_p3 "PROBE_SUBSTRATE_UNKNOWN.P3" "$file — $pid discharges' \
+  'emit_p1 "PROBE_SUBSTRATE_UNKNOWN.P1" "$file — $pid discharges'; then
+  runmut --strict --check-probe-library "$T/p11a-unknown.md"
+  [[ "$RC" == 1 ]] \
+    && pass "negative control: making unknown convict turns the same fixture red (P3 is a decision, not a gap)" \
+    || fail "the unknown branch must be load-bearing"
+else
+  fail "MUTATION SITE NOT FOUND — the PROBE_SUBSTRATE_UNKNOWN emit moved; this control is dead"
+fi
+
+# ── 19. A declared exception is FIRST-CLASS — absence vs inapplicability ─────────────────────
+# The same law as GATE_EMPTY_LEGITIMATE vs GATE_VACUOUS: a class that does not apply is DECLARED.
+probefixture "$T/p11a-na.md" fill "except~PROBE:money-path~n/a:no revenue path"
+run --strict --check-probe-library "$T/p11a-na.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "PROBE_EXCEPTION_DECLARED.*money-path"; } \
+  && pass "\`n/a:<reason>\` is a first-class declaration, not a silence" || fail "n/a with a reason must be accepted"
+
+probefixture "$T/p11a-bare-na.md" fill "except~PROBE:money-path~n/a"
+run --strict --check-probe-library "$T/p11a-bare-na.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "PROBE_NA_UNBACKED.P2"; } \
+  && pass "a bare \`n/a\` with no reason is PROBE_NA_UNBACKED.P2 (indistinguishable from 'nobody looked')" \
+  || fail "bare n/a must be P2"
+
+probefixture "$T/p11a-waived.md" fill "except~PROBE:money-path~waived DEC-0042"
+run --check-probe-library "$T/p11a-waived.md"
+echo "$OUT" | grep -q "PROBE_NA_UNBACKED.P2" \
+  && fail "a waiver citing a DEC must not be P2 merely because no log was found" \
+  || pass "a waiver with no findable decisions log is recorded as unverified, never convicted"
+
+mkdir -p "$T/dec" && probefixture "$T/dec/evidence-contract.md" fill "except~PROBE:money-path~waived DEC-0042"
+printf '# Decisions\n\n## DEC-0042 — accept the dark money path\n' > "$T/dec/project-decisions-log.md"
+run --strict --check-probe-library "$T/dec/evidence-contract.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "waived DEC-0042 (resolves"; } \
+  && pass "\`waived DEC-####\` resolving in project-decisions-log.md is a backed exception" \
+  || fail "a resolving DEC must back the waiver"
+printf '# Decisions\n\n## DEC-0001 — something else\n' > "$T/dec/project-decisions-log.md"
+run --check-probe-library "$T/dec/evidence-contract.md"
+echo "$OUT" | grep -q "PROBE_NA_UNBACKED.P2" \
+  && pass "a waiver whose DEC is missing from the log is PROBE_NA_UNBACKED.P2" \
+  || fail "an unresolvable DEC must be P2"
+
+probefixture "$T/p11a-prose.md" fill "except~PROBE:money-path~doesn't apply to us"
+run --check-probe-library "$T/p11a-prose.md"
+echo "$OUT" | grep -q "PROBE_NA_UNBACKED.P2" \
+  && pass "an exception Speck cannot parse is a silence with extra words (P2)" || fail "prose exception must be P2"
+
+# ── 20. The library is CLOSED: a deleted row is an undeclared class ──────────────────────────
+probefixture "$T/p11a-deleted.md" fill "delete~PROBE:second-actor"
+run --strict --check-probe-library "$T/p11a-deleted.md"
+{ [[ "$RC" == 1 ]] && [[ "$(count 'PROBE_UNDECLARED.P1')" == 1 ]] && echo "$OUT" | grep -q "absent from §11a"; } \
+  && pass "deleting a class from an otherwise-declared §11a raises exactly one PROBE_UNDECLARED.P1" \
+  || fail "a deleted class must be undeclared, not silently gone"
+
+if mkmut "probe-no-completeness.sh" \
+  '    in_list "$pid" "$seen" && continue
+    emit_p1 "PROBE_UNDECLARED.P1" "$file — $pid ($(probe_field "$pid" 2)) is absent' \
+  '    continue
+    emit_p1 "PROBE_UNDECLARED.P1" "$file — $pid ($(probe_field "$pid" 2)) is absent'; then
+  runmut --strict --check-probe-library "$T/p11a-deleted.md"
+  [[ "$RC" == 0 ]] \
+    && pass "negative control: removing the closed-set sweep lets a deleted class pass green" \
+    || fail "the closed-set completeness sweep must be load-bearing"
+else
+  fail "MUTATION SITE NOT FOUND — the completeness sweep moved; this control is dead"
+fi
+
+probefixture "$T/p11a-newid.md" fill "rename~PROBE:substrate~PROBE:my-own-idea"
+run --check-probe-library "$T/p11a-newid.md"
+{ echo "$OUT" | grep -q "not one of Speck" && echo "$OUT" | grep -q "PROBE_UNDECLARED.P1"; } \
+  && pass "a project-invented probe ID is drift AND leaves its real class undeclared (§11a is closed)" \
+  || fail "an unknown probe ID must be rejected"
+
+# ── 21. Speck-owned cells are parity-checked, and the LOOKUP ignores the cell ─────────────────
+# Without this, weakening a row's claim type to `correctness` — which admits everything — would
+# silently dissolve every mismatch that row could ever raise. The most valuable single assertion
+# here: the drift is reported AND the mismatch still fires, because the lookup routes off the
+# COMPILED claim type, never the cell a project can edit.
+probefixture "$T/p11a-weakened.md" fill \
+  "claim~PROBE:geometry-ax~correctness" \
+  "discharge~PROBE:geometry-ax~test:frontend/src/WeekGrid.fits.test.tsx"
+run --check-probe-library "$T/p11a-weakened.md"
+{ echo "$OUT" | grep -q "PROBE_LIBRARY_DRIFT.P2" && echo "$OUT" | grep -q "PROBE_SUBSTRATE_MISMATCH.P1"; } \
+  && pass "weakening a row's claim type is drift AND does not dissolve the mismatch (the cell is not the oracle)" \
+  || fail "editing the claim-type cell must not change the admissibility verdict"
+
+# ── 22. PROBE_LIBRARY_ABSENT.P3 and the scaffold that fixes it ───────────────────────────────
+awk '/^## 11a\./{ins=1} ins && /^## 12\./{ins=0} !ins' "$TEMPLATE" > "$T/p11a-absent.md"
+grep -q '^## 11a\.' "$T/p11a-absent.md" && fail "fixture setup: §11a was not stripped" || true
+run --strict --check-probe-library "$T/p11a-absent.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "PROBE_LIBRARY_ABSENT.P3"; } \
+  && pass "a contract with no §11a is P3 at exit 0 — every pre-v10.2 contract, unblocked" \
+  || fail "an absent §11a must be a P3 nudge"
+echo "$OUT" | grep -q -- "--scaffold-probe-library --write" \
+  && pass "the absent-library P3 names the command that fixes it" || fail "P3 must name the scaffold command"
+
+cp "$T/p11a-absent.md" "$T/p11a-dryrun.md"
+run --scaffold-probe-library "$T/p11a-dryrun.md"
+diff -q "$T/p11a-absent.md" "$T/p11a-dryrun.md" >/dev/null 2>&1 \
+  && pass "--scaffold-probe-library without --write does not touch the file" || fail "scaffold dry-run must not write"
+
+run --scaffold-probe-library --write "$T/p11a-absent.md"
+run --check-probe-library "$T/p11a-absent.md"
+{ [[ "$(count 'PROBE_LIBRARY_DRIFT')" == 0 ]] && [[ "$(count 'PROBE_UNDECLARED.P1')" == 8 ]]; } \
+  && pass "a scaffolded §11a round-trips drift-free, and lands UNDISCHARGED (never pre-filled green)" \
+  || fail "the scaffold must round-trip clean and undischarged"
+run --scaffold-probe-library --write "$T/p11a-absent.md"
+echo "$OUT" | grep -q "PROBE_LIBRARY_PRESENT" \
+  && pass "scaffolding twice is a no-op" || fail "scaffold must be idempotent"
+
+# ── 23. The default scan reaches §11a's own table without a second parser ────────────────────
+# §11a is a citation site by construction (a Claim column + a Discharge artifact column), so the
+# plain scan computes the same P1. Two readers of one table would be two places to drift.
+run --strict "$T/p11a-mismatch.md"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "PROBE_SUBSTRATE_MISMATCH.P1"; } \
+  && pass "the plain scan resolves §11a as a citation site and reaches the same verdict" \
+  || fail "§11a must be a citation site for the default scan too"
+
+# ── 24. Telemetry on the new exit paths (#98 §4) ─────────────────────────────────────────────
+# `break 2` out of the inner loop used to land on an UNCONDITIONAL `pass`, so a telemetry
+# regression printed a ✓ beside its own ✗. The suite still exited 1 (fail() sets FAILED=1), so
+# nothing was certified falsely — but a green tick next to a red cross, in a suite whose entire
+# subject is honest verdicts, is the wrong artifact to ship. The flag makes the pass conditional.
+_telemetry_ok=true
+for args in "--print-probe-library" "--check-probe-library $TEMPLATE" "--scaffold-probe-library $T/p11a-dryrun.md"; do
+  # shellcheck disable=SC2086
+  run $args
+  for k in SPECK_GATE_SCOPE SPECK_GATE_SUBJECT SPECK_GATE_PREDICATES SPECK_GATE_MODE; do
+    echo "$OUT" | grep -q "^$k=" || { fail "telemetry $k missing on '$args'"; _telemetry_ok=false; break 2; }
+  done
+done
+[[ "$_telemetry_ok" == true ]] && pass "the three §11a modes publish SCOPE/SUBJECT/PREDICATES/MODE"
+run --check-probe-library "$TEMPLATE"
+{ echo "$OUT" | grep -q "^SPECK_GATE_SUBJECT=8$" && echo "$OUT" | grep -q "^SPECK_GATE_MODE=check-probe-library$"; } \
+  && pass "the §11a check publishes the 8 classes it actually read, not 0" || fail "§11a check must publish a real SUBJECT"
+
+# ── 25. IT IS WIRED — the assertion this whole cluster is about ───────────────────────────────
+# v10.1 shipped this validator with no hook, no CI step and no §6a row, so the rule it implements
+# could not fail a build. "It exists" is not wiring. Both halves are pinned here:
+#   (a) seed-gate-registry.sh DECLARES it in §6a, so validate-gate-liveness.sh sees it;
+#   (b) seed-gate-registry.sh RUNS it on the contract it just wrote.
+SEED="$ROOT/.speck/scripts/seed-gate-registry.sh"
+RECIPE_FOR_WIRING="$ROOT/.speck/recipes/nextjs-supabase/recipe.yaml"
+WOUT="$(bash "$SEED" "$RECIPE_FOR_WIRING" 2>&1 || true)"
+{ echo "$WOUT" | grep -q '^| speck:evidence-citations | `.speck/scripts/validation/validators/validate-evidence-citations.sh specs/` | manual |' \
+  && echo "$WOUT" | grep -q '^| speck:probe-library | `.speck/scripts/validation/validators/validate-evidence-citations.sh --check-probe-library` | manual |'; } \
+  && pass "wired (a): seed-gate-registry.sh emits both standing §6a rows, so the gate is DECLARED" \
+  || fail "the standing §6a rows must be seeded"
+
+# The seeded rows must survive the header-keyed round-trip the same way the recipe's do — they go
+# through the same producer precisely so a column insert cannot shift only one of the two sets.
+echo "$WOUT" | grep -q '^| speck:evidence-citations |.*| evidence | specs/\*\* | citations>0 | — | — |$' \
+  && pass "wired (a2): the standing row's Scope/Subject land in their own header-named cells" \
+  || fail "the standing row's cells must align with the §6a header"
+
+WIRED_CONTRACT="$T/wired/evidence-contract.md"
+mkdir -p "$T/wired" && cp "$TEMPLATE" "$WIRED_CONTRACT"
+WRC=0; WOUT2="$(bash "$SEED" "$RECIPE_FOR_WIRING" --contract "$WIRED_CONTRACT" 2>&1)" || WRC=$?
+{ [[ "$WRC" == 0 ]] \
+  && echo "$WOUT2" | grep -q "SPECK_GATE_MODE=check-contract" \
+  && echo "$WOUT2" | grep -q "SPECK_GATE_MODE=check-probe-library"; } \
+  && pass "wired (b): seeding a contract RUNS both standing gates on it — and still exits 0 (nudge)" \
+  || fail "seeding a contract must run the citation + §11a gates without blocking"
+echo "$WOUT2" | grep -q "PROBE_UNDECLARED.P1" \
+  && pass "wired (b2): the run reports real findings on the seeded contract (not a silent no-op)" \
+  || fail "the wired run must actually produce findings"
 
 echo ""
 if [[ "$FAILED" == 0 ]]; then

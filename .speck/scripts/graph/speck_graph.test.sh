@@ -1630,6 +1630,20 @@ if ! grep -q "Traceback" <<<"$ROUT" && grep -q "GRAPH_UNWRITABLE" <<<"$ROUT" && 
 else
   bad "road still crashes on a read-only tree" "$ROUT (rc=$RRC)"
 fi
+# …and so does `readiness`, the third derived view (v10.2). Asserted here rather than in its own
+# test so the rule is one rule: a view added later must join the contract, not restate it.
+MOUT="$(python3 "$GRAPH" readiness "$RO" 2>&1)" && MRC=0 || MRC=$?
+if ! grep -q "Traceback" <<<"$MOUT" && grep -q "GRAPH_UNWRITABLE" <<<"$MOUT" && [[ $MRC -ne 0 ]]; then
+  ok "readiness degrades identically — the newest derived view is inside the same contract"
+else
+  bad "readiness crashes (or writes) on a read-only tree" "$MOUT (rc=$MRC)"
+fi
+MOUT="$(python3 "$GRAPH" readiness "$RO" --stdout 2>&1)" && MRC=0 || MRC=$?
+if [[ $MRC -eq 0 ]] && grep -q "Readiness State Map" <<<"$MOUT"; then
+  ok "…and its \`--stdout\` escape hatch genuinely renders on the same read-only tree"
+else
+  bad "readiness names an escape hatch that does not work" "$MOUT (rc=$MRC)"
+fi
 
 echo "── Test 62b: gate's absent-witness branch is still NON-capping, exit 0, on the gate surface"
 # Test 36 pins this on check/gap. The v10 release note promises it on `gate` too, and the installed
@@ -1650,6 +1664,322 @@ if [[ $RC -eq 0 ]] && grep -q "GRAPH_UNBUILT" <<<"$OUT" && ! grep -q "GRAPH_STAL
   ok "a never-built graph is reported as UNBUILT on gate and clears to advance (exit 0)"
 else
   bad "gate must not brick a project that has never run build (the whole v8→v9 base)" "$OUT (rc=$RC)"
+fi
+
+# ── Tests 63-65: issue #96 — the third reachability leg, the derived Proof column, and the order.
+
+echo "── Test 63: a delivery claim the TREE REFUTES is a contradiction, not a filled field"
+# v10.1 asked "is entry_point filled?" and never looked at the tree, so `lib/ghost.ts:createGhost`
+# — a file that has never existed — read exactly like a true citation, and the report join could be
+# satisfied by two sentences the same author typed. THE BOUND: only path/symbol/line existence is
+# decided here; reach, mutation execution and fidelity stay undecidable and stay declared so.
+RES="$TMP/tree/projects/900-res"
+mkdir -p "$RES/epics/001-r/stories/S001-real" "$RES/epics/001-r/stories/S002-ghost" "$TMP/tree/lib"
+# a repo-root marker, so cited paths have a base to resolve against at all
+mkdir -p "$TMP/tree/.speck"
+printf 'export function createThread() {\n  return 1;\n}\n' > "$TMP/tree/lib/threadWrite.ts"
+cat > "$RES/product-contract.md" <<'EOF'
+# Product Contract: Res
+## 5. Magic Moments
+### MM-1 — The real one
+### MM-2 — The ghost
+EOF
+res_story() {  # <dir> <MM> <entry_point> <wiring_witness>
+  { echo "---"; echo "artifact_type: story-spec"; echo "serves: [$2]"
+    echo "entry_point: $3"; echo "wiring_witness: $4"; echo "---"
+    echo "# Story: $1"; echo "#### AC-1 — Primary"
+  } > "$RES/epics/001-r/stories/$1/spec.md"
+  { echo "# Validation Report"
+    echo "- **VERDICT** $2 = GOOD — connoisseur Job B"
+    echo ""
+    echo "## 🧬 Mutation Record"
+    echo "| guard test | mutation site | verdict |"
+    echo "|---|---|---|"
+    echo "| t::x | $4 | GUARD_MUTATION_PROVEN |"
+  } > "$RES/epics/001-r/stories/$1/validation-report.md"
+}
+res_story S001-real  MM-1 "lib/threadWrite.ts:createThread" "lib/threadWrite.ts:2"
+res_story S002-ghost MM-2 "lib/ghost.ts:createGhost"        "lib/ghost.ts:41"
+OUT="$(python3 "$GRAPH" check "$RES" 2>&1 || true)"
+if grep -q "WIRING_UNRESOLVED.P2" <<<"$OUT" && grep -q "lib/ghost.ts" <<<"$OUT"; then
+  ok "a cited path that does not exist in the tree is convicted by name"
+else
+  bad "the citation named a file nobody can open and the graph agreed with it" "$OUT"
+fi
+# THE POSITIVE CONTROL, and it is the half that makes the finding worth having: the story whose
+# citation is TRUE must not be convicted, or the rule is just "having an entry_point is bad".
+if grep -q "S001-real" <<<"$(grep WIRING_UNRESOLVED <<<"$OUT")"; then
+  bad "the resolution leg convicted a citation that resolves — it is measuring the wrong thing" "$OUT"
+else
+  ok "…and the story whose path, symbol and line all resolve is left alone (positive control)"
+fi
+# A refuted citation may not launder a promise into 'witnessed' just because the report repeats it.
+if grep -q "MAPPED_UNWITNESSED.P2" <<<"$OUT" && grep -q "MM-2" <<<"$OUT"; then
+  ok "…and the refuted citation cannot witness MM-2, even though the report dutifully repeats it"
+else
+  bad "two artifacts agreeing about a file that does not exist still satisfied the witness" "$OUT"
+fi
+if [[ "$(hard_count "$OUT")" == "0" ]]; then
+  ok "…and it CAPS, never blocks (same polarity as every other reachability leg)"
+else
+  bad "the resolution leg must not become a wall" "$OUT"
+fi
+if [[ "$(cap_token "$(python3 "$GRAPH" gap "$RES" 2>&1 || true)")" == "CAP=INTEGRATION-GREEN" ]]; then
+  ok "…and it lowers the cap NUMBER, rather than printing beside an unchanged one"
+else
+  bad "WIRING_UNRESOLVED printed without moving the ceiling" "$(python3 "$GRAPH" gap "$RES" 2>&1)"
+fi
+
+echo "── Test 63b: a WRONG SYMBOL in a real file, and a line past the end of a real file"
+res_story S002-ghost MM-2 "lib/threadWrite.ts:createGhost" "lib/threadWrite.ts:2"
+OUT="$(python3 "$GRAPH" check "$RES" 2>&1 || true)"
+if grep -q "does not occur anywhere in lib/threadWrite.ts" <<<"$OUT"; then
+  ok "the file exists, the entry point does not — named as a rename/move, not as an absence"
+else
+  bad "a symbol absent from the file it names was accepted" "$OUT"
+fi
+res_story S002-ghost MM-2 "lib/threadWrite.ts:createThread" "lib/threadWrite.ts:9999"
+OUT="$(python3 "$GRAPH" check "$RES" 2>&1 || true)"
+if grep -q "outside the file it names" <<<"$OUT"; then
+  ok "a mutation site past the end of the file it cites is refuted by the file itself"
+else
+  bad "a wiring_witness line that cannot exist was accepted" "$OUT"
+fi
+
+echo "── Test 63c: with NO repo root there is no base, so the answer is NOT EVALUATED, not a guess"
+# This is what keeps a loose checkout, a submodule and every pre-existing fixture safe: the leg
+# only speaks where it can resolve. `$WIT` cites lib/threadWrite.ts and has no root above it.
+OUT="$(python3 "$GRAPH" check "$WIT" 2>&1 || true)"
+if grep -q "WIRING_UNRESOLVED" <<<"$OUT"; then
+  bad "the leg convicted a citation it had no base to resolve — a guess, not a finding" "$OUT"
+else
+  ok "no repo root → nothing fires (a gate that guesses is worse than the prose it replaces)"
+fi
+if grep -q "PROMISE_FIDELITY: NOT evaluated" <<<"$OUT"; then
+  ok "…and what stays undecidable is PRINTED, not left to be rediscovered"
+else
+  bad "the undecidable remainder must be declared on the same surface as the verdict" "$OUT"
+fi
+
+echo "── Test 64: the Readiness State Map is DERIVED — the Proof column is computed, never typed"
+RM="$TMP/rmtree/projects/901-rm"
+mkdir -p "$RM/epics/001-m/stories/S001-proven" "$RM/epics/001-m/stories/S002-unproven"
+cat > "$RM/product-contract.md" <<'EOF'
+# Product Contract: RM
+## 5. Magic Moments
+### MM-1 — Only wow
+EOF
+printf -- '---\nartifact_type: story-spec\nserves: [MM-1]\nreadiness_state_verified: UX-RC\n---\n# A\n#### AC-1 — a\n' \
+  > "$RM/epics/001-m/stories/S001-proven/spec.md"
+printf -- '---\nartifact_type: story-spec\nreadiness_state_verified: UX-RC\n---\n# B\n#### AC-1 — b\n' \
+  > "$RM/epics/001-m/stories/S002-unproven/spec.md"
+printf -- '---\nartifact_type: validation-report\nreadiness_state_verified: IMPL-GREEN\n---\n# Report\n' \
+  > "$RM/epics/001-m/stories/S001-proven/validation-report.md"
+OUT="$(python3 "$GRAPH" readiness "$RM" --stdout 2>&1)"
+if grep -q "NEVER hand-edit" <<<"$OUT" && grep -q "Level | Item | Claimed State | Proof" <<<"$OUT"; then
+  ok "the map renders the six project-state columns and declares its own derivation"
+else
+  bad "the derived readiness map must carry the project-state column set" "$OUT"
+fi
+S2ROW="$(grep "001-m/S002" <<<"$OUT" || true)"
+if grep -q "none yet" <<<"$S2ROW"; then
+  ok "a story with no validation report gets \`none yet\` — a fact, where a blank reads as 'checked'"
+else
+  bad "an unproven row must say so in the Proof cell" "$S2ROW"
+fi
+S1ROW="$(grep "001-m/S001" <<<"$OUT" || true)"
+if grep -q "validation-report.md@" <<<"$S1ROW"; then
+  ok "…and a proven row cites the report path pinned at a SHA"
+else
+  bad "the Proof cell must resolve to <path>@<sha>" "$S1ROW"
+fi
+# THE control point: the claim and its own proof disagreeing is the exact defect that survived two
+# rewrites of a project-state, because the claim resolved to nothing and nothing could contradict it.
+if grep -q "contradiction" <<<"$S1ROW" && grep -q "IMPL-GREEN" <<<"$S1ROW"; then
+  ok "…and a claim its OWN proof contradicts is printed ON the claim, not in a footnote"
+else
+  bad "a spec claiming UX-RC whose report records IMPL-GREEN passed silently" "$S1ROW"
+fi
+# The item set comes from the graph, so a story cannot be left off its own status page.
+if grep -q "001-m/S001" <<<"$OUT" && grep -q "001-m/S002" <<<"$OUT" && grep -q "| Epic |" <<<"$OUT"; then
+  ok "…and every story + epic in the graph has a row (the item set is compiled, not maintained)"
+else
+  bad "the row set must come from the graph" "$OUT"
+fi
+# Not separately committable — the road's law, applied to the second quoted-onward table.
+rm -f "$RM/graph/readiness-map.md"
+python3 "$GRAPH" build "$RM" >/dev/null 2>&1
+if [[ -s "$RM/graph/readiness-map.md" ]]; then
+  ok "…and \`build\` refreshes it in the SAME call (a separately-refreshable copy goes stale)"
+else
+  bad "build left the readiness map behind, exactly as it once left the road" "no file"
+fi
+
+echo "── Test 64b: staleness is the CONTENT predicate — a proof is stale when its subject moved"
+# Requires real history: the predicate is 'the spec's last commit is newer than the report's'.
+# NOT `stamped SHA == HEAD` — the counter-example that killed that rule for the witness (five
+# commits behind, byte-identical) holds one artifact up, and is asserted below.
+GRM="$TMP/gitrm"
+mkdir -p "$GRM/projects/902-git/epics/001-g/stories/S001-a"
+GP902="$GRM/projects/902-git"
+cat > "$GP902/product-contract.md" <<'EOF'
+# Product Contract: Git
+## 5. Magic Moments
+### MM-1 — Only wow
+EOF
+printf -- '---\nartifact_type: story-spec\nserves: [MM-1]\nreadiness_state_verified: UX-RC\n---\n# A\n#### AC-1 — a\n' \
+  > "$GP902/epics/001-g/stories/S001-a/spec.md"
+printf -- '---\nartifact_type: validation-report\nreadiness_state_verified: UX-RC\n---\n# Report\n' \
+  > "$GP902/epics/001-g/stories/S001-a/validation-report.md"
+GIT="git -C $GRM -c user.email=t@e -c user.name=t -c commit.gpgsign=false"
+if $GIT init -q >/dev/null 2>&1 && $GIT add -A >/dev/null 2>&1 \
+   && $GIT commit -qm "spec + report together" >/dev/null 2>&1; then
+  OUT="$(python3 "$GRAPH" readiness "$GP902" --stdout 2>&1)"
+  ROW="$(grep "S001-a" <<<"$OUT" || true)"
+  if grep -qE 'validation-report\.md@[0-9a-f]{6,}' <<<"$ROW" && grep -q "| no |" <<<"$ROW"; then
+    ok "a proof committed with its spec is FRESH and pinned at the real short SHA"
+  else
+    bad "the git-backed proof stamp or the fresh verdict is wrong" "$ROW"
+  fi
+  # Five commits that touch NEITHER artifact — the exact counter-example. HEAD moves; nothing else.
+  for i in 1 2 3 4 5; do
+    echo "$i" > "$GRM/unrelated-$i.txt"
+    $GIT add -A >/dev/null 2>&1 && $GIT commit -qm "unrelated $i" >/dev/null 2>&1
+  done
+  ROW="$(grep "S001-a" <<<"$(python3 "$GRAPH" readiness "$GP902" --stdout 2>&1)" || true)"
+  if grep -q "| no |" <<<"$ROW"; then
+    ok "…and five commits behind HEAD, content-identical, is STILL fresh (SHA equality stays dead)"
+  else
+    bad "staleness fired on HEAD moving — the rule that teaches --no-verify inside a day" "$ROW"
+  fi
+  # Now move the SUBJECT. The proof now predates the thing it proves.
+  printf -- '---\nartifact_type: story-spec\nserves: [MM-1]\nreadiness_state_verified: SHIP-RC\n---\n# A\n#### AC-1 — a\n#### AC-2 — new\n' \
+    > "$GP902/epics/001-g/stories/S001-a/spec.md"
+  $GIT add -A >/dev/null 2>&1 && $GIT commit -qm "respec the story" >/dev/null 2>&1
+  ROW="$(grep "S001-a" <<<"$(python3 "$GRAPH" readiness "$GP902" --stdout 2>&1)" || true)"
+  if grep -q "after the proof" <<<"$ROW"; then
+    ok "…and a spec that changed AFTER its report makes the proof stale (content, not HEAD)"
+  else
+    bad "a proof older than the spec it proves reported fresh" "$ROW"
+  fi
+else
+  echo "  ⏭  skipped the git-backed half (git unavailable in this environment)"
+fi
+# With no git at all the honest answer is `unknown` — never `no`, which would read as verified.
+if grep -q "no proof yet" <<<"$(grep "001-m/S002" <<<"$(python3 "$GRAPH" readiness "$RM" --stdout 2>&1)")"; then
+  ok "…and with no history the cell says \`unknown\`, never \`no\`"
+else
+  bad "a row with no history must say so, never imply a verified 'no'" \
+      "$(python3 "$GRAPH" readiness "$RM" --stdout 2>&1)"
+fi
+
+echo "── Test 65: the gap token's ORDER is computed — it decides what the next session works on"
+ORD="$TMP/projects/903-order"
+mkdir -p "$ORD/epics/001-o/stories/S001-a" "$ORD/epics/001-o/stories/S002-b"
+ord_contract() {   # <highest MM number>
+  { echo "# Product Contract: Order"; echo "## 5. Magic Moments"
+    echo "### MM-1 — delivered (adopts the scheme)"
+    for i in $(seq 2 "$1"); do echo "### MM-$i — nobody delivers this"; done
+  } > "$ORD/product-contract.md"
+}
+# A dangling ref (DANGLING_REF), a two-story cycle (DEP_CYCLE) and phantom promises
+# (PHANTOM_PROMISE) — three gate blocks whose MINT order differs from their ranked order, with the
+# whole set inside the window, so the window cannot hide the disorder.
+printf -- '---\nartifact_type: story-spec\nserves: [MM-1]\ndepends_on: [S002, S404]\n---\n# A\n#### AC-1 — a\n' \
+  > "$ORD/epics/001-o/stories/S001-a/spec.md"
+printf -- '---\nartifact_type: story-spec\ndepends_on: [S001]\n---\n# B\n#### AC-1 — b\n' \
+  > "$ORD/epics/001-o/stories/S002-b/spec.md"
+ord_contract 4
+GAPOUT="$(python3 "$GRAPH" gap "$ORD" 2>&1 || true)"
+gap_p1_codes() {   # the gate codes inside the P1 window, in the order they were printed
+  sed -E 's/.*·P1\(([^)]*)\).*/\1/' <<<"$1" | tr ',' '\n' \
+    | sed -E 's/^ *//; s/ .*//' | grep -v '^$' | grep -v '^+' || true
+}
+CODES="$(gap_p1_codes "$GAPOUT")"
+SORTED="$(printf '%s\n' "$CODES" | sort)"
+if [[ -n "$CODES" ]] && [[ "$(wc -l <<<"$CODES")" -ge 3 ]] && [[ "$CODES" == "$SORTED" ]]; then
+  ok "the P1 window is emitted in the computed order, not the order the gate blocks happen to run"
+else
+  bad "gap reprioritises by gate-block authorship order" "$GAPOUT"
+fi
+# Same run, one more assertion: the ranking is STABLE. A token that gets diffed across sessions
+# cannot reshuffle when nothing changed.
+if [[ "$(gap_p1_codes "$(python3 "$GRAPH" gap "$ORD" 2>&1 || true)")" == "$CODES" ]]; then
+  ok "…and it is stable across runs (the tiebreak is arbitrary on purpose, never unstable)"
+else
+  bad "the work order changed with no input change" "$CODES"
+fi
+
+echo "── Test 65b: a truncated window SAYS so, and NEXT= names the one item to do"
+ord_contract 9
+GAPOUT="$(python3 "$GRAPH" gap "$ORD" 2>&1 || true)"
+if grep -qE '\+[0-9]+ more' <<<"$GAPOUT"; then
+  ok "a truncated window discloses the remainder (a silent window reads as the total)"
+else
+  bad "the window dropped items silently — '2 shown of 10' reads as 2" "$GAPOUT"
+fi
+NEXT="$(sed -E 's/.*NEXT=([^ |]*).*/\1/' <<<"$GAPOUT")"
+if [[ -n "$NEXT" ]] && [[ "$NEXT" != "$GAPOUT" ]] && [[ "$NEXT" != "none" ]]; then
+  ok "…and NEXT= names the single item to do next (\`$NEXT\`), so nobody infers a ranking"
+else
+  bad "gap must name the next item outright — /goal's iteration policy depends on it" "$GAPOUT"
+fi
+# ONE ranking, two consumers: the item gap puts first IS the row findings ranks first, by
+# construction. If these two ever disagree the project has two work orders and a second namespace.
+TOPROW="$(python3 "$GRAPH" findings "$ORD" --stdout 2>&1 | grep -m1 -E '^\| 1 \|' || true)"
+if grep -qF "$NEXT" <<<"$TOPROW"; then
+  ok "…and it is the SAME row the derived findings view ranks first (one order, two surfaces)"
+else
+  bad "gap and findings disagree about what to do next — two work orders" "$NEXT vs $TOPROW"
+fi
+
+echo "── Test 66: \`road --check\` — the READ-SIDE assert, content-signature not SHA"
+RC1="$TMP/projects/904-roadcheck"
+mkdir -p "$RC1/epics/001-c/stories/S001-a"
+printf '# Product Contract: RC\n## 5. Magic Moments\n### MM-1 — wow\n' > "$RC1/product-contract.md"
+printf -- '---\nartifact_type: story-spec\nserves: [MM-1]\n---\n# A\n#### AC-1 — a\n' \
+  > "$RC1/epics/001-c/stories/S001-a/spec.md"
+python3 "$GRAPH" build "$RC1" >/dev/null 2>&1
+OUT="$(python3 "$GRAPH" road "$RC1" --check 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && grep -q "ROAD_FRESH" <<<"$OUT"; then
+  ok "a road \`build\` just wrote is fresh, and says so (a green that names the leg that ran)"
+else
+  bad "road --check convicts the road build itself just rendered" "$OUT (rc=$RC)"
+fi
+# THE anti-SHA control: rewrite ONLY the stamp footer. Content identical, HEAD 'moved'. A predicate
+# that fires here is `stamped SHA == HEAD` in disguise — the rule brightstance disproved.
+ROADF="$RC1/graph/road-to-completion.md"
+python3 - "$ROADF" <<'PYEOF'
+import sys, re
+p = sys.argv[1]; t = open(p).read()
+open(p, "w").write(re.sub(r"^\*\[as of SHA .*$", "*[as of SHA `deadbee` | derived]*", t, flags=re.M))
+PYEOF
+OUT="$(python3 "$GRAPH" road "$RC1" --check 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && grep -q "ROAD_FRESH" <<<"$OUT"; then
+  ok "…a DIFFERENT SHA stamp with identical content is still FRESH (SHA equality stays dead)"
+else
+  bad "the road assert is SHA equality wearing a disguise — it would fire on every commit" "$OUT"
+fi
+# Now change what the road SAYS. This is the fire: a road opening in bold with a cap value that a
+# fresh compile does not agree with.
+python3 - "$ROADF" <<'PYEOF'
+import sys
+p = sys.argv[1]; t = open(p).read()
+open(p, "w").write(t.replace("**Blocking** = 0", "**Blocking** = 0 — clear to advance, ship it"))
+PYEOF
+OUT="$(python3 "$GRAPH" road "$RC1" --check 2>&1)" && RC=0 || RC=$?
+if [[ $RC -ne 0 ]] && grep -q "ROAD_STALE" <<<"$OUT" && grep -q "cannot report its own staleness" <<<"$(tr 'A-Z' 'a-z' <<<"$OUT")"; then
+  ok "…and a road whose CONTENT disagrees with a fresh compile exits non-zero, naming the fix"
+else
+  bad "a hand-edited road passed the read-side assert" "$OUT (rc=$RC)"
+fi
+# On the commit path it is ADVISORY, and that is the disclosed choice: v10.2's own routing changes
+# every road, so a blocking check would make the whole installed base uncommittable on upgrade day.
+OUT="$(python3 "$GRAPH" lint-refs "$RC1" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && grep -q "ROAD_STALE (advisory, does not block)" <<<"$OUT"; then
+  ok "…and lint-refs (the commit path) SURFACES it without bricking the commit"
+else
+  bad "the commit-path advisory is missing, or it blocks" "$OUT (rc=$RC)"
 fi
 
 echo ""

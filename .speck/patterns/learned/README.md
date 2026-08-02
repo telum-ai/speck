@@ -28,11 +28,16 @@ Patterns are organized by type:
 
 ### `testing/` — class-gate patterns (seeded directly, not via the retrospective cascade)
 
-These nine were extracted in one pass from ISSUE #100 (a cross-product retrospective over Streb,
+The first nine were extracted in one pass from ISSUE #100 (a cross-product retrospective over Streb,
 Brightstance and Splang at Speck v9.5.0) rather than promoted through the story→epic→project cascade
 below — worth stating explicitly, since "Patterns are NOT added manually" is this directory's default
 governance rule and this is the disclosed exception to it. Read `class-gate-not-a-third-fix.md` first;
-it is the umbrella doctrine the other eight instantiate.
+it is the umbrella doctrine the rest instantiate. The last two extend the same series from ISSUE #103
+and ISSUE #93 class 3.
+
+**This table is the directory's index, and it had drifted**: two patterns shipped in v10 with no row
+here, so a reader of this page saw nine of the eleven files that exist. An index that lists a subset
+is worse than no index — it reads as complete. Add a row in the same commit as a new pattern file.
 
 | Pattern | What it closes |
 |---|---|
@@ -45,6 +50,8 @@ it is the umbrella doctrine the other eight instantiate.
 | `recipe-pii-redaction-chokepoint.md` | PII reaching a log call, plus the scanner's own recorded blind spots |
 | `recipe-failed-read-is-not-empty.md` | A caught read failure rendered as a genuine empty/zero |
 | `recipe-duplicated-rule-schema-type-parity.md` | A constant/enum/predicate legitimately living in two files, joined by nothing but a comment |
+| `two-carrier-interval-doctrine.md` | ISSUE #103 — a change whose two halves ride different clocks is destructive only in the interval between the landings, and every gate is green on both sides of it. Mechanized for the decidable slice by `validate-two-carrier.sh` (positional readers of markdown pipe-tables), wired staged-scoped into `pre-commit-hook.sh` in v10.2 |
+| `quality-bound-vs-existence-bound.md` | ISSUE #93 class 3 — a quality bar that annexes the go/no-go, so the gate can never fail loudly and every blocked thing reads as merely unripe. Mechanized in v10.2 by `validate-bound-fusion.sh`: the tell is not in the artifact (where the bounds really are fused) but in the machinery, where the rungs a quality axis may gate are an enumerated set |
 
 ## Pattern File Format
 

@@ -45,13 +45,41 @@
 # A token is a citation when it carries a file extension, sits under one of §9's reserved evidence
 # directories, or is an absolute path that resolves. "Contains a slash or an @" is a PUNCTUATION
 # test, not a path test: it reported API routes, slash commands, npm scopes and ordinary English
-# (`try/catch`, `Terms/Privacy`, `4/4`) as untyped citations at a 26% rate over two real projects,
-# and a P3 that noisy is a P3 that gets suppressed project-wide on first contact.
+# (`try/catch`, `Terms/Privacy`, `4/4`) as citations.
+#
+# MEASURED ONCE, HERE — every other mention in this file points back to this paragraph instead of
+# re-quoting its own number. Two real Speck projects' specs/** (brightstance, streb), same corpus,
+# before/after this file's fix: the bare punctuation test reported 1,240 "citations" combined
+# (brightstance 609, streb 631); requiring an extension, a reserved evidence directory, or a
+# resolving absolute path instead reports 947 (brightstance 535, streb 412) — a 23.6% drop. All of
+# the removed 293 were extension-less punctuation matches (brightstance 74 -> 0, streb 222 -> 4),
+# and the 4 streb survivors are genuine directory citations, not false positives. The 947-side of
+# this is reproducible on demand: `validate-evidence-citations.sh <specs-dir>` prints
+# SPECK_GATE_SUBJECT. The absolute counts above pin a LIVE corpus and drift with every commit those
+# repos take — do not re-assert them as current. The durable claim is the RATIO and the direction:
+# ~24% fewer, and every removed match was extension-less punctuation. A P3 with the punctuation
+# test's false-positive rate is a P3 that gets suppressed project-wide on first contact.
 #
 # THE WRITE IS NARROWER THAN THE READ (see the stamp-scope guard in process_file).
 # --stamp-types rewrites only tables that carry BOTH a `Claim` column and an evidence column — the
 # only shape from which a stamped type can ever be read back (§2b). Scanning stays wider, because
 # the P3 must reach the legacy evidence-only shape.
+#
+# THE §11a STANDARD PROBE LIBRARY (v10.2) — WHY IT LIVES IN THIS FILE.
+# #101's §11a was unbuildable at v10.0 because PROBE_SUBSTRATE_MISMATCH.P1 "the cited artifact's
+# type is on the 'does NOT count' side of §2's table" cannot be computed from `path@sha`. v10.1
+# shipped the type vocabulary and the admissibility table above, so §11a is now a LOOKUP over that
+# table — claim type -> citation type -> admissible? — rather than an inference over a string. The
+# lookup and the table must not be two files: a registry whose admissibility rule could drift from
+# the table it cites is the vacuity #100 filed. So the library is compiled in HERE, beside the
+# table it reads, and the contract's rendering of it is parity-checked exactly like §2b.
+#
+# UNKNOWN NEVER CONVICTS, and it is a decision rather than an omission. Admissibility is a property
+# of the PAIR (claim type, citation type). An unknown citation type means the pair is INCOMPLETE,
+# not that it is inadmissible — and a validator that resolved incomplete to inadmissible would turn
+# every un-stamped project red on upgrade day while claiming to have proved something it never
+# computed. So an untyped/unknown discharge artifact is PROBE_SUBSTRATE_UNKNOWN.P3, the same
+# severity and the same reason as CITATION_UNTYPED.P3.
 #
 # Usage:
 #   validate-evidence-citations.sh [--strict] <file|dir>        scan and report
@@ -59,6 +87,9 @@
 #   validate-evidence-citations.sh --print-table                claim<TAB>admissible types
 #   validate-evidence-citations.sh --check-contract <file>      §2b <-> compiled-table parity
 #   validate-evidence-citations.sh --stamp-types [--write] <f>  the migration body (see below)
+#   validate-evidence-citations.sh --print-probe-library        the closed §11a class list
+#   validate-evidence-citations.sh --check-probe-library <f>    §11a discharge / exception / drift
+#   validate-evidence-citations.sh --scaffold-probe-library [--write] <f>   add §11a to a contract
 #
 # Exit: 0 = no P1 (or no --strict), 1 = P1 under --strict / drift under --strict, 2 = invocation error.
 
@@ -145,6 +176,50 @@ claim_admissible_types() {
 }
 CLAIM_TYPES="correctness visibility acceptance persistence fit behaviour"
 
+# ── The §11a Standard Probe Library (Speck-owned, CLOSED) ────────────────────────────────────
+# Eight recurring defect classes, each routed to an admissible substrate BY RULE rather than by
+# whoever's imagination ran that week. This is deliberately NOT §11: §11's own P4 says its list
+# "prompts the adversary's imagination — it is not the definition of done", and growing it is the
+# failure mode it warns about. §11a is the differently-shaped second section — closed, recurring,
+# discharge-REQUIRED — and a project extends it exactly as much as it extends CITATION_TYPES: not
+# at all.
+#
+# ONE COLUMN LIST, like GATE_REGISTRY_COLUMNS. The header, the separator and the scaffolded rows
+# are all derived from it, so a column insert cannot land in one and not the others — the exact
+# drift that made three §6a readers disagree before v9.6.
+PROBE_LIBRARY_COLUMNS=("Probe ID" "Class" "Claim type" "Admissible substrate" "Required negative controls" "Discharge artifact" "Exception")
+PROBE_IDX_ID=0; PROBE_IDX_CLASS=1; PROBE_IDX_CLAIM=2; PROBE_IDX_SUBSTRATE=3; PROBE_IDX_CONTROLS=4
+PROBE_IDX_DISCHARGE=5; PROBE_IDX_EXCEPTION=6
+
+# id <TAB> class <TAB> claim type <TAB> admissible substrate <TAB> required negative controls.
+# The last two columns (Discharge artifact / Exception) are the PROJECT's to fill — they are the
+# only two cells §11a leaves open, and the whole registry exists to make leaving BOTH of them empty
+# a finding instead of a silence.
+#
+# The claim type on each row is the load-bearing field: it is what turns PROBE_SUBSTRATE_MISMATCH
+# into a lookup into claim_admissible_types() above. `named-clock` and `substrate` are typed
+# `correctness` HONESTLY — a lint rule plus a dual-TZ suite run genuinely is the right instrument
+# for them, so those two rows can never raise a mismatch. A registry that manufactured a stricter
+# claim type than the class deserves, just to make every row able to fire, would be theater.
+probe_library() {
+  printf '%s\n' \
+"PROBE:provenance	P1	behaviour	render site + generator stamp + the prompt's own exemplars, judged control-vs-treatment on the composed prompt with the shipped model	rendered-with-degraded-provenance · exemplar re-read (deleting the exemplar must not leave the test green)" \
+"PROBE:honest-label	P2	persistence	the write's observed outcome read back out of the datastore against a pre-walk baseline	total-failure render · partial-failure render · the three renders differ" \
+"PROBE:second-actor	P3	visibility	A writes, teardown, B signs in on the same install, offline — once per enumerated persistence layer	signOut vs deleteAccount compared field-for-field · launch-with-data-and-no-owner-record" \
+"PROBE:money-path	P4	acceptance	the real engine as the applying principal, one run per revenue path	entitlement gate flipped and every revenue path goes red · vendor fixture cited to the vendor's field reference · per-user serialized claim write · one declared fail-posture · bounded worst case per tap" \
+"PROBE:named-clock	P5	correctness	an AST/lint rule over write handlers, cache fills and fixtures, plus the date-sensitive suites run under two timezones	a non-UTC TZ run · allowlist entries that name the audience" \
+"PROBE:geometry-ax	P6	fit	a baked build: platform AX dump plus container-vs-content geometry at 3 or more widths, numbers in the artifact	adjacent-target overlap · expected-cell presence · page overflow" \
+"PROBE:substrate	P7	correctness	§2b parity of this contract against Speck's compiled admissibility table	the parity run reports CITATION_TABLE_PARITY over a non-empty row set" \
+"PROBE:migration-dirt	P8	acceptance	the migration applied forward on a throwaway seeded to the target's real dirty shape	pre-state REJECTED · boundary cases still refuse · one migration head after the merge"
+}
+
+probe_ids() { probe_library | cut -f1; }
+
+# probe_field <probe-id> <1-based field> — empty when the id is not in the closed library.
+probe_field() {
+  probe_library | awk -F'\t' -v id="$1" -v n="$2" '$1 == id { print $n; exit }'
+}
+
 in_list() {
   local needle="$1" hay="$2" t
   for t in $hay; do [[ "$t" == "$needle" ]] && return 0; done
@@ -169,6 +244,9 @@ while [[ $# -gt 0 ]]; do
     --print-table) mode="print-table"; shift ;;
     --check-contract) mode="check-contract"; shift ;;
     --stamp-types) mode="stamp-types"; shift ;;
+    --print-probe-library) mode="print-probe-library"; shift ;;
+    --check-probe-library) mode="check-probe-library"; shift ;;
+    --scaffold-probe-library) mode="scaffold-probe-library"; shift ;;
     -h|--help) sed -n '1,40p' "${BASH_SOURCE[0]}"; exit 0 ;;
     -*) echo "ERROR: unknown option '$1'" >&2; exit 2 ;;
     *) target="$1"; shift ;;
@@ -189,6 +267,13 @@ if [[ "$mode" == "print-table" ]]; then
     n=$((n + 1))
   done
   GATE_PREDICATES="$n"
+  exit 0
+fi
+
+if [[ "$mode" == "print-probe-library" ]]; then
+  probe_library
+  GATE_PREDICATES="$(probe_ids | grep -c .)"
+  GATE_SUBJECT="$GATE_PREDICATES"
   exit 0
 fi
 
@@ -368,12 +453,13 @@ stamp_cell() {
 # noise, and noise is how a P3 gets globally suppressed.
 #
 # "CONTAINS A SLASH OR AN @" WAS NOT A PATH TEST — IT WAS A PUNCTUATION TEST, and it is why this
-# gate could not be wired anywhere. Measured over two real projects' `specs/**` (1,646 markdown
-# files), 407 of 1,199 reported "citations" — 34% — carried no file extension at all. They were
-# API routes (`/model`, `/suggest`), slash commands (`/audit`), npm scopes (`@streb/web`), CI
-# refs (`pnpm/action-setup@v4`) and ordinary English written with a solidus (`try/catch`,
-# `before/after`, `sets/week`, `A/B/C/D`, `4/4`, `Terms/Privacy`, `988/741741`). A P3 with a 34%
-# false-positive rate is a P3 that gets suppressed project-wide on first contact.
+# gate could not be wired anywhere (the measurement is above, under WHAT COUNTS AS A CITATION AT
+# ALL — not repeated here, so there is exactly one number for this in the file). It reported API
+# routes (`/model`, `/suggest`), slash commands (`/audit`), npm scopes (`@streb/web`), CI refs
+# (`pnpm/action-setup@v4`) and ordinary English written with a solidus (`try/catch`,
+# `before/after`, `sets/week`, `A/B/C/D`, `4/4`, `Terms/Privacy`, `988/741741`) as citations just
+# as readily as a real path. A P3 that noisy is a P3 that gets suppressed project-wide on first
+# contact.
 #
 # So a token is a citation only when it carries one of THREE facts about a filesystem:
 #   1. a file extension on its basename — the strongest available signal that it names an artifact;
@@ -507,6 +593,256 @@ check_contract() {
     drift=1
   elif [[ "$drift" -eq 0 ]]; then
     emit_note "CITATION_TABLE_PARITY" "$file — §2b matches Speck's compiled admissibility table ($GATE_PREDICATES claim rows, $(printf '%s' "$CITATION_TYPES" | wc -w | tr -d ' ') citation types)"
+  fi
+}
+
+# ── §11a: the Standard Probe Library check ───────────────────────────────────────────────────
+# Shaped on §6a's precedent, which is the only gate-registry pattern in this repo that has been
+# proven load-bearing: a Speck-owned closed set, rendered into the project's contract, read back
+# HEADER-KEYED, with the project-authored cells the only ones a project may write.
+#
+# `## 11a.` and never `### 11a.`: §11a is a SIBLING of §11, not a subsection of it. #101's P4
+# constraint is that §11 must not grow, and a subsection heading is exactly how a "second, differently
+# shaped section" quietly becomes a longer §11.
+probe_section() {
+  awk '/^##[[:space:]]*11a\./ { ins=1; next } ins && /^##[[:space:]]/ { ins=0 } ins { print }' "$1"
+}
+
+# Whitespace/backtick-insensitive comparison of a Speck-owned cell. A project re-wrapping a long
+# cell or dropping the code ticks off a claim type is not drift; changing the WORDS is.
+norm_cell() {
+  local s
+  s="$(printf '%s' "$1" | tr -d '`' | tr '\n\t' '  ' | tr -s ' ')"
+  printf '%s' "$(sp_trim "$s")"
+}
+
+PCOL_ID=-1; PCOL_CLASS=-1; PCOL_CLAIM=-1; PCOL_SUBSTRATE=-1; PCOL_CONTROLS=-1; PCOL_DISCHARGE=-1; PCOL_EXCEPTION=-1
+resolve_probe_columns() {
+  split_row "$1"
+  PCOL_ID=-1; PCOL_CLASS=-1; PCOL_CLAIM=-1; PCOL_SUBSTRATE=-1; PCOL_CONTROLS=-1; PCOL_DISCHARGE=-1; PCOL_EXCEPTION=-1
+  local i lc
+  for (( i=0; i<${#ROW_CELLS[@]}; i++ )); do
+    lc="$(printf '%s' "${ROW_CELLS[$i]}" | tr '[:upper:]' '[:lower:]')"
+    case "$lc" in
+      "probe id"*)   PCOL_ID=$i ;;
+      class*)        PCOL_CLASS=$i ;;
+      claim*)        PCOL_CLAIM=$i ;;
+      admissible*)   PCOL_SUBSTRATE=$i ;;
+      required*)     PCOL_CONTROLS=$i ;;
+      discharge*)    PCOL_DISCHARGE=$i ;;
+      exception*)    PCOL_EXCEPTION=$i ;;
+    esac
+  done
+  [[ $PCOL_ID -ge 0 && $PCOL_DISCHARGE -ge 0 && $PCOL_EXCEPTION -ge 0 ]]
+}
+
+# Where a `waived DEC-####` must resolve. Same convention as validate-gate-liveness.sh: the log
+# sits beside the contract, or one level up in a project dir. Not findable => the waiver is
+# recorded as unverified rather than convicted — degrade-to-honest, never a false P2.
+find_decisions_log() {
+  local d; d="$(cd "$(dirname "$1")" 2>/dev/null && pwd)" || return 1
+  local p
+  for p in "$d/project-decisions-log.md" "$d/../project-decisions-log.md"; do
+    [[ -f "$p" ]] && { printf '%s' "$p"; return 0; }
+  done
+  return 1
+}
+
+check_probe_library() {
+  local file="$1"
+  local block line in_table=false is_probe_table=false seen="" declog=""
+  local pid claim discharge exception ex tok first_cite ty adm dec
+  local exp_class exp_claim exp_substrate exp_controls got pair idx rest label want
+  local has_discharge has_exception
+
+  block="$(probe_section "$file")"
+  if [[ -z "$(printf '%s' "$block" | tr -d '[:space:]')" ]]; then
+    emit_p3 "PROBE_LIBRARY_ABSENT.P3" "$file — no '## 11a. Standard Probe Library' section. The eight recurring defect classes are neither discharged nor declared inapplicable here, which is indistinguishable from a project that has none of those surfaces. Fix: \`.speck/scripts/validation/validators/validate-evidence-citations.sh --scaffold-probe-library --write $file\`, then fill Discharge artifact or Exception on every row."
+    return
+  fi
+  declog="$(find_decisions_log "$file" || true)"
+
+  while IFS= read -r line; do
+    if [[ "$line" != \|* ]]; then in_table=false; is_probe_table=false; continue; fi
+    if [[ "$in_table" == false ]]; then
+      in_table=true
+      if resolve_probe_columns "$line"; then is_probe_table=true; else is_probe_table=false; fi
+      continue
+    fi
+    is_separator_row "$line" && continue
+    [[ "$is_probe_table" == false ]] && continue
+
+    split_row "$line"
+    pid="$(norm_cell "$(cell_at "$PCOL_ID")")"
+    [[ -z "$pid" ]] && continue
+    if ! in_list "$pid" "$(probe_ids | tr '\n' ' ')"; then
+      emit_p2 "PROBE_LIBRARY_DRIFT.P2" "$file — '$pid' is not one of Speck's eight §11a classes [$(probe_ids | tr '\n' ' ' | sed 's/ $//')]. §11a is CLOSED: a project adds probes to its own §11 (the adversary's imagination), never to the library. Fix: remove the row, or open an issue against Speck to add the class."
+      continue
+    fi
+    seen="$seen $pid"
+    GATE_SUBJECT=$((GATE_SUBJECT + 1))
+
+    # --- Speck-owned cells must not have been edited. Without this, weakening a row's claim type
+    # to `correctness` silently dissolves every mismatch it could ever raise. Same law as §2b's
+    # parity check: the human-readable half and the machine-readable half are ONE rule.
+    exp_class="$(probe_field "$pid" 2)"
+    exp_claim="$(probe_field "$pid" 3)"
+    exp_substrate="$(probe_field "$pid" 4)"
+    exp_controls="$(probe_field "$pid" 5)"
+    for pair in "$PCOL_CLASS|Class|$exp_class" "$PCOL_CLAIM|Claim type|$exp_claim" \
+                "$PCOL_SUBSTRATE|Admissible substrate|$exp_substrate" "$PCOL_CONTROLS|Required negative controls|$exp_controls"; do
+      idx="${pair%%|*}"; rest="${pair#*|}"; label="${rest%%|*}"; want="${rest#*|}"
+      [[ "$idx" -lt 0 ]] && continue
+      got="$(norm_cell "$(cell_at "$idx")")"
+      GATE_PREDICATES=$((GATE_PREDICATES + 1))
+      if [[ "$got" != "$(norm_cell "$want")" ]]; then
+        emit_p2 "PROBE_LIBRARY_DRIFT.P2" "$file — $pid's Speck-owned '$label' cell reads '$got' but the compiled library says '$want'. Fix: re-sync §11a from .speck/templates/project/evidence-contract-template.md (only Discharge artifact and Exception are yours to write)."
+      fi
+    done
+
+    # --- the claim type used for the lookup is the COMPILED one, never the cell. A drifted cell is
+    # already reported above; routing off it as well would let an edit change the verdict.
+    claim="$exp_claim"
+    discharge="$(cell_at "$PCOL_DISCHARGE")"
+    exception="$(cell_at "$PCOL_EXCEPTION")"
+
+    first_cite=""
+    while IFS= read -r tok; do
+      [[ -z "$tok" ]] && continue
+      is_citation_like "$tok" || continue
+      first_cite="$tok"; break
+    done <<< "$(citation_tokens "$discharge")"
+    has_discharge=false; [[ -n "$first_cite" ]] && has_discharge=true
+
+    ex="$(norm_cell "$exception")"
+    has_exception=true
+    case "$ex" in
+      ""|"—"|"-"|"–")
+        has_exception=false ;;
+      "n/a"|"N/A"|"n/a:"|"na")
+        emit_p2 "PROBE_NA_UNBACKED.P2" "$file — $pid declares the class inapplicable with no reason. 'n/a' alone is indistinguishable from 'nobody looked'. Fix: \`n/a:<reason>\` (e.g. \`n/a:no revenue path\`)." ;;
+      n/a:*)
+        emit_note "PROBE_EXCEPTION_DECLARED" "$file — $pid: $ex" ;;
+      waived*)
+        dec="$(printf '%s' "$ex" | grep -oE 'DEC-[0-9]+' | head -n1 || true)"
+        if [[ -z "$dec" ]]; then
+          emit_p2 "PROBE_NA_UNBACKED.P2" "$file — $pid is waived with no DEC. A dark spot we accept is a logged decision, not a dash. Fix: \`waived DEC-####\`, with the DEC in project-decisions-log.md."
+        elif [[ -n "$declog" ]] && grep -qF "$dec" "$declog" 2>/dev/null; then
+          emit_note "PROBE_EXCEPTION_DECLARED" "$file — $pid: waived $dec (resolves in $(basename "$declog"))"
+        elif [[ -n "$declog" ]]; then
+          emit_p2 "PROBE_NA_UNBACKED.P2" "$file — $pid cites $dec but it is not found in $(basename "$declog")."
+        else
+          emit_note "PROBE_EXCEPTION_UNVERIFIED" "$file — $pid: waived $dec, but no project-decisions-log.md was found beside the contract — recorded, not verified."
+        fi ;;
+      *)
+        emit_p2 "PROBE_NA_UNBACKED.P2" "$file — $pid's Exception cell reads '$ex', which is neither \`n/a:<reason>\` nor \`waived DEC-####\`. An exception Speck cannot parse is a silence with extra words." ;;
+    esac
+
+    if [[ "$has_discharge" == false ]]; then
+      if [[ "$has_exception" == false ]]; then
+        emit_p1 "PROBE_UNDECLARED.P1" "$file — $pid ($exp_class) has neither a discharge artifact nor a declared exception. Absence and inapplicability must be distinguishable — the same law as GATE_EMPTY_LEGITIMATE vs GATE_VACUOUS. Fix: cite a typed artifact admissible for '$claim' [$(claim_admissible_types "$claim")], or declare \`n/a:<reason>\` / \`waived DEC-####\`."
+      fi
+      continue
+    fi
+
+    GATE_PREDICATES=$((GATE_PREDICATES + 1))
+    ty="$(citation_type_of "$first_cite")"
+    adm="$(claim_admissible_types "$claim")"
+    if [[ -z "$ty" ]]; then
+      # UNKNOWN NEVER CONVICTS. See the header: admissibility is a property of the PAIR, and an
+      # unknown type means the pair is incomplete, not that it is inadmissible.
+      emit_p3 "PROBE_SUBSTRATE_UNKNOWN.P3" "$file — $pid discharges a '$claim' claim with '$first_cite', whose citation type is unknown, so admissibility could not be computed (not: was computed and failed). Fix: \`--stamp-types --write $file\`, or prefix it by hand from §2b's vocabulary [$CITATION_TYPES]."
+    elif in_list "$ty" "$adm"; then
+      ok=$((ok + 1))
+      emit_note "PROBE_DISCHARGED" "$file — $pid: \`$ty\` is admissible for '$claim'"
+    else
+      emit_p1 "PROBE_SUBSTRATE_MISMATCH.P1" "$file — $pid discharges a '$claim' claim with a \`$ty\` citation ($first_cite). §2b admits only [$adm] for '$claim': a \`$ty\` is structurally incapable of observing this claim, however green it is. Re-collect on an admissible substrate."
+    fi
+  done <<< "$block"
+
+  # --- the closed-set completeness check. A class deleted from the table is the SAME sin as a
+  # blank row: silence where a declaration was required. §6a hunts exactly this third case.
+  while IFS= read -r pid; do
+    [[ -z "$pid" ]] && continue
+    in_list "$pid" "$seen" && continue
+    emit_p1 "PROBE_UNDECLARED.P1" "$file — $pid ($(probe_field "$pid" 2)) is absent from §11a entirely. The library is closed: a deleted row is an undeclared class, not an inapplicable one. Fix: restore the row from .speck/templates/project/evidence-contract-template.md and fill Discharge artifact or Exception."
+  done <<< "$(probe_ids)"
+}
+
+# ── --scaffold-probe-library: the migration body, in the validator ───────────────────────────
+# Same shape as --stamp-types --write: the thing that fixes the finding ships beside the finding.
+# The section is DERIVED from the compiled library, so a scaffolded contract passes the drift check
+# by construction, and it is scaffolded UNDISCHARGED on purpose — a scaffold that pre-filled the
+# discharge cells would mint eight green rows nobody proved, which is the failure mode this whole
+# registry exists to make impossible.
+probe_table_markdown() {
+  local out="|" c n i
+  for c in "${PROBE_LIBRARY_COLUMNS[@]}"; do out="$out $c |"; done
+  printf '%s\n' "$out"
+  out="|"
+  for c in "${PROBE_LIBRARY_COLUMNS[@]}"; do
+    n=${#c}; (( n < 3 )) && n=3
+    out="$out$(printf -- '-%.0s' $(seq 1 "$n"))|"
+  done
+  printf '%s\n' "$out"
+  probe_library | while IFS=$'\t' read -r id class claim substrate controls; do
+    printf '| %s | %s | `%s` | %s | %s | — | — |\n' "$id" "$class" "$claim" "$substrate" "$controls"
+  done
+}
+
+probe_section_markdown() {
+  cat <<'HDR'
+## 11a. Standard Probe Library
+
+*§11 above stays exactly as it is — its P4 says its list prompts the adversary's imagination and must not be grown to close a gap. §11a is the differently-shaped second section: a **closed, Speck-owned registry** of eight recurring defect classes that are discharge-**required**. Each row's claim type routes into §2b's admissibility table, so `PROBE_SUBSTRATE_MISMATCH.P1` is a lookup, not an opinion.*
+
+**How a row is discharged.** Fill **Discharge artifact** with a typed citation (§2b: `<citation-type>:<path>[@<sha>]`) whose type is admissible for that row's claim type — *or* fill **Exception**. Exactly one of the two, never neither.
+
+**Exception is first-class** — `—` (the class applies, discharge required) · `n/a:<reason>` (this product has no such surface) · `waived DEC-####` (it does and we accept the dark spot, with the DEC in `project-decisions-log.md`). A row with neither a discharge artifact nor an exception is `PROBE_UNDECLARED.P1`, and so is deleting the row.
+
+HDR
+  probe_table_markdown
+  cat <<'FTR'
+
+*Checked by `validate-evidence-citations.sh --check-probe-library <this file>`. Only the last two columns are yours to write; the rest is parity-checked against Speck's compiled library.*
+FTR
+}
+
+scaffold_probe_library() {
+  local file="$1" tmp
+  if [[ -n "$(probe_section "$file" | tr -d '[:space:]')" ]]; then
+    emit_note "PROBE_LIBRARY_PRESENT" "$file — §11a already present; nothing scaffolded. Run --check-probe-library to see what is undeclared."
+    return
+  fi
+  local sectfile; sectfile="$(mktemp)"
+  probe_section_markdown > "$sectfile"
+  tmp="$(mktemp)"
+  # Insert before §12 when it exists (§11a is a sibling of §11, so it belongs between them);
+  # otherwise append. Never rewrites a byte of the surrounding contract.
+  #
+  # The section is streamed in with getline from a FILE, never passed through `awk -v`: an -v value
+  # is scanned for escape sequences and its newline handling is implementation-defined, so a
+  # multi-line section through -v is the BSD-vs-GNU shape that reddens a correct implementation on
+  # someone else's machine. seed-gate-registry.sh splices its §6a table the same way.
+  if grep -qE '^##[[:space:]]*12\.' "$file"; then
+    awk -v sectfile="$sectfile" '
+      /^##[[:space:]]*12\./ && !done {
+        while ((getline l < sectfile) > 0) print l
+        close(sectfile); print "---"; print ""; done=1
+      }
+      { print }
+    ' "$file" > "$tmp"
+  else
+    { cat "$file"; echo ""; cat "$sectfile"; } > "$tmp"
+  fi
+  rm -f "$sectfile"
+  GATE_SUBJECT=$((GATE_SUBJECT + $(probe_ids | grep -c .)))
+  if [[ "$write" == true ]]; then
+    mv "$tmp" "$file"
+    emit_note "PROBE_LIBRARY_SCAFFOLDED" "$file — §11a written with $(probe_ids | grep -c .) undischarged classes. Fill Discharge artifact or Exception on every row, then re-run --check-probe-library."
+  else
+    rm -f "$tmp"
+    emit_note "PROBE_LIBRARY_SCAFFOLD_DRYRUN" "$file — would insert §11a with $(probe_ids | grep -c .) classes (pass --write to apply)."
   fi
 }
 
@@ -675,15 +1011,22 @@ echo ""
 
 while IFS= read -r f; do
   [[ -z "$f" ]] && continue
-  if [[ "$mode" == "check-contract" ]]; then
-    check_contract "$f"
-  else
-    process_file "$f"
-  fi
+  case "$mode" in
+    check-contract)          check_contract "$f" ;;
+    check-probe-library)     check_probe_library "$f" ;;
+    scaffold-probe-library)  scaffold_probe_library "$f" ;;
+    *)                       process_file "$f" ;;
+  esac
 done <<< "$(collect_files)"
 
 echo ""
 case "$mode" in
+  check-probe-library)
+    echo "§11a probe library: $(probe_ids | grep -c .) Speck-owned class(es) · ${GATE_SUBJECT} declared in the contract · ${ok} discharged on an admissible substrate · ${errors} undeclared-or-mismatched(P1) · ${warnings} drift/unbacked/unknown(P2,P3) · ${notes} note(s)"
+    ;;
+  scaffold-probe-library)
+    echo "§11a scaffold: $(probe_ids | grep -c .) class(es) · $( [[ "$write" == true ]] && echo "WRITTEN" || echo "dry-run (pass --write to apply)" )"
+    ;;
   stamp-types)
     echo "Citations: ${GATE_SUBJECT} examined · ${stamped} stamped · ${left_untyped} left untyped (ambiguous) · ${skipped_tables} table(s) skipped (evidence column but no \`Claim\` column — a type written there can never be read) · $( [[ "$write" == true ]] && echo "WRITTEN" || echo "dry-run (pass --write to apply)" )"
     ;;
@@ -696,7 +1039,11 @@ case "$mode" in
 esac
 
 if [[ "$errors" -gt 0 && "$strict" == true ]]; then
-  echo -e "${RED}Evidence-citation check FAILED: $errors claim(s) discharged by an inadmissible substrate.${NC}" >&2
+  if [[ "$mode" == "check-probe-library" ]]; then
+    echo -e "${RED}§11a check FAILED: $errors probe class(es) undeclared or discharged by an inadmissible substrate.${NC}" >&2
+  else
+    echo -e "${RED}Evidence-citation check FAILED: $errors claim(s) discharged by an inadmissible substrate.${NC}" >&2
+  fi
   exit 1
 fi
 if [[ "$mode" == "check-contract" && "$warnings" -gt 0 && "$strict" == true ]]; then

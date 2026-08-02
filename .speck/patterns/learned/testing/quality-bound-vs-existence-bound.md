@@ -1,12 +1,13 @@
 # Pattern: A Quality Bound Fused to an Existence Bound — the Gate That Can Never Fail Loudly
 
-**Category**: testing (gotcha + gate-design, doctrine-level; #93's class 3, the one class in that
-series with no shipped mechanism)
-**Discovered**: 2026-07, issue #93 §3, revisited alongside #103
-**Validated In**: analysis of Speck's own readiness-state machinery (below) — no third-party
-instance re-verified in this pass.
+**Category**: testing (gotcha + gate-design, doctrine-level; #93's class 3 — **mechanized in
+v10.2**, after two passes concluded it could not be)
+**Discovered**: 2026-07, issue #93 §3, revisited alongside #103, mechanized 2026-08 (v10.2)
+**Validated In**: Speck's own readiness-state machinery (below), now under a shipped regression
+gate — `.speck/scripts/validation/validators/validate-bound-fusion.sh`.
 **Occurrences**: named as the sharpest of #93's five classes; this pattern is its first write-up
-with a worked discriminator applied to a real system.
+with a worked discriminator applied to a real system, and v10.2 is the first pass that turned the
+discriminator into an executing check.
 
 ## Problem
 
@@ -82,20 +83,71 @@ below the existence floor.**
   INTEGRATION-GREEN` (existence, unaffected by taste) plus a taste verdict recorded separately in
   the LARP findings (content, self-held, never gating the existence claim).
 
-**The mechanical tell this yields, described but not shipped as a check here** (this cluster's
-owned files are `.speck/patterns/learned/` and `validate-two-carrier.sh`; a new gate for this would
-need a new validator file outside that scope — disclosed rather than built past the boundary): a
-regression check would assert, from `validation-report-template.md` and `validate-felt-axis.sh`
-together, that **the set of blocker classes permitted to cap `NO-SHIP`/`IMPL-GREEN`/
-`INTEGRATION-GREEN` (existence) and the set of blocker classes permitted to cap `UX-RC` and above
-(quality) are disjoint** — i.e., that no felt/taste/aesthetic signal appears among the conditions
-gating the bottom three rungs, and no `implementation-pending`/`autonomous-not-done`-shaped
-existence blocker is the ONLY thing standing between a story and a quality-rung claim it has
-otherwise earned. If a future edit to either file lets a taste judgment cap below
-`INTEGRATION-GREEN`, or lets an existence gap hide behind a quality-sounding justification, THAT
-edit is the fusion this pattern warns against, and it would be silent — this is exactly why #93
-files this class as having "no mechanism": the violation is a structural property of two files
-staying disjoint over time, not a single value a script can grep once and be done with.
+## The mechanism (v10.2) — `validate-bound-fusion.sh`
+
+Two earlier passes concluded this class had no mechanical tell. **It does**, and the reason both
+passes missed it is instructive: they went looking for the tell **in the artifact**, where it
+genuinely is not there. In a validation report, "not good enough yet" and "not yet" are
+indistinguishable — that is the class's premise, so any check reading reports would either convict
+honest "not ready" reports or convict nothing. And convicting an honest "not ready" is the worse
+error by a distance, because it teaches authors to route around the state, which is the very
+behaviour this class describes.
+
+**The tell is not in the artifact. It is in the machinery.** In the artifact the two bounds are
+fused and undecidable; in the code that *renders* the verdict, the rungs a quality axis is allowed
+to gate are written down as an enumerated set — `case "$1" in UX-RC|COMMERCIAL-RC|SHIP-RC|SHIP)
+return 0 ;;`. That set is decidable, and whether it intersects the existence floor is a
+set-intersection, not a judgment call. Move the subject from the artifact to the machinery and the
+class stops being unmechanizable.
+
+`.speck/scripts/validation/validators/validate-bound-fusion.sh` asserts, over Speck's own
+validators:
+
+- **A. Non-empty rung scope.** Every quality-axis validator has an enforcement rung-set. Deleting
+  the predicate is the *easier* fusion than widening it — with no rung scope the axis blocks
+  everywhere, floor included — so "no predicate found" is reported as `BOUND_FUSION_UNDECIDABLE.P2`,
+  never as clean.
+- **B. Disjointness.** That rung-set does not intersect `NO-SHIP | IMPL-GREEN | INTEGRATION-GREEN`.
+  A one-token edit adding `INTEGRATION-GREEN` to either `case` arm reads as a tightening, ships
+  silently, and is `BOUND_FUSION.P1`.
+- **C. Non-empty subject.** Every quality axis the shipped template declares (`*_axis:` in
+  frontmatter) is enforced by a validator this check actually inspected. A green from a check whose
+  subject set went empty reads identically to a green from a check that looked at everything;
+  `BOUND_FUSION_NO_SUBJECT.P2` keeps them apart.
+- **D. Ladder liveness.** The existence rungs it reasons about are verified present in the ladder
+  parsed from `validation-report-template.md`. A renamed rung yields
+  `BOUND_FUSION_LADDER_DRIFT.P2`, not a stale green.
+
+Two precision properties matter more than coverage here, and both are asserted in the suite rather
+than argued: **parse ≠ gate** (both validators enumerate every rung in a `grep -oE` to READ a
+claimed state; extracting a rung and gating on one are different acts, and conflating them would
+make the check red on arrival against correct code), and **code ≠ prose** (both validators narrate
+the ladder at length in their headers; every line is comment-stripped before evidence is read).
+Most importantly, **no artifact can move this check's verdict** — pinned by a test that drops a
+genuine `NO-SHIP` report with both axes `uncovered` into the tree and asserts the output does not
+change by a byte. It cannot convict an honest "not ready", because it cannot see one.
+
+### The residual this does NOT mechanize, located and named
+
+`validation-report-template.md:48` states that a **severe BAD** taste verdict *"caps the claimable
+state"* — and names **no floor**. Every other cap directive in the template names its rung
+explicitly (`MUST cap at NO-SHIP`; `cap at IMPL-GREEN/INTEGRATION-GREEN`). On its face, then, the
+one quality cap in the machinery is unbounded and may be read as capping below the existence floor —
+this pattern's exact fusion, in prose. It is deliberately **not** turned into a check: a grep over
+template prose is the shape of rule this repo has already shipped vacuous twice (a rule the shipped
+template's own boilerplate satisfies), and the repair is one human sentence, not a scanner.
+
+**The repair, for whoever owns that template:** name the floor — *"caps the claimable state at
+UX-RC"* — so the craft verdict cannot be read as reaching the existence rungs it does not own.
+
+### Where it runs
+
+`.speck/scripts/validation/pre-commit-hook.sh`, **above** the hook's early exit (the check's trigger
+is an edit to a validator or to `validation-report-template.md` — a code commit, which is exactly
+what that early exit discards). It fires only when that machinery is touched: the check reads the
+machinery, not the commit, so running it constantly would be noise, while running it on the edit
+that can change its answer is the whole point. Advisory at v10.2, same rationale as the two-carrier
+block: measure the field value before letting it stop a commit.
 
 ## When to Use
 
@@ -118,9 +170,11 @@ staying disjoint over time, not a single value a script can grep once and be don
 - `two-carrier-interval-doctrine.md` — issue #103, filed alongside this pattern; a different axis
   (WHEN a gate's verdict is valid, across a clock boundary) rather than this one (WHAT KIND of
   question a gate's verdict is allowed to answer).
-- `class-gate-not-a-third-fix.md` — the umbrella doctrine for this pattern family; #93 class 3 is
-  the one class in the original five with no shipped mechanism, which this pattern's "mechanical
-  tell, described but not built" section is honest about rather than fabricating a check.
+- `class-gate-not-a-third-fix.md` — the umbrella doctrine for this pattern family. #93 class 3 was
+  the one class in the original five with no shipped mechanism; v10.2 closed that, and the way it
+  closed generalizes: **when a class looks unmechanizable, check whether you are looking at the
+  wrong subject.** The artifact is where the two bounds are fused and undecidable; the machinery
+  that renders the verdict is where the same distinction is written down as an enumerated set.
 
 ## Source
 

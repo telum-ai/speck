@@ -233,6 +233,9 @@ Full rationale: `docs/v8/v8-north-star.md`.
 | [Returning user] | Cold-open → resume context → action | Screenshots showing no re-onboarding, timings |
 | [Skeptical buyer] | Landing → trust check → first signal of value | Screenshots, taste notes, "would I pay?" judgment |
 | [Naive first-timer (context-stripped)] | Onboarding → first screen → value-producing screen | Screenshots, First-Viewport Reaction rubric, taste notes, revulsion check (Required for consumer archetypes) |
+| **Second actor, same install** *(REQUIRED — Speck-owned, not a placeholder)* | A signs in → writes → teardown → **B signs in on the same install, offline** | Per persistence layer, B observes nothing of A's: server row, cache, queue/outbox, local DB, notification schedule, draft, store receipt, billing SDK identity, analytics. `signOut` vs `deleteAccount` compared field-for-field. Discharges `PROBE:second-actor` in §11a |
+
+*Every other row above is a placeholder for this product to name. **The second-actor row is not.** A persona set can be arbitrarily broad and still be one identity in many states — day-0, paused, muted-counterpart, solo, serial-decliner are all the same actor — so identity and tenancy defects are as invisible to a wide persona army as to a single-user suite. The scars: an offline queue that survived sign-out and replayed under the current token, landing A's unsynced work in B's account; a sign-out that forgot the push token instead of revoking it, so a stranger's handset keeps receiving A's notifications with neither person holding a control that can stop it; one local DB per device, so B read A's sessions offline while the account-delete path already knew the difference.*
 
 ### LARP Required for SHIP-RC
 
@@ -313,6 +316,10 @@ For every validation report at UX-RC or higher:
 | REPLACE_BEFORE_SHIP:unit-frontend | `npm run test` | pre-push | frontend-tests | `frontend/src/**` | `tests_collected>0` | — | — |
 | REPLACE_BEFORE_SHIP:banned-language | `.speck/scripts/banned-language-lint.sh` | pre-commit | copy | `src/**,app/**,components/**` | `files>0` | — | — |
 | REPLACE_BEFORE_SHIP:integration | `pytest tests/integration` | ci:push | backend | `backend/**` | `tests_collected>0` | — | — |
+| speck:evidence-citations | `.speck/scripts/validation/validators/validate-evidence-citations.sh specs/` | manual | evidence | `specs/**` | `citations>0` | — | — |
+| speck:probe-library | `.speck/scripts/validation/validators/validate-evidence-citations.sh --check-probe-library` | manual | evidence | `specs/projects/**` | `probe_classes>0` | — | — |
+
+**Speck-owned standing rows.** The two `speck:` rows are **not project-authored and not project-deletable** — `seed-gate-registry.sh` re-emits them on every seed, after the recipe's own gates, so re-seeding a contract can never drop them. They are declared `manual` **honestly**: `seed-gate-registry.sh` runs both the moment it seeds or amends this contract, and `/audit`, `/epic-validate` and `/project-validate` run them on demand; nothing on the commit path invokes them yet, and declaring a stage they do not fire at is the exact divergence `validate-gate-liveness.sh` exists to catch. Both are **nudges** — they exit 0 without `--strict`, so a project that has not adopted typed citations or §11a is enumerated, never blocked.
 
 **Stage** ∈ `pre-commit | pre-push | commit-msg | ci:push | ci:pull_request | manual`.
 - `manual` = the contract honestly declares this gate off the automatic path (no divergence to detect).
@@ -597,6 +604,62 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 | Evaluator-tampering scan | The graded diff adds/edits no test-harness hooks (`conftest.py`, global setup/teardown), grader, or CI config; if verification logic must change, it is reviewed in a separate change. A no-op/zero-capability change must NOT make any gate pass. |
 | Reward-hack trajectory audit | Transcript shows no fix/answer retrieval (git-history mining, web fetch of the reference patch) and no visible-test overfitting; any shortcut-dependent pass is re-run under isolation before it counts. |
 | Irreversible-action tier compliance check | Verification confirms no Tier 2 or Tier 3 actions were executed by the agent without corresponding recorded human approval tokens in the trajectory log. |
+
+---
+
+## 11a. Standard Probe Library
+
+*§11 above stays exactly as it is. Its P4 framing is correct and this section does not touch it: **do not grow §11 to close a gap.** §11a is a **different kind of object** — §11 is the adversary's imagination (open, un-enumerable, discharged by a logged attempt); §11a is a **closed, Speck-owned registry of eight recurring defect classes** that are discharge-**required**. Adding a row to §11 makes a longer list nobody discharges; adding a row here is a Speck change, not a project change.*
+
+**Why a registry and not a checklist.** Each of the eight classes below recurred across three Speck-managed products and was caught, every time, by whichever probe an agent happened to invent that session. The unifying mechanism is **substrate mismatch**: the evidence was collected at a layer structurally incapable of observing the claim. §2a states that rule for a human, §2b states it for a machine — and §11a is what makes it **enforceable per class**: every row carries a Speck-owned **claim type**, so admissibility here is a **lookup into §2b's table**, not an inference over a path string.
+
+**How a row is discharged.** Fill **Discharge artifact** with a **typed citation** (§2b syntax: `<citation-type>:<path>[@<sha>]`) whose type is admissible for that row's claim type — *or* fill **Exception**. Exactly one of the two, never neither.
+
+**Exception is first-class — the same law as `GATE_EMPTY_LEGITIMATE` vs `GATE_VACUOUS`.** A class that does not apply to this product is **declared**, never silently absent, because absence and inapplicability are indistinguishable from the outside and only one of them is honest:
+
+- `—` — the class applies; a discharge artifact is required.
+- `n/a:<reason>` — this product has no such surface (`n/a:no revenue path`, `n/a:no migrations`, `n/a:fixed-width desktop tool`). The reason is mandatory; a bare `n/a` is `PROBE_NA_UNBACKED.P2`.
+- `waived DEC-####` — the surface exists and we accept the dark spot, with the DEC resolving in `project-decisions-log.md` (or `PROBE_NA_UNBACKED.P2`).
+
+A row with **neither** a discharge artifact **nor** a declared exception is the sin — `PROBE_UNDECLARED.P1` — and so is deleting the row outright. The registry is closed: a missing class is an undeclared class.
+
+| Probe ID | Class | Claim type | Admissible substrate | Required negative controls | Discharge artifact | Exception |
+|----------|-------|------------|----------------------|----------------------------|--------------------|-----------|
+| PROBE:provenance | P1 | `behaviour` | render site + generator stamp + the prompt's own exemplars, judged control-vs-treatment on the composed prompt with the shipped model | rendered-with-degraded-provenance · exemplar re-read (deleting the exemplar must not leave the test green) | — | — |
+| PROBE:honest-label | P2 | `persistence` | the write's observed outcome read back out of the datastore against a pre-walk baseline | total-failure render · partial-failure render · the three renders differ | — | — |
+| PROBE:second-actor | P3 | `visibility` | A writes, teardown, B signs in on the same install, offline — once per enumerated persistence layer | signOut vs deleteAccount compared field-for-field · launch-with-data-and-no-owner-record | — | — |
+| PROBE:money-path | P4 | `acceptance` | the real engine as the applying principal, one run per revenue path | entitlement gate flipped and every revenue path goes red · vendor fixture cited to the vendor's field reference · per-user serialized claim write · one declared fail-posture · bounded worst case per tap | — | — |
+| PROBE:named-clock | P5 | `correctness` | an AST/lint rule over write handlers, cache fills and fixtures, plus the date-sensitive suites run under two timezones | a non-UTC TZ run · allowlist entries that name the audience | — | — |
+| PROBE:geometry-ax | P6 | `fit` | a baked build: platform AX dump plus container-vs-content geometry at 3 or more widths, numbers in the artifact | adjacent-target overlap · expected-cell presence · page overflow | — | — |
+| PROBE:substrate | P7 | `correctness` | §2b parity of this contract against Speck's compiled admissibility table | the parity run reports CITATION_TABLE_PARITY over a non-empty row set | — | — |
+| PROBE:migration-dirt | P8 | `acceptance` | the migration applied forward on a throwaway seeded to the target's real dirty shape | pre-state REJECTED · boundary cases still refuse · one migration head after the merge | — | — |
+
+*The table ships **undischarged on purpose**. A template whose own boilerplate satisfies its validator is the exact vacuity this repo has shipped twice: the green would mean "nobody edited the template," not "the class was proved." So an unedited contract raises eight `PROBE_UNDECLARED.P1` — which is the honest starting state, and why the gate runs as a nudge (exit 0) rather than a block.*
+
+### What each row is earned from — the scar, in one line
+
+- **P1 provenance.** A `score_source` flag stamped since fire 8, consumed only by a trend-eligibility gate: the app knew at render time it was showing a keyword scan, protected its own database, and told the user nothing. Two headline contract promises were falsely claimed. The third enforcement point has no prior art anywhere — **the prompt's exemplars are a teacher**, and models follow the example over the rule beside it, so a prompt rule added without re-reading every exemplar against it leaves the breach being taught.
+- **P2 honest-label.** A chip that flipped to "✓ sent" on a 150 ms timer with the POST result discarded; a failed friend search that rendered as "No match for …" so people stopped looking for friends who *are* on the platform. The tell is mechanical: **the render under total failure is byte-identical to full success.** The *partial*-failure leg is the one that keeps paying — a write that half-landed is the case where "success" and "failure" are both lies.
+- **P3 second-actor.** An offline availability queue that survived sign-out and replayed under the **current** token, landing A's unsynced work in B's account; a sign-out that forgot the push token instead of revoking it, so a stranger's handset keeps receiving A's notifications and *neither person has a control that can stop it*; one local DB per **device**, so athlete B read A's sessions offline. **The obvious repair is wrong**: clearing on sign-out drops the pending upload queue without emitting the ops, and a phone in a basement gym holds work that exists nowhere else. The shipped resolution compares owners at **sign-in** and clears only when the queue is provably empty across both stores — so a **deferred-to-sign-in** discharge is legitimate here, and `unknown is never zero`.
+- **P4 money-path.** An independent audit flipped one handler's `requireEntitlement` to `false` and ran the whole edge suite: **170 passed, 0 failed** — the one word between a non-paying user and the paid coach was read by no test at all. Flipping the *crisis* handler the other way left both suites green too. That symmetry is the point: the probe catches the gate being deletable in **either** direction, which is why the always-requires and the never-may-require paths are pinned in one file.
+- **P5 named-clock.** `mesocycle.start_date = parsed_start or date.today()` — itself an earlier harden whose instinct was right and whose error was *whose* today. An Oslo athlete tapping "Build first block" at 00:30 local is at 22:30 UTC the previous day, so the block is stamped yesterday and the phone paints "Rest today" on a plan built sixty seconds earlier. The timezone dependency was already declared **285 lines above the defect in the same file** and had simply never been wired into that route.
+- **P6 geometry-ax.** `34px gutter + 7×44px cells + 6×6px gaps = 378px in a 343px box`; the overflow was clipped away and one column lost its border and ~5px of hit area, on every phone, for months, while axe reported **0/0/0/0 and a11y 9/9, identical before and after**. Two verification layers were blind and neither knew it: a rule engine has no model of containment, and props are not the platform tree (jsdom performs no layout, so its geometry numbers are zeros).
+- **P7 substrate.** An anon-key server client carries no JWT, so `auth.uid() = <col>` returned **zero rows for every user, always** — silently. The read looks exactly like "no record exists." Paying subscribers read as free and were told to upgrade to the tier they had already bought.
+- **P8 migration-dirt.** *"A constraint nobody can apply protects nothing."* The first cut added an index and documented that it would fail to apply until duplicates were resolved — but the environment being deployed to *was* the one producing the duplicates, so the migration wedged the alembic head and every later migration behind it, security fixes included. A clean `git merge` is not a clean merge: two heads arrived from one.
+
+### How this section is validated
+
+`validate-evidence-citations.sh --check-probe-library <this file>` reads the table above and reports, in the established vocabulary:
+
+- **`PROBE_DISCHARGED`** — a typed, admissible citation. **`PROBE_EXCEPTION_DECLARED`** — a backed `n/a:`/`waived`.
+- **`PROBE_UNDECLARED.P1`** — a class with neither a discharge artifact nor a declared exception, **including a class deleted from the table**. The silent third case §6a already hunts.
+- **`PROBE_SUBSTRATE_MISMATCH.P1`** — the discharge citation's type is not in §2b's Admissible set for this row's claim type. A pure lookup: claim type → citation type → admissible?
+- **`PROBE_SUBSTRATE_UNKNOWN.P3`** — a discharge artifact whose type is **unknown** (untyped, or a prefix outside the closed vocabulary). **Unknown never convicts**, and that is a deliberate decision, not an oversight: admissibility is a property of the *pair*, so an unknown type means the pair is incomplete, and a validator that resolved incomplete to *inadmissible* would turn every un-stamped project red on upgrade day while claiming to have proved something it never computed. `CITATION_UNTYPED` is P3 for the same reason. Stamp with `--stamp-types --write`, then the real verdict becomes computable.
+- **`PROBE_NA_UNBACKED.P2`** — `n/a` with no reason, or `waived` with no resolving DEC.
+- **`PROBE_LIBRARY_DRIFT.P2`** — a Speck-owned cell (Class / Claim type / Admissible substrate / Required negative controls) was edited, or an unrecognised Probe ID appears. Without this, weakening a row's claim type to `correctness` would silently dissolve every mismatch it could ever raise — the same reason §2b is parity-checked.
+- **`PROBE_LIBRARY_ABSENT.P3`** — no §11a at all. Scaffold it with `validate-evidence-citations.sh --scaffold-probe-library --write <this file>`.
+
+Blocking posture matches `GATE_DISARMED.P1`: hard-blocks only at **COMMERCIAL-RC / SHIP-RC**; below that it enumerates and warns. The gate exits 0 without `--strict`, so wiring it can never turn a repo red on the day it lands.
 
 ---
 

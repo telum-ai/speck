@@ -158,7 +158,39 @@ function is_resolver_name(s) {
   return 0
 }
 
+# has_literal_index_array — `${name[0]}` with a LITERAL integer index, EXCLUDING bash's own special
+# arrays. This exclusion is not tidiness; it closed a real false positive found the day the check
+# was first put on the pre-commit path: `.speck/scripts/seed-gate-registry.sh` gained the ordinary
+# line
+#     CITATIONS_VALIDATOR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/…"
+# and was instantly convicted as a positional table reader, because `${BASH_SOURCE[0]}` is
+# syntactically `${name[integer]}`. `${BASH_SOURCE[0]}`, `${PIPESTATUS[0]}`, `${BASH_REMATCH[1]}`
+# and `${FUNCNAME[0]}` are among the most common lines in careful bash — the population most likely
+# to also read a §6a table — so the rule as written convicted good code at a rate that would have
+# taught reviewers to ignore it, which is worse than not shipping the rule at all. These names index
+# an interpreter structure, never a table column.
+#
+# The scan LOOPS rather than testing only the first match: a line may carry `${BASH_SOURCE[0]}` and
+# a genuine `${ROW_CELLS[3]}`, and a first-match-only test would clear it on the innocent one.
+function has_literal_index_array(s,   rest, aname) {
+  rest = s
+  while (match(rest, /\$\{[A-Za-z_][A-Za-z0-9_]*\[[0-9]+\]\}/)) {
+    aname = substr(rest, RSTART + 2, RLENGTH - 2)
+    sub(/\[.*$/, "", aname)
+    if (!(aname in BUILTIN_ARRAY)) return 1
+    rest = substr(rest, RSTART + RLENGTH)
+  }
+  return 0
+}
+
 BEGIN {
+  # Bash's own special arrays — interpreter state, never a pipe-table column. See
+  # has_literal_index_array above for the false positive that earned this list.
+  split("BASH_SOURCE FUNCNAME PIPESTATUS BASH_LINENO BASH_REMATCH BASH_ARGV BASH_ARGC " \
+        "BASH_VERSINFO BASH_ALIASES BASH_CMDS DIRSTACK GROUPS COMP_WORDS COMPREPLY COPROC",
+        builtin_tmp, " ")
+  for (bi in builtin_tmp) BUILTIN_ARRAY[builtin_tmp[bi]] = 1
+
   # WINDOW bounds how far a positional pull may sit from its table's row extraction, IN EITHER
   # DIRECTION, and still be attributed to it. It is a bounded-blast-radius default, NOT an
   # empirically pinned optimum, and this file does not claim otherwise:
@@ -230,7 +262,7 @@ BEGIN {
   if ((index(code, "IFS='|'") > 0 || index(code, "IFS=\"|\"") > 0) &&
       match(code, /read[ \t]+-r[ \t]+[A-Za-z_][A-Za-z0-9_]*[ \t]+[A-Za-z_]/) &&
       index(code, " -a ") == 0) hit = 1
-  if (match(code, /\$\{[A-Za-z_][A-Za-z0-9_]*\[[0-9]+\]\}/)) hit = 1
+  if (has_literal_index_array(code)) hit = 1
   if (hit) { nb++; bnum[nb] = NR; btext[nb] = NR ": " $0 }
 }
 END {

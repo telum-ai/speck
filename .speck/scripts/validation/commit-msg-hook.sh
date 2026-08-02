@@ -15,6 +15,25 @@ NC='\033[0m'
 
 COMMIT_MSG_FILE="$1"
 
+# 0. Banned-phrase scan of the commit message itself.
+#
+# banned-phrase-detector.sh scans AGENT-AUTHORED text for methodology-hostile phrasing — the
+# "should work", "fully verified", "comprehensive" register that stands in for evidence. It had
+# NO caller anywhere in the repo: no hook, no skill, no CI, no §6a row, no test. A gate that
+# never runs certifies nothing, which is the defect this release's whole backlog is about, so
+# shipping that release while carrying an orphan gate was the one avoidable irony left.
+#
+# A commit message is exactly its subject: agent-authored prose asserting what happened. It is
+# ADVISORY here (never blocks, never changes the exit code) because a phrase list is a nudge,
+# not a proof — and because a gate that newly rejects commits on wording would be turning a
+# green repo red on the upgrade commit, which is the rule this release enforces everywhere else.
+if [[ -n "${COMMIT_MSG_FILE:-}" && -f "$COMMIT_MSG_FILE" ]]; then
+  _bpd="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/banned-phrase-detector.sh"
+  if [[ -x "$_bpd" || -f "$_bpd" ]]; then
+    bash "$_bpd" "$COMMIT_MSG_FILE" 2>/dev/null || true
+  fi
+fi
+
 # 1. Detect if any non-trivial source code is being modified
 # Filter out documentation, specs, assets, config files.
 staged_code_files=()

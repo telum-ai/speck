@@ -1706,6 +1706,86 @@ test('v10.1: a REFLOWING stamp is rolled back byte-for-byte and stays PENDING', 
   }
 });
 
+test('v10.1: stamp-citation-types THROWS when validate-evidence-citations.sh is missing (never silent success)', async () => {
+  // The third of three structurally similar "script is missing -> throw" sites in this file
+  // (lift-serves, rebuild-witness-graph, and this one). Isolated to a ONE-migration registry —
+  // { registry: [m] } — so mutating either of the OTHER two throw sites cannot flip this test:
+  // it exercises exactly the STAMP_CITATION_TYPES_ID run() and nothing else in the lane.
+  const { STAMP_CITATION_TYPES_ID } = await import('./migrate.js');
+  const dir = v101Workspace({ stamp: null }); // validators/validate-evidence-citations.sh absent
+  try {
+    writeFixtureProject(dir);
+    assert.ok(
+      !existsSync(join(dir, '.speck', 'scripts', 'validation', 'validators', 'validate-evidence-citations.sh')),
+    );
+
+    const m = getRegisteredMigrations().find(x => x.id === STAMP_CITATION_TYPES_ID);
+    const result = runNamedMigrations(dir, '10.0.0', '10.1.0', { registry: [m] });
+
+    // A `return 0` here would record 'applied' and RETIRE the stamp forever, leaving every
+    // citation permanently untyped — the documented failure contract of this lane, proven now
+    // for this rider rather than merely claimed by analogy to its two siblings.
+    assert.deepEqual(result.applied, [], 'a no-op stamp is NOT an application');
+    assert.equal(result.failed.length, 1);
+    assert.equal(result.failed[0].id, STAMP_CITATION_TYPES_ID);
+    assert.match(result.failed[0].error, /validate-evidence-citations\.sh/);
+    assert.equal(
+      readAppliedLedger(dir).find(e => e.id === STAMP_CITATION_TYPES_ID).status,
+      'failed',
+    );
+
+    // "--list still shows it PENDING": the whole point of recording 'failed'.
+    assert.deepEqual(
+      pendingMigrations(dir, '10.0.0', '10.1.0', { registry: [m] }).map(x => x.id),
+      [STAMP_CITATION_TYPES_ID],
+      'a failed stamp stays pending so the next run retries it once the script is restored',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('v10.1: with the citation script absent, a real upgrade reports 1 applied 1 failed, and --list still shows it PENDING', async () => {
+  // The end-to-end shape of the hand-verified claim, through the real CLI-facing
+  // migrateCommand()/runNamedMigrations() pipeline and the REAL run() bodies of both v10.1
+  // riders (graph script present, citation script absent) — not a fake stand-in.
+  //
+  // Scoped to exactly these two ids (not the bare module registry): by this point in the file,
+  // earlier tests have permanently registered their own throwaway migrations onto the shared
+  // module-level MIGRATION_REGISTRY (e.g. a `version: '10.1.0'` one with an empty run()), and
+  // the module registry offers no way to unregister them. Asserting on the real registry
+  // wholesale would make this test's pass/fail depend on unrelated tests' registration order
+  // rather than on the STAMP_CITATION_TYPES_ID throw site this test exists to prove.
+  const { STAMP_CITATION_TYPES_ID, REBUILD_WITNESS_GRAPH_ID, getRegisteredMigrations: reg } =
+    await import('./migrate.js');
+  const dir = v101Workspace({ graph: true, stamp: null });
+  try {
+    const proj = writeFixtureProject(dir);
+    runGraph(join(dir, '.speck', 'scripts', 'graph', 'speck_graph.py'), 'build', proj);
+
+    const registry = reg().filter(m => m.id === REBUILD_WITNESS_GRAPH_ID || m.id === STAMP_CITATION_TYPES_ID);
+    assert.equal(registry.length, 2, 'both real v10.1 riders must be found in the shipped registry');
+
+    const out = captureLog(() => {
+      migrateCommand(dir, { run: true, from: '10.0.0', to: '10.1.0', registry });
+    });
+
+    assert.match(out, /1 applied, 0 skipped, 1 failed/, out);
+    const ledger = readAppliedLedger(dir);
+    assert.equal(ledger.find(e => e.id === REBUILD_WITNESS_GRAPH_ID)?.status, 'applied');
+    assert.equal(ledger.find(e => e.id === STAMP_CITATION_TYPES_ID)?.status, 'failed');
+
+    const list = captureLog(() => {
+      migrateCommand(dir, { list: true, from: '10.0.0', to: '10.1.0', registry });
+    });
+    assert.match(list, /PENDING \(1\)/, list);
+    const pendingBlock = list.split('APPLIED')[0];
+    assert.ok(pendingBlock.includes(STAMP_CITATION_TYPES_ID), `must still list as pending\n${list}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 /* --- (d) the upgrade, end to end ------------------------------------------ */
 
 test('v10.1: a 10.0 → 10.1 upgrade runs BOTH, once each; a second upgrade is a no-op', async () => {

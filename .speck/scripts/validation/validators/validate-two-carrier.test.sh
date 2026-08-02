@@ -10,6 +10,15 @@
 # provenance claim this repo's audit history makes load-bearing. If the commit is unreachable
 # (shallow clone, tarball install), Test 1 SKIPS loudly — it is never silently counted as passed.
 # If Test 1 ever goes green, the check has regressed to vacuous against the case it was built for.
+#
+# SKIPPING IS NOT FREE IN CI (v10.2). "Loudly skipped" still exits 0, so on a shallow clone — the
+# environment that most needs the regression pinned, because nobody is reading that log — the four
+# assertions below evaporate and the suite reports success. Two independent closures:
+#   1. `SPECK_CI=1` makes an unreachable-history SKIP a FAILURE. Set it in any automated runner.
+#   2. When history IS reachable, the fixture's identity is asserted against a pinned blob SHA
+#      (git hash-object), so "we fetched something" and "we fetched THE historical file" are
+#      distinguishable. A rewritten/rebased history that silently hands back a different blob
+#      fails here instead of quietly re-scoping what Test 1 proves.
 
 set -euo pipefail
 
@@ -62,6 +71,9 @@ expect_clean() {
 # Provenance is mechanical: the fixture is fetched from git, byte-for-byte, not transcribed here.
 HIST_COMMIT="0e7ae68^"
 HIST_PATH=".speck/scripts/validation/validators/validate-gate-liveness.sh"
+# The blob's own SHA-1, pinned. `git hash-object <file>` recomputes it from the bytes on disk, so
+# this asserts the FIXTURE's identity, not merely that some object was retrievable at that path.
+HIST_BLOB="31ac9c6b46eab3f819499d4412780d920828c04b"
 echo "Test 1 (RED): the real pre-fix validate-gate-liveness.sh ($HIST_COMMIT) is a violation"
 HIST_FIXTURE="$TMP/pre-fix-validate-gate-liveness.sh"
 hist_ok=false
@@ -75,6 +87,20 @@ if [[ "$hist_ok" == true ]]; then
   hist_lines="$(wc -l < "$HIST_FIXTURE" | tr -d ' ')"
   hist_sha="$(git -C "$ROOT" rev-parse --short "$HIST_COMMIT" 2>/dev/null || echo unknown)"
   echo "  fixture: git show $HIST_COMMIT:$HIST_PATH  →  $hist_lines lines, blob from commit $hist_sha"
+
+  # Identity of the fixture, asserted rather than assumed. Without this, a rewritten history that
+  # still resolves `0e7ae68^:<path>` to SOME blob would keep Test 1 green while silently changing
+  # what it proves.
+  got_blob="$(git -C "$ROOT" hash-object "$HIST_FIXTURE" 2>/dev/null || echo unknown)"
+  if [[ "$got_blob" == "$HIST_BLOB" ]]; then
+    echo "  ✓ fixture blob identity: $got_blob (pinned)"
+  else
+    echo "ERROR: historical fixture blob is $got_blob, expected $HIST_BLOB."
+    echo "       The bytes behind $HIST_COMMIT:$HIST_PATH changed — Test 1 is no longer pinned to the"
+    echo "       regression it claims. Re-derive the SHA deliberately, do not just update it."
+    fails=$((fails + 1))
+  fi
+
   expect_violation "pre-fix validate-gate-liveness.sh (real regression, $HIST_COMMIT, unedited)" "$HIST_FIXTURE"
 
   # NEGATIVE CONTROL for the "a single comment defeats the gate" defect. Evidence C used to be a
@@ -110,6 +136,14 @@ else
   echo "  ⚠ SKIP: $HIST_COMMIT:$HIST_PATH is unreachable (shallow clone / non-git checkout)."
   echo "    Test 1 and its comment negative-controls did NOT run — they are skipped, not passed."
   skips=$((skips + 4))
+  if [[ "${SPECK_CI:-}" == "1" ]]; then
+    echo "ERROR: SPECK_CI=1 and the historical fixture is unreachable. In an automated runner a"
+    echo "       skip is indistinguishable from a pass — nobody reads the log — so the four"
+    echo "       assertions pinning the real regression would evaporate in exactly the environment"
+    echo "       that needs them. Fetch full history (actions/checkout fetch-depth: 0) or vendor"
+    echo "       blob $HIST_BLOB into the repo; do not unset SPECK_CI to get green."
+    fails=$((fails + 1))
+  fi
 fi
 
 
@@ -399,6 +433,266 @@ else
   echo "ERROR: WINDOW disclosure is stale — probe verdict at WINDOW=150 was rc=$rc_norm, at 100000 rc=$rc_big."
   echo "       The header comment in validate-two-carrier.sh must be rewritten to match."
   fails=$((fails + 1))
+fi
+
+
+echo ""
+echo "Test 15: each Evidence-C branch (C1/C2/C3) is pinned INDIVIDUALLY, not as a redundant set"
+# THE GAP THIS CLOSES. Every pre-v10.2 exoneration fixture in this suite was a `name() { … }`
+# DEFINITION — and a definition line satisfies C1 (the definition rule) AND C2 (the invocation
+# rule) at once, because C2's command-position scan sees `resolve_columns_from_header` as the first
+# word of the segment before `(`. So disabling C1 alone left the suite green, disabling C2 alone
+# left the suite green, and only disabling BOTH reddened it: neither rule was individually pinned,
+# and either could have been deleted or broken silently. C3 was worse — the inline
+# `tr`+`case`+`COL*=$i` idiom had NO fixture at all, so it was an unexercised EXONERATION branch
+# whose failure mode is a wrong CLEAR (a positional reader let through), the direction that leaves
+# no trace.
+#
+# Each fixture below is a positional table reader (Evidence A + B both fire), cleared by EXACTLY
+# ONE Evidence-C branch. All three are verified below by mutation, in scratch copies: disabling
+# that one branch must convict the file its branch clears, and must NOT convict the other two.
+
+# C1 alone: `function NAME() { … }`. The `function ` keyword form is invisible to C2 — C2 takes the
+# first word of the segment before `(`, which here is `function`, not the resolver name. Only C1's
+# explicit `sub(/^function[ \t]+/…)` recovers the name.
+cat > "$TMP/evc-c1-only.sh" <<'C1ONLY'
+#!/usr/bin/env bash
+set -euo pipefail
+rows="$(awk '/^\|/{print}' "$1")"
+function resolve_columns_from_header() {
+  :
+}
+while IFS= read -r row; do
+  gid=$(printf '%s' "$row" | awk -F'|' '{print $2}')
+  printf '%s\n' "$gid"
+done <<< "$rows"
+C1ONLY
+
+# C2 alone: an INVOCATION with the definition living in a sourced library, so no `()` definition
+# exists in this file for C1 to see. This is the ordinary shape of a repo with a shared helper.
+cat > "$TMP/evc-c2-only.sh" <<'C2ONLY'
+#!/usr/bin/env bash
+set -euo pipefail
+source ./shared-table-lib.sh
+rows="$(awk '/^\|/{print}' "$1")"
+resolve_columns_from_header "$(head -n 1 <<< "$rows")"
+while IFS= read -r row; do
+  gid=$(printf '%s' "$row" | awk -F'|' '{print $2}')
+  printf '%s\n' "$gid"
+done <<< "$rows"
+C2ONLY
+
+# C3 alone: the bare inline idiom with NO resolver-named function anywhere. Variables are COL_ID /
+# COL_CMD deliberately — `COL_INDEX` would itself satisfy is_resolver_name() and re-arm C2, which
+# is precisely how C3 stayed unexercised while looking covered.
+cat > "$TMP/evc-c3-only.sh" <<'C3ONLY'
+#!/usr/bin/env bash
+set -euo pipefail
+rows="$(awk '/^\|/{print}' "$1")"
+header="$(head -n 1 <<< "$rows")"
+IFS='|' read -r -a cells <<< "$header"
+for (( i=0; i<${#cells[@]}; i++ )); do
+  lc="$(printf '%s' "${cells[$i]}" | tr '[:upper:]' '[:lower:]' | xargs)"
+  case "$lc" in
+    "gate id"*) COL_ID=$i ;;
+    command*)   COL_CMD=$i ;;
+  esac
+done
+while IFS= read -r row; do
+  gid=$(printf '%s' "$row" | awk -F'|' '{print $2}')
+  printf '%s\n' "$gid"
+done <<< "$rows"
+C3ONLY
+
+expect_clean "C1-only fixture (\`function NAME()\` definition, never invoked)" "$TMP/evc-c1-only.sh"
+expect_clean "C2-only fixture (invocation of a sourced resolver, no definition in-file)" "$TMP/evc-c2-only.sh"
+expect_clean "C3-only fixture (bare tr/case/COL_ID=\$i idiom, no resolver-named function)" "$TMP/evc-c3-only.sh"
+
+# --- the mutation half: each branch, disabled alone in a scratch copy, convicts ONLY its own
+# --- fixture. This is what turns three green assertions into three PINS.
+# The mutation neuters the branch's effect (`c_found = 1` → `c_found = c_found`) without changing
+# the line's structure, so a patch that failed to apply is detectable by count, not by hoping.
+mutate_branch() {
+  # $1 = awk source line marker (a unique substring), $2 = output path
+  local marker="$1" out="$2" n
+  awk -v m="$marker" '
+    index($0, m) > 0 && index($0, "c_found = 1") > 0 { sub(/c_found = 1/, "c_found = c_found"); mutated++ }
+    { print }
+    END { if (mutated != 1) exit 9 }
+  ' "$VALIDATOR" > "$out"
+}
+
+# Markers are BACKSLASH-FREE on purpose: `awk -v m=…` expands escape sequences in the assigned
+# value, so a marker containing `\t` would arrive at awk as a real tab and match nothing — the
+# mutation would silently not apply and the "pin" would be theatre. Each marker is verified unique
+# by the match-count check inside mutate_branch, not assumed.
+declare -a branch_markers=(
+  "is_resolver_name(tolower(fn))"      # C1 — the definition rule
+  "is_resolver_name(tolower(w))"       # C2 — the invocation rule
+  "(col|column|columns|idx|index)"     # C3 — the inline idiom rule
+)
+declare -a branch_names=(C1 C2 C3)
+declare -a branch_fixtures=(
+  "$TMP/evc-c1-only.sh"
+  "$TMP/evc-c2-only.sh"
+  "$TMP/evc-c3-only.sh"
+)
+
+for bi in 0 1 2; do
+  bname="${branch_names[$bi]}"
+  mutant="$TMP/mutant-no-$bname.sh"
+  if ! mutate_branch "${branch_markers[$bi]}" "$mutant"; then
+    echo "ERROR: could not disable Evidence $bname in a scratch copy (marker matched != 1 line) —"
+    echo "       the mutation for $bname did NOT run, so $bname is still unpinned."
+    fails=$((fails + 1))
+    continue
+  fi
+  for fj in 0 1 2; do
+    fname="${branch_names[$fj]}"
+    rc=0
+    bash "$mutant" --strict "${branch_fixtures[$fj]}" >/dev/null 2>&1 || rc=$?
+    if [[ $bi -eq $fj ]]; then
+      if [[ $rc -eq 1 ]]; then
+        echo "  ✓ Evidence $bname disabled → the $fname-only fixture is convicted ($bname is pinned)"
+      else
+        echo "ERROR: Evidence $bname disabled but the $fname-only fixture stayed clean (rc=$rc) —"
+        echo "       $bname is redundant with another branch and is not individually pinned."
+        fails=$((fails + 1))
+      fi
+    else
+      if [[ $rc -ne 0 ]]; then
+        echo "ERROR: Evidence $bname disabled and the unrelated $fname-only fixture went red (rc=$rc) —"
+        echo "       the $fname fixture is not exonerated by $fname alone, so it pins nothing specific."
+        fails=$((fails + 1))
+      fi
+    fi
+  done
+done
+
+
+echo ""
+echo "Test 16: bash's own special arrays are not table columns (\`\${BASH_SOURCE[0]}\` false positive)"
+# EARNED, NOT IMAGINED. This is the first defect the check produced once it was actually put on the
+# pre-commit path, and it arrived within the hour: `.speck/scripts/seed-gate-registry.sh` — a
+# header-keyed §6a reader, i.e. exactly the good code this gate is supposed to leave alone — gained
+# an ordinary line,
+#     CITATIONS_VALIDATOR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/…"
+# and was instantly convicted, because `${BASH_SOURCE[0]}` is syntactically `${name[integer]}`.
+# `${BASH_SOURCE[0]}`, `${PIPESTATUS[0]}`, `${FUNCNAME[0]}` and `${BASH_REMATCH[1]}` are among the
+# most common lines in careful bash, and careful bash is precisely the population that also reads
+# §6a tables. A gate convicting good code at that rate teaches reviewers to wave it through, which
+# is worse than not shipping it.
+#
+# Three assertions, because the fix has two ways to be wrong: too narrow (the false positive
+# survives) and too broad (`${arr[N]}` stops being evidence at all).
+
+# 16a — the real-world shape, and NOTE WHAT IS ABSENT FROM IT: no resolver-named function, so
+# Evidence C does not fire. That matters. The first draft of this fixture called
+# `resolve_columns_from_header`, which cleared it via Evidence C no matter what the array rule did —
+# it would have passed identically against the buggy validator and pinned nothing. The real
+# convicted file (`seed-gate-registry.sh`) has no resolver either, which is why it was convicted at
+# all; the fixture has to share that property to be measuring the same thing. Proven below by
+# mutation, not by this comment.
+cat > "$TMP/builtin-arrays.sh" <<'BIA'
+#!/usr/bin/env bash
+set -euo pipefail
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+rows="$(awk '/^\|/{print}' "$1")"
+status="${PIPESTATUS[0]}"
+caller="${FUNCNAME[0]:-main}"
+printf '%s %s %s\n' "$SELF_DIR" "$status" "$caller"
+BIA
+expect_clean "a table reader using \${BASH_SOURCE[0]}/\${PIPESTATUS[0]}/\${FUNCNAME[0]} only" \
+  "$TMP/builtin-arrays.sh"
+
+# 16b — a genuine literal-index column read must STILL be convicted. If the repair had been "stop
+# treating ${arr[N]} as evidence", 16a would pass and the rule would be gone.
+cat > "$TMP/real-array-index.sh" <<'RAI'
+#!/usr/bin/env bash
+set -euo pipefail
+rows="$(awk '/^\|/{print}' "$1")"
+while IFS= read -r row; do
+  IFS='|' read -r -a ROW_CELLS <<< "$row"
+  gid="${ROW_CELLS[3]}"
+  printf '%s\n' "$gid"
+done <<< "$rows"
+RAI
+expect_violation "a genuine \${ROW_CELLS[3]} literal column index is still convicted" \
+  "$TMP/real-array-index.sh"
+
+# 16c — a line carrying BOTH must still be convicted. This pins the LOOP: a first-match-only test
+# would find `${BASH_SOURCE[0]}`, exonerate, and never reach the real column read on the same line.
+cat > "$TMP/mixed-array-index.sh" <<'MAI'
+#!/usr/bin/env bash
+set -euo pipefail
+rows="$(awk '/^\|/{print}' "$1")"
+while IFS= read -r row; do
+  IFS='|' read -r -a ROW_CELLS <<< "$row"
+  printf '%s %s\n' "${BASH_SOURCE[0]}" "${ROW_CELLS[3]}"
+done <<< "$rows"
+MAI
+expect_violation "one line carrying \${BASH_SOURCE[0]} AND \${ROW_CELLS[3]} is still convicted" \
+  "$TMP/mixed-array-index.sh"
+
+# 16d — the mutation half. Three green assertions above are only PINS if reverting the repair
+# reddens 16a and reverting it the other way (deleting the rule) greens 16b. Both directions are
+# executed in scratch copies, because "too narrow" and "too broad" are the two ways this fix can be
+# wrong and each is invisible to the other's assertion.
+PREFIX="$TMP/mutant-array"
+awk '{ if ($0 == "    if (!(aname in BUILTIN_ARRAY)) return 1") { print "    return 1"; m++ } else print }
+     END { if (m != 1) exit 9 }' "$VALIDATOR" > "$PREFIX-no-exclusion.sh" \
+  || { echo "ERROR: could not revert the BUILTIN_ARRAY exclusion — 16a is unpinned"; fails=$((fails + 1)); }
+awk '{ if ($0 == "  if (has_literal_index_array(code)) hit = 1") { print "  if (0) hit = 1"; m++ } else print }
+     END { if (m != 1) exit 9 }' "$VALIDATOR" > "$PREFIX-no-rule.sh" \
+  || { echo "ERROR: could not disable the literal-index rule — 16b/16c are unpinned"; fails=$((fails + 1)); }
+
+if [[ -s "$PREFIX-no-exclusion.sh" && -s "$PREFIX-no-rule.sh" ]]; then
+  rc=0; bash "$PREFIX-no-exclusion.sh" --strict "$TMP/builtin-arrays.sh" >/dev/null 2>&1 || rc=$?
+  if [[ $rc -eq 1 ]]; then
+    echo "  ✓ exclusion reverted → the \${BASH_SOURCE[0]} fixture is convicted (the repair is pinned)"
+  else
+    echo "ERROR: with the BUILTIN_ARRAY exclusion reverted, the \${BASH_SOURCE[0]} fixture stayed"
+    echo "       clean (rc=$rc). Something ELSE is exonerating it, so 16a measures that instead."
+    fails=$((fails + 1))
+  fi
+
+  rc=0; bash "$PREFIX-no-rule.sh" --strict "$TMP/real-array-index.sh" >/dev/null 2>&1 || rc=$?
+  if [[ $rc -eq 0 ]]; then
+    echo "  ✓ literal-index rule disabled → the \${ROW_CELLS[3]} fixture goes clean (16b is pinned)"
+  else
+    echo "ERROR: with the literal-index rule disabled, the \${ROW_CELLS[3]} fixture was still"
+    echo "       convicted (rc=$rc) — another Evidence-B branch is carrying it and 16b pins nothing."
+    fails=$((fails + 1))
+  fi
+fi
+
+
+echo ""
+echo "Test 17: the FIELD VALUE the pre-commit wiring assumes is executed, not asserted in a comment"
+# pre-commit-hook.sh wires this check ADVISORY on the stated ground that its finding count over
+# `.speck/scripts` is 0 — "green on arrival, so the first thing it can ever say is about a reader
+# someone just wrote". That is a claim about the tree, and a claim about the tree that only a
+# comment carries is the kind of thing this repo has watched rot in place. It is measured here.
+#
+# NOTE ON SCOPE: this assertion deliberately reaches beyond this validator's own fixtures. If it
+# goes red, it is not necessarily a bug in this check — it may be a genuine positional reader
+# someone just added, which is the check working. Read the finding before touching this test.
+TREE="$ROOT/.speck/scripts"
+tree_rc=0
+tree_out="$(bash "$VALIDATOR" --strict "$TREE" 2>&1)" || tree_rc=$?
+tree_subject="$(grep '^SPECK_GATE_SUBJECT=' <<<"$tree_out" | cut -d= -f2)"
+tree_predicates="$(grep '^SPECK_GATE_PREDICATES=' <<<"$tree_out" | cut -d= -f2)"
+if [[ $tree_rc -ne 0 ]]; then
+  echo "ERROR: the .speck/scripts tree is NOT clean (exit $tree_rc). The pre-commit wiring is"
+  echo "       advisory on the stated ground that this count is 0 — that ground has moved."
+  printf '%s\n' "$tree_out" | grep -E "POSITIONAL_TABLE_READ|Found " | sed 's/^/       /'
+  fails=$((fails + 1))
+elif [[ "${tree_predicates:-0}" -lt 1 ]]; then
+  echo "ERROR: the tree scan found 0 table-reading files (SUBJECT=$tree_subject). A clean verdict"
+  echo "       over a subject the check never recognised is a green about nothing."
+  fails=$((fails + 1))
+else
+  echo "  ✓ .speck/scripts: 0 findings across $tree_predicates table-reading file(s) of $tree_subject scanned"
 fi
 
 

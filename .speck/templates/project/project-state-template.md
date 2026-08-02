@@ -64,6 +64,16 @@ Two rules that follow from that order, and both have cost a session:
 - **A road that has not been recompiled since the work was specified will report the work as done.** Rebuild before you quote it: `speck_graph.py build <PROJECT_DIR> && speck_graph.py check <PROJECT_DIR>`.
 - **A clear road never means "nothing to do."** It means the promise ledger is filled. A cap can go NO-SHIP → SHIP without a line of product being built, because a plan correction gave every promise an owner. Graph bookkeeping is not product motion.
 
+**Order WITHIN a source is computed, not chosen.** `gap` and `findings` fold structural findings,
+caps and honest-pending gates into one surface, and the order is the work order — so it is ranked by
+`(severity, gate code, subject)`, identically in both, by one function. Consequences worth knowing
+before you re-rank anything by hand:
+
+- **`gap` names the next item outright**: `NEXT=<GATE_CODE>@<node>`. It is the same row `findings` puts at #1. Take that one; do not re-derive a ranking from the printed list.
+- **The tiebreak is alphabetical — arbitrary on purpose, and stable.** A token that gets diffed across sessions must not reshuffle when nothing changed; a stable arbitrary order beats an unstable meaningful one.
+- **A truncated window says `+N more`.** If it does not say so, it is not truncated. A silent window reads as the total, which is how "2 of 9" became "2".
+- **Acceptance moves an item in the ORDER, never in the ceiling** (`findings-exceptions.md`). Nothing authored can raise `GRAPH_CAP`.
+
 ---
 
 ## ⚡ Contradictions (things that are true at the same time and shouldn't be)
@@ -98,15 +108,24 @@ If empty: "No known contradictions." — and that sentence is a claim like any o
 
 ## 🎚️ Readiness State Map
 
+**This table is DERIVED. Do not type it — paste it.** Generate it, then paste the output here:
+
+```bash
+python3 .speck/scripts/graph/speck_graph.py readiness specs/projects/<PROJECT_ID> --stdout
+# (`speck_graph.py build` also refreshes it into graph/readiness-map.md in the same call)
+```
+
 | Level | Item | Claimed State | Proof | Last Verified | Stale? |
 |-------|------|---------------|-------|---------------|--------|
-| Project | [project-id] | [NO-SHIP/IMPL-GREEN/UX-RC/COMMERCIAL-RC/SHIP-RC/SHIP] | [path/to/project-validation-report.md@abc1234] | [date] | [yes/no] |
-| Epic | E001-[name] | [state] | [path/to/epic-validation-report.md@abc1234] | [date] | [yes/no] |
-| Epic | E002-[name] | [state] | [path/to/epic-validation-report.md@abc1234] | [date] | [yes/no] |
-| Story | E001/S001 | [state] | [path/to/validation-report.md@abc1234] | [date] | [yes/no] |
+| Project | [project-id] | [state, or `unclaimed`] | [path/to/project-validation-report.md@abc1234, or `none yet`] | [date] | [no / yes — <artifact> changed at <sha>, after the proof / unknown] |
+| Epic | E001-[name] | [state] | [path/to/epic-validation-report.md@abc1234] | [date] | [as above] |
+| Story | E001/S001 | [state] | [path/to/validation-report.md@abc1234] | [date] | [as above] |
 | ... | ... | ... | ... | ... | ... |
 
-*Stale = >2 weeks since `verified-against-runtime` stamp OR HEAD has moved since stamp was applied.*
+*Stale = the CONTENT predicate: the artifact a proof proves CHANGED AFTER the proof (its spec has a
+commit after the report's). **Never `stamped SHA == HEAD`** — a project five commits behind whose
+spec nobody touched is fresh, and a rule that fired on it would teach `--no-verify` inside a day.
+With no git history the cell says `unknown`, never `no`.*
 
 **Every verdict word in this document cites a `proof: <path>@<sha>` that resolves.** A state, a
 cap, an `audited`, a `judged`, a `validated` — each one is a claim about an artifact, so it names
@@ -114,12 +133,18 @@ the artifact and the SHA it was true at. This is the same law the traceability m
 lives under, applied one artifact up.
 
 <!--
-Issue #96 finding 3. Two consecutive project-states carried a false magic-moment verdict claim and
-NOTHING could detect it, because the claim resolved to nothing. From the commit that finally caught
-it: "a claim repeated across pickups is not evidence." A verdict with no resolvable proof is not a
-weaker claim than one with proof — it is an unfalsifiable one, which is worse, because it survives
-every rewrite. If a row has no proof yet, write `none yet` in the Proof cell; an empty cell reads
-as "someone checked" and nobody did.
+Issue #96 finding 3 + item E. Two consecutive project-states carried a false magic-moment verdict
+claim and NOTHING could detect it, because the claim resolved to nothing. From the commit that
+finally caught it: "a claim repeated across pickups is not evidence." A verdict with no resolvable
+proof is not a weaker claim than one with proof — it is an unfalsifiable one, which is worse,
+because it survives every rewrite.
+
+WHY THE TABLE IS GENERATED AND NOT WRITTEN: a hand-authored Proof column is the gated party
+authoring the gate's input — #93 class 2 by construction. Typing `validation-report.md@abc1234`
+costs exactly as much whether or not the file is there. So the ITEM set comes from the graph (a
+story cannot be left off its own status page), the PROOF is the report that exists on disk pinned
+at the SHA that last changed it, `none yet` is printed where there is none (an empty cell reads as
+"someone checked", and nobody did), and a claim its OWN proof contradicts is printed ON the claim.
 -->
 
 
@@ -213,7 +238,8 @@ If all green: "All truth artifacts are fresh."
 |-------|----------|--------|--------|
 | `.speck/VERSION` == `.speck/project.json` → `speck_version` | equal | [both values] | [✅ / ⚠️ drift] |
 | `graph/witness.json` == a fresh compile | equal | [output of `speck_graph.py check`] | [✅ fresh / ⚠️ GRAPH_STALE] |
-| `graph/road-to-completion.md` rebuilt since `witness.json` | yes | [both stamps] | [✅ / ⚠️ road older than witness] |
+| `graph/road-to-completion.md` agrees with a fresh compile | equal | [output of `speck_graph.py road <PROJECT_DIR> --check`] | [✅ ROAD_FRESH / ⚠️ ROAD_STALE] |
+| `graph/readiness-map.md` regenerated (the Proof column above) | yes | [`speck_graph.py build` refreshes it with the witness and the road] | [✅ / ⚠️ pasted table is older than the graph] |
 
 <!--
 Each row is a pair that has been observed disagreeing in a shipped repo — one project ran v9.5.0 in

@@ -1,5 +1,87 @@
 # Speck Changelog
 
+## v10.2.0 — 2026-08-02 — The backlog closes
+
+Closes the last three open issues from the field-filed audit-doctrine series (#93, #96, #101), and
+puts every remaining orphan validator on a real invocation path.
+
+### §11a — the Standard Probe Library (#101)
+
+Buildable at last, because v10.1 shipped the type vocabulary it needed. §11a ships as a **sibling**
+of §11, not an extension of it — §11 is byte-untouched and its P4 ("do not grow this list to close a
+gap") is restated in §11a's own opening, because the issue was explicit that the two sections have
+different shapes and only one of them is closed.
+
+Eight closed classes, each carrying an admissible substrate, its required negative controls, and a
+first-class **declared exception**. `PROBE_SUBSTRATE_MISMATCH.P1` is now a real lookup — claim type →
+admissible citation types → is the cited type in the set — rather than an inference over a string
+that carried no type.
+
+Three properties worth stating because each was a decision, not an accident:
+
+- **Unknown never convicts.** An untyped discharge artifact is `PROBE_SUBSTRATE_UNKNOWN.P3` at exit
+  0. Admissibility is a property of the *pair*; an unknown type means the pair is INCOMPLETE, not
+  inadmissible. Resolving incomplete to inadmissible would redden every un-stamped project on
+  upgrade day while claiming a verdict it never computed.
+- **Absence and inapplicability are mechanically distinguishable** — the same law as
+  `GATE_EMPTY_LEGITIMATE` vs `GATE_VACUOUS`. A class that does not apply is *declared*
+  (`n/a:<reason>`, or `waived DEC-####` resolved against the decisions log); a bare `n/a`, a
+  DEC-less waiver, or a **deleted row** is a finding.
+- **The registry cannot be edited into agreement with itself.** The lookup routes off the compiled
+  claim type, never the cell, so weakening a row's claim type raises `PROBE_LIBRARY_DRIFT.P2` *and*
+  leaves the mismatch firing.
+
+The shipped template ships §11a undischarged on purpose, so the unedited artifact is the sin: exactly
+8 `PROBE_UNDECLARED.P1`, and 0 once every exception is filled. Pinned in both directions.
+
+### Every gate now has a caller
+
+This release closes a backlog about gates that certify what they never inspected, so it swept its own
+tree for the same defect: all 65 scripts under `.speck/scripts`, grepped repo-wide, with prose-only
+mentions discarded so a mention could not pass as an invocation.
+
+- `validate-evidence-citations.sh` and the §11a check are **declared** as standing §6a rows (emitted
+  through the same producer as recipe gates, so a column insert shifts them identically) and
+  **executed** at seed/amend time. Stage is `manual` honestly — nothing on the commit path invokes
+  them yet, and declaring a stage a gate does not fire at is exactly the divergence
+  `validate-gate-liveness.sh` exists to catch.
+- `validate-two-carrier.sh` (#103) runs on the pre-commit path over **changed shell files only** —
+  not a repo-wide scan, which would be both slow and blocking.
+- **`banned-phrase-detector.sh` had no caller at all** — no hook, no skill, no CI, no §6a row, no
+  test — while `docs/frontier/` asserted it was covered by a lane that does not exist in this repo.
+  It scans agent-authored prose for the "production-ready / no regressions / rock-solid" register
+  that stands in for evidence, so a commit message is precisely its subject. Wired into
+  `commit-msg-hook.sh`, **advisory**: it prints, it never blocks, and it never changes the exit code.
+  A phrase list is a nudge, not a proof — and a gate that newly rejected commits on wording would be
+  turning a green repo red on the upgrade commit.
+
+### #96 — the graph remainder
+
+Finding 4's decidable slice (`PROMISE_FIDELITY` / `WIRING_UNRESOLVED`, minted inside `check_graph()`
+so they reach every existing consumer without a new hook), the project-state **Proof column** derived
+from the graph rather than hand-authored — a hand-authored proof column would be #93 class 2 by
+construction — and a deterministic, documented gap-source ordering, because the order decides what
+the next session works on.
+
+### #93 class 3 — a quality bound fused to an existence bound
+
+The one class of the original five that had no mechanism, and the discriminator was sharp enough to
+mechanize after all: **self-held is fine when the bound governs CONTENT; pathological when it decides
+EXISTENCE.** `validate-bound-fusion.sh` looks for the fusion — a single self-authored field that both
+grades quality and gates advancement — and is deliberately precise rather than broad, because a check
+that convicts an honest "not ready yet" would train exactly the routing-around the class describes.
+
+### Fixed
+
+- `.claude/loop.md` invoked `.speck/scripts/v7/regenerate-project-state.sh` — a path that does not
+  exist, so that loop step was a silent no-op pointed at the script this release makes load-bearing.
+- Two measurement comments that disagreed with each other, and one that pinned a live corpus with no
+  SHA so it re-rotted on the next commit to an unrelated repo. The figures live in one place now, and
+  the durable claim is the ratio, not the absolute count.
+- A `pass` that executed unconditionally after a `break 2`, printing a ✓ beside its own ✗. It never
+  hid the failure — but a green tick next to a red cross, in a suite whose subject is honest
+  verdicts, is the wrong artifact.
+
 ## v10.1.0 — 2026-08-02 — Minor-capable migrations, typed citations, observation exposure
 
 Works the open half of the audit-doctrine backlog (#93 / #96 / #100 / #101 / #103 / #104). The

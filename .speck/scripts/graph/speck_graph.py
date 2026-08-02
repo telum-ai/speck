@@ -1340,6 +1340,94 @@ def _witness_cited(site, story_node):
     return site in read_text(report)
 
 
+# The THIRD leg (v10.2, issue #96 finding 4) — the slice where the graph can mechanically
+# CONTRADICT a claimed discharge, as opposed to merely noticing that a field is empty.
+#
+# v10.1 shipped the two absence legs: a delivery claim must NAME a production entry point, and the
+# delivering story's own report must RECORD the `<path>:<line>` a delete-the-call mutation reddened.
+# Both ask "is the field filled?". Neither ever looked at the tree, so `entry_point:
+# lib/ghost.ts:createGhost` — a file that has never existed — read exactly like a true one, and the
+# citation pair could be satisfied entirely by two sentences the same author typed.
+#
+# WHAT IS DECIDABLE, and it is only this: a cited path either exists in this tree or it does not; a
+# cited symbol either occurs in that file or it does not; a cited line either exists in that file or
+# it does not. Each `no` is a CONTRADICTION — the claim asserts something about the tree that the
+# tree refutes — and needs no judgement about whether the code is any good.
+#
+# WHAT STAYS UNDECIDABLE, stated so nobody reads this leg as more than it is:
+#   • whether a user gesture actually REACHES that symbol at runtime (needs code nodes + a call
+#     graph — the `ORPHAN_CODE` P5 line the graph already declares NOT evaluated),
+#   • whether the mutation was RUN as opposed to recorded (that is `mutate-guard.sh
+#     --verify-receipt`, which recomputes the pinned content against the receipts on disk),
+#   • whether the code at that entry point is FAITHFUL to the promise (#86's conclusion, unchanged:
+#     not statically decidable, and a gate that guessed would be worse than the prose it replaces).
+#
+# NOT EVALUATED beats a guess. With no repo root there is no base to resolve a relative citation
+# against, so the answer is "unevaluable" and nothing fires — the same polarity as the adoption
+# gradient. A path carrying a template placeholder (`<path>`, `[file]`, `{sym}`) is unfilled, not
+# false; that is the absence leg's business, not this one.
+RE_CLAIM_PLACEHOLDER = re.compile(r"[<>\[\]{}]")
+
+
+def _cited_path(project_dir, raw_path):
+    """Resolve a cited path against the tree → (state, abspath).
+
+    states: `resolved` (abspath is real) · `unresolved` (no base contains it) · `unevaluable`.
+    Two bases are tried, repo root then project dir, because citations are hand-written in both
+    conventions and convicting on convention would be a vendor-brittleness bug, not a finding.
+    """
+    p = (raw_path or "").strip().strip("`")
+    if not p or RE_CLAIM_PLACEHOLDER.search(p):
+        return "unevaluable", ""
+    root = _repo_root(project_dir)
+    if not root:
+        return "unevaluable", ""
+    for base in (root, project_dir):
+        cand = os.path.normpath(os.path.join(base, p))
+        if os.path.exists(cand):
+            return "resolved", cand
+    return "unresolved", ""
+
+
+def _claim_contradicted(project_dir, node):
+    """Does this delivery claim name something this tree refutes? → (bool, detail).
+
+    Checks, in the order an author would fix them: the entry-point PATH, the entry-point SYMBOL
+    inside that file, the witness PATH, the witness LINE. A file that cannot be read is unevaluable
+    (an unreadable file is not a refutation), and only the first contradiction is reported — the
+    rest are usually the same typo.
+    """
+    ep = (node.attrs.get("entry_point") or "").strip().strip("`")
+    if not ep or RE_ENTRY_NA.match(ep) or not RE_ENTRY_POINT.match(ep):
+        return False, ""          # absent / bounded escape / malformed — the ABSENCE leg's business
+    ep_path, _sep, symbol = ep.rpartition(":")
+    state, abspath = _cited_path(project_dir, ep_path)
+    if state == "unresolved":
+        return True, ("`entry_point: %s` names a path that does not exist in this tree — a claim "
+                      "that cites a file nobody can open is not a weaker claim than one that cites "
+                      "a real file, it is an unfalsifiable one" % ep)
+    if state == "resolved":
+        text = read_text(abspath)
+        if text and symbol not in text:
+            return True, ("`entry_point: %s` names a symbol that does not occur anywhere in %s — "
+                          "the file exists, the entry point does not (renamed? moved?)" % (ep, ep_path))
+    wit = (node.attrs.get("wiring_witness") or "").strip().strip("`")
+    site = RE_WITNESS_SITE.search(wit)
+    if site:
+        w_path, _c, w_line = site.group(0).rpartition(":")
+        w_state, w_abs = _cited_path(project_dir, w_path)
+        if w_state == "unresolved":
+            return True, ("`wiring_witness: %s` cites a mutation site in a file that does not exist "
+                          "in this tree" % site.group(0))
+        if w_state == "resolved":
+            text = read_text(w_abs)
+            if text and w_line.isdigit() and int(w_line) > len(text.splitlines()):
+                return True, ("`wiring_witness: %s` cites line %s of a file that has %d line(s) — "
+                              "the mutation site is outside the file it names"
+                              % (site.group(0), w_line, len(text.splitlines())))
+    return False, ""
+
+
 def _graph_signature(gr):
     """Content signature of a compiled graph: nodes (incl. each content_hash) + edges.
 
@@ -1554,6 +1642,25 @@ def check_graph(project_dir):
                          and (n.attrs.get("entry_point") or "").strip())
     delivered_promises = [n for n in sorted(nodes.values(), key=lambda x: x.id)
                           if n.kind in ("magic-moment", "job") and n.id in delivered]
+    # The resolution pass runs over EVERY adopted claimant, not only the ones the witness loop
+    # happens to reach: a promise with two claimants where one cites a phantom file is still
+    # carrying a false citation, and reporting it only when the OTHER claimant also fails would
+    # make the finding depend on an unrelated row. Memoised because the witness loop asks again.
+    contradicted = {}
+    for n in sorted(nodes.values(), key=lambda x: x.id):
+        if n.kind not in ("prm", "story") or _adoption_scope(n) not in adopted_scopes:
+            continue
+        bad, why = _claim_contradicted(project_dir, n)
+        if bad:
+            contradicted[n.id] = why
+    if contradicted:
+        caps.append("WIRING_UNRESOLVED.P2: %d delivery claim(s) cite something this tree refutes — "
+                    "%s%s. Fix the citation or drop it: an unresolvable citation is the one shape "
+                    "that survives every rewrite, because nothing can disagree with it."
+                    % (len(contradicted),
+                       "; ".join("%s %s" % (k, v) for k, v in sorted(contradicted.items())[:3]),
+                       ", …" if len(contradicted) > 3 else ""))
+        cap_state = _min_readiness(cap_state, "integration-green")
     unwitnessed = []
     unevaluated = []
     for n in delivered_promises:
@@ -1574,6 +1681,12 @@ def check_graph(project_dir):
                 ok = True
                 break
             if state == "sited":
+                # A citation the tree REFUTES cannot witness anything, even when the story's report
+                # dutifully repeats it — two artifacts agreeing about a file that does not exist is
+                # exactly the shape the join was built to catch, one level down.
+                if claimant.id in contradicted:
+                    reasons.append("%s %s" % (claimant.id, contradicted[claimant.id]))
+                    continue
                 if _witness_cited(detail, story):
                     ok = True
                     break
@@ -1697,6 +1810,16 @@ def check_graph(project_dir):
     pending = [
         "ORPHAN_CODE: pending tests-as-join (P5) — needs code nodes to prove every code entity "
         "traces to a promise. NOT evaluated (cannot claim 'no orphan code' yet).",
+        # The bound on finding 4's three legs, printed rather than left to be rediscovered. The
+        # reachability legs prove a citation RESOLVES — a named entry point, a recorded mutation
+        # site, and a path/symbol/line this tree does not refute. They do not prove a user gesture
+        # arrives there, that the mutation was RUN (mutate-guard.sh --verify-receipt owns that), or
+        # that the code is faithful to the promise (#86: not statically decidable). A gate that
+        # guessed at those would be worse than the prose it replaces.
+        "PROMISE_FIDELITY: NOT evaluated and not decidable here — the graph proves a delivery claim "
+        "RESOLVES (entry point named · mutation site recorded · path/symbol/line not refuted by the "
+        "tree), never that the gesture reaches it or that the code keeps the promise. Runtime "
+        "reach stays with /larp; mutation execution with `mutate-guard.sh --verify-receipt`.",
     ]
 
     # The exceptions registry, matched LAST so it sees every live finding and cap this run minted.
@@ -1900,10 +2023,22 @@ def compute_gap(project_dir):
     judged = set(e.dst for e in edges if e.kind == "judges" and e.dst)
     mm_judged = sum(1 for n in nodes.values() if n.kind == "magic-moment" and n.id in judged)
     phantom = [f for f in hard if f["code"].startswith("PHANTOM_PROMISE")]
+    # The work order is COMPUTED by the same function the derived findings view uses, so the item
+    # `gap` puts first and the row `findings` puts first are the same row by construction. Exceptions
+    # are applied first: an ACCEPTED finding still exists (and still caps), it just stops being the
+    # thing the next session is told to do — acceptance moves a finding in the ORDER, never in the
+    # ceiling (design invariant §6.4).
+    _invalid, accepted_keys = apply_exceptions(
+        findings, caps, read_findings_exceptions(project_dir))
+    ranked = _ranked_rows(findings, caps, pending, accepted_keys)
+    open_ranked = [r for r in ranked if r["state"] == "OPEN"]
     return {
         "cap_state": cap_state,
         "hard": hard,
         "caps": caps,
+        "ranked": ranked,
+        "open_ranked": open_ranked,
+        "next": open_ranked[0]["key"] if open_ranked else "",
         "felt_uncovered": axes["felt_uncovered"],
         "taste_open": axes["taste_open"],
         "reports": axes["reports"],
@@ -1915,15 +2050,29 @@ def compute_gap(project_dir):
     }
 
 
+GAP_WINDOW = 6          # how many ranked items the token names before it says "+N more"
+
+
+def _window(keys, limit=GAP_WINDOW):
+    """`a, b, c` — and when the list is longer, SAY SO. A silent truncation reads as a total."""
+    shown = list(keys)[:limit]
+    rest = len(keys) - len(shown)
+    return ", ".join(shown) + (" +%d more" % rest if rest > 0 else "")
+
+
 def gap_line(project_dir):
-    """The single evaluator-legible SPECK-GAP: line."""
+    """The single evaluator-legible SPECK-GAP: line. Order = the computed work order, see
+    `_ranked_rows`: the leftmost item inside each group is the one to do next, and `NEXT=` names it
+    outright so the evaluator never has to infer a ranking from a printed list."""
     g = compute_gap(project_dir)
     parts = []
     if g["hard"]:
-        codes = ", ".join("%s %s" % (f["code"].split(".")[0], f.get("ref", "")) for f in g["hard"][:6])
-        parts.append("%d·P1(%s)" % (len(g["hard"]), codes))
+        hard_keys = [r["key"].replace("@", " ") for r in g["ranked"]
+                     if r["origin"] == "finding" and r["severity"] == "P1"]
+        parts.append("%d·P1(%s)" % (len(hard_keys), _window(hard_keys)))
     if g["caps"]:
-        parts.append("%d·cap" % len(g["caps"]))
+        cap_keys = [r["key"] for r in g["ranked"] if r["origin"] == "cap"]
+        parts.append("%d·cap(%s)" % (len(cap_keys), _window(cap_keys, 3)))
     if g["felt_uncovered"]:
         parts.append("FELT:uncovered(%d)" % g["felt_uncovered"])
     if g["taste_open"]:
@@ -1942,7 +2091,12 @@ def gap_line(project_dir):
     if done:
         return ("SPECK-GAP: none — GRAPH_CAP=%s · structural clear · MM %d/%d judged · JTBD ok"
                 % (g["cap_state"].upper(), g["mm_judged"], g["mm_total"]))
-    return "SPECK-GAP: " + " | ".join(parts) + " | CAP=%s" % g["cap_state"].upper()
+    # NEXT= is the whole point of ranking: /goal's iteration policy says "take the single
+    # highest-severity unmet item", and until now the evaluator had to infer which one that was from
+    # a list printed in mint order. Now the token names it, and it is the same row `findings` puts
+    # at the top, because both come out of `_ranked_rows`.
+    return ("SPECK-GAP: " + " | ".join(parts) + " | CAP=%s" % g["cap_state"].upper()
+            + " | NEXT=%s" % (g["next"] or "none"))
 
 
 def emit_goal(project_dir, target=None):
@@ -1962,9 +2116,11 @@ def emit_goal(project_dir, target=None):
         "content-hashed); never delete an MM-N/JOB-N to dodge a phantom; every gate (validate, audit, "
         "larp) stays authoritative. "
         "BOUNDARIES: route each unmet gap item through the owning Speck skill, never reimplement one. "
-        "ITERATION POLICY: take the single highest-severity unmet item from `gap` and close it "
-        "(untraced/phantom -> the story chain; audit P0/P1 -> /harden; uncovered FELT / unjudged MM -> "
-        "/larp; stale -> build), then re-check before advancing. "
+        "ITERATION POLICY: take the item `gap` names in its `NEXT=` token — it is COMPUTED (severity, "
+        "then gate code, then subject), so it is the same item every session and the same row "
+        "`findings` ranks first; never re-rank it by hand. Close it (untraced/phantom -> the story "
+        "chain; audit P0/P1 -> /harden; uncovered FELT / unjudged MM -> /larp; stale -> build), then "
+        "re-check before advancing. "
         "BLOCKED STOP: stop and report for an owner decision at any forks-open TASTE, contract/project "
         "pivot, price lock, or deploy. "
         "Or stop after --max-turns turns."
@@ -2011,7 +2167,9 @@ ROAD_ROUTING = {
     "UNCLAIMED_MM_REF": ("TIDY", "if the story delivers it, add `serves: [MM-N]` to its frontmatter — else ignore"),
     "HETEROGENEOUS_ID": ("TIDY", "give the §5 heading an `MM-N —` id (`MM-5a` is accepted)"),
     "ORPHAN_CODE": ("REMOVE", "remove the code no promise asked for (or wire it) — pending tests-as-join P5"),
+    "PROMISE_FIDELITY": ("PROVE", "/larp Job A+B and /audit — undecidable in the graph; never gate on a guess"),
     "MAPPED_UNWITNESSED": ("PROVE", "name the production `entry_point` and cite the `<path>:<line>` a delete-the-call mutation reddened"),
+    "WIRING_UNRESOLVED": ("TIDY", "repoint the citation at the path/symbol/line that really exists — or delete it"),
     "EXCEPTION_PHANTOM": ("TIDY", "delete the row from findings-exceptions.md — the finding it excepts no longer fires"),
     "EXCEPTION_UNJUSTIFIED": ("TIDY", "give the row a posture (ACCEPTED|SUPERSEDED) and a reason an outsider can check"),
     "UNJUDGED_SURFACE": ("PROVE", "/larp connoisseur Job B — judge this surface (pending verdict extraction)"),
@@ -2134,7 +2292,45 @@ def _write_derived(project_dir, filename, text, command):
     return 0
 
 
-def cmd_road(project_dir, write=True):
+def road_signature(text):
+    """Content signature of a rendered road, EXCLUDING the SHA stamp footer.
+
+    The footer carries HEAD, so comparing whole files would be `stamped SHA == HEAD` wearing a
+    disguise: it would fire on every non-spec commit in every repo and teach `--no-verify` inside a
+    day. What matters is whether the road's ROUTED CONTENT still matches a fresh compile.
+    """
+    body = [ln for ln in text.splitlines() if not ln.startswith("*[as of SHA")]
+    return content_hash("\n".join(body).strip())
+
+
+def road_freshness(project_dir):
+    """Compare the committed road against a fresh render → (state, detail).
+
+    states: `fresh` · `stale` · `absent` (never rendered — not tampering, so it is not a defect).
+    """
+    path = os.path.join(project_dir, "graph", "road-to-completion.md")
+    if not os.path.isfile(path):
+        return "absent", ("no committed road-to-completion.md — run `speck_graph.py build` "
+                          "(which renders it in the same call)")
+    if road_signature(read_text(path)) != road_signature(render_road(project_dir)):
+        return "stale", ("graph/road-to-completion.md disagrees with a fresh compile. A stale road "
+                         "CANNOT report its own staleness — it was rendered when the graph was "
+                         "fresh, so it contains no GRAPH_STALE line by construction, and it opens "
+                         "in bold with a cap value that gets quoted onward. Fix: "
+                         "`speck_graph.py build <PROJECT_DIR>`")
+    return "fresh", "graph/road-to-completion.md matches a fresh compile"
+
+
+def cmd_road(project_dir, write=True, check=False):
+    if check:
+        # The READ-SIDE assert (issue #96 finding 2, repair 2). `build` re-renders the road in the
+        # same call, so the two artifacts can no longer be separately WRITTEN — this is the other
+        # half: a road that disagrees with a fresh compile can be DETECTED, by anything that cares
+        # to look, without rebuilding anything.
+        state, detail = road_freshness(project_dir)
+        icon = {"fresh": "✅", "stale": "⛔", "absent": "ℹ️ "}[state]
+        sys.stdout.write("%s ROAD_%s: %s\n" % (icon, state.upper(), detail))
+        return 1 if state == "stale" else 0
     text = render_road(project_dir)
     if write:
         return _write_derived(project_dir, "road-to-completion.md", text, "road")
@@ -2154,15 +2350,26 @@ def _severity_of(code):
     return tail if tail in SEVERITY_RANK else "P3"
 
 
-def findings_rows(project_dir):
-    """Every live finding + cap as one ranked list of rows. Ranking is COMPUTED, never typed."""
-    findings, caps, pending, cap_state = check_graph(project_dir)
-    exceptions = read_findings_exceptions(project_dir)
-    # annotate for display (idempotent — check_graph already ran the same match to mint its caps)
-    _invalid, accepted_keys = apply_exceptions(findings, caps, exceptions)
+# THE ORDER IS THE CONTENT (v10.2, issue #96 items F/H).
+#
+# `gap` and `findings` both fold structural findings, caps and honest-pending gates into one
+# surface, and BOTH are read to decide what the next session works on — /goal's iteration policy
+# says "take the single highest-severity unmet item". So the order is not presentation: it is the
+# work order. It was mint order — the sequence the gate blocks happen to appear in inside
+# check_graph — which meant appending a gate block silently reprioritised every project's next
+# session, and `gap`'s six-item window could hide a whole gate code behind seven instances of
+# another. Worse, the window truncated without saying so, so "2 shown of 9" read as "2".
+#
+# ONE ranking function, two consumers, so a derived view cannot drift from the authoritative one
+# (#100's law): (severity rank, gate code, subject). The tiebreak is alphabetical on purpose — it is
+# arbitrary but STABLE and printable, and a stable arbitrary order beats an unstable meaningful one
+# for a token that gets diffed across sessions.
+def _ranked_rows(findings, caps, pending, accepted_keys):
+    """findings + caps + pending → ONE list of rows in the computed work order."""
     rows = []
     for f in findings:
         rows.append({"key": finding_key(f["code"], f.get("ref", "")), "code": f["code"],
+                     "origin": "finding",
                      "severity": _severity_of(f["code"]), "subject": f.get("ref", "") or "—",
                      "where": f.get("source_file", "") or "—",
                      "state": "ACCEPTED" if f.get("accepted") else "OPEN",
@@ -2170,17 +2377,28 @@ def findings_rows(project_dir):
     for c in caps:
         code = c.split(":", 1)[0].strip()
         key = finding_key(code)
-        rows.append({"key": key, "code": code, "severity": _severity_of(code),
+        rows.append({"key": key, "code": code, "origin": "cap",
+                     "severity": _severity_of(code),
                      "subject": "—", "where": "—",
                      "state": "ACCEPTED" if key in accepted_keys else "OPEN",
                      "note": c.split(":", 1)[1].strip() if ":" in c else c})
     for p in pending:
         code = p.split(":", 1)[0].strip()
-        rows.append({"key": finding_key(code), "code": code, "severity": "P3", "subject": "—",
+        rows.append({"key": finding_key(code), "code": code, "origin": "pending",
+                     "severity": "P3", "subject": "—",
                      "where": "—", "state": "NOT-EVALUATED",
                      "note": p.split(":", 1)[1].strip() if ":" in p else p})
     rows.sort(key=lambda r: (SEVERITY_RANK[r["severity"]], r["code"], r["subject"]))
-    return rows, cap_state, exceptions
+    return rows
+
+
+def findings_rows(project_dir):
+    """Every live finding + cap as one ranked list of rows. Ranking is COMPUTED, never typed."""
+    findings, caps, pending, cap_state = check_graph(project_dir)
+    exceptions = read_findings_exceptions(project_dir)
+    # annotate for display (idempotent — check_graph already ran the same match to mint its caps)
+    _invalid, accepted_keys = apply_exceptions(findings, caps, exceptions)
+    return _ranked_rows(findings, caps, pending, accepted_keys), cap_state, exceptions
 
 
 def render_findings(project_dir):
@@ -2228,6 +2446,195 @@ def cmd_findings(project_dir, write=True):
     text = render_findings(project_dir)
     if write:
         return _write_derived(project_dir, "findings.md", text, "findings")
+    sys.stdout.write(text)
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# readiness — the project-state Readiness State Map, DERIVED (v10.2, issue #96 item E / finding 3).
+#
+# project-state.md is the single-page agent first-read, and its Readiness State Map is the table a
+# fresh agent quotes onward. Every cell in it was hand-typed, including the Proof cell — so the
+# gated party authored the gate's input, which is #93 class 2 by construction. The measured cost:
+# two consecutive project-states carried a false magic-moment verdict claim and NOTHING could detect
+# it, because the claim resolved to nothing. From the commit that finally caught it: "a claim
+# repeated across pickups is not evidence."
+#
+# So the table is COMPUTED here and pasted there:
+#   • the ITEM set comes from the graph (story nodes and their epic scopes) — not from a list
+#     someone maintains, so a story cannot be omitted from its own status page;
+#   • the CLAIM comes from the claim artifact (a story's `readiness_state_verified` frontmatter);
+#   • the PROOF is the validation report that exists on disk, pinned at the SHA that last CHANGED
+#     it. No report → `none yet`, which is a fact, where an empty cell reads as "someone checked";
+#   • a claim the report CONTRADICTS is printed next to the claim, not in a footnote.
+#
+# STALENESS IS THE CONTENT PREDICATE, never `stamped SHA == HEAD`. A proof is stale when the thing
+# it proves CHANGED AFTER it: the spec's last commit is newer than the report's. A project five
+# commits behind whose spec nobody touched is FRESH — that counter-example is exactly why the SHA
+# rule was rejected for the witness, and the same argument holds one artifact up. With no git there
+# is no answer, so the cell says `unknown`, never `no`.
+# ---------------------------------------------------------------------------
+
+_GIT_STAMP_CACHE = {}
+
+
+def _git_file_stamp(root, path):
+    """(short_sha, YYYY-MM-DD, unix_ts) of the last commit that CHANGED `path`.
+
+    ("", "", 0) when there is no git, no repo, or the file has never been committed — all three are
+    "unknown", and the caller says so rather than inventing a verdict.
+    """
+    key = ("stamp", root, path)
+    if key in _GIT_STAMP_CACHE:
+        return _GIT_STAMP_CACHE[key]
+    stamp = ("", "", 0)
+    if root and path and os.path.exists(path):
+        try:
+            out = subprocess.check_output(
+                ["git", "-C", root, "log", "-1", "--format=%h|%ad|%ct", "--date=short",
+                 "--", path],
+                stderr=subprocess.DEVNULL).decode().strip()
+            if out and "|" in out:
+                sha, date, ts = (out.split("|") + ["", "", ""])[:3]
+                stamp = (sha, date, int(ts) if ts.isdigit() else 0)
+        except (subprocess.CalledProcessError, OSError, ValueError):
+            stamp = ("", "", 0)
+    _GIT_STAMP_CACHE[key] = stamp
+    return stamp
+
+
+def _git_changed_since(root, since_sha, path):
+    """Did any commit AFTER `since_sha` change `path`? → 'yes'/'no'/'unknown'.
+
+    ANCESTRY, not timestamps. Two commits can share a second — the test that pinned this predicate
+    committed the report and then the spec inside the same second, and a `%ct` comparison called the
+    proof fresh while its subject had visibly moved. `<sha>..HEAD -- <path>` cannot tie.
+    """
+    key = ("since", root, since_sha, path)
+    if key in _GIT_STAMP_CACHE:
+        return _GIT_STAMP_CACHE[key]
+    answer = "unknown"
+    if root and since_sha and path:
+        try:
+            out = subprocess.check_output(
+                ["git", "-C", root, "rev-list", "--count", "%s..HEAD" % since_sha, "--", path],
+                stderr=subprocess.DEVNULL).decode().strip()
+            if out.isdigit():
+                answer = "yes" if int(out) > 0 else "no"
+        except (subprocess.CalledProcessError, OSError):
+            answer = "unknown"
+    _GIT_STAMP_CACHE[key] = answer
+    return answer
+
+
+READINESS_NO_PROOF = "none yet — no validation report"
+
+
+def _readiness_row(project_dir, root, level, item, claim_file, report_file, claimed):
+    """One derived row: {level,item,claimed,proof,verified,stale,note}. Nothing here is typed."""
+    rel = lambda p: os.path.relpath(p, project_dir)
+    row = {"level": level, "item": item, "claimed": claimed or "unclaimed",
+           "proof": READINESS_NO_PROOF, "verified": "—", "stale": "n/a — no proof yet", "note": ""}
+    if not report_file or not os.path.isfile(report_file):
+        return row
+    fm, _body = strip_frontmatter(read_text(report_file))
+    recorded = (fm.get("readiness_state_verified", "") or "").strip()
+    r_sha, r_date, r_ts = _git_file_stamp(root, report_file)
+    row["proof"] = "%s@%s" % (rel(report_file), r_sha or "uncommitted")
+    row["verified"] = r_date or "unknown"
+    if recorded and claimed and recorded.upper() != claimed.upper():
+        # Two artifacts answering the same question differently is the contradiction the whole
+        # Contradictions section exists for — surfaced ON the claim, where a reader cannot skip it.
+        row["note"] = ("⚠ contradiction: the claim says `%s`, its own proof records `%s`"
+                       % (claimed, recorded))
+    elif recorded:
+        row["claimed"] = recorded
+    if not r_sha:
+        row["stale"] = "unknown — proof not committed"
+        return row
+    moved = _git_changed_since(root, r_sha, claim_file) if claim_file else "unknown"
+    if moved == "unknown":
+        row["stale"] = "unknown — no git history for the claim artifact"
+    elif moved == "yes":
+        c_sha, _c_date, _c_ts = _git_file_stamp(root, claim_file)
+        row["stale"] = "yes — %s changed at %s, after the proof" % (rel(claim_file), c_sha or "HEAD")
+    else:
+        row["stale"] = "no"
+    return row
+
+
+def readiness_rows(project_dir):
+    """The Readiness State Map, derived: one row per project / epic / story node in the graph."""
+    _graph, nodes, _edges = build_graph(project_dir)
+    root = _repo_root(project_dir)
+    rows = [_readiness_row(
+        project_dir, root, "Project", project_id_of(project_dir),
+        os.path.join(project_dir, "project.md"),
+        os.path.join(project_dir, "project-validation-report.md"),
+        (strip_frontmatter(read_text(os.path.join(project_dir, "project.md")))[0]
+         .get("readiness_state_verified", "") or "").strip())]
+    stories = [n for n in sorted(nodes.values(), key=lambda x: x.id) if n.kind == "story"]
+    # Epics come from the graph AND from the tree: an epic with no stories yet is precisely the one
+    # a status page must show as unproven, and it has no node to be found by.
+    epics_dir = os.path.join(project_dir, "epics")
+    on_disk = set(d for d in (os.listdir(epics_dir) if os.path.isdir(epics_dir) else [])
+                  if os.path.isdir(os.path.join(epics_dir, d)))
+    for epic in sorted(set(n.scope for n in stories if n.scope) | on_disk):
+        edir = os.path.join(project_dir, "epics", epic)
+        rows.append(_readiness_row(
+            project_dir, root, "Epic", epic, os.path.join(edir, "epic.md"),
+            os.path.join(edir, "epic-validation-report.md"),
+            (strip_frontmatter(read_text(os.path.join(edir, "epic.md")))[0]
+             .get("readiness_state_verified", "") or "").strip()))
+        for n in stories:
+            if n.scope != epic:
+                continue
+            sdir = n.source_file if os.path.isdir(n.source_file) else os.path.dirname(n.source_file)
+            rows.append(_readiness_row(
+                project_dir, root, "Story", n.id, n.source_file,
+                os.path.join(sdir, "validation-report.md"),
+                (n.attrs.get("readiness_state_verified", "") or "").strip()))
+    return rows
+
+
+def render_readiness(project_dir):
+    rows = readiness_rows(project_dir)
+    root = _repo_root(project_dir)
+    sha = git_head_sha(root) if root else ""
+    proven = sum(1 for r in rows if r["proof"] != READINESS_NO_PROOF)
+    contradicted = sum(1 for r in rows if r["note"])
+    out = []
+    out.append("<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->")
+    out.append("<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->")
+    out.append("<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->")
+    out.append("<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->")
+    out.append("<!-- one, and it survives every rewrite. -->")
+    out.append("")
+    out.append("# Readiness State Map — %s" % project_id_of(project_dir))
+    out.append("")
+    out.append("**Rows with a resolvable proof** = %d/%d · **claims their own proof contradicts** = %d  "
+               % (proven, len(rows), contradicted))
+    out.append("**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves "
+               "changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose "
+               "spec nobody touched is fresh.")
+    out.append("")
+    out.append("| Level | Item | Claimed State | Proof | Last Verified | Stale? |")
+    out.append("|-------|------|---------------|-------|---------------|--------|")
+    for r in rows:
+        claimed = r["claimed"] + ((" %s" % r["note"]) if r["note"] else "")
+        proof = ("`%s`" % r["proof"]) if r["proof"] != READINESS_NO_PROOF else r["proof"]
+        out.append("| %s | `%s` | %s | %s | %s | %s |"
+                   % (r["level"], r["item"], claimed, proof, r["verified"], r["stale"]))
+    out.append("")
+    out.append("*[as of SHA `%s` | derived — regenerate, never hand-edit]*" % (sha or "pending"))
+    out.append("")
+    return "\n".join(out)
+
+
+def cmd_readiness(project_dir, write=True):
+    text = render_readiness(project_dir)
+    if write:
+        return _write_derived(project_dir, "readiness-map.md", text, "readiness")
     sys.stdout.write(text)
     return 0
 
@@ -2508,6 +2915,10 @@ def cmd_build(project_dir, write=True):
         # render_road compares against the file this call just wrote and the road does not embed a
         # GRAPH_STALE line describing the state one line above it.
         cmd_road(project_dir, write=True)
+        # Same law, same call, for the readiness map (v10.2, item E): project-state's Readiness
+        # State Map is quoted onward exactly as the road is, so a separately-refreshable copy would
+        # go stale exactly as the road did. One call refreshes every derived view or none.
+        cmd_readiness(project_dir, write=True)
     else:
         json.dump(graph, sys.stdout, indent=2)
         sys.stdout.write("\n")
@@ -2517,6 +2928,20 @@ def cmd_build(project_dir, write=True):
 def cmd_lint_refs(project_dir):
     _graph, nodes, edges = build_graph(project_dir)
     findings, unmigrated = lint_refs(nodes, edges)
+    # The road assert rides here because `lint-refs` is what the commit path actually calls, and the
+    # moment of commit is the moment a stale road starts being quoted onward. It runs BEFORE the
+    # clean-exit branch on purpose: a project whose references all resolve is exactly the project
+    # whose road nobody has looked at.
+    #
+    # ADVISORY, DELIBERATELY, and disclosed rather than implied: v10.2's own routing table adds a row
+    # to EVERY project's road, so every road committed under v10.1 disagrees with a fresh render on
+    # upgrade day. A blocking check here would make the installed base uncommittable until each repo
+    # ran `build` — a gate whose entire cost lands on upgrade day is a gate people route around with
+    # `--no-verify`, and then it protects nothing. `speck_graph.py road --check` is the same
+    # predicate with a real exit code, for a CI step that opts in.
+    road_state, road_detail = road_freshness(project_dir)
+    if road_state == "stale":
+        sys.stdout.write("⚠️  ROAD_STALE (advisory, does not block): %s\n\n" % road_detail)
     if not findings and not unmigrated:
         sys.stdout.write("✅ lint-refs: all cross-references resolve (%d nodes, %d edges)\n"
                          % (len(nodes), len(edges)))
@@ -2550,12 +2975,20 @@ Usage:
   speck_graph.py context   <PROJECT_DIR> <story-id>   The story's context pack — one lookup, no tree walk
   speck_graph.py check     <PROJECT_DIR>              Forcing gates: dangling/dup BLOCK; phantom/stale CAP
   speck_graph.py gate      <PROJECT_DIR> [--story ID|--epic ID]   Scoped advance-gate (exit 1 = blocked)
-  speck_graph.py road      <PROJECT_DIR> [--stdout]   The road to completion: TIDY→REMOVE→BUILD→PROVE
+  speck_graph.py road      <PROJECT_DIR> [--stdout|--check]   The road to completion:
+                                                      TIDY→REMOVE→BUILD→PROVE. `--check` asserts the
+                                                      COMMITTED road still matches a fresh compile
+                                                      (content, never `stamped SHA == HEAD`) and
+                                                      exits 1 when it does not.
   speck_graph.py findings  <PROJECT_DIR> [--stdout]   The DERIVED project-level findings view, ranked
                                                       across every epic. The gate-code namespace here
                                                       is authoritative; the only authored artifact is
                                                       findings-exceptions.md (exceptions, never
                                                       instances).
+  speck_graph.py readiness <PROJECT_DIR> [--stdout]   The DERIVED Readiness State Map (claim · proof
+                                                      · staleness) for project-state.md. Every Proof
+                                                      cell is computed; a hand-typed one is the
+                                                      gated party authoring the gate's input.
   speck_graph.py gap       <PROJECT_DIR> [--emit-goal] [--target ship-rc|ship]   Drive surface for native /goal
   speck_graph.py cascade   <PROJECT_DIR> --dec DEC-NNNN    Blast radius: still-discharged promises a DEC descopes
 
@@ -2611,12 +3044,17 @@ def main(argv):
         if not project_dir:
             sys.stderr.write("ERROR: road requires an existing PROJECT_DIR\n")
             return 2
-        return cmd_road(project_dir, write="--stdout" not in args)
+        return cmd_road(project_dir, write="--stdout" not in args, check="--check" in args)
     if cmd == "findings":
         if not project_dir:
             sys.stderr.write("ERROR: findings requires an existing PROJECT_DIR\n")
             return 2
         return cmd_findings(project_dir, write="--stdout" not in args)
+    if cmd == "readiness":
+        if not project_dir:
+            sys.stderr.write("ERROR: readiness requires an existing PROJECT_DIR\n")
+            return 2
+        return cmd_readiness(project_dir, write="--stdout" not in args)
     if cmd == "gap":
         if not project_dir:
             sys.stderr.write("ERROR: gap requires an existing PROJECT_DIR\n")

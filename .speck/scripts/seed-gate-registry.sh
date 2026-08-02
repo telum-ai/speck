@@ -87,9 +87,54 @@ gen_rows() {
 }
 
 ROWS="$(gen_rows)"
+
+# --- SPECK-OWNED STANDING GATES (issue #101 (c), v10.2) -------------------------------------
+# The recipe declares the PROJECT's gates. These two are SPECK's, and they are emitted on every
+# seed for one reason: `validate-evidence-citations.sh` shipped in v10.1 with no hook, no CI step
+# and no §6a row, so the rule it implements could not fail a build — which is the exact shape this
+# whole backlog was filed about. A gate that is not declared anywhere is not a gate.
+#
+# WHY `manual`, HONESTLY. Nothing on the commit path invokes them yet, and §6a's own law is that
+# declaring a stage a gate does not fire at is the divergence `validate-gate-liveness.sh` exists to
+# catch. `manual` is the true value; the invocation that does exist is at the bottom of this file
+# (every seed/amend of a contract runs both), plus /audit, /epic-validate and /project-validate on
+# demand. Both are NUDGES — they exit 0 without --strict, so declaring them cannot turn a
+# downstream repo red on the day they land.
+#
+# WHY THEY GO THROUGH gen_rows RATHER THAN A printf OF THEIR OWN. A second row producer is a second
+# place the §6a column list can drift from — the precise defect GATE_REGISTRY_COLUMNS was
+# introduced to kill (three readers, three independently hardcoded field orders). Feeding a
+# synthetic recipe back through the SAME parser means a column insert shifts these rows exactly as
+# it shifts the project's.
+STANDING_YAML="$(mktemp)"
+cat > "$STANDING_YAML" <<'STANDING'
+evidence_contract:
+  ci_gates:
+    - id: speck:evidence-citations
+      command: .speck/scripts/validation/validators/validate-evidence-citations.sh specs/
+      stage: manual
+      domain: evidence
+      scope: specs/**
+      subject: citations>0
+    - id: speck:probe-library
+      command: .speck/scripts/validation/validators/validate-evidence-citations.sh --check-probe-library
+      stage: manual
+      domain: evidence
+      scope: specs/projects/**
+      subject: probe_classes>0
+STANDING
+SAVED_RECIPE="$RECIPE"
+RECIPE="$STANDING_YAML"
+STANDING_ROWS="$(gen_rows)"
+RECIPE="$SAVED_RECIPE"
+rm -f "$STANDING_YAML"
+
 if [[ -z "$ROWS" ]]; then
-  echo "⚠️  No evidence_contract.ci_gates found in $RECIPE — nothing to seed." >&2
-  exit 0
+  echo "⚠️  No evidence_contract.ci_gates found in $RECIPE — seeding Speck's standing gates only." >&2
+  ROWS="$STANDING_ROWS"
+else
+  ROWS="$ROWS
+$STANDING_ROWS"
 fi
 
 TABLE="$(
@@ -118,3 +163,21 @@ awk -v tblfile="$TBLFILE" '
 ' "$CONTRACT" > "$TMP" && mv "$TMP" "$CONTRACT"
 rm -f "$TBLFILE"
 echo "✅ Seeded §6a gate registry in $CONTRACT from $(basename "$(dirname "$RECIPE")")"
+
+# --- RUN the standing gates on the contract we just wrote (issue #101 (c)) -------------------
+# A §6a row declares a gate; it does not execute one. This block is the execution: every seed or
+# amend of an evidence contract now judges that contract's typed citations (§2b parity) and its
+# §11a probe library, right here, on a real path an agent already walks.
+#
+# STRICTLY NON-BLOCKING, and the `|| true` is load-bearing under `set -e`: a project that has not
+# adopted typed citations or §11a must be ENUMERATED, not blocked, on the day this lands. The
+# findings are printed; this script's exit code is untouched. Set SPECK_SEED_SKIP_NUDGE=1 to
+# silence (the gate is declared in §6a either way, so silencing is visible, not a hole).
+CITATIONS_VALIDATOR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/validation/validators/validate-evidence-citations.sh"
+if [[ "${SPECK_SEED_SKIP_NUDGE:-0}" != "1" && -f "$CITATIONS_VALIDATOR" ]]; then
+  echo ""
+  echo "── Speck standing evidence gates (nudge — findings only, never a block) ──"
+  bash "$CITATIONS_VALIDATOR" --check-contract "$CONTRACT" || true
+  bash "$CITATIONS_VALIDATOR" --check-probe-library "$CONTRACT" || true
+fi
+exit 0

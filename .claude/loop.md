@@ -28,7 +28,7 @@ For each loop iteration, execute these steps systematically:
    - If any minor lint errors, formatting deviations, or simple syntax failures are found in the specs or code, resolve them with a minimal, elegant fix and commit.
    - If `project-state.md` is missing or outdated compared to the active work, regenerate it:
      ```bash
-     bash .speck/scripts/v7/regenerate-project-state.sh
+     bash .speck/scripts/regenerate-project-state.sh
      ```
 
 5. **Provide a Crisp Status Update**:
