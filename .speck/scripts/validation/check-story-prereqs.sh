@@ -95,6 +95,12 @@ fi
 # 5. Witness-graph forcing gate (v9): the story must be non-dangling AND trace UP to a promise,
 #    with zero dangling refs in its subtree — an orphan specified-but-unwired story blocks implement.
 #    Migration-aware: an epic that hasn't adopted a promise ledger yet GUIDES (never walls) greenfield.
+#
+#    v10.1 (issue #96 finding 3): `gate` now also computes graph FRESHNESS and reports it here.
+#    Read-only — it compares a content signature and never rebuilds, so this stays safe in a
+#    read-only CI checkout and leaves any tree-clean assertion intact. Staleness is surfaced and
+#    NEVER blocks: a hard freshness gate on every /story-implement would fire on rot nobody in
+#    this story caused and would teach `--no-verify` inside a day. Guide-rail, not wall.
 graph_py=".speck/scripts/graph/speck_graph.py"
 if command -v python3 >/dev/null 2>&1 && [[ -f "$graph_py" ]]; then
   # derive PROJECT_DIR (…/specs/projects/<id>) and STORY_ID (<epic>/<story>) from STORY_DIR
@@ -104,10 +110,23 @@ if command -v python3 >/dev/null 2>&1 && [[ -f "$graph_py" ]]; then
   story_num="$(printf '%s' "${story_dir%%/*}" | grep -oE '^S[0-9]+' || true)"
   graph_story_id="${epic_dir}/${story_num}"          # canonical node id: <epic-basename>/S###
   if [[ -d "$proj_dir" && "$STORY_DIR" == *"/epics/"* ]]; then
-    echo -e "${YELLOW}🔍 Witness-graph reachability gate (v9)...${NC}"
-    if ! python3 "$graph_py" gate "$proj_dir" --story "$graph_story_id"; then
+    echo -e "${YELLOW}🔍 Witness-graph reachability + freshness gate (v9.0/v10.1)...${NC}"
+    # Captured, not piped: under `set -o pipefail` a `cmd | grep -q` reports the PRODUCER's status,
+    # so the match and the command's own failure become indistinguishable.
+    if gate_out="$(python3 "$graph_py" gate "$proj_dir" --story "$graph_story_id" 2>&1)"; then
+      gate_rc=0
+    else
+      gate_rc=$?
+    fi
+    printf '%s\n' "$gate_out"
+    if [[ "$gate_rc" -ne 0 ]]; then
       echo -e "${RED}❌ Graph gate: this story is not legitimately wired (see above).${NC}"
       failed=true
+    fi
+    if grep -q "GRAPH_STALE" <<<"$gate_out"; then
+      echo -e "${YELLOW}⚠️  The committed witness graph is STALE — every cap, count and 'clear to advance'${NC}"
+      echo -e "${YELLOW}    you read out of it until you rebuild describes a different tree. This does NOT${NC}"
+      echo -e "${YELLOW}    block implementation. Fix: python3 $graph_py build $proj_dir${NC}"
     fi
   fi
 else

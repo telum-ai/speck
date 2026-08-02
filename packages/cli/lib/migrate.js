@@ -11,7 +11,7 @@
 
 import { existsSync, readdirSync, statSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 
 /**
  * Parse a version string like "v7.0.0", "7.0.0", or "v6.1.14" into an integer major.
@@ -21,6 +21,124 @@ function majorOf(version) {
   if (!version) return null;
   const m = String(version).match(/v?(\d+)\./);
   return m ? parseInt(m[1], 10) : null;
+}
+
+/* ===========================================================================
+ * VERSION ARITHMETIC (v10.1)
+ * ===========================================================================
+ *
+ * `majorOf` above is deliberately untouched: detectMigration()'s four major flags are
+ * frozen behaviour, and the legacy two-argument `appliesTo` shape is still handed exactly
+ * the integers it was handed in v10.0.0. What follows is the NEW arithmetic, used only by
+ * the version-keyed half of the lane.
+ *
+ * WHY THIS EXISTS AT ALL. The registry was built version-agnostic while its predicate
+ * stayed major-only, so a migration registered in 10.1 could not fire for a 10.0 → 10.1
+ * upgrade — the halves rode different clocks. That is what forced v9.6 and v10 to be
+ * batched into a single major release.
+ */
+
+/**
+ * Parse "v10.10.3" / "10.1" / "10" into { major, minor, patch }. Missing components are 0
+ * (10.1 means 10.1.0). Returns null for anything with no leading numeric major — including
+ * null/undefined, which is how "unknown origin" travels through this module.
+ *
+ * Pre-release and build metadata are intentionally NOT modelled. Speck ships plain X.Y.Z,
+ * and a half-implemented precedence rule that silently mis-orders `10.1.0-rc1` would be
+ * worse than not accepting one at all: everything after the first non-matching character
+ * is ignored, so `10.1.0-rc1` reads as 10.1.0.
+ */
+export function parseVersion(version) {
+  if (version === null || version === undefined) return null;
+  const m = String(version).trim().match(/^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?/);
+  if (!m) return null;
+  return {
+    major: parseInt(m[1], 10),
+    minor: m[2] === undefined ? 0 : parseInt(m[2], 10),
+    patch: m[3] === undefined ? 0 : parseInt(m[3], 10),
+  };
+}
+
+/**
+ * Compare two versions numerically, component by component: -1 / 0 / 1, or **null when
+ * either side is unparsable** (an unknown version is not "smaller", it is not comparable —
+ * returning 0 or -1 there would silently answer a question nobody can answer).
+ *
+ * THE TRAP THIS EXISTS FOR: `'10.10.0' < '10.9.0'` is TRUE as a string compare, because '1'
+ * sorts before '9' at index 3. Lexicographic ordering is right for the first nine minors and
+ * then quietly inverts, which is the kind of defect that does not surface for months —
+ * by which time a 10.10 schema change has been applied before the 10.9 one it depends on.
+ *
+ * Callers must null-check: `compareVersions(a, b) < 0` reads false for null, which is the
+ * safe direction for a gate but the WRONG direction for a sort comparator.
+ */
+export function compareVersions(a, b) {
+  const pa = parseVersion(a);
+  const pb = parseVersion(b);
+  if (pa == null || pb == null) return null;
+  for (const key of ['major', 'minor', 'patch']) {
+    if (pa[key] !== pb[key]) return pa[key] < pb[key] ? -1 : 1;
+  }
+  return 0;
+}
+
+/**
+ * The predicate a MINOR-introduced migration wants: "this upgrade reaches `introducedIn`,
+ * and the project was not already at or past it".
+ *
+ *     registerMigration({ id: '...', version: '10.1.0', appliesTo: atOrAfter('10.1.0'), run })
+ *
+ * Both halves matter. Reaching it is what makes a 10.0 → 10.3 hop run the 10.1 migration.
+ * Not-already-past-it is what stops a 10.2 → 10.3 upgrade from re-proposing work that shipped
+ * a release ago — belt to the ledger's braces, since the ledger is the authority on "already
+ * ran" and this is only the authority on "in scope for this crossing".
+ *
+ * An UNKNOWN origin applies (a hand-run `speck migrate` cannot know what the project came
+ * from, and the ledger is the real guard). An unknown TARGET does not: a version that cannot
+ * be read cannot be claimed to reach anything.
+ */
+export function atOrAfter(introducedIn) {
+  if (parseVersion(introducedIn) == null) {
+    throw new Error(`atOrAfter: "${introducedIn}" is not a parsable version (expected X.Y.Z)`);
+  }
+  // Three declared parameters on purpose — arity is one of the two signals that tells the
+  // lane this is a version-keyed predicate rather than the pre-10.1 major-keyed shape.
+  const fn = (fromVersion, toVersion, _ctx) => {
+    const reaches = compareVersions(toVersion, introducedIn);
+    if (reaches == null || reaches < 0) return false;
+    const alreadyThere = compareVersions(fromVersion, introducedIn);
+    return alreadyThere == null || alreadyThere < 0;
+  };
+  fn.speckVersionKeyed = true;
+  fn.speckIntroducedIn = introducedIn;
+  return fn;
+}
+
+/**
+ * The predicate the four shipped v10 migrations use — "crossing INTO major N from anything
+ * older". The expression is byte-for-byte the one they carried in v10.0.0, kept as its own
+ * helper rather than folded into atOrAfter('N.0.0') so that the frozen decisions are
+ * preserved by construction and not by an argument about equivalence.
+ */
+export function crossesMajor(major) {
+  // ctx.fromMajor / ctx.toMajor are ALWAYS what the lane supplies, and they come from
+  // `majorOf` — the v10.0.0 parser. Preferring them keeps every in-lane decision
+  // bit-identical to what v10.0.0 decided, whatever the positional arguments now carry.
+  // The fallback is only reached by a direct call (a test, a REPL), where a bare major
+  // and a full version are both reasonable things to hand a major-keyed predicate.
+  const majorFrom = v => {
+    const parsed = parseVersion(v);
+    return parsed == null ? null : parsed.major;
+  };
+  const fn = (fromVersion, toVersion, ctx) => {
+    const c = ctx || {};
+    const fromMajor = c.fromMajor !== undefined ? c.fromMajor : majorFrom(fromVersion);
+    const toMajor = c.toMajor !== undefined ? c.toMajor : majorFrom(toVersion);
+    return toMajor != null && toMajor >= major && (fromMajor == null || fromMajor < major);
+  };
+  fn.speckVersionKeyed = true;
+  fn.speckIntroducedIn = `${major}.0.0`;
+  return fn;
 }
 
 /**
@@ -229,9 +347,33 @@ renders from the graph. Until then, the engagement gate refuses feature work.
  *     registerMigration({
  *       id: 'v10-traceability-6a-column',      // stable forever; it is the ledger key
  *       description: 'Insert the §6a witness column into traceability-matrix.md',
- *       appliesTo: (fromMajor, toMajor) => toMajor >= 10 && (fromMajor == null || fromMajor < 10),
+ *       version: '10.1.0',                     // the release that INTRODUCED it
+ *       appliesTo: atOrAfter('10.1.0'),        // optional — derived from `version` if omitted
  *       run: (targetDir, ctx) => { ... },      // throw to fail; return value ignored
  *     });
+ *
+ * `version` (v10.1+) is the release that introduced the migration. It does three jobs:
+ * it derives `appliesTo` when you do not write one, it is the RUN ORDER on a multi-hop
+ * upgrade (10.0 → 10.3 replays 10.1, then 10.2, then 10.3), and it is what
+ * `speck migrate --list` prints — because "which release brought this into existence" is
+ * the fact an operator staring at a pending migration actually needs.
+ *
+ * CONTRACT for appliesTo(fromVersion, toVersion, ctx):
+ *   - fromVersion / toVersion are the FULL version strings ('10.0.0'), not majors. This is
+ *     the v10.1 change: a major-keyed predicate cannot express "introduced in 10.1", so a
+ *     minor-release migration was structurally invisible to the upgrade that shipped it.
+ *   - ctx is { currentVersion, targetVersion, fromMajor, toMajor } — the parsed majors are
+ *     carried there, so a genuinely major-keyed rule still has them without re-parsing.
+ *   - fromVersion is null when the origin is unknown (a hand-run `speck migrate`). Treat
+ *     that as "applies": the LEDGER, not the version range, is what makes a re-run safe.
+ *   - BACKWARD COMPATIBILITY — a predicate declared with FEWER THAN THREE parameters and
+ *     not built by atOrAfter/crossesMajor is treated as the pre-10.1 major-keyed shape and
+ *     is called with `(fromMajor, toMajor)` exactly as v10.0.0 called it. This is not
+ *     cosmetic: handed the string '10.0.0', the old body `toMajor >= 10` evaluates NaN >= 10
+ *     → false, and the migration silently never runs. A false negative with no error
+ *     anywhere is the single worst outcome this lane can produce, so the old shape keeps
+ *     its old arguments forever. Write new predicates with three declared parameters, or
+ *     just pass `version` and let the lane derive one.
  *
  * CONTRACT for run(targetDir, ctx):
  *   - targetDir is the WORKSPACE root — the directory holding `.speck/` and `specs/projects/`.
@@ -257,26 +399,128 @@ export function registerMigration(migration) {
   if (!migration || typeof migration !== 'object') {
     throw new Error('registerMigration: expected a migration object');
   }
-  const { id, description, appliesTo, run } = migration;
+  const { id, description, version, appliesTo, run } = migration;
   if (typeof id !== 'string' || id.trim() === '') {
     throw new Error('registerMigration: migration needs a non-empty string id');
   }
   if (typeof run !== 'function') {
     throw new Error(`registerMigration: migration "${id}" needs a run() function`);
   }
-  if (typeof appliesTo !== 'function') {
-    throw new Error(`registerMigration: migration "${id}" needs an appliesTo(fromMajor, toMajor) function`);
+  // An unparsable version is refused at registration rather than tolerated, because it is
+  // BOTH the ordering key and (often) the gate: a version nobody can compare sorts
+  // arbitrarily against its siblings and answers "does this crossing reach it?" with a
+  // shrug. Five-second fix here; an out-of-order artifact rewrite in a user's repo later.
+  if (version !== undefined && parseVersion(version) == null) {
+    throw new Error(
+      `registerMigration: migration "${id}" has an unparsable version "${version}" (expected X.Y.Z)`,
+    );
+  }
+  if (typeof appliesTo !== 'function' && version === undefined) {
+    throw new Error(
+      `registerMigration: migration "${id}" needs an appliesTo(fromVersion, toVersion, ctx) ` +
+        'function, a `version` to derive one from, or both',
+    );
   }
   if (MIGRATION_REGISTRY.some(m => m.id === id)) {
     throw new Error(`registerMigration: "${id}" is already registered (ids are ledger keys and must be unique)`);
   }
-  MIGRATION_REGISTRY.push({ id, description: description || id, appliesTo, run });
+  // The one trap left by supporting both predicate shapes. Nothing shipped hits this — the
+  // four built-ins use crossesMajor(), and `version` alone derives a tagged atOrAfter() — so
+  // it is silent in normal use and speaks only when someone hand-rolls a two-parameter rule.
+  // A warning rather than a throw because the old shape is genuinely still supported; what is
+  // NOT acceptable is finding out months later that a migration never fired.
+  if (
+    typeof appliesTo === 'function' &&
+    appliesTo.speckVersionKeyed !== true &&
+    appliesTo.length < 3
+  ) {
+    console.warn(
+      `⚠️  registerMigration: "${id}" declares appliesTo with ${appliesTo.length} parameter(s), so it ` +
+        'will be called with MAJORS (fromMajor, toMajor) — the pre-v10.1 shape.\n' +
+        '   If you meant a version-keyed rule, use `atOrAfter("X.Y.Z")`, pass `version: "X.Y.Z"`, or ' +
+        'declare three parameters (fromVersion, toVersion, ctx).\n' +
+        '   A version-keyed body handed a major compares against undefined and never fires.',
+    );
+  }
+  MIGRATION_REGISTRY.push({
+    id,
+    description: description || id,
+    version: version === undefined ? null : version,
+    appliesTo: typeof appliesTo === 'function' ? appliesTo : atOrAfter(version),
+    run,
+  });
   return MIGRATION_REGISTRY.length;
 }
 
 /** The registered migrations, in registration order. Copy — callers cannot mutate the lane. */
 export function getRegisteredMigrations() {
   return MIGRATION_REGISTRY.slice();
+}
+
+/* --- how the lane calls a predicate, and what order it walks the registry in ---
+ *
+ * Both helpers below operate on RAW registry entries, not on what registerMigration()
+ * normalised — because `options.registry` (tests, and any caller replaying a specific set)
+ * bypasses registerMigration entirely. Doing the work here means the two paths cannot
+ * diverge, which is precisely the class of bug this whole change is about.
+ */
+
+/** The version that introduced a migration, from the entry or from its predicate. */
+export function migrationVersion(migration) {
+  if (migration && typeof migration.version === 'string' && migration.version.trim() !== '') {
+    return migration.version;
+  }
+  const from = migration && migration.appliesTo && migration.appliesTo.speckIntroducedIn;
+  return typeof from === 'string' ? from : null;
+}
+
+/**
+ * Ask one migration whether it applies to this crossing, honouring both predicate shapes.
+ * See the CONTRACT block above for why the two-parameter shape keeps receiving majors.
+ */
+function migrationApplies(migration, fromVersion, toVersion, ctx) {
+  let fn = migration.appliesTo;
+  if (typeof fn !== 'function') {
+    const v = migrationVersion(migration);
+    // Neither a predicate nor a version: there is no rule at all. Treat it as applicable so
+    // it surfaces in the run report instead of vanishing — the same policy the try/catch
+    // below applies to a predicate that throws.
+    if (v == null) return true;
+    fn = atOrAfter(v);
+  }
+  const versionKeyed = fn.speckVersionKeyed === true || fn.length >= 3;
+  return versionKeyed ? !!fn(fromVersion, toVersion, ctx) : !!fn(ctx.fromMajor, ctx.toMajor);
+}
+
+/**
+ * Registry order for a run: by introducing version ascending, then by registration order.
+ *
+ * Multi-hop is why this is not cosmetic. A 10.0 → 10.3 upgrade replays three releases'
+ * worth of migrations in one pass, and each was written against the artifact shape the
+ * previous one left behind — so 10.1 must run before 10.2, whatever order the modules
+ * happened to import in. Comparison is numeric (see compareVersions): a string sort puts
+ * 10.10.0 BEFORE 10.9.0.
+ *
+ * UNVERSIONED migrations sort first, stable among themselves. They predate the versioned
+ * lane (or are a caller's ad-hoc registry), so registration order is the only ordering
+ * information they carry, and running them ahead of the versioned ones preserves exactly
+ * the sequence v10.0.0 used.
+ */
+export function sortMigrations(list) {
+  return list
+    .map((m, i) => ({ m, i, v: migrationVersion(m) }))
+    .sort((a, b) => {
+      if (a.v && b.v) {
+        const c = compareVersions(a.v, b.v);
+        if (c != null && c !== 0) return c;
+      } else if (a.v && !b.v) {
+        return 1;
+      } else if (!a.v && b.v) {
+        return -1;
+      }
+      return a.i - b.i; // stable: registration order breaks every tie
+    })
+    .map(x => x.m);
 }
 
 /* --- the applied ledger ---------------------------------------------------
@@ -328,10 +572,14 @@ export function readAppliedLedger(targetDir) {
  * Written after EACH migration, not once at the end: "individually resumable" means
  * a crash between two migrations must still leave the finished one recorded.
  */
-function recordMigration(targetDir, id, status, error) {
+function recordMigration(targetDir, id, status, error, version) {
   const pj = readProjectJson(targetDir) || {};
   const entries = readAppliedLedger(targetDir).filter(e => e.id !== id);
   const entry = { id, status, at: new Date().toISOString() };
+  // Additive, and additive on purpose: an older ledger with no `version` still reads and
+  // still suppresses a re-run. Recording it means `--list` can name the introducing release
+  // for an APPLIED migration whose registration has since been retired from the registry.
+  if (version) entry.version = version;
   if (status === 'failed' && error) entry.error = String(error);
   entries.push(entry);
   const next = { ...pj, applied_migrations: entries };
@@ -350,13 +598,12 @@ function resolveRegistry(options) {
  * A `failed` entry is PENDING again — that is the resumability guarantee.
  */
 export function pendingMigrations(targetDir, currentVersion, targetVersion, options = {}) {
-  const fromMajor = majorOf(currentVersion);
-  const toMajor = majorOf(targetVersion);
+  const ctx = migrationContext(currentVersion, targetVersion);
   const done = new Set(readAppliedLedger(targetDir).filter(e => e.status === 'applied').map(e => e.id));
-  return resolveRegistry(options).filter(m => {
+  return sortMigrations(resolveRegistry(options)).filter(m => {
     if (done.has(m.id)) return false;
     try {
-      return !!m.appliesTo(fromMajor, toMajor);
+      return migrationApplies(m, currentVersion, targetVersion, ctx);
     } catch {
       // A migration whose own gate throws is not silently skipped — treat it as
       // applicable so the failure surfaces in the run report instead of vanishing.
@@ -366,20 +613,34 @@ export function pendingMigrations(targetDir, currentVersion, targetVersion, opti
 }
 
 /**
+ * The ctx every predicate and every run() receives. The majors come from `majorOf` — the
+ * v10.0.0 parser, unchanged — so a major-keyed predicate gets exactly the integers it
+ * always got, whichever path it arrives by.
+ */
+function migrationContext(currentVersion, targetVersion) {
+  return {
+    currentVersion,
+    targetVersion,
+    fromMajor: majorOf(currentVersion),
+    toMajor: majorOf(targetVersion),
+  };
+}
+
+/**
  * Run every pending named migration for this crossing.
  * Returns { applied: [id], skipped: [id], failed: [{ id, error }] }.
  */
 export function runNamedMigrations(targetDir, currentVersion, targetVersion, options = {}) {
-  const fromMajor = majorOf(currentVersion);
-  const toMajor = majorOf(targetVersion);
-  const ctx = { currentVersion, targetVersion, fromMajor, toMajor };
+  const ctx = migrationContext(currentVersion, targetVersion);
   const result = { applied: [], skipped: [], failed: [] };
   const done = new Set(readAppliedLedger(targetDir).filter(e => e.status === 'applied').map(e => e.id));
 
-  for (const m of resolveRegistry(options)) {
+  // Version order, not registration order: a multi-hop upgrade replays several releases in
+  // one pass, and each migration was written against the shape its predecessor left behind.
+  for (const m of sortMigrations(resolveRegistry(options))) {
     let applicable;
     try {
-      applicable = !!m.appliesTo(fromMajor, toMajor);
+      applicable = migrationApplies(m, currentVersion, targetVersion, ctx);
     } catch {
       applicable = true;
     }
@@ -391,14 +652,15 @@ export function runNamedMigrations(targetDir, currentVersion, targetVersion, opt
       continue;
     }
 
+    const version = migrationVersion(m);
     try {
       m.run(targetDir, ctx);
-      recordMigration(targetDir, m.id, 'applied');
+      recordMigration(targetDir, m.id, 'applied', null, version);
       result.applied.push(m.id);
       if (options.verbose) console.log(`   ✅ ${m.id} — ${m.description}`);
     } catch (err) {
       const message = err?.message || String(err);
-      recordMigration(targetDir, m.id, 'failed', message);
+      recordMigration(targetDir, m.id, 'failed', message, version);
       result.failed.push({ id: m.id, error: message });
       // Deliberately NOT rethrown: one broken migration must not strand the others,
       // and the ledger keeps it pending so the next run retries it.
@@ -475,7 +737,8 @@ function findProjectMarkdown(targetDir) {
 registerMigration({
   id: STAMP_TEMPLATE_VERSION_ID,
   description: 'Backfill template_version into existing project artifact frontmatter',
-  appliesTo: (fromMajor, toMajor) => toMajor >= 10 && (fromMajor == null || fromMajor < 10),
+  version: '10.0.0',
+  appliesTo: crossesMajor(10),
   run: (targetDir, ctx = {}) => {
     const version = ctx.targetVersion || '10.0.0';
     let stamped = 0;
@@ -506,7 +769,8 @@ export const LIFT_SERVES_ID = 'v10-lift-serves-frontmatter';
 registerMigration({
   id: LIFT_SERVES_ID,
   description: 'Lift pre-v10 prose-derived MM/JOB delivery claims into story `serves:` frontmatter',
-  appliesTo: (fromMajor, toMajor) => toMajor >= 10 && (fromMajor == null || fromMajor < 10),
+  version: '10.0.0',
+  appliesTo: crossesMajor(10),
   run: (targetDir) => {
     const script = join(targetDir, '.speck', 'scripts', 'graph', 'speck_graph.py');
     if (!existsSync(script)) {
@@ -640,7 +904,8 @@ export function insertGateRegistryColumns(file) {
 registerMigration({
   id: GATE_REGISTRY_SCOPE_SUBJECT_ID,
   description: "Insert the §6a Scope + Subject columns into existing evidence contracts (#98)",
-  appliesTo: (fromMajor, toMajor) => toMajor >= 10 && (fromMajor == null || fromMajor < 10),
+  version: '10.0.0',
+  appliesTo: crossesMajor(10),
   run: (targetDir) => {
     let widened = 0;
     for (const file of findProjectMarkdown(targetDir)) {
@@ -691,8 +956,195 @@ export function pinBannedLanguageScope(targetDir, scope = 'any-depth') {
 registerMigration({
   id: BANNED_LANGUAGE_SCOPE_ID,
   description: 'Record the v10 banned_language.scope default (any-depth) in .speck/project.json',
-  appliesTo: (fromMajor, toMajor) => toMajor >= 10 && (fromMajor == null || fromMajor < 10),
+  version: '10.0.0',
+  appliesTo: crossesMajor(10),
   run: (targetDir) => (pinBannedLanguageScope(targetDir) ? 1 : 0),
+});
+
+/* ===========================================================================
+ * THE v10.1 RIDERS — the first two migrations to use the MINOR lane
+ * ===========================================================================
+ *
+ * Both of the artifact changes below shipped in v10.1 with NO registration, and the four
+ * migrations above cannot cover them: every one of them gates on `crossesMajor(10)`, which is
+ * FALSE for a 10.0 → 10.1 upgrade. `speck migrate --list --from 10.0.0 --to 10.1.0` therefore
+ * printed `PENDING (0)` on a release that had already changed two artifact contracts.
+ *
+ * That is precisely the hole the version-keyed half of this lane was built to close in this
+ * same wave. They are registered here with `version: '10.1.0'` + `atOrAfter('10.1.0')`, which
+ * fires on the crossing that shipped them, on any later hop that steps over 10.1 (10.0 → 10.4),
+ * and never again once a project is past it.
+ */
+
+/* --- built-in migration (10.1): rebuild every committed witness graph -------- */
+
+export const REBUILD_WITNESS_GRAPH_ID = 'v10-1-rebuild-witness-graph';
+
+// WHY THIS MUST RIDE THE UPGRADE.
+// v10.1's extractor puts `entry_point` and `wiring_witness` on EVERY `prm` and `story` node, and
+// `_graph_signature()` hashes the whole node list — so a witness.json committed under v10.0.0 can
+// no longer equal a v10.1 fresh compile, whatever the project did or did not change. Measured on a
+// clean fixture: built + checked under v10.0.0 → exit 0, GRAPH_CAP = INTEGRATION-GREEN; the same
+// tree read by v10.1 scripts → GRAPH_STALE.P2, GRAPH_CAP = STALE. That is 100% of consumers going
+// green→red on code they did not touch, with /story-implement printing the STALE banner on every
+// story in every project. The graph is DERIVED, so the fix is mechanical and belongs on upgrade day.
+//
+// SCOPE — only projects that already committed a witness. A project with no witness.json reads
+// `unbuilt`, which explicitly does NOT cap, and minting its first graph here would be the wrong
+// gesture: the first build belongs to /speck-graph-up, behind identity hardening, because an
+// unhardened project's fresh graph can carry DANGLING_REF.P1 caps that did not exist a minute ago.
+// Fixing staleness must not manufacture a different green→red.
+registerMigration({
+  id: REBUILD_WITNESS_GRAPH_ID,
+  description:
+    'Rebuild each committed witness graph for the v10.1 node schema (entry_point + wiring_witness)',
+  version: '10.1.0',
+  appliesTo: atOrAfter('10.1.0'),
+  run: (targetDir) => {
+    const script = join(targetDir, '.speck', 'scripts', 'graph', 'speck_graph.py');
+    if (!existsSync(script)) {
+      // The same failure contract the serves-lift documents, for the same reason: `return 0` here
+      // records status 'applied', pendingMigrations() filters applied ids out, and the rebuild is
+      // RETIRED FOREVER — leaving every consumer permanently STALE with nothing left in the ledger
+      // to say why. Throwing records 'failed', lets the siblings finish, and stays pending until
+      // the `.speck/` sync that ships this script has landed.
+      throw new Error(
+        '.speck/scripts/graph/speck_graph.py is missing — the v10.1 witness graphs cannot be ' +
+          'rebuilt, and every committed graph stays STALE. Re-run `speck upgrade` to restore ' +
+          '.speck/scripts/, then `speck migrate --run`.',
+      );
+    }
+    let rebuilt = 0;
+    for (const projectPath of findProjects(targetDir)) {
+      if (!existsSync(join(projectPath, 'graph', 'witness.json'))) continue;
+      // Throwing is the contract: a project whose rebuild fails must not be recorded as done.
+      // `build` re-renders road-to-completion.md in the same call, so the two derived artifacts
+      // cannot come out of this disagreeing with each other.
+      //
+      // execFileSync, not execSync: `projectPath` is a directory name from the user's specs tree,
+      // and interpolating one into a shell string makes a folder called `$(…)` executable.
+      execFileSync('python3', [script, 'build', projectPath], {
+        cwd: targetDir,
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      rebuilt += 1;
+    }
+    return rebuilt;
+  },
+});
+
+/* --- built-in migration (10.1): stamp typed citations ----------------------- */
+
+export const STAMP_CITATION_TYPES_ID = 'v10-1-stamp-citation-types';
+
+/**
+ * Does `after` differ from `before` by anything other than content GROWING inside a table cell?
+ * Returns null when the change is admissible, or a human-readable description of the first
+ * violation.
+ *
+ * WHY A STRUCTURAL INVARIANT AND NOT A DIFF OF THE STAMPER'S OUTPUT MESSAGE. The property that
+ * matters is a property of the FILE, so it is checked on the file: same number of lines, same
+ * number of cells per line, and — the one that actually catches this defect — byte-identical
+ * leading and trailing whitespace on every cell. Splicing `test:` into a citation grows the cell's
+ * CONTENT and leaves its padding untouched. Rebuilding the row out of trimmed cells collapses that
+ * padding, which is what a measured `--stamp-types --write` did across 24 files: an authored table
+ * came back as `| a | b | c |` with every column alignment gone. A migration is not entitled to
+ * reformat prose it was only asked to annotate.
+ */
+export function findTableReflow(before, after) {
+  if (before === after) return null;
+  const b = before.split('\n');
+  const a = after.split('\n');
+  if (b.length !== a.length) {
+    return `line count changed (${b.length} → ${a.length}) — a stamp adds no lines and drops none`;
+  }
+  const lead = s => s.match(/^[ \t]*/)[0];
+  const trail = s => s.match(/[ \t]*$/)[0];
+  for (let i = 0; i < b.length; i++) {
+    if (b[i] === a[i]) continue;
+    const bc = b[i].split('|');
+    const ac = a[i].split('|');
+    if (bc.length !== ac.length) {
+      return `line ${i + 1}: cell count changed (${bc.length} → ${ac.length}) — the row was rebuilt, not annotated`;
+    }
+    for (let j = 0; j < bc.length; j++) {
+      if (lead(bc[j]) !== lead(ac[j]) || trail(bc[j]) !== trail(ac[j])) {
+        return (
+          `line ${i + 1}, cell ${j + 1}: authored padding was collapsed ` +
+          `(${JSON.stringify(bc[j])} → ${JSON.stringify(ac[j])})`
+        );
+      }
+    }
+  }
+  return null;
+}
+
+// WHY THIS MUST RIDE THE UPGRADE.
+// v10.1 adds the typed-citation vocabulary and the §2b admissibility table. Every artifact that
+// exists today is legacy-untyped by construction, so every citation site raises CITATION_UNTYPED.P3
+// until someone stamps what can be derived. Without a registration the mechanism attaches to
+// nothing at all — which is exactly what shipped: `grep` found four registrations, every one of
+// them `version: '10.0.0'`.
+//
+// WHY IT VERIFIES ITS OWN WRITES. An earlier `--stamp-types --write` re-emitted any row it touched
+// out of TRIMMED cells, so it collapsed authored column padding — measured across 24 files, an
+// authored table coming back as `| a | b | c |` with every alignment gone. The stamp mode now
+// splices the type into the one cell and leaves the rest of the line byte-identical, so on the
+// current tree this guard never fires. It stays anyway, because the guarantee it makes is one this
+// migration owes regardless of who edits the stamper next: a migration asked to ANNOTATE prose is
+// not entitled to REFORMAT it, and the artifacts it walks are hand-maintained.
+//
+// So the stamp runs ONE FILE AT A TIME, and any write that is not a pure in-cell annotation is
+// RESTORED byte-for-byte and the migration throws. The effective mode cannot reflow a table: the
+// worst case is a file written and instantly put back, followed by a `failed` ledger entry.
+//
+// Failing is deliberately NOT the same as "skip it and record applied". A silent success would
+// retire the stamp from the ledger permanently — the very defect being closed here, one release
+// later and harder to see. Recording `failed` keeps it pending, so it applies itself on the first
+// run after the stamper is well-behaved again, with no gesture from anyone.
+registerMigration({
+  id: STAMP_CITATION_TYPES_ID,
+  description: 'Stamp derivable citation types into existing project artifacts (§11a typed citations)',
+  version: '10.1.0',
+  appliesTo: atOrAfter('10.1.0'),
+  run: (targetDir) => {
+    const script = join(
+      targetDir, '.speck', 'scripts', 'validation', 'validators', 'validate-evidence-citations.sh',
+    );
+    if (!existsSync(script)) {
+      // Same reasoning as the rebuild above: a missing script is not a completed migration.
+      throw new Error(
+        '.speck/scripts/validation/validators/validate-evidence-citations.sh is missing — ' +
+          'citations cannot be typed. Re-run `speck upgrade` to restore .speck/scripts/, then ' +
+          '`speck migrate --run`.',
+      );
+    }
+    let stamped = 0;
+    for (const file of findProjectMarkdown(targetDir)) {
+      const before = readFileSync(file, 'utf-8');
+      // execFileSync for the same reason as the rebuild above: `file` is an artifact path.
+      execFileSync('bash', [script, '--stamp-types', '--write', file], {
+        cwd: targetDir,
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      const after = readFileSync(file, 'utf-8');
+      if (after === before) continue;
+      const reflow = findTableReflow(before, after);
+      if (reflow) {
+        writeFileSync(file, before);
+        throw new Error(
+          `--stamp-types --write did not annotate ${file}, it REWROTE it: ${reflow}. ` +
+            'The file has been restored byte-for-byte and this migration stays PENDING — it will ' +
+            'apply itself on the first run after the stamp mode splices the type into the cell ' +
+            'instead of rebuilding the row from trimmed cells.',
+        );
+      }
+      stamped += 1;
+    }
+    return stamped;
+  },
 });
 
 /**
@@ -754,15 +1206,25 @@ export function migrateCommand(targetDir, options = {}) {
   // --list (also the default): print PENDING first, then APPLIED. Pending is the
   // actionable half, so it goes where the eye lands.
   console.log(`🥓 Speck migrations for ${currentVersion || '(unknown)'} → ${targetVersion}\n`);
+  // Each line names the release that INTRODUCED the migration. Once the lane is
+  // minor-capable that is the actionable fact: "pending" no longer implies "from the last
+  // major", and an operator deciding whether to run a hop needs to know whether the work in
+  // front of them arrived in 10.1 or in 10.7. Unversioned entries say so rather than
+  // borrowing a number — they are also the ones that cannot be ordered in a multi-hop run.
+  const introducedBy = v => (v ? `v${String(v).replace(/^v/, '')}` : 'unversioned');
   console.log(`PENDING (${pending.length})`);
   if (pending.length === 0) console.log('  (none)');
-  for (const m of pending) console.log(`  • ${m.id} — ${m.description}`);
+  for (const m of pending) {
+    console.log(`  • [${introducedBy(migrationVersion(m))}] ${m.id} — ${m.description}`);
+  }
   console.log(`\nAPPLIED (${ledger.length})`);
   if (ledger.length === 0) console.log('  (none)');
   for (const e of ledger) {
     const when = e.at ? ` (${String(e.at).slice(0, 10)})` : '';
     const mark = e.status === 'failed' ? '✗ FAILED' : '✓';
-    console.log(`  ${mark} ${e.id}${when}${e.error ? ` — ${e.error}` : ''}`);
+    console.log(
+      `  ${mark} [${introducedBy(e.version)}] ${e.id}${when}${e.error ? ` — ${e.error}` : ''}`,
+    );
   }
   return { mode: 'list', currentVersion, targetVersion, pending, applied: ledger };
 }
@@ -868,6 +1330,12 @@ export function runPostUpgradeMigrations(targetDir, currentVersion, targetVersio
     if (migrateV10) {
       summary.actions.push('migrateV10');
       summary.kind = summary.kind ? `${summary.kind.split('-to-')[0]}-to-v10` : 'v9-to-v10';
+    } else {
+      // The lane ran without a major crossing — a minor-introduced migration, or a
+      // previously-failed one being retried. v10.0.0 had no way to report this because it
+      // had no way to reach it: `actions` stayed empty while artifacts were being rewritten,
+      // so a caller reading the summary saw a no-op upgrade that had in fact edited files.
+      summary.actions.push('namedMigrations');
     }
   }
 

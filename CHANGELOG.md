@@ -1,5 +1,87 @@
 # Speck Changelog
 
+## v10.1.0 — 2026-08-02 — Minor-capable migrations, typed citations, observation exposure
+
+Works the open half of the audit-doctrine backlog (#93 / #96 / #100 / #101 / #103 / #104). The
+headline is unglamorous and unblocks the rest: **migrations can now ship on a minor.**
+
+### ⚠️ Upgrade day
+
+- **The witness graph is rebuilt for you.** v10.1 adds `entry_point` and `wiring_witness` to `prm`
+  and `story` nodes, and `_graph_signature()` hashes the full node list — so every `witness.json`
+  committed under v10.0.0 would otherwise compare unequal to a fresh compile and report
+  `GRAPH_CAP = STALE` on a project nobody touched. `v10-1-rebuild-witness-graph` runs on upgrade and
+  rebuilds each project's graph. Measured end to end: `INTEGRATION-GREEN` before, `STALE` with the
+  scripts landed and the migration not yet run, `INTEGRATION-GREEN` after — and a second run is a
+  no-op.
+- **Citation types are stamped for you** by `v10-1-stamp-citation-types`, where they can be derived
+  unambiguously. Ambiguous citations are left untyped on purpose: a wrong type produces a confident
+  false admissibility verdict, which is worse than no verdict. The stamp preserves your authored cell
+  padding byte-for-byte and refuses to touch a table that has no `Claim` column; because the stamped
+  cell's *content* grows, rendered column alignment in stamped rows does widen. Re-aligning is a
+  separate, opt-in pass. If a write turns out not to be a pure in-cell annotation, the migration
+  restores the file and stays pending rather than recording a lie.
+
+### The migration lane goes minor-capable
+
+`appliesTo` receives full versions now, not just majors — `atOrAfter('10.1.0')` fires on a minor,
+`crossesMajor(10)` preserves the v10 semantics exactly. A frozen 19-crossing decision table, captured
+from v10.0.0 *before* the refactor and asserted through `pendingMigrations()` rather than by calling
+the predicate directly, proves every historical decision is unchanged.
+
+This was a self-inflicted repeat: the registry shipped version-agnostic while its predicate stayed
+major-only, so a migration registered on a minor could never fire — the same constraint that forced
+v9.6 and v10 into one major, and precisely #103's class (two halves of one mechanism on different
+clocks). The compat path is not cosmetic: handed a version string, an old two-parameter predicate
+evaluates `NaN >= 10` → false and the migration silently never runs, so dispatch is by predicate
+shape and a new predicate that could receive the wrong arguments gets a loud warning.
+
+Multi-hop works: `10.0 → 10.3` replays 10.1, 10.2 and 10.3 once each in version order, and a throwing
+migration records `failed`, keeps its siblings running, and stays pending. `speck migrate --list`
+prints the introducing release for every pending and applied entry.
+
+### Typed evidence citations (#101)
+
+§11a was not implementable as specified — `PROBE_SUBSTRATE_MISMATCH.P1` cannot be computed from a
+`path@sha` string that carries no type. So this builds the thing upstream of it: a closed citation-type
+vocabulary and a machine-readable admissibility table, so *"a mocked-client test cannot discharge what
+the deployment ACCEPTS"* becomes a lookup instead of an inference.
+
+`CITATION_UNTYPED` is **P3, non-blocking** — every artifact downstream is untyped, so anything harsher
+would brick every project on upgrade day.
+
+### Observation exposure (#104)
+
+`observe-guard.sh` is the counterpart `mutate-guard.sh` never had. Mutation proves a *test* can fail;
+nothing proved an *observation* ever had the chance to — **a green reports its verdict, never its
+exposure**, so confidence accumulates on run count rather than on chances to fail. It runs the
+*shipped* invocation and diffs local flags against the container/deploy command (the scar: a bearer
+token in a URL path segment was invisible locally under `--log-level warning` and reproduced in one
+request under the image's own INFO default), and it asks what a green **licenses** — waiting is
+harmless unexposed; closing a fire or writing REFUTED on a live credential is not.
+
+### Graph, and #100's namespace question
+
+The freshness leg reaches `gate_graph` without turning `/story-implement` into a mutating step, and
+degrades on a read-only tree instead of raising. `MAPPED_UNWITNESSED` adoption is scoped per-epic, so
+the first honest row a team fills does not cap the whole project — a gate whose entire cost lands on
+the first step is a gate people route around. The graph's findings namespace is authoritative and any
+project-level view derives from it, because a derived view cannot drift.
+
+### Honest scope of the two new checks
+
+`validate-two-carrier.sh` (#103) and `validate-evidence-citations.sh` (#101) **exist and are proven,
+and are not yet on a gate path** — no hook, no CI step, no §6a row invokes them. They are usable by
+hand today. Saying so plainly matters in a release line about gates that certify what they never
+inspected.
+
+`validate-two-carrier.sh` found a real instance on its first run: `validate-coverage-matrix.sh` pulled
+`$10`/`$11` out of the cell-status grid by hard-coded position — the same shape that made §6a unsafe
+to extend, and live in Speck's own tree while v10.1 was *adding two persona columns* that would have
+shifted every field. It is header-resolved now. The test that pinned it has been retired into a frozen
+fixture: an assertion naming a live defect as its expected value is #99's counter-test class, where
+the suite holds the bug in place and the honest fix looks like the breaking change.
+
 ## v10.0.0 — 2026-08-02 — Evidence has to be evidence
 
 Fourteen field-filed issues from three Speck-managed products (Streb, Brightstance, Splang)

@@ -113,6 +113,48 @@ Full rationale: `docs/v8/v8-north-star.md`.
 - **Never inherit a magnitude from a report — measure it.** The naive fix to a mis-measured defect is routinely a worse defect (shrinking the grid's gap would have kept the unyieldable `min-width` and moved the amputation to a narrower phone).
 - **A green suite remains the right and sufficient instrument for CORRECTNESS claims.** This is an admissibility rule for the claim a report *makes* — not a requirement to collect every substrate for every AC. The sin is citing one row's instrument for another row's claim.
 
+### 2b. Typed citations — the closed vocabulary and the admissibility table
+
+*§2a is the rule stated for a human reader. This is the same rule stated so a machine can apply it, and the two halves must not drift: `validate-evidence-citations.sh --check-contract <this file>` diffs the table below against the Speck-owned one compiled into the validator and reports `CITATION_TABLE_DRIFT.P2` when they disagree.*
+
+**Why the citation format had to change first.** A citation written `path@sha` carries **no type**. Nothing in that string says whether it points at a green suite, a live read as a real principal, or a screenshot — so no validator can compute whether the instrument was capable of observing the claim. Admissibility is a property of the *pair* (claim type, citation type), and half the pair was never written down. Typing the citation is upstream of every admissibility check; a registry built before it would be another section of prose that cannot fail a build.
+
+**Syntax.** A typed citation is `<citation-type>:<path>[@<sha>]` — e.g. `live-probe:supabase/tests/webhook_claim_proof.sql@89468af1`. The prefix must be one of the tokens below, spelled exactly; a leading token that is not in the vocabulary is not a type (a bare `https://…` or a Windows drive letter is read as an untyped path, never as a bogus type). A citation with no recognized prefix is **legacy-untyped**: `CITATION_UNTYPED.P3` — a nudge, never a block, because every artifact authored before this section is untyped by construction and a P1 here would brick every project on upgrade day. Stamp what can be derived with `validate-evidence-citations.sh --stamp-types --write <path>`.
+
+**The closed citation-type vocabulary.** Speck-owned. A project does not add tokens — an unknown token reads as untyped, so inventing one degrades to a nudge rather than manufacturing a false admissibility verdict.
+
+| Token | The instrument | Where it already appears in this contract |
+|---|---|---|
+| `test` | A unit/integration suite run in the project's own harness. Mocks and props-level assertions live here. | §8 IMPL-GREEN; validation-report Gate Criteria (`test-output.txt`) |
+| `mutation-guard` | A guard whose removal was **watched** to redden it — `mutate-guard.sh`, verdict `GUARD_MUTATION_PROVEN`. | validation-report §Mutation Record |
+| `live-probe` | A request/read/write issued **against the deployed target or the real engine**, as a named principal, and observed at that boundary. | §2 "Real Supabase/Stripe/RevenueCat events"; §7; §8 Real-Integration Smoke Check |
+| `db-catalog` | Introspection of the live datastore's catalog, or a **baselined** read-back out of the datastore. | §8 Live-Schema Parity Check (`validate-schema-drift.sh`), Real Write-Path Smoke Check |
+| `ax-dump` | The **platform** accessibility tree from a baked build — the OS tree assistive tech walks, not props. | §2 "AXe screenshots and accessibility trees"; §6; §9 `ax-trees/` |
+| `geometry` | Measured **container-vs-content** numbers from a running screen, at ≥3 widths, numbers in the artifact. | §2a row 4 |
+| `capture` | A screenshot, recording, or LARP transcript. Evidence of *what was on screen*, adjudicated or not. | §6; §9 `screenshots/`, `larp-recordings/`, `transcripts/` |
+| `device-walk` | A human attestation on a real device or the baked artifact. | §8 Verifiability Tiering; `larp-recordings/<sha>-human-attestation.md` |
+| `model-eval` | Control-vs-treatment on the **composed** prompt with the **shipped** model, n reported. | §2a row 5 |
+| `static` | A source-text, lint, type-check or grep assertion over the tree. Reads the source; never runs it. | §8 lint/type gates; `banned-language-lint.sh output` |
+
+**The admissibility table.** Claim type → which citation types may discharge it. **Admissible is a whitelist**: a type absent from a row's Admissible cell is inadmissible for that claim and raises `PROBE_SUBSTRATE_MISMATCH.P1`. The third column names the ones that were earned by a shipped defect, so nobody re-litigates them.
+
+| Claim type | Admissible citation types | Inadmissible here — and the scar that earned it |
+|---|---|---|
+| `correctness` | `test` `mutation-guard` `live-probe` `db-catalog` `static` `ax-dump` `geometry` `capture` `device-walk` `model-eval` | *(nothing — a green suite is the right and sufficient instrument for a correctness claim; this row can never fire)* |
+| `visibility` | `live-probe` `db-catalog` `device-walk` | `test` · `mutation-guard` — an anon-key server client carries no JWT, so `auth.uid() = <col>` returned **zero rows for every user, always**, silently. Two mutation-verified suites could not see it; a live read as each principal settled it in one query. Also `static`, `capture` |
+| `acceptance` | `live-probe` `db-catalog` `device-walk` | `test` — a **mocked client** encodes what we *believe* the deployment accepts, so it can only ever confirm our own belief. Only the real boundary can contradict it. Also `mutation-guard`, `static`, `capture` |
+| `persistence` | `live-probe` `db-catalog` | `capture` — a screenshot of a success state is not a written row; and a post-walk read with **no pre-walk baseline** cannot tell a fresh write from a stale seed. Also `test`, `mutation-guard`, `static` |
+| `fit` | `ax-dump` `geometry` `device-walk` | `test` — a **props-level a11y assertion** reads props, not the platform tree, and jsdom performs no layout. A rule engine is structurally blind to containment: axe was **0/0/0/0 and a11y 9/9, identical before and after** a grid amputated a column on every phone. Also `static`, `capture`, `mutation-guard` |
+| `behaviour` | `model-eval` `device-walk` | `static` — asserting the rule string is **present in the source** of a prompt is not evidence the composed prompt changed what the shipped model does. Also `test`, `capture` |
+
+*A claim whose type is none of the six is **unrouted**: the validator reports it and moves on. Degrade-to-honest, never a false P1 — a wrong routing produces a confident wrong verdict, which is worse than an admitted gap.*
+
+**Where a typed citation appears — the citation site.** Admissibility is only computable where the claim type and the citation sit in the *same row*, so the site is a markdown table carrying **both** a column whose header starts with `Claim` and a column whose header starts with `Evidence` / `Citation` / `Discharge artifact` / `Proof` / `Substrate`. Any table in any Speck artifact with that shape is scanned; any table without it is ignored. That is why the two definition tables above are inert — their columns are `Admissible…` / `Inadmissible…`, so the contract can never report findings against its own documentation. A discharge table that adds a `Claim type` column becomes machine-checkable the moment it does, with no change to this validator.
+
+| Claim type | Discharge artifact | Notes |
+|---|---|---|
+| `visibility` | `live-probe:specs/.../logs/<sha>-rls-as-principal.log` | *(example row — replace or delete)* |
+
 ---
 
 ## 3. Invalid Proof Sources (anti-proof)

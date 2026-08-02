@@ -4,7 +4,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, existsSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, existsSync, readFileSync, writeFileSync, rmSync, copyFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -926,6 +926,855 @@ test('#98.1: never overrides a scope the project already declared', async () => 
     const pj = JSON.parse(readFileSync(p, 'utf-8'));
     assert.equal(pj.banned_language.scope, 'legacy-root');
     assert.deepEqual(pj.banned_language.exclude, ['**/legacy/**'], 'sibling keys untouched');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* ===========================================================================
+ * v10.1 — THE LANE GOES MINOR-CAPABLE (#103's class: two halves, one clock)
+ *
+ * The registry was built version-agnostic while its predicate stayed major-only, so a
+ * migration registered in 10.1 could not fire for a 10.0 → 10.1 upgrade. That constraint is
+ * exactly what forced v9.6 and v10 to be batched into a single major.
+ * =========================================================================== */
+
+/* ---------------------------------------------------------------------------
+ * THE FROZEN DECISION TABLE — the acceptance criterion for this change.
+ *
+ * Every value below was CAPTURED from v10.0.0 before the refactor, by running
+ * detectMigration() and pendingMigrations() over the shipped registry. It is a
+ * behaviour freeze, not an aspiration: making the predicate version-keyed must not
+ * move a single one of these decisions.
+ *
+ * It asserts through pendingMigrations() rather than by calling appliesTo() directly,
+ * deliberately — the calling CONVENTION is what changes, so a test that hand-picks the
+ * arguments would freeze the wrong thing and pass either way.
+ * ------------------------------------------------------------------------- */
+
+const V10_BUILTINS = [
+  'v10-stamp-template-version',
+  'v10-lift-serves-frontmatter',
+  'v10-gate-registry-scope-subject-columns',
+  'v10-banned-language-scope-any-depth',
+];
+
+// The v10.1 riders. They are NOT part of the freeze — they are what the freeze made possible:
+// every row below whose TARGET reaches 10.1 now carries them, and every row whose target stops
+// at 10.0 (or whose origin is already past 10.1) is byte-for-byte the v10.0.0 decision. That
+// split IS the assertion: the minor lane fires exactly where a minor lane should, and nowhere
+// a major-keyed predicate used to fire.
+const V10_1_BUILTINS = [
+  'v10-1-rebuild-witness-graph',
+  'v10-1-stamp-citation-types',
+];
+
+// [from, to, { scaffoldV7, reproveV8, graphV9, migrateV10, targetMajor }, pendingIds]
+const FROZEN_CROSSINGS = [
+  ['6.0.0', '7.0.0', [true, false, false, false, 7], []],
+  ['6.1.14', '7.20.1', [true, false, false, false, 7], []],
+  ['7.20.1', '8.0.0', [false, true, false, false, 8], []],
+  ['6.0.0', '8.0.0', [true, true, false, false, 8], []],
+  ['8.6.0', '9.0.0', [false, false, true, false, 9], []],
+  ['6.0.0', '9.0.0', [true, true, true, false, 9], []],
+  ['9.0.0', '9.1.0', [false, false, false, false, 9], []],
+  ['9.6.0', '9.7.0', [false, false, false, false, 9], []],
+  ['9.6.0', '10.0.0', [false, false, false, true, 10], V10_BUILTINS],
+  ['8.6.0', '10.0.0', [false, false, true, true, 10], V10_BUILTINS],
+  ['6.0.0', '10.0.0', [true, true, true, true, 10], V10_BUILTINS],
+  ['10.0.0', '10.1.0', [false, false, false, false, 10], V10_1_BUILTINS],
+  ['10.0.0', '10.4.1', [false, false, false, false, 10], V10_1_BUILTINS],
+  ['10.9.0', '10.10.0', [false, false, false, false, 10], []],
+  ['10.0.0', '11.0.0', [false, false, false, false, 11], V10_1_BUILTINS],
+  [null, '9.0.0', [true, true, true, false, 9], []],
+  [null, '10.0.0', [true, true, true, true, 10], V10_BUILTINS],
+  [null, '10.1.0', [true, true, true, true, 10], [...V10_BUILTINS, ...V10_1_BUILTINS]],
+  ['7.20.1', 'not-a-version', [false, false, false, false, null], []],
+  ['v7.20.1', 'v8.0.0', [false, true, false, false, 8], []],
+];
+
+test('FROZEN: every v7/v8/v9/v10 crossing decides exactly as v10.0.0 decided', () => {
+  const dir = tempTarget(true);
+  try {
+    const registry = getRegisteredMigrations();
+    for (const [from, to, flags, expectedPending] of FROZEN_CROSSINGS) {
+      const label = `${from ?? '(unknown)'} → ${to}`;
+      const d = detectMigration(from, to);
+      assert.deepEqual(
+        [d.scaffoldV7, d.reproveV8, d.graphV9, d.migrateV10, d.targetMajor],
+        flags,
+        `detectMigration drifted for ${label}`,
+      );
+      assert.deepEqual(
+        pendingMigrations(dir, from, to, { registry }).map(m => m.id),
+        expectedPending,
+        `the shipped registry's applicability drifted for ${label}`,
+      );
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* --- (b) the semver comparison, and the ordering trap ---------------------- */
+
+test('compareVersions: 10.10.0 > 10.9.0 > 10.1.0 — the trap a string compare gets wrong', async () => {
+  const { compareVersions, parseVersion } = await import('./migrate.js');
+
+  // The whole reason this helper exists. Left as a string compare it reads
+  // '10.10.0' < '10.9.0' (because '1' < '9' at index 3) and nothing surfaces for months.
+  assert.ok('10.10.0' < '10.9.0', 'the trap is real: a string compare inverts these');
+  assert.equal(compareVersions('10.10.0', '10.9.0'), 1);
+  assert.equal(compareVersions('10.9.0', '10.1.0'), 1);
+  assert.equal(compareVersions('10.1.0', '10.10.0'), -1);
+  assert.equal(compareVersions('9.9.9', '10.0.0'), -1, 'major dominates');
+  assert.equal(compareVersions('10.1.0', '10.1.0'), 0);
+  assert.equal(compareVersions('v10.1.0', '10.1.0'), 0, 'a v prefix is not a version difference');
+  assert.equal(compareVersions('10.0.10', '10.0.9'), 1, 'patch compares numerically too');
+  assert.equal(compareVersions(null, '10.0.0'), null, 'unknown is not comparable, and says so');
+  assert.equal(compareVersions('not-a-version', '10.0.0'), null);
+
+  assert.deepEqual(parseVersion('v10.10.3'), { major: 10, minor: 10, patch: 3 });
+  assert.deepEqual(parseVersion('10.1'), { major: 10, minor: 1, patch: 0 });
+  assert.equal(parseVersion('not-a-version'), null);
+});
+
+test('atOrAfter: fires on the MINOR that introduces it, never before, never after it landed', async () => {
+  const { atOrAfter } = await import('./migrate.js');
+  const p = atOrAfter('10.1.0');
+
+  assert.equal(p('10.0.0', '10.1.0'), true, 'the crossing that introduces it');
+  assert.equal(p('10.0.0', '10.3.0'), true, 'a jump straight past it still needs it');
+  assert.equal(p('10.0.0', '11.0.0'), true, 'and so does a major jump over it');
+  assert.equal(p('9.6.0', '10.1.0'), true);
+  assert.equal(p(null, '10.1.0'), true, 'unknown origin applies — the ledger is the real guard');
+
+  assert.equal(p('10.0.0', '10.0.9'), false, 'the upgrade never reaches 10.1.0');
+  assert.equal(p('10.1.0', '10.2.0'), false, 'the project was already at/past it');
+  assert.equal(p('10.2.0', '10.3.0'), false);
+  assert.equal(p('10.0.0', 'not-a-version'), false, 'an unreadable target cannot claim to reach it');
+
+  // The ordering trap, through the predicate rather than the comparator.
+  assert.equal(atOrAfter('10.9.0')('10.1.0', '10.10.0'), true, '10.10.0 is AFTER 10.9.0');
+  assert.equal(atOrAfter('10.10.0')('10.0.0', '10.9.0'), false, '10.9.0 is BEFORE 10.10.0');
+});
+
+/* --- (a) full versions to the predicate, majors in ctx --------------------- */
+
+test('appliesTo receives FULL versions plus ctx majors; a 2-arg predicate keeps the old shape', () => {
+  const dir = tempTarget(true);
+  try {
+    const seen = [];
+    const modern = {
+      id: 'm-modern',
+      description: 'three-parameter predicate',
+      appliesTo: (fromVersion, toVersion, ctx) => {
+        seen.push({ fromVersion, toVersion, ctx });
+        return true;
+      },
+      run: () => {},
+    };
+    // The pre-10.1 shape, verbatim from the shipped registrations. It must keep receiving
+    // MAJORS: handed '10.0.0' instead of 10, `'10.0.0' >= 10` is NaN-false and the migration
+    // silently never runs — a false negative with no error anywhere.
+    let legacyArgs = null;
+    const legacy = {
+      id: 'm-legacy-shape',
+      description: 'two-parameter major-keyed predicate',
+      appliesTo: (fromMajor, toMajor) => {
+        legacyArgs = [fromMajor, toMajor];
+        return toMajor >= 10 && (fromMajor == null || fromMajor < 10);
+      },
+      run: () => {},
+    };
+
+    const pending = pendingMigrations(dir, '9.6.0', '10.0.0', { registry: [modern, legacy] });
+    assert.deepEqual(pending.map(m => m.id), ['m-modern', 'm-legacy-shape']);
+
+    assert.equal(seen[0].fromVersion, '9.6.0', 'the modern predicate gets the FULL from-version');
+    assert.equal(seen[0].toVersion, '10.0.0', 'and the FULL to-version');
+    assert.equal(seen[0].ctx.fromMajor, 9, 'with the parsed majors carried in ctx');
+    assert.equal(seen[0].ctx.toMajor, 10);
+    assert.deepEqual(legacyArgs, [9, 10], 'the 2-arg shape still gets majors, positionally');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* --- (c) a MINOR crossing must run a pending minor migration --------------- */
+
+test('runPostUpgradeMigrations: a 10.0 → 10.1 MINOR crossing runs the 10.1 migration', async () => {
+  const { atOrAfter } = await import('./migrate.js');
+  const dir = tempTarget(true);
+  try {
+    let ran = 0;
+    const registry = [
+      { id: 'm-10-1', description: 'a 10.1 artifact migration', version: '10.1.0',
+        appliesTo: atOrAfter('10.1.0'), run: () => { ran += 1; } },
+    ];
+
+    const summary = runPostUpgradeMigrations(dir, '10.0.0', '10.1.0', { registry });
+
+    assert.equal(ran, 1, 'a brand-new minor migration must not be invisible to the upgrade');
+    assert.deepEqual(summary.named.applied, ['m-10-1']);
+    assert.ok(summary.actions.includes('namedMigrations'), 'the lane running must be reported');
+    assert.equal(readAppliedLedger(dir).find(e => e.id === 'm-10-1').status, 'applied');
+
+    // Still once-only. The replay is not even a "skip" — with the ledger recorded, nothing
+    // is pending and no major flag is set, so the whole function short-circuits before the
+    // lane. run() must not fire again, and the summary must say plainly that nothing ran.
+    const again = runPostUpgradeMigrations(dir, '10.0.0', '10.1.0', { registry });
+    assert.equal(ran, 1, 'run() must NOT fire a second time');
+    assert.equal(again.named, null);
+    assert.deepEqual(again.actions, []);
+    assert.equal(
+      readAppliedLedger(dir).find(e => e.id === 'm-10-1').status,
+      'applied',
+      'and the ledger still holds the record that made the replay a no-op',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('runPostUpgradeMigrations: a minor crossing with NOTHING pending still runs nothing', () => {
+  // The other half of (c): making minors capable must not make every minor upgrade do work.
+  const dir = tempTarget(true);
+  try {
+    const summary = runPostUpgradeMigrations(dir, '10.0.0', '10.1.0', { registry: [] });
+    assert.equal(summary.kind, null);
+    assert.deepEqual(summary.actions, []);
+    assert.equal(summary.named, null);
+    assert.ok(!existsSync(join(dir, '.speck', 'project.json')), 'no ledger may be scaffolded');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* --- (d) multi-hop -------------------------------------------------------- */
+
+/** A versioned migration for the multi-hop tests. `appliesTo` is left to the lane to derive. */
+function versionedMigration(id, version, run) {
+  return { id, description: `migration introduced in ${version}`, version, run };
+}
+
+test('multi-hop: 10.0 → 10.3 runs the 10.1, 10.2 and 10.3 migrations once each, in version order', () => {
+  const dir = tempTarget(true);
+  try {
+    const order = [];
+    // Registered OUT of version order on purpose: version order must come from the version,
+    // not from whichever module happened to import first.
+    const registry = [
+      versionedMigration('m-10-3', '10.3.0', () => order.push('10.3.0')),
+      versionedMigration('m-10-1', '10.1.0', () => order.push('10.1.0')),
+      versionedMigration('m-10-2', '10.2.0', () => order.push('10.2.0')),
+    ];
+
+    const result = runNamedMigrations(dir, '10.0.0', '10.3.0', { registry });
+
+    assert.deepEqual(order, ['10.1.0', '10.2.0', '10.3.0'], 'a hop must replay history forwards');
+    assert.deepEqual(result.applied, ['m-10-1', 'm-10-2', 'm-10-3']);
+    assert.deepEqual(result.failed, []);
+
+    // Once each, forever: the second pass is all skips.
+    const second = runNamedMigrations(dir, '10.0.0', '10.3.0', { registry });
+    assert.deepEqual(second.applied, []);
+    assert.deepEqual(second.skipped, ['m-10-1', 'm-10-2', 'm-10-3']);
+    assert.deepEqual(order, ['10.1.0', '10.2.0', '10.3.0'], 'no run() fired twice');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('multi-hop: a THROWING middle migration does not strand the later ones, and is retried', () => {
+  const dir = tempTarget(true);
+  try {
+    const order = [];
+    let middleThrows = true;
+    const registry = [
+      versionedMigration('m-10-1', '10.1.0', () => order.push('10.1.0')),
+      versionedMigration('m-10-2', '10.2.0', () => {
+        order.push('10.2.0');
+        if (middleThrows) throw new Error('10.2 blew up mid-hop');
+      }),
+      versionedMigration('m-10-3', '10.3.0', () => order.push('10.3.0')),
+    ];
+
+    const first = runNamedMigrations(dir, '10.0.0', '10.3.0', { registry });
+    assert.deepEqual(order, ['10.1.0', '10.2.0', '10.3.0'], '10.3 must still run after 10.2 threw');
+    assert.deepEqual(first.applied, ['m-10-1', 'm-10-3']);
+    assert.deepEqual(first.failed.map(f => f.id), ['m-10-2']);
+    assert.match(first.failed[0].error, /blew up mid-hop/);
+    assert.equal(readAppliedLedger(dir).find(e => e.id === 'm-10-2').status, 'failed');
+
+    // Resumable across the hop: only the failed one is pending, and it retries in place.
+    assert.deepEqual(
+      pendingMigrations(dir, '10.0.0', '10.3.0', { registry }).map(m => m.id),
+      ['m-10-2'],
+    );
+    middleThrows = false;
+    const second = runNamedMigrations(dir, '10.0.0', '10.3.0', { registry });
+    assert.deepEqual(second.applied, ['m-10-2']);
+    assert.deepEqual(second.skipped, ['m-10-1', 'm-10-3']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('multi-hop ordering: 10.10.0 runs AFTER 10.9.0, not before it', () => {
+  // The ordering trap where it actually bites: run order. A string sort would put
+  // '10.10.0' before '10.9.0' and apply a later schema change to an earlier shape.
+  const dir = tempTarget(true);
+  try {
+    const order = [];
+    const registry = [
+      versionedMigration('m-10-10', '10.10.0', () => order.push('10.10.0')),
+      versionedMigration('m-10-9', '10.9.0', () => order.push('10.9.0')),
+      versionedMigration('m-10-2', '10.2.0', () => order.push('10.2.0')),
+    ];
+    runNamedMigrations(dir, '10.1.0', '10.11.0', { registry });
+    assert.deepEqual(order, ['10.2.0', '10.9.0', '10.10.0']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('multi-hop: a hop that stops SHORT of a version does not run that version migration', () => {
+  const dir = tempTarget(true);
+  try {
+    const order = [];
+    const registry = [
+      versionedMigration('m-10-1', '10.1.0', () => order.push('10.1.0')),
+      versionedMigration('m-10-2', '10.2.0', () => order.push('10.2.0')),
+      versionedMigration('m-10-5', '10.5.0', () => order.push('10.5.0')),
+    ];
+    const r = runNamedMigrations(dir, '10.0.0', '10.2.0', { registry });
+    assert.deepEqual(order, ['10.1.0', '10.2.0'], '10.5 has not shipped for this workspace yet');
+    assert.deepEqual(r.applied, ['m-10-1', 'm-10-2']);
+    assert.ok(!readAppliedLedger(dir).some(e => e.id === 'm-10-5'), 'and it is not recorded either');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('registerMigration: a NEW two-parameter predicate warns that it will receive majors', async () => {
+  // The one live trap left by supporting both shapes. `atOrAfter`/`crossesMajor` are tagged
+  // and a bare `version` derives a tagged predicate, so the only way to fall in is to
+  // hand-roll a version-keyed rule with two declared parameters — which then silently
+  // receives majors, compares NaN, and never fires. Zero noise for correct registrations;
+  // loud at exactly the moment the trap is being set.
+  const { registerMigration: reg } = await import('./migrate.js');
+  const warnings = [];
+  const original = console.warn;
+  console.warn = (...args) => warnings.push(args.join(' '));
+  try {
+    reg({
+      id: 'm-two-param-warns',
+      description: 'hand-rolled two-parameter predicate',
+      appliesTo: (from, to) => to >= 11 && (from == null || from < 11),
+      run: () => {},
+    });
+  } finally {
+    console.warn = original;
+  }
+  assert.equal(warnings.length, 1, 'exactly one warning, on the registration that earned it');
+  assert.match(warnings[0], /m-two-param-warns/);
+  assert.match(warnings[0], /major/i, 'it must say WHICH arguments the predicate will receive');
+
+  // And a correctly-shaped registration stays silent.
+  const quiet = [];
+  console.warn = (...args) => quiet.push(args.join(' '));
+  try {
+    reg({ id: 'm-versioned-quiet', description: 'derived predicate', version: '10.1.0', run: () => {} });
+  } finally {
+    console.warn = original;
+  }
+  assert.deepEqual(quiet, [], 'a `version`-derived predicate is the blessed shape — no noise');
+});
+
+test('registerMigration: `version` alone derives appliesTo, and is rejected when unparsable', async () => {
+  const { registerMigration: reg } = await import('./migrate.js');
+  assert.throws(
+    () => reg({ id: 'v-bad', version: 'ten-point-one', run: () => {} }),
+    /version/,
+    'an unparsable version cannot order or gate anything',
+  );
+  assert.throws(
+    () => reg({ id: 'v-neither', run: () => {} }),
+    /appliesTo|version/,
+    'a migration with neither a version nor a predicate has no firing rule at all',
+  );
+});
+
+/* --- (e) --list names the introducing version ----------------------------- */
+
+test('migrate --list: names the VERSION that introduced each pending migration', async () => {
+  const { atOrAfter } = await import('./migrate.js');
+  const dir = tempTarget(true);
+  try {
+    writeFileSync(join(dir, '.speck', 'VERSION'), '10.3.0\n');
+    const registry = [
+      { id: 'm-done', description: 'already ran', version: '10.1.0', appliesTo: atOrAfter('10.1.0'), run: () => {} },
+      { id: 'm-todo', description: 'still pending', version: '10.2.0', appliesTo: atOrAfter('10.2.0'), run: () => {} },
+    ];
+    runNamedMigrations(dir, '10.0.0', '10.3.0', { registry: [registry[0]] });
+
+    let result;
+    const out = captureLog(() => {
+      result = migrateCommand(dir, { list: true, registry });
+    });
+
+    assert.deepEqual(result.pending.map(m => m.id), ['m-todo']);
+    // The actionable fact: WHICH version brought this migration into existence.
+    const todoLine = out.split('\n').find(l => l.includes('m-todo'));
+    assert.match(todoLine, /10\.2\.0/, 'a pending migration must name its introducing version');
+    const doneLine = out.split('\n').find(l => l.includes('m-done'));
+    assert.match(doneLine, /10\.1\.0/, 'and the ledger remembers it for the applied ones');
+
+    assert.equal(
+      readAppliedLedger(dir).find(e => e.id === 'm-done').version,
+      '10.1.0',
+      'the ledger records the introducing version, so --list does not depend on the registry',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* ===========================================================================
+ * v10.1 — THE TWO MINOR-INTRODUCED ARTIFACT MIGRATIONS
+ *
+ * B1 built the minor-capable lane (above) precisely so v10.1's two breaking artifact
+ * changes could ride the upgrade. Both shipped WITHOUT a registration, which is the same
+ * defect in both directions:
+ *
+ *   entry_point/wiring_witness on every prm+story node    → _graph_signature() changes →
+ *     every witness.json committed under v10.0.0 reads GRAPH_STALE.P2 / GRAPH_CAP = STALE
+ *     against a v10.1 fresh compile. Measured on a clean fixture: v10.0.0 build+check exits 0
+ *     at INTEGRATION-GREEN; the same tree under v10.1 scripts is STALE. 100% of consumers go
+ *     green→red on code they did not change, and /story-implement prints the banner on every
+ *     story. crossesMajor(10) does NOT fire for 10.0 → 10.1, so nothing rebuilt them.
+ *
+ *   typed citations (§11a)                                → the stamp mechanism attached to
+ *     nothing at all: four registrations existed, every one of them version '10.0.0'.
+ * =========================================================================== */
+
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const REAL_GRAPH_SCRIPT = join(REPO_ROOT, '.speck', 'scripts', 'graph', 'speck_graph.py');
+
+/**
+ * A stub stamp script that types `login.test.ts` IN PLACE, leaving every other byte —
+ * including the authored column padding — exactly where the author put it. This is what the
+ * shipped stamp mode does today, and the only shape the migration is allowed to write.
+ *
+ * Written as single-quoted JS strings on purpose: a template literal would eat bash's
+ * `${...}` expansions.
+ */
+const STAMP_STUB_PRESERVING = [
+  '#!/usr/bin/env bash',
+  'set -euo pipefail',
+  'write=false; target=""',
+  'for a in "$@"; do',
+  '  case "$a" in',
+  '    --stamp-types|--strict) ;;',
+  '    --write) write=true ;;',
+  '    *) target="$a" ;;',
+  '  esac',
+  'done',
+  'out=""; changed=false',
+  'while IFS= read -r line || [[ -n "$line" ]]; do',
+  '  new="${line//login.test.ts/test:login.test.ts}"',
+  '  [[ "$new" != "$line" ]] && changed=true',
+  '  out+="$new"$\'\\n\'',
+  'done < "$target"',
+  'if [[ "$write" == true && "$changed" == true ]]; then printf "%s" "$out" > "$target"; fi',
+  'echo "Citations: stamped"',
+  'exit 0',
+  '',
+].join('\n');
+
+/**
+ * The stub that reproduces the defect the audit measured across 24 files: it rebuilds any row
+ * it touched out of TRIMMED cells, collapsing the author's column padding. The stamp mode has
+ * since been fixed to splice in place, so this stub — not the shipped script — is what keeps
+ * the guard honest: it pins the migration's own promise (annotate, never reformat) against
+ * whoever edits the stamper next.
+ */
+const STAMP_STUB_REFLOWING = [
+  '#!/usr/bin/env bash',
+  'set -euo pipefail',
+  'write=false; target=""',
+  'for a in "$@"; do',
+  '  case "$a" in',
+  '    --stamp-types|--strict) ;;',
+  '    --write) write=true ;;',
+  '    *) target="$a" ;;',
+  '  esac',
+  'done',
+  'out=""; changed=false',
+  'while IFS= read -r line || [[ -n "$line" ]]; do',
+  '  new="${line//login.test.ts/test:login.test.ts}"',
+  '  if [[ "$new" != "$line" ]]; then',
+  '    changed=true',
+  '    IFS="|" read -r -a cells <<< "$new"',
+  '    rebuilt="|"',
+  '    for (( i=1; i<${#cells[@]}; i++ )); do',
+  '      c="${cells[$i]}"',
+  '      c="${c#"${c%%[![:space:]]*}"}"',
+  '      c="${c%"${c##*[![:space:]]}"}"',
+  '      if [[ -z "$c" && $i -eq $(( ${#cells[@]} - 1 )) ]]; then continue; fi',
+  '      rebuilt+=" $c |"',
+  '    done',
+  '    new="$rebuilt"',
+  '  fi',
+  '  out+="$new"$\'\\n\'',
+  'done < "$target"',
+  'if [[ "$write" == true && "$changed" == true ]]; then printf "%s" "$out" > "$target"; fi',
+  'echo "Citations: stamped"',
+  'exit 0',
+  '',
+].join('\n');
+
+/** A workspace on 10.1.0, wired the way `speck upgrade` leaves .speck/scripts/. */
+function v101Workspace({ graph = true, stamp = null } = {}) {
+  const dir = tempTarget(true);
+  writeFileSync(join(dir, '.speck', 'VERSION'), '10.1.0\n');
+  if (graph) {
+    mkdirSync(join(dir, '.speck', 'scripts', 'graph'), { recursive: true });
+    copyFileSync(REAL_GRAPH_SCRIPT, join(dir, '.speck', 'scripts', 'graph', 'speck_graph.py'));
+  }
+  if (stamp) {
+    const validators = join(dir, '.speck', 'scripts', 'validation', 'validators');
+    mkdirSync(validators, { recursive: true });
+    writeFileSync(join(validators, 'validate-evidence-citations.sh'), stamp);
+  }
+  return dir;
+}
+
+/**
+ * The smallest project the real extractor resolves cleanly: one magic moment, one story
+ * that serves it, one matrix row discharging it. Deliberately the REAL artifacts — the
+ * whole finding is about what the real extractor now puts on a node.
+ */
+function writeFixtureProject(targetDir, id = '001-demo') {
+  const proj = join(targetDir, 'specs', 'projects', id);
+  const story = join(proj, 'epics', '001-alpha', 'stories', 'S001-foo');
+  mkdirSync(story, { recursive: true });
+  writeFileSync(join(proj, 'product-contract.md'), [
+    '# Product Contract: Demo',
+    '',
+    '## 2. Primary Persona',
+    '**JTBD** (`JOB-1`): When X, I want Y, so that Z.',
+    '',
+    '## 5. Magic Moments',
+    '### MM-1 — First wow',
+    '',
+  ].join('\n'));
+  writeFileSync(join(story, 'spec.md'), [
+    '---',
+    'artifact_type: story-spec',
+    'depends_on: []',
+    'blocks: []',
+    'serves: [MM-1]',
+    'readiness_state_verified: UX-RC',
+    '---',
+    '# Story: Foo',
+    '#### AC-1 — Primary',
+    '',
+  ].join('\n'));
+  writeFileSync(join(proj, 'epics', '001-alpha', 'traceability-matrix.md'), [
+    '# Matrix: Alpha',
+    '## 2. Traceability Matrix',
+    '| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC | Grain | Status |',
+    '|--------|--------|---------|-------------------------------|-----|-------|--------|',
+    '| PRM-001 | product-contract §5 MM-1 | wow lands | S001 / AC-1 | — | ux-rc | discharged |',
+    '',
+  ].join('\n'));
+  return proj;
+}
+
+/** An artifact carrying an untyped citation in a PADDED table — the stamp migration's subject. */
+const PADDED_CITATION_REPORT = [
+  '# Validation Report',
+  '',
+  '| Claim type               | Evidence                                  | Notes             |',
+  '|--------------------------|-------------------------------------------|-------------------|',
+  '| correctness              | login.test.ts                             | authored padding  |',
+  '',
+].join('\n');
+
+function runGraph(script, ...args) {
+  const r = spawnSync('python3', [script, ...args], { encoding: 'utf-8' });
+  return `${r.stdout || ''}${r.stderr || ''}`;
+}
+
+/** Rewrite a committed witness.json into the shape v10.0.0's extractor produced. */
+function downgradeWitnessToV10_0(proj) {
+  const p = join(proj, 'graph', 'witness.json');
+  const g = JSON.parse(readFileSync(p, 'utf-8'));
+  for (const n of g.nodes) {
+    if (!n.attrs) continue;
+    delete n.attrs.entry_point;
+    delete n.attrs.wiring_witness;
+  }
+  writeFileSync(p, JSON.stringify(g, null, 2) + '\n');
+}
+
+/* --- (a) both are REGISTERED, on the minor lane ---------------------------- */
+
+test('v10.1: BOTH minor artifact migrations are registered, keyed to 10.1.0', async () => {
+  const { REBUILD_WITNESS_GRAPH_ID, STAMP_CITATION_TYPES_ID } = await import('./migrate.js');
+  const byId = new Map(getRegisteredMigrations().map(m => [m.id, m]));
+
+  for (const id of [REBUILD_WITNESS_GRAPH_ID, STAMP_CITATION_TYPES_ID]) {
+    const m = byId.get(id);
+    assert.ok(m, `${id} must ship registered — an unregistered migration attaches to nothing`);
+    assert.equal(m.version, '10.1.0', `${id} must declare the release that introduced it`);
+    // The whole point: it fires on the MINOR crossing that shipped it. crossesMajor(10) —
+    // what all four v10.0.0 built-ins use — is false for 10.0 → 10.1.
+    assert.equal(
+      m.appliesTo('10.0.0', '10.1.0', { fromMajor: 10, toMajor: 10 }),
+      true,
+      `${id} must apply to the 10.0 → 10.1 crossing that introduced it`,
+    );
+    assert.equal(
+      m.appliesTo('10.1.0', '10.2.0', { fromMajor: 10, toMajor: 10 }),
+      false,
+      `${id} must not re-propose itself on a later hop`,
+    );
+  }
+});
+
+/* --- (b) the graph rebuild, end to end on the real extractor --------------- */
+
+test('v10.1: a witness built under v10.0.0 is STALE, and CLEAN after the migration runs', async () => {
+  const { REBUILD_WITNESS_GRAPH_ID } = await import('./migrate.js');
+  const dir = v101Workspace();
+  try {
+    const proj = writeFixtureProject(dir);
+    const script = join(dir, '.speck', 'scripts', 'graph', 'speck_graph.py');
+
+    runGraph(script, 'build', proj);
+    downgradeWitnessToV10_0(proj);
+
+    // RED: the exact consumer-visible symptom, measured — not asserted.
+    const before = runGraph(script, 'check', proj);
+    assert.match(before, /GRAPH_STALE/, 'a v10.0.0-shaped witness must read stale under v10.1');
+    assert.match(before, /GRAPH_CAP = STALE/, 'and it caps the whole project');
+
+    const m = getRegisteredMigrations().find(x => x.id === REBUILD_WITNESS_GRAPH_ID);
+    const result = runNamedMigrations(dir, '10.0.0', '10.1.0', { registry: [m] });
+    assert.deepEqual(result.applied, [REBUILD_WITNESS_GRAPH_ID]);
+    assert.deepEqual(result.failed, []);
+
+    // GREEN: same tree, same scripts, no spec edited — only the derived artifact rebuilt.
+    const after = runGraph(script, 'check', proj);
+    assert.doesNotMatch(after, /GRAPH_STALE/, 'the migration must clear the staleness it was written for');
+    assert.doesNotMatch(after, /GRAPH_CAP = STALE/);
+    // And the rebuild is what did it: the new schema keys are on the committed nodes now.
+    const witness = JSON.parse(readFileSync(join(proj, 'graph', 'witness.json'), 'utf-8'));
+    assert.ok(
+      witness.nodes.some(n => n.attrs && 'entry_point' in n.attrs && 'wiring_witness' in n.attrs),
+      'the committed witness must carry the v10.1 node schema',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('v10.1: rebuild-witness-graph THROWS when speck_graph.py is missing (never silent success)', async () => {
+  const { REBUILD_WITNESS_GRAPH_ID } = await import('./migrate.js');
+  const dir = v101Workspace({ graph: false });
+  try {
+    writeFixtureProject(dir);
+    const m = getRegisteredMigrations().find(x => x.id === REBUILD_WITNESS_GRAPH_ID);
+    const result = runNamedMigrations(dir, '10.0.0', '10.1.0', { registry: [m] });
+
+    // A `return 0` here would record 'applied' and RETIRE the rebuild forever, leaving every
+    // consumer permanently STALE — the documented failure contract of this lane.
+    assert.deepEqual(result.applied, []);
+    assert.equal(result.failed.length, 1);
+    assert.match(result.failed[0].error, /speck_graph\.py/);
+    assert.deepEqual(
+      pendingMigrations(dir, '10.0.0', '10.1.0', { registry: [m] }).map(x => x.id),
+      [REBUILD_WITNESS_GRAPH_ID],
+      'a failed rebuild stays pending so the next run retries it',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('v10.1: a project with NO committed witness is left unbuilt, not silently graphed', async () => {
+  const { REBUILD_WITNESS_GRAPH_ID } = await import('./migrate.js');
+  const dir = v101Workspace();
+  try {
+    const proj = writeFixtureProject(dir);
+    assert.ok(!existsSync(join(proj, 'graph', 'witness.json')));
+
+    const m = getRegisteredMigrations().find(x => x.id === REBUILD_WITNESS_GRAPH_ID);
+    const result = runNamedMigrations(dir, '10.0.0', '10.1.0', { registry: [m] });
+    assert.deepEqual(result.applied, [REBUILD_WITNESS_GRAPH_ID], 'nothing stale, nothing to fix');
+    assert.ok(
+      !existsSync(join(proj, 'graph', 'witness.json')),
+      'building a first graph is /speck-graph-up\'s gesture, behind identity hardening — a ' +
+        'migration that minted one here could invent DANGLING_REF.P1 caps that did not exist',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* --- (c) the reflow guard: the real control point on the stamp ------------- */
+
+test('v10.1: findTableReflow catches collapsed padding and passes an in-place type splice', async () => {
+  const { findTableReflow } = await import('./migrate.js');
+  const before = '| correctness   | login.test.ts        | note   |';
+
+  assert.equal(
+    findTableReflow(before, '| correctness   | test:login.test.ts        | note   |'),
+    null,
+    'splicing the type INTO the cell leaves every authored byte of padding where it was',
+  );
+  assert.match(
+    findTableReflow(before, '| correctness | test:login.test.ts | note |') || '',
+    /padding/,
+    'rebuilding the row from trimmed cells is the destructive rewrite the audit measured',
+  );
+  assert.match(
+    findTableReflow(before, '| correctness   | test:login.test.ts        |') || '',
+    /cell count/,
+    'a dropped cell is a corrupted row, not a stamp',
+  );
+  assert.match(
+    findTableReflow('a\nb\n', 'a\n') || '',
+    /line count/,
+    'a dropped line is a corrupted file, not a stamp',
+  );
+});
+
+test('v10.1: the stamp migration WRITES when the stamp preserves the table', async () => {
+  const { STAMP_CITATION_TYPES_ID, findTableReflow } = await import('./migrate.js');
+  const dir = v101Workspace({ stamp: STAMP_STUB_PRESERVING });
+  try {
+    const proj = writeFixtureProject(dir);
+    const report = join(proj, 'epics', '001-alpha', 'stories', 'S001-foo', 'validation-report.md');
+    writeFileSync(report, PADDED_CITATION_REPORT);
+
+    const m = getRegisteredMigrations().find(x => x.id === STAMP_CITATION_TYPES_ID);
+    const result = runNamedMigrations(dir, '10.0.0', '10.1.0', { registry: [m] });
+    assert.deepEqual(result.applied, [STAMP_CITATION_TYPES_ID]);
+
+    const after = readFileSync(report, 'utf-8');
+    assert.match(after, /test:login\.test\.ts/, 'the citation is typed');
+    assert.equal(
+      findTableReflow(PADDED_CITATION_REPORT, after),
+      null,
+      'and not one byte of the authored table padding moved',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('v10.1: a REFLOWING stamp is rolled back byte-for-byte and stays PENDING', async () => {
+  const { STAMP_CITATION_TYPES_ID } = await import('./migrate.js');
+  const dir = v101Workspace({ stamp: STAMP_STUB_REFLOWING });
+  try {
+    const proj = writeFixtureProject(dir);
+    const report = join(proj, 'epics', '001-alpha', 'stories', 'S001-foo', 'validation-report.md');
+    writeFileSync(report, PADDED_CITATION_REPORT);
+
+    const m = getRegisteredMigrations().find(x => x.id === STAMP_CITATION_TYPES_ID);
+    const result = runNamedMigrations(dir, '10.0.0', '10.1.0', { registry: [m] });
+
+    assert.deepEqual(result.applied, [], 'a destructive stamp is never recorded as applied');
+    assert.equal(result.failed.length, 1);
+    assert.match(result.failed[0].error, /padding|reflow/i);
+    assert.equal(
+      readFileSync(report, 'utf-8'),
+      PADDED_CITATION_REPORT,
+      'the file must be restored byte-for-byte — the migration leaves NO damage behind',
+    );
+    assert.deepEqual(
+      pendingMigrations(dir, '10.0.0', '10.1.0', { registry: [m] }).map(x => x.id),
+      [STAMP_CITATION_TYPES_ID],
+      'and it stays pending, so it applies the run after the stamp mode is fixed',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* --- (d) the upgrade, end to end ------------------------------------------ */
+
+test('v10.1: a 10.0 → 10.1 upgrade runs BOTH, once each; a second upgrade is a no-op', async () => {
+  const { REBUILD_WITNESS_GRAPH_ID, STAMP_CITATION_TYPES_ID } = await import('./migrate.js');
+  const dir = v101Workspace({ stamp: STAMP_STUB_PRESERVING });
+  try {
+    const proj = writeFixtureProject(dir);
+    const report = join(proj, 'epics', '001-alpha', 'stories', 'S001-foo', 'validation-report.md');
+    writeFileSync(report, PADDED_CITATION_REPORT);
+    runGraph(join(dir, '.speck', 'scripts', 'graph', 'speck_graph.py'), 'build', proj);
+    downgradeWitnessToV10_0(proj);
+
+    const first = runPostUpgradeMigrations(dir, '10.0.0', '10.1.0', {});
+    // Through the REAL module registry, not an injected one — the defect was that the shipped
+    // registry contained nothing for this crossing. Filtered to the v10.1 riders because earlier
+    // tests in this file deliberately register throwaway 10.1.0 entries into that same registry.
+    assert.deepEqual(
+      first.named.applied.filter(id => id.startsWith('v10-1-')),
+      [REBUILD_WITNESS_GRAPH_ID, STAMP_CITATION_TYPES_ID],
+      'a MINOR crossing must run both — this is the capability B1 built and both clusters declined',
+    );
+    assert.deepEqual(first.named.failed, []);
+    // No major was crossed, so the summary reports the lane, not a v10 crossing.
+    assert.deepEqual(first.actions, ['namedMigrations']);
+
+    const stampedOnce = readFileSync(report, 'utf-8');
+
+    const second = runPostUpgradeMigrations(dir, '10.0.0', '10.1.0', {});
+    assert.deepEqual(second.named, null, 'nothing pending → the lane does not even run');
+    assert.equal(readFileSync(report, 'utf-8'), stampedOnce, 'and no artifact is touched twice');
+
+    const ledger = readAppliedLedger(dir);
+    for (const id of [REBUILD_WITNESS_GRAPH_ID, STAMP_CITATION_TYPES_ID]) {
+      const e = ledger.filter(x => x.id === id);
+      assert.equal(e.length, 1, `${id} is recorded exactly once`);
+      assert.equal(e[0].status, 'applied');
+      assert.equal(e[0].version, '10.1.0', 'the ledger remembers the introducing release');
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* --- (e) the operator surface, through the REAL bin/speck.js -------------- */
+
+test('v10.1: `speck migrate --list --from 10.0.0 --to 10.1.0` names BOTH as pending, with v10.1.0', async () => {
+  const { REBUILD_WITNESS_GRAPH_ID, STAMP_CITATION_TYPES_ID } = await import('./migrate.js');
+  const dir = v101Workspace();
+  try {
+    const r = spawnSync(
+      process.execPath,
+      [SPECK_BIN, 'migrate', '--list', '--from', '10.0.0', '--to', '10.1.0'],
+      { cwd: dir, encoding: 'utf-8' },
+    );
+    const out = `${r.stdout}${r.stderr}`;
+    assert.equal(r.status, 0, out);
+
+    // The reported symptom was literally `PENDING (0)`: the mechanism attached to nothing.
+    assert.match(out, /PENDING \(2\)/, out);
+    const pendingBlock = out.split('APPLIED')[0];
+    for (const id of [REBUILD_WITNESS_GRAPH_ID, STAMP_CITATION_TYPES_ID]) {
+      const line = pendingBlock.split('\n').find(l => l.includes(id));
+      assert.ok(line, `${id} must be listed as pending\n${out}`);
+      assert.match(line, /\[v10\.1\.0\]/, `${id} must name the release that introduced it`);
+    }
+    // The v10.0.0 built-ins are NOT pending for a within-major hop.
+    for (const id of V10_BUILTINS) {
+      assert.ok(!pendingBlock.includes(id), `${id} crossed at v10.0.0 and must not re-propose`);
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

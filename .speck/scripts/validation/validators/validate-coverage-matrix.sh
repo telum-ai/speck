@@ -39,11 +39,32 @@ if [[ "$completeness" == "chain-partial" ]]; then
 fi
 
 # Parse the cell status grid: rows between "## Cell status grid" and "## Cross-cell".
+#
+# Columns resolve BY HEADER NAME, not by position. This file used to read `$10` and `$11`
+# with the comment "Status = 9th data column (field 10)" — the identical shape that made the
+# §6a Gate Registry unsafe to extend, where inserting one column silently re-mapped Canary to
+# Waiver and the registry reported green having read the wrong cell. Adding a persona column
+# here (v10.1 adds `second-actor` and `impatient`) shifts every field, so a positional read
+# would have taken a persona verdict as the Status and reported a grid that parsed cleanly and
+# meant nothing. The positional values survive only as a fallback for a grid whose header row
+# cannot be recognised.
+COL_STATUS=10; COL_EVIDENCE=11
+_hdr="$(echo "$content" | awk '/^## Cell status grid/{ins=1;next} ins && /^## /{ins=0} ins && /^\|/{print; exit}')"
+if [[ -n "$_hdr" ]]; then
+  _i=0
+  while IFS= read -r _cell; do
+    _i=$((_i + 1))
+    case "$(printf '%s' "$_cell" | tr '[:upper:]' '[:lower:]' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')" in
+      status*)   COL_STATUS=$_i ;;
+      evidence*) COL_EVIDENCE=$_i ;;
+    esac
+  done < <(printf '%s' "$_hdr" | tr '|' '\n')
+fi
+
 gap_count=0; run_count=0; noevidence=0; badstatus=0; total=0
 while IFS= read -r row; do
-  # Status = 9th data column (field 10), Evidence = 10th (field 11).
-  status=$(printf '%s' "$row" | awk -F'|' '{s=$10; gsub(/^[ \t]+|[ \t]+$/,"",s); print s}')
-  evidence=$(printf '%s' "$row" | awk -F'|' '{e=$11; gsub(/^[ \t]+|[ \t]+$/,"",e); print e}')
+  status=$(printf '%s' "$row" | awk -F'|' -v c="$COL_STATUS" '{s=$c; gsub(/^[ \t]+|[ \t]+$/,"",s); print s}')
+  evidence=$(printf '%s' "$row" | awk -F'|' -v c="$COL_EVIDENCE" '{e=$c; gsub(/^[ \t]+|[ \t]+$/,"",e); print e}')
   [[ -z "$status" ]] && continue
   ((total++))
   case "$status" in

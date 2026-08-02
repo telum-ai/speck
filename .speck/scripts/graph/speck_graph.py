@@ -502,6 +502,21 @@ def _extract_epic(epic_path, epic_id, nodes, edges, add_node):
             _extract_story(spec, story_path, epic_id, story_qual, nodes, edges, add_node)
 
 
+def _cell(row, header):
+    """A table cell by header key, trimmed and un-backticked. Absent header → ''.
+
+    An em-dash / en-dash / bare hyphen is the matrix's own "nothing here" glyph, so it reads as
+    ABSENT rather than as a value — otherwise `| — |` would satisfy a presence check. A bare `n/a`
+    is deliberately NOT stripped here: it flows into _wiring_claim so the author gets the one
+    instructive message ("name the kind") from a single classifier, rather than two different
+    verdicts for the same intent depending on which artifact carried the cell.
+    """
+    if not header:
+        return ""
+    v = (row.get(header, "") or "").strip().strip("`").strip()
+    return "" if v in ("", "-", "—", "–") else v
+
+
 def _extract_matrix(matrix, epic_id, nodes, edges, add_node):
     text = read_text(matrix)
     for table in parse_tables(text):
@@ -512,6 +527,10 @@ def _extract_matrix(matrix, epic_id, nodes, edges, add_node):
         h_dec = find_header(headers, "dec")
         h_status = find_header(headers, "status")
         h_grain = find_header(headers, "grain")
+        # v10.1 (issue #96 finding 4) — OPTIONAL wiring columns. Header-keyed, so a matrix that
+        # predates them parses exactly as before and the gate below degrades to un-adopted.
+        h_entry = find_header(headers, "entry point", "entry_point", "entry-point")
+        h_witness = find_header(headers, "wiring witness", "wiring_witness", "wiring-witness")
         if not h_prm:
             continue
         for row in table["rows"]:
@@ -524,7 +543,9 @@ def _extract_matrix(matrix, epic_id, nodes, edges, add_node):
             grain = (row.get(h_grain, "") or "").strip() if h_grain else ""
             add_node(Node(prm_id, "prm", epic_id, (row.get(h_src, "") or "").strip(),
                           matrix, pm.group(1), content_hash(json.dumps(row, sort_keys=True)),
-                          {"status": status, "grain": grain}))
+                          {"status": status, "grain": grain,
+                           "entry_point": _cell(row, h_entry),
+                           "wiring_witness": _cell(row, h_witness)}))
             # sources edge — the Source cell may name MM-N / JOB-N / FR-... / screen ids
             if h_src:
                 # `MM-\d+[a-z]?` here too, or a Source cell naming MM-5a matches the prefix `MM-5`
@@ -646,7 +667,11 @@ def _extract_story(spec, story_path, epic_id, story_qual, nodes, edges, add_node
     body = strip_noncontent(body)  # don't harvest MM/AC refs from fenced examples
     add_node(Node(story_qual, "story", epic_id, title, spec, "", content_hash(text),
                   {"readiness_state_verified": fm.get("readiness_state_verified", ""),
-                   "lifecycle_state": fm.get("lifecycle_state", "")}))
+                   "lifecycle_state": fm.get("lifecycle_state", ""),
+                   # v10.1 (issue #96 finding 4): the wiring claim for a story that serves a
+                   # promise DIRECTLY (no PRM row to carry the cells). Same two fields, same rules.
+                   "entry_point": (fm.get("entry_point", "") or "").strip().strip("`").strip(),
+                   "wiring_witness": (fm.get("wiring_witness", "") or "").strip().strip("`").strip()}))
     # AC-N nodes from §2b headings: "#### AC-1 — ...", incl. sub-lettered "#### AC-1a: ..."
     for m in re.finditer(r"^#{2,4}\s+(AC-\d+[a-z]?)\b\s*(?:[—\-:]\s*(.*))?$", body, re.MULTILINE):
         ac_id = "%s/%s" % (story_qual, m.group(1))
@@ -1105,6 +1130,272 @@ def cascade_blast(project_dir, dec):
     return sorted(set(hits))
 
 
+# ---------------------------------------------------------------------------
+# Reachability witness (v10.1, issue #96 finding 4) — the decidable slice #86 set aside.
+#
+# Conservation (PHANTOM_PROMISE) asks whether a promise has an OWNER. It never asks whether a user
+# gesture REACHES it, because every one of its legs is document-derived: `serves`, `sources`,
+# `discharges`. The scar it cannot see: an epic whose matrix was all-`mapped`, `Blocking = 0`,
+# `GRAPH_CAP = SHIP` — and whose central promise had never once fired for a real user, because
+# nothing in the app ever created the row the whole read side depended on. The gate's verdict did
+# not change when that epic went from non-functional to functional. That, not the defect, is why
+# this leg exists.
+#
+# #86 concluded fidelity is not statically decidable and asked only that the success string stop
+# over-reading. REACHABILITY is decidable, at one honest altitude below tests-as-join (P5): the
+# delivery claim must NAME a production entry point, and must CITE the `<path>:<line>` a
+# delete-the-call mutation reddened. Neither field proves the code is good — they prove the claim
+# resolves to something, which is #71's law applied one artifact up.
+#
+# THE BOUND THAT MAKES IT SAFE. Roughly a third of a real matrix promises something whose delivery
+# is NOT a call: a schema constraint, an RLS policy, a copy/legal promise, an absence promise
+# ("threads introduce no badge, ring, streak or confetti"). Those take `entry_point: n/a — <kind>`
+# and are accepted. An unbounded "every promise names a call site" rule would be wrong for all of
+# them and would push authors toward naming a fake site — worse than no gate. Note the polarity:
+# the authored list is the EXCEPTIONS (the n/a kinds), never the instances. Bare `n/a` does NOT
+# discharge; the kind has to be named, because that is the part a reader can disagree with.
+#
+# It CAPS, never blocks (`mapped-unwitnessed` is a ceiling, same polarity as GRAPH_CAP), and it is
+# adoption-gated: a project that carries no `entry_point` anywhere gets a non-capping P3 that names
+# the fixing edit, so no existing matrix becomes non-conformant on upgrade.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# The findings registry (v10.1, issue #100 §5) — ONE namespace, and it is this one.
+#
+# THE QUESTION #100 LEFT OPEN: which artifact owns the severity ranking that decides what the next
+# session works on? This module already mints every gate code and every severity suffix. A second,
+# project-level registry listing the same findings by hand would be a second namespace — and #87's
+# law says a correct judgment that reaches half its artifacts leaves the system LESS coherent than
+# before. The measured cost of the hand-kept version was 14 of 20 entries stale, one of them
+# advertising the project's highest open severity for eleven fires after it was closed, plus one
+# defect carrying three ids across two reports.
+#
+# THE RESOLUTION: the graph's namespace is AUTHORITATIVE and the project-level view is DERIVED.
+# `speck_graph.py findings` recomputes the whole ranked list from the same check_graph() call the
+# cap and the road come from, so the ranking is COMPUTED, never typed, and per-epic reports render
+# from it. A derived view cannot drift; aliasing cannot arise, because the id is the gate code plus
+# the node it fires on — the same defect found twice yields the same key by construction, so
+# convergence stays visible instead of minting `COM-02 = F-08 = E003-10`.
+#
+# WHAT STAYS AUTHORED, AND ITS POLARITY: only `findings-exceptions.md` — and it enumerates
+# EXCEPTIONS, never instances. A list of instances rots silently (nothing fires when an entry goes
+# stale); a list of exceptions FAILS LOUDLY when the world changes, because an exception whose
+# finding no longer fires is a phantom and says so. That is the same both-directions ratchet a
+# registry needs to avoid decaying into a list of standing permission slips.
+#
+# WHAT AN EXCEPTION MAY NOT DO: change the ceiling. Acceptance moves a finding in the WORK ORDER,
+# never in GRAPH_CAP — design invariant §6.4 is "caps, never raises", and an exception that lifted
+# a cap would be the one authored input able to grant readiness.
+# ---------------------------------------------------------------------------
+
+EXCEPTION_POSTURES = ("ACCEPTED", "SUPERSEDED")
+# There is nowhere to write "looks fine" — that is the phrase that turned the hand-kept registries
+# into decoration. An entry must name what is true, not what someone believes.
+EXCEPTION_BELIEF_WORDS = (
+    "looks fine", "looks ok", "looks okay", "seems fine", "seems ok", "seems okay",
+    "probably", "should be fine", "not a problem", "no issue", "fine for now", "wontfix", "n/a")
+EXCEPTION_MIN_WHY = 40
+RE_EXCEPTION_KEY = re.compile(r"^[A-Z][A-Z0-9_]+(?:\.P\d)?(?:@\S.*)?$")
+
+
+def _code_root(code):
+    return code.split(".")[0]
+
+
+def finding_key(code, subject=""):
+    """The one id a finding has: `<GATE_CODE>@<node>`, or the bare code for a project-wide cap.
+
+    Minted from the compile, never typed — which is what makes a cross-epic re-find an identical
+    key instead of a third alias.
+    """
+    root = _code_root(code)
+    return "%s@%s" % (root, subject) if subject else root
+
+
+def read_findings_exceptions(project_dir):
+    """Parse the authored exceptions registry → [{key, posture, why}]. Absent file → []."""
+    path = os.path.join(project_dir, "findings-exceptions.md")
+    if not os.path.isfile(path):
+        return []
+    out = []
+    for table in parse_tables(read_text(path)):
+        headers = table["headers"]
+        h_key = find_header(headers, "finding")
+        h_posture = find_header(headers, "posture", "state")
+        h_why = find_header(headers, "why", "reason")
+        if not h_key:
+            continue
+        for row in table["rows"]:
+            key = (row.get(h_key, "") or "").strip().strip("`").strip()
+            if not RE_EXCEPTION_KEY.match(key):
+                continue  # template placeholder / prose row — not an entry
+            out.append({"key": key,
+                        "posture": (row.get(h_posture, "") or "").strip().strip("`").strip().upper(),
+                        "why": (row.get(h_why, "") or "").strip()})
+    return out
+
+
+def apply_exceptions(findings, caps, exceptions):
+    """Match authored exceptions against the LIVE finding set; annotate matches, report the rest.
+
+    Returns (invalid, accepted_keys): [(code, message)] for every entry that does not hold, and the
+    set of finding keys an entry legitimately covers. Annotates each matched FINDING dict with
+    `accepted` (caps are strings and carry no slot, hence the key set). It never touches severity:
+    see the polarity note above.
+    """
+    live = {}
+    for f in findings:
+        for key in (finding_key(f["code"], f.get("ref", "")), finding_key(f["code"])):
+            live.setdefault(key, []).append(f)
+    for c in caps:
+        live.setdefault(finding_key(c.split(":", 1)[0].strip()), []).append(None)
+
+    invalid = []
+    accepted_keys = set()
+    for ex in exceptions:
+        key = finding_key(ex["key"].split("@", 1)[0],
+                          ex["key"].split("@", 1)[1] if "@" in ex["key"] else "")
+        why = ex["why"]
+        low = why.lower()
+        if _code_root(ex["key"].split("@", 1)[0]).startswith("EXCEPTION_"):
+            invalid.append(("EXCEPTION_UNJUSTIFIED.P2",
+                            "`%s` excepts the exception gate itself — a registry that can silence "
+                            "its own ratchet is not a ratchet. Delete the row." % ex["key"]))
+            continue
+        if ex["posture"] not in EXCEPTION_POSTURES:
+            invalid.append(("EXCEPTION_UNJUSTIFIED.P2",
+                            "`%s` declares posture '%s'; there are exactly two an entry can take — "
+                            "ACCEPTED (known, declined, with the reason) or SUPERSEDED (a DEC "
+                            "retired it; collapsing that into 'fixed' loses the reason)."
+                            % (ex["key"], ex["posture"] or "<blank>")))
+            continue
+        if len(why) < EXCEPTION_MIN_WHY or any(w in low for w in EXCEPTION_BELIEF_WORDS):
+            invalid.append(("EXCEPTION_UNJUSTIFIED.P2",
+                            "`%s` says nothing an outsider can check — name the caller, the surface, "
+                            "or what the current behaviour costs (>=%d chars, no belief words). "
+                            "Got: '%s'" % (ex["key"], EXCEPTION_MIN_WHY, why[:60])))
+            continue
+        if key not in live:
+            invalid.append(("EXCEPTION_PHANTOM.P2",
+                            "`%s` excepts a finding that NO LONGER FIRES — good news, it was fixed "
+                            "or moved. Delete the row, so the registry keeps describing what "
+                            "actually ships rather than becoming a standing permission slip."
+                            % ex["key"]))
+            continue
+        accepted_keys.add(key)
+        for f in live[key]:
+            if f is not None:
+                f["accepted"] = "%s — %s" % (ex["posture"], why)
+    return invalid, accepted_keys
+
+
+RE_ENTRY_POINT = re.compile(r"^[^\s:]+\.[A-Za-z0-9]+:[A-Za-z_][A-Za-z0-9_.]*$")
+RE_ENTRY_NA = re.compile(r"^n/?a\s*[—–-]\s*(\S.*)$", re.IGNORECASE)
+RE_WITNESS_SITE = re.compile(r"[A-Za-z0-9_@./-]+\.[A-Za-z0-9]+:\d+")
+
+
+def _wiring_claim(node):
+    """Classify one delivery claimant's wiring cells → (state, detail).
+
+    states: `n/a` (bounded escape, accepted) · `sited` (detail is the mutation site) ·
+            `absent` · `malformed` · `unproven`.
+    """
+    ep = (node.attrs.get("entry_point") or "").strip()
+    wit = (node.attrs.get("wiring_witness") or "").strip()
+    if not ep:
+        return "absent", "carries no `entry_point`"
+    na = RE_ENTRY_NA.match(ep)
+    if na:
+        return "n/a", "delivery is not a call — %s" % na.group(1).strip()
+    if not RE_ENTRY_POINT.match(ep):
+        return "malformed", ("`entry_point: %s` is neither `<path>:<symbol>` nor the bounded escape "
+                             "`n/a — <kind>` (schema constraint / RLS policy / copy / absence "
+                             "promise). A bare `n/a` does not discharge: name the kind." % ep)
+    site = RE_WITNESS_SITE.search(wit)
+    if not site:
+        return "unproven", ("entry point `%s` names a call site, but no `wiring_witness` cites the "
+                            "`<path>:<line>` that a delete-the-call mutation reddened. A control "
+                            "that still passes with the call deleted is not a witness." % ep)
+    return "sited", site.group(0)
+
+
+def _witness_cited(site, story_node):
+    """True when the DELIVERING story's validation report records that mutation site.
+
+    The join is the load-bearing half. A cell in a matrix is one author's sentence; the same site
+    appearing in the story's own report is a claim two artifacts have to agree on — and it is
+    exactly the citation shape `mutate-guard.sh --verify-receipt` recomputes against the receipts
+    on disk. The graph proves the citation RESOLVES; whether the mutation ran stays with the guard.
+    """
+    if story_node is None:
+        return False
+    src = story_node.source_file or ""
+    story_dir = src if os.path.isdir(src) else os.path.dirname(src)
+    if not story_dir:
+        return False
+    report = os.path.join(story_dir, "validation-report.md")
+    if not os.path.isfile(report):
+        return False
+    return site in read_text(report)
+
+
+def _graph_signature(gr):
+    """Content signature of a compiled graph: nodes (incl. each content_hash) + edges.
+
+    Deliberately NOT `stamped SHA == HEAD`. Brightstance's committed witness sat 5 commits behind
+    HEAD and was byte-identical to a fresh compile, because those 5 commits touched no spec — a
+    SHA-equality rule would fire on every non-spec commit in every repo and teach `--no-verify`
+    within a day. The predicate has to be about CONTENT or it is about nothing.
+    """
+    return content_hash(json.dumps(
+        {"nodes": gr.get("nodes", []), "edges": gr.get("edges", [])}, sort_keys=True))
+
+
+# The freshness LEG, isolated so more than one consumer can run it (issue #96 finding 3).
+#
+# It was inlined in check_graph(), which is the one command no lifecycle hook calls — so `gate`,
+# described as "the SCOPED forcing primitive the lifecycle hooks call", could not observe staleness
+# at all. Isolating it costs one json.load + two hashes over a graph the caller already compiled,
+# which is why it is affordable on the pre-implement path.
+#
+# PURE READ. It never rebuilds and never writes: making the first pre-implement check a MUTATING
+# step would break read-only CI checkouts and every tree-clean assertion (the reason #96 finding 3
+# was deferred in v10). There is nothing to gate behind `SPECK_CI=1` because there is no write.
+FRESHNESS_DETAIL = {
+    "stale": "committed witness.json differs from a fresh compile — regenerate with "
+             "`speck_graph.py build` (never hand-edit it)",
+    "corrupt": "witness.json is unreadable/corrupt — the tamper-evidence artifact itself is "
+               "destroyed; regenerate with `speck_graph.py build`",
+    "unbuilt": "no committed witness.json — this project's graph has never been built; run "
+               "`speck_graph.py build` (not tampering, so it does not cap)",
+    "fresh": "committed witness.json matches a fresh compile",
+}
+
+
+def graph_freshness(project_dir, graph=None):
+    """Compare the committed witness.json against a FRESH compile.
+
+    Returns (state, detail); state ∈ {fresh, stale, corrupt, unbuilt}. `graph` is the fresh compile
+    when the caller already has one (gate/check both do) — otherwise it is compiled here.
+    """
+    if graph is None:
+        graph, _nodes, _edges = build_graph(project_dir)
+    on_disk = graph_path(project_dir)
+    if not os.path.isfile(on_disk):
+        return "unbuilt", FRESHNESS_DETAIL["unbuilt"]
+    try:
+        saved = json.load(open(on_disk, encoding="utf-8"))
+    except (ValueError, OSError):
+        return "corrupt", FRESHNESS_DETAIL["corrupt"]
+    # compare full CONTENT (nodes incl. their content_hash, + edges), not just ids/counts — a
+    # title/hash change or a repointed edge that keeps the id-set must still read STALE
+    # (design invariant §6.1: freshness is computed, never asserted).
+    if _graph_signature(graph) != _graph_signature(saved):
+        return "stale", FRESHNESS_DETAIL["stale"]
+    return "fresh", FRESHNESS_DETAIL["fresh"]
+
+
 def check_graph(project_dir):
     """Run every structural forcing gate. Returns (findings, caps, pending, cap_state)."""
     graph, nodes, edges = build_graph(project_dir)
@@ -1222,27 +1513,104 @@ def check_graph(project_dir):
     #     upgrader), and the engagement gate already blocks feature work there. Capping it too would
     #     drop every such project to INTEGRATION-GREEN on a patch bump and double-punish greenfield.
     #     So: an honest, DISTINCT, non-capping signal (GRAPH_UNBUILT.P3) — never a wall.
-    on_disk = graph_path(project_dir)
-    if os.path.isfile(on_disk):
-        try:
-            saved = json.load(open(on_disk, encoding="utf-8"))
-            # compare full CONTENT (nodes incl. their content_hash, + edges), not just ids/counts —
-            # a title/hash change or a repointed edge that keeps the id-set must still read STALE
-            # (design invariant §6.1: freshness is computed, never asserted).
-            def _sig(gr):
-                return content_hash(json.dumps(
-                    {"nodes": gr.get("nodes", []), "edges": gr.get("edges", [])}, sort_keys=True))
-            if _sig(graph) != _sig(saved):
-                caps.append("GRAPH_STALE.P2: committed witness.json differs from a fresh compile — "
-                            "regenerate with `speck_graph.py build` (never hand-edit it)")
-                cap_state = _min_readiness(cap_state, "integration-green")
-        except (ValueError, OSError):
-            caps.append("GRAPH_STALE.P2: witness.json is unreadable/corrupt — the tamper-evidence "
-                        "artifact itself is destroyed; regenerate with `speck_graph.py build`")
-            cap_state = _min_readiness(cap_state, "integration-green")
-    else:
-        caps.append("GRAPH_UNBUILT.P3: no committed witness.json — this project's graph has never "
-                    "been built; run `speck_graph.py build` (not tampering, so it does not cap)")
+    # MAPPED_UNWITNESSED — a promise can have an owner and still never be reached. See the header
+    # note above _wiring_claim for why this is decidable where fidelity is not, and what bounds it.
+    prm_story = {}          # prm id -> the story node it discharges to (first resolvable)
+    for e in edges:
+        if e.kind == "discharges" and e.dst:
+            sp = e.dst.rsplit("/", 1)[0] if re.search(r"/AC-\d+[a-z]?$", e.dst) else e.dst
+            if sp in nodes and nodes[sp].kind == "story" and e.src not in prm_story:
+                prm_story[e.src] = nodes[sp]
+    claimants = {}          # promise id -> [(claimant node, delivering story node or None)]
+    for e in edges:
+        if e.kind == "serves" and e.dst and e.src in nodes:
+            claimants.setdefault(e.dst, []).append((nodes[e.src], nodes[e.src]))
+        elif e.kind == "sources" and e.dst and e.src in prms_really_discharged and e.src in nodes:
+            claimants.setdefault(e.dst, []).append((nodes[e.src], prm_story.get(e.src)))
+    # ADOPTION IS SCOPED TO THE EPIC, never to the project (v10.1 audit).
+    #
+    # `wiring_adopted` was `any(entry_point for n in nodes.values())` — one flag over the WHOLE
+    # project. So the first single `Entry Point` cell a team filled anywhere flipped the gate on for
+    # every delivered promise at once, and a project sitting at SHIP-RC dropped to
+    # INTEGRATION-GREEN the moment it started adopting. Upgrade day was safe; the FIRST HONEST STEP
+    # was the expensive one. A gate whose entire cost lands on the first honest step is a gate
+    # people route around — the same failure direction as a rule that teaches you to delete the
+    # comment to get green.
+    #
+    # The epic is the unit because it is already the unit: `gate` scopes its block-vs-guide split
+    # exactly here ("rot in an ADOPTED scope BLOCKS; the identical absence in an un-adopted scope
+    # GUIDES"), and an epic is the grain a team actually opts in with. Per-claimant adoption was
+    # rejected: it would make an EMPTY cell permanently free and a half-filled one the only thing
+    # that ever caps, so filling a cell could only ever hurt you — the same perverse polarity,
+    # inverted. A threshold-of-N was rejected as a tunable that decays to N = ∞.
+    #
+    # Consequence, and it is the point: adopting one row in epic A judges epic A and leaves epic B
+    # untouched. Both signals can fire in the same run — a P2 cap for the adopted epics and the
+    # non-capping P3 for the rest — so the incremental path is legible instead of a cliff.
+    def _adoption_scope(n):
+        return n.scope
+    adopted_scopes = set(_adoption_scope(n) for n in nodes.values()
+                         if n.kind in ("prm", "story")
+                         and (n.attrs.get("entry_point") or "").strip())
+    delivered_promises = [n for n in sorted(nodes.values(), key=lambda x: x.id)
+                          if n.kind in ("magic-moment", "job") and n.id in delivered]
+    unwitnessed = []
+    unevaluated = []
+    for n in delivered_promises:
+        promise_claimants = sorted(claimants.get(n.id, []), key=lambda t: t[0].id)
+        # A promise is judged only where somebody adopted. With no adopted scope at all, or with
+        # every one of this promise's claimants living in un-adopted scopes, reachability is simply
+        # NOT EVALUATED — and says so, rather than reporting a false "reachable" or a false cap.
+        judged = [(c, s) for (c, s) in promise_claimants
+                  if _adoption_scope(c) in adopted_scopes]
+        if not adopted_scopes or (promise_claimants and not judged):
+            unevaluated.append(n.id)
+            continue
+        ok = False
+        reasons = []
+        for claimant, story in judged:
+            state, detail = _wiring_claim(claimant)
+            if state == "n/a":
+                ok = True
+                break
+            if state == "sited":
+                if _witness_cited(detail, story):
+                    ok = True
+                    break
+                reasons.append("%s cites mutation site %s, but %s's validation-report.md records "
+                               "no such site" % (claimant.id, detail,
+                                                 story.id if story else "the delivering story"))
+            else:
+                reasons.append("%s %s" % (claimant.id, detail))
+        if not ok:
+            unwitnessed.append("%s (%s)" % (n.id, reasons[0] if reasons
+                                            else "no delivery claimant carries an `entry_point`"))
+    if unevaluated:
+        caps.append("GRAPH_UNMIGRATED.P3: reachability is NOT evaluated for %d delivered promise(s) "
+                    "(%s%s) — no `entry_point` in any epic that claims them yet, so a promise can "
+                    "have an OWNER here and still never be reached by a user gesture. Adoption is "
+                    "per-EPIC: turn it on for one epic at a time by adding `Entry Point` + `Wiring "
+                    "Witness` columns to that epic's traceability matrix, or `entry_point:` / "
+                    "`wiring_witness:` to a serving story's frontmatter (`entry_point: n/a — "
+                    "<kind>` for a promise whose delivery is not a call). Adopting one epic leaves "
+                    "its siblings on this line (does not cap)"
+                    % (len(unevaluated), ", ".join(unevaluated[:5]),
+                       ", …" if len(unevaluated) > 5 else ""))
+    if unwitnessed:
+        caps.append("MAPPED_UNWITNESSED.P2: %d/%d delivered promise(s) in ADOPTED epic(s) are "
+                    "mapped but NOT witnessed — %s%s. An owner is not a reachable call; bars ux-rc+ "
+                    "until each names its production entry point and cites the delete-the-call "
+                    "mutation."
+                    % (len(unwitnessed), len(delivered_promises) - len(unevaluated),
+                       "; ".join(unwitnessed[:3]), ", …" if len(unwitnessed) > 3 else ""))
+        cap_state = _min_readiness(cap_state, "integration-green")
+
+    fresh_state, fresh_detail = graph_freshness(project_dir, graph)
+    if fresh_state in ("stale", "corrupt"):
+        caps.append("GRAPH_STALE.P2: %s" % fresh_detail)
+        cap_state = _min_readiness(cap_state, "integration-green")
+    elif fresh_state == "unbuilt":
+        caps.append("GRAPH_UNBUILT.P3: %s" % fresh_detail)
 
     # UNMAPPED_PROMISE — conservation anti-join (the graph form of validate-traceability-matrix.sh's
     # DEFAULT-mode open-row check): once an epic has an epic-breakdown.md, every PRM must RESOLVE —
@@ -1330,6 +1698,13 @@ def check_graph(project_dir):
         "ORPHAN_CODE: pending tests-as-join (P5) — needs code nodes to prove every code entity "
         "traces to a promise. NOT evaluated (cannot claim 'no orphan code' yet).",
     ]
+
+    # The exceptions registry, matched LAST so it sees every live finding and cap this run minted.
+    invalid_exceptions, _accepted = apply_exceptions(
+        findings, caps, read_findings_exceptions(project_dir))
+    for code, message in invalid_exceptions:
+        caps.append("%s: %s" % (code, message))
+        cap_state = _min_readiness(cap_state, "integration-green")
 
     hard = [f for f in findings if f["code"].endswith(".P1")]
     if hard:
@@ -1435,6 +1810,27 @@ def gate_graph(project_dir, story=None, epic=None):
     if unmigrated:
         notes.append("un-adopted id schemes present (%s) — guidance only, not a block"
                      % ", ".join("%d %s" % (v, k) for k, v in sorted(unmigrated.items())))
+
+    # FRESHNESS (issue #96 finding 3) — the lifecycle hooks' first chance to see a stale graph.
+    #
+    # Reported, never blocking. A blocking freshness gate on every /story-implement would fire on
+    # a graph that is stale for a reason nobody in this story caused, and would teach `--no-verify`
+    # inside a day — the same failure the SHA-equality rule was rejected for. Guide-rail, not wall:
+    # the note names the one command that fixes it, and the FRESH line is printed too so a green
+    # gate is legible as "the leg ran" rather than as "the leg is missing" (a silent pass and an
+    # unrun check read identically, which is how this leg went unnoticed for a whole major version).
+    #
+    # Read-only by construction: it compares a signature, it does not rebuild. `gate` writes nothing
+    # to the tree, so a read-only CI checkout and any tree-clean assertion survive it untouched.
+    fresh_state, fresh_detail = graph_freshness(project_dir, graph)
+    if fresh_state == "fresh":
+        notes.append("GRAPH_FRESH: %s (freshness computed, not asserted)" % fresh_detail)
+    elif fresh_state == "unbuilt":
+        notes.append("GRAPH_UNBUILT: %s" % fresh_detail)
+    else:
+        notes.append("GRAPH_STALE: %s. This gate REPORTS staleness and never blocks on it, and it "
+                     "writes nothing — but every cap and count you read out of the committed graph "
+                     "until you rebuild is a report about a different tree." % fresh_detail)
     return blocking, notes
 
 
@@ -1615,6 +2011,9 @@ ROAD_ROUTING = {
     "UNCLAIMED_MM_REF": ("TIDY", "if the story delivers it, add `serves: [MM-N]` to its frontmatter — else ignore"),
     "HETEROGENEOUS_ID": ("TIDY", "give the §5 heading an `MM-N —` id (`MM-5a` is accepted)"),
     "ORPHAN_CODE": ("REMOVE", "remove the code no promise asked for (or wire it) — pending tests-as-join P5"),
+    "MAPPED_UNWITNESSED": ("PROVE", "name the production `entry_point` and cite the `<path>:<line>` a delete-the-call mutation reddened"),
+    "EXCEPTION_PHANTOM": ("TIDY", "delete the row from findings-exceptions.md — the finding it excepts no longer fires"),
+    "EXCEPTION_UNJUSTIFIED": ("TIDY", "give the row a posture (ACCEPTED|SUPERSEDED) and a reason an outsider can check"),
     "UNJUDGED_SURFACE": ("PROVE", "/larp connoisseur Job B — judge this surface (pending verdict extraction)"),
     "UNPARSED_VERDICT": ("PROVE", "record it as `- **VERDICT** MM-N = GOOD|BAD` in the validation report"),
     "PRE_V9_PROOF": ("PROVE", "/speck-reprove — re-earn the claim under v9 evidence"),
@@ -1628,10 +2027,6 @@ BUCKET_BLURB = {
     "BUILD": "make the thing the contract promised — weakest-grain / topological first",
     "PROVE": "climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest",
 }
-
-
-def _code_root(code):
-    return code.split(".")[0]
 
 
 def road_lines(project_dir):
@@ -1711,16 +2106,129 @@ def render_road(project_dir):
     return "\n".join(out)
 
 
-def cmd_road(project_dir, write=True):
-    text = render_road(project_dir)
-    if write:
-        out = os.path.join(project_dir, "graph", "road-to-completion.md")
+def _write_derived(project_dir, filename, text, command):
+    """Write a DERIVED view under graph/, degrading to a named error on an unwritable tree.
+
+    The derived surfaces must survive a read-only checkout (`chmod a-w`, a CI checkout mounted
+    read-only, a `git worktree` on a read-only volume). They are not on a hook path and every one
+    of them has a `--stdout` mode, so an unwritable tree is DEGRADATION, not incorrectness — and
+    degradation gets a message, exactly as `graph_freshness` degrades an unreadable witness.json to
+    "corrupt" instead of letting the OSError out. A raw Python stack trace is not a message: it
+    names no fix, and the fix here (`--stdout`) already exists one flag away.
+
+    Returns the exit code: 0 on success, 1 with the named error on OSError.
+    """
+    out = os.path.join(project_dir, "graph", filename)
+    try:
         os.makedirs(os.path.dirname(out), exist_ok=True)
         with open(out, "w", encoding="utf-8") as fh:
             fh.write(text)
-        sys.stderr.write("✅ Wrote %s\n" % out)
-    else:
-        sys.stdout.write(text)
+    except OSError as exc:
+        sys.stderr.write(
+            "⛔ GRAPH_UNWRITABLE: cannot write %s (%s). This tree is read-only, so the derived "
+            "view could not be refreshed — the view itself is fine and was computed. Re-run with "
+            "`--stdout` to read it without writing: `speck_graph.py %s <PROJECT_DIR> --stdout`\n"
+            % (out, exc.strerror or exc, command))
+        return 1
+    sys.stderr.write("✅ Wrote %s\n" % out)
+    return 0
+
+
+def cmd_road(project_dir, write=True):
+    text = render_road(project_dir)
+    if write:
+        return _write_derived(project_dir, "road-to-completion.md", text, "road")
+    sys.stdout.write(text)
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# findings — the project-level view, DERIVED. See the registry note above apply_exceptions.
+# ---------------------------------------------------------------------------
+
+SEVERITY_RANK = {"P1": 0, "P2": 1, "P3": 2}
+
+
+def _severity_of(code):
+    tail = code.rsplit(".", 1)[-1]
+    return tail if tail in SEVERITY_RANK else "P3"
+
+
+def findings_rows(project_dir):
+    """Every live finding + cap as one ranked list of rows. Ranking is COMPUTED, never typed."""
+    findings, caps, pending, cap_state = check_graph(project_dir)
+    exceptions = read_findings_exceptions(project_dir)
+    # annotate for display (idempotent — check_graph already ran the same match to mint its caps)
+    _invalid, accepted_keys = apply_exceptions(findings, caps, exceptions)
+    rows = []
+    for f in findings:
+        rows.append({"key": finding_key(f["code"], f.get("ref", "")), "code": f["code"],
+                     "severity": _severity_of(f["code"]), "subject": f.get("ref", "") or "—",
+                     "where": f.get("source_file", "") or "—",
+                     "state": "ACCEPTED" if f.get("accepted") else "OPEN",
+                     "note": f.get("accepted") or f.get("detail", "")})
+    for c in caps:
+        code = c.split(":", 1)[0].strip()
+        key = finding_key(code)
+        rows.append({"key": key, "code": code, "severity": _severity_of(code),
+                     "subject": "—", "where": "—",
+                     "state": "ACCEPTED" if key in accepted_keys else "OPEN",
+                     "note": c.split(":", 1)[1].strip() if ":" in c else c})
+    for p in pending:
+        code = p.split(":", 1)[0].strip()
+        rows.append({"key": finding_key(code), "code": code, "severity": "P3", "subject": "—",
+                     "where": "—", "state": "NOT-EVALUATED",
+                     "note": p.split(":", 1)[1].strip() if ":" in p else p})
+    rows.sort(key=lambda r: (SEVERITY_RANK[r["severity"]], r["code"], r["subject"]))
+    return rows, cap_state, exceptions
+
+
+def render_findings(project_dir):
+    rows, cap_state, exceptions = findings_rows(project_dir)
+    root = _repo_root(project_dir)
+    sha = git_head_sha(root) if root else ""
+    top = next((r for r in rows if r["state"] == "OPEN"), None)
+    out = []
+    out.append("<!-- DERIVED from the witness graph by `speck_graph.py findings` — NEVER hand-edit. -->")
+    out.append("<!-- The gate-code namespace in speck_graph.py is AUTHORITATIVE; this file is a -->")
+    out.append("<!-- projection of it. Per-epic audit reports render FROM this, so a close cannot -->")
+    out.append("<!-- be partial. The ONLY authored artifact is findings-exceptions.md, and it -->")
+    out.append("<!-- enumerates EXCEPTIONS, never instances. -->")
+    out.append("")
+    out.append("# Findings — %s" % project_id_of(project_dir))
+    out.append("")
+    out.append("**Highest open severity** = `%s`%s  "
+               % (top["severity"] if top else "none",
+                  (" (`%s`)" % top["key"]) if top else ""))
+    out.append("**Open** = %d · **accepted** = %d · **not-evaluated** = %d  "
+               % (sum(1 for r in rows if r["state"] == "OPEN"),
+                  sum(1 for r in rows if r["state"] == "ACCEPTED"),
+                  sum(1 for r in rows if r["state"] == "NOT-EVALUATED")))
+    out.append("**GRAPH_CAP** = `%s` — acceptance changes the work ORDER, never the ceiling."
+               % cap_state.upper())
+    out.append("")
+    out.append("| # | finding | severity | subject | where | state | note |")
+    out.append("|---|---------|----------|---------|-------|-------|------|")
+    for i, r in enumerate(rows, 1):
+        where = os.path.relpath(r["where"], project_dir) if r["where"] not in ("", "—") else "—"
+        out.append("| %d | `%s` | %s | `%s` | %s | %s | %s |"
+                   % (i, r["key"], r["severity"], r["subject"], where, r["state"],
+                      r["note"].replace("|", "\\|")[:220]))
+    out.append("")
+    out.append("_Exceptions registered: %d (authored in `findings-exceptions.md`). An exception "
+               "whose finding stops firing is a PHANTOM and caps until the row is deleted._"
+               % len(exceptions))
+    out.append("")
+    out.append("*[as of SHA `%s` | derived — regenerate, never hand-edit]*" % (sha or "pending"))
+    out.append("")
+    return "\n".join(out)
+
+
+def cmd_findings(project_dir, write=True):
+    text = render_findings(project_dir)
+    if write:
+        return _write_derived(project_dir, "findings.md", text, "findings")
+    sys.stdout.write(text)
     return 0
 
 
@@ -1986,6 +2494,20 @@ def cmd_build(project_dir, write=True):
         c = graph["counts"]
         sys.stderr.write("✅ Wrote %s (%d nodes, %d edges, completeness: %s)\n"
                          % (out, c["nodes"], c["edges"], graph["generator_completeness"]))
+        # The road is re-rendered in the SAME call, deliberately (issue #96 finding 2).
+        #
+        # `build` used to write witness.json and nothing else, while three skills and the AGENTS.md
+        # preamble all prescribe `build && check` — so an agent following Speck exactly left the
+        # most human-readable derived artifact stale. And a stale road CANNOT report its own
+        # staleness: it was rendered when the graph was fresh, so it contains no GRAPH_STALE line
+        # by construction. One repo's road sat 256 commits behind HEAD and 87 behind the
+        # witness.json it claims to derive from, opening in bold with `GRAPH_CAP = SHIP`,
+        # `Blocking = 0`. The two artifacts must not be separately committable.
+        #
+        # Order is load-bearing: witness.json is written FIRST, so the freshness leg inside
+        # render_road compares against the file this call just wrote and the road does not embed a
+        # GRAPH_STALE line describing the state one line above it.
+        cmd_road(project_dir, write=True)
     else:
         json.dump(graph, sys.stdout, indent=2)
         sys.stdout.write("\n")
@@ -2029,6 +2551,11 @@ Usage:
   speck_graph.py check     <PROJECT_DIR>              Forcing gates: dangling/dup BLOCK; phantom/stale CAP
   speck_graph.py gate      <PROJECT_DIR> [--story ID|--epic ID]   Scoped advance-gate (exit 1 = blocked)
   speck_graph.py road      <PROJECT_DIR> [--stdout]   The road to completion: TIDY→REMOVE→BUILD→PROVE
+  speck_graph.py findings  <PROJECT_DIR> [--stdout]   The DERIVED project-level findings view, ranked
+                                                      across every epic. The gate-code namespace here
+                                                      is authoritative; the only authored artifact is
+                                                      findings-exceptions.md (exceptions, never
+                                                      instances).
   speck_graph.py gap       <PROJECT_DIR> [--emit-goal] [--target ship-rc|ship]   Drive surface for native /goal
   speck_graph.py cascade   <PROJECT_DIR> --dec DEC-NNNN    Blast radius: still-discharged promises a DEC descopes
 
@@ -2085,6 +2612,11 @@ def main(argv):
             sys.stderr.write("ERROR: road requires an existing PROJECT_DIR\n")
             return 2
         return cmd_road(project_dir, write="--stdout" not in args)
+    if cmd == "findings":
+        if not project_dir:
+            sys.stderr.write("ERROR: findings requires an existing PROJECT_DIR\n")
+            return 2
+        return cmd_findings(project_dir, write="--stdout" not in args)
     if cmd == "gap":
         if not project_dir:
             sys.stderr.write("ERROR: gap requires an existing PROJECT_DIR\n")

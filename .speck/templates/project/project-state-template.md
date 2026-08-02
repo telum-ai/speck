@@ -1,8 +1,16 @@
 ---
-speck_version: 8.0
 artifact_type: project-state
 auto_regenerated: true
 ---
+
+<!--
+NO `speck_version:` FRONTMATTER KEY, DELIBERATELY (issue #96 finding 3).
+It used to say `8.0` while the body said `7.0.0` — one document, two disagreeing answers to the
+same question, which is the exact defect this artifact is supposed to REPORT. `.speck/VERSION` is
+the authoritative one (detect-version.sh reads it; migrate.sh reconciles project.json to it). This
+file now carries the version in ONE place, the Speck Version field below, derived from that file.
+One source of truth per fact: update the higher layer and let the lower one re-derive.
+-->
 
 # Project State
 
@@ -29,9 +37,54 @@ Three-minute read budget. If this doc exceeds 200 lines, compress.
 **Project ID**: `[PROJECT_ID]`
 **Project Archetype**: [consumer_product | b2b_saas | internal_tool | infra_service | backend_api]
 **Play Level**: [sprint | build | platform]
-**Speck Version**: 7.0.0
+**Speck Version**: [contents of .speck/VERSION — the authoritative one; never typed from memory]
 **Generated**: [YYYY-MM-DD HH:MM]
 **Generated From SHA**: [git rev-parse --short HEAD]
+
+*One SHA stamp per document. This field and the footer stamp must be the SAME short SHA — a project-state carrying two disagreeing stamps has been half-regenerated, and every claim below it is of unknown vintage.*
+
+---
+
+## 🧭 How to read this document (gap-source ORDER)
+
+<!--
+Issue #96 finding 2, doctrine half. The ORDER is the content: an agent that opens the derived road
+first reads a confident answer computed against a tree that no longer exists.
+-->
+
+When you are looking for what to do next, read the sources **in this order**:
+
+1. **This file** — Contradictions, then Blocking Issues, then Next Action.
+2. **The pickup / handoff note**, if one exists.
+3. **Real open defects** — harden reports, audit findings, punch lists.
+4. **Only then** the derived road (`graph/road-to-completion.md`) and the derived findings view (`graph/findings.md`), and only as a **completeness cross-check** on 1–3.
+
+Two rules that follow from that order, and both have cost a session:
+
+- **A road that has not been recompiled since the work was specified will report the work as done.** Rebuild before you quote it: `speck_graph.py build <PROJECT_DIR> && speck_graph.py check <PROJECT_DIR>`.
+- **A clear road never means "nothing to do."** It means the promise ledger is filled. A cap can go NO-SHIP → SHIP without a line of product being built, because a plan correction gave every promise an owner. Graph bookkeeping is not product motion.
+
+---
+
+## ⚡ Contradictions (things that are true at the same time and shouldn't be)
+
+<!--
+Issue #96 finding 4, doctrine half: contradictions come BEFORE the cap, not after it.
+The one project that put this first is the only one where the next agent met the truth:
+
+  "E008 IS A CLOSED CIRCUIT, and the graph cannot see it. GRAPH_CAP = SHIP, Blocking = 0, road
+   says 'clear to advance' — and the epic's central promise has never once fired for a real user.
+   Both statements are true at the same time, which is the whole lesson: the graph proves
+   traceable · complete · fresh, never it works."
+
+A reader who meets the cap first has already formed a verdict by the time they reach the caveat.
+-->
+
+| What the gates say | What is actually true | Evidence |
+|--------------------|-----------------------|----------|
+| [what a gate, cap or report currently claims] | [the fact that contradicts it] | [path/to/file.md@abc1234] |
+
+If empty: "No known contradictions." — and that sentence is a claim like any other; it is only worth writing if someone looked.
 
 ---
 
@@ -45,15 +98,30 @@ Three-minute read budget. If this doc exceeds 200 lines, compress.
 
 ## 🎚️ Readiness State Map
 
-| Level | Item | Claimed State | Last Verified | Stale? |
-|-------|------|---------------|---------------|--------|
-| Project | [project-id] | [NO-SHIP/IMPL-GREEN/UX-RC/COMMERCIAL-RC/SHIP-RC/SHIP] | [date] | [yes/no] |
-| Epic | E001-[name] | [state] | [date] | [yes/no] |
-| Epic | E002-[name] | [state] | [date] | [yes/no] |
-| Story | E001/S001 | [state] | [date] | [yes/no] |
-| ... | ... | ... | ... | ... |
+| Level | Item | Claimed State | Proof | Last Verified | Stale? |
+|-------|------|---------------|-------|---------------|--------|
+| Project | [project-id] | [NO-SHIP/IMPL-GREEN/UX-RC/COMMERCIAL-RC/SHIP-RC/SHIP] | [path/to/project-validation-report.md@abc1234] | [date] | [yes/no] |
+| Epic | E001-[name] | [state] | [path/to/epic-validation-report.md@abc1234] | [date] | [yes/no] |
+| Epic | E002-[name] | [state] | [path/to/epic-validation-report.md@abc1234] | [date] | [yes/no] |
+| Story | E001/S001 | [state] | [path/to/validation-report.md@abc1234] | [date] | [yes/no] |
+| ... | ... | ... | ... | ... | ... |
 
 *Stale = >2 weeks since `verified-against-runtime` stamp OR HEAD has moved since stamp was applied.*
+
+**Every verdict word in this document cites a `proof: <path>@<sha>` that resolves.** A state, a
+cap, an `audited`, a `judged`, a `validated` — each one is a claim about an artifact, so it names
+the artifact and the SHA it was true at. This is the same law the traceability matrix already
+lives under, applied one artifact up.
+
+<!--
+Issue #96 finding 3. Two consecutive project-states carried a false magic-moment verdict claim and
+NOTHING could detect it, because the claim resolved to nothing. From the commit that finally caught
+it: "a claim repeated across pickups is not evidence." A verdict with no resolvable proof is not a
+weaker claim than one with proof — it is an unfalsifiable one, which is worse, because it survives
+every rewrite. If a row has no proof yet, write `none yet` in the Proof cell; an empty cell reads
+as "someone checked" and nobody did.
+-->
+
 
 ---
 
@@ -138,6 +206,23 @@ If empty: "No outstanding REPLACE_BEFORE_SHIP markers."
 | `PRD.md` | aaa9999 | def5678 | 2026-03-15 | ⚠️ Stale verification |
 
 If all green: "All truth artifacts are fresh."
+
+**Version + graph parity (assert, don't assume):**
+
+| Check | Expected | Actual | Status |
+|-------|----------|--------|--------|
+| `.speck/VERSION` == `.speck/project.json` → `speck_version` | equal | [both values] | [✅ / ⚠️ drift] |
+| `graph/witness.json` == a fresh compile | equal | [output of `speck_graph.py check`] | [✅ fresh / ⚠️ GRAPH_STALE] |
+| `graph/road-to-completion.md` rebuilt since `witness.json` | yes | [both stamps] | [✅ / ⚠️ road older than witness] |
+
+<!--
+Each row is a pair that has been observed disagreeing in a shipped repo — one project ran v9.5.0 in
+.speck/VERSION and 9.4.0 in project.json, another's road was 87 commits behind the witness.json it
+claims to derive from. The freshness check is CONTENT, never `stamped SHA == HEAD`: a witness five
+commits behind HEAD whose compile is byte-identical is FRESH, and a rule that fired on it would
+teach `--no-verify` inside a day.
+-->
+
 
 ---
 

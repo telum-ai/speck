@@ -103,7 +103,7 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | GATE_WIRING_DRIFT.P1 | CI_TRUNK_EXCLUDED.P1 | SCRIPT_UNREFERENCED.P1 | GATE_WAIVER_UNBACKED.P2 | GATE_DISARMED.P1 | GATE_LIVENESS_UNVERIFIED.P2 | GUARD_MUTATION_PROVEN | GUARD_MUTATION_GREEN.P2 | GUARD_UNMUTATED.P2 | V8_REPROVE.P1
+- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | GATE_WIRING_DRIFT.P1 | CI_TRUNK_EXCLUDED.P1 | SCRIPT_UNREFERENCED.P1 | GATE_WAIVER_UNBACKED.P2 | GATE_DISARMED.P1 | GATE_LIVENESS_UNVERIFIED.P2 | GUARD_MUTATION_PROVEN | GUARD_MUTATION_GREEN.P2 | GUARD_UNMUTATED.P2 | OBSERVATION_EXPOSED | OBSERVATION_UNEXPOSED.P2 | OBSERVATION_UNEXPOSED_BLOCKING.P1 | OBSERVATION_NOT_GREEN.P1 | OBSERVATION_UNMEASURED.P2 | V8_REPROVE.P1
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix
@@ -127,6 +127,44 @@ mutation claim that lives only in prose is invisible to it.
 
 A validation report or harden report whose cited guard carries no `GUARD_*` verdict at all is the
 same class one level up — the claim exists and the measurement does not.
+
+**Observation codes (`OBSERVATION_*`) — the counterpart set, for evidence that is WATCHED rather
+than RUN.** Emitted by `.speck/scripts/validation/observe-guard.sh` as
+`SPECK_OBSERVATION_VERDICT=<code>`. The `GUARD_*` codes above install mutation-as-evidence for
+**tests**; these do the same work for **observations** — a grep of a log, a CI verdict, a
+dashboard, a quiet inbox, a count that did not move. They are load-bearing in the same way: they
+get written into findings, they close fires, they justify REFUTED.
+
+The mechanism they exist to break: **a green reports its verdict and never its exposure** —
+whether the occasion it ran on contained the failing case at all. A hard-won pass and a pass that
+*could not have failed* are byte-identical in the artifact, so confidence accumulates on **run
+count** rather than on **chances to fail**. Note this is NOT the shadowed / vacuous / forgeable
+class: the check was correct, executed, and truthful about itself. What was missing was the
+occasion. Re-run against a real failing case to tell them apart — RED means the guard is broken
+(that is the other class); GREEN means nothing is broken and this run had nothing to catch.
+
+- `OBSERVATION_EXPOSED` — not a finding. The instrument was shown able to display the thing, and
+  the occasion ran under the **shipped** invocation (flags and env diffed against the `Dockerfile`
+  CMD / `Procfile` / deploy command). Carry it as the evidence.
+- `OBSERVATION_UNEXPOSED.P2` — exposure was not established, and this green licenses only
+  **waiting**. Honest and non-blocking by design: an unexposed run is harmless here and buying
+  exposure would be waste. Same degrade-to-honest ethos as `GUARD_MUTATION_GREEN.P2`.
+- `OBSERVATION_UNEXPOSED_BLOCKING.P1` — exposure was not established and this green licenses
+  something **accumulating or irreversible**: closing a fire, exiting a shadow period, re-stamping
+  a readiness state, writing REFUTED on a live credential. **The run does not count toward it.**
+  Either buy exposure or stop citing the observation as the thing that closes it.
+- `OBSERVATION_NOT_GREEN.P1` — the observation did not hold. The needle was present where absence
+  was asserted, or the result never arrived where presence was asserted (**a gate you never saw is
+  not a gate that passed** — a `cancelled` CI run is a missing result, not a pass). This is a real
+  finding, not an exposure problem.
+- `OBSERVATION_UNMEASURED.P2` — nothing was measured; a destructive invocation was refused.
+
+**The bounds, so this stays proportionate.** Some subjects have **no lever** — a guard reconciling
+inbound mail cannot make mail arrive. Its correct move is not to manufacture but to refuse to let
+an unexposed run count (`--no-lever`), because *two static passes in a row prove only that neither
+number moved* (`SPECK_OBSERVATION_STATIC=true` reports exactly that). And **exposure is bought,
+not free** — buy it where the green authorises something that cannot be walked back, not
+everywhere; `--accept-divergence` records the purchase instead of hiding it.
 
 ### 5. Update project-state.md
 
@@ -156,7 +194,15 @@ If only P1-P3:
 - Add follow-up stories to the active epic's backlog
 
 If no drift:
-- Re-stamp all checked truth artifacts with fresh `verified` date
+- **First ask what the green licenses.** Re-stamping every truth artifact with a fresh `verified`
+  date is not *waiting* — it is an **accumulating** act, and it is the single place in this skill
+  where confidence is written down on the strength of things not having happened. So before
+  re-stamping, for every finding that rests on an OBSERVATION rather than on a test — a quiet log,
+  a green CI verdict, a count that did not move, a `staleness-check.sh` that reported nothing —
+  run `.speck/scripts/validation/observe-guard.sh --licenses accumulating` over it and transcribe
+  the verdict. `OBSERVATION_UNEXPOSED_BLOCKING.P1` means that observation does not count toward
+  the re-stamp; re-stamp the artifacts it does not carry and say why the rest were held.
+- Otherwise re-stamp all checked truth artifacts with fresh `verified` date
 - Proceed normally
 
 ### 7. Write the recheck report
@@ -176,6 +222,8 @@ Report summary fields per claude skill.
 - NEVER skip persona LARP cold-start
 - NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh` AND `asset-drift-check.sh` (when UI/brand assets exist) AND `settings-drift-check.sh` (when `.claude/settings.json` exists) AND `validate-schema-drift.sh` (when DB-backed) AND `compute-cascade.sh --strict` (if superseded DECs exist) AND `compute-eval-signals.sh --strict` AND `market-staleness-check.sh` AND `market-reconcile-check.sh` (when `product-contract.md` exists)
 - NEVER mark a truth artifact "fresh" while it still contains `REPLACE_BEFORE_SHIP:` or `[NEEDS USER REVIEW]` tokens
+- NEVER let an OBSERVATION close a P0 or re-stamp a truth artifact without answering what its green licenses. A green that closes a fire or refreshes a `verified` date is accumulating or irreversible, so it needs `OBSERVATION_EXPOSED`; a green that licenses only *waiting* needs nothing, and `OBSERVATION_UNEXPOSED.P2` is the correct, non-blocking record for it. **Two static passes in a row prove only that neither number moved** — a repeat drift-check with byte-identical output is not a second datapoint
+- NEVER treat a `cancelled`, skipped, or never-triggered CI run as a pass. A gate you never saw is not a gate that passed — that is `OBSERVATION_NOT_GREEN.P1`, and it is a finding
 - ALWAYS write a dated report (even if green)
 - ALWAYS re-stamp truth artifacts on green (with fresh `verified` date)
 - ALWAYS update `project-state.md` regardless of verdict (including the new "Sections Awaiting User Review" and "Outstanding REPLACE_BEFORE_SHIP markers" appendices)

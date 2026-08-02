@@ -1162,6 +1162,496 @@ else
   bad "lift duplicated the frontmatter key" "$(sed -n '1,8p' "$LS/epics/001-e/stories/S004-real/spec.md")"
 fi
 
+# ── Tests 50-51: the freshness LEG reaches the lifecycle hooks (issue #96 finding 3).
+#
+# `check` computed freshness correctly for a whole major version and `gate` — the primitive the
+# hooks actually call — never ran it, so NO lifecycle hook could observe a stale graph. Three repos
+# were 142 / 169 / 256 commits behind at the time it was filed. The fix is the leg, not a rebuild:
+# `gate` must stay a pure read or the first pre-implement check becomes a mutating step and breaks
+# read-only checkouts and every tree-clean assertion.
+
+FRESH="$TMP/projects/002-fresh"
+mkdir -p "$FRESH/epics/001-f/stories/S001-a"
+cat > "$FRESH/product-contract.md" <<'EOF'
+# Product Contract: Fresh
+## 5. Magic Moments
+### MM-1 — Only wow
+EOF
+cat > "$FRESH/epics/001-f/stories/S001-a/spec.md" <<'EOF'
+---
+artifact_type: story-spec
+serves: [MM-1]
+---
+# Story: A
+#### AC-1 — Primary
+EOF
+
+echo "── Test 50: gate on a FRESH graph prints GRAPH_FRESH — a green gate is legible as 'the leg ran'"
+python3 "$GRAPH" build "$FRESH" >/dev/null 2>&1
+OUT="$(python3 "$GRAPH" gate "$FRESH" --story "001-f/S001" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && grep -q "GRAPH_FRESH" <<<"$OUT"; then
+  ok "gate publishes the freshness result on the clear path (a silent pass and an unrun leg differ)"
+else
+  bad "gate must report that the freshness leg ran, not merely stay quiet" "$OUT (rc=$RC)"
+fi
+
+echo "── Test 51: gate SEES a stale witness, reports it, does NOT block, and writes NOTHING"
+# Content change that keeps the id-set and the edge count — the predicate is a content signature,
+# never `stamped SHA == HEAD`: a witness 5 commits behind HEAD that compiles byte-identical is
+# FRESH, and a SHA rule would fire on every non-spec commit and teach `--no-verify` in a day.
+python3 - "$FRESH/graph/witness.json" <<'PY'
+import json, sys
+p = sys.argv[1]; g = json.load(open(p))
+for n in g["nodes"]:
+    if n["kind"] == "story":
+        n["title"] = n["title"] + " (hand-edited)"; break
+json.dump(g, open(p, "w"), indent=2)
+PY
+snap_tree() { (cd "$1" && find . -type f -exec shasum {} \; | sort | shasum | awk '{print $1}'); }
+BEFORE="$(snap_tree "$FRESH")"
+OUT="$(python3 "$GRAPH" gate "$FRESH" --story "001-f/S001" 2>&1)" && RC=0 || RC=$?
+AFTER="$(snap_tree "$FRESH")"
+if grep -q "GRAPH_STALE" <<<"$OUT"; then
+  ok "the lifecycle-hook primitive can finally SEE staleness (GRAPH_STALE in gate output)"
+else
+  bad "gate ran no freshness leg — a stale graph is invisible to every hook" "$OUT"
+fi
+if [[ $RC -eq 0 ]]; then
+  ok "…and it GUIDES, never walls (exit 0 — a blocking freshness gate teaches --no-verify)"
+else
+  bad "gate must not block on staleness" "$OUT (rc=$RC)"
+fi
+if [[ "$BEFORE" == "$AFTER" ]]; then
+  ok "…and it is a pure READ: the tree is byte-identical after the gate (read-only CI survives)"
+else
+  bad "gate mutated the tree — this is exactly why the leg was deferred in v10" "$BEFORE != $AFTER"
+fi
+# The stale note must name the ONE command that fixes it, or it is a nag rather than a guide-rail.
+if grep -q "speck_graph.py build" <<<"$OUT"; then
+  ok "…and the note names the fixing command"
+else
+  bad "a guide-rail that doesn't name the fix is a nag" "$OUT"
+fi
+
+echo "── Test 51b: \`build\` re-renders the road in the SAME call — the documented flow is sufficient"
+# The witness and the road may not be separately committable. Pinned two ways: the road exists
+# after a bare `build`, and it does NOT quote a GRAPH_STALE line describing the file `build` just
+# wrote (the ordering bug this would otherwise ship with).
+ROADF="$FRESH/graph/road-to-completion.md"
+rm -f "$ROADF"
+python3 "$GRAPH" build "$FRESH" >/dev/null 2>&1
+if [[ -f "$ROADF" ]]; then
+  ok "build wrote the road too — an agent following \`build && check\` no longer leaves it stale"
+else
+  bad "build refreshed witness.json and left the road behind (issue #96 finding 2)" "no $ROADF"
+fi
+# Match a routed TABLE ROW, never a bare word: the road's own banner says "The GRAPH_STALE law
+# applies to this file", so a grep for the token is satisfied by the artifact's own explanatory
+# boilerplate on every road ever rendered — a vacuous green. Only a `|`-row names a finding.
+if grep -qE '^\|.*`GRAPH_STALE' "$ROADF"; then
+  bad "the road quotes staleness about the witness the same call just wrote — ordering is wrong" \
+      "$(grep -nE '^\|.*GRAPH_STALE' "$ROADF")"
+else
+  ok "…and it is rendered AFTER the witness is written, so it does not slander its own input"
+fi
+
+# ── Tests 52-56: reachability witness — the decidable slice #86 set aside (issue #96 finding 4).
+#
+# Conservation asks whether a promise has an OWNER; it never asks whether a user gesture REACHES
+# it. The scar: an epic all-`mapped`, Blocking = 0, GRAPH_CAP = SHIP — whose central promise had
+# never once fired for a real user, and whose gate output did not change when it went from
+# non-functional to functional.
+
+WIT="$TMP/projects/003-wit"
+mkdir -p "$WIT/epics/001-w/stories/S001-a" "$WIT/epics/001-w/stories/S002-b" "$WIT/epics/001-w/stories/S003-c"
+cat > "$WIT/product-contract.md" <<'EOF'
+# Product Contract: Wit
+## 5. Magic Moments
+### MM-1 — The thread offer
+### MM-2 — The reframe
+### MM-3 — No badges, rings or confetti
+EOF
+wit_story() {   # <dir> <MM> [extra frontmatter lines]
+  local d="$1" mm="$2"; shift 2
+  { echo "---"
+    echo "artifact_type: story-spec"
+    echo "serves: [$mm]"
+    for line in "$@"; do echo "$line"; done
+    echo "---"
+    echo "# Story: ${d##*/}"
+    echo "#### AC-1 — Primary"
+  } > "$WIT/epics/001-w/stories/$d/spec.md"
+  # a recorded verdict, so UNJUDGED_SURFACE doesn't mask the cap this section is measuring
+  { echo "# Validation Report"
+    echo "- **VERDICT** $mm = GOOD — connoisseur Job B"
+  } > "$WIT/epics/001-w/stories/$d/validation-report.md"
+}
+wit_story S001-a MM-1
+wit_story S002-b MM-2
+wit_story S003-c MM-3
+
+echo "── Test 52: adoption gradient — a project with NO entry_point anywhere is guided, never capped"
+OUT="$(python3 "$GRAPH" check "$WIT" 2>&1 || true)"
+GAPOUT="$(python3 "$GRAPH" gap "$WIT" 2>&1 || true)"
+if grep -q "reachability is NOT evaluated" <<<"$OUT" && grep -q "GRAPH_UNMIGRATED.P3" <<<"$OUT"; then
+  ok "un-adopted project gets an honest P3 that names the fixing edit (never a false 'reachable')"
+else
+  bad "an un-adopted project must be told reachability was not evaluated" "$OUT"
+fi
+if [[ "$(cap_token "$GAPOUT")" == "CAP=SHIP" ]]; then
+  ok "…and the cap NUMBER is untouched — no existing matrix becomes non-conformant on upgrade"
+else
+  bad "the adoption gradient must not cap the installed base" "$GAPOUT"
+fi
+
+echo "── Test 53: once adopted, a promise with an entry point but NO mutation witness caps"
+wit_story S001-a MM-1 "entry_point: lib/threadWrite.ts:createThread" "wiring_witness: lib/threadWrite.ts:41"
+{ echo "# Validation Report"
+  echo "- **VERDICT** MM-1 = GOOD — connoisseur Job B"
+  echo ""
+  echo "## 🧬 Mutation Record"
+  echo "| guard test | mutation site | verdict |"
+  echo "|---|---|---|"
+  echo "| threadWrite.test.ts::creates a row | lib/threadWrite.ts:41 | GUARD_MUTATION_PROVEN |"
+} > "$WIT/epics/001-w/stories/S001-a/validation-report.md"
+wit_story S002-b MM-2 "entry_point: app/reframe.tsx:submitReframe"
+wit_story S003-c MM-3 "entry_point: n/a — absence promise (no badge, ring, streak or confetti)"
+OUT="$(python3 "$GRAPH" check "$WIT" 2>&1 || true)"
+GAPOUT="$(python3 "$GRAPH" gap "$WIT" 2>&1 || true)"
+if grep -q "MAPPED_UNWITNESSED.P2: 1/3" <<<"$OUT" && grep -q "MM-2" <<<"$OUT"; then
+  ok "exactly the promise with no delete-the-call witness is unwitnessed (1 of 3)"
+else
+  bad "the witness leg convicted the wrong set" "$OUT"
+fi
+if grep -q "MM-3" <<<"$OUT"; then
+  bad "the bounded escape must be accepted — a third of a real matrix is not a call" "$OUT"
+else
+  ok "…and \`entry_point: n/a — <kind>\` is accepted (schema/RLS/copy/absence promises)"
+fi
+if [[ "$(cap_token "$GAPOUT")" == "CAP=INTEGRATION-GREEN" ]]; then
+  ok "…and it CAPS rather than blocks (mapped-unwitnessed is a ceiling, same polarity as GRAPH_CAP)"
+else
+  bad "MAPPED_UNWITNESSED must lower the cap number, not merely print beside it" "$GAPOUT"
+fi
+if [[ "$(hard_count "$OUT")" == "0" ]]; then
+  ok "…and mints no hard .P1 — it never blocks implementation"
+else
+  bad "the witness leg must not become a wall" "$OUT"
+fi
+
+echo "── Test 54: THE control point — the join to the story's validation report, not the cell alone"
+# A cell in a matrix is one author's sentence. The load-bearing half is that the SAME site appears
+# in the delivering story's own report — the citation shape mutate-guard --verify-receipt recomputes
+# against the receipts on disk. Delete only the mutation row and MM-1 must flip to unwitnessed.
+{ echo "# Validation Report"
+  echo "- **VERDICT** MM-1 = GOOD — connoisseur Job B"
+} > "$WIT/epics/001-w/stories/S001-a/validation-report.md"
+OUT="$(python3 "$GRAPH" check "$WIT" 2>&1 || true)"
+if grep -q "MAPPED_UNWITNESSED.P2: 2/3" <<<"$OUT" && grep -q "records no such site" <<<"$OUT"; then
+  ok "a wiring_witness the delivering report does not record is not a witness (2/3 now)"
+else
+  bad "the report join is not the control point — the cell alone satisfied the gate" "$OUT"
+fi
+
+echo "── Test 55: a bare \`n/a\` does not discharge — the KIND is the part a reader can disagree with"
+wit_story S003-c MM-3 "entry_point: n/a"
+OUT="$(python3 "$GRAPH" check "$WIT" 2>&1 || true)"
+if grep -q "MM-3" <<<"$OUT" && grep -q "name the kind" <<<"$OUT"; then
+  ok "bare n/a is rejected with the instructive message (an unnamed escape is a blank cheque)"
+else
+  bad "bare n/a must not discharge a promise" "$OUT"
+fi
+wit_story S003-c MM-3 "entry_point: n/a — absence promise (no badge, ring, streak or confetti)"
+
+# ── Tests 56-59: ONE findings namespace, and the registry has inverted polarity (issue #100 §5).
+#
+# The open question was which artifact owns the ranking. This module mints every gate code, so a
+# second hand-kept project-level list would be a second namespace — measured cost of the hand-kept
+# version: 14 of 20 entries stale, the advertised top severity closed eleven fires earlier, and one
+# defect carrying three ids across two reports. Resolution: the graph's namespace is authoritative,
+# the project view is DERIVED, and the only authored artifact enumerates EXCEPTIONS.
+
+echo "── Test 56: the findings view is DERIVED and ranked by computed severity, not by typing"
+OUT="$(python3 "$GRAPH" findings "$WIT" --stdout 2>&1 || true)"
+if grep -q "NEVER hand-edit" <<<"$OUT" && grep -q "AUTHORITATIVE" <<<"$OUT" \
+   && grep -q "Highest open severity" <<<"$OUT"; then
+  ok "the view declares its own derivation and computes the top open severity"
+else
+  bad "the derived findings view must state the namespace and compute the ranking" "$OUT"
+fi
+# The ranking is the product: P1 rows must precede P2, which must precede P3. Read the order off
+# the rendered table rather than trusting the sort call.
+RANKS="$(awk -F'|' '/^\| [0-9]+ \|/ { gsub(/ /, "", $4); print $4 }' <<<"$OUT")"
+SORTED="$(printf '%s\n' "$RANKS" | sort)"
+if [[ "$RANKS" == "$SORTED" ]]; then
+  ok "…and rows are emitted in severity order (P1 → P2 → P3)"
+else
+  bad "the derived view is not severity-ranked" "$RANKS"
+fi
+
+echo "── Test 57: an exception whose finding no longer fires is a PHANTOM and fails LOUDLY"
+cat > "$WIT/findings-exceptions.md" <<'EOF'
+# Findings — exceptions
+| Finding | Posture | Why |
+|---------|---------|-----|
+| DEP_CYCLE | ACCEPTED | Nothing in this project has a depends_on cycle; this row exists to prove the ratchet fires. |
+EOF
+OUT="$(python3 "$GRAPH" check "$WIT" 2>&1 || true)"
+GAPOUT="$(python3 "$GRAPH" gap "$WIT" 2>&1 || true)"
+if grep -q "EXCEPTION_PHANTOM.P2" <<<"$OUT" && grep -q "NO LONGER FIRES" <<<"$OUT"; then
+  ok "a stale exception is caught — a list of exceptions fails loudly where a list of instances rots"
+else
+  bad "the registry must delete its own phantoms, or it becomes standing permission slips" "$OUT"
+fi
+if [[ "$(cap_token "$GAPOUT")" == "CAP=INTEGRATION-GREEN" ]]; then
+  ok "…and it caps (the ratchet fires in BOTH directions, which is the direction that matters)"
+else
+  bad "a phantom exception must move the number, not merely print" "$GAPOUT"
+fi
+
+echo "── Test 58: there is nowhere to write 'looks fine', and only two postures exist"
+cat > "$WIT/findings-exceptions.md" <<'EOF'
+# Findings — exceptions
+| Finding | Posture | Why |
+|---------|---------|-----|
+| MAPPED_UNWITNESSED | ACCEPTED | looks fine |
+| UNJUDGED_SURFACE | maybe later | This reason is comfortably longer than the forty character floor requires. |
+EOF
+OUT="$(python3 "$GRAPH" check "$WIT" 2>&1 || true)"
+if grep -q "says nothing an outsider can check" <<<"$OUT"; then
+  ok "belief words and thin entries are rejected by name"
+else
+  bad "'looks fine' is the phrase that turned the hand-kept registries into decoration" "$OUT"
+fi
+if grep -q "there are exactly two an entry can take" <<<"$OUT"; then
+  ok "…and a posture outside ACCEPTED|SUPERSEDED is rejected (SUPERSEDED is not 'fixed')"
+else
+  bad "an entry must declare which of the two it is" "$OUT"
+fi
+
+echo "── Test 59: acceptance moves a finding in the WORK ORDER, never in the ceiling"
+cat > "$WIT/findings-exceptions.md" <<'EOF'
+# Findings — exceptions
+| Finding | Posture | Why |
+|---------|---------|-----|
+| MAPPED_UNWITNESSED | ACCEPTED | MM-2's reframe path ships behind a kill switch that is off in production, so no gesture reaches it this quarter. |
+EOF
+OUT="$(python3 "$GRAPH" findings "$WIT" --stdout 2>&1 || true)"
+GAPOUT="$(python3 "$GRAPH" gap "$WIT" 2>&1 || true)"
+ACCEPTED_ROW="$(grep "MAPPED_UNWITNESSED" <<<"$OUT" || true)"
+if grep -q "ACCEPTED" <<<"$ACCEPTED_ROW"; then
+  ok "the accepted finding is marked in the derived view (convergence stays visible, not deleted)"
+else
+  bad "a legitimate exception must annotate its finding" "$ACCEPTED_ROW"
+fi
+if [[ "$(cap_token "$GAPOUT")" == "CAP=INTEGRATION-GREEN" ]]; then
+  ok "…and GRAPH_CAP is UNCHANGED — an authored file may never grant readiness (§6.4 caps, never raises)"
+else
+  bad "an exception lifted the ceiling — that is the one thing it may never do" "$GAPOUT"
+fi
+rm -f "$WIT/findings-exceptions.md"
+
+# ── Tests 60-62: the incremental-adoption path, and read-only survival of the derived surfaces.
+#
+# Both are v10.1 audit findings against the two surfaces added above.
+#   60/61 — MAPPED_UNWITNESSED was adoption-gated by ONE project-wide flag, so the first `Entry
+#           Point` cell a team filled anywhere flipped the gate on for every delivered promise at
+#           once and dropped a SHIP-RC project to INTEGRATION-GREEN. A gate whose entire cost lands
+#           on the first honest step is a gate people route around.
+#   62    — `findings` (and `road`) died with a raw PermissionError traceback on a read-only tree,
+#           where `gate` and `check` both behave. Not a hook path and `--stdout` exists, so this is
+#           degradation — and degradation gets a MESSAGE, the way graph_freshness degrades an
+#           unreadable witness to "corrupt" instead of raising.
+
+INC="$TMP/projects/004-inc"
+mkdir -p "$INC/epics/001-alpha/stories/S001-a" "$INC/epics/002-beta/stories/S001-b"
+cat > "$INC/product-contract.md" <<'EOF'
+# Product Contract: Incremental
+## 5. Magic Moments
+### MM-1 — Alpha's promise
+### MM-2 — Beta's promise
+EOF
+inc_story() {  # <epic-dir> <story-dir> <MM> [extra frontmatter lines]
+  local e="$1" d="$2" mm="$3"; shift 3
+  { echo "---"
+    echo "artifact_type: story-spec"
+    echo "serves: [$mm]"
+    for line in "$@"; do echo "$line"; done
+    echo "---"
+    echo "# Story: $d"
+    echo "#### AC-1 — Primary"
+  } > "$INC/epics/$e/stories/$d/spec.md"
+  { echo "# Validation Report"
+    echo "- **VERDICT** $mm = GOOD — connoisseur Job B"
+  } > "$INC/epics/$e/stories/$d/validation-report.md"
+}
+inc_story 001-alpha S001-a MM-1
+inc_story 002-beta  S001-b MM-2
+
+echo "── Test 60: baseline — a two-epic project that has adopted NOTHING is guided, never capped"
+OUT="$(python3 "$GRAPH" check "$INC" 2>&1 || true)"
+GAPOUT="$(python3 "$GRAPH" gap "$INC" 2>&1 || true)"
+if grep -q "reachability is NOT evaluated for 2 delivered promise(s)" <<<"$OUT" \
+   && grep -q "MM-1" <<<"$OUT" && grep -q "MM-2" <<<"$OUT"; then
+  ok "both promises sit on the non-capping line, named individually"
+else
+  bad "an un-adopted two-epic project must name both un-evaluated promises" "$OUT"
+fi
+if [[ "$(cap_token "$GAPOUT")" == "CAP=SHIP" ]] && ! grep -q "MAPPED_UNWITNESSED" <<<"$OUT"; then
+  ok "…and the ceiling is untouched (CAP=SHIP, no MAPPED_UNWITNESSED)"
+else
+  bad "nothing is adopted, so nothing may cap" "$GAPOUT / $OUT"
+fi
+
+echo "── Test 61: THE incremental path — adopting ONE row in epic alpha must not cap epic beta"
+# The defect, stated as a fixture: alpha fills its Entry Point cell HONESTLY and COMPLETELY (entry
+# point + wiring witness + the site recorded in its own validation report, i.e. alpha is fully
+# witnessed and owes nothing). Beta has not started. Under project-wide adoption this run printed
+# `MAPPED_UNWITNESSED.P2: 1/2` and CAP=INTEGRATION-GREEN — the first honest step demoting a project
+# for an epic nobody had touched. Under per-epic adoption alpha is judged (and passes), beta stays
+# on the P3 line, and the ceiling does not move.
+inc_story 001-alpha S001-a MM-1 \
+  "entry_point: lib/alpha.ts:createAlpha" "wiring_witness: lib/alpha.ts:41"
+{ echo "# Validation Report"
+  echo "- **VERDICT** MM-1 = GOOD — connoisseur Job B"
+  echo ""
+  echo "## 🧬 Mutation Record"
+  echo "| guard test | mutation site | verdict |"
+  echo "|---|---|---|"
+  echo "| alpha.test.ts::creates a row | lib/alpha.ts:41 | GUARD_MUTATION_PROVEN |"
+} > "$INC/epics/001-alpha/stories/S001-a/validation-report.md"
+OUT="$(python3 "$GRAPH" check "$INC" 2>&1 || true)"
+GAPOUT="$(python3 "$GRAPH" gap "$INC" 2>&1 || true)"
+if ! grep -q "MAPPED_UNWITNESSED" <<<"$OUT"; then
+  ok "adopting one epic's row raises NO cap on the un-adopted sibling (the cliff is gone)"
+else
+  bad "the first honest step still caps a sibling epic — a gate people route around" \
+      "$(grep 'MAPPED_UNWITNESSED' <<<"$OUT")"
+fi
+if [[ "$(cap_token "$GAPOUT")" == "CAP=SHIP" ]]; then
+  ok "…and the cap NUMBER is unchanged (CAP=SHIP) — a SHIP-RC project may start adopting for free"
+else
+  bad "adoption cost must not land on the first honest step" "$GAPOUT"
+fi
+# The P3 must now name ONLY beta's promise — otherwise the gate is silently untargeted and the
+# un-evaluated set is not really per-epic, it is just off.
+P3LINE="$(grep "reachability is NOT evaluated" <<<"$OUT" || true)"
+if grep -q "MM-2" <<<"$P3LINE" && ! grep -q "MM-1" <<<"$P3LINE"; then
+  ok "…and the un-evaluated line names beta's promise ONLY (alpha was judged, and passed)"
+else
+  bad "adoption scoping is not per-epic — the un-evaluated set did not shrink to beta" "$P3LINE"
+fi
+# THE CONTROL POINT for "alpha is really judged, not merely skipped". Break alpha's witness only:
+# same fixture, one artifact edited. If per-epic adoption had degraded into "never evaluate", this
+# stays green and the whole leg is decoration.
+cp "$INC/epics/001-alpha/stories/S001-a/validation-report.md" "$TMP/alpha-report.bak"
+{ echo "# Validation Report"
+  echo "- **VERDICT** MM-1 = GOOD — connoisseur Job B"
+} > "$INC/epics/001-alpha/stories/S001-a/validation-report.md"
+OUT="$(python3 "$GRAPH" check "$INC" 2>&1 || true)"
+GAPOUT="$(python3 "$GRAPH" gap "$INC" 2>&1 || true)"
+if grep -q "MAPPED_UNWITNESSED.P2: 1/1" <<<"$OUT" && grep -q "MM-1" <<<"$OUT" \
+   && [[ "$(cap_token "$GAPOUT")" == "CAP=INTEGRATION-GREEN" ]]; then
+  ok "the ADOPTED epic is genuinely judged — alpha's broken witness caps, denominator 1 (not 2)"
+else
+  bad "per-epic adoption degraded into 'never evaluated' — the leg proves nothing" "$OUT / $GAPOUT"
+fi
+if grep -q "reachability is NOT evaluated for 1 delivered promise" <<<"$OUT"; then
+  ok "…and beta stays on the non-capping line in the SAME run (both signals coexist)"
+else
+  bad "the incremental path must show both signals at once, or it reads as a cliff" "$OUT"
+fi
+cp "$TMP/alpha-report.bak" "$INC/epics/001-alpha/stories/S001-a/validation-report.md"
+
+echo "── Test 62: the derived surfaces survive a READ-ONLY checkout — a stack trace is not a message"
+RO="$TMP/projects/005-readonly"
+mkdir -p "$RO/epics/001-r/stories/S001-a"
+cat > "$RO/product-contract.md" <<'EOF'
+# Product Contract: ReadOnly
+## 5. Magic Moments
+### MM-1 — Only wow
+EOF
+printf -- '---\nartifact_type: story-spec\nserves: [MM-1]\n---\n# A\n#### AC-1 — a\n' \
+  > "$RO/epics/001-r/stories/S001-a/spec.md"
+python3 "$GRAPH" build "$RO" >/dev/null 2>&1
+# The happy path FIRST, while the tree is still writable — otherwise the only coverage
+# `_write_derived` has is its failure branch, and "always returns the error" would read as green.
+rm -f "$RO/graph/findings.md"
+WOUT="$(python3 "$GRAPH" findings "$RO" 2>&1)" && WRC=0 || WRC=$?
+if [[ $WRC -eq 0 ]] && [[ -s "$RO/graph/findings.md" ]] && grep -q "AUTHORITATIVE" "$RO/graph/findings.md"; then
+  ok "findings still WRITES the derived view on a normal tree (exit 0, file has the real content)"
+else
+  bad "the degradation wrapper broke the ordinary write path" "$WOUT (rc=$WRC)"
+fi
+chmod -R a-w "$RO"
+# Restore write permission no matter how this section exits, so the EXIT trap can clean up.
+restore_ro() { chmod -R u+w "$RO" 2>/dev/null || true; }
+trap 'restore_ro; rm -rf "$TMP"' EXIT
+
+# gate and check are the surfaces that already behaved; they are the comparison, so a green here is
+# not "read-only happens to work" but "findings now matches its neighbours".
+GOUT="$(python3 "$GRAPH" gate "$RO" --story "001-r/S001" 2>&1)" && GRC=0 || GRC=$?
+if [[ $GRC -eq 0 ]] && grep -q "GRAPH_FRESH" <<<"$GOUT"; then
+  ok "gate's freshness leg still runs and WRITES NOTHING on a genuinely unwritable tree (exit 0)"
+else
+  bad "the freshness leg must stay a pure read — a read-only checkout may not brick the hooks" \
+      "$GOUT (rc=$GRC)"
+fi
+
+FOUT="$(python3 "$GRAPH" findings "$RO" 2>&1)" && FRC=0 || FRC=$?
+if grep -q "Traceback" <<<"$FOUT"; then
+  bad "findings still dies with a raw Python stack trace on a read-only tree" "$FOUT"
+else
+  ok "findings no longer raises — the unwritable tree is handled, not propagated"
+fi
+# A named error that points at the escape hatch. Assert the CODE and the flag, not a vendor string:
+# `exc.strerror` is libc's wording and differs across platforms, so pinning "Permission denied"
+# would be the same vendor-message trap that has already shipped twice in this repo.
+# The flag must be named ON THE GRAPH_UNWRITABLE LINE ITSELF, not merely somewhere in the output:
+# `--stdout` also appears in the USAGE block, which any error path could print, so a whole-output
+# grep for it would be satisfied by boilerplate.
+UNWRITABLE_LINE="$(grep "GRAPH_UNWRITABLE" <<<"$FOUT" || true)"
+if [[ -n "$UNWRITABLE_LINE" ]] && grep -q -- "--stdout" <<<"$UNWRITABLE_LINE" && [[ $FRC -ne 0 ]]; then
+  ok "…it degrades to a NAMED error that names the working alternative (--stdout), exit non-zero"
+else
+  bad "degradation must name itself and the fix, not merely avoid crashing" "$FOUT (rc=$FRC)"
+fi
+# And the escape hatch has to actually work, or the message is a lie.
+SOUT="$(python3 "$GRAPH" findings "$RO" --stdout 2>&1)" && SRC=0 || SRC=$?
+if [[ $SRC -eq 0 ]] && grep -q "AUTHORITATIVE" <<<"$SOUT" && ! grep -q "GRAPH_UNWRITABLE" <<<"$SOUT"; then
+  ok "…and \`--stdout\` genuinely renders the full view on the same read-only tree"
+else
+  bad "the named error points at a flag that does not work" "$SOUT (rc=$SRC)"
+fi
+# `road` is the same derived-surface contract and shared the same defect.
+ROUT="$(python3 "$GRAPH" road "$RO" 2>&1)" && RRC=0 || RRC=$?
+if ! grep -q "Traceback" <<<"$ROUT" && grep -q "GRAPH_UNWRITABLE" <<<"$ROUT" && [[ $RRC -ne 0 ]]; then
+  ok "road degrades identically — one rule for every derived view, not a per-command patch"
+else
+  bad "road still crashes on a read-only tree" "$ROUT (rc=$RRC)"
+fi
+
+echo "── Test 62b: gate's absent-witness branch is still NON-capping, exit 0, on the gate surface"
+# Test 36 pins this on check/gap. The v10 release note promises it on `gate` too, and the installed
+# base depends on it: migrate.js marks every v8→v9 upgrader with .v9-graph-needed, so on upgrade day
+# NO project has a committed witness. If gate blocked there, the whole base is bricked by a bump.
+restore_ro
+UNB="$TMP/projects/006-unbuilt"
+mkdir -p "$UNB/epics/001-u/stories/S001-a"
+cat > "$UNB/product-contract.md" <<'EOF'
+# Product Contract: Unbuilt
+## 5. Magic Moments
+### MM-1 — Only wow
+EOF
+printf -- '---\nartifact_type: story-spec\nserves: [MM-1]\n---\n# A\n#### AC-1 — a\n' \
+  > "$UNB/epics/001-u/stories/S001-a/spec.md"
+OUT="$(python3 "$GRAPH" gate "$UNB" --story "001-u/S001" 2>&1)" && RC=0 || RC=$?
+if [[ $RC -eq 0 ]] && grep -q "GRAPH_UNBUILT" <<<"$OUT" && ! grep -q "GRAPH_STALE" <<<"$OUT"; then
+  ok "a never-built graph is reported as UNBUILT on gate and clears to advance (exit 0)"
+else
+  bad "gate must not brick a project that has never run build (the whole v8→v9 base)" "$OUT (rc=$RC)"
+fi
+
 echo ""
 echo "════════════════════════════════════════════"
 echo "  speck_graph: $PASS passed, $FAIL failed"
