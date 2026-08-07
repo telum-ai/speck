@@ -142,4 +142,31 @@ else
   pass "bare 'Four-Axis Readiness' header accepted (no parenthetical required)"
 fi
 
+# 10. a RELATIVE report path terminates (#116) — the invocation story-validate documents.
+# `dirname "validation-report.md"` is `.` and `dirname "."` is `.`, so pre-fix the project-root walk
+# never advanced. The timeout IS the assertion: a hang must be a RED test, not a hung suite.
+REL_DIR="$TMP/rel"; mkdir -p "$REL_DIR"
+cat > "$REL_DIR/validation-report.md" <<EOF
+---
+readiness_state_claimed: UX-RC
+felt_axis: ai-verified
+taste_axis: ai-critiqued
+taste_anchor: product+universal
+---
+
+## 🧭 Four-Axis Readiness
+- TASTE: ai-critiqued (connoisseur pass recorded)
+EOF
+( cd "$REL_DIR" && bash "$VALIDATOR" --strict validation-report.md >/dev/null 2>&1 ) &
+REL_PID=$!
+REL_WAITED=0
+while kill -0 "$REL_PID" 2>/dev/null && [[ "$REL_WAITED" -lt 15 ]]; do sleep 1; REL_WAITED=$((REL_WAITED + 1)); done
+if kill -0 "$REL_PID" 2>/dev/null; then
+  kill -9 "$REL_PID" 2>/dev/null || true
+  fail "relative report path did not terminate within 15s — the root walk is looping (#116)"
+else
+  wait "$REL_PID" 2>/dev/null || true
+  pass "relative report path terminates (#116)"
+fi
+
 if [[ "$FAILED" == 0 ]]; then echo "✅ validate-taste-axis: all tests passed"; else echo "❌ validate-taste-axis: FAILURES"; exit 1; fi

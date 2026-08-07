@@ -44,6 +44,22 @@
 #                           is a test/fixture file, the matched line is a comment or docstring,
 #                           a --red test was already red, or a control reddened (the file broke
 #                           rather than the predicate).          exit 1
+#   GUARD_UNMUTATED_HARNESS.P2
+#                           nothing was measured, and THE HARNESS IS WHY — the probe worktree could
+#                           not run the guard at all (a build tool that rejects the node_modules
+#                           symlink, a missing binary). Split out from GUARD_UNMUTATED.P2 in v10.5
+#                           (#114 §3) because the two read identically and mean opposite things:
+#                           one says "we could not measure your guard", the other invites the reader
+#                           to conclude the guard is worthless and delete it.  exit 1
+#   GUARD_MUTATION_UNOBSERVABLE.P2
+#                           the mutation provably happened, and the --red invocation STRUCTURALLY
+#                           could not observe it — no applier was supplied for a guard whose subject
+#                           is not the source tree (a DB schema, RLS, a grant posture), so the tests
+#                           looked at a system the mutation never reached. Split from
+#                           GUARD_MUTATION_GREEN.P2 in v10.5 (#114 §2.3): that code is documented as
+#                           "the mutation provably happened and the suite did not notice — write the
+#                           honest scope onto the test", and a reader who trusts that wording
+#                           concludes the guard is blind. Here the guard is not blind at all.  exit 0
 #
 # RECEIPTS — AND THE LIMIT OF WHAT A RECEIPT CAN PROVE (read this before trusting one)
 # Every run that resolves a real site drops a receipt in .speck/mutation-receipts/ pinning
@@ -99,11 +115,28 @@ VERIFY_REPORT=""
 RED_CMDS=()
 GREEN_CMDS=()
 
+# --applier <cmd> — "bring the system to the mutated state", run AFTER the mutation and BEFORE the
+# --red invocations (#114 §2.2). The v10.4 model — mutate text, run tests — silently assumes the
+# guard's subject IS the source tree. For a guard whose subject is a DATABASE that assumption is
+# false: editing a migration nobody applies changes nothing the smoke can see, so the run produced
+# GUARD_MUTATION_GREEN.P2 — "the mutation happened and the suite did not notice" — for a guard that
+# reddens hard the moment the mutated migration actually reaches a database. Correct, and useless.
+# The applier is the missing step, and it is a real one: schema, RLS and grant posture are exactly
+# the guards that most need mutation evidence.
+#
+# It carries its own safety rule rather than inheriting --red's, because its job IS to change state.
+# A local, disposable-stack applier (`supabase db reset`, `docker compose up`) classifies safe or
+# unknown after #114 §2's verb-scoping and runs; anything that still trips the destructive denylist
+# requires an explicit --applier-ack, which is a decision the author records rather than a default
+# the tool grants.
+APPLIER=""
+APPLIER_ACK=false
+
 RECEIPT_DIR_NAME=".speck/mutation-receipts"
 
 die_usage() {
   echo "ERROR: $1" >&2
-  echo "Usage: mutate-guard.sh --file <path> --pattern <str> --replacement <str> --red '<cmd>' --green '<cmd>' [--expect-count N] [--match-count N] [--cwd <subdir>] [--root <dir>] [--require-proven]" >&2
+  echo "Usage: mutate-guard.sh --file <path> --pattern <str> --replacement <str> --red '<cmd>' --green '<cmd>' [--applier '<cmd>' [--applier-ack]] [--expect-count N] [--match-count N] [--cwd <subdir>] [--root <dir>] [--require-proven]" >&2
   echo "       mutate-guard.sh --verify-receipt <validation-report.md> [--root <dir>]" >&2
   exit 64
 }
@@ -114,6 +147,8 @@ while [[ $# -gt 0 ]]; do
     --file)         FILE="${2:-}"; shift 2 ;;
     --pattern)      PATTERN="${2:-}"; shift 2 ;;
     --replacement)  REPLACEMENT="${2:-}"; shift 2 ;;
+    --applier)      APPLIER="${2:-}"; shift 2 ;;
+    --applier-ack)  APPLIER_ACK=true; shift ;;
     --red)          RED_CMDS+=("${2:-}"); shift 2 ;;
     --green)        GREEN_CMDS+=("${2:-}"); shift 2 ;;
     --expect-count) EXPECT_COUNT="${2:-}"; shift 2 ;;
@@ -145,10 +180,12 @@ site_hash_of() { cl_digest "$1:$2:$3"; }
 
 verdict_rank() {
   case "$1" in
-    GUARD_MUTATION_PROVEN)   echo 3 ;;
-    GUARD_MUTATION_GREEN.P2) echo 2 ;;
-    GUARD_UNMUTATED.P2)      echo 1 ;;
-    *)                       echo 0 ;;
+    GUARD_MUTATION_PROVEN)          echo 3 ;;
+    GUARD_MUTATION_GREEN.P2)        echo 2 ;;
+    GUARD_MUTATION_UNOBSERVABLE.P2) echo 2 ;;
+    GUARD_UNMUTATED.P2)             echo 1 ;;
+    GUARD_UNMUTATED_HARNESS.P2)     echo 1 ;;
+    *)                              echo 0 ;;
   esac
 }
 
@@ -202,6 +239,8 @@ verify_report() {
       v = ""
       if      (index($0, "GUARD_MUTATION_PROVEN")   > 0) v = "GUARD_MUTATION_PROVEN"
       else if (index($0, "GUARD_MUTATION_GREEN.P2") > 0) v = "GUARD_MUTATION_GREEN.P2"
+      else if (index($0, "GUARD_MUTATION_UNOBSERVABLE.P2") > 0) v = "GUARD_MUTATION_UNOBSERVABLE.P2"
+      else if (index($0, "GUARD_UNMUTATED_HARNESS.P2") > 0) v = "GUARD_UNMUTATED_HARNESS.P2"
       else if (index($0, "GUARD_UNMUTATED.P2")      > 0) v = "GUARD_UNMUTATED.P2"
       if (v == "") next
       # $1 is empty (leading pipe) and $2 is the guard-test cell, which can itself hold a
@@ -384,6 +423,7 @@ write_receipt() {
 # outranks every verdict and is never downgraded to a warning.
 finish() {
   local rc="$1"
+  rm -f "${RUN_OUT_FILE:-}" 2>/dev/null || true
   if [[ -n "$WT" ]]; then cl_worktree_remove "$ROOT" "$WT" || true; fi
   if [[ -n "$ROOT_SNAP" ]]; then
     local after; after="$(cl_root_snapshot "$ROOT")"
@@ -431,12 +471,33 @@ fi
 
 # Every invocation is classified before it runs. A mutation probe must never run a gate that
 # deploys, migrates or touches prod (canary-lib.sh's shared classifier — one law, one place).
+#
+# The refusal NAMES THE TOKEN that fired (#114 §1.3). "classified 'unsafe'" alone sent the operator
+# to read a 40-alternative regex to discover that a directory called `deploy` in an argument had
+# convicted a `vitest` run; `refused: matched destructive token 'deploy'` is diagnosable in one read.
 check_safety() {
   local inv="$1" kind="$2" verdictclass
+  CL_SAFETY_REASON=""
   verdictclass="$(cl_probe_safety "$inv" "$WT")"
   if [[ "$verdictclass" != "safe" ]]; then
     VERDICT="GUARD_UNMUTATED.P2"
-    REASON="$kind invocation classified '$verdictclass' by cl_probe_safety and was refused: $inv"
+    REASON="$kind invocation classified '$verdictclass' by cl_probe_safety and was refused (${CL_SAFETY_REASON:-no reason recorded}): $inv"
+    finish 1
+  fi
+  return 0
+}
+
+# The applier is exempt from check_safety by design — its job IS to change state — but only within
+# the same fail-closed frame: an invocation that still trips the destructive denylist after #114 §2's
+# verb-scoping needs --applier-ack, so the widening is a decision the author records rather than one
+# the tool grants.
+check_applier_safety() {
+  local inv="$1" verdictclass
+  CL_SAFETY_REASON=""
+  verdictclass="$(cl_probe_safety "$inv" "$WT")"
+  if [[ "$verdictclass" == "unsafe" && "$APPLIER_ACK" != true ]]; then
+    VERDICT="GUARD_UNMUTATED.P2"
+    REASON="--applier is classified 'unsafe' (${CL_SAFETY_REASON:-no reason recorded}) and no --applier-ack was given: $inv"
     finish 1
   fi
   return 0
@@ -468,6 +529,7 @@ fi
 
 for c in "${RED_CMDS[@]}"; do check_safety "$c" "--red"; done
 for c in "${GREEN_CMDS[@]}"; do check_safety "$c" "--green"; done
+[[ -n "$APPLIER" ]] && check_applier_safety "$APPLIER"
 
 # --- match accounting (#94 §5a: a pattern that matches zero times changes nothing) ------------
 
@@ -502,13 +564,41 @@ case "$ext" in
   *)                                    line_prefix="" ;;
 esac
 
+#
+# `/*` INSIDE A LITERAL IS NOT A COMMENT (#114 §4). This counted `/*` minus `*/` over the raw line
+# text, so a doc comment containing the literal `` `@sentry/*` `` opened a "block" that never closed
+# — and every subsequent line in the file was classified as prose, with every mutation site in it
+# refused, blaming the SITE. Proven by contrast in the reporting project: a balanced copy of the same
+# file mutated to GUARD_MUTATION_PROVEN immediately. `strip_literals` blanks quoted and backticked
+# spans before the delimiters are counted, so a glob inside a string can no longer open a comment.
+#
+# And when the file's comment state never closes at the matched line, that is THE TOOL'S parse
+# failure, not the site's — it is reported as such rather than refusing sites silently.
 is_comment_line() {
   local file="$1" ln="$2"
   awk -v ln="$ln" -v pfx="$line_prefix" -v bo="$block_open" -v bc="$block_close" -v pydoc="$py_doc" \
       -v tdq='"""' -v tsq="'''" '
     function count(s, needle,   n, i) { n = 0; while ((i = index(s, needle)) > 0) { n++; s = substr(s, i + length(needle)) } return n }
+    # Blank out "…", ?…? and `…` spans so a delimiter INSIDE a literal cannot open or close a block.
+    # Single-line scope only, matching the rest of this pass: a literal that spans lines is rare in
+    # the languages that have block comments, and erring toward "unchanged" keeps the old behaviour.
+    function strip_literals(s,   out, i, c, q) {
+      out = ""; q = ""
+      for (i = 1; i <= length(s); i++) {
+        c = substr(s, i, 1)
+        if (q == "") {
+          if (c == "\"" || c == "\047" || c == "`") { q = c; out = out " "; continue }
+          out = out c
+        } else {
+          if (c == "\\") { i++; out = out "  "; continue }
+          if (c == q) { q = "" }
+          out = out " "
+        }
+      }
+      return out
+    }
     NR < ln {
-      if (bo != "") { inblock += count($0, bo) - count($0, bc); if (inblock < 0) inblock = 0 }
+      if (bo != "") { s2 = strip_literals($0); inblock += count(s2, bo) - count(s2, bc); if (inblock < 0) inblock = 0 }
       if (pydoc == "true") { doc = (doc + count($0, tdq) + count($0, tsq)) % 2 }
       next
     }
@@ -535,11 +625,17 @@ fi
 
 # --- baseline: every cited test must be GREEN before the mutation ----------------------------
 
+# run_one is called inside `$( … )`, so it runs in a SUBSHELL and cannot hand a variable back. The
+# output has to travel through a FILE at a stable path (#114 §3.2 — a baseline red must be
+# attributable to the harness rather than to the guard, and that needs the invocation's own output).
+# The path is deliberately OUTSIDE the worktree: a scratch file inside $WT would be swept into the
+# `git add -A` that makes the mutated tree coherent.
+RUN_OUT_FILE="${TMPDIR:-/tmp}/speck-mutate-out-$$"
+last_run_output() { cat "$RUN_OUT_FILE" 2>/dev/null || true; }
 run_one() {
-  local inv="$1" out rc
-  out="$WT/.speck-mutate-out.$RANDOM"
-  rc="$(cl_run_gate "$WT" "$SUBDIR" "$inv" "$out")"
-  rm -f "$out" 2>/dev/null || true
+  local inv="$1" rc
+  : > "$RUN_OUT_FILE"
+  rc="$(cl_run_gate "$WT" "$SUBDIR" "$inv" "$RUN_OUT_FILE")"
   printf '%s' "$rc"
   return 0
 }
@@ -548,8 +644,14 @@ i=0
 for c in "${RED_CMDS[@]}"; do
   i=$((i + 1))
   if [[ "$(run_one "$c")" != "0" ]]; then
-    VERDICT="GUARD_UNMUTATED.P2"
-    REASON="--red invocation #$i was ALREADY red before the mutation — nothing observed after it can be attributed to the mutation: $c"
+    harness_sig="$(cl_harness_failure_signature "$(last_run_output)" || true)"
+    if [[ -n "$harness_sig" ]]; then
+      VERDICT="GUARD_UNMUTATED_HARNESS.P2"
+      REASON="the PROBE HARNESS could not run --red invocation #$i in the throwaway worktree — this says nothing about the guard. Signature: '$harness_sig'. Invocation: $c"
+    else
+      VERDICT="GUARD_UNMUTATED.P2"
+      REASON="--red invocation #$i was ALREADY red before the mutation — nothing observed after it can be attributed to the mutation: $c"
+    fi
     finish 1
   fi
 done
@@ -582,6 +684,20 @@ fi
 # Untracked-but-present files matter to some runners; stage so the worktree is coherent.
 git -C "$WT" add -A >/dev/null 2>&1 || true
 
+# --- bring the system to the mutated state (#114 §2.2) ---------------------------------------
+# For a guard whose subject is the source tree this step is a no-op and no --applier is supplied.
+# For a guard whose subject is a DATABASE it is the whole ballgame: without it the --red invocation
+# observes the live catalog, which the mutated migration never reached.
+APPLIER_RAN=false
+if [[ -n "$APPLIER" ]]; then
+  if [[ "$(run_one "$APPLIER")" != "0" ]]; then
+    VERDICT="GUARD_UNMUTATED.P2"
+    REASON="--applier failed after the mutation, so the system never reached the mutated state and no --red result can be attributed to it: $APPLIER"
+    finish 1
+  fi
+  APPLIER_RAN=true
+fi
+
 # --- post-mutation: count the reds, and require every control to survive ---------------------
 
 RED_OBSERVED=0
@@ -602,6 +718,25 @@ done
 if [[ "$RED_OBSERVED" -ge "$EXPECT_COUNT" ]]; then
   VERDICT="GUARD_MUTATION_PROVEN"
   REASON="$RED_OBSERVED of ${#RED_CMDS[@]} cited test invocation(s) went red at $SITE (required $EXPECT_COUNT); ${#GREEN_CMDS[@]} control(s) stayed green"
+  finish 0
+fi
+
+# The mutation happened and nobody noticed. TWO different facts wear that shape, and conflating them
+# is #114 §2.3: the guard is blind, OR the --red invocation could not observe the mutation at all
+# because the mutated artifact was never applied to the system it inspects. A guard whose subject is
+# a migration file, a schema or an infra manifest, run with NO --applier, is the second — and the
+# reader of GUARD_MUTATION_GREEN.P2 ("write the honest scope onto the test") would draw exactly the
+# wrong conclusion about a guard that reddens hard the moment the mutation actually lands.
+NEEDS_APPLIER=false
+case "$FILE" in
+  *migrations/*|*migration/*|*.sql|*.tf|*.tfvars|*/k8s/*|*/helm/*|*.hcl) NEEDS_APPLIER=true ;;
+esac
+if [[ "$NEEDS_APPLIER" == true && "$APPLIER_RAN" == false ]]; then
+  VERDICT="GUARD_MUTATION_UNOBSERVABLE.P2"
+  REASON="the mutation provably happened at $SITE, but the subject is a file that must be APPLIED to a system before any test can see it, and no --applier was supplied — so the cited test(s) inspected a system the mutation never reached. This is NOT evidence that the guard is blind. Re-run with --applier '<bring the system to the mutated state>'"
+  if [[ "$REQUIRE_PROVEN" == true ]]; then
+    finish 1
+  fi
   finish 0
 fi
 

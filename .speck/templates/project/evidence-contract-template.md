@@ -90,6 +90,23 @@ Full rationale: `docs/v8/v8-north-star.md`.
 - ✅ Integration tests against the binary (NOT the source tree)
 - ✅ Recorded API responses against deployed staging/prod
 
+### 2c. What "client bundle" MEANS — the enumerated leak surface
+
+*Load-bearing wherever a gate says "no secret reaches the client bundle". The phrase carries an implicit **Pages-Router-era** definition — static JS chunks — and a scan written to that definition reports CLEAN over a real leak. Measured: a Server Component rendering `process.env.<SERVER_ONLY_VAR>` delivered the value to the browser via prerendered HTML and the RSC flight payload while a `.next/static/**`-only scan printed CLEAN. The gate was wired, canaried and live; its **subject set** was wrong.*
+
+**Rule: "client bundle" = everything the browser can receive.** Enumerate the surfaces for YOUR framework in the gate's Scope cell (§6a) — never leave it to the phrase.
+
+| Framework | Enumerated browser-delivered surfaces |
+|---|---|
+| Next.js App Router | `.next/static/**` (JS/CSS chunks) · `.next/server/app/**/*.html` (prerendered HTML) · `.next/server/app/**/*.rsc`, `*.segment.rsc` (RSC flight payload) |
+| Next.js Pages Router | `.next/static/**` · `.next/server/pages/**/*.html` |
+| Vite / CRA / SPA | `dist/**` · `build/**` (all emitted assets, incl. sourcemaps if shipped) |
+| SvelteKit / Nuxt / Astro | the adapter's client output dir **plus** any prerendered HTML and serialized-payload files |
+
+*Why RSC matters specifically:* a decrypted value passed as a **prop** to a `"use client"` component serializes into the flight payload. It never appears in a chunk, and it is delivered to the browser on every request.
+
+**One self-test direction PER enumerated surface.** A leak gate must prove it bites on each path it claims to cover, separately. A single self-test that exercises an already-covered path proves the **machinery**, not the **coverage** — the shape that let the original hole ship: the gate had a liveness self-test, and the self-test only planted a canary where the scan already looked. Declare each direction in §6a's Subject cell (e.g. `self_test_directions==3`), and observe each one bite.
+
 ### 2a. The claim-type axis — which INSTRUMENT is admissible for which KIND of claim
 
 *Everything above is indexed by **platform**. Platform answers "which build"; it never answers "which instrument can observe this claim." That gap is the whole mechanism behind a recurring defect class: a green, honestly-authored, mutation-verified suite gets cited for a claim it is **structurally incapable of observing**, and nothing written down was violated. #87 gave evidence a **grain** field (at what altitude it was collected); this gives it **admissibility** (which substrate may back which claim at all).*
@@ -176,6 +193,9 @@ Full rationale: `docs/v8/v8-north-star.md`.
 - ❌ Storybook-only screenshots for full-flow validation
 - ❌ Mocked auth screenshots for auth flow claims
 - ❌ Localhost screenshots for production-like behavior validation
+
+- ❌ **A client-bundle secret scan whose scope is static chunks only** (`.next/static/**`, `dist/assets/**`) cited as proof no secret reaches the browser. On App Router that omits prerendered HTML and the RSC flight payload — both browser-delivered — so a CLEAN result is silent about the paths a Server Component actually leaks through. Enumerate the surfaces (§2c) in the gate's Scope cell.
+- ❌ **A single liveness self-test cited as proof a multi-surface leak gate covers all its surfaces.** One direction proves the machinery runs; it says nothing about the surfaces it did not plant a canary in. One observed-biting direction per enumerated surface, or the uncovered surfaces are undeclared residual.
 
 ### Platform: [e.g., CLI]
 - ❌ `cargo run` output for shipping claims (must be release binary)

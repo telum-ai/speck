@@ -64,15 +64,28 @@ emit_note() { echo -e "${BLUE}$1${NC}  $2"; }
 # inserting a column can never again silently re-map Canary→Waiver underneath a reader that assumed
 # a fixed position. Falls back to the historical fixed layout when no recognizable header is found,
 # so a legacy/hand-authored table with no header row still parses exactly as before.
+#
+# BACKTICKS (#112). Every cell is de-backticked here, matching what gate_sig already did one screen
+# away for the Command cell alone. The asymmetry was the bug: the shipped evidence-contract template
+# writes EVERY Scope cell backticked (`frontend/src/**`), and the Scope cell went straight to
+# `git ls-files -- ":(glob)\`src/**\`"`, which matches zero files. So a project following Speck
+# exactly got GATE_SCOPE_UNRESOLVABLE.P2 on every gate, and a project that quietly dropped the
+# backticks to silence the warning was the one that ended up correct. Read the other way: the
+# vacuity check #98 installed was silently evaluating nothing. Backticks are markdown display
+# decoration in every column, never part of a gate id, command or pathspec.
+#
+# ESCAPED PIPES (#118). Same protect/restore as the traceability matrix — a Command cell holding a
+# shell pipeline must not shift the Stage and Scope columns after it.
 ROW_CELLS=()
 split_row() {
   local line="$1" i cell
   local -a raw=()
-  IFS='|' read -r -a raw <<< "$line" || true
+  IFS='|' read -r -a raw <<< "$(sp_row_protect "$line")" || true
   ROW_CELLS=()
   for (( i=1; i<${#raw[@]}; i++ )); do
     cell="$(sp_trim "${raw[$i]}")"
-    ROW_CELLS+=("$cell")
+    cell="$(sp_row_restore "$cell")"
+    ROW_CELLS+=("${cell//\`/}")
   done
 }
 
@@ -137,11 +150,38 @@ cell_at() {
 }
 
 # --- §6a table extraction ---
+# BOUNDED TO ONE TABLE (#113). This used to collect EVERY line starting with `|` between the §6a
+# heading and the next heading, and find the header separately by grepping for `Gate ID` — so the
+# row set was never tied to the table that header belongs to. §6a is exactly where a project is
+# supposed to write down what a gate does NOT cover, and a residual is naturally documented as a
+# measurement table or a fixture matrix. Each of its data rows then parsed as a gate: an id that is
+# not a gate, a stage that does not parse, one GATE_WIRING_DRIFT.P2 apiece. The observed workaround
+# was to render the matrix as a fenced code block with a parenthetical explaining why — a formatting
+# choice forced on a document by its reader, which the next author cannot know. And a validator whose
+# output carries routine phantom findings is one whose real findings stop being read.
+#
+# A markdown table ends at the first line that does not begin with `|`. Start at the `Gate ID`
+# header, stop there. Everything else in §6a — prose, a second table, a fenced block — is out of
+# scope by construction. If no `Gate ID` header exists (a legacy headerless registry), fall back to
+# the old whole-section scan so those still parse exactly as before.
 block="$(awk '
   /^### 6a\./ { ins=1; next }
   ins && /^#{2,3} / { ins=0 }
   ins && /^\|/ { print }
 ' "$CONTRACT" 2>/dev/null || true)"
+
+gate_table="$(awk '
+  /^### 6a\./ { ins=1; next }
+  ins && /^#{2,3} / { ins=0 }
+  !ins { next }
+  intable && !/^\|/ { intable=0 }          # a blank line (or any non-pipe line) ends the table
+  intable { print; next }
+  /^\|/ && tolower($0) ~ /\|[[:space:]]*gate id[[:space:]]*\|/ { intable=1; print }
+' "$CONTRACT" 2>/dev/null || true)"
+
+if [[ -n "$(printf '%s' "$gate_table" | tr -d '[:space:]')" ]]; then
+  block="$gate_table"
+fi
 
 header_lines="$(printf '%s\n' "$block" | grep -iE '\|[[:space:]]*Gate ID[[:space:]]*\|' || true)"
 header_row="$(sp_head 1 "$header_lines")"
@@ -186,11 +226,39 @@ precommit_stages() {
   ' "$PCC" 2>/dev/null | tr '\n' ' '
 }
 
-# does husky / package.json / Speck hook reference sig on the commit path? echoes stage tokens.
+# The directory git ACTUALLY dispatches hooks from (#110). `.husky/` is one convention, not the
+# mechanism: `core.hooksPath` accepts any committed directory, and `.githooks/` is at least as common
+# for tool-free repo-carried hooks. Hardcoding `.husky` meant a project that commits
+# `.githooks/pre-push`, points core.hooksPath at it in an npm `prepare` step, and declares a pre-push
+# gate in §6a got SCRIPT_UNREFERENCED.P1 — the gate wired, running, and observed blocking a red push,
+# with the registry blind to it. The `pkg` branch was no escape: a match in package.json yields the
+# stage `pkg`, which then falls through to GATE_WIRING_DRIFT.P1.
+#
+# Husky's layout: core.hooksPath points at the GENERATED dispatcher dir (`.husky/_`), while the user's
+# hooks are its parent. Peel one `/_` so a husky repo resolves to `.husky`, not `.husky/_`.
+# `.git/hooks` is deliberately NOT consulted — untracked, per-clone, and the whole point of this
+# validator is that present-on-disk ≠ wired.
+hooks_dir() {
+  local hp
+  hp="$(git -C "$ROOT" config --get core.hooksPath 2>/dev/null || true)"
+  [[ -z "$hp" ]] && return 0
+  case "$hp" in */_) hp="${hp%/_}" ;; esac
+  case "$hp" in /*) printf '%s' "$hp" ;; *) printf '%s' "$ROOT/$hp" ;; esac
+}
+
+# does husky / a configured hooks dir / package.json / Speck hook reference sig on the commit path?
+# echoes stage tokens.
 other_commit_path_stages() {
-  local sig="$1" out=""
-  [[ -f "$HUSKY/pre-commit" ]] && grep -qF "$sig" "$HUSKY/pre-commit" 2>/dev/null && out="$out pre-commit"
-  [[ -f "$HUSKY/pre-push" ]] && grep -qF "$sig" "$HUSKY/pre-push" 2>/dev/null && out="$out pre-push"
+  local sig="$1" out="" hd stage
+  hd="$(hooks_dir)"
+  # The configured hooks dir first; .husky stays as a fallback for a fresh clone whose `prepare`
+  # step has not run yet, so core.hooksPath is not set at scan time.
+  for dir in "$hd" "$HUSKY"; do
+    [[ -n "$dir" && -d "$dir" ]] || continue
+    for stage in pre-commit pre-push commit-msg; do
+      [[ -f "$dir/$stage" ]] && grep -qF "$sig" "$dir/$stage" 2>/dev/null && out="$out $stage"
+    done
+  done
   [[ -f "$SPECK_HOOK" ]] && grep -qF "$sig" "$SPECK_HOOK" 2>/dev/null && out="$out pre-commit"
   [[ -f "$PKG" ]] && grep -qF "$sig" "$PKG" 2>/dev/null && out="$out pkg"
   printf '%s' "$out"
@@ -285,8 +353,9 @@ while IFS= read -r row; do
       firing="$pcstages $others"
       if [[ -z "$(printf '%s' "$firing" | tr -d ' ')" ]]; then
         # not referenced anywhere on the commit path
-        if [[ ! -f "$PCC" && ! -d "$HUSKY" && ! -f "$SPECK_HOOK" ]]; then
-          emit_p2 "GATE_WIRING_UNVERIFIED.P2" "$gid — no recognized hook system (.pre-commit-config.yaml / .husky / Speck hook) to verify against"
+        cfg_hooks="$(hooks_dir)"
+        if [[ ! -f "$PCC" && ! -d "$HUSKY" && ! -f "$SPECK_HOOK" && ! -d "$cfg_hooks" ]]; then
+          emit_p2 "GATE_WIRING_UNVERIFIED.P2" "$gid — no recognized hook system (.pre-commit-config.yaml / core.hooksPath dir / .husky / Speck hook) to verify against"
         else
           emit_p1 "SCRIPT_UNREFERENCED.P1" "$gid — '$cmd' declared at $stage but is referenced by NO committed hook config (present-on-disk ≠ wired)"
         fi

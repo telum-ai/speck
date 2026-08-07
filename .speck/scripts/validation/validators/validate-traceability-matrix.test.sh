@@ -644,7 +644,13 @@ echo "Test 24: MUTATION PROOF — reverting the AUDIT branch in a SCRATCH COPY t
 # Confirms the mutation site is the REAL control point: has_structured_token() itself, not a
 # default arg or an unreached branch. Deleting exactly the AUDIT line must flip Test 23's fixture
 # from pass to fail — nothing else about the validator changes.
-SCRATCH24="$TMP/scratch-validator-24.sh"
+# The scratch copy must sit in a MIRRORED tree: the validator sources ../../lib/text.sh relative to
+# its own location (#118), so a flat copy in $TMP would die on a missing library and "fail" for the
+# wrong reason — a mutation proof that passes because the mutant crashed proves nothing.
+SCRATCH24_ROOT="$TMP/scratch24"
+mkdir -p "$SCRATCH24_ROOT/.speck/scripts/validation/validators" "$SCRATCH24_ROOT/.speck/scripts/lib"
+cp "$ROOT/.speck/scripts/lib/text.sh" "$SCRATCH24_ROOT/.speck/scripts/lib/text.sh"
+SCRATCH24="$SCRATCH24_ROOT/.speck/scripts/validation/validators/validate-traceability-matrix.sh"
 cp "$ROOT/.speck/scripts/validation/validators/validate-traceability-matrix.sh" "$SCRATCH24"
 # Remove the AUDIT branch line (portable: match on the literal regex text, not line number).
 sed -i.bak '/\[\[ "\$v" =~ AUDIT-\[A-Za-z0-9-\]\*\[0-9\] \]\] && return 0/d' "$SCRATCH24"
@@ -654,6 +660,45 @@ if bash "$SCRATCH24" --require-evidence --status-only "$FIX23/traceability-matri
   exit 1
 fi
 echo "  ✓ Passed Test 24 (revert-and-confirm-RED: the AUDIT branch is the real control point)"
+
+
+echo "Test 25: ESCAPED PIPE in a Backing cell does not shift the columns after it (#118)"
+# The Backing column holds evidence, and evidence is commands — so a matrix row WILL eventually
+# carry a shell pipeline. Pre-fix, `IFS='|'` split on the `\|` too: the row below yielded one extra
+# cell, the header-resolved Grain index landed on Backing and Status landed on Grain. The author
+# wrote `discharged`; the validator read `story` and reported an unresolved promise.
+FIX25="$TMP/fix25"; mkdir -p "$FIX25"
+cat > "$FIX25/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Grain (proven-at) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|-------------------|--------|
+| PRM-001 | product-contract §3 | grant posture is revoked | S002 / AC-1 | — | S002/AC-1 via `supabase status -o env \| sed 's/^/export /'` | impl-green | discharged |
+EOF
+OUT25="$(bash "$VALIDATOR" --require-evidence --status-only "$FIX25/traceability-matrix.md" 2>&1)"; RC25=$?
+[[ "$RC25" -eq 0 ]] || { echo "ERROR: a row whose Backing cell cites a shell pipeline must still resolve"; echo "$OUT25"; exit 1; }
+echo "$OUT25" | grep -q "cells but the header has" && { echo "ERROR: an ESCAPED pipe must not trip the cell-count check"; echo "$OUT25"; exit 1; }
+echo "  ✓ Passed Test 25 (escaped pipe parsed as one cell; Status still read as 'discharged')"
+
+
+echo "Test 26: an UNESCAPED extra pipe is REPORTED, not silently re-read"
+# The cause-agnostic half of #118: whatever produces a cell-count divergence, every column after it
+# is read from the wrong cell. One count comparison surfaces the class without knowing the cause.
+FIX26="$TMP/fix26"; mkdir -p "$FIX26"
+cat > "$FIX26/traceability-matrix.md" <<'EOF'
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source (artifact §/screen/element) | Promise (what is owed) | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing (fine-grained PRM/audit refs) | Grain (proven-at) | Status |
+|--------|------------------------------------|------------------------|-------------------------------|-------------------|---------------------------------------|-------------------|--------|
+| PRM-001 | product-contract §3 | grant posture is revoked | S002 / AC-1 | — | a | b | impl-green | discharged |
+EOF
+OUT26="$(bash "$VALIDATOR" --require-evidence --status-only "$FIX26/traceability-matrix.md" 2>&1 || true)"
+echo "$OUT26" | grep -q "cells but the header has" || { echo "ERROR: a column-count divergence must be reported, not absorbed"; echo "$OUT26"; exit 1; }
+echo "  ✓ Passed Test 26 (cell-count divergence surfaced)"
 
 
 echo "All validate-traceability-matrix tests passed successfully!"

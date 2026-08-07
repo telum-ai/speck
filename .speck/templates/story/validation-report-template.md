@@ -112,8 +112,12 @@ requires a green control so "I hit the predicate" is distinguishable from "I bro
 | [GUARD_TEST PATH AND NAME] | [MUTATION_SITE PATH AND LINE] | [MATCH_COUNT] | [RED_TESTS NAMES AND COUNTS] | [GREEN_CONTROL TEST NAME] | [VERDICT_CODE FROM MUTATE GUARD] |
 
 **Verdicts.** `GUARD_MUTATION_PROVEN` · `GUARD_MUTATION_GREEN.P2` — report it green, write the honest
-scope onto the test, and never tune the mutation until it reddens · `GUARD_UNMUTATED.P2` — nothing
-was measured, so the guard does not discharge its AC at this state.
+scope onto the test, and never tune the mutation until it reddens · `GUARD_MUTATION_UNOBSERVABLE.P2`
+— the mutation happened but the cited test could not see it (a migration/schema/infra file with no
+`--applier`); this is NOT evidence the guard is blind, re-run with one · `GUARD_UNMUTATED.P2` —
+nothing was measured, so the guard does not discharge its AC at this state ·
+`GUARD_UNMUTATED_HARNESS.P2` — nothing was measured and the HARNESS is why (the probe worktree could
+not run the guard); same non-discharge, but do not read it as a verdict on the guard.
 
 **A guard cited as evidence must import and call the shipped function or the shipped SQL literal**,
 not a transcription of it. A guard that re-derives its own predicate cannot observe its own removal,

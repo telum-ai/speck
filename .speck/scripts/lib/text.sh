@@ -144,6 +144,34 @@ sp_parens_balanced() {
   (( depth == 0 ))
 }
 
+# --- markdown table rows: escaped pipes ----------------------------------------------------------
+# `\|` is the ONLY way to write a literal pipe inside a markdown table cell, and `IFS='|' read -a`
+# splits on it like any other delimiter. The result is not a parse error — it is one extra cell that
+# shifts every later column by one, silently, under a header-keyed reader that resolved its indexes
+# from a header row containing no escaped pipe. The row then MEANS something different than it says:
+# on an 8-column traceability row, Grain reads the Backing cell and Status reads the Grain cell (#118).
+#
+# A matrix row WILL contain a pipe: the Backing column holds evidence, and evidence is commands —
+# `supabase status -o env | sed 's/^/export /'`, `gh run view … --jq`, any shell pipeline. The row
+# citing the command that produced its own evidence is the row most likely to be re-read wrong.
+#
+# Protect before splitting, restore per cell. \x01 is not legal in a markdown source file, so the
+# substitution is round-trip safe. Pair with a cell-count check against the header: a row whose
+# count differs from the header's is a parse defect regardless of cause.
+SP_PIPE_SENTINEL=$'\x01'
+
+# sp_row_protect <line> — replace escaped pipes (\|) with the sentinel. Plain pipes are untouched.
+sp_row_protect() {
+  local s="$1"
+  printf '%s' "${s//\\|/$SP_PIPE_SENTINEL}"
+}
+
+# sp_row_restore <cell> — turn sentinels back into literal pipes. Apply per cell, after trimming.
+sp_row_restore() {
+  local s="$1"
+  printf '%s' "${s//$SP_PIPE_SENTINEL/|}"
+}
+
 # sp_match_exact <needle> <file>
 # Fixed-string, whole-line match. No regex metacharacters, no substring false-positives.
 # Use where the haystack holds one normalised token per line (e.g. `table:orders`), so

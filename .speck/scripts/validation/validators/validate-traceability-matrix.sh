@@ -84,6 +84,10 @@ fi
 BREAKDOWN_EXISTS=false
 [[ -f "$EPIC_DIR/epic-breakdown.md" ]] && BREAKDOWN_EXISTS=true
 
+# Shared text primitives — sp_row_protect / sp_row_restore for escaped-pipe-safe row splitting (#118).
+# shellcheck source=../../lib/text.sh
+. "$(dirname "$0")/../../lib/text.sh"
+
 # Trim leading/trailing whitespace from a string.
 trim() { local s="$1"; s="${s#"${s%%[![:space:]]*}"}"; s="${s%"${s##*[![:space:]]}"}"; printf '%s' "$s"; }
 
@@ -182,27 +186,39 @@ has_structured_token() {
 # --- Header-keyed row parser (Speck v8.4) --------------------------------------------------------
 # Split a markdown table row into the global array ROW_CELLS (trimmed, 0-indexed at the FIRST real
 # column — the empty field before the leading '|' is dropped). A single trailing empty field (from
-# the closing '|') is kept but never indexed by a resolved column. Naive '|' split (matrices never
-# embed literal pipes — same constraint as every other Speck matrix parser).
+# the closing '|') is kept but never indexed by a resolved column.
+#
+# ESCAPED PIPES (#118). The v8.4 note here read "matrices never embed literal pipes" — an assumption,
+# not a constraint, and false the first time a Backing cell cited the shell pipeline that produced its
+# own evidence. `IFS='|'` split on the `\|` too, yielding one extra cell that shifted every later
+# column by one. Header-keying made it WORSE, not better: the header row carries no escaped pipe, so
+# it resolved the correct indexes, and the data row then read Grain out of Backing and Status out of
+# Grain — with no parse error, on the validator that decides whether an epic may close. Protect the
+# escape before splitting and restore it per cell (sp_row_protect / sp_row_restore, text.sh), and
+# record the cell count so a mismatch against the header can be reported as the parse defect it is.
 ROW_CELLS=()
+ROW_RAW_COUNT=0
 split_row() {
   local line="$1" i cell
   local -a raw=()
-  IFS='|' read -r -a raw <<< "$line" || true
+  IFS='|' read -r -a raw <<< "$(sp_row_protect "$line")" || true
   ROW_CELLS=()
   for (( i=1; i<${#raw[@]}; i++ )); do
     cell="$(trim "${raw[$i]}")"
-    ROW_CELLS+=("$cell")
+    ROW_CELLS+=("$(sp_row_restore "$cell")")
   done
+  ROW_RAW_COUNT=${#ROW_CELLS[@]}
 }
 
 # Column indexes into ROW_CELLS, resolved from the header row by NAME (not position).
 # -1 = column absent (e.g. a 6-col matrix has no Backing/Grain; a 7-col matrix has no Grain).
 COL_ID=-1; COL_SRC=-1; COL_PROMISE=-1; COL_DISCHARGE=-1; COL_DEC=-1; COL_BACKING=-1; COL_GRAIN=-1; COL_STATUS=-1
 COLUMNS_RESOLVED=false
+HEADER_CELL_COUNT=0
 
 resolve_columns_from_header() {
   split_row "$1"
+  HEADER_CELL_COUNT=$ROW_RAW_COUNT
   COL_ID=-1; COL_SRC=-1; COL_PROMISE=-1; COL_DISCHARGE=-1; COL_DEC=-1; COL_BACKING=-1; COL_GRAIN=-1; COL_STATUS=-1
   local i lc
   for (( i=0; i<${#ROW_CELLS[@]}; i++ )); do
@@ -276,6 +292,7 @@ violations=0
 open_rows=0
 total=0
 fidelity_warnings=0
+parse_warnings=0
 grain_warnings=0
 grain_violations=0
 discharged_total=0
@@ -295,6 +312,16 @@ while IFS= read -r line; do
   [[ "$line" =~ ^\|[[:space:]]*PRM-[0-9]+ ]] || continue
 
   split_row "$line"
+
+  # A row whose cell count differs from the header's is a PARSE DEFECT, whatever the cause — every
+  # column resolved by name after the divergence point reads a different cell than the author wrote.
+  # This check is deliberately cause-agnostic: #118 arrived as an escaped pipe, but a dropped or
+  # duplicated delimiter produces the same silent re-read, and one count comparison surfaces the
+  # whole class the first time it happens in any project.
+  if [[ "$HEADER_CELL_COUNT" -gt 0 && "$ROW_RAW_COUNT" -ne "$HEADER_CELL_COUNT" ]]; then
+    echo -e "${YELLOW}⚠️  ${NC}[parse] row starting '$(trim "$(printf '%s' "$line" | cut -c1-40)")…' has ${ROW_RAW_COUNT} cells but the header has ${HEADER_CELL_COUNT} — every column after the divergence is read from the wrong cell. Escape a literal pipe as '\\|'."
+    parse_warnings=$((parse_warnings + 1))
+  fi
 
   # No header was seen (unusual matrix) — derive columns positionally from this first data row.
   [[ "$COLUMNS_RESOLVED" == true ]] || resolve_columns_positional
@@ -585,6 +612,9 @@ if [[ "$grain_warnings" -gt 0 ]]; then
 fi
 if [[ "$CHECK_FIDELITY" == true && "$fidelity_warnings" -gt 0 ]]; then
   echo -e "${YELLOW}⚠️  ${fidelity_warnings} fidelity warning(s) — structural presence/overlap only (WARN-only), NOT a faithfulness verdict.${NC}"
+fi
+if [[ "$parse_warnings" -gt 0 ]]; then
+  echo -e "${YELLOW}⚠️  ${parse_warnings} row(s) whose cell count disagrees with the header — those rows' Grain/Status were read from the wrong cells. Fix the row shape before trusting any verdict above.${NC}"
 fi
 
 echo -e "${GREEN}✅ Promise conservation holds — every PRM row resolves (discharged / descoped / pilot-gated).${NC}"

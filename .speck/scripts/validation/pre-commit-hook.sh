@@ -123,9 +123,44 @@ if [[ -f "$bound_fusion" ]]; then
   fi
 fi
 
+# ── Staged-scoped banned-language lint (#109) ────────────────────────────────────────────────
+# THE THIRD BLOCK ABOVE THE EARLY EXIT, and it belongs here for the reason the two-carrier comment
+# already spells out — it just wasn't applied to this one. Banned language lives in SOURCE FILES
+# carrying user-visible copy, not in spec markdown, so the gate's entire population is the ordinary
+# code-only commit: exactly the commit the exit below discards. Placed under it, the gate was
+# authored, correct, wired, and structurally unreachable for every commit it exists to guard —
+# #93 class 1, in the very file whose comment names that class.
+#
+# The silence was the worse half. The hook printed "✓ No Speck specifications or README staged for
+# commit." and never mentioned the lint, so a commit that was never scanned and a commit that
+# scanned clean produced the same output. Nothing said it did not run.
+#
+# BLOCKING, unlike the two advisory blocks above it: this one has been blocking since it was
+# written, and reaching its real population is a fix to its wiring, not a new bar. A project that
+# also chains this lint from its own .husky/pre-commit now runs it twice on spec commits — cheap,
+# and harmless.
+if [[ -f ".speck/scripts/banned-language-lint.sh" ]]; then
+  echo -e "${BLUE}🔍 Running staged banned-language lint...${NC}"
+  if ! bash .speck/scripts/banned-language-lint.sh --staged; then
+    echo -e "${RED}❌ Banned-language violations in staged files.${NC}"
+    errors=$((errors + 1))
+  fi
+fi
+
+# The early exit cannot stand between a block above it and the error report below it: a
+# banned-language finding on a code-only commit would be counted and then discarded unread.
+if [[ $errors -gt 0 && ${#staged_specs[@]} -eq 0 && "$staged_readme" == false ]]; then
+  echo -e "\n${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${RED}ERROR: Commit rejected. Found $errors non-compliant file(s).${NC}"
+  echo -e "${YELLOW}Please fix the validation errors shown above before committing.${NC}"
+  echo -e "${BLUE}Note: If you need to force-commit (not recommended), use 'git commit --no-verify'.${NC}"
+  echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+  exit 1
+fi
+
 # Early-exit when no spec/README is staged, before referencing the array (set -u safe).
-# Anything scoped to non-spec files must run ABOVE this line — see the two-carrier and
-# bound-fusion blocks.
+# Anything scoped to non-spec files must run ABOVE this line — see the two-carrier,
+# bound-fusion and banned-language blocks.
 if [[ ${#staged_specs[@]} -eq 0 && "$staged_readme" == false ]]; then
   echo -e "${GREEN}✓ No Speck specifications or README staged for commit.${NC}"
   exit 0
@@ -240,14 +275,7 @@ if [[ -f "$epic_prereqs" ]]; then
   fi
 fi
 
-# Staged-scoped banned-language lint (advisory at pre-commit; full-repo scan remains manual/CI)
-if [[ -f ".speck/scripts/banned-language-lint.sh" ]]; then
-  echo -e "${BLUE}🔍 Running staged banned-language lint...${NC}"
-  if ! bash .speck/scripts/banned-language-lint.sh --staged; then
-    echo -e "${RED}❌ Banned-language violations in staged files.${NC}"
-    errors=$((errors + 1))
-  fi
-fi
+# (The staged-scoped banned-language lint moved ABOVE the early exit — see #109 there.)
 
 if [[ "$errors" -gt 0 ]]; then
   echo -e "\n${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

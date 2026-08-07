@@ -40,7 +40,10 @@
 #   plain text are user-visible in full and stay whole-file. A file the lexer cannot handle
 #   is scanned WHOLE (pre-v10 behaviour, so the mode can never create a blind spot) and
 #   counted in SPECK_GATE_UNPARSED, because silently scanning it whole — or silently
-#   skipping it — is the failure this whole release is about.
+#   skipping it — is the failure this whole release is about. A JSX text run the
+#   heuristic declines (it holds `; = ( )` outside any `{…}` container) is the third
+#   path: neither revealed nor scanned whole. Those are counted per file and published
+#   as SPECK_GATE_TEXT_RUNS_REJECTED (#111) — a residual you can see, not a blind spot.
 #
 # If PROJECT_DIR is omitted, walks up from cwd. If TARGET_PATHS is omitted, the scope mode
 # decides which product-surface directories are scanned.
@@ -121,6 +124,14 @@ GATE_PREDICATES=0
 # result rests on the mask and how much on the old whole-file scan.
 GATE_FILTER="whole-file"
 GATE_UNPARSED=0
+# The v10.5 addition (#111). UNPARSED counts files the lexer could not read AT ALL — those are
+# scanned whole, so they are covered, just not narrowed. TEXT_RUNS_REJECTED counts something
+# UNPARSED structurally could not: a markup text run inside a file that lexed FINE, which the
+# JSX heuristic declined to read and which was therefore neither revealed nor scanned whole.
+# That third path took neither honest option, and a clean file and an unread one printed the
+# same thing. A non-zero value here is a live residual: N runs of user-visible copy that this
+# run did not look at.
+GATE_TEXT_RUNS_REJECTED=0
 TELEMETRY_EMITTED=false
 TMP_TERMS=""
 TMP_CELLS=""
@@ -136,6 +147,7 @@ emit_telemetry() {
   echo "SPECK_GATE_PREDICATES=$GATE_PREDICATES"
   echo "SPECK_GATE_FILTER=$GATE_FILTER"
   echo "SPECK_GATE_UNPARSED=$GATE_UNPARSED"
+  echo "SPECK_GATE_TEXT_RUNS_REJECTED=$GATE_TEXT_RUNS_REJECTED"
 }
 
 on_exit() {
@@ -579,6 +591,17 @@ if [[ "$STRINGS_ONLY" == true && "$GATE_SUBJECT" -gt 0 ]]; then
   UNPARSED_FILES="$(printf '%s\n' "$PARSE_REPORT" | grep -E '^(unparsed|degraded)	' || true)"
   if [[ -n "$UNPARSED_FILES" ]]; then
     GATE_UNPARSED=$(printf '%s\n' "$UNPARSED_FILES" | wc -l | tr -d ' ')
+  fi
+  # #111 — text runs the JSX heuristic refused, in files that otherwise lexed fine. Name the
+  # files: "N runs somewhere" is not actionable, and this residual's whole point is that it
+  # can be looked at.
+  REJECTED_RUNS="$(printf '%s\n' "$PARSE_REPORT" | grep -E '^text-runs-rejected	' || true)"
+  if [[ -n "$REJECTED_RUNS" ]]; then
+    GATE_TEXT_RUNS_REJECTED=$(printf '%s\n' "$REJECTED_RUNS" | awk -F'\t' '{s+=$3} END {print s+0}')
+    echo "⚠️  ${GATE_TEXT_RUNS_REJECTED} markup text run(s) were NOT read (JSX heuristic declined them):"
+    printf '%s\n' "$REJECTED_RUNS" | awk -F'\t' '{printf "     %s (%s run(s))\n", $2, $3}'
+    echo "     These are neither revealed nor scanned whole — a term inside them cannot fire."
+    echo "     Rewrite the run so its prose sits outside any ; = ( ) characters, or run with --no-strings-only."
   fi
 fi
 

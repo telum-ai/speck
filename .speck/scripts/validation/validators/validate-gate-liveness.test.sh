@@ -197,4 +197,102 @@ run "$d/evidence-contract.md"
   && pass "legacy row with no Scope column → no scope finding (the migration adds it, not a P2)" \
   || fail "a pre-v10 6-column row must not be convicted of an unresolvable scope"
 
+# 13. #112 — a BACKTICKED Scope cell must resolve. The shipped evidence-contract template writes
+# every Scope cell backticked, and `git ls-files -- ':(glob)`frontend/src/**`'` matches zero files.
+# So Speck's own template produced rows that the shipped validator read as unresolvable — and the
+# project that quietly dropped the backticks to silence the warning was the one that ended up
+# correct. Both directions are asserted: the backticked reachable scope must be SILENT, and the
+# backticked unreachable one must still be caught (de-backticking must not defeat the check itself).
+d="$T/t13"
+mkdir -p "$d/.speck" "$d/frontend/src"
+git -C "$d" init -q
+git -C "$d" config user.email t@t.co; git -C "$d" config user.name t
+printf 'export const App = () => null\n' > "$d/frontend/src/App.tsx"
+{
+  echo "## 6. Required Static Evidence"
+  echo ""
+  echo "### 6a. CI-Enforced Gate Registry"
+  echo "| Gate ID | Command / Script | Stage | Domain | Scope | Subject | Canary | Waiver |"
+  echo "|---------|------------------|-------|--------|-------|---------|--------|--------|"
+  echo "| tick-live | \`lint.sh\` | manual | copy | \`frontend/src/**\` | files>0 | — | — |"
+  echo "| tick-dark | \`lint.sh\` | manual | copy | \`nowhere/src/**\` | files>0 | — | — |"
+  echo ""
+  echo "## 7. Required Live-Service Evidence"
+} > "$d/evidence-contract.md"
+git -C "$d" add -A >/dev/null 2>&1; git -C "$d" commit -q -m init >/dev/null 2>&1
+run "$d/evidence-contract.md"
+{ ! echo "$OUT" | grep -q "GATE_SCOPE_UNRESOLVABLE.P2.*tick-live" \
+  && echo "$OUT" | grep -q "GATE_SCOPE_UNRESOLVABLE.P2.*tick-dark"; } \
+  && pass "#112: a backticked Scope resolves (template shape) and an unreachable one is still caught" \
+  || fail "#112: the Scope cell must be de-backticked before it reaches git ls-files"
+
+# 14. #113 — a SECOND markdown table inside §6a must not become phantom gates. §6a is precisely
+# where a project documents what a gate does NOT cover, and a residual is naturally written as a
+# measurement matrix. Pre-fix each of its data rows parsed as a gate with an unparseable stage. The
+# observed workaround was to render the matrix as a fenced code block, with a parenthetical
+# explaining why a table could not be used — a formatting choice forced on a document by its reader.
+d="$T/t14"
+mkdir -p "$d/.speck"
+git -C "$d" init -q
+git -C "$d" config user.email t@t.co; git -C "$d" config user.name t
+{
+  echo "## 6. Required Static Evidence"
+  echo ""
+  echo "### 6a. CI-Enforced Gate Registry"
+  echo "| Gate ID | Command / Script | Stage | Domain | Canary | Waiver |"
+  echo "|---------|------------------|-------|--------|--------|--------|"
+  echo "| lint | eslint | manual | copy | — | — |"
+  echo ""
+  echo "Declared residual for the banned-language gate, measured over six fixtures:"
+  echo ""
+  echo "| Fixture | Text run | Rejected by | Gate |"
+  echo "|---------|----------|-------------|------|"
+  echo "| A | plain text | — | FIRES |"
+  echo "| B | text with {\" \"} | { } | blind |"
+  echo "| C | text with (tag) | ( ) | blind |"
+  echo ""
+  echo "## 7. Required Live-Service Evidence"
+} > "$d/evidence-contract.md"
+git -C "$d" add -A >/dev/null 2>&1; git -C "$d" commit -q -m init >/dev/null 2>&1
+run "$d/evidence-contract.md"
+{ [[ "$RC" == 0 ]] && ! echo "$OUT" | grep -q "GATE_WIRING_DRIFT" \
+  && echo "$OUT" | grep -q "GATE_MANUAL.*lint"; } \
+  && pass "#113: a second table in §6a produces no phantom gates; the real one still parses" \
+  || fail "#113: §6a row extraction must be bounded to the table carrying the Gate ID header"
+
+# 15. #110 — a gate wired in a `.githooks/`-style directory pointed at by core.hooksPath is WIRED.
+# `.husky` is a convention, not the mechanism. Pre-fix this exact shape — committed hook,
+# core.hooksPath set, gate observed blocking a red push — reported SCRIPT_UNREFERENCED.P1, and the
+# `pkg` branch was no escape (a package.json match yields the stage `pkg`, which falls through to
+# GATE_WIRING_DRIFT.P1).
+d="$T/t15"
+mkdir -p "$d/.speck" "$d/.githooks"
+git -C "$d" init -q
+git -C "$d" config user.email t@t.co; git -C "$d" config user.name t
+git -C "$d" config core.hooksPath .githooks
+printf '#!/bin/sh\nbash scripts/gate.sh\n' > "$d/.githooks/pre-push"
+chmod +x "$d/.githooks/pre-push"
+mkctr "$d" "| push-gate | scripts/gate.sh | pre-push | backend | — | — |"
+git -C "$d" add -A >/dev/null 2>&1; git -C "$d" commit -q -m init >/dev/null 2>&1
+run "$d/evidence-contract.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "GATE_OK.*push-gate" \
+  && ! echo "$OUT" | grep -q "SCRIPT_UNREFERENCED"; } \
+  && pass "#110: core.hooksPath dir (.githooks/pre-push) counts as wired" \
+  || fail "#110: the hook directory must be resolved, not hardcoded to .husky"
+
+# 16. #110 regression guard — husky must keep working. core.hooksPath points at the GENERATED
+# dispatcher (`.husky/_`); the user's hooks live in its parent, so the resolver peels one `/_`.
+d="$T/t16"
+mkdir -p "$d/.speck" "$d/.husky/_"
+git -C "$d" init -q
+git -C "$d" config user.email t@t.co; git -C "$d" config user.name t
+git -C "$d" config core.hooksPath .husky/_
+printf '#!/bin/sh\nbash scripts/gate.sh\n' > "$d/.husky/pre-commit"
+mkctr "$d" "| commit-gate | scripts/gate.sh | pre-commit | backend | — | — |"
+git -C "$d" add -A >/dev/null 2>&1; git -C "$d" commit -q -m init >/dev/null 2>&1
+run "$d/evidence-contract.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "GATE_OK.*commit-gate"; } \
+  && pass "#110: husky's .husky/_ dispatcher resolves to the parent hook dir" \
+  || fail "#110: a husky repo must still resolve its hooks"
+
 if [[ "$FAILED" == 0 ]]; then echo "✅ validate-gate-liveness: all tests passed"; else echo "❌ validate-gate-liveness: FAILURES"; exit 1; fi

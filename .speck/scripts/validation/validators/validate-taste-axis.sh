@@ -101,14 +101,19 @@ elif [[ "$taste_axis" != "uncovered" && -n "$taste_axis" ]]; then
 fi
 
 # 4. Detect archetype (walk up for project.json).
-TARGET_DIR=$(dirname "$file_path")
+# CANONICALIZE FIRST (#116) — see the twin note in validate-felt-axis.sh. `dirname "report.md"` is
+# `.` and `dirname "."` is `.`, so a RELATIVE report path (the invocation the story-validate skill
+# documents) hangs this walk forever.
+TARGET_DIR=$(cd "$(dirname "$file_path")" 2>/dev/null && pwd) || TARGET_DIR=""
 project_archetype="consumer_product"
 project_json=""
 dir="$TARGET_DIR"
 while [[ "$dir" != "/" && -n "$dir" ]]; do
   if [[ -f "${dir}/project.json" ]]; then project_json="${dir}/project.json"; break
   elif [[ -f "${dir}/.speck/project.json" ]]; then project_json="${dir}/.speck/project.json"; break; fi
-  dir=$(dirname "$dir")
+  parent=$(dirname "$dir")
+  [[ "$parent" == "$dir" ]] && break
+  dir="$parent"
 done
 if [[ -f "$project_json" ]]; then
   archetype=$(grep -o '"project_archetype"[[:space:]]*:[[:space:]]*"[^"]*"' "$project_json" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || true)

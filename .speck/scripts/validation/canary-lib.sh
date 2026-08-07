@@ -17,10 +17,57 @@
 # "unknown" (command family not recognized as safe — refuse, fail-closed), "safe" (a known read/lint/
 # test/format-check family, a Speck-owned script, or a pure no-op — run it). Refuse == fail-closed.
 
-# Pure STRING check for a destructive verb (shared by the runtime probe AND the recipe-time lint, so
-# they never drift). Boundaried; sees the verb wherever it appears in the invocation/body text.
+# The destructive-verb pattern, in ONE place so the runtime probe and the recipe-time lint can never
+# drift. Boundaried; sees the verb wherever it appears in the invocation/body text.
+#
+# VENDOR NAMES ARE VERB-SCOPED (#114 §2). `supabase` and a bare `migrate` used to sit in this list
+# alone, while every other alternative is `<tool> <destructive-verb>`. A bare vendor name does not
+# model danger, it models a vendor: `supabase status` — which prints connection details and mutates
+# nothing — classified exactly as `supabase db push`, and so did the container name in
+# `docker exec supabase_db_odd psql …`. The consequence was structural, not cosmetic: NO admissible
+# applier existed for any DB-migration guard, because the denylist refused the CLI and the allowlist
+# refused the raw client, so a grant/RLS posture — the class of guard that most needs mutation
+# evidence — could never be witnessed at all. Scoped to the verbs that actually push state, a local
+# `supabase db reset` against a disposable stack is admissible, which is what unblocks that class.
+CL_DESTRUCTIVE_RE='(^|[^a-z-])(deploy|publish|upgrade|destroy|provision|db[ _-]?push|prisma[ ]+migrate|drizzle-kit[ ]+push|supabase[ ]+(db[ ]+(push|remote|dump)|link|projects|secrets|functions|branches)|terraform[ ]+(apply|destroy)|pulumi[ ]+(up|destroy)|railway[ ]+up|flyctl|fly[ ]+deploy|kubectl|helm[ ]+(install|upgrade|uninstall)|wrangler|npm[ ]+publish|yarn[ ]+publish|pnpm[ ]+publish|twine[ ]+upload|gh[ ]+release|vercel|netlify[ ]+deploy|docker[ ]+(push|compose[ ]+push)|git[ ]+(commit|push)|alembic[ ]+(upgrade|downgrade)|goose[ ]+(up|down)|manage\.py[ ]+migrate|rails[ ]+db:migrate|dropdb|createdb|aws[ ]+(s3|lambda|ecs|cloudformation|deploy)|gcloud|az[ ]+|rm[ ]+-rf)([^a-z]|$)'
+
+# Pure STRING check for a destructive verb.
 cl_looks_destructive() {
-  printf '%s' "$1" | grep -qiE '(^|[^a-z-])(deploy|publish|migrate|upgrade|destroy|provision|db[ _-]?push|prisma[ ]+migrate|drizzle-kit[ ]+push|supabase|terraform[ ]+(apply|destroy)|pulumi[ ]+(up|destroy)|railway[ ]+up|flyctl|fly[ ]+deploy|kubectl|helm[ ]+(install|upgrade|uninstall)|wrangler|npm[ ]+publish|yarn[ ]+publish|pnpm[ ]+publish|twine[ ]+upload|gh[ ]+release|vercel|netlify[ ]+deploy|docker[ ]+(push|compose[ ]+push)|git[ ]+(commit|push)|alembic[ ]+(upgrade|downgrade)|goose[ ]+(up|down)|dropdb|createdb|aws[ ]+(s3|lambda|ecs|cloudformation|deploy)|gcloud|az[ ]+|rm[ ]+-rf)([^a-z]|$)'
+  printf '%s' "$1" | grep -qiE "$CL_DESTRUCTIVE_RE"
+}
+
+# cl_destructive_match <text> — echo the matched substring, or nothing. The refusal message's whole
+# job is to be diagnosable: "unsafe" sends the operator to read a 40-alternative regex, while
+# "matched 'deploy'" is actionable in one read (#114 §1.3, §2.4, §3 Gap-2.3 — the same ask arrived
+# from three independent stories).
+cl_destructive_match() {
+  printf '%s' "$1" | grep -oiE "$CL_DESTRUCTIVE_RE" | head -n1 | sed -E 's/^[^a-zA-Z]+//; s/[^a-zA-Z0-9]+$//'
+}
+
+# cl_redact_path_args <invocation> — blank out tokens that are FILESYSTEM PATHS, not verbs.
+#
+# #114 §1: `cl_looks_destructive` was handed the whole invocation, arguments included, and
+# `src/app/api/health/deploy-workflow.test.ts` matches `deploy` (preceded by `/`, followed by `-`,
+# both satisfying the boundary). So `npx vitest run <that path>` was "unsafe" while the identical
+# command on `sha.test.ts` was "safe" — same runner, same flags, same worktree, the only difference
+# a directory name. And it bites hardest exactly where mutation evidence matters most: a guard
+# protecting a deploy pipeline, a migration runner or a publish step almost always lives in a file
+# named after the thing it guards.
+#
+# A token is path-shaped when it holds a `/` and is not a flag. Redaction is applied ONLY when the
+# operative tool is already on the read/lint/test allowlist (see cl_probe_safety), so a compound
+# invocation like `vitest run x && supabase db push` still has its second half read in full.
+cl_redact_path_args() {
+  local inv="$1" out="" tok first=true
+  for tok in $inv; do
+    if [[ "$first" == true ]]; then first=false; out="$tok"; continue; fi
+    case "$tok" in
+      -*)  out="$out $tok" ;;
+      */*) out="$out PATH" ;;
+      *)   out="$out $tok" ;;
+    esac
+  done
+  printf '%s' "$out"
 }
 
 # Known-safe first-token families (read/lint/test/format-check). Extend as needed — adding here is
@@ -44,9 +91,12 @@ cl_is_safe_tool() {
 #             known read/lint/test/format-check family; OR a pure no-op.
 #   unknown = an opaque command we cannot read and cannot recognize (e.g. a bespoke compiled binary)
 #             → fail-closed: refuse to run it.
+#
+# CL_SAFETY_REASON is set on every call: the token that fired, or the tool that was not recognized.
 cl_probe_safety() {
   local inv="$1" wt="$2"
   local first second eff="$inv" resolved_body=false target name
+  CL_SAFETY_REASON=""
   first="$(printf '%s' "$inv" | awk '{print $1}')"
   second="$(printf '%s' "$inv" | awk '{print $2}')"
   case "$first" in
@@ -61,24 +111,38 @@ $(cat "$wt/$target" 2>/dev/null || true)"; resolved_body=true; fi ;;
 $(grep -E "\"$name\"[[:space:]]*:" "$wt/package.json" 2>/dev/null || true)"; resolved_body=true; fi
       fi ;;
   esac
-  cl_looks_destructive "$eff" && { printf 'unsafe'; return 0; }
+
+  # Resolve the operative tool FIRST (#114 §1.1). A known read/lint/test runner does not become
+  # destructive because of an argument — but the arguments are still scanned, with only the
+  # path-shaped tokens redacted, so a compound `vitest run x && supabase db push` is still refused.
+  local op=""
+  if [[ "$resolved_body" == false ]]; then
+    set -- $inv
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        env|time) shift ;;
+        timeout|gtimeout) shift; [[ "${1:-}" =~ ^[0-9] ]] && shift ;;
+        npx) shift ;;
+        python|python3) shift; [[ "${1:-}" == "-m" ]] && shift ;;
+        *) break ;;
+      esac
+    done
+    op="${1:-}"; op="${op##*/}"
+    if cl_is_safe_tool "$op"; then
+      eff="$(cl_redact_path_args "$inv")"
+    fi
+  fi
+
+  if cl_looks_destructive "$eff"; then
+    CL_SAFETY_REASON="matched destructive token '$(cl_destructive_match "$eff")'"
+    printf 'unsafe'; return 0
+  fi
   # We read the full wrapper body and it carries no destructive verb → safe to run in the worktree.
   [[ "$resolved_body" == true ]] && { printf 'safe'; return 0; }
   # A Speck-owned script is reviewed → safe.
   case "$first" in .speck/*|*/.speck/*|./.speck/*) printf 'safe'; return 0 ;; esac
-  # Otherwise classify the operative tool, peeling leading runners.
-  set -- $inv
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      env|time) shift ;;
-      timeout|gtimeout) shift; [[ "${1:-}" =~ ^[0-9] ]] && shift ;;
-      npx) shift ;;
-      python|python3) shift; [[ "${1:-}" == "-m" ]] && shift ;;
-      *) break ;;
-    esac
-  done
-  local op="${1:-}"; op="${op##*/}"
   cl_is_safe_tool "$op" && { printf 'safe'; return 0; }
+  CL_SAFETY_REASON="operative tool '${op:-?}' is not on the known read/lint/test allowlist (fail-closed)"
   printf 'unknown'
   return 0
 }
@@ -121,14 +185,54 @@ cl_worktree_remove() {
   return 0
 }
 
-# Symlink node_modules into the worktree when the lockfiles match (never npm install — slow/network).
+# Provide node_modules to the worktree without an npm install (slow, network, and it would change
+# what is being measured).
+#
+# SYMLINK IS THE DEFAULT AND IS RIGHT FOR ALMOST EVERYTHING — Vitest, Jest and pytest resolve through
+# it happily. Turbopack does not (#114 §3): it resolves the project root first and then REFUSES any
+# symlink that escapes it —
+#     Error [TurbopackInternalError]: Symlink [project]/node_modules is invalid,
+#     it points out of the filesystem root
+# — so the build dies at package resolution before any test runs, the `--red` invocation is already
+# red BEFORE the mutation, and the whole e2e layer of a Next 16 project loses mutation evidence for a
+# harness reason that reads like a project problem.
+#
+# So: clone instead of linking when the project declares a build tool known to reject escaping
+# symlinks. `cp -c` (APFS) and `cp -al` (Linux hardlink) are near-free — no bytes are copied, only
+# directory entries — and both degrade to a plain symlink if unavailable rather than failing the run.
+cl_needs_real_node_modules() {
+  local root="$1" sub="$2"
+  local pkg="$root/${sub:+$sub/}package.json"
+  [[ -f "$pkg" ]] || return 1
+  grep -qE '"(next|turbopack|@vercel/turbopack[^"]*)"[[:space:]]*:' "$pkg" 2>/dev/null
+}
+
 cl_link_node_modules() {
   local root="$1" wt="$2" sub="$3"   # sub = "" for repo root, or e.g. "frontend"
   local src="$root/${sub:+$sub/}node_modules"
   local dst="$wt/${sub:+$sub/}node_modules"
   [[ -d "$src" && ! -e "$dst" ]] || return 0
+  if cl_needs_real_node_modules "$root" "$sub"; then
+    # Copy-on-write / hardlink clone, cheapest first. Any success wins; otherwise fall through.
+    cp -c -R "$src" "$dst" 2>/dev/null && return 0
+    cp -al "$src" "$dst" 2>/dev/null && return 0
+    cp -R "$src" "$dst" 2>/dev/null && return 0
+  fi
   ln -s "$src" "$dst" 2>/dev/null || true
   return 0
+}
+
+# --- harness failure vs. blind guard (#114 §3.2) -------------------------------------------------
+# When a `--red` invocation is already red before the mutation, the honest verdict is "nothing was
+# measured" — but the REASON has to say WHOSE fault it was. `GUARD_UNMUTATED.P2` with the reason
+# "already red" reads as a project problem, and an author who trusts it concludes their e2e guard is
+# worthless: they delete it, or — worse — tune something until it goes green. The doctrine correctly
+# forbids tuning the mutation; it should not be this easy to arrive at the temptation.
+#
+# These signatures say the HARNESS could not run the guard, not that the guard is blind.
+cl_harness_failure_signature() {
+  local out="$1"
+  printf '%s' "$out" | grep -oiE 'Symlink .* points out of the filesystem root|TurbopackInternalError|Cannot find module|command not found|ENOENT: no such file or directory|executable file not found' | head -n1
 }
 
 # Digest helper with a fallback chain. NEVER collapses to a constant on a missing tool (that would

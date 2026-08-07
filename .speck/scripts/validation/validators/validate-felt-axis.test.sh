@@ -183,5 +183,42 @@ else
 fi
 
 
+echo "Test 8: a RELATIVE report path terminates (#116 — the invocation story-validate documents)"
+# `dirname "validation-report.md"` is `.`, and `dirname "."` is `.` — pre-fix the project-root walk
+# never advanced and the validator hung forever. Two validator agents lost a run to this on two
+# different stories. The timeout IS the assertion: a hang must be a RED test, not a hung suite.
+# Run from inside the story dir with a bare filename, exactly as the skill's example does.
+REL_DIR="$TMP/rel"; mkdir -p "$REL_DIR/.speck"
+echo '{"project_archetype": "consumer_product"}' > "$REL_DIR/.speck/project.json"
+cat > "$REL_DIR/validation-report.md" <<'EOF'
+---
+artifact_type: validation-report
+readiness_state_claimed: UX-RC
+felt_axis: ai-verified
+---
+
+## 🎯 Readiness State Claim
+Claiming: UX-RC
+
+## 🧭 Four-Axis Readiness
+- CORRECT: tests pass
+- ON-CONTRACT: LARP findings
+- FELT-GOOD: naive-hostile taste verdict recorded in larp-recordings/abc-naive-hostile-findings.md
+EOF
+REL_RC=0
+( cd "$REL_DIR" && bash "$VALIDATOR" --strict validation-report.md >/dev/null 2>&1 ) &
+REL_PID=$!
+REL_WAITED=0
+while kill -0 "$REL_PID" 2>/dev/null && [[ "$REL_WAITED" -lt 15 ]]; do sleep 1; REL_WAITED=$((REL_WAITED + 1)); done
+if kill -0 "$REL_PID" 2>/dev/null; then
+  kill -9 "$REL_PID" 2>/dev/null || true
+  echo "ERROR: relative report path did not terminate within 15s — the root walk is looping (#116)"
+  exit 1
+fi
+wait "$REL_PID" || REL_RC=$?
+[[ "$REL_RC" -eq 0 ]] || { echo "ERROR: relative path terminated but FAILED (rc=$REL_RC) — it must behave identically to the absolute invocation"; exit 1; }
+echo "  ✓ Passed Test 8 (relative path terminates, same verdict as absolute)"
+
+
 echo "All validate-felt-axis tests passed successfully!"
 exit 0

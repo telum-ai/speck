@@ -95,7 +95,12 @@ else
 fi
 
 # 3. Detect Project Archetype
-TARGET_DIR=$(dirname "$file_path")
+# CANONICALIZE FIRST (#116). `dirname "validation-report.md"` is `.`, and `dirname "."` is `.` —
+# so the walk below never advances and never terminates. That is not an exotic invocation: a
+# RELATIVE report path is exactly what the story-validate skill documents, and two validator agents
+# on two different stories each lost a run to the hang before switching to an absolute path. Resolve
+# the directory to an absolute path once, here, and the `!= "/"` guard becomes reachable.
+TARGET_DIR=$(cd "$(dirname "$file_path")" 2>/dev/null && pwd) || TARGET_DIR=""
 project_archetype="consumer_product" # Default fallback (strictest)
 project_json=""
 dir="$TARGET_DIR"
@@ -107,7 +112,10 @@ while [[ "$dir" != "/" && -n "$dir" ]]; do
     project_json="${dir}/.speck/project.json"
     break
   fi
-  dir=$(dirname "$dir")
+  parent=$(dirname "$dir")
+  # Belt and braces: any dir whose parent is itself is a fixed point, whatever produced it.
+  [[ "$parent" == "$dir" ]] && break
+  dir="$parent"
 done
 
 if [[ -f "$project_json" ]]; then

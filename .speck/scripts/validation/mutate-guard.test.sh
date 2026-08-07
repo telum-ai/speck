@@ -520,6 +520,184 @@ grep -q 'no receipt names this site' <<<"$ROUT" \
 echo "  ✓ a fabricated citation now fails the build, not just the skill's conscience"
 PASS=$((PASS + 1))
 
+# ══ #114 — four classifier/harness blind spots, one per section of the issue ══════════════════
+
+echo "Test 27 (#114 §1): a destructive VERB in a FILE PATH does not convict a test runner"
+# `cl_probe_safety "npx vitest run src/lib/deploy/region.test.ts"` returned unsafe while the same
+# command on sha.test.ts returned safe — same runner, same flags, same worktree, the only difference
+# a directory named `deploy`. It bites hardest where mutation evidence matters most: a guard
+# protecting a deploy pipeline lives in a file named after the thing it guards.
+# shellcheck source=/dev/null
+set +u; . "$ROOT/.speck/scripts/validation/canary-lib.sh"; set -u
+mkdir -p "$REPO/src/lib/deploy"
+[ "$(cl_probe_safety "npx vitest run src/lib/deploy/region.test.ts" "$REPO")" = "safe" ] \
+  || { echo "  ✗ a path segment named 'deploy' still convicts a vitest run"; exit 1; }
+[ "$(cl_probe_safety "npx vitest run src/app/api/health/deploy-workflow.test.ts" "$REPO")" = "safe" ] \
+  || { echo "  ✗ a FILENAME containing 'deploy' still convicts a vitest run"; exit 1; }
+[ "$(cl_probe_safety "npx vitest run src/lib/shared/sha.test.ts" "$REPO")" = "safe" ] \
+  || { echo "  ✗ regression: the always-safe control stopped being safe"; exit 1; }
+echo "  ✓ a path is not a verb (three invocations, one classifier)"
+PASS=$((PASS + 1))
+
+echo "Test 28 (#114 §1): a REAL destructive verb in the same invocation is still refused"
+# The redaction must not become a hole. A compound invocation whose second half pushes state is
+# refused even though its operative tool is on the allowlist.
+[ "$(cl_probe_safety "npx vitest run src/lib/deploy && supabase db push" "$REPO")" = "unsafe" ] \
+  || { echo "  ✗ a compound invocation ending in a real applier was allowed"; exit 1; }
+[ "$(cl_probe_safety "npm publish" "$REPO")" = "unsafe" ] \
+  || { echo "  ✗ a bare destructive command stopped being refused"; exit 1; }
+echo "  ✓ redaction narrows the false positives without opening a hole"
+PASS=$((PASS + 1))
+
+echo "Test 29 (#114 §1.3): the refusal NAMES the token that fired"
+cl_probe_safety "terraform apply" "$REPO" >/dev/null
+grep -qi 'apply' <<<"${CL_SAFETY_REASON:-}" \
+  || { echo "  ✗ the reason does not name the matched token: ${CL_SAFETY_REASON:-<empty>}"; exit 1; }
+cl_probe_safety "psql -c 'select 1'" "$REPO" >/dev/null
+grep -qi 'allowlist' <<<"${CL_SAFETY_REASON:-}" \
+  || { echo "  ✗ an allowlist refusal must say so: ${CL_SAFETY_REASON:-<empty>}"; exit 1; }
+echo "  ✓ 'unsafe' and 'unknown' are each diagnosable in one read"
+PASS=$((PASS + 1))
+
+echo "Test 30 (#114 §2): a bare VENDOR NAME no longer models danger — the verb does"
+# Every other alternative in the denylist is `<tool> <destructive-verb>`; `supabase` alone refused
+# `supabase status` (read-only), `supabase db reset` (a LOCAL disposable stack) and even a container
+# named supabase_db_odd. That is what left DB-schema/RLS/grant guards with no admissible applier.
+cl_looks_destructive "npx supabase status" \
+  && { echo "  ✗ a read-only vendor subcommand is still classified destructive"; exit 1; }
+cl_looks_destructive "npx supabase db reset" \
+  && { echo "  ✗ a local disposable-stack reset is still classified destructive"; exit 1; }
+cl_looks_destructive "docker exec supabase_db_odd psql -U postgres -c 'select 1'" \
+  && { echo "  ✗ a CONTAINER NAME is still classified destructive"; exit 1; }
+cl_looks_destructive "npx supabase db push" \
+  || { echo "  ✗ the verb that actually pushes state stopped being refused"; exit 1; }
+cl_looks_destructive "supabase link --project-ref abc" \
+  || { echo "  ✗ 'supabase link' must stay refused"; exit 1; }
+echo "  ✓ supabase status/db reset admissible; db push / link still refused"
+PASS=$((PASS + 1))
+
+echo "Test 31 (#114 §2.3): a migration mutation with no --applier is UNOBSERVABLE, not a blind guard"
+# GUARD_MUTATION_GREEN.P2 is documented as "the mutation happened and the suite did not notice —
+# write the honest scope onto the test". A reader who trusts that wording concludes the guard is
+# blind. When the subject is a file that must be APPLIED before anything can see it, and no applier
+# ran, the guard was never given a chance — a different claim, and now a different code.
+mkdir -p "$REPO/supabase/migrations"
+cat > "$REPO/supabase/migrations/20260101000000_grants.sql" <<'EOF'
+-- grant posture for the exemplar table
+revoke all on public.infra_smoke from anon, authenticated;
+grant select on public.infra_smoke to authenticated;
+EOF
+git -C "$REPO" add -A >/dev/null 2>&1
+git -C "$REPO" -c commit.gpgsign=false commit -qm migration >/dev/null 2>&1
+OUT="$(run_guard --file supabase/migrations/20260101000000_grants.sql \
+        --pattern 'revoke all on public.infra_smoke from anon, authenticated;' \
+        --replacement 'select 1;' \
+        --red 'bash tests/t_add.sh' --green 'bash tests/t_mul.sh')"
+assert_verdict GUARD_MUTATION_UNOBSERVABLE.P2 "$OUT" "no applier for a DB-subject guard → UNOBSERVABLE"
+grep -q 'NOT evidence that the guard is blind' <<<"$OUT" \
+  || { echo "  ✗ the reason must refuse the blind-guard reading outright"; echo "$OUT"; exit 1; }
+echo "  ✓ the verdict describes the harness, and says so"
+PASS=$((PASS + 1))
+
+echo "Test 32 (#114 §2.2): --applier runs after the mutation and restores the observable path"
+# With an applier supplied, the same run reaches an ordinary verdict — the UNOBSERVABLE branch is
+# about a MISSING applier, not about migrations being unprovable.
+OUT="$(run_guard --file supabase/migrations/20260101000000_grants.sql \
+        --pattern 'revoke all on public.infra_smoke from anon, authenticated;' \
+        --replacement 'select 1;' \
+        --applier 'true' \
+        --red 'bash tests/t_add.sh' --green 'bash tests/t_mul.sh')"
+assert_verdict GUARD_MUTATION_GREEN.P2 "$OUT" "with an applier, the run reaches a real verdict"
+
+echo "Test 33 (#114 §2.2): a failing --applier is refused, not silently ignored"
+OUT="$(run_guard --file supabase/migrations/20260101000000_grants.sql \
+        --pattern 'revoke all on public.infra_smoke from anon, authenticated;' \
+        --replacement 'select 1;' \
+        --applier 'false' \
+        --red 'bash tests/t_add.sh' --green 'bash tests/t_mul.sh')"
+assert_verdict GUARD_UNMUTATED.P2 "$OUT" "a failed applier means the system never reached the state"
+grep -q 'never reached the mutated state' <<<"$OUT" \
+  || { echo "  ✗ the reason must name the applier as the cause"; echo "$OUT"; exit 1; }
+echo "  ✓ the applier is load-bearing, not advisory"
+PASS=$((PASS + 1))
+
+echo "Test 34 (#114 §4): a '/*' inside a STRING does not turn the rest of the file into prose"
+# mutate-guard found comment regions by counting `/*` minus `*/` over raw text. A doc comment
+# holding the literal `@sentry/*` opened a block that never closed, so EVERY later line was
+# classified as prose and every mutation site in it refused — with a message blaming the site.
+mkdir -p "$REPO/src/observability"
+cat > "$REPO/src/observability/scrub.ts" <<'EOF'
+// Scrub PII before it leaves the process.
+// Redaction applies to every `@sentry/*` package integration.
+export function scrub(input: string): string {
+  return input.replace(/secret=[^&]+/g, "secret=REDACTED");
+}
+EOF
+cat > "$REPO/tests/t_scrub.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+grep -q 'secret=REDACTED' src/observability/scrub.ts
+EOF
+git -C "$REPO" add -A >/dev/null 2>&1
+git -C "$REPO" -c commit.gpgsign=false commit -qm scrub >/dev/null 2>&1
+OUT="$(run_guard --file src/observability/scrub.ts --pattern 'secret=REDACTED' --replacement 'secret=LEAKED' \
+        --red 'bash tests/t_scrub.sh' --green 'bash tests/t_mul.sh')"
+assert_verdict GUARD_MUTATION_PROVEN "$OUT" "a site below an unbalanced glob-in-a-string is reachable"
+grep -q 'is a comment' <<<"$OUT" && { echo "  ✗ the site was still refused as prose"; echo "$OUT"; exit 1; }
+echo "  ✓ the glob no longer opens a comment block"
+PASS=$((PASS + 1))
+
+echo "Test 35 (#114 §4): a REAL block comment is still refused"
+# The literal-stripping must not blind the comment check itself.
+cat > "$REPO/src/observability/note.ts" <<'EOF'
+export const live = 1;
+/*
+ * MARKER_IN_BLOCK_COMMENT sits inside a real block comment.
+ */
+export const after = 2;
+EOF
+git -C "$REPO" add -A >/dev/null 2>&1
+git -C "$REPO" -c commit.gpgsign=false commit -qm note >/dev/null 2>&1
+OUT="$(run_guard --file src/observability/note.ts --pattern 'MARKER_IN_BLOCK_COMMENT' --replacement 'X' \
+        --red 'bash tests/t_add.sh' --green 'bash tests/t_mul.sh')"
+assert_verdict GUARD_UNMUTATED.P2 "$OUT" "a genuine block comment is still refused"
+grep -q 'is a comment' <<<"$OUT" || { echo "  ✗ a different branch refused it"; echo "$OUT"; exit 1; }
+echo "  ✓ stripping literals did not blind the comment detector"
+PASS=$((PASS + 1))
+
+echo "Test 36 (#114 §3.2): a HARNESS failure is not reported as a blind guard"
+# When a --red invocation is already red because the probe worktree cannot run it at all, the reason
+# used to read as a project problem — and an author who trusts it deletes the guard, or tunes
+# something until it goes green.
+cat > "$REPO/tests/t_harness.sh" <<'EOF'
+#!/usr/bin/env bash
+echo "Error [TurbopackInternalError]: Symlink [project]/node_modules is invalid, it points out of the filesystem root" >&2
+exit 1
+EOF
+git -C "$REPO" add -A >/dev/null 2>&1
+git -C "$REPO" -c commit.gpgsign=false commit -qm harness >/dev/null 2>&1
+OUT="$(run_guard --file src/prod.sh --pattern '$1 + $2' --replacement '$1 - $2' \
+        --red 'bash tests/t_harness.sh' --green 'bash tests/t_mul.sh')"
+assert_verdict GUARD_UNMUTATED_HARNESS.P2 "$OUT" "a known harness signature gets its own code"
+grep -q 'says nothing about the guard' <<<"$OUT" \
+  || { echo "  ✗ the reason must refuse the blind-guard reading"; echo "$OUT"; exit 1; }
+echo "  ✓ the label matches the status"
+PASS=$((PASS + 1))
+
+echo "Test 37 (#114 §3.2): an ordinary baseline red is still GUARD_UNMUTATED.P2"
+# The split must not swallow the honest case: a genuinely failing test before the mutation is a
+# project problem, and it must keep saying so.
+cat > "$REPO/tests/t_justred.sh" <<'EOF'
+#!/usr/bin/env bash
+echo "assertion failed: expected 4, got 5"
+exit 1
+EOF
+git -C "$REPO" add -A >/dev/null 2>&1
+git -C "$REPO" -c commit.gpgsign=false commit -qm justred >/dev/null 2>&1
+OUT="$(run_guard --file src/prod.sh --pattern '$1 + $2' --replacement '$1 - $2' \
+        --red 'bash tests/t_justred.sh' --green 'bash tests/t_mul.sh')"
+assert_verdict GUARD_UNMUTATED.P2 "$OUT" "a plain failing baseline keeps the original code"
+
 echo ""
 echo "All mutate-guard tests passed ($PASS assertions)."
 exit 0

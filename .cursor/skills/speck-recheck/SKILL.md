@@ -104,7 +104,7 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | GATE_WIRING_DRIFT.P1 | CI_TRUNK_EXCLUDED.P1 | SCRIPT_UNREFERENCED.P1 | GATE_WAIVER_UNBACKED.P2 | GATE_DISARMED.P1 | GATE_LIVENESS_UNVERIFIED.P2 | GUARD_MUTATION_PROVEN | GUARD_MUTATION_GREEN.P2 | GUARD_UNMUTATED.P2 | OBSERVATION_EXPOSED | OBSERVATION_UNEXPOSED.P2 | OBSERVATION_UNEXPOSED_BLOCKING.P1 | OBSERVATION_NOT_GREEN.P1 | OBSERVATION_UNMEASURED.P2 | UNANALYZED_CORPUS.P1 | ANALYSIS_STALE.P1 | ANALYSIS_CRITICAL_OPEN.P1 | PROMISE_UNCOVERED.P1 | ANALYSIS_DECORRELATION_UNVERIFIED.P2 | ANALYSIS_COVERAGE_UNCOMPUTED.P2 | ANALYSIS_GRANDFATHERED.P2 | V8_REPROVE.P1
+- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | GATE_WIRING_DRIFT.P1 | CI_TRUNK_EXCLUDED.P1 | SCRIPT_UNREFERENCED.P1 | GATE_WAIVER_UNBACKED.P2 | GATE_DISARMED.P1 | GATE_LIVENESS_UNVERIFIED.P2 | GUARD_MUTATION_PROVEN | GUARD_MUTATION_GREEN.P2 | GUARD_MUTATION_UNOBSERVABLE.P2 | GUARD_UNMUTATED.P2 | GUARD_UNMUTATED_HARNESS.P2 | OBSERVATION_EXPOSED | OBSERVATION_UNEXPOSED.P2 | OBSERVATION_UNEXPOSED_BLOCKING.P1 | OBSERVATION_NOT_GREEN.P1 | OBSERVATION_UNMEASURED.P2 | UNANALYZED_CORPUS.P1 | ANALYSIS_STALE.P1 | ANALYSIS_CRITICAL_OPEN.P1 | PROMISE_UNCOVERED.P1 | ANALYSIS_DECORRELATION_UNVERIFIED.P2 | ANALYSIS_COVERAGE_UNCOMPUTED.P2 | ANALYSIS_GRANDFATHERED.P2 | V8_REPROVE.P1
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix
@@ -122,9 +122,19 @@ mutation claim that lives only in prose is invisible to it.
   until it reddens. Record it green, write the scope onto the test, and do not adjust the mutation.
   Same ethos as `GATE_LIVENESS_UNVERIFIED.P2` — degrade-to-honest on applicability, fail-closed on
   claims.
+- `GUARD_MUTATION_UNOBSERVABLE.P2` (v10.5) — the mutation provably happened and the cited test
+  **structurally could not see it**: the subject is a file that must be APPLIED to a system before
+  anything can observe it (a migration, a schema, an infra manifest) and no `--applier` was supplied,
+  so the test inspected a system the mutation never reached. Split out from `GUARD_MUTATION_GREEN.P2`
+  because that code's own wording — "write the honest scope onto the test" — invites the reader to
+  conclude the guard is blind, and here it is not blind at all. Re-run with `--applier`.
 - `GUARD_UNMUTATED.P2` — nothing was measured (no match, a comment or docstring line, a test or
   fixture path, an already-red target, or a control that reddened too). The guard does **not**
   discharge its AC at this state; a validation report citing it as proven is drift.
+- `GUARD_UNMUTATED_HARNESS.P2` (v10.5) — nothing was measured, **and the harness is why**: the probe
+  worktree could not run the guard at all (a build tool that rejects the linked `node_modules`, a
+  missing binary). Same non-discharge as `GUARD_UNMUTATED.P2`, different cause and different remedy —
+  it is not a statement about the guard, and an author who reads it as one deletes a working gate.
 
 A validation report or harden report whose cited guard carries no `GUARD_*` verdict at all is the
 same class one level up — the claim exists and the measurement does not.

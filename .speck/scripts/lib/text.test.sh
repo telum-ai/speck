@@ -97,6 +97,20 @@ sp_parens_balanced "a (b (c) d)"            && pass "nested pair is balanced"   
 sp_parens_balanced "sett (Norwegian for rep" && fail "unbalanced open is caught" "nonzero" "zero" || pass "unbalanced open is caught"
 sp_parens_balanced "set)"                   && fail "unbalanced close is caught" "nonzero" "zero" || pass "unbalanced close is caught"
 
+echo "── sp_row_protect / sp_row_restore (escaped pipes, #118)"
+row='| PRM-9 | src | a \| b | S1 | — | backing | impl-green | discharged |'
+protected="$(sp_row_protect "$row")"
+IFS='|' read -r -a raw <<< "$protected"
+# 8 real columns + the empty field before the leading pipe = 9. Unprotected this is 10.
+eq "escaped pipe no longer splits" "9" "${#raw[@]}"
+eq "the cell holding it is intact" "a | b" "$(sp_row_restore "$(sp_trim "${raw[3]}")")"
+eq "the column AFTER it is not shifted" "backing" "$(sp_trim "${raw[6]}")"
+eq "Status still reads Status" "discharged" "$(sp_trim "${raw[8]}")"
+# Plain (unescaped) pipes must still be delimiters — protection must not swallow the table.
+IFS='|' read -r -a plain <<< "$(sp_row_protect '| a | b | c |')"
+eq "plain pipes still delimit" "4" "${#plain[@]}"
+eq "round-trip is byte-identical" 'x \| y' "$(sp_row_restore "$(sp_row_protect 'x \| y')" | sed 's/|/\\|/')"
+
 echo "── sp_match_exact"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

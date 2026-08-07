@@ -982,6 +982,75 @@ else
   echo "SKIP: V28 — canary-lib.sh / banned-language.canary not present in this sync"
 fi
 
+# ── V30 (#111): the six-fixture JSX text-run matrix, verbatim from the issue ──────────────
+# Six three-line components differing only in the characters inside the text run. Pre-fix, ONE of
+# six fired and SPECK_GATE_TEXT_RUNS_REJECTED did not exist, so the five blind files produced
+# byte-identical output to five clean ones. Each fixture is asserted INDIVIDUALLY — a matrix
+# scored in aggregate hides which member regressed.
+#
+# B and C are the ones that matter most and are now CAUGHT: Prettier manufactures B by wrapping a
+# long JSX line, and a §7 term whose own canonical shape carries an interpolation is C.
+# D, E and F stay refused (`( ) ; =` are what protect `if (a > b) { … }`) — but they are now
+# COUNTED and NAMED, which is the difference between a residual and a blind spot.
+jsx_fixture() { # <dir> <basename> <line>
+  mkdir -p "$1/src/app"
+  { echo 'export default function C() {'; echo "  return ($3);"; echo '}'; } > "$1/src/app/$2.tsx"
+}
+
+for fx in \
+  "A|<p>Var server er revolusjonerende</p>|fire" \
+  "B|<p>Var server er revolusjonerende{\" \"}</p>|fire" \
+  "C|<p>Hei {\"du\"}, var server er revolusjonerende</p>|fire" \
+  "D|<p>Valgt fordi (tag) - var server er revolusjonerende</p>|reject" \
+  "E|<p>Var server er revolusjonerende; ukesmeny er klar</p>|reject" \
+  "F|<p>Odd = uken din, var server er revolusjonerende</p>|reject"
+do
+  name="${fx%%|*}"; restfx="${fx#*|}"; jsx="${restfx%|*}"; want="${restfx##*|}"
+  d="$WORK/v30-$name"
+  mkproj "$d" <<'EOF'
+| revolusjonerende | UI | hype | bedre |
+EOF
+  jsx_fixture "$d" "c" "$jsx"
+  run_lint "$d"
+  if [[ "$want" == "fire" ]]; then
+    assert_rc "V30-$name: banned term inside a JSX text run FIRES" 1
+  else
+    # Still refused — but it must SAY SO. A refusal that reports nothing is the actual defect.
+    if grep -q 'SPECK_GATE_TEXT_RUNS_REJECTED=0' <<<"$LAST_OUT"; then
+      _bad "V30-$name: a refused text run must be COUNTED, not silent (#111)"
+    else
+      _ok "V30-$name: refused text run is counted and the file is named"
+    fi
+  fi
+done
+
+# V30g: a clean JSX file must report ZERO rejected runs — otherwise the counter is noise and
+# the number stops meaning "there is copy here nobody read".
+d="$WORK/v30-clean"
+mkproj "$d" <<'EOF'
+| revolusjonerende | UI | hype | bedre |
+EOF
+jsx_fixture "$d" "c" '<p>Var server er helt vanlig{" "}</p>'
+run_lint "$d"
+assert_rc "V30g: a clean JSX file passes" 0
+assert_out_has "V30g: a fully-understood run reports no rejection" "SPECK_GATE_TEXT_RUNS_REJECTED=0"
+
+# V30h: an EXPRESSION CONTAINER's contents must stay hidden. Revealing `{apiClient}` would
+# re-open the exact false-conviction class --strings-only exists to close (an import specifier
+# matching the template's own §7 "API" row). The prose around it is copy; the identifier is not.
+d="$WORK/v30-ident"
+mkproj "$d" <<'EOF'
+| synergy | UI | generic pitch | collaboration |
+EOF
+mkdir -p "$d/src/app"
+{
+  echo 'export default function C({ synergyCount }) {'
+  echo '  return (<p>Vi teller {synergyCount} ting her</p>);'
+  echo '}'
+} > "$d/src/app/c.tsx"
+run_lint "$d"
+assert_rc "V30h: an identifier inside {…} is not revealed as copy" 0
+
 echo ""
 echo "Results: $pass passed, $fail failed"
 [[ "$fail" -eq 0 ]]

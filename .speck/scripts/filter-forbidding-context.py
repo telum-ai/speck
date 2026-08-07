@@ -46,7 +46,13 @@ KNOWN LIMITS, stated rather than hidden:
     apostrophe, not a string opener — that is what makes `<p>It's here</p>` work
     inside .tsx, and it means a genuine multi-line `'` string is missed.
   * JSX/HTML text nodes are recovered by a conservative `>`…`<` rule; a text run
-    holding `; { } = ( )` is rejected rather than risk re-convicting code.
+    holding `; = ( )` is rejected rather than risk re-convicting code. `{ }` is NOT in
+    that set (#111): a JSX expression container is stripped and the prose around it is
+    read, because Prettier manufactures `{" "}` at every long-line wrap. A run that IS
+    still rejected is COUNTED and its file named — `--parse-report` emits
+    `text-runs-rejected`, which the lint publishes as SPECK_GATE_TEXT_RUNS_REJECTED.
+    A rejected run used to take neither honest path: not revealed, not scanned whole,
+    not counted — so a clean file and an unread one printed the same thing.
 """
 
 import os
@@ -391,28 +397,100 @@ def lex_source(text, ext, mask, start=0, end=None, force_c_like=False):
 _TAGGISH = re.compile(r"^<[A-Za-z/>]")
 _TEXT_REJECT = re.compile(r"[;{}=()]")
 
+# Runs this pass looked at and REFUSED to reveal, keyed by path. See reveal_jsx_text.
+JSX_RUNS_REJECTED = {}
 
-def reveal_jsx_text(text, mask, start=0, end=None):
+
+def _text_outside_containers(run):
+    """Split a JSX text run into the segments that sit OUTSIDE `{…}` expression containers.
+
+    In JSX a `{` opens an EXPRESSION CONTAINER; the prose on either side of it is still
+    prose. `<p>Hei {"du"}, vår server er X</p>` is one sentence a user reads, interrupted by
+    an interpolation — but the whole run carried `{ }` and so was refused wholesale.
+
+    Returns a list of (start, end) offsets INTO THE RUN, or None when the braces do not
+    balance — which means we mis-lexed, and the caller must refuse rather than guess.
+
+    The container's own contents are deliberately NOT returned. `{apiClient}` is an
+    identifier, not copy; revealing it would re-open exactly the false-conviction class
+    (`"API"` matching an import) that `--strings-only` exists to close. A string literal
+    inside a container is already revealed by lex_source on its own merits.
+    """
+    spans = []
+    depth = 0
+    seg_start = 0
+    for idx, c in enumerate(run):
+        if c == "{":
+            if depth == 0 and idx > seg_start:
+                spans.append((seg_start, idx))
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth < 0:
+                return None
+            if depth == 0:
+                seg_start = idx + 1
+    if depth != 0:
+        return None
+    if seg_start < len(run):
+        spans.append((seg_start, len(run)))
+    return spans
+
+
+def reveal_jsx_text(text, mask, start=0, end=None, path=None):
     """Conservatively reveal `>`…`<` text runs inside CODE regions.
 
-    Deliberately high-precision: a run holding `; { } = ( )` is rejected rather than
-    risk re-convicting `if (a > b) { … }`. The opening `>` must also close a tag-like
-    `<…>` span, or a bare `a > b < c` comparison would qualify.
+    Deliberately high-precision: a run holding `; = ( )` is rejected rather than risk
+    re-convicting `if (a > b) { … }`. The opening `>` must also close a tag-like `<…>`
+    span, or a bare `a > b < c` comparison would qualify.
+
+    BRACES ARE NOT IN THAT SET ANY MORE (#111). They were, and the cost on a JSX codebase —
+    the primary target of the `src/**` scope — was five of six real shapes going unread:
+
+        <p>Vår server er X</p>                    FIRES
+        <p>Vår server er X{" "}</p>               blind — `{ }`
+        <p>Hei {"du"}, vår server er X</p>        blind — `{ }`
+
+    and Prettier MANUFACTURES the second one: wrapping a long JSX line emits `{" "}` at the
+    break, on exactly the long lines long-form copy produces. So a project running
+    `prettier --check` in CI — a posture Speck encourages — generated blind text runs
+    automatically. A `{…}` span is now stripped and the remaining prose evaluated; the
+    `if (a > b)` protection is untouched, because `; = ( )` still reject and the opening `>`
+    must still close a real tag.
+
+    WHAT IS STILL REFUSED IS NOW COUNTED. A rejected run used to take neither of the two
+    honest paths this file documents — it was not scanned whole, and it was not counted in
+    SPECK_GATE_UNPARSED. The output of a clean file and of an unread file were byte-identical,
+    which is the "green that never had a subject" failure, inside the gate itself. Rejections
+    now accumulate in JSX_RUNS_REJECTED and surface as SPECK_GATE_TEXT_RUNS_REJECTED, so the
+    residual is visible even where it is not yet closed.
     """
     if end is None:
         end = len(text)
     i = start
+    rejected = 0
     while i < end:
         gt = text.find(">", i)
         if gt < 0 or gt >= end:
-            return
+            break
         lt = text.find("<", gt + 1)
         if lt < 0 or lt > end:
-            return
+            break
         run = text[gt + 1:lt]
-        if _closes_a_tag(text, gt, start) and run.strip() and not _TEXT_REJECT.search(run):
-            _reveal(mask, text, gt + 1, lt)
+        if _closes_a_tag(text, gt, start) and run.strip():
+            spans = _text_outside_containers(run)
+            joined = None if spans is None else "".join(run[a:b] for a, b in spans)
+            if joined is not None and not _TEXT_REJECT.search(joined):
+                if joined.strip():
+                    for a, b in spans:
+                        _reveal(mask, text, gt + 1 + a, gt + 1 + b)
+                # A run that is ONLY an expression container (`{" "}`) has no prose to
+                # reveal — it is fully understood and correctly empty, not a rejection.
+            else:
+                rejected += 1
         i = gt + 1
+    if rejected and path is not None:
+        JSX_RUNS_REJECTED[path] = JSX_RUNS_REJECTED.get(path, 0) + rejected
 
 
 def _closes_a_tag(text, gt, floor):
@@ -661,7 +739,7 @@ def _build_mask(path):
         else:
             clean = lex_source(text, ext, mask)
             if ext in JSX_EXT:
-                reveal_jsx_text(text, mask)
+                reveal_jsx_text(text, mask, path=path)
     except Exception:
         # A crash here must degrade ONE file, never fail the gate: the lint would then
         # exit 2 in CI on an input nobody can see. Degraded means "scanned whole, and
@@ -700,9 +778,21 @@ def hit_is_visible(path, line_no, pattern):
 
 
 def parse_report(paths):
+    """One line per file: `<status>\t<path>`, plus a `text-runs-rejected` line per file
+    whose JSX text runs this pass refused to read (#111).
+
+    The second class is NOT a status — those files were lexed successfully and their string
+    literals are covered. It is a per-file residual: N markup text runs inside them were
+    neither revealed nor scanned whole. Reporting it is what turns a silent blind spot into
+    a visible one, which is the half of #111 worth having even if nothing else changed.
+    """
     for p in paths:
         status, _ = masked_lines(p)
         print("%s\t%s" % (status, p))
+    for p in paths:
+        n = JSX_RUNS_REJECTED.get(p)
+        if n:
+            print("text-runs-rejected\t%s\t%d" % (p, n))
     return 0
 
 

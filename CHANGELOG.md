@@ -1,5 +1,140 @@
 # Speck Changelog
 
+## v10.5.0 — 2026-08-07 — Nine gates, and the population each one never reached
+
+Nine issues from one epic in one project, and eight of them are the same sentence: **a check that
+was correct about the thing it looked at, and never looked at the thing it was for.**
+
+Not one of these is a wrong answer. Every one is a *right answer over the wrong subject* — which is
+the failure this whole line of releases exists to kill, arriving nine more times inside the gates
+themselves.
+
+### #109 — the banned-language gate ran below its own early exit
+
+The hook exits early when no spec markdown and no README is staged. That sentence describes **every
+ordinary code-only commit** — which is the entire population of a gate whose subject is user-visible
+copy in source files. The block sat under it: authored, correct, wired, and structurally unreachable
+for every commit it existed to guard.
+
+The file already named this exact class, two blocks above the exit, in its own comment — the
+two-carrier and bound-fusion blocks were deliberately placed above the exit for that reason. This
+one was not.
+
+Worse than the miss: the hook printed `✓ No Speck specifications or README staged for commit.` and
+never mentioned the lint. **A commit that was never scanned and a commit that scanned clean produced
+identical output.** The block moved above the exit, and `pre-commit-hook.test.sh` now DRIVES THE
+HOOK — the only way to test reach — with four cases including the reported one. Against the old
+hook, two of them go red with that exact green line in the output.
+
+### #111 — the copy gate was blind to most real JSX, and said nothing
+
+A `>`…`<` text run was revealed only if it held none of `; { } = ( )`. Six three-line components
+differing only in those characters: **one of six fired.** And `SPECK_GATE_UNPARSED=0` on every run,
+because a rejected text run took neither of the two honest paths the filter documents — it was not
+scanned whole, and it was not counted. Clean file, unread file, byte-identical output.
+
+Braces are out of the reject set. In JSX `{` opens an *expression container*; the prose around it is
+still prose, and Prettier **manufactures** the blind shape — it emits `{" "}` at every long-line
+wrap, on exactly the long lines that long-form copy produces. The container's contents stay hidden,
+because `{apiClient}` is an identifier and revealing it would re-open the false-conviction class
+`--strings-only` exists to close.
+
+What is still refused is now **counted and named**: `SPECK_GATE_TEXT_RUNS_REJECTED`, per file. That
+half was worth shipping even alone — it converts a blind spot into a residual you can look at.
+
+### #110, #112, #113 — three ways to be wrong about §6a
+
+- **#112** — every cell is de-backticked now. `gate_sig` already stripped backticks from the Command
+  cell; the Scope cell one screen away did not, and went straight to
+  `git ls-files -- ':(glob)`src/**`'`, which matches nothing. **The shipped template writes every
+  Scope cell backticked.** So Speck's own template produced rows the shipped validator read as
+  unresolvable, and the project that quietly dropped the backticks to silence the warning was the one
+  that ended up correct. Read the other way: the vacuity check #98 installed was evaluating nothing.
+- **#113** — §6a row extraction is bounded to the table carrying the `Gate ID` header. It used to
+  take every `|`-line up to the next heading, with the header found by a separate grep — so §6a, the
+  section reserved for documenting what a gate does *not* cover, was hostile to the measurement
+  tables that documentation naturally takes. Six phantom gates from one residual matrix. The observed
+  workaround was to render it as a fenced code block with a parenthetical explaining why, which is a
+  formatting choice forced on a document by its reader.
+- **#110** — the hook directory is resolved from `core.hooksPath`, not hardcoded to `.husky`. A
+  project committing `.githooks/pre-push` got `SCRIPT_UNREFERENCED.P1` for a gate that was wired,
+  running, and observed blocking a red push. Husky still works: `core.hooksPath` points at the
+  generated `.husky/_` dispatcher, so the resolver peels one `/_`.
+
+### #114 — four ways the mutation harness refused legitimate evidence
+
+Together these meant **no DB guard, no Next.js e2e guard, and no file below a `/*` in prose could
+produce mutation evidence** — and each failure was reported as the *site's* fault.
+
+- **A path is not a verb.** `cl_looks_destructive` was handed the whole invocation, so
+  `npx vitest run src/lib/deploy/region.test.ts` was "unsafe" while the same command on
+  `sha.test.ts` was "safe". It bites hardest where mutation evidence matters most: a guard protecting
+  a deploy pipeline lives in a file named after the thing it guards. The operative tool is classified
+  first, and path-shaped arguments are redacted before the verb scan — `vitest run x && supabase db
+  push` is still refused.
+- **A vendor name is not danger.** Every other alternative in the denylist is `<tool> <verb>`;
+  `supabase` sat there alone and refused `supabase status` — a read-only command — along with a
+  container named `supabase_db_odd` and any path containing the string. The denylist refused the CLI
+  and the allowlist refused the raw client, so **no admissible applier existed for any DB-migration
+  guard.** Vendor entries are verb-scoped now, and `--applier` is a real step: "bring the system to
+  the mutated state", run after the mutation, with its own safety rule and an explicit `--applier-ack`
+  for the cases that still trip the denylist.
+- **Two greens that meant opposite things.** `GUARD_MUTATION_GREEN.P2` is documented as "the mutation
+  happened and the suite did not notice — write the honest scope onto the test". For a migration
+  nobody applied, the guard is not blind at all; it reddens hard the moment the mutation reaches a
+  database. That case is now `GUARD_MUTATION_UNOBSERVABLE.P2`, and a harness that could not run the
+  guard at all is `GUARD_UNMUTATED_HARNESS.P2` — because an author who reads "already red" as a
+  verdict on their gate deletes a working gate, or tunes something until it goes green.
+  `cl_link_node_modules` also clones instead of symlinking under Turbopack, which rejects a symlink
+  escaping the project root and killed the whole e2e layer of any Next 16 project.
+- **`/*` inside a string is not a comment.** A doc comment holding the literal `` `@sentry/*` ``
+  opened a block that never closed, so every later line in the file was classified as prose and every
+  mutation site refused — with a message blaming the site. Literals are blanked before the delimiters
+  are counted.
+
+Every refusal now **names the token that fired**. The same ask arrived from three independent
+stories, which is what a message that sends the reader to a 40-alternative regex earns.
+
+### #116 — the documented invocation hung forever
+
+`dirname "validation-report.md"` is `.`, and `dirname "."` is `.`, so the project-root walk in
+`validate-felt-axis.sh` and its taste twin never advanced. The relative path is the invocation the
+`story-validate` skill documents; two validator agents on two different stories each lost a run to
+it. The argument is canonicalized, and the walk breaks on any fixed point. The regression test uses
+a **timeout as the assertion** — a hang has to be a red test, not a hung suite.
+
+### #118 — one escaped pipe shifted every column after it
+
+`IFS='|'` splits on `\|` too — the only way to write a literal pipe in a markdown cell. Header-keying
+made it **worse**: the header row has no escaped pipe, so it yielded correct indexes, and the data
+row yielded one extra cell. On the validator that decides whether an epic may close, Grain read
+Backing and Status read Grain. The author wrote `discharged`; the row meant `impl-green`.
+
+A matrix row *will* carry a pipe — the Backing column holds evidence, and evidence is commands. The
+row citing the shell pipeline that produced its own evidence is the row most likely to be silently
+re-read. `sp_row_protect` / `sp_row_restore` live in `text.sh` with the other idioms, and both
+matrix readers use them. Paired with a **cause-agnostic** check: a row whose cell count disagrees
+with the header is reported, whatever produced the divergence.
+
+### #115 — "client bundle" meant three things and the gate knew one
+
+A Server Component rendering `process.env.<SERVER_ONLY_VAR>` delivers the value to the browser via
+prerendered HTML **and** the RSC flight payload. A scan scoped to `.next/static/**` printed CLEAN
+over both. The phrase carries an implicit Pages-Router-era definition, and the gate inherited it.
+
+The evidence-contract template now defines **"client bundle" = everything the browser can receive**,
+enumerated per framework, and requires **one liveness self-test direction per enumerated surface**.
+That second rule is the one that would have caught it: the gate *had* a self-test, and the self-test
+only planted a canary where the scan already looked — proving the machinery, not the coverage.
+
+### Verification
+
+Every fix above is pinned by a test that was **observed going red against the pre-fix code**, not
+merely added. The #111 matrix reproduces the issue's six-fixture table verbatim (1 of 6 firing
+before, 3 firing and 3 counted after); #109's two reach tests fail against the old hook with its
+`✓ No Speck specifications or README staged` line in the output; #114 §4 fails with the exact
+`is a comment, a docstring or blank` message the field report quoted.
+
 ## v10.4.0 — 2026-08-07 — A marker nobody read, and a promise with no name
 
 Two issues, and the same sentence describes both: **a check whose vocabulary was narrower than its
