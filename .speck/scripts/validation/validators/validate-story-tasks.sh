@@ -82,9 +82,37 @@ status: pending  # pending | in_progress | completed
 The orchestrator uses this to detect implementation progress."
 fi
 
-# 2. Count total tasks (accept [ ] + [x]/[X])
-total_tasks=$(echo "$content" | grep -E -c "^- \[[ xX]\] T[0-9]+")
+# 2. Count tasks. EVERY marker enters the denominator; only [x]/[X] is complete.
+#
+# The bug this replaces (#107, found in the field on E000/S004): the total was counted with the
+# character class `[ xX]`, so a task marked `[!]` matched NEITHER the total NOR the completed
+# pattern. It did not read as incomplete — it was ERASED. A tasks.md with 18 tasks, 5 of them
+# blocked, reported "13 of 13 complete · Ready for /story-validate", and one of the vanished five
+# was the load-bearing observation task for AC-1.
+#
+# That is the dark-gate shape: a green that never had the chance to catch what it exists to catch,
+# and the failure direction leaves no trace, because a story whose blocked work disappeared and a
+# story that is genuinely done print the same line.
+#
+# So the denominator is now `\[.\]` — any single-character marker. A task is a task whatever glyph
+# its author reached for, and a marker this validator has never heard of must change the count it
+# cannot be silently dropped from. Classification is the narrow part:
+#   [x] [X]  complete
+#   [!]      BLOCKED — reported separately, and it suppresses the Ready verdict outright
+#   [ ]      incomplete, the ordinary case
+#   anything else  incomplete AND NAMED, because an unrecognised marker resolving quietly to
+#                  "not done" is how the next `[!]` gets invented and silently mis-read again.
+#
+# `[!]` was never in tasks-template.md — it is a field convention this validator had no vocabulary
+# for. It is documented in the template now, so the fix is not just this regex.
+total_tasks=$(echo "$content" | grep -E -c "^- \[.\] T[0-9]+")
 completed_tasks=$(echo "$content" | grep -E -c "^- \[[xX]\] T[0-9]+")
+blocked_tasks=$(echo "$content" | grep -E -c "^- \[!\] T[0-9]+")
+unknown_markers=$(echo "$content" | grep -E "^- \[.\] T[0-9]+" | grep -E -v "^- \[[ xX!]\] T[0-9]+" || true)
+unknown_count=0
+if [ -n "$unknown_markers" ]; then
+  unknown_count=$(echo "$unknown_markers" | grep -c . || true)
+fi
 
 if [ "$total_tasks" -eq 0 ]; then
   log_error "No tasks found in tasks.md" \
@@ -94,8 +122,36 @@ if [ "$total_tasks" -eq 0 ]; then
 
 Tasks should be concrete, actionable items from plan.md."
 else
-  log_success "Has $total_tasks task(s), $completed_tasks completed"
-  
+  log_success "Has $total_tasks task(s), $completed_tasks completed, $blocked_tasks blocked"
+
+  # A blocked task is a FINDING, not a footnote. It is the story telling you, in its own file, that
+  # acceptance-critical work cannot proceed — so it is surfaced whether or not anything else is
+  # wrong, and it is an error under --strict rather than a line someone might scroll past.
+  if [ "$blocked_tasks" -gt 0 ]; then
+    blocked_list=$(echo "$content" | grep -E "^- \[!\] T[0-9]+" | sed 's/^/    /')
+    if [ "$strict" = true ]; then
+      log_error "$blocked_tasks task(s) marked BLOCKED [!] — this story is not ready to advance" \
+        "Unblock or re-scope them, then re-run. Blocked tasks:
+$blocked_list
+
+A blocked task is not an incomplete task you can finish later in the same pass — it is a
+dependency the story cannot satisfy on its own. Advancing past it moves the block downstream
+where it costs more to find."
+    else
+      log_warning "$blocked_tasks task(s) marked BLOCKED [!]" \
+        "Blocked tasks:
+$blocked_list"
+    fi
+  fi
+
+  # An unrecognised marker is neither complete nor honestly incomplete — it is unreadable, and the
+  # validator says so rather than folding it into a count it cannot justify.
+  if [ "$unknown_count" -gt 0 ]; then
+    log_warning "$unknown_count task(s) use a marker this validator does not recognise" \
+      "Counted as INCOMPLETE. Use [ ] pending · [x] complete · [!] blocked.
+$(echo "$unknown_markers" | sed 's/^/    /')"
+  fi
+
   # Check for too many tasks
   if [ "$total_tasks" -gt 20 ]; then
     log_warning "Story has many tasks ($total_tasks > 20)" \
@@ -106,7 +162,15 @@ Apply simplicity-first: Can this be done in <100 lines of code?"
   # Calculate completion percentage
   if [ "$total_tasks" -gt 0 ]; then
     completion_pct=$((completed_tasks * 100 / total_tasks))
-    if [ "$completion_pct" -eq 100 ]; then
+    # The Ready verdict is guarded on the blocked count as well as the percentage, and the
+    # redundancy is deliberate. Fixing the denominator already makes 13-of-18 read 72%, so this
+    # branch is unreachable while the count is right — which is exactly why it is here. #107 was a
+    # counting bug that reached the field as a WRONG VERDICT, and the verdict should not depend on
+    # one arithmetic expression staying correct forever. A story with an explicitly blocked task is
+    # not ready, at any percentage.
+    if [ "$blocked_tasks" -gt 0 ]; then
+      log_success "Progress: $completion_pct% complete ($completed_tasks/$total_tasks) — NOT ready: $blocked_tasks blocked"
+    elif [ "$completion_pct" -eq 100 ]; then
       log_success "All tasks complete! Ready for /story-validate"
     elif [ "$completion_pct" -gt 0 ]; then
       log_success "Progress: $completion_pct% complete ($completed_tasks/$total_tasks)"

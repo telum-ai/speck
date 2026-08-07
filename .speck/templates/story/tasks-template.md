@@ -128,6 +128,24 @@ status: pending
 
 ---
 
+### Task markers — the whole vocabulary
+
+| Marker | Means | Effect on the gate |
+|--------|-------|--------------------|
+| `- [ ]` | pending | counted, incomplete |
+| `- [x]` | complete | counted, complete |
+| `- [!]` | **BLOCKED** — this task cannot proceed on its own | counted, incomplete, and it **withholds the Ready verdict** at any percentage |
+
+`[!]` is listed here because it was not, and that cost a story. It arose as a field convention while
+`validate-story-tasks.sh` counted only `[ ]` and `[x]` — so a `[!]` line matched neither pattern and
+was erased from *both* the numerator and the denominator. A tasks.md with 18 tasks, 5 of them
+blocked, reported "13 of 13 complete · Ready for /story-validate", and one of the vanished five was
+the load-bearing observation task for its AC (#107).
+
+Any other glyph is counted as incomplete **and named** as an unrecognised marker. Invent a fourth
+state and the validator will tell you it does not know what you meant — rather than quietly deciding
+for you, which is how `[!]` got mis-read for eleven versions.
+
 ### Phase 1: Setup
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize [language] project with [framework] dependencies

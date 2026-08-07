@@ -1,5 +1,63 @@
 # Speck Changelog
 
+## v10.4.0 — 2026-08-07 — A marker nobody read, and a promise with no name
+
+Two issues, and the same sentence describes both: **a check whose vocabulary was narrower than its
+subject, reporting a verdict over the part it happened to understand.**
+
+### #107 — `[!]` BLOCKED tasks were not counted as done. They were counted as nothing.
+
+The field report said blocked tasks "read as done". The mechanism is worse than that. The total was
+counted with the character class `[ xX]` and the completions with `[xX]`, so a `- [!] T014` line
+matched **neither**. It did not inflate the numerator — it was **erased from both**. A tasks.md with
+18 tasks, 5 of them blocked, reported *"13 of 13 complete · Ready for /story-validate"*, and one of
+the five that vanished was the load-bearing observation task for its AC.
+
+That is the dark-gate shape at its purest: an orchestrator reading that line advances the story, and
+nothing anywhere prints differently. A green and an erasure are the same string.
+
+The denominator is now `\[.\]` — **any** single-character marker. A task is a task whatever glyph its
+author reached for, and a marker the validator has never heard of must change a count it cannot be
+silently dropped from. `[x]` is complete, `[!]` is blocked, `[ ]` is pending, and anything else is
+incomplete **and named**, because an unrecognised marker resolving quietly to "not done" is how the
+next `[!]` gets invented and mis-read again.
+
+Blocked tasks are now listed, not just counted — a count tells you to look, the list tells you
+where — and `--strict` rejects. The Ready verdict is additionally guarded on the blocked count,
+which is redundant while the arithmetic is right and is there precisely because #107 reached the
+field as a *wrong verdict* produced by arithmetic that was not.
+
+**`[!]` was never in `tasks-template.md`.** It was a field convention the validator had no vocabulary
+for, which is the actual root cause — so the marker table is in the template now. The fix is not the
+regex.
+
+This validator also shipped **eleven minor versions with no test suite at all**. It has one now, with
+mutation controls; one of them reproduces the field report verbatim.
+
+### #108 — differentiator pillars get ids, closing the limit v10.3 disclosed
+
+v10.3 made promise coverage a hard gate and could only reach MM-N and JOB-N. §3 was one free-prose
+sentence with no id, so the gate emitted an honest *"pillars: not evaluated"* rather than claim a
+verdict it could not compute. Filed rather than buried, and closed here.
+
+§3 pillars are now `### DIF-N` headings — the **same grammar as `### MM-N`**, deliberately: the
+number is the machine key, the title is for humans, sub-lettered ids (`DIF-2a`) are real ids. The
+witness graph extracts them, so `PROMISE_UNCOVERED.P1` reaches a pillar no epic delivers, and the
+severity mapping rule reaches the class so a pillar gap cannot be authored down to HIGH.
+
+**§3a anti-differentiators deliberately get no ids.** An anti-differentiator is a *constraint*, not a
+promise: nothing delivers it, so nothing can cover it, and a coverage gate over it would produce
+findings closable only by deleting the claim. A test asserts they never node-ify.
+
+**The upgrade is a no-op until a contract opts in, and that is measured rather than argued.** Adding
+a node kind is the change that can silently force a witness rebuild across the whole installed base
+— `_graph_signature` hashes nodes and edges, so one extra node anywhere reddens every committed
+witness. No contract on disk carries a `### DIF-N` heading, so the extractor emits nothing and the
+signature is byte-identical; the test compares a fresh compile against the pre-change graph and
+asserts equality, then asserts the signature *does* move once a pillar is declared. v10.1's
+node-schema change needed `REBUILD_WITNESS_GRAPH_ID`; the difference between that release and this
+one is that assertion, not a claim in this file.
+
 ## v10.3.0 — 2026-08-07 — The adversary reaches the plan
 
 Two field reports from one session (#105, #106). They look unrelated — a shell parser and a

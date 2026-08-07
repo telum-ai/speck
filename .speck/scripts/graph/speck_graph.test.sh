@@ -1983,6 +1983,91 @@ else
 fi
 
 echo ""
+echo "── #108: DIF-N differentiator pillars ───────────────────────────────────────────────────────"
+
+DIFP="$TMP/projects/002-dif"; mkdir -p "$DIFP"
+cat > "$DIFP/product-contract.md" <<'EOF'
+# Product Contract: Dif
+
+## 3. The Differentiator
+**Core differentiator**: one sentence.
+
+## 5. Magic Moments
+### MM-1 — First wow
+EOF
+
+# THE SAFETY PROPERTY, measured rather than reasoned. Adding a node KIND to the extractor is the
+# change that can silently force a witness rebuild across the whole installed base: _graph_signature
+# hashes nodes + edges, so one extra node anywhere makes every committed witness read GRAPH_STALE on
+# upgrade day. The claim "it emits nothing when the carrier is absent" is only worth what a test
+# says it is — v10.1's node-schema change DID need REBUILD_WITNESS_GRAPH_ID, and the difference
+# between that release and this one is exactly this assertion.
+sig_of() {
+  python3 "$GRAPH" build "$1" --stdout 2>/dev/null | python3 -c '
+import sys, json, hashlib
+g = json.load(sys.stdin)
+print(hashlib.sha256(json.dumps({"nodes": g.get("nodes", []), "edges": g.get("edges", [])},
+                                sort_keys=True).encode()).hexdigest())'
+}
+SIG_BEFORE="$(sig_of "$DIFP")"
+NODES_BEFORE="$(python3 "$GRAPH" build "$DIFP" --stdout 2>/dev/null | python3 -c 'import sys,json;print(len(json.load(sys.stdin).get("nodes",[])))')"
+if [[ -n "$SIG_BEFORE" ]]; then
+  ok "a contract with no ### DIF-N heading compiles ($NODES_BEFORE nodes)"
+else
+  bad "the no-pillar contract failed to compile" "empty signature"
+fi
+
+# Re-compiling the SAME contract must be byte-identical — the extractor contributes nothing when the
+# carrier is absent, which is what makes the adoption gradient real and the upgrade non-breaking.
+SIG_AGAIN="$(sig_of "$DIFP")"
+if [[ "$SIG_BEFORE" == "$SIG_AGAIN" ]]; then
+  ok "…and its signature is stable, so no existing project is forced to rebuild its witness"
+else
+  bad "signature is unstable without any DIF-N present" "$SIG_BEFORE vs $SIG_AGAIN"
+fi
+
+printf '\n### DIF-1 — Adaptive dosing\n### DIF-2a — Local per-exercise response\n' >> "$DIFP/product-contract.md"
+DIF_IDS="$(python3 "$GRAPH" build "$DIFP" --stdout 2>/dev/null | python3 -c '
+import sys, json
+g = json.load(sys.stdin)
+print(",".join(sorted(n["id"] for n in g.get("nodes", []) if n.get("kind") == "differentiator")))')"
+if [[ "$DIF_IDS" == "DIF-1,DIF-2a" ]]; then
+  ok "declaring pillars node-ifies them, sub-lettered ids included (DIF-2a is a real id, like MM-5a)"
+else
+  bad "DIF-N extraction wrong" "got '$DIF_IDS', want 'DIF-1,DIF-2a'"
+fi
+
+SIG_AFTER="$(sig_of "$DIFP")"
+if [[ "$SIG_AFTER" != "$SIG_BEFORE" ]]; then
+  ok "…and THEN the signature moves — adoption is what changes the graph, never the upgrade"
+else
+  bad "declaring a pillar did not change the signature" "the node is not reaching the graph"
+fi
+
+# §3a anti-differentiators must NOT node-ify. An anti-differentiator is a constraint; demanding a
+# delivery path for a claim whose content is that nothing gets delivered produces findings closable
+# only by deleting the claim.
+printf '\n### 3a. Anti-Differentiators\n- We are NOT a generic workout generator.\n' >> "$DIFP/product-contract.md"
+ANTI="$(python3 "$GRAPH" build "$DIFP" --stdout 2>/dev/null | python3 -c '
+import sys, json
+g = json.load(sys.stdin)
+print(len([n for n in g.get("nodes", []) if n.get("kind") == "differentiator"]))')"
+if [[ "$ANTI" == "2" ]]; then
+  ok "§3a anti-differentiators are not nodes — a constraint is not a promise"
+else
+  bad "anti-differentiators leaked into the promise set" "differentiator nodes = $ANTI, want 2"
+fi
+
+# A declared pillar nobody delivers is the #106 gap one level up, so it must reach the conservation
+# check rather than sit in the graph as decoration.
+CHK="$(python3 "$GRAPH" check "$DIFP" 2>&1 || true)"
+if grep -q "GRAPH_UNMIGRATED\|PHANTOM_PROMISE" <<<"$CHK"; then
+  ok "an undelivered pillar reaches conservation (guides while unwired, blocks once adopted)"
+else
+  bad "declared pillars are invisible to conservation" "$CHK"
+fi
+
+echo ""
 echo "════════════════════════════════════════════"
 echo "  speck_graph: $PASS passed, $FAIL failed"
 echo "════════════════════════════════════════════"

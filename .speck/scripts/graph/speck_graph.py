@@ -43,6 +43,7 @@ SCHEMA_VERSION = "1.0"
 #   ac            004-ai-core-workout-gen/S038/AC-2      bare AC-2 within its own story
 #   prm           004-ai-core-workout-gen/PRM-016        bare PRM-016 within its own epic
 #   magic-moment  MM-3     job JOB-2     dec DEC-0207    requirement FR-...-014 / NFR-003
+#   differentiator DIF-1   (§3 pillars, #108 — §3a anti-differentiators are constraints, never nodes)
 # ---------------------------------------------------------------------------
 
 RE_STORY_BARE = re.compile(r"^S\d{2,}$")
@@ -51,6 +52,7 @@ RE_PRM_BARE = re.compile(r"^PRM-\d+$")
 RE_MM = re.compile(r"^MM-\d+[a-z]?$")           # sub-lettered MMs (MM-5a) are real, like AC-1a
 RE_JOB = re.compile(r"^JOB-\d+$")
 RE_DEC = re.compile(r"^DEC-\d+$")
+RE_DIF = re.compile(r"^DIF-\d+[a-z]?$")   # §3 differentiator pillars (#108)
 RE_FR = re.compile(r"^FR-[A-Za-z0-9-]+-\d+$")         # tolerate hyphenated middles (FR-auth-svc-014)
 RE_NFR = re.compile(r"^NFR-\d+$")
 RE_EPIC_ORDINAL = re.compile(r"^(\d{2,}|E\d{2,})")  # leading ordinal token of an epic basename
@@ -431,6 +433,29 @@ def extract(project_dir):
         # AC parser five lines away already accepted `AC-1a`. The tool set the product vocabulary.)
         for m in re.finditer(r"^#{2,4}\s+(MM-\d+[a-z]?)\b\s*(?:[—\-:]\s*(.*))?$", text, re.MULTILINE):
             add_node(Node(m.group(1), "magic-moment", None, (m.group(2) or "").strip(),
+                          contract, m.group(1), content_hash(m.group(0))))
+        # DIF heading — the §3 differentiator pillars (#108). Same grammar as MM-N on purpose:
+        # the number is the machine key, sub-letters node-ify, the title is optional.
+        #
+        # WHY THIS EXISTS. v10.3 made promise coverage a hard gate, but it could only reach MM-N and
+        # JOB-N, so it emitted an honest "pillars: not evaluated" line — §3 was one free-prose
+        # sentence with no id to compare a coverage matrix against, and a gate over prose would have
+        # claimed a verdict it could not compute.
+        #
+        # ONLY §3 PILLARS, never §3a. An anti-differentiator ("We are NOT a generic workout
+        # generator") is a CONSTRAINT, not a promise — no epic "covers" it, and nothing delivers it.
+        # Gating it would demand a delivery path for a statement whose whole content is that nothing
+        # should be delivered, which is how a coverage gate starts producing findings that can only
+        # be closed by deleting the claim.
+        #
+        # ADOPTION GRADIENT, and it is what makes this safe to land on a minor: no contract on disk
+        # carries a `### DIF-N` heading, so this loop emits nothing for every existing project, the
+        # node set is unchanged, and `_graph_signature` — which hashes nodes + edges — is therefore
+        # byte-identical. No project reads GRAPH_STALE on upgrade day and no witness rebuild is
+        # needed. A project becomes subject to pillar coverage the moment it declares its first
+        # pillar, and not before. Asserted by a test, not by this comment.
+        for m in re.finditer(r"^#{2,4}\s+(DIF-\d+[a-z]?)\b\s*(?:[—\-:]\s*(.*))?$", text, re.MULTILINE):
+            add_node(Node(m.group(1), "differentiator", None, (m.group(2) or "").strip(),
                           contract, m.group(1), content_hash(m.group(0))))
         meta["heterogeneous_ids"] = _heterogeneous_mm_headings(read_text(contract), contract)
         for m in re.finditer(r"(JOB-\d+)", text):
@@ -857,6 +882,8 @@ def _target_kind(dst):
         return "magic-moment"
     if RE_JOB.match(dst):
         return "job"
+    if RE_DIF.match(dst):
+        return "differentiator"
     if RE_DEC.match(dst):
         return "dec"
     if RE_FR.match(dst) or re.search(r"/NFR-\d+$", dst) or RE_NFR.match(dst):
@@ -915,7 +942,7 @@ def lint_refs(nodes, edges):
         elif kind == "story":
             add_p1("DANGLING_REF.P1", e,
                    "%s --%s--> %s : target story does not exist" % (e.src, e.kind, e.dst))
-        elif kind in ("magic-moment", "job"):
+        elif kind in ("magic-moment", "job", "differentiator"):
             if kind_counts.get(kind, 0) == 0:
                 unmigrated[kind] = unmigrated.get(kind, 0) + 1  # contract hasn't adopted the id scheme
             else:
@@ -1567,7 +1594,7 @@ def check_graph(project_dir):
             wired_kinds.add(nodes[e.dst].kind)
         if e.kind == "sources" and e.dst and nodes.get(e.dst):
             wired_kinds.add(nodes[e.dst].kind)
-    for kind in ("magic-moment", "job"):
+    for kind in ("magic-moment", "job", "differentiator"):
         present = [n for n in nodes.values() if n.kind == kind]
         if not present:
             continue

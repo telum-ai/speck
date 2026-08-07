@@ -95,6 +95,36 @@ PLACEHOLDER CONVENTION:
 
 > **Market recheck (P2, #80).** The differentiator — and any "no competitor does X" claim — rots: it can be true when written and false weeks later. At lock, `stamp-market.sh --baseline` writes an inline `*[market-verified: unverified | staged <date>]*` line directly under **Core differentiator** above; `/speck-frontier-scan --product` later re-stamps it with a dated, **sourced** verdict. Absolute/exclusivity claims get a tight clock (default 30 days); generic differentiators an archetype cadence (45 / 90). **Never hand-edit the stamp** — only `stamp-market.sh` writes it, and only when a real scan report backs it. `market-staleness-check.sh` flags a stale/unverified claim as `MARKET_DRIFT`.
 
+#### Pillars — the load-bearing claims of the wedge (DIF-N)
+
+*Break the one-sentence differentiator into the distinct claims it actually rests on. One `### DIF-N`
+heading each, same grammar as `### MM-N` in §5: **the number is the machine key**, the title is for
+humans, sub-lettered ids (`DIF-2a`) are real ids.*
+
+*Why they carry ids (#108): v10.3 made promise coverage a hard gate, but it could only reach MM-N and
+JOB-N. §3 was free prose with no id, so the gate honestly reported "pillars: not evaluated" rather
+than claim a verdict it could not compute. With ids, a pillar no epic delivers is caught by the same
+machinery that catches an unaddressed magic moment — `PROMISE_UNCOVERED.P1`, CRITICAL by rule.*
+
+*Optional until you declare one, gated the moment you do. A contract with no `### DIF-N` heading
+emits no pillar nodes and nothing changes — that adoption gradient is what let this land on a minor
+without re-convicting every contract already on disk. Declaring your first pillar opts this project
+in, deliberately.*
+
+*Anti-differentiators below do NOT get ids, and that is a decision rather than an omission: an
+anti-differentiator is a **constraint**, not a promise. Nothing delivers it, so nothing can cover it,
+and a coverage gate over it would produce findings closable only by deleting the claim.*
+
+### DIF-1 — REPLACE_BEFORE_SHIP: Pillar name
+
+REPLACE_BEFORE_SHIP: One claim the wedge rests on. What must be true of the built product for this
+pillar to be real — stated so an epic can be pointed at it.
+
+### DIF-2 — REPLACE_BEFORE_SHIP: Pillar name
+
+REPLACE_BEFORE_SHIP: The second claim. Delete this heading entirely if the wedge rests on one pillar;
+an empty pillar is worse than no pillar, because it reads as coverage that was never required.
+
 ### 3a. Anti-Differentiators ("We are NOT...")
 
 *What the product must never feel like, even if competitors are. Three to five sentences finishing "We are not..."*

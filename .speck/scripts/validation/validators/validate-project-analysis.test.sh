@@ -441,6 +441,37 @@ run --gate "$P"
   && pass "an MM-N present with an open status → PROMISE_UNCOVERED.P1" \
   || fail "a gap row is a finding, not coverage"
 
+# 29b. #108 — DIF-N PILLARS ARE GATED EXACTLY LIKE MM-N, once a contract declares one.
+# v10.3 shipped this as a disclosed limit: §3 was free prose with no id, so the gate emitted
+# "pillars: not evaluated" rather than claim a verdict it could not compute. The gradient is the
+# safety property — a contract with no pillar is untouched, and declaring one opts in.
+d="$T/g29b"; P="$(mkproj "$d")"; write_report "$P/project-analysis-report.md"
+printf '\n### DIF-1 — The wedge pillar\n' >> "$P/product-contract.md"
+gitify "$d"
+run --gate "$P"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "PROMISE_UNCOVERED.P1" && echo "$OUT" | grep -q "DIF-1"; } \
+  && pass "a declared DIF-1 the matrix omits → PROMISE_UNCOVERED.P1, naming the pillar" \
+  || fail "#108: declared pillars must reach the coverage gate"
+
+# …and the contrapositive, which is the half that keeps the gradient honest: a contract that
+# declares NO pillar must behave exactly as it did before #108. Otherwise the feature is a silent
+# tax on every project that never asked for it.
+d="$T/g29c"; P="$(mkproj "$d")"; write_report "$P/project-analysis-report.md"; gitify "$d"
+run --gate "$P"
+{ [[ "$RC" == 0 ]] && ! echo "$OUT" | grep -q "PROMISE_UNCOVERED"; } \
+  && pass "a contract declaring no pillar is untouched by #108 (no new finding, exit 0)" \
+  || fail "#108 must not convict a project that declared no pillar"
+
+# The mapping rule has to reach the new class too, or a pillar gap is whatever severity the author
+# types — the exact discretion #106 removed for MM-N.
+d="$T/g29d"; P="$(mkproj "$d")"; write_report "$P/project-analysis-report.md"
+sed -i.bak 's/| L6-1 | cross-artifact-drift | HIGH |/| L6-1 | unaddressed differentiator pillar | HIGH |/' "$P/project-analysis-report.md"
+gitify "$d"
+run --strict "$P/project-analysis-report.md"
+{ echo "$OUT" | grep -qi "critical"; } \
+  && pass "an 'unaddressed differentiator pillar' row is CRITICAL by rule, not by the author's cell" \
+  || fail "#108: the severity mapping rule must cover pillars"
+
 # 30. THE GRAPH DEGRADE IS HONEST, never a silent pass. A python3 that cannot build the graph
 # yields ANALYSIS_COVERAGE_UNCOMPUTED.P2 — completeness was NOT computed.
 d="$T/g30"; P="$(mkproj "$d")"; write_report "$P/project-analysis-report.md"

@@ -151,19 +151,21 @@ Everything else is author-judged `HIGH` / `MEDIUM` / `LOW`. **Only `CRITICAL` wi
 
 ### Promise Coverage (Unaddressed-Promise Gap)
 
-*Completeness is computed against the witness graph, not against this file. `python3 .speck/scripts/graph/speck_graph.py build <PROJECT_DIR> --stdout` emits every `magic-moment` and `job` node; the gate compares that set to the rows below. An MM-N or JOB-N the graph knows about and this matrix does not is `PROMISE_UNCOVERED.P1`. If the graph cannot be read, completeness was **not computed** (`ANALYSIS_COVERAGE_UNCOMPUTED.P2`) — an honest unknown, never a pass.*
+*Completeness is computed against the witness graph, not against this file. `python3 .speck/scripts/graph/speck_graph.py build <PROJECT_DIR> --stdout` emits every `magic-moment`, `job` and `differentiator` node; the gate compares that set to the rows below. An MM-N, JOB-N or DIF-N the graph knows about and this matrix does not is `PROMISE_UNCOVERED.P1`. If the graph cannot be read, completeness was **not computed** (`ANALYSIS_COVERAGE_UNCOMPUTED.P2`) — an honest unknown, never a pass.*
 
-- Differentiator pillars mapped: [e.g., 3] of [e.g., 4]
+- Differentiator pillars (DIF-N) mapped: [e.g., 3] of [e.g., 4] — **only pillars the contract declares as `### DIF-N`**. A §3 written as free prose declares none, and the gate says so rather than guessing (#108).
 - Magic moments (MM-N) mapped: [e.g., 5] of [e.g., 6]
 - Jobs (JOB-N) mapped: [e.g., 4] of [e.g., 4]
 
-**Status** uses the same vocabulary as the Issues table: `resolved` when at least one epic or story carries the dimension · `open` when nothing does · `waived DEC-####` when a logged decision defers it. An MM-N or JOB-N row left `open` is `CRITICAL` **by rule** and blocks — it does not get to be a HIGH.
+**Status** uses the same vocabulary as the Issues table: `resolved` when at least one epic or story carries the dimension · `open` when nothing does · `waived DEC-####` when a logged decision defers it. An MM-N, JOB-N or DIF-N row left `open` is `CRITICAL` **by rule** and blocks — it does not get to be a HIGH.
 
 | Promise dimension | Source | Epic / story coverage | Status |
 |-------------------|--------|----------------------|--------|
 | [e.g., MM-2 <magic moment name>] | product-contract §5 | [e.g., E003 / S011] | [e.g., resolved] |
 | [e.g., JOB-1 <job name>] | product-contract §4 | [e.g., E001 / S002] | [e.g., resolved] |
-| [e.g., Differentiator: <pillar name>] | product-contract §3 | [e.g., E002 / S007] | [e.g., resolved] |
+| [e.g., DIF-1 <pillar name>] | product-contract §3 | [e.g., E002 / S007] | [e.g., resolved] |
+
+*§3a anti-differentiators are deliberately absent from this matrix. An anti-differentiator is a **constraint**, not a promise — nothing delivers it, so nothing can cover it, and a row demanding coverage could only be closed by deleting the claim.*
 
 ---
 

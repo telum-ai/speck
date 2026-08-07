@@ -217,7 +217,7 @@ lc() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 # The shared contract fixes three classes as CRITICAL BY CONSTRUCTION, not by author judgement:
 #   • a cross-artifact `contradictory` verdict (two artifacts that cannot both be satisfied — the
 #     #106 motivating defect class);
-#   • an unaddressed magic moment (MM-N) or job (JOB-N);
+#   • an unaddressed magic moment (MM-N), job (JOB-N), or differentiator pillar (DIF-N);
 #   • a gate whose precondition contradicts the evidence contract.
 # All three are re-derived from the Category cell here rather than trusted from the Severity cell,
 # because a severity the author picks is a severity the author can lower — and 13 of the 14
@@ -231,7 +231,10 @@ effective_severity() {
   case "$cat" in
     *unaddressed*|*uncovered*|*unmapped*|*orphan*)
       case "$cat" in
-        *promise*|*magic*|*job*|*mm-*) printf 'critical'; return 0 ;;
+        # `dif-`/`differentiator`/`pillar` join the set in #108, when §3 pillars gained ids. Before
+        # that they could not be here: a rule keyed on a class the contract had no id for would
+        # convict on the word rather than on the promise.
+        *promise*|*magic*|*job*|*mm-*|*dif-*|*differentiator*|*pillar*) printf 'critical'; return 0 ;;
       esac ;;
   esac
   case "$sev" in
@@ -482,7 +485,7 @@ structural_mode() {
       fi
       if [[ "$eff" == critical && "$auth" != critical ]]; then
         log_error "finding $fid is CRITICAL BY RULE (Category '$fcat') but is authored as '${fsev:-empty}'" \
-          "Severity is assigned by rule, not at the author's discretion: a cross-artifact contradiction, an unaddressed MM-N/JOB-N, and a gate precondition that contradicts the evidence contract are CRITICAL by construction. Raise the cell, or rename the class if that is not what this finding is."
+          "Severity is assigned by rule, not at the author's discretion: a cross-artifact contradiction, an unaddressed MM-N/JOB-N/DIF-N, and a gate precondition that contradicts the evidence contract are CRITICAL by construction. Raise the cell, or rename the class if that is not what this finding is."
       fi
       case "$(lc "$fverd")" in
         confirmed|refuted) : ;;
@@ -662,9 +665,17 @@ freshness_check() {
 
 # PROMISE COVERAGE, READ FROM THE GRAPH — never a second parser.
 # speck_graph.py:13-14's design invariant 2 forbids a parallel truth, and :424-440 already extracts
-# MM-N and JOB-N from product-contract.md. So the graph is the READER here: shell out, take every
-# node of kind magic-moment or job, and never re-grep '### MM-N' in bash. If python3 is missing or
-# the build fails, say completeness was NOT computed — an honest unknown, never a silent pass.
+# MM-N, JOB-N and (since #108) DIF-N from product-contract.md. So the graph is the READER here:
+# shell out, take every node of kind magic-moment / job / differentiator, and never re-grep
+# '### MM-N' in bash. If python3 is missing or the build fails, say completeness was NOT computed —
+# an honest unknown, never a silent pass.
+#
+# DIF-N closes the limit v10.3 shipped disclosed (#108): §3 pillars were free prose with no id, so
+# the gate emitted "pillars: not evaluated" rather than claim a verdict it could not compute. They
+# have ids now, and they are gated exactly like MM-N — but only once a contract declares one, which
+# is why no project is newly convicted by this. §3a anti-differentiators are deliberately NOT nodes:
+# an anti-differentiator is a constraint, and demanding a delivery path for a claim whose content is
+# that nothing gets delivered produces findings closable only by deleting the claim.
 promise_coverage_check() {
   local proj="$1"
   local graph_py graph_json ids id row rc=0
@@ -694,7 +705,7 @@ try:
 except Exception:
     sys.exit(3)
 for n in g.get("nodes", []):
-    if n.get("kind") in ("magic-moment", "job"):
+    if n.get("kind") in ("magic-moment", "job", "differentiator"):
         print(n.get("id", ""))
 ' 2>/dev/null)" || rc=$?
   if [[ "$rc" -ne 0 ]]; then
@@ -702,7 +713,7 @@ for n in g.get("nodes", []):
     return 0
   fi
   if [[ -z "${ids//[[:space:]]/}" ]]; then
-    emit_note "promise coverage: the graph knows no MM-N or JOB-N node for this project (product-contract.md declares none) — nothing to require of the matrix."
+    emit_note "promise coverage: the graph knows no MM-N, JOB-N or DIF-N node for this project (product-contract.md declares none) — nothing to require of the matrix."
     return 0
   fi
 
@@ -736,13 +747,13 @@ for n in g.get("nodes", []):
   done <<< "$ids"
 
   if [[ -n "$missing" ]]; then
-    emit_p1 "PROMISE_UNCOVERED.P1" "the graph knows these promise nodes and the coverage matrix does not name them:$missing. An unaddressed MM-N/JOB-N is CRITICAL by construction — the matrix is where that gets caught, so a promise absent from it is a promise nobody looked for."
+    emit_p1 "PROMISE_UNCOVERED.P1" "the graph knows these promise nodes and the coverage matrix does not name them:$missing. An unaddressed MM-N/JOB-N/DIF-N is CRITICAL by construction — the matrix is where that gets caught, so a promise absent from it is a promise nobody looked for."
   fi
   if [[ -n "$unresolved" ]]; then
     emit_p1 "PROMISE_UNCOVERED.P1" "these promise nodes appear in the coverage matrix with an unresolved status:$unresolved. A row that names a gap is a finding, not coverage."
   fi
   if [[ -z "$missing" && -z "$unresolved" ]]; then
-    emit_note "promise coverage: every MM-N/JOB-N the graph knows is present in the matrix with a resolved status."
+    emit_note "promise coverage: every MM-N/JOB-N/DIF-N the graph knows is present in the matrix with a resolved status."
   fi
   return 0
 }
@@ -945,12 +956,12 @@ gate_mode() {
   critical_open_check
 
   # --- predicate 4: promise coverage, read from the graph ---
-  # Project-level only. MM-N/JOB-N are project-global nodes, so requiring one epic's matrix to name
+  # Project-level only. MM-N/JOB-N/DIF-N are project-global nodes, so requiring one epic's matrix to name
   # every promise in the product would manufacture a finding out of correct scoping.
   if [[ "$level" == "project" ]]; then
     promise_coverage_check "$proj"
   else
-    emit_note "promise coverage is a project-level predicate (MM-N/JOB-N are project-global nodes) — not evaluated for a single epic."
+    emit_note "promise coverage is a project-level predicate (MM-N/JOB-N/DIF-N are project-global nodes) — not evaluated for a single epic."
   fi
 
   # --- predicate 5: decorrelation ---
