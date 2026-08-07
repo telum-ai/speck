@@ -32,6 +32,26 @@ Read `.speck/project.json` (if it exists) for `play_level`.
 
 ## Pre-Specify Check (v7 — Mandatory Gate)
 
+**Step A — Run the deterministic prerequisite check:**
+
+```bash
+bash .speck/scripts/validation/check-epic-prereqs.sh specs/projects/<PROJECT_ID>
+```
+
+Exit 0 = clear, 1 = gate rejected, 2 = invocation error. On exit 1, **STOP** and route to the named remedy — do not specify the epic:
+
+- `UNANALYZED_CORPUS.P1` — `/project-analyze` has not run. It is REQUIRED after `/project-plan` at Platform and at Build with 4+ epics. Run it, then return here.
+- `ANALYSIS_STALE.P1` — `PRD.md` / `epics.md` / `product-contract.md` changed after the analysis report's last commit. The corpus moved; re-run `/project-analyze`.
+- `ANALYSIS_CRITICAL_OPEN.P1` — the report has a CRITICAL finding still at Status `open`. Resolve it or waive it with a `DEC-####`.
+- `PROMISE_UNCOVERED.P1` — an `MM-N` / `JOB-N` the witness graph knows about is missing from the promise-coverage matrix, or present unresolved.
+- `ANALYSIS_DECORRELATION_UNVERIFIED.P2` — fewer lenses than the tier requires, or a CRITICAL/HIGH row whose Verifier is its own Lens. Advisory unless `--strict`.
+- `ANALYSIS_COVERAGE_UNCOMPUTED.P2` — the witness graph could not be read, so promise-coverage completeness was **not computed**. Read it as an honest unknown, never as a coverage pass: `PROMISE_UNCOVERED.P1` did not run.
+- `ANALYSIS_GRANDFATHERED.P2` — this project was planned before v10.3 and carries `<PROJECT_DIR>/.analysis-gate-grandfathered`. **Surface the notice to the user, loudly, every time — then proceed.** The gate is real forward and advisory backward by design. Repeat the marker's own `reason:` / `clears_with:` lines verbatim; do not silence it, and do not treat it as a pass. Once an analysis report exists, the script reports the exemption **spent** and prints the `rm` command that retires the marker — pass that along rather than leaving a dead exemption on disk.
+
+At Build with 1-3 epics the analysis gate does not apply — the script exits 0 and `/project-analyze` stays optional and recommended.
+
+**Step B — Check for an outstanding epic validation:**
+
 Read `project-state.md` (or list `specs/projects/<PROJECT_ID>/epics/` directory and check validation reports).
 If there is an existing epic in the project that has completed implementation (all stories implemented) but has NOT yet passed `/epic-validate` (i.e. does not have an `epic-validation-report.md` claiming a verified readiness state of `UX-RC` / `API-RC` or higher, or is still listed as unvalidated):
 - **STOP**. You are NOT allowed to specify or start work on a new epic (unless creating the Infrastructure epic `E000`) while a prior active epic's validation is outstanding.

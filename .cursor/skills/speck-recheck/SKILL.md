@@ -73,6 +73,7 @@ Required artifacts to check:
 ├── [Parallel] shell: MARKET drift — run `.speck/scripts/market-staleness-check.sh` (no-web, age/stamp only); classify `MARKET_DRIFT.P1` (an absolute "no competitor does X" claim in §3/§3a that is unverified/stale past the tight clock, an honest `verdict: eroded|false`, or a cited scan report that is missing — phantom evidence) or `MARKET_DRIFT.P2` (generic differentiator past its archetype cadence, provisional/unverified baseline, or under-sourced). Route findings to `/speck-frontier-scan --product`
 ├── [Parallel] shell: WEDGE reconciliation — run `.speck/scripts/market-reconcile-check.sh`; classify `WEDGE_DRIFT.P1` (§3 differentiator empty while §2a states a defensible wedge, OR §2a self-flags §3 as thin/copyable — the Brightstance case) or `WEDGE_DRIFT.P2` (§3↔§2a token overlap < 25% — auditor confirms §3 is at least as defensible as the wedge)
 ├── [Parallel] shell: GATE-WIRING drift — run `.speck/scripts/validation/validators/validate-gate-liveness.sh specs/projects/<id>/evidence-contract.md`; classify `GATE_WIRING_DRIFT.P1` (a §6a gate declared pre-commit/pre-push but wired stages:[manual] or nowhere), `CI_TRUNK_EXCLUDED.P1` (a ci: gate whose workflow ignores trunk), `SCRIPT_UNREFERENCED.P1` (a §6a-named script never called on the commit path), or `GATE_WAIVER_UNBACKED.P2` (a waiver citing a missing DEC). A dark gate manufactures clean-looking evidence — this is P2 (no claim without a mechanism) applied to the GATES themselves. Unrecognized CI/hook system → `GATE_WIRING_UNVERIFIED` (never false-green). NOTE: only the cheap WIRING check runs here in the always-on recheck shell; the heavier gate-liveness CANARY probe (mutation runs, `gate-liveness-probe.sh` → `GATE_DISARMED.P1` / `GATE_LIVENESS_UNVERIFIED.P2`, #88 Phase 2) is opt-in at `/epic-validate` / `/project-validate` / `/audit`, never on the recheck fast path.
+├── [Parallel] shell: PLANNING-ANALYSIS gate — run `.speck/scripts/validation/validators/validate-project-analysis.sh --gate specs/projects/<id>`. It exits 1 on any P1 by default (no `--strict` needed — that is what makes it a gate, not a report). Classify `UNANALYZED_CORPUS.P1` (the gate applies at this play level / epic count and no analysis report exists — the corpus was never read by a lens that did not write it), `ANALYSIS_STALE.P1` (`PRD.md` / `epics.md` / `product-contract.md` has a commit AFTER the report's last commit — CONTENT freshness, never `stamped SHA == HEAD`; no git history ⇒ `unknown`, never `fresh`), `ANALYSIS_CRITICAL_OPEN.P1` (a findings row at Severity CRITICAL with Status `open`), `PROMISE_UNCOVERED.P1` (an `MM-N`/`JOB-N` the witness graph knows about is absent from the promise-coverage matrix, or present unresolved), `ANALYSIS_DECORRELATION_UNVERIFIED.P2` (fewer lenses than the tier requires, or a CRITICAL/HIGH row whose Verifier equals its Lens — the author certifying their own work), `ANALYSIS_COVERAGE_UNCOMPUTED.P2` (the graph could not be read, so matrix completeness was NOT computed — an honest unknown, never a green), and `ANALYSIS_GRANDFATHERED.P2` (a pre-v10.3 project exempted by `<PROJECT_DIR>/.analysis-gate-grandfathered`). The grandfather code is the **disclosed asymmetry**: the gate is real forward and advisory backward, so surface it on every recheck — loudly, never collapsed — for as long as the marker sits on disk.
 ├── [Parallel] shell: grep -rln "\[NEEDS USER REVIEW\]" specs/projects/<id>/   (surface to project-state.md)
 └── [Wait] → Synthesize drift report
 ```
@@ -103,7 +104,7 @@ If any check fails: drift detected (P0).
 
 For each finding:
 - Severity (P0-P3)
-- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | GATE_WIRING_DRIFT.P1 | CI_TRUNK_EXCLUDED.P1 | SCRIPT_UNREFERENCED.P1 | GATE_WAIVER_UNBACKED.P2 | GATE_DISARMED.P1 | GATE_LIVENESS_UNVERIFIED.P2 | GUARD_MUTATION_PROVEN | GUARD_MUTATION_GREEN.P2 | GUARD_UNMUTATED.P2 | OBSERVATION_EXPOSED | OBSERVATION_UNEXPOSED.P2 | OBSERVATION_UNEXPOSED_BLOCKING.P1 | OBSERVATION_NOT_GREEN.P1 | OBSERVATION_UNMEASURED.P2 | V8_REPROVE.P1
+- Type: SPEC_VS_CODE | TRUTH_STALE | TEMPLATE_DRIFT.P1 | TEMPLATE_DRIFT.P2 | LARP_FAIL | INTEGRATION_RISK | PRINCIPLE_VIOLATION | BANNED_LANGUAGE | ASSET_DRIFT.P1 | PROFILE_DRIFT.P1 | PROFILE_DRIFT.P2 | PROFILE_DRIFT.P3 | SETTINGS_DRIFT.P0 | SCHEMA_DRIFT.P0 | MIGRATION_REPAIR_WARNING.P1 | CASCADE_STALE.P1 | EVAL_SIGNAL_DRIFT.P2 | MARKET_DRIFT.P1 | MARKET_DRIFT.P2 | WEDGE_DRIFT.P1 | WEDGE_DRIFT.P2 | GATE_WIRING_DRIFT.P1 | CI_TRUNK_EXCLUDED.P1 | SCRIPT_UNREFERENCED.P1 | GATE_WAIVER_UNBACKED.P2 | GATE_DISARMED.P1 | GATE_LIVENESS_UNVERIFIED.P2 | GUARD_MUTATION_PROVEN | GUARD_MUTATION_GREEN.P2 | GUARD_UNMUTATED.P2 | OBSERVATION_EXPOSED | OBSERVATION_UNEXPOSED.P2 | OBSERVATION_UNEXPOSED_BLOCKING.P1 | OBSERVATION_NOT_GREEN.P1 | OBSERVATION_UNMEASURED.P2 | UNANALYZED_CORPUS.P1 | ANALYSIS_STALE.P1 | ANALYSIS_CRITICAL_OPEN.P1 | PROMISE_UNCOVERED.P1 | ANALYSIS_DECORRELATION_UNVERIFIED.P2 | ANALYSIS_COVERAGE_UNCOMPUTED.P2 | ANALYSIS_GRANDFATHERED.P2 | V8_REPROVE.P1
 - Where (file:line or surface)
 - Evidence (link to artifact)
 - Recommended fix
@@ -189,6 +190,16 @@ If `MARKET_DRIFT.P1` or `WEDGE_DRIFT.P1` found:
 - Do NOT block `/story-implement` — a stale or over-strong market claim is not a runtime defect
 - **BLOCK claiming `COMMERCIAL-RC` / `SHIP-RC`** and **BLOCK generating marketing / positioning copy from the spec** until the claim is re-validated (`/speck-frontier-scan --product` → re-stamp) or §3 is reconciled with the §2a wedge (`/project-adjust`). This is the precise "don't ship a false 'no competitor does X'" save.
 
+If `UNANALYZED_CORPUS.P1` / `ANALYSIS_STALE.P1` / `ANALYSIS_CRITICAL_OPEN.P1` / `PROMISE_UNCOVERED.P1` found:
+- Do NOT block `/story-implement` inside an epic already underway — the defect is in the plan, and halting mid-story does not repair it
+- **BLOCK the next `/epic-specify`** until `/project-analyze` clears. `check-epic-prereqs.sh` is the enforcing call site; `/recheck`'s job is to surface the block early instead of at the moment someone tries to start an epic
+- Route to `/project-analyze` with lenses decorrelated from whoever authored the corpus
+
+If `ANALYSIS_GRANDFATHERED.P2` found:
+- Never block — this project was planned before the gate existed, and the decision was that the gate is real forward and advisory backward
+- Surface it in the report AND in `project-state.md`, uncollapsed, on **every** recheck. The repeated notice is the entire mechanism for backward-facing projects; a notice that fades is a gate that quietly turned off
+- State plainly what it means: no decorrelated lens has read this planning corpus. One `/project-analyze` run makes the exemption **spent** — `check-epic-prereqs.sh` then names it and prints the `rm` command that retires `<PROJECT_DIR>/.analysis-gate-grandfathered`. Carry that instruction into the report; a spent marker left on disk goes on exempting the project for reasons that no longer exist
+
 If only P1-P3:
 - Surface findings; allow user to proceed at their discretion
 - Add follow-up stories to the active epic's backlog
@@ -220,10 +231,12 @@ Report summary fields per claude skill.
 ## Behavior Rules
 
 - NEVER skip persona LARP cold-start
-- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh` AND `asset-drift-check.sh` (when UI/brand assets exist) AND `settings-drift-check.sh` (when `.claude/settings.json` exists) AND `validate-schema-drift.sh` (when DB-backed) AND `compute-cascade.sh --strict` (if superseded DECs exist) AND `compute-eval-signals.sh --strict` AND `market-staleness-check.sh` AND `market-reconcile-check.sh` (when `product-contract.md` exists)
+- NEVER claim "no drift" without running `staleness-check.sh` AND `banned-language-lint.sh` AND `check-replace-markers.sh` AND `asset-drift-check.sh` (when UI/brand assets exist) AND `settings-drift-check.sh` (when `.claude/settings.json` exists) AND `validate-schema-drift.sh` (when DB-backed) AND `compute-cascade.sh --strict` (if superseded DECs exist) AND `compute-eval-signals.sh --strict` AND `market-staleness-check.sh` AND `market-reconcile-check.sh` (when `product-contract.md` exists) AND `validate-project-analysis.sh --gate` (when a planning corpus exists)
 - NEVER mark a truth artifact "fresh" while it still contains `REPLACE_BEFORE_SHIP:` or `[NEEDS USER REVIEW]` tokens
 - NEVER let an OBSERVATION close a P0 or re-stamp a truth artifact without answering what its green licenses. A green that closes a fire or refreshes a `verified` date is accumulating or irreversible, so it needs `OBSERVATION_EXPOSED`; a green that licenses only *waiting* needs nothing, and `OBSERVATION_UNEXPOSED.P2` is the correct, non-blocking record for it. **Two static passes in a row prove only that neither number moved** — a repeat drift-check with byte-identical output is not a second datapoint
 - NEVER treat a `cancelled`, skipped, or never-triggered CI run as a pass. A gate you never saw is not a gate that passed — that is `OBSERVATION_NOT_GREEN.P1`, and it is a finding
+- ALWAYS surface `ANALYSIS_GRANDFATHERED.P2` in full on every recheck, never collapsed and never de-duplicated across sessions. It is the only signal a pre-v10.3 project gets, and it is deliberately advisory — quieting it converts a disclosed asymmetry into a silent exemption
+- NEVER report `ANALYSIS_COVERAGE_UNCOMPUTED.P2` as a coverage pass. It means the witness graph could not be read, so matrix completeness was not computed — an honest unknown, and the `PROMISE_UNCOVERED.P1` check did not run
 - ALWAYS write a dated report (even if green)
 - ALWAYS re-stamp truth artifacts on green (with fresh `verified` date)
 - ALWAYS update `project-state.md` regardless of verdict (including the new "Sections Awaiting User Review" and "Outstanding REPLACE_BEFORE_SHIP markers" appendices)
@@ -233,7 +246,7 @@ Report summary fields per claude skill.
 
 ## Integration Points
 
-- Reads: all truth artifacts, all `personas/*.md` LARP scripts, `.speck/scripts/staleness-check.sh`, `.speck/scripts/banned-language-lint.sh`
+- Reads: all truth artifacts, all `personas/*.md` LARP scripts, `.speck/scripts/staleness-check.sh`, `.speck/scripts/banned-language-lint.sh`, `.speck/scripts/validation/validators/validate-project-analysis.sh`
 - Invokes: `/larp` (for persona cold-start), `/project-state` (regeneration)
 - Writes: `project-recheck-report-<date>.md`, re-stamps truth artifacts on green
 - Updates: `project-state.md` blocking issues, next action

@@ -969,6 +969,13 @@ const V10_1_BUILTINS = [
   'v10-1-stamp-citation-types',
 ];
 
+// The v10.3 rider (#106). Same split as the 10.1 pair, one minor further along: it appears on every
+// crossing whose TARGET reaches 10.3 from an origin below it, and nowhere else. The rows that stop
+// at 10.0/10.1, and the row that starts at 10.9, are unchanged — which is the freeze still holding.
+const V10_3_BUILTINS = [
+  'v10-3-analysis-gate-grandfather',
+];
+
 // [from, to, { scaffoldV7, reproveV8, graphV9, migrateV10, targetMajor }, pendingIds]
 const FROZEN_CROSSINGS = [
   ['6.0.0', '7.0.0', [true, false, false, false, 7], []],
@@ -983,9 +990,9 @@ const FROZEN_CROSSINGS = [
   ['8.6.0', '10.0.0', [false, false, true, true, 10], V10_BUILTINS],
   ['6.0.0', '10.0.0', [true, true, true, true, 10], V10_BUILTINS],
   ['10.0.0', '10.1.0', [false, false, false, false, 10], V10_1_BUILTINS],
-  ['10.0.0', '10.4.1', [false, false, false, false, 10], V10_1_BUILTINS],
+  ['10.0.0', '10.4.1', [false, false, false, false, 10], [...V10_1_BUILTINS, ...V10_3_BUILTINS]],
   ['10.9.0', '10.10.0', [false, false, false, false, 10], []],
-  ['10.0.0', '11.0.0', [false, false, false, false, 11], V10_1_BUILTINS],
+  ['10.0.0', '11.0.0', [false, false, false, false, 11], [...V10_1_BUILTINS, ...V10_3_BUILTINS]],
   [null, '9.0.0', [true, true, true, false, 9], []],
   [null, '10.0.0', [true, true, true, true, 10], V10_BUILTINS],
   [null, '10.1.0', [true, true, true, true, 10], [...V10_BUILTINS, ...V10_1_BUILTINS]],
@@ -1855,6 +1862,221 @@ test('v10.1: `speck migrate --list --from 10.0.0 --to 10.1.0` names BOTH as pend
     for (const id of V10_BUILTINS) {
       assert.ok(!pendingBlock.includes(id), `${id} crossed at v10.0.0 and must not re-propose`);
     }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* ===========================================================================
+ * v10.3 — the analysis-gate grandfather marker (#106)
+ * ===========================================================================
+ *
+ * The gate itself is check-epic-prereqs.sh (tested in
+ * .speck/scripts/validation/check-epic-prereqs.test.sh). What is tested HERE is the half that must
+ * ride the upgrade: without a marker, every project already on disk goes green → blocked on upgrade
+ * day, on work nobody in the project touched.
+ */
+
+const GRANDFATHER_MARKER = '.analysis-gate-grandfathered';
+
+/** A workspace on 10.3.0. No .speck/scripts needed — this migration shells out to nothing. */
+function v103Workspace() {
+  const dir = tempTarget(true);
+  writeFileSync(join(dir, '.speck', 'VERSION'), '10.3.0\n');
+  return dir;
+}
+
+/**
+ * A project in one of the four states the migration has to tell apart.
+ *   planned   — PRD.md + epics.md, no report        → the population to grandfather
+ *   analyzed  — PRD.md + epics.md + a report        → needs no exemption
+ *   unplanned — PRD.md only                         → nothing to grandfather
+ *   empty     — neither                             → nothing to grandfather
+ */
+function writeGrandfatherProject(targetDir, id, state) {
+  const proj = join(targetDir, 'specs', 'projects', id);
+  mkdirSync(proj, { recursive: true });
+  if (state !== 'empty') writeFileSync(join(proj, 'PRD.md'), '# PRD\n');
+  if (state === 'planned' || state === 'analyzed') {
+    writeFileSync(join(proj, 'epics.md'), '### E001: Alpha\n');
+  }
+  if (state === 'analyzed') {
+    writeFileSync(join(proj, 'project-analysis-report.md'), '# Analysis\n');
+  }
+  return proj;
+}
+
+test('v10.3: the grandfather migration is registered on the MINOR lane, keyed to 10.3.0', async () => {
+  const { ANALYSIS_GATE_GRANDFATHER_ID } = await import('./migrate.js');
+  const m = getRegisteredMigrations().find(x => x.id === ANALYSIS_GATE_GRANDFATHER_ID);
+
+  assert.ok(m, 'an unregistered migration attaches to nothing — the v10.1 defect, one release on');
+  assert.equal(m.version, '10.3.0', 'it must declare the release that introduced it');
+  assert.equal(
+    m.appliesTo('10.2.0', '10.3.0', { fromMajor: 10, toMajor: 10 }),
+    true,
+    'it must fire on the 10.2 → 10.3 crossing that ships the gate',
+  );
+  assert.equal(
+    m.appliesTo('10.0.0', '10.5.0', { fromMajor: 10, toMajor: 10 }),
+    true,
+    'and on a multi-hop that steps over 10.3 — those projects have the same pre-gate corpus',
+  );
+  assert.equal(
+    m.appliesTo('10.3.0', '10.4.0', { fromMajor: 10, toMajor: 10 }),
+    false,
+    'and never again once a project is past it',
+  );
+});
+
+test('v10.3: only PLANNED, un-analyzed projects are marked — and the marker says how to clear it', async () => {
+  const { ANALYSIS_GATE_GRANDFATHER_ID } = await import('./migrate.js');
+  const dir = v103Workspace();
+  try {
+    const planned = writeGrandfatherProject(dir, '001-planned', 'planned');
+    const analyzed = writeGrandfatherProject(dir, '002-analyzed', 'analyzed');
+    const unplanned = writeGrandfatherProject(dir, '003-unplanned', 'unplanned');
+    const empty = writeGrandfatherProject(dir, '004-empty', 'empty');
+
+    const m = getRegisteredMigrations().find(x => x.id === ANALYSIS_GATE_GRANDFATHER_ID);
+    const result = runNamedMigrations(dir, '10.2.0', '10.3.0', { registry: [m] });
+    assert.deepEqual(result.applied, [ANALYSIS_GATE_GRANDFATHER_ID]);
+    assert.deepEqual(result.failed, []);
+
+    assert.ok(existsSync(join(planned, GRANDFATHER_MARKER)), 'a pre-gate planned corpus is exempted');
+    // Writing one here would install a live FALSE exemption: delete the report later and the
+    // project is silently exempt again, with no record that it ever was analyzed.
+    assert.ok(
+      !existsSync(join(analyzed, GRANDFATHER_MARKER)),
+      'a project that already has an analysis report needs no exemption',
+    );
+    assert.ok(!existsSync(join(unplanned, GRANDFATHER_MARKER)), 'no epics.md ⇒ /project-plan never ran');
+    assert.ok(!existsSync(join(empty, GRANDFATHER_MARKER)), 'an empty project dir has nothing to exempt');
+
+    // The marker is read by a human six months from now, not only by the gate. An exemption nobody
+    // can date or clear is how a temporary carve-out becomes the permanent state.
+    const body = readFileSync(join(planned, GRANDFATHER_MARKER), 'utf-8');
+    assert.match(body, /speck_version: 10\.3\.0/, 'it records the upgrade that granted the exemption');
+    assert.match(body, /reason:/, 'it records why the exemption exists');
+    assert.match(body, /\/project-analyze specs\/projects\/001-planned/, 'and the exact command that clears it');
+    assert.match(body, /rm specs\/projects\/001-planned\/\.analysis-gate-grandfathered/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('v10.3: the marker write is idempotent by INSPECTION, not only by ledger', async () => {
+  const { ANALYSIS_GATE_GRANDFATHER_ID } = await import('./migrate.js');
+  const dir = v103Workspace();
+  try {
+    const proj = writeGrandfatherProject(dir, '001-planned', 'planned');
+    const marker = join(proj, GRANDFATHER_MARKER);
+    const m = getRegisteredMigrations().find(x => x.id === ANALYSIS_GATE_GRANDFATHER_ID);
+
+    runNamedMigrations(dir, '10.2.0', '10.3.0', { registry: [m] });
+    const first = readFileSync(marker, 'utf-8');
+
+    // Run the body AGAIN with the ledger bypassed — the state after a crash mid-run, or after a
+    // `.speck/` re-sync loses project.json. The ledger stops a second RUN; only the check-then-write
+    // stops a partial one from re-dating an exemption that was already granted.
+    const written = m.run(dir, { targetVersion: '10.9.9' });
+    assert.equal(written, 0, 'an already-marked project is skipped, not rewritten');
+    assert.equal(readFileSync(marker, 'utf-8'), first, 'and the marker is byte-identical');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('v10.3: a failed marker write THROWS — it is never recorded as applied', async () => {
+  const { ANALYSIS_GATE_GRANDFATHER_ID } = await import('./migrate.js');
+  const dir = v103Workspace();
+  try {
+    const proj = writeGrandfatherProject(dir, '001-planned', 'planned');
+    // A DIRECTORY where the marker file belongs: writeFileSync raises EISDIR. It stands in for any
+    // real write failure (read-only checkout, permissions, full disk) without needing root — AND it
+    // is the case that caught a live defect: a bare existsSync() check called the directory an
+    // already-written marker and skipped, while check-epic-prereqs.sh's `[[ -f ]]` does not, so the
+    // project would have been silently unexempted with the migration recorded 'applied'.
+    mkdirSync(join(proj, GRANDFATHER_MARKER), { recursive: true });
+
+    const m = getRegisteredMigrations().find(x => x.id === ANALYSIS_GATE_GRANDFATHER_ID);
+    const result = runNamedMigrations(dir, '10.2.0', '10.3.0', { registry: [m] });
+
+    // A catch-and-return here would record 'applied' for a project whose marker never landed —
+    // pendingMigrations() filters applied ids out, so it would be retired FOREVER and that project
+    // would be blocked on upgrade day with nothing in the ledger to explain why.
+    assert.deepEqual(result.applied, [], 'a marker that never landed is NOT an application');
+    assert.equal(result.failed.length, 1);
+    assert.equal(result.failed[0].id, ANALYSIS_GATE_GRANDFATHER_ID);
+    assert.equal(readAppliedLedger(dir).find(e => e.id === ANALYSIS_GATE_GRANDFATHER_ID).status, 'failed');
+    assert.deepEqual(
+      pendingMigrations(dir, '10.2.0', '10.3.0', { registry: [m] }).map(x => x.id),
+      [ANALYSIS_GATE_GRANDFATHER_ID],
+      'and it stays pending, so the next run retries it',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('v10.3: a zero-project workspace is a genuine no-op and records APPLIED', async () => {
+  const { ANALYSIS_GATE_GRANDFATHER_ID } = await import('./migrate.js');
+  const dir = v103Workspace();
+  try {
+    const m = getRegisteredMigrations().find(x => x.id === ANALYSIS_GATE_GRANDFATHER_ID);
+    const result = runNamedMigrations(dir, '10.2.0', '10.3.0', { registry: [m] });
+    // Unlike the three shell-out migrations, nothing is left undone here: there is no pre-v10.3
+    // corpus to exempt, and anything planned from now on is planned under the gate.
+    assert.deepEqual(result.applied, [ANALYSIS_GATE_GRANDFATHER_ID]);
+    assert.deepEqual(result.failed, []);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('v10.3: the marker a real upgrade writes is the one check-epic-prereqs.sh honours', async () => {
+  // The end-to-end claim, across the two halves of #106: the migration writes the marker, and the
+  // SHIPPED gate script — not a stand-in — reads it, downgrades to a notice, and exits 0. Wired
+  // through runPostUpgradeMigrations(), the real upgrade entry point.
+  const { ANALYSIS_GATE_GRANDFATHER_ID } = await import('./migrate.js');
+  const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+  const gate = join(repoRoot, '.speck', 'scripts', 'validation', 'check-epic-prereqs.sh');
+  const dir = v103Workspace();
+  try {
+    // Stand the gate and its delegate inside the workspace: the gate resolves its delegate from its
+    // own directory, so a blocking stub next to it is what proves the marker is doing the work.
+    const validation = join(dir, '.speck', 'scripts', 'validation', 'validators');
+    mkdirSync(validation, { recursive: true });
+    mkdirSync(join(dir, '.speck', 'scripts', 'lib'), { recursive: true });
+    copyFileSync(gate, join(dir, '.speck', 'scripts', 'validation', 'check-epic-prereqs.sh'));
+    copyFileSync(
+      join(repoRoot, '.speck', 'scripts', 'lib', 'text.sh'),
+      join(dir, '.speck', 'scripts', 'lib', 'text.sh'),
+    );
+    writeFileSync(
+      join(validation, 'validate-project-analysis.sh'),
+      '#!/usr/bin/env bash\necho "ANALYSIS_GRANDFATHERED.P2  exempted by marker"\nexit 0\n',
+    );
+
+    const proj = writeGrandfatherProject(dir, '001-planned', 'planned');
+    writeFileSync(join(proj, 'epics.md'), ['### E001: A', '### E002: B', '### E003: C', '### E004: D'].join('\n'));
+    writeFileSync(join(dir, '.speck', 'project.json'), JSON.stringify({ play_level: 'build' }, null, 2) + '\n');
+
+    const upgrade = runPostUpgradeMigrations(dir, '10.2.0', '10.3.0', {});
+    assert.ok(
+      upgrade.named.applied.includes(ANALYSIS_GATE_GRANDFATHER_ID),
+      'the marker must be written by the ordinary upgrade path, with no extra gesture',
+    );
+
+    const r = spawnSync(
+      'bash',
+      [join(dir, '.speck', 'scripts', 'validation', 'check-epic-prereqs.sh'), proj],
+      { encoding: 'utf-8' },
+    );
+    const out = `${r.stdout}${r.stderr}`;
+    assert.equal(r.status, 0, `a grandfathered project must NOT be blocked\n${out}`);
+    assert.match(out, /GRANDFATHERED/, out);
+    assert.match(out, /\/project-analyze specs\/projects\/001-planned/, 'the notice carries the clearing command');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

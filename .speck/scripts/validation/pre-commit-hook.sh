@@ -173,6 +173,73 @@ if command -v python3 >/dev/null 2>&1 && [[ -f "$graph_py" ]]; then
   fi
 fi
 
+# ── Wave safety on a staged epics.md (#105) — ADVISORY THIS RELEASE ──────────────────────────
+# The validator had exactly one caller before v10.3, and it was a line of prose in a SKILL.md. That
+# is why #105 arrived as "the validator crashes" rather than as "a wave went unchecked for months":
+# nothing on the commit path ever ran it, so its false negative was invisible by construction.
+#
+# WHY ADVISORY, and this is a disclosed half-measure rather than a preference. The bug being fixed
+# is a FALSE NEGATIVE: an annotated `Yes (…)` cell silently skipped collision checking. So the fixed
+# validator sees collisions that the broken one hid — real ones, in plans that have read green for
+# their whole life. Blocking on arrival would turn green→red on the upgrade commit, for a collision
+# the author did not introduce and in a file they may not have touched. That is the direction this
+# repo's upgrade-day doctrine refuses, and a gate that is red on arrival gets bypassed, not fixed.
+# It never touches `errors`. Promote it to blocking by adding `errors=$((errors + 1))` in the
+# findings branch, once the field has run a release with it printing.
+wave_safety=".speck/scripts/validation/validators/validate-wave-safety.sh"
+if [[ -f "$wave_safety" ]]; then
+  staged_epics=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null \
+    | grep -E '^specs/projects/[^/]+/epics\.md$' || true)
+  if [[ -n "$staged_epics" ]]; then
+    while IFS= read -r em; do
+      [[ -f "$em" ]] || continue
+      echo -e "${BLUE}🔍 Wave safety (advisory): ${em}...${NC}"
+      ws_rc=0
+      bash "$wave_safety" "$em" || ws_rc=$?
+      if [[ $ws_rc -eq 1 ]]; then
+        echo -e "${YELLOW}⚠ Wave-safety findings above are ADVISORY in v10.3 — this commit is not blocked.${NC}"
+        echo -e "${YELLOW}  Re-sequence the waves or apply the schema-freeze foundation pattern.${NC}"
+        echo -e "${YELLOW}  Do NOT de-annotate the wave table to silence this: the annotation is not the defect.${NC}"
+      elif [[ $ws_rc -ne 0 ]]; then
+        echo -e "${YELLOW}⚠ wave-safety check could not run (exit $ws_rc) — NOT counted as clean.${NC}"
+      fi
+    done <<< "$staged_epics"
+  fi
+fi
+
+# ── The project-analysis gate on a staged epic.md (#106) — BLOCKING, grandfathered backward ──
+# epic.md is the OUTPUT of /epic-specify, so staging one is the observable moment the planning
+# corpus starts being built on. That makes it the honest trigger: the gate asks "was this corpus
+# independently analyzed before anyone built on it?", and this is the first commit where the answer
+# matters.
+#
+# This one DOES block, and the asymmetry is deliberate and disclosed. A project planned before v10.3
+# carries a `.analysis-gate-grandfathered` marker written by the upgrade migration and gets a loud,
+# repeated notice instead of a rejection — it could not have satisfied a gate that did not exist.
+# A project planned after v10.3 has no marker and is rejected. Real forward, advisory backward; the
+# marker expires by itself the first time /project-analyze runs, because the gate consults it only
+# when the report is absent.
+#
+# Applicability is the script's job, not this hook's: it exits 0 with an explicit "not applicable"
+# line for Build projects under 4 epics. This block never decides who is in scope — asking the
+# question here as well would be a second producer of the threshold, and the two would drift.
+epic_prereqs=".speck/scripts/validation/check-epic-prereqs.sh"
+if [[ -f "$epic_prereqs" ]]; then
+  staged_epic_md=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null \
+    | grep -E '^specs/projects/[^/]+/epics/[^/]+/epic\.md$' || true)
+  if [[ -n "$staged_epic_md" ]]; then
+    ep_dirs=$(printf '%s\n' "$staged_epic_md" | sed -E 's#(specs/projects/[^/]+)/epics/.*#\1#' | sort -u)
+    while IFS= read -r pd; do
+      [[ -d "$pd" ]] || continue
+      echo -e "${BLUE}🔍 Planning-corpus analysis gate: ${pd}...${NC}"
+      if ! bash "$epic_prereqs" "$pd"; then
+        echo -e "${RED}❌ Epic work is gated on an independent /project-analyze pass (see above).${NC}"
+        errors=$((errors + 1))
+      fi
+    done <<< "$ep_dirs"
+  fi
+fi
+
 # Staged-scoped banned-language lint (advisory at pre-commit; full-repo scan remains manual/CI)
 if [[ -f ".speck/scripts/banned-language-lint.sh" ]]; then
   echo -e "${BLUE}🔍 Running staged banned-language lint...${NC}"

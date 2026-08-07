@@ -85,6 +85,26 @@
       "## 3. Coverage Summary"
     ]
   },
+  "project-analysis-report": {
+    "structure_version": "10.3.0",
+    "required_headers": [
+      "## Lens Roster",
+      "## Executive Summary",
+      "### ⚠️ Issues Found",
+      "### Promise Coverage (Unaddressed-Promise Gap)",
+      "## Readiness Assessment"
+    ]
+  },
+  "epic-analysis-report": {
+    "structure_version": "10.3.0",
+    "required_headers": [
+      "## Lens Roster",
+      "## Executive Summary",
+      "### ⚠️ Issues Found",
+      "### Promise Coverage (Unaddressed-Promise Gap)",
+      "## Readiness Checklist"
+    ]
+  },
   "harden-report": {
     "structure_version": "7.13.2",
     "required_headers": [

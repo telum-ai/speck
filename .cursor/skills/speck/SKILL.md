@@ -436,6 +436,7 @@ This is perfectly fine for MVPs and prototypes!
 - "Develop project management tool"
 → Route to: `/project-specify`
 → Architecture: Run `/project-architecture` before `/project-plan` when planning depends on design decisions (also respect **play level** from `project.json` / project-specify — Build may defer some steps until the 4+ epic gate)
+→ Analysis: Run `/project-analyze` after `/project-plan` and before the first `/epic-specify` — required at Platform and at Build with 4+ epics, recommended below that
 
 ## Brownfield Architecture Handling
 
@@ -480,6 +481,7 @@ I'll help you:
 
 **Project → Epic Transition**
 After `/project-plan` creates PRD and identifies epics:
+- Run `/project-analyze` — **required** at Platform and at Build with 4+ epics, before any `/epic-specify`; recommended below that threshold
 - Use `/project-roadmap` to plan epic timeline
 - Then `/epic-specify` for each epic in priority order
 - (If you’re working with existing work where PRD exists but architecture.md is missing, run `/project-architecture` and then update PRD.md or re-run `/project-plan`.)
@@ -526,11 +528,13 @@ Based on context, provide helpful hints:
 - After specify → "Canonical next step is `/project-clarify` (unless Sprint)"
 - After clarify → "Run `/project-product-contract` then `/project-evidence-contract` (required for Build and Platform)"
 - After contracts are done → "Run `/project-context` (or Platform foundation commands `/project-domain`, `/project-ux` if Platform play level)"
-- After context → "Optional: `/project-constitution` → `/project-architecture` (required if Platform or Build with 4+ epics)"
+- After context → "Optional: `/project-constitution` → `/project-architecture` (required if Platform or Build with 4+ epics — the same threshold that later requires `/project-analyze`)"
 - After architecture → "Optional: `/project-design-system` → `/project-plan`"
-- After plan → "Canonical next step is beginning epic development via `/epic-specify` (Optional planning gates: `/project-roadmap` → `/project-analyze` to inspect plan quality). Do NOT run `/project-validate` yet — it is strictly the final post-implementation release gate."
-- **Play `platform`** or default (no `project.json`) **and** complexity 3–4 → suggest Platform flow: `/project-specify` → `/project-clarify` → `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-evidence-contract` → `/project-plan`
-- **Play `build`** → suggest Build flow: `/project-specify` → `/project-clarify` → `/project-product-contract` → `/project-evidence-contract` → `/project-context` → `[/project-architecture if cross-system]` → `/project-plan` (and remind that 4+ epics trigger required architecture + ux-strategy)
+- After plan → "**Required next step: `/project-analyze`** — at Platform, and at Build with 4+ epics — before ANY `/epic-specify`. `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start until the gate clears (`UNANALYZED_CORPUS.P1`). At Build with 1-3 epics it is optional and recommended. Then `/project-roadmap` (optional) → `/epic-specify`. Do NOT run `/project-validate` yet — it is strictly the final post-implementation release gate."
+  - The lenses must be **decorrelated** from whoever authored the planning corpus: 3 mandatory at Build 4+ (promise-coverage · cross-artifact drift · completeness critic), all 7 at Platform. A lens marked `authored_corpus: true` does not count toward the tier.
+  - A project planned before v10.3 is **grandfathered** by `<PROJECT_DIR>/.analysis-gate-grandfathered`: surface the notice loudly every time, never block it, and tell the user that running `/project-analyze` makes the exemption spent — `check-epic-prereqs.sh` then prints the `rm` command that retires the marker.
+- **Play `platform`** or default (no `project.json`) **and** complexity 3–4 → suggest Platform flow: `/project-specify` → `/project-clarify` → `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-evidence-contract` → `/project-plan` → `/project-analyze` (required, all 7 lenses)
+- **Play `build`** → suggest Build flow: `/project-specify` → `/project-clarify` → `/project-product-contract` → `/project-evidence-contract` → `/project-context` → `[/project-architecture if cross-system]` → `/project-plan` → `[/project-analyze — required at 4+ epics, recommended below]` (and remind that 4+ epics trigger required architecture + ux-strategy + a cleared `/project-analyze`)
 - Brownfield import → Follow the unified flow starting with `/project-import` → `/speck-scan` → `/project-specify` → then follow Play Level phases.
 
 **Epic Level**:
@@ -579,7 +583,7 @@ I'll guide you through the workflow (full foundation if play level is Platform; 
 6. System architecture (/project-architecture) ← Critical at this scope
 7. Design system (optional) (/project-design-system)
 8. Planning & PRD (/project-plan)
-9. Project validation (/project-validate)
+9. Planning analysis gate (/project-analyze) ← required here; decorrelated lenses, before any epic work
 
 Ready to start? [Y/n]:
 ```

@@ -414,6 +414,12 @@ case "$filename" in
   *harden-report-*.md|*harden-report.md)
     validation_type="harden-report"
     ;;
+  *project-analysis-report-*.md|*project-analysis-report.md)
+    validation_type="project-analysis-report"
+    ;;
+  *epic-analysis-report-*.md|*epic-analysis-report.md)
+    validation_type="epic-analysis-report"
+    ;;
   *story-adjust-report-*.md|*story-adjust-report.md)
     validation_type="story-adjust-report"
     ;;
@@ -525,6 +531,22 @@ case "$validation_type" in
     # declares unenforceable by construction — an agent could delete §2b and the Mutation-Proof
     # line and every gate stayed green. This is the chokepoint the mutation-record work needed.
     bash "$SCRIPT_DIR/validators/validate-harden-report.sh" $strict_flag "$file_path"
+    ;;
+  project-analysis-report|epic-analysis-report)
+    # WAS: the `*)` arm below — "not a tracked template, skip", exit 0. Same defect as the
+    # harden-report arm above, one altitude up: every section the two analysis-report templates
+    # declare was unenforceable BY CONSTRUCTION, so an agent could ship a report with the Lens
+    # Roster and the Promise Coverage matrix simply deleted and every gate stayed green. A rule
+    # stated in a template cannot fail a build (#106).
+    #
+    # ONE validator for BOTH altitudes, on purpose — the structural rules are identical and the
+    # artifact_type in the report's own frontmatter selects the altitude. A second script would be
+    # a second copy of one rule, which is how the two altitudes drift apart.
+    #
+    # Structural mode only. The BLOCKING gate (UNANALYZED_CORPUS.P1 and friends) is
+    # `--gate <PROJECT_DIR>`, called from check-epic-prereqs.sh — it asks a question about a
+    # project directory, not about one staged file, so it cannot live on this per-file path.
+    bash "$SCRIPT_DIR/validators/validate-project-analysis.sh" $strict_flag "$file_path"
     ;;
   story-adjust-report|epic-adjust-report|project-adjust-report|seam-contract)
     # Passed placeholder check, no additional structural sub-validator needed

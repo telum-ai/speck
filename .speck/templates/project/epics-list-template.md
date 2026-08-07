@@ -93,6 +93,15 @@ Set up testing framework, CI/CD pipeline, linting/formatting, error tracking, an
 - **Depends On**: E000 (infrastructure foundation)
 - **Enables**: E003, E004
 
+<!--
+Replace EVERY bullet below with this epic's real values, or with `—` when the epic touches none
+of that kind. `—` is an answer; a bullet left as `[e.g., …]` is not.
+
+An UNFILLED bullet is not an empty one. validate-wave-safety.sh compares these lists to find
+collisions between epics scheduled in the same wave, and reports a bullet still carrying its
+`[e.g., …]` example as WAVE_TABLE_UNFILLED.P2 rather than as a pass — "no collisions found",
+computed from rows nobody filled in, is a green with nothing behind it.
+-->
 **Touch-points (creates/modifies)**:
 - Migrations: [e.g., create table auto_reply_config]
 - Models/Services: [e.g., models/availability.py, match_service.py]

@@ -84,12 +84,16 @@ Run these checks **in order**. Stop at the first hit, run the indicated skill, t
 | Level | When | Required PROMISE | Optional PROMISE | Discipline (PROVE) |
 |-------|------|------------------|-------------------|----------------------|
 | **Sprint** | Weekend bets, prototypes, simple tools | `PRD.md` (sprint) + `sprint-log.md` | none | LARP at validate |
-| **Build** | Products with subscriptions, dashboards, teams | `product-contract.md` + `context.md` + `evidence-contract.md` | architecture (req. if 4+ epics), constitution, design-system, domain-model | LARP + `/audit` + decision log + readiness states |
-| **Platform** | Enterprise, marketplace, multi-system | Full Platform flow | n/a — full flow | Full PROVE pillar; `/recheck` on every engagement gap |
+| **Build** | Products with subscriptions, dashboards, teams | `product-contract.md` + `context.md` + `evidence-contract.md` | architecture (req. if 4+ epics), constitution, design-system, domain-model | LARP + `/audit` + decision log + readiness states; `/project-analyze` req. if 4+ epics |
+| **Platform** | Enterprise, marketplace, multi-system | Full Platform flow | n/a — full flow | Full PROVE pillar; `/project-analyze` req. after `/project-plan`; `/recheck` on every engagement gap |
 
 Discipline (skeptical review, LARP, audit, decision locks, banned-phrase detection) applies at **all** levels — the difference is the artifact depth and number of gates, not their existence.
 
-**Build complexity gate**: If a Build project hits **4+ epics**, `architecture.md` and `ux-strategy.md` become **required** (composition fallacy prevention). Consider `/project-promote` to Platform instead of patching Build.
+**Build complexity gate**: If a Build project hits **4+ epics**, `architecture.md`, `ux-strategy.md`, and a cleared `/project-analyze` become **required** (composition fallacy prevention). Consider `/project-promote` to Platform instead of patching Build.
+
+**Planning-analysis gate (v10.3)**: `/project-analyze` is **REQUIRED** after `/project-plan` and before any `/epic-specify` — at **Platform**, and at **Build with 4+ epics** (the same threshold that already forces architecture + ux-strategy). Below that threshold it stays **optional and recommended**. Why it stopped being opt-in: a planning corpus that walked the full canonical Build flow — every skill entered, five skeptical-review primitives, `/speck-premise-challenge`, strict validators green — still carried 1 CRITICAL and 13 HIGH defects that survived every inline gate, and a decorrelated multi-lens pass found all 14. That is **P4 applied to the plan itself**: at this altitude the party opting into the adversary was the author of the work. **Lens tier** (deliberately not all 7 everywhere — the checklist stays small): 3 mandatory at Build 4+ — promise-coverage · cross-artifact drift · completeness critic — and all 7 at Platform; a lens whose reviewer authored a corpus artifact does **not** count toward the tier. Enforced by `.speck/scripts/validation/validators/validate-project-analysis.sh --gate <PROJECT_DIR>` (exit 1 on any P1), invoked from `/epic-specify` via `.speck/scripts/validation/check-epic-prereqs.sh`. `/epic-analyze` carries the same decorrelation contract one altitude down.
+
+**Disclosed asymmetry — the gate is real forward, advisory backward.** On upgrade, the `v10-3-analysis-gate-grandfather` migration writes a per-project marker file, `<PROJECT_DIR>/.analysis-gate-grandfathered`, to every project that shows `/project-plan` already ran (`PRD.md` **and** `epics.md`) and has no analysis report yet. While it is present, `/epic-specify` and `/recheck` print a **loud notice that repeats on every run** (`ANALYSIS_GRANDFATHERED.P2`, echoing the marker's own `reason:` / `clears_with:` lines) and **never block**. Projects planned on v10.3+ have no marker and **do** block. The marker does not delete itself: once `project-analysis-report.md` exists alongside it, `check-epic-prereqs.sh` calls the exemption **spent** and prints the `rm` that retires it — an exemption outliving its reason is how a gate turns off without anyone deciding to turn it off. Stated here rather than left implicit inside the validator, because an estate that arrives red on upgrade day gets bypassed rather than fixed.
 
 ## 📁 Canonical Directory Structure
 
@@ -104,6 +108,7 @@ specs/projects/<PROJECT_ID>/
 ├── context.md                  # PROMISE: Constraints (current state — TRUTH)
 ├── architecture.md             # PROMISE: System design (current state — TRUTH; req. Platform / 4+ epic Build)
 ├── epics.md                    # BUILD: Epic index
+├── project-analysis-report.md  # PROVE: Decorrelated multi-lens analysis of the planning corpus (req. Platform / 4+ epic Build)
 ├── constitution.md             # PROMISE: Principles + enforcement mechanisms (optional at Build)
 ├── domain-model.md             # PROMISE: Terminology (optional at Build; merged into product-contract)
 ├── ux-strategy.md              # PROMISE: UX principles (optional at Build; merged into product-contract)
@@ -152,6 +157,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Current state for next-session pickup (auto-regen) | `project-state.md` |
 | Drift / re-engagement report | `project-recheck-report.md` |
 | v7→v8 truth re-prove report (cap-and-worklist) | `project-v8-reprove-report.md` |
+| Pre-execution analysis of the planning corpus (decorrelated multi-lens) | `project-analysis-report.md` |
 | Project-level skeptical audit findings | `project-audit-report.md` |
 | Post-validation hardening report | `project-harden-report-*.md` |
 | Post-validation project adjustment report | `project-adjust-report-*.md` |
@@ -197,7 +203,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Epic-level skeptical audit findings | `audit-report.md` |
 | Epic validation report (JTBD walkthrough) | `epic-validation-report.md` |
 | Post-validation epic adjustment report | `epic-adjust-report-*.md` |
-| Epic-level pre-impl analysis (v6) | `epic-analysis-report.md` |
+| Epic-level pre-implementation analysis (decorrelated multi-lens) | `epic-analysis-report.md` |
 | Epic retrospective | `epic-retro.md` |
 | Epic-scoped research report | `epic-*-research-report-*.md` |
 | Brownfield epic-scoped code scan | `epic-codebase-scan*.md` |
@@ -237,6 +243,7 @@ If a user requests bespoke docs (e.g., "create a positioning brief", "make a lau
 /project-specify → /project-clarify → /project-product-contract → /project-readme → /project-evidence-contract
   → /project-context → [/project-architecture if cross-system]
   → /project-plan (creates PRD + epics + E000 infrastructure epic)
+  → [/project-analyze — recommended at 1-3 epics; REQUIRED at 4+ (see Build flow (4+ epics))]
   → per epic: /epic-specify → /epic-clarify → [/epic-architecture] → [/epic-experience-chain if UI]
               → /epic-plan → /epic-breakdown → /epic-analyze
   → per story: /story-specify → /story-clarify → [/story-scan] → /story-plan
@@ -246,11 +253,11 @@ If a user requests bespoke docs (e.g., "create a positioning brief", "make a lau
   → /project-validate → /project-retrospective
 ```
 
-### Build flow (4+ epics) — gate triggers required architecture + ux-strategy
-Same as Build but `/project-architecture` and `/project-ux` are required before `/project-plan`.
+### Build flow (4+ epics) — gate triggers required architecture + ux-strategy + project-analyze
+Same as Build but `/project-architecture` and `/project-ux` are **required before** `/project-plan`, and `/project-analyze` is **required after** `/project-plan` and before the first `/epic-specify` — 3 decorrelated lenses minimum (promise-coverage · cross-artifact drift · completeness critic). `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start on `UNANALYZED_CORPUS.P1`.
 
 ### Platform flow
-Full flow: includes `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-readme` → `/project-evidence-contract` → `/project-plan` → `/project-roadmap`. `/project-state` keeps README status current after validation gates.
+Full flow: includes `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-readme` → `/project-evidence-contract` → `/project-plan` → `/project-analyze` (**required**, all 7 lenses) → `/project-roadmap`. `/project-state` keeps README status current after validation gates.
 
 ### Reengagement & Intent Changes
 On any new session: read `project-state.md`. 
@@ -354,6 +361,7 @@ These apply at every play level, in every command, on every project. The first f
 | **Engagement-gap recheck** | >2 weeks since last verified-against-runtime stamp OR new agent | Run `/recheck` to detect drift before new feature work |
 | **Decision-lock log** | Every phase boundary | Enumerate decisions, log SHA + alternatives in `project-decisions-log.md` |
 | **Skeptical-review** | Before any non-trivial proposal locks | Produce N≥3 alternatives + tradeoff scoring + rationale |
+| **Planning-corpus adversary** | After `/project-plan` (Platform / Build 4+) · after `/epic-breakdown` | Run `/project-analyze` / `/epic-analyze` with lenses **decorrelated** from the corpus authors — a reviewer that wrote a corpus artifact does not count toward the tier (3 lenses at Build 4+, 7 at Platform). Severity is assigned **by rule, not by author judgment**: a cross-artifact `contradictory` verdict, an unaddressed `MM-N`/`JOB-N` in the promise-coverage matrix, and a gate whose precondition contradicts the evidence contract are **CRITICAL by construction**. Only CRITICAL + `open` blocks. Enforced by `validate-project-analysis.sh --gate`. |
 | **Skeptical audit** | Between `implement` and `validate` | Run `/audit` — auditor doesn't trust the implementer's report |
 | **Verify-skills-before-accept** | Accepting any delegated / parallel sub-agent result | Confirm ≥2 real skill invocations (`skills_invoked` + transcript) AND template-compliant reports before merging; never accept a self-reported `{readiness_state, pass}` |
 | **Runtime LARP** | Every UI story/epic validate gate | Run `/larp [persona]` — produces checked-in evidence |
@@ -479,6 +487,8 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Claim `SHIP-RC` based on dev-mode evidence — must be the launch build
 - Generate a Speck artifact without reading its template and SKILL.md first
 - Run `/project-plan` before required PROMISE artifacts exist (varies by play level)
+- Run `/epic-specify` on a Platform or 4+-epic Build project whose `/project-analyze` gate has not cleared (`UNANALYZED_CORPUS.P1` / `ANALYSIS_CRITICAL_OPEN.P1` / `ANALYSIS_STALE.P1`)
+- Let the author of the planning corpus be the lens that certifies it — a lens marked `authored_corpus: true` does not count toward the required tier, and a CRITICAL/HIGH finding whose Verifier equals its Lens is `ANALYSIS_DECORRELATION_UNVERIFIED.P2`
 - Skip the skeptical audit (`/audit`) between implement and validate
 - Let "outside autonomous reach" stand without enumerating what CAN be done autonomously
 - Trust historical PASS docs over current runtime proof
@@ -503,6 +513,7 @@ Commands are invoked by reading the corresponding `SKILL.md` file. **Always read
 - Stamp truth artifacts with `[as of SHA <hash> | verified <date>]`
 - Surface 3+ alternatives at non-trivial decisions
 - Run `/larp` on UI stories at validate time
+- Run `/project-analyze` after `/project-plan` and before the first `/epic-specify` at Platform or Build with 4+ epics, and `/epic-analyze` after `/epic-breakdown` — both with lenses decorrelated from whoever authored the corpus
 - Run `/audit` between implement and validate
 - Enforce the Form Validation Matrix for any user story involving form submissions or input fields
 - Declare a readiness state at every validate gate

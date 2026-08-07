@@ -44,6 +44,11 @@ The following artifacts are now REQUIRED before continuing:
 - architecture.md — How do these [N] epics connect as a system?
 - ux-strategy.md — How does a user navigate between [N] sets of features?
 
+And REQUIRED after this plan, before any /epic-specify:
+- project-analysis-report.md — /project-analyze, run by lenses that did NOT
+  author this corpus (3 mandatory: promise-coverage, cross-artifact drift,
+  completeness critic). /epic-specify will refuse to start until it clears.
+
 Without these, each epic will be designed in isolation and the product
 will suffer from the composition fallacy (each part works, whole doesn't).
 
@@ -54,6 +59,8 @@ Options:
 ```
 
 If the user chooses option 2 or insists on continuing: require `architecture.md` and `ux-strategy.md` before producing the final PRD. The gate is non-negotiable for 4+ epics.
+
+The **same 4+ epic threshold** also makes `/project-analyze` required *after* this skill finishes. It is a separate gate at a later moment — architecture and ux-strategy are inputs to the plan; `/project-analyze` is the decorrelated adversary applied to the finished plan (P4 at the planning altitude). Do not treat one as a substitute for the other, and do not let this skill's own author be the lens that certifies its output. At Platform, `/project-analyze` is required regardless of epic count.
 
 ---
 
@@ -357,10 +364,14 @@ This command benefits from parallel execution:
    2. Validate epic boundaries
    3. Optional: /project-roadmap (for epic timeline and dependencies)
       - If you intentionally skipped /project-design-system and later decide you need it, run /project-design-system and then update PRD.md accordingly (or re-run /project-plan to re-synthesize PRD + epics with design-system inputs).
-   4. Quality gates:
-      - /project-analyze (deep quality analysis of design/plan)
+   4. Planning analysis gate:
+      - /project-analyze — REQUIRED at Platform and at Build with 4+ epics,
+        before ANY /epic-specify. Recommended (not required) at Build with 1-3 epics.
+        Lenses must be decorrelated from whoever authored this corpus:
+        3 mandatory at Build 4+ (promise-coverage, cross-artifact drift,
+        completeness critic), all 7 at Platform.
       - Note: Do NOT run /project-validate yet. /project-validate is strictly the final post-implementation release gate run only after ALL epics are validated.
-   5. Begin epic development:
+   5. Begin epic development (blocked until the gate above clears):
       - cd epics/E001-[epic-name]
       - /epic-specify (enhances the placeholder epic.md)
       - /epic-clarify (if needed)
@@ -375,3 +386,9 @@ This command benefits from parallel execution:
     - For Level 3-4: Epic planning is critical for success
     - PRD is living document - update as learning occurs
     - Epic boundaries can be adjusted based on implementation learning
+    - A project planned by this skill is planned **on v10.3 or later**, so it is NOT grandfathered:
+      never write a `.analysis-gate-grandfathered` marker here. That marker exists only for corpora
+      that predate the gate, and only the `v10-3-analysis-gate-grandfather` upgrade migration writes
+      it (and only where `PRD.md` + `epics.md` already exist without a report). Writing one here would turn a real
+      forward gate into a permanently advisory one — the exact overclaim the asymmetry is disclosed
+      to avoid.

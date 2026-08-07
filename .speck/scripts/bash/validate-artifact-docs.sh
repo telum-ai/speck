@@ -61,6 +61,14 @@ done
 
 check_agents "project-*-research-report-*.md"
 
+# v10.3: /project-analyze became a required gate at Platform / 4+-epic Build, so its output artifact
+# has to appear in the routing table like every other canonical artifact.
+# Honest scope: this asserts a DOCUMENTATION row exists in AGENTS.md. It is not evidence that the
+# gate fires — the v10.2 "every gate has a caller" sweep deliberately discarded prose mentions so a
+# mention could not pass as an invocation. The firing evidence is validate-project-analysis.sh's own
+# tests plus its call site in check-epic-prereqs.sh.
+check_agents "project-analysis-report.md"
+
 # Epic-level
 for needle in \
   epic.md epic-architecture.md epic-tech-spec.md epic-breakdown.md experience-chain.md \

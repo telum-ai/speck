@@ -10,7 +10,7 @@
  */
 
 import { existsSync, readdirSync, statSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, basename } from 'path';
 import { execSync, execFileSync } from 'child_process';
 
 /**
@@ -1144,6 +1144,95 @@ registerMigration({
       stamped += 1;
     }
     return stamped;
+  },
+});
+
+/* ===========================================================================
+ * THE v10.3 RIDER — grandfathering the project-analysis gate
+ * ===========================================================================
+ */
+
+export const ANALYSIS_GATE_GRANDFATHER_ID = 'v10-3-analysis-gate-grandfather';
+
+/** The marker filename, per project. Exported because the gate script and its tests name it too. */
+export const ANALYSIS_GATE_GRANDFATHER_MARKER = '.analysis-gate-grandfathered';
+
+/**
+ * The marker's contents: what exempted this project, why, and the exact gesture that ends it.
+ *
+ * A bare touch-file would have been enough for the gate to read. It is not enough for the human who
+ * finds it six months from now — "why is this file here and what do I do about it?" is the question
+ * an undocumented marker leaves permanently open, and an exemption nobody can date or clear is how a
+ * temporary carve-out becomes the permanent state.
+ */
+function grandfatherMarkerBody(projectId, version) {
+  return [
+    '# Speck analysis-gate grandfather marker',
+    `speck_version: ${version}`,
+    'gate: check-epic-prereqs.sh → validate-project-analysis.sh --gate',
+    'reason: >-',
+    '  This project ran /project-plan before the v10.3 project-analysis gate existed, so it could',
+    '  not have satisfied a gate that did not exist. While this marker is present the gate prints a',
+    '  repeated NOTICE for this project instead of blocking. Projects planned after v10.3 have no',
+    '  marker and DO block — the gate is real forward and advisory backward, by decision.',
+    'clears_with: |',
+    `  /project-analyze specs/projects/${projectId}`,
+    `  rm specs/projects/${projectId}/${ANALYSIS_GATE_GRANDFATHER_MARKER}`,
+    '',
+  ].join('\n');
+}
+
+// WHY THIS RIDES THE UPGRADE, and why the marker is PER-PROJECT.
+// v10.3 makes /project-analyze a precondition for epic work (#106). Every project already on disk
+// planned its corpus before that gate existed, so on upgrade day every one of them would go from
+// green to blocked on work nobody in the project touched — and a gate that is red on arrival across
+// an entire estate gets bypassed rather than satisfied. The marker is what makes the asymmetry a
+// DISCLOSED design decision instead of a hidden hole: advisory backward, real forward.
+//
+// Per PROJECT, not in .speck/project.json, because .speck/project.json is workspace-scoped while the
+// gap is per-project. A workspace-level flag would exempt a project created tomorrow, in a workspace
+// that happened to upgrade today — which is precisely the "real forward" half, lost.
+//
+// SCOPE — only projects that show evidence /project-plan actually ran (PRD.md AND epics.md) and that
+// have no analysis report yet. A project with neither artifact has nothing to grandfather; a project
+// that already has a report needs no exemption, and writing one would install a live false-exemption
+// that re-arms the moment the report is deleted.
+registerMigration({
+  id: ANALYSIS_GATE_GRANDFATHER_ID,
+  description:
+    'Mark pre-v10.3 planned projects as grandfathered against the /project-analyze gate (#106)',
+  version: '10.3.0',
+  appliesTo: atOrAfter('10.3.0'),
+  run: (targetDir, ctx = {}) => {
+    const version = ctx.targetVersion || '10.3.0';
+    let marked = 0;
+    for (const projectPath of findProjects(targetDir)) {
+      if (!existsSync(join(projectPath, 'PRD.md'))) continue;
+      if (!existsSync(join(projectPath, 'epics.md'))) continue;
+      if (existsSync(join(projectPath, 'project-analysis-report.md'))) continue;
+      const marker = join(projectPath, ANALYSIS_GATE_GRANDFATHER_MARKER);
+      // Check-then-write, so a mid-run crash cannot produce a second, differently-versioned marker
+      // on the retry. The ledger stops a second RUN; this stops a partial one from rewriting the
+      // exemption date of a project that was already marked.
+      //
+      // isFile(), not a bare existsSync: check-epic-prereqs.sh honours the marker behind `[[ -f ]]`,
+      // so a DIRECTORY at that path is not a marker to the gate. Bare existsSync would call it one,
+      // skip the write, and leave the project silently unexempted — the two halves of #106
+      // disagreeing about what a marker is. Falling through instead makes writeFileSync raise
+      // EISDIR, which is loud, recorded 'failed', and retried.
+      if (existsSync(marker) && statSync(marker).isFile()) continue;
+      // Deliberately UNGUARDED. A try/catch that returned a count here would record the migration
+      // 'applied' for projects whose marker never landed, pendingMigrations() would filter it out
+      // forever, and those projects would be BLOCKED on upgrade day with nothing left in the ledger
+      // to explain why. Throwing is this lane's failure contract: 'failed', siblings keep running,
+      // retried next time — and every marker already written is skipped by the check above.
+      writeFileSync(marker, grandfatherMarkerBody(basename(projectPath), version));
+      marked += 1;
+    }
+    // A workspace with zero qualifying projects is a GENUINE no-op, not deferred work: there is no
+    // pre-v10.3 corpus to exempt, and anything planned from here on is planned under the gate. So
+    // this one honestly records 'applied' rather than staying pending.
+    return marked;
   },
 });
 

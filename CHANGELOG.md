@@ -1,5 +1,125 @@
 # Speck Changelog
 
+## v10.3.0 — 2026-08-07 — The adversary reaches the plan
+
+Two field reports from one session (#105, #106). They look unrelated — a shell parser and a
+methodology gate — and they are the same defect at two altitudes: **a check that reported a verdict
+it had not earned**, in both cases by inspecting less than it appeared to.
+
+### #106 — `/project-analyze` is required, decorrelated, and consequential
+
+The report is the argument. A planning corpus produced through the FULL canonical Build flow — every
+skill entered, templates read, five skeptical-review primitives, `/speck-premise-challenge`, strict
+validators green, a decision log with 3+ alternatives per lock — still carried **1 CRITICAL and 13
+HIGH defects**. Every one survived every inline gate. All 14 were found by a single decorrelated
+multi-lens pass, and the CRITICAL was a promise-level contradiction: the evidence contract banned
+n=1 evidence while a gate required that same magic moment validated at n=1 by construction.
+
+The structural cause, in P4's own words: **the adversary is supposed to be structural, but at
+project-plan level it was opt-in — and the party opting in was the author.** Speck already gets this
+right downstream (`/audit` is non-skippable; the Verify-Skills Gate rejects self-audits). The
+planning corpus — the highest-leverage artifacts in the system, which every epic inherits — had the
+weakest adversarial treatment in the canon.
+
+So: required after `/project-plan`, before any `/epic-specify`, at Platform and at Build with 4+
+epics — the threshold that already forces architecture + ux-strategy. Below it, optional and
+recommended. `/epic-analyze` carries the same contract one altitude down, because fixing only the
+project altitude would have closed the named gap and opened a new one directly beneath it.
+
+**The lens tier is 3 at Build-4+ and 7 at Platform, and that is a decision, not a default.** The
+field evidence came from seven lenses, which argues for seven everywhere. AGENTS.md's own anti-bloat
+rule argues the other way, and it wins below Platform: the three that are mandatory — promise
+coverage, cross-artifact drift, completeness critic — are the three whose defect classes are
+*structurally invisible to the author* (an absence, a relation between two files, and the blind spot
+itself). A lens whose reviewer authored a corpus artifact does not count toward the tier.
+
+**Severity is assigned by rule, not by the author.** Three classes are CRITICAL by construction: a
+cross-artifact `contradictory` verdict, an unaddressed MM-N/JOB-N, and a gate precondition that
+contradicts the evidence contract. This is the load-bearing paragraph, and it is worth saying why:
+of the 14 defects that motivated the issue, **13 were graded below CRITICAL by their own author**. A
+discretion-graded gate would have passed all 13 and blocked one.
+
+Enforced by `validate-project-analysis.sh --gate` (exit 1 on any P1 with **no flag required** — a
+finding that only fires when asked for is not a gate), reached from `/epic-specify` through
+`check-epic-prereqs.sh`, and from the pre-commit hook on a staged `epic.md`. Promise-coverage
+completeness reads MM-N/JOB-N from the **witness graph** rather than re-grepping `product-contract.md`:
+design invariant 2 forbids a parallel truth, and a second MM parser is a two-carrier interval by
+construction.
+
+### ⚠️ Upgrade day — the gate is real forward and advisory backward
+
+Every project on disk planned its corpus before this gate existed and could not have satisfied it.
+The `v10-3-analysis-gate-grandfather` migration writes a per-project
+`<PROJECT_DIR>/.analysis-gate-grandfathered` marker to each project that shows `/project-plan` ran
+(`PRD.md` **and** `epics.md`) with no analysis report. While present: a loud notice that repeats on
+every run, and **never a block**. Projects planned on v10.3+ have no marker and do block.
+
+That asymmetry is the disclosed cost of not turning an entire estate red on the upgrade commit — an
+estate that arrives red gets bypassed rather than fixed. The marker does not delete itself; once a
+report exists beside it the gate calls the exemption **spent** and prints the `rm` that retires it,
+because an exemption outliving its reason is how a gate turns off with nobody deciding to turn it off.
+
+### #105 — the wave-safety parser, and what it was not checking
+
+The reported bug was a crash: an `epics.md` whose only parallel cell read `Yes (distinct surfaces;
+E003 zero migrations)` aborted at `wave_epics_: unbound variable`. The crash was the *harmless* half.
+The other half — the exact-match `parallel_lower == "yes"` — meant every annotated cell was silently
+filed as serial, so the wave was never collision-checked and the run exited 0 with a green tick.
+
+Rewriting the parser to fix that surfaced a class of the same thing, each verified by running it:
+`None` / `none` / `N/A` / `TBD` / `zero` / en-dash all parsed as real migration lists and fabricated
+collisions — while `zero` is the word AGENTS.md itself uses for that state; a markdown-link value was
+discarded as a placeholder and hid a real collision; `- **Migrations**:` parsed as no migrations at
+all; a `## Story Estimates` table parsed as a concurrency wave; the word "Touch-points" in prose
+after the last epic reopened the block; a duplicate wave row silently erased the first row's
+collisions; `E002 + E003` collapsed to one token and skipped the pair.
+
+And one that was never reported, more severe than either reported bug: an Epics cell of
+`E002:-$(touch /tmp/PWNED)` reached `eval` and **executed** — verified by the file appearing on disk.
+The eval-based pseudo-associative array is gone entirely rather than sanitised; keys are validated
+against `^E[0-9]+$` before storage, so the payload is now a named `WAVE_EPIC_UNPARSED.P2` finding.
+
+**Wave safety runs at pre-commit, and it is ADVISORY this release — a gate that still cannot fail a
+build.** That is a half-measure and is labelled as one rather than shipped as enforcement. The bug
+being fixed is a *false negative*, so the fixed validator sees collisions the broken one hid — real
+ones, in plans that have read green their whole life. Blocking on arrival would be green→red on the
+upgrade commit for a collision the author did not introduce. Promotion to blocking is one line, and
+it belongs to a release where the field has watched it print first. For the same reason it gets **no
+§6a row**: §6a is the CI-*enforced* registry, and declaring `stage: pre-commit` for a check that
+cannot reject anything is a label outrunning its status — the two existing advisory blocks are
+deliberately absent from it too.
+
+### Two over-corrections, found by re-running the issue instead of re-reading the fix
+
+Both were authored *by* the #105 rewrite and caught only when the original repro was replayed against
+the finished validator. Recorded because the lesson generalises: the riskiest moment for a false
+negative is the commit that closes one.
+
+- The touch-points header was anchored on `**`. The shipped template emits bold, so every fixture in
+  the suite passed — while a hand-written `Touch-points:` captured nothing and two epics sharing a
+  model file reported a clean PASS. A validator that reads only the shape its own template emits is
+  checking its scaffolding, not the corpus. The discriminator is now the shape of a *header* (a
+  colon with nothing after it), which keeps the anti-prose property the anchor was reaching for.
+- The exposure line printed `epics with touch-points: 3` for a run that captured zero, because it
+  counted registered `### EXXX` headers — epics that *exist*, not epics that were *read*. That line
+  exists solely to distinguish a real green from a green that inspected nothing, and it was
+  reporting the verdict's confidence instead of its reach. It now reads `parsed/total`.
+
+### Fixed
+
+- `count_epics()` in the analysis gate returned the `epics/` **directory** count whenever it was
+  non-zero and consulted `epics.md` only as a fallback, while `check-epic-prereqs.sh` one frame up
+  took the MAX of both. A project with 4 planned epics and its first epic dir scaffolded — the most
+  common state a project is ever in — read 4 there and 1 here, so the gate reported "not applicable"
+  and passed clean. **The entire #106 gate would have shipped inert**, and an inert gate and a
+  satisfied gate print the same exit code. Both counters now take the MAX, and a test asserts they
+  agree on one fixture, because the duplication is the real defect.
+- `project-analysis-report.md` and `epic-analysis-report.md` fell through `validate-template.sh`'s
+  `*) exit 0` arm, so every section their templates declared was unenforceable by construction —
+  the hole `validate-harden-report.sh` was written to close for one artifact. Both now route to a
+  structural validator, vintage-bound on `artifact_type:` so no report already on disk is convicted.
+- The wave-safety banner printed a frozen `v7.18.0`; it reads `.speck/VERSION`.
+
 ## v10.2.0 — 2026-08-02 — The backlog closes
 
 Closes the last three open issues from the field-filed audit-doctrine series (#93, #96, #101), and

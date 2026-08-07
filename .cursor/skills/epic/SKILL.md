@@ -71,7 +71,11 @@ For **each** transition below: **invoke the listed skill** (read `.cursor/skills
 Run the appropriate skills in order. After each command completes successfully, evaluate whether a stop condition is met before transitioning.
 
 ```
-State: Draft         →  Run: /epic-specify  →  Validate & Clarify (/epic-clarify)
+State: Draft         →  Run: bash .speck/scripts/validation/check-epic-prereqs.sh specs/projects/<PROJECT_ID>
+                             ↳ STOP on exit 1 — the project-level /project-analyze gate has not cleared.
+                               Route to /project-analyze; do NOT specify the epic.
+                               ANALYSIS_GRANDFATHERED.P2 → surface loudly, then proceed.
+                        Run: /epic-specify  →  Validate & Clarify (/epic-clarify)
                              ↳ STOP if user clarification required.
                                Transition to state: Specified
 
@@ -81,6 +85,11 @@ State: Specified     →  If UI Epic: Run /epic-journey and /epic-wireframes / /
                                Transition to state: Planned
 
 State: Planned       →  Run: /epic-analyze  →  Verify zero critical issues.
+                             Lenses MUST be decorrelated from whoever authored the epic
+                             corpus — if this orchestrator's own session wrote epic-tech-spec.md
+                             or epic-breakdown.md, delegate the lenses to a separate agent
+                             (@speck-auditor or a separate session). Self-certification is
+                             not an analysis pass.
                              ↳ STOP if P0/P1 issues found in plans.
                         Start story implementations (delegating to /story)
                                Transition to state: In Progress
@@ -124,12 +133,15 @@ Self-reported fields are not tamper-evident (host-runtime limit) — the transcr
 Do NOT transition automatically and stop immediately if any of these occur:
 1. **Unresolved Clarifications**: Any `[NEEDS CLARIFICATION]` markers introduced in `epic.md` or specifications.
 2. **Critical/P0 Findings**: Any P0 findings returned by `/epic-analyze` or `/audit` must halt the orchestrator immediately. Fix them before continuing.
-3. **Validation Cap**: If `/epic-validate` is run and first-time user comprehension fails, capping the readiness state at `IMPL-GREEN`, stop and present the remediation requirements to the user.
+3. **Project analysis gate not cleared**: `check-epic-prereqs.sh` exits 1 (`UNANALYZED_CORPUS.P1`, `ANALYSIS_STALE.P1`, `ANALYSIS_CRITICAL_OPEN.P1`, `PROMISE_UNCOVERED.P1`). The epic cannot start on a planning corpus no decorrelated lens has read. `ANALYSIS_GRANDFATHERED.P2` is NOT a stop — surface it loudly and continue.
+4. **Validation Cap**: If `/epic-validate` is run and first-time user comprehension fails, capping the readiness state at `IMPL-GREEN`, stop and present the remediation requirements to the user.
 
 ---
 
 ## Behavior Rules
 
+- **ALWAYS** run `check-epic-prereqs.sh` before the first `/epic-specify` of a session — the project-level `/project-analyze` gate is REQUIRED at Platform and at Build with 4+ epics, and an epic built on an uncertified plan inherits every defect in it.
+- **ALWAYS** run `/epic-analyze` with lenses decorrelated from the corpus authors — 3 mandatory at Build 4+ (promise-coverage · cross-artifact drift · completeness critic), all 7 at Platform. A lens marked `authored_corpus: true` does not count toward the tier.
 - **ALWAYS** check for the `E000` Developer Infrastructure epic first. Ensure testing and CI patterns are resolved before allowing other epics to specify.
 - **ALWAYS** invoke downstream skills by reading their `SKILL.md` — never substitute inline artifact authoring for a skipped skill step.
 - **ALWAYS** delegate per-story work to `/story`; the epic orchestrator coordinates sequencing, not story implementation.
