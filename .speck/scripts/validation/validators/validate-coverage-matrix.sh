@@ -31,10 +31,10 @@ completeness=$(echo "$content" | grep -m1 '^generator_completeness:' | sed -E 's
 if [[ "$completeness" == "chain-partial" ]]; then
   if $strict; then
     echo -e "${RED}ERROR:${NC} generator_completeness is 'chain-partial' — the coverage universe is under-enumerated and cannot back a breadth claim. Fill the experience-chain screen table and regenerate." >&2
-    ((errors++))
+    errors=$((errors + 1))
   else
     echo -e "${YELLOW}WARNING:${NC} generator_completeness: chain-partial (universe under-enumerated)"
-    ((warnings++))
+    warnings=$((warnings + 1))
   fi
 fi
 
@@ -66,33 +66,33 @@ while IFS= read -r row; do
   status=$(printf '%s' "$row" | awk -F'|' -v c="$COL_STATUS" '{s=$c; gsub(/^[ \t]+|[ \t]+$/,"",s); print s}')
   evidence=$(printf '%s' "$row" | awk -F'|' -v c="$COL_EVIDENCE" '{e=$c; gsub(/^[ \t]+|[ \t]+$/,"",e); print e}')
   [[ -z "$status" ]] && continue
-  ((total++))
+  total=$((total + 1))
   case "$status" in
     RUN)
-      ((run_count++))
+      run_count=$((run_count + 1))
       if [[ -z "$evidence" || "$evidence" == "—" || "$evidence" == "-" ]]; then
-        ((noevidence++))
+        noevidence=$((noevidence + 1))
       fi ;;
-    GAP) ((gap_count++)) ;;
+    GAP) gap_count=$((gap_count + 1)) ;;
     DEFERRED-BY-BUDGET*|N-A*) ;;   # waived with a reason
-    *) ((badstatus++)) ;;
+    *) badstatus=$((badstatus + 1)) ;;
   esac
 done < <(echo "$content" | awk '/^## Cell status grid/{ins=1;next} ins && /^## /{ins=0} ins && /^\|/{print}' | grep -vE '^\|[- ]*Persona|^\|[-: ]+\|')
 
 if [[ "$total" -eq 0 ]]; then
-  echo -e "${YELLOW}WARNING:${NC} coverage grid has no cell rows"; ((warnings++))
+  echo -e "${YELLOW}WARNING:${NC} coverage grid has no cell rows"; warnings=$((warnings + 1))
 fi
 if [[ "$badstatus" -gt 0 ]]; then
-  echo -e "${RED}ERROR:${NC} $badstatus cell(s) have an unrecognized Status (must be RUN | DEFERRED-BY-BUDGET | N-A | GAP)" >&2; ((errors++))
+  echo -e "${RED}ERROR:${NC} $badstatus cell(s) have an unrecognized Status (must be RUN | DEFERRED-BY-BUDGET | N-A | GAP)" >&2; errors=$((errors + 1))
 fi
 if [[ "$noevidence" -gt 0 ]]; then
-  echo -e "${RED}ERROR:${NC} $noevidence RUN cell(s) cite no evidence path (surrogate proof — a RUN must cite a real larp-recordings/… path)" >&2; ((errors++))
+  echo -e "${RED}ERROR:${NC} $noevidence RUN cell(s) cite no evidence path (surrogate proof — a RUN must cite a real larp-recordings/… path)" >&2; errors=$((errors + 1))
 fi
 if [[ "$gap_count" -gt 0 ]]; then
   if $strict; then
-    echo -e "${RED}ERROR:${NC} $gap_count in-universe cell(s) are GAP (un-run, un-waived). Fill via /project-validate --exhaustive, or waive as DEFERRED-BY-BUDGET(reason)/N-A(reason)." >&2; ((errors++))
+    echo -e "${RED}ERROR:${NC} $gap_count in-universe cell(s) are GAP (un-run, un-waived). Fill via /project-validate --exhaustive, or waive as DEFERRED-BY-BUDGET(reason)/N-A(reason)." >&2; errors=$((errors + 1))
   else
-    echo -e "${YELLOW}WARNING:${NC} $gap_count GAP cell(s) (visible breadth gaps — each a P3 finding)"; ((warnings++))
+    echo -e "${YELLOW}WARNING:${NC} $gap_count GAP cell(s) (visible breadth gaps — each a P3 finding)"; warnings=$((warnings + 1))
   fi
 fi
 
