@@ -32,7 +32,7 @@ Every readiness claim decomposes into three distinct, non-substitutable axes:
 * **WHEN: DB-backed project (persistent store + migrations)**:
   - [ ] **Live-Schema Parity Check**: Every database object (tables, columns, custom types, trigger functions) that your migration files claim to create exists and is verified in the target database. Run the schema↔migrations drift probe (`validate-schema-drift.sh`) to assert parity.
   - [ ] **Real Write-Path Smoke Check**: At least one real database write (e.g. insert, update, or delete) path is exercised and verified. Fail-closed reads (e.g., catching errors and returning empty/disabled) swallow missing tables on read paths; write paths expose them immediately.
-  - [ ] **Migration integrity**: Verify no migrations were "force-marked" as applied without running their SQL. 
+  - [ ] **Migration integrity**: Verify no migrations were "force-marked" as applied without running their SQL.
     > ⚠️ **CRITICAL WARNING**: Commands like `supabase migration repair --status applied <version>` (and database analogs) mark a migration as applied in the system ledger WITHOUT executing its SQL. This leaves the actual database schema in an un-migrated, drifting state while ledger checks false-pass. Never use migration ledger repairs as a shortcut for executing migrations in target environments.
 * **WHEN: no external services in §7 and not DB-backed**:
   - [ ] (SKIP — Auto-passed. Proceed directly to UX-RC / API-RC)
@@ -166,4 +166,3 @@ Per declared PROFILE surface (from `project.md`):
 | Landing hero (if declared) | product-contract §1 + ui-spec | `--surface=landing` (check-only) | story validate gate |
 
 ---
-

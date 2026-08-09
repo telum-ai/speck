@@ -17,8 +17,11 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 ### Immune system
 
 - `validate-corpus-budget.sh` hard-fails regressions (AGENTS ≤16KiB/≤200 lines; desc ≤120/≤10k sum;
-  disable-model allowlist; skill body ≤200; agent-prose emoji-header lint).
-- A1-lite: 12 seeded fixtures / 6 classes; `bash .speck/eval/score.sh` → `.speck/eval/reports/`.
+  disable-model allowlist; skill body ≤200; ref nodes ≤120 lines/≤8KiB; declared branch-byte caps;
+  direct router ownership; no ref-to-ref continuation edges).
+- A1-lite: 12 seeded fixtures / 6 classes; fail closed on wrong verdicts, harness errors, immutable-baseline
+  regressions, and candidate-corpus capability deletion; `bash .speck/eval/score.sh` → `.speck/eval/reports/`.
+- GitHub Actions runs the complete repository suite and PR/push whitespace checks.
 - Methodology ADRs: `docs/decisions/` + `docs/v11/v11-north-star.md`.
 
 ### Catalog surgery
@@ -33,6 +36,7 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 ### Host wiring
 
 - `.agents/skills` → `.cursor/skills` (Codex discovery); `smartSync` creates the symlink on upgrade.
+- `CLAUDE.md` is a managed `@AGENTS.md` import; init/upgrade merges it without overwriting user instructions.
 - Upgrade `REMOVE_FILES` deletes retired domain + visual-testing host skill dirs from consumer projects.
 - `sync-claude-runtime.sh` syncs **skills only** (no longer clobbers generated agents/).
 

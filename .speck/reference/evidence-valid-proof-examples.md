@@ -108,4 +108,3 @@ Copy/adapt into evidence-contract §2 for this product.
 | `visibility` | `live-probe:specs/.../logs/<sha>-rls-as-principal.log` | *(example row — replace or delete)* |
 
 ---
-

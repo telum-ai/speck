@@ -54,4 +54,3 @@
 - ❌ Self-graded "done": the agent declaring its own success criteria met without a runtime / exit-code / artifact check it did not control. ("Gate progress with facts, not vibes" — Thread AI, 2026.)
 
 ---
-

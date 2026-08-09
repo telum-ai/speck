@@ -56,4 +56,3 @@ LARP scripts live in: `specs/projects/<PROJECT_ID>/personas/<persona-id>.md`
 | [Unresponsive Auth Provider] | Mock auth provider response latency >= 5s | Request timeout trigger within 1s, fail-closed/cached response validity, client receives expected timeout error |
 
 ---
-

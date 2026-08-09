@@ -10,7 +10,7 @@ AGENTS.md exceeded Codex's 32 KiB default and Claude's ~200-line adherence guida
 
 ## Decision
 
-Ship `validate-corpus-budget.sh` with hard ceilings (AGENTS ≤16 KiB / ≤200 lines; desc ≤120 each / ≤10k sum; disable-model allowlist; skill body ≤200 with shrink-only grandfather). Wire into `npm test`. Fail closed on regressions.
+Ship `validate-corpus-budget.sh` with hard ceilings (AGENTS ≤16 KiB / ≤200 lines; desc ≤120 each / ≤10k sum; disable-model allowlist; skill body ≤200 with shrink-only grandfather; ref nodes ≤120 lines / ≤8 KiB; declared execution-path byte caps). Wire it into `npm test` and `.github/workflows/quality.yml`. Fail closed on regressions and PR whitespace errors.
 
 ## Budget delta
 
@@ -21,7 +21,7 @@ Ship `validate-corpus-budget.sh` with hard ceilings (AGENTS ≤16 KiB / ≤200 l
 
 ## Evidence
 
-Owner spine lock on host-loader constraints + hybrid fitness (plan). A1-lite protects gate deletion separately.
+`validate-corpus-budget.test.sh` mutation-covers every budget class, including hidden ref edges and execution-path overflow. A1-lite separately protects its six seeded defect capabilities against an immutable baseline.
 
 ## Consequences
 

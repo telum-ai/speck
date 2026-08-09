@@ -29,7 +29,7 @@ Same as Build but `/project-architecture` and `/project-ux` are **required befor
 Full flow: includes `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-readme` → `/project-evidence-contract` → `/project-plan` → `/project-analyze` (**required**, all 7 lenses) → `/project-roadmap`. `/project-state` keeps README status current after validation gates.
 
 ### Reengagement & Intent Changes
-On any new session: read `project-state.md`. 
+On any new session: read `project-state.md`.
 - If missing or stale (>2 weeks since last verified-against-runtime), run `/recheck` before any feature work to detect drift.
 - If the session is triggered by an **intent change** or **strategic pivot** to a completed/validated project, run `/project-adjust` to safely spec the delta and compute the reverse cascade rather than making silent code changes or re-authoring specs from scratch.
 
