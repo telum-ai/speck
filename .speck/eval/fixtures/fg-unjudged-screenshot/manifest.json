@@ -1,0 +1,6 @@
+{
+  "id": "fg-unjudged-screenshot",
+  "class": "fake-green",
+  "expect": "catch",
+  "description": "UX-RC with unjudged screenshot"
+}

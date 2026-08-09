@@ -1,7 +1,6 @@
 ---
 name: harden
-description: Lightweight skill for post-validation hardening. Run when a defect is found in already validated/shipped work. Captures the defect, technical root cause, gate defect (why gates missed it), systemic guardrail (tests/lint/checks), and readiness re-assessment — bypassing the heavy spec -> plan -> tasks lifecycle. FIRST ACTION after loading is read template at .speck/templates/project/harden-template.md.
-disable-model-invocation: false
+description: Post-validation defect hardening. Use when fixing bugs in validated work.
 ---
 
 > 🚦 **METHODOLOGY INTENT SPLIT**: 
@@ -15,7 +14,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now:
 ```
@@ -24,7 +23,7 @@ $ARGUMENTS
 
 ---
 
-## 🎯 The Harden Flow (/harden scope)
+## The Harden Flow (/harden scope)
 
 When a bug is found post-validate or post-ship, do NOT spin up a full-ceremony story with spec, plan, and tasks unless the feature requires brand-new functionality. Instead, use the **Harden Flow**:
 

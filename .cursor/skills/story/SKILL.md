@@ -1,7 +1,7 @@
 ---
 name: story
-description: Orchestrator wrapper for story-level work. Detects the current state of a story, resumes its lifecycle, and executes downstream skills step-by-step. Supports --interactive, --from, --skip. Stops ONLY at true decision gates or high-severity findings (P0/P1 drift/errors).
-disable-model-invocation: false
+description: Story lifecycle orchestrator. Invoke only via /story.
+disable-model-invocation: true
 ---
 
 The user input can be provided directly by the agent or as a command argument:

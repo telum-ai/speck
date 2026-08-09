@@ -1,7 +1,6 @@
 ---
 name: story-analyze
-description: Retired in Speck v8 (alias-shim). The v6 story-analyze cross-check is split — the pre-implementation spec/plan/task consistency check now runs at the tail of /story-tasks, and the adversarial behavior-vs-spec check is /audit (speck-audit), run AFTER implementation. New invocations route there.
-disable-model-invocation: false
+description: Retired alias → audit. Use when /story-analyze named.
 ---
 
 # /story-analyze — retired in Speck v8 (alias-shim)

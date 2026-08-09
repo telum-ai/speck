@@ -2,7 +2,7 @@
 
 Recipes are pre-configured project templates for common full-stack setups. They provide starting points that accelerate the `/project-specify` → `/project-plan` flow by pre-filling architectural decisions, technology choices, and common epic structures.
 
-**Related**: Each recipe has companion **Skills** in `.cursor/skills/` that provide deep implementation patterns for the recommended services (Stripe, Supabase, Clerk, etc.).
+**Related**: Vendor API details — Context7 / official docs at implement time (Speck v11 removed generic domain skills).
 
 ## 🛒 Buy vs. Build Philosophy
 

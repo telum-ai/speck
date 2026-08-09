@@ -1,7 +1,6 @@
 ---
 name: analyze
-description: Level-dispatching pre-implementation analysis (Speck v8 unified entry). Routes to project-analyze / epic-analyze based on --level or the current directory. Story-level analysis is retired — its consistency job runs at the tail of /story-tasks and its adversarial job is /audit. Use when the user says "analyze this epic/project" before planning/implementation.
-disable-model-invocation: false
+description: Routes analyze by --level. Use when analyzing planning corpus or epic breakdown.
 ---
 
 The user input can be provided directly by the agent or as a command argument:

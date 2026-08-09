@@ -1,5 +1,5 @@
 /**
- * ENFORCES the model-tiering doctrine (see AGENTS.md -> "Model Tiering Doctrine") and the
+ * ENFORCES the model-tiering doctrine (see `.speck/reference/host-capabilities.md`) and the
  * decoupled per-harness generation.
  *
  * Source of truth: `.cursor/agents/speck-*.md` — humans set `tier:` + the markdown body there.

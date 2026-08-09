@@ -1,0 +1,6 @@
+{
+  "id": "pp-open-prm",
+  "class": "phantom-promise",
+  "expect": "catch",
+  "description": "open PRM row"
+}

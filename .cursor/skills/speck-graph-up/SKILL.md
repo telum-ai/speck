@@ -1,7 +1,6 @@
 ---
 name: speck-graph-up
-description: Drive a pre-v9 project to a fully-established witness graph — the v9 migration that paves a perfect road to completion. Hardens identity (AC-N/MM-N/JOB-N), builds the derived graph, heals the road already walked (stale digests, over-claimed matrices, [pre-v9-proof] caps), and emits road-to-completion.md (TIDY→REMOVE→BUILD→PROVE). Load when .speck/.v9-graph-needed exists, when an agent engages a v9 project with no committed graph/witness.json, or when the user says "graph up", "bring this to v9", "/speck-graph-up".
-disable-model-invocation: false
+description: Establishes v9 witness graph. Use when .v9-graph-needed present.
 ---
 
 The user input can be provided directly by the agent or as a command argument — consider it before proceeding.

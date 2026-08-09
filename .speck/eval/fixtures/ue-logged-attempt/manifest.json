@@ -1,0 +1,6 @@
+{
+  "id": "ue-logged-attempt",
+  "class": "unreachable-excuse",
+  "expect": "clean-pass",
+  "description": "control logged attempt"
+}

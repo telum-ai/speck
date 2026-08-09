@@ -1,7 +1,6 @@
 ---
 name: speck-skeptical-review
-description: Skeptical-review primitive. Before any non-trivial proposal locks (paid promise, differentiator, technical stack, architectural pattern, magic moment, banned language, readiness state target, etc.), produce N≥3 alternatives with tradeoff scoring and rationale. Unconditional discipline — invoked from project-product-contract, project-evidence-contract, project-architecture, project-plan, epic-plan, epic-architecture, story-plan, and any decision-locking flow. Forces enumeration before commitment, preventing premature lock-in.
-disable-model-invocation: false
+description: N≥3 alternatives before lock. Use at non-trivial decisions.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

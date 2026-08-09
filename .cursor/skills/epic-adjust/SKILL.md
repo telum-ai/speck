@@ -1,7 +1,6 @@
 ---
 name: epic-adjust
-description: Deliberate re-engineering of already-validated epic-level work. Run when you deliberately modify what you previously specified and validated at the epic level (IA redesign, cross-cutting visual-system overhaul, multi-story structural pivot) — distinguished from /harden which is for defect/bug fixing. FIRST ACTION after loading is to read template at .speck/templates/epic/epic-adjust-template.md.
-disable-model-invocation: false
+description: Re-specs validated epic deltas. Use when epic IA/structure pivots.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
@@ -10,7 +9,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now:
 ```
@@ -19,7 +18,7 @@ $ARGUMENTS
 
 ---
 
-## 🎯 The Epic-Adjust Flow (/epic-adjust scope)
+## The Epic-Adjust Flow (/epic-adjust scope)
 
 When validated epic-level work (such as Information Architecture, screen-flows, cross-story design systems) is intentionally changed because of new understanding or pivots, do NOT wing it and do NOT use `/harden` (which is reserved exclusively for post-validation defect fixes). Instead, use the **Epic-Adjust Flow**:
 

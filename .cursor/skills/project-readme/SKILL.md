@@ -1,7 +1,6 @@
 ---
 name: project-readme
-description: Generate or refresh the root README.md public face from Speck truth artifacts. Load after /project-specify, /project-product-contract, or automatically via /project-state regeneration. Keeps GitHub-visible project identity in sync with PROMISE and PROVE. FIRST ACTION is read .speck/templates/project/readme-template.md.
-disable-model-invocation: false
+description: Refresh root README PROFILE. Use after product-contract / on PROFILE drift.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

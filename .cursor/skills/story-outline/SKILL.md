@@ -1,7 +1,6 @@
 ---
 name: story-outline
-description: Retired in Speck v8 (alias-shim). The v6 story-outline research-mapping step is replaced by /speck-skeptical-review (enumerate implementation-approach alternatives) + /speck-decision-log (lock the choice), with just-in-time research folded into /story-plan. New invocations route there.
-disable-model-invocation: false
+description: Retired alias. Use when /story-outline named.
 ---
 
 # /story-outline — retired in Speck v8 (alias-shim)

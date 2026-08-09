@@ -1,7 +1,6 @@
 ---
 name: epic-experience-chain
-description: Required for UI epics. Defines the SEAMS between screens — entry state, single job per screen, emotional progression, handoff, no-repetition rule, first-viewport "why now", magic-moment placement, backtracking, cross-epic adjacency. Prevents the "seven different apps stitched together" failure mode (Fauna's Sept 2025 audit). Produces experience-chain.md, required before /epic-plan. Load when epic has any user-facing UI, when user says "the app feels disjointed", or when designing a multi-screen flow. FIRST ACTION is read the template at .speck/templates/epic/experience-chain-template.md.
-disable-model-invocation: false
+description: UI epic seams + emotional flow. Use for UI epics before plan.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
@@ -12,7 +11,7 @@ $ARGUMENTS
 
 ---
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 Before any other action, read:
 ```

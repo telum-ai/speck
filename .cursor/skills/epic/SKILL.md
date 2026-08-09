@@ -1,7 +1,7 @@
 ---
 name: epic
-description: Orchestrator wrapper for epic-level work. Detects the current state of an epic, resumes its lifecycle, and executes downstream skills step-by-step. Supports --interactive, --from, --skip. Stops ONLY at true decision gates or high-severity findings (P0/P1 drift/errors).
-disable-model-invocation: false
+description: Epic lifecycle orchestrator. Invoke only via /epic.
+disable-model-invocation: true
 ---
 
 The user input can be provided directly by the agent or as a command argument:

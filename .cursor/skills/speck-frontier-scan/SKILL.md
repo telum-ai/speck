@@ -1,7 +1,6 @@
 ---
 name: speck-frontier-scan
-description: Execute a 4-angle SOTA frontier scan on autonomous engineering practices. Scans current academic, enterprise, and open-source benchmarks (Architectures, Context Engineering, Verification, Spec-Driven Development) using Perplexity/WebSearch, synthesizes deltas against the Speck baseline, maps them to canonical files, and proposes spec-adjustments. Recommended quarterly or on a recurring /loop cadence. Also supports a `--product` mode that re-validates a product's differentiator / competitive ("no competitor does X") claims against the live market and re-stamps them (issue #80).
-disable-model-invocation: false
+description: SOTA frontier scan. Use when researching methodology/product frontier.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

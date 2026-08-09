@@ -1,7 +1,6 @@
 ---
 name: story-clarify
-description: Load after spec.md exists but requirements are vague, acceptance criteria are missing, or scope is unclear. Run before story-plan to surface ambiguities before technical decisions are made. Encodes answers directly back into spec.md.
-disable-model-invocation: false
+description: Fills gaps in spec.md. Use after story-specify.
 ---
 
 

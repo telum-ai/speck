@@ -1,7 +1,6 @@
 ---
 name: story-scan
-description: Retired in Speck v8 (alias-shim). Story-scoped brownfield code scanning is now /speck-scan --level story (one recipe-driven scan skill for project/epic/story). New invocations route there.
-disable-model-invocation: false
+description: Alias of speck-scan --level story. Use when /story-scan named.
 ---
 
 # /story-scan — retired in Speck v8 (alias-shim)

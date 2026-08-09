@@ -62,6 +62,8 @@ test('skills stay symlinked; agents do not', () => {
   const { source, target } = setup();
   smartSync(source, target);
   assert.ok(lstatSync(join(target, '.claude/skills')).isSymbolicLink(), '.claude/skills IS a symlink');
+  assert.ok(lstatSync(join(target, '.codex/skills')).isSymbolicLink(), '.codex/skills IS a symlink');
+  assert.ok(lstatSync(join(target, '.agents/skills')).isSymbolicLink(), '.agents/skills IS a symlink (Codex discovery)');
   assert.ok(!lstatSync(join(target, '.claude/agents')).isSymbolicLink(), '.claude/agents is NOT a symlink');
 });
 

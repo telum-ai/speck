@@ -1,0 +1,6 @@
+{
+  "id": "pp-discharged",
+  "class": "phantom-promise",
+  "expect": "clean-pass",
+  "description": "control discharged"
+}

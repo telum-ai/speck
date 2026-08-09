@@ -1,7 +1,6 @@
 ---
 name: epic-constitution
-description: Load when an epic has unique technical principles that extend or override the project constitution. Produces epic-level constitution.md — optional, skip when the project constitution is sufficient for this epic's concerns.
-disable-model-invocation: false
+description: Epic-specific technical principles. Use rarely when epic needs own constitution.
 ---
 
 

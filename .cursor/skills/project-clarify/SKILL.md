@@ -1,7 +1,6 @@
 ---
 name: project-clarify
-description: Load after project.md exists to fill gaps through targeted Q&A. Use when project goals, target users, or scope feel underspecified. Run before project-context or project-architecture to prevent rework downstream.
-disable-model-invocation: false
+description: Fills gaps in project.md. Use after project-specify.
 ---
 
 

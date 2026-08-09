@@ -1,7 +1,6 @@
 ---
 name: retrospective
-description: Level-dispatching retrospective (Speck v8 unified entry). Routes to the level-appropriate retrospective skill — project-retrospective / epic-retrospective / story-retrospective — based on --level or the current directory. Use when the user says "retro this", "capture learnings", "what did we learn". The per-level specialists own the full learning-capture + commit-tag + pattern-feedback logic.
-disable-model-invocation: false
+description: Routes retrospective by --level. Use when running retros.
 ---
 
 The user input can be provided directly by the agent or as a command argument:

@@ -3,10 +3,9 @@ set -euo pipefail
 
 # Validates that Speck's primary docs enumerate the full artifact set.
 #
-# v7 behavior (V6 fix):
-# - AGENTS.md is the strict source of truth (canonical routing table)
-# - .speck/README.md is checked for v7 center-of-gravity artifacts (warnings only)
-# - Deprecated v6 names (epic-outline.md, outline.md) are NOT required
+# v11: AGENTS.md is the dense spine; full routing lives in
+# `.speck/reference/canonical-routing.md` (JIT). Coverage may appear in either.
+# .speck/README.md is checked for center-of-gravity artifacts (warnings only).
 #
 # Scope: methodology docs only (not specs/** in user projects)
 
@@ -14,6 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 agents_path="$REPO_ROOT/AGENTS.md"
+routing_path="$REPO_ROOT/.speck/reference/canonical-routing.md"
 speck_readme_path="$REPO_ROOT/.speck/README.md"
 
 if [[ ! -f "$agents_path" ]]; then
@@ -26,10 +26,14 @@ warnings=0
 
 check_agents() {
   local needle="$1"
-  if ! grep -Fq "$needle" "$agents_path"; then
-    echo "❌ Missing in AGENTS.md: $needle"
-    errors=1
+  if grep -Fq "$needle" "$agents_path"; then
+    return 0
   fi
+  if [[ -f "$routing_path" ]] && grep -Fq "$needle" "$routing_path"; then
+    return 0
+  fi
+  echo "❌ Missing in AGENTS.md / .speck/reference/canonical-routing.md: $needle"
+  errors=1
 }
 
 check_readme_warn() {
@@ -43,7 +47,7 @@ check_readme_warn() {
   fi
 }
 
-echo "🔍 Validating artifact coverage (AGENTS.md strict, README.md advisory)..."
+echo "🔍 Validating artifact coverage (AGENTS.md + canonical-routing.md strict, README.md advisory)..."
 
 # === AGENTS.md — canonical routing table (Speck v7) ===
 
@@ -104,7 +108,7 @@ fi
 
 if [[ "$errors" -eq 1 ]]; then
   echo ""
-  echo "❌ Artifact doc validation failed. Update AGENTS.md to include missing canonical artifacts."
+  echo "❌ Artifact doc validation failed. Update AGENTS.md or .speck/reference/canonical-routing.md."
   exit 1
 fi
 

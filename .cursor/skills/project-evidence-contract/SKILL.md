@@ -1,7 +1,6 @@
 ---
 name: project-evidence-contract
-description: Create or update evidence-contract.md — the PROVE center of gravity. Defines what counts as proof for THIS product (per platform), what does NOT count, readiness state gate criteria, and adversarial probes. Required at Build+ before /project-plan. Load when user wants to define ship criteria, lock launch gates, prevent surrogate proof, or before any validation work. FIRST ACTION is read the template at .speck/templates/project/evidence-contract-template.md.
-disable-model-invocation: false
+description: Creates evidence-contract.md. Use after product-contract.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
@@ -10,7 +9,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 Before any other action, read:
 ```

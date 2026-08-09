@@ -1,7 +1,6 @@
 ---
 name: speck-scan
-description: Unified scan skill that extracts code-side facts from an existing codebase at project, epic, or story scope. This consolidates the v6 project-scan, epic-scan, and story-scan into one skill with a --level argument. Load when starting brownfield work, when /recheck needs a fresh code-side reality check, or when user says "scan this project/epic/story". Defaults to inferring level from current directory.
-disable-model-invocation: false
+description: Code-side scan by --level. Use when extracting facts from codebase.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
@@ -39,7 +38,7 @@ $ARGUMENTS
 
 ## Execution by Level
 
-### --level project
+### level project
 
 Produces `project-landscape-overview.md`. Captures:
 - Top-level structure (apps, packages, libraries)
@@ -53,7 +52,7 @@ Produces `project-landscape-overview.md`. Captures:
 
 Output template: `.speck/templates/project/project-landscape-overview-template.md` (use existing template).
 
-### --level epic
+### level epic
 
 Produces `epic-codebase-scan-<topic>.md` in `epics/E###-<name>/`. Captures:
 - Files and modules in the epic's scope
@@ -62,7 +61,7 @@ Produces `epic-codebase-scan-<topic>.md` in `epics/E###-<name>/`. Captures:
 - Dependencies on other epics' code
 - Known issues / debt in this area
 
-### --level story
+### level story
 
 Produces `codebase-scan-<topic>.md` in `stories/S###-<name>/`. Captures:
 - Specific files this story will touch

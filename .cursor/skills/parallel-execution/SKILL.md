@@ -1,7 +1,6 @@
 ---
 name: parallel-execution
-description: Concurrency and parallel epic/chunk execution recipe using Git worktrees, file-cluster chunking, seam contracts, and merge choreography. Required when executing multiple epics or stories in parallel.
-disable-model-invocation: false
+description: Parallel epic/chunk concurrency doctrine. Use when running epics in parallel.
 ---
 
 ## Purpose
@@ -10,7 +9,7 @@ When multiple epics or stories are executed in parallel (across separate session
 
 ---
 
-## 🧭 The Parallel-Conductor Pattern
+## The Parallel-Conductor Pattern
 
 ```
                  [main] (planning corpus pushed)
@@ -29,7 +28,7 @@ When multiple epics or stories are executed in parallel (across separate session
 
 ---
 
-## 🛠️ Core Doctrines
+## Core Doctrines
 
 ### 1. Worktree-Per-Chunk Isolation
 - **One Epic/Chunk = One Worktree + One Branch** branched off the *current* `main`.

@@ -1,0 +1,611 @@
+The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
+
+User input:
+
+$ARGUMENTS
+
+Analyze the user's request and route to the appropriate Speck workflow level based on scope and context.
+
+## Pre-Routing Checks
+
+Before routing to standard workflows, check for special cases:
+
+### 1. Completed Project Input Detection (Post-Completion Triage Router)
+If the project has already been validated or shipped, and the user is providing new feedback, redesign requests, bug reports, or strategic pivots, triage and route accordingly:
+- **Defects / Bug Reports / Incidents**: Route to `/harden` to document root-cause and add systemic tests.
+- **Deliberate Story Redesign / Visual Overhaul**: Route to `/story-adjust` to spec the delta, update story `plan.md`, and conserve promises.
+- **Deliberate Epic Structural Pivot / IA Redesign**: Route to `/epic-adjust` to re-spec epic-level deltas and update epic `traceability-matrix.md`.
+- **Project Directional Pivot / Strategic Contract Change**: Route to `/project-adjust` to update `product-contract.md` and force a superseding DEC, run `compute-cascade.sh` to determine the blast-radius of affected downstream epics/stories, and route each to `/epic-adjust` or `/story-adjust`.
+- **New Feature Addition / Scope Expansion**: Route to `/epic-specify` or `/story-specify` to draft new specs from scratch.
+- **General Engagement Gap / "Is this still working?"**: Route to `/recheck`.
+
+### 2. Brainstorm Detection
+If user's request is vague or ideation-focused, route to `/project-brainstorm`:
+- "I have an idea but it's not clear yet"
+- "Help me figure out what to build"
+- "Let's brainstorm", "explore ideas", "I'm not sure what I want"
+- Vague descriptions lacking specific features
+- Stream-of-consciousness thoughts
+- "I wish..." or "wouldn't it be cool if..." statements
+
+```
+User: /speck I have some ideas about helping people be more social but I'm not sure
+
+AI: 💡 Sounds like you're in ideation mode! Let me help you brainstorm...
+→ Routes to: /project-brainstorm
+```
+
+### 2. Recipe Detection
+If user's request matches a known recipe, offer it:
+- Check `.speck/recipes/*/recipe.yaml` for keyword matches
+- Suggest matching recipe as starting point
+- Allow user to accept, customize, or skip
+- If a recipe is selected:
+  - Load `.speck/recipes/<recipe>/recipe.yaml` and use it to pre-fill /project-* artifacts
+  - Load relevant skills from `.claude/skills/` (e.g., Clerk/Stripe/Supabase) and apply their patterns/gotchas during planning and implementation
+
+```
+User: /speck Build a React app with Python backend
+
+AI: 🍳 I found a matching recipe: "react-fastapi-postgres"
+    
+    This recipe includes:
+    - React 18 + TypeScript + Vite frontend
+    - FastAPI + SQLAlchemy backend  
+    - PostgreSQL database
+    - Pre-configured auth epic
+    
+    Options:
+    1. Use this recipe (customized for your needs)
+    2. Start from scratch (full specification flow)
+    3. See other recipes
+    
+[If user picks 1, pre-fill project-specify with recipe defaults]
+```
+
+**Recipe Keywords**:
+- Each recipe defines a `keywords:` list in `.speck/recipes/<recipe>/recipe.yaml`
+- Match case-insensitively against the user’s request (exact + partial phrase matches)
+- If multiple recipes match, present the top 3 with “why it matched” and let the user choose
+
+**Recipe index**:
+- See `.speck/recipes/README.md` for the full recipe list and intended use cases
+
+### 3. Concurrent Multi-Epic Spawn
+If the user asks to run 2+ epics in parallel (e.g. "spawn E002+E003", "run these epics concurrently"):
+
+1. Read `specs/projects/<PROJECT_ID>/epics.md` → `## Epic Concurrency Waves & Rebase Cadence`
+2. **Wave safety**: every requested epic must be in the **same current wave** and must NOT be an integrator epic (2+ upstream deps not yet merged to `main`). If unsafe → STOP and list blockers.
+3. **Push before spawn**: `git push origin main` so the planning corpus is on `origin/main` — worktrees branch from `origin/main`, not local `HEAD`. Unpushed commits = the wave builds blind to locked specs.
+4. For each epic: `git worktree add ../<repo>-eNNN -b epic/eNNN origin/main`. Include a precondition guard in each sub-agent prompt ("verify `<spec path>` exists on this branch, else abort").
+5. Tell the user DEC band per epic (`E002` → `DEC-0201+`) and that `project-state.md` regen is **merge-only** on epic branches
+6. Route each epic to `/epic` in its worktree — do not start integrator epics until upstream wave merges
+7. **After each epic merges**: `git worktree remove --force ../<repo>-eNNN` (worktrees are ~1 GB+; parallel accumulation can exhaust host disk and freeze every session)
+
+See AGENTS.md **Concurrent multi-epic execution** and `.speck/patterns/learned/process/parallel-epic-execution.md` for migration version coordination, disk hygiene, and the conductor + orchestration-ledger pattern.
+
+## Complexity scale vs play level (read this first)
+
+Two different concepts — do not merge them:
+
+| | **Complexity scale (0–4)** | **Play level** (`sprint` / `build` / `platform` in `.speck/project.json`) |
+|---|---|---|
+| **Purpose** | **Routing**: how big is the request? Story vs epic vs project. | **Rigor**: which artifacts and how much upfront planning? |
+| **When set** | During `/speck` scale analysis (ephemeral). | During `/project-specify` (persisted). |
+
+A **complexity 3** “full product” project can still be **play level Build**. **Complexity 4** (ecosystem scope) ≠ **`play_level: platform`** (full methodology tier). Use play signals (enterprise, marketplace, full governance) for Platform play; use scale for where to route.
+
+---
+
+## Play Level Detection
+
+Play levels are **agent-detected from conversation context** — never declared with flags.
+
+After pre-routing checks, infer the play level before routing:
+
+### Sprint signals (route to lightweight sprint flow)
+- Time-bounded: "this weekend", "48 hours", "in a day", "quick experiment"
+- Tiny scope: "simple tool", "calculator", "one-page app", "landing page"
+- Ship-first intent: "ship it", "just get it out", "hack together", "prototype"
+- No revenue complexity: "free tool", "scratch my own itch", "fun side project"
+
+→ Sprint: Use `sprint-prd-template.md`, create `sprint-log.md`, skip epics/stories.
+→ Tell the user: "This sounds like a Sprint — a focused 1–2 week bet. I'll keep the planning lightweight."
+
+### Build signals (route to standard build flow)
+- Subscription or payment: "subscription", "paid plan", "stripe", "pricing"
+- Dashboard or admin: "dashboard", "admin panel", "user management"
+- Expansion from existing: "expand this", "add more features", "v2", "grow it"
+- Multi-user: "teams", "organizations", "multi-tenant"
+
+→ Build: Standard PRD + context.md + COMMERCIAL.md. Epic structure. No constitution/design-system required.
+→ Tell the user: "This sounds like a Build — a structured product with epics and stories."
+
+### Platform play-level signals (full rigor — not the same as complexity scale)
+- Architecture complexity: "microservices", "distributed", "enterprise", "regulated", "multi-region"
+- Governance: explicit request for full foundation, constitution, or “we need everything documented”
+- Scale language: "millions of users", "global", "marketplace" (often **correlates** with complexity 3–4 but does not **define** play level)
+
+→ **`play_level: platform`**: Full Speck foundation flow (see AGENTS.md).  
+→ **Do not** set Platform play level **only** because scale analysis said complexity 3–4 — a large Build project uses Build + the 4+ epic gate instead unless user wants full rigor.
+
+### Promotion signals
+- "getting traction", "this is working", "users are paying", "promote to build/platform"
+- "it's bigger than I thought", "we need more structure"
+
+→ Route to: `/project-promote` with current play level context.
+
+---
+
+## Clear Level Separation (No Overlaps)
+
+Each level has distinct responsibilities:
+- **Project**: Vision, goals, epic identification, roadmap
+- **Epic**: Feature design, technical architecture, story mapping  
+- **Story**: Implementation details, concrete dev tasks
+
+The levels complement each other without overlap:
+- Projects don't define HOW features work (that's epic level)
+- Epics don't define WHAT the product is (that's project level)
+- Stories don't define architecture (that's epic level)
+
+## Execution Flow
+
+1. **Auto-Detection Phase**:
+   - Detect if we're in the middle of existing Speck work
+   - Look for current project context
+   - Identify if this is a continuation or new work
+
+2. **Context Parsing**:
+   - Parse arguments for explicit context: "project:XXX", "epic:YYY"
+   - Look for natural language context: "in project", "for epic"
+   - Check for continuation keywords: "continue", "resume", "next"
+   - Extract the actual request after context markers
+
+3. **Smart Context Resolution**:
+   - If "continue" or empty args → Find most recent work
+   - If ambiguous → List current work in progress
+   - If new work → Proceed to scale analysis
+
+4. **Context Validation** (if context provided):
+   - Verify project exists: `specs/projects/[PROJECT_ID]/project.md`
+   - Verify epic exists: `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/epic.md`
+   - If invalid, list available options
+
+5. **Scale Analysis** (if no context):
+   - Run `bash .speck/scripts/bash/analyze-scale.sh --json "$ARGUMENTS"`
+   - Parse JSON for suggested level and reasoning
+   - Consider confidence level
+
+6. **Interactive Guidance**:
+   - Present analysis with clear reasoning
+   - Show current state if relevant
+   - Offer intelligent defaults
+   - Guide to the most appropriate workflow
+
+7. **Smart Routing**:
+   - Route to command with proper context
+   - Pass context as part of arguments
+   - Ensure continuity of work
+   - Suggest next steps after completion
+
+## Context Resolution Examples
+
+### Explicit Context
+```
+Input: "/speck project:001-my-app epic:E001-authentication Add password reset"
+→ Routes to: /story-specify with context pre-filled
+```
+
+### Natural Language Context  
+```
+Input: "/speck Add OAuth to the authentication epic"
+→ Asks: "Which project contains the authentication epic?"
+→ Lists projects, then epics
+→ Routes to: /story-specify with discovered context
+```
+
+### No Context (New Work)
+```
+Input: "/speck Build a task management system"
+→ Runs scale analysis (complexity 3–4 / project-scale detected)
+→ Recommends: /project-specify
+→ Allows override if user prefers different level
+```
+
+### Continuation Context
+```
+Input: "/speck Continue planning the user profile epic"
+→ Searches for "user profile" epic across projects
+→ If found: Routes to appropriate epic command
+→ If multiple: Asks which one
+→ If none: Suggests creating new epic
+```
+
+### Empty Input (Most Intelligent)
+```
+Input: "/speck"
+
+AI: Let me check your current work state...
+
+[If work exists]:
+Current work in progress:
+- Project: 001-my-app (75% complete)
+  - PRD: ✅ Complete
+  - Architecture: ⚠️ Not created (complexity-scale 3 project)
+  - Epic: Authentication (3/5 stories done)
+    - Active story: Password reset flow
+  - Epic: User Management (not started)
+
+What would you like to do?
+1. Continue with password reset flow (/story-implement)
+2. Create system architecture (/project-architecture) [Recommended when project-scale / complexity 3–4]
+3. Start the user management epic (/epic-specify)
+4. View project roadmap (/project-roadmap)
+5. Review epic progress (/epic-validate)
+6. Begin something new
+
+[If no work exists]:
+No existing work found. What would you like to build?
+```
+
+## Interactive Context Discovery
+
+When context is ambiguous:
+
+```
+User: /speck "Add search functionality"
+
+AI: I need more context to route you correctly. 
+
+Are you:
+1. Starting a new project with search as a core feature?
+2. Adding search to an existing project? 
+3. Adding search within a specific epic?
+
+[If option 2 or 3 chosen]
+
+Available projects:
+- 001-my-app: Social Planning Assistant
+- 002-crm-platform: CRM for Small Business
+- 003-ecommerce: Online Store Platform
+- 002-task-tracker: Task Management System
+
+Which project? [Enter number or name]:
+
+[After project selection, if needed]
+
+This could be:
+a) A new epic for comprehensive search
+b) A story within an existing epic
+
+Available epics in 001-my-app:
+- E001-authentication: User Auth & Onboarding
+- E002-connections: Social Connections  
+- E003-activities: Activity Planning
+
+Where does search belong? 
+a) New epic (comprehensive search system)
+b) Add to existing epic [Enter number]
+c) Let me check the project roadmap first
+
+[If c]: Shows project-roadmap.md to understand epic relationships
+```
+
+## Natural Flow Between Levels
+
+The Speck workflow naturally progresses:
+1. **Project** → Vision, goals, epic identification, system architecture
+2. **Epic** → Feature sets, technical design, story mapping
+3. **Story** → Implementation details, concrete tasks
+
+You can jump in at ANY level based on your needs:
+- Have a big idea? → Start at project level
+- Know the feature you want? → Start at epic level  
+- Ready to implement? → Start at story level
+
+Architecture is handled based on **complexity scale** (and comes *before* planning whenever planning depends on design decisions):
+- Complexity 0–1 → Usually skip `/project-architecture` (or keep it very lightweight) and work at epic/story level
+- Complexity 2–4 → Run `/project-architecture` before `/project-plan` so the PRD incorporates the chosen design (unless play level is Sprint and scope is explicitly tiny — then follow play-level rules)
+- Complex epics → Run `/epic-architecture` before `/epic-plan` and before implementation
+- Brownfield projects → `/project-architecture` primarily extracts the as-is architecture from code (and can propose a to-be) before `/project-plan`
+
+## Smart Suggestions Based on Scale
+
+The system provides intelligent recommendations:
+
+**Small Addition to Existing Epic**
+```
+"Add email validation to signup"
+→ Detected: Story-level (specific validation)
+→ Context needed: Which epic has signup?
+→ Route to: /story [STORY_ID] continue (which boots story-specify)
+```
+
+**Cross-Cutting Feature**
+```
+"Add real-time notifications"  
+→ Detected: Epic-level (affects multiple areas)
+→ Suggest: New epic in current project
+→ Route to: /epic [EPIC_ID] continue (which boots epic-specify)
+```
+
+**Major Enhancement**
+```
+"Convert to microservices architecture"
+→ Detected: Project-level transformation
+→ Suggest: New project or major epic
+→ Route to: /project-specify or /epic [EPIC_ID] continue
+```
+
+## Interactive Flow Example
+
+```
+User: /speck "Add user authentication system"
+
+AI: 🔍 Analyzing request...
+
+Scale Analysis:
+- Detected: Epic-level scope (authentication system)
+- Estimated: 8-12 stories across 1 epic
+- Confidence: High
+
+Recommendation: Start with stateful epic orchestrator
+
+Options:
+a) Continue with stateful epic orchestrator (/epic E001 continue) [Recommended]
+b) Start with project level (/project-specify)
+c) Break down to single story (/story S001 continue)
+d) Get more details about each option
+
+Your choice [a]: 
+
+[After epic-specify and epic-clarify]
+
+AI: Authentication epic specified! This looks complex with OAuth, 2FA, and session management.
+
+Next steps:
+1. Design epic architecture (/epic-architecture) [Recommended] 
+2. Jump to tech spec (/epic-plan)
+3. Map user journey first (/epic-journey)
+
+Your choice [1]:
+```
+
+## Jump-In Examples
+
+**Starting Mid-Stream**
+```
+User: /speck "I need to implement the login form"
+
+AI: This looks like a story within an authentication epic.
+
+Do you have:
+1. An existing project with auth epic? → /story-specify
+2. Just the epic planned? → Let's find it
+3. Nothing yet? → Should we create the auth epic first?
+```
+
+**Skipping Levels** 
+```
+User: /speck "Build task tracker MVP - I don't need full project planning"
+
+AI: Understood! You want to skip detailed project planning.
+
+Options:
+a) Create single epic with all MVP features → /epic-specify
+b) Jump straight to stories → /story-specify  
+c) Minimal project wrapper → /project-specify (quick version)
+
+This is perfectly fine for MVPs and prototypes!
+```
+
+## Scale Detection Examples
+
+**Level 0 (Atomic)**
+- "Fix typo in login button"
+- "Change header color to blue"
+- "Update copyright year"
+→ Route to: `/story-specify`
+→ Architecture: Not needed
+
+**Level 1 (Small Feature)**
+- "Add password reset form"
+- "Create user profile page"  
+- "Implement search bar"
+→ Route to: `/story-specify` (within existing epic)
+→ Architecture: Inherits from epic
+
+**Level 2 (Feature Set)**
+- "Build authentication system"
+- "Add shopping cart functionality"
+- "Implement notification system"
+→ Route to: `/epic-specify`
+→ Architecture: Optional `/epic-architecture` for complex epics
+
+**Complexity 3–4 (Major product / ecosystem)**
+- "Create social media platform"
+- "Build e-commerce site"
+- "Develop project management tool"
+→ Route to: `/project-specify`
+→ Architecture: Run `/project-architecture` before `/project-plan` when planning depends on design decisions (also respect **play level** from `project.json` / project-specify — Build may defer some steps until the 4+ epic gate)
+→ Analysis: Run `/project-analyze` after `/project-plan` and before the first `/epic-specify` — required at Platform and at Build with 4+ epics, recommended below that
+
+## Brownfield Architecture Handling
+
+When importing existing code, architecture commands adapt:
+
+**Project Import Flow**
+```
+/speck import ~/myproject
+→ /project-import (analyzes code)
+→ /project-scan (extracts patterns)
+→ /project-specify (creates spec from code)
+→ /project-context (captures constraints discovered + missing non-code context)
+→ /project-architecture (reverse-engineers design)
+```
+
+**Architecture Extraction Features**
+- Detects existing architectural patterns
+- Maps component relationships from code
+- Identifies technology stack automatically
+- Documents implicit design decisions
+- Suggests refactoring opportunities
+
+**Example Brownfield Flow**
+```
+User: /speck Import my Rails app and document architecture
+
+AI: Analyzing your codebase...
+- Found: MVC architecture with Rails 7
+- Database: PostgreSQL with 23 models
+- APIs: REST endpoints in 5 controllers
+- Frontend: Hotwire + Stimulus
+
+I'll help you:
+1. Create project structure from code
+2. Extract and document current architecture
+3. Identify improvement opportunities
+
+[Routes to /project-import then /project-architecture]
+```
+
+## Key Transition Points
+
+**Project → Epic Transition**
+After `/project-plan` creates PRD and identifies epics:
+- Run `/project-analyze` — **required** at Platform and at Build with 4+ epics, before any `/epic-specify`; recommended below that threshold
+- Use `/project-roadmap` to plan epic timeline
+- Then `/epic-specify` for each epic in priority order
+- (If you’re working with existing work where PRD exists but architecture.md is missing, run `/project-architecture` and then update PRD.md or re-run `/project-plan`.)
+- No overlap: Project defines WHAT epics, Epic defines HOW
+
+**Epic → Story Transition**  
+After `/epic-clarify` resolves ambiguities:
+- For complex epics: Run `/epic-architecture` 
+- Use `/epic-plan` to create technical spec
+- Use `/epic-breakdown` to map all stories
+- Then `/story-specify` for each story in order
+- No overlap: Epic defines architecture, Story defines implementation
+
+## Override Handling
+
+If user disagrees with recommendation:
+
+```
+User: "No, I want to start with a full project plan"
+
+AI: Understood! Let me help you create a project specification instead.
+[Routes to /project-specify]
+```
+
+## Error Conditions
+
+- Empty input → Ask what they want to build
+- Ambiguous scope → Present scale analysis and ask for clarification  
+- Conflicting context → Explain current location and options
+
+## Smart Suggestions
+
+Based on context, provide helpful hints:
+
+**Ideation Phase**:
+- Vague idea → "Try /project-brainstorm to explore and crystallize your concept"
+- After brainstorm → "Ready to formalize! Run /project-specify with your chosen concept"
+
+**Recipe Matches**:
+- Matching recipe found → "I found a recipe that matches! Use it for faster setup"
+- After recipe selection → "Recipe applied! Customizing for your specific needs..."
+
+**Project Level (CRITICAL ORDERING RULE: ALWAYS consult `AGENTS.md` under `## 📋 The Speck Command Phases` for canonical flow by Play Level)**:
+- After specify → "Canonical next step is `/project-clarify` (unless Sprint)"
+- After clarify → "Run `/project-product-contract` then `/project-evidence-contract` (required for Build and Platform)"
+- After contracts are done → "Run `/project-context` (or Platform foundation commands `/project-domain`, `/project-ux` if Platform play level)"
+- After context → "Optional: `/project-constitution` → `/project-architecture` (required if Platform or Build with 4+ epics — the same threshold that later requires `/project-analyze`)"
+- After architecture → "Optional: `/project-design-system` → `/project-plan`"
+- After plan → "**Required next step: `/project-analyze`** — at Platform, and at Build with 4+ epics — before ANY `/epic-specify`. `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start until the gate clears (`UNANALYZED_CORPUS.P1`). At Build with 1-3 epics it is optional and recommended. Then `/project-roadmap` (optional) → `/epic-specify`. Do NOT run `/project-validate` yet — it is strictly the final post-implementation release gate."
+  - The lenses must be **decorrelated** from whoever authored the planning corpus: 3 mandatory at Build 4+ (promise-coverage · cross-artifact drift · completeness critic), all 7 at Platform. A lens marked `authored_corpus: true` does not count toward the tier.
+  - A project planned before v10.3 is **grandfathered** by `<PROJECT_DIR>/.analysis-gate-grandfathered`: surface the notice loudly every time, never block it, and tell the user that running `/project-analyze` makes the exemption spent — `check-epic-prereqs.sh` then prints the `rm` command that retires the marker.
+- **Play `platform`** or default (no `project.json`) **and** complexity 3–4 → suggest Platform flow: `/project-specify` → `/project-clarify` → `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-evidence-contract` → `/project-plan` → `/project-analyze` (required, all 7 lenses)
+- **Play `build`** → suggest Build flow: `/project-specify` → `/project-clarify` → `/project-product-contract` → `/project-evidence-contract` → `/project-context` → `[/project-architecture if cross-system]` → `/project-plan` → `[/project-analyze — required at 4+ epics, recommended below]` (and remind that 4+ epics trigger required architecture + ux-strategy + a cleared `/project-analyze`)
+- Brownfield import → Follow the unified flow starting with `/project-import` → `/speck-scan` → `/project-specify` → then follow Play Level phases.
+
+**Epic Level**:
+- Complex epic after clarify → "Run /epic-architecture before tech spec"
+- In an epic needing stories → "Run /epic-breakdown to map stories"
+- Epic ready for work → "Start with first story via /story-specify"
+
+**General**:
+- Starting fresh → "I can help you decide the right level to begin"
+
+## Output Format
+
+After routing decision:
+
+```
+✅ Routing to [workflow level] workflow
+
+Context:
+- Scope: [detected scope]
+- Complexity scale: [0-4]
+- Location: [current context]
+
+Executing: /[command] "[original arguments]"
+---
+[Command execution continues...]
+```
+
+## Architecture-Aware Routing Example
+
+**Complexity 4 (ecosystem-scale) — example**
+```
+User: /speck Build a comprehensive e-learning platform
+
+AI: 🔍 Analyzing request...
+
+This is **complexity scale 4** (ecosystem-scale scope): multiple subsystems, integrations, scalability, security.  
+`/project-specify` will set **play level** (Build vs Platform) from your signals — **not** the same as this scale label.
+
+I'll guide you through the workflow (full foundation if play level is Platform; Build streamlines some steps):
+
+1. Project specification (/project-specify)
+2. Clarification (/project-clarify)
+3. UX strategy (optional) (/project-ux)
+4. Context & constraints (/project-context)
+5. Constitution (optional) (/project-constitution)
+6. System architecture (/project-architecture) ← Critical at this scope
+7. Design system (optional) (/project-design-system)
+8. Planning & PRD (/project-plan)
+9. Planning analysis gate (/project-analyze) ← required here; decorrelated lenses, before any epic work
+
+Ready to start? [Y/n]:
+```
+
+**Complex Brownfield Import**
+```
+User: /speck Import and modernize my existing Django app
+
+AI: Analyzing your existing codebase...
+
+Found:
+- Django 2.1 (outdated)
+- Monolithic architecture
+- 47 models, 23 views
+- No clear separation of concerns
+
+Architecture recommendations:
+1. Document current architecture (as-is)
+2. Design target architecture (to-be)
+3. Create migration roadmap
+
+Shall I:
+a) Import and document current state [Recommended]
+b) Skip to modernization planning
+c) Just create basic structure
+
+Your choice [a]:
+
+[Routes to /project-import → /project-architecture]
+```
+
+This universal entry point helps users start their Speck journey at the right level without needing to understand the full hierarchy upfront, with intelligent architecture guidance when complexity demands it.

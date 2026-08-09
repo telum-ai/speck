@@ -1,7 +1,6 @@
 ---
 name: story-tasks
-description: Load after plan.md (and optional ui-spec.md) to generate the step-by-step implementation checklist (tasks.md). Required before story-implement. Use when user says 'create tasks', 'break this into steps', or moves from planning to implementation. FIRST ACTION after loading: read template at .speck/templates/story/tasks-template.md before any context loading or artifact generation.
-disable-model-invocation: false
+description: Writes tasks.md checklist. Use after plan / before implement.
 ---
 
 
@@ -11,7 +10,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now using the Read tool:
 ```
@@ -87,7 +86,7 @@ The template defines required task format, ordering rules, parallel-marker synta
    - If present, load `.speck/recipes/[recipe-name]/recipe.yaml`
    - Extract `visual_testing:` (platform/strategy/pattern_file/breakpoints/devices/window_sizes/agent_commands)
    - Use this to generate explicit tasks so visual testing is part of development (not just validation):
-     * Add/extend the platform’s visual test harness (per `.cursor/skills/visual-testing-web/SKILL.md (or platform-specific skill per pattern_file)`)
+     * Add/extend the platform’s visual test harness (per `.cursor/skills/visual-testing/references/web.md (or platform-specific skill per pattern_file)`)
      * Add a **visual smoke test** for the 1–3 most impacted screens/components
      * Ensure stable selectors/keys exist (`data-testid` / RN `testID` / Flutter keys)
      * Add a baseline capture/update step (snapshots/goldens/screenshots as appropriate)

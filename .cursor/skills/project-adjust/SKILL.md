@@ -1,7 +1,6 @@
 ---
 name: project-adjust
-description: Deliberate directional or strategic intent change of already-validated/shipped project work. Run when you deliberately modify high-level contracts, strategic promises, or decisions (e.g., revising product-contract.md or project.md) — distinguished from /harden (defect fixing) and /story-adjust or /epic-adjust (story/epic redesign). FIRST ACTION after loading is to read template at .speck/templates/project/project-adjust-template.md.
-disable-model-invocation: false
+description: Project directional/contract pivot + cascade. Use on strategic intent change.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
@@ -10,7 +9,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now using the Read tool:
 ```
@@ -19,7 +18,7 @@ $ARGUMENTS
 
 ---
 
-## 🎯 The Project-Adjust Flow (/project-adjust scope)
+## The Project-Adjust Flow (/project-adjust scope)
 
 When validated project-level work (such as strategic promises in `product-contract.md`, core design vision in `project.md`, or central system design in `architecture.md`) is intentionally pivoted or changed, do NOT wing it and do NOT use `/harden`. Instead, use the **Project-Adjust Flow**:
 

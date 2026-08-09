@@ -1,7 +1,6 @@
 ---
 name: epic-breakdown
-description: Load after epic-tech-spec.md exists to create the story map, dependencies, and implementation order (epic-breakdown.md). Required before starting any individual story in the epic. Use when user says 'break this into stories' or 'what stories do we need?'. FIRST ACTION after loading: read template at .speck/templates/epic/breakdown-template.md before any context loading or artifact generation.
-disable-model-invocation: false
+description: Maps epic to ordered stories. Use after epic-plan.
 ---
 
 
@@ -11,7 +10,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now using the Read tool:
 ```

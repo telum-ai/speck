@@ -1,0 +1,6 @@
+{
+  "id": "sa-separate-auditor",
+  "class": "self-audit",
+  "expect": "clean-pass",
+  "description": "control separate auditor"
+}

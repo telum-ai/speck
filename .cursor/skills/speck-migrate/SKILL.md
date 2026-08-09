@@ -1,7 +1,6 @@
 ---
 name: speck-migrate
-description: Migrate a v6 Speck project to v7 additively. Detects v6 project.json, creates new v7 artifacts (product-contract, evidence-contract, project-decisions-log, project-state, design-system/primitives) without deleting anything. Updates speck_version. Generates migration report. Load when user says "migrate to v7", "upgrade to v7", "speck migrate", or when a v6 project (speck_version <7 or absent) needs to adopt v7 mechanisms.
-disable-model-invocation: false
+description: Migrates Speck versions. Use when upgrading Speck in a repo.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

@@ -1,7 +1,6 @@
 ---
 name: project-roadmap
-description: Load after project-plan to sequence epics into a delivery timeline with dependencies and resource allocation. Produces project-roadmap.md — optional, most useful for multi-team or multi-quarter projects. FIRST ACTION after loading: read template at .speck/templates/project/roadmap-template.md before any context loading or artifact generation.
-disable-model-invocation: false
+description: Project roadmap. Use for Platform sequencing.
 ---
 
 
@@ -11,7 +10,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now using the Read tool:
 ```

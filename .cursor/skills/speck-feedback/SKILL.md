@@ -1,7 +1,6 @@
 ---
 name: speck-feedback
-description: Continuous feedback capture mechanism. Maintains a running feedback file, dedup-checks issues on telum-ai/speck via gh, and drafts comments/issues for one-tap confirmation.
-disable-model-invocation: false
+description: Captures Speck methodology feedback/issues. Use when hitting a Speck gap.
 ---
 
 ## Purpose
@@ -10,7 +9,7 @@ When developers or agents encounter a bug, a workaround, or a confusing Speck in
 
 ---
 
-## 🛠️ Core Process
+## Core Process
 
 ### 1. Maintain Running Feedback File
 - Write feedback immediately to a running file: `.speck/feedback/<date>-<session>.md` (using `.speck/templates/feedback/template.md`).
@@ -41,7 +40,7 @@ When developers or agents encounter a bug, a workaround, or a confusing Speck in
 
 ---
 
-## 🚦 Inline Capture Triggers
+## Inline Capture Triggers
 
 Always-on discipline demands that the moment a gate is worked around, a skill is ambiguous, or a Speck behavior is patched locally, you MUST trigger `/speck-feedback`:
 

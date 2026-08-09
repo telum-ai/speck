@@ -1,7 +1,6 @@
 ---
 name: epic-outline
-description: Retired in Speck v8 (alias-shim). The v6 epic-outline research-mapping step is replaced by /speck-skeptical-review (enumerate technical-approach alternatives) + /speck-decision-log (lock the choice with rationale + SHA), with just-in-time research folded into /epic-plan. New invocations route there.
-disable-model-invocation: false
+description: Retired alias → speck-skeptical-review / story-tasks. Use when /epic-outline named.
 ---
 
 # /epic-outline — retired in Speck v8 (alias-shim)

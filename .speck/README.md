@@ -47,7 +47,7 @@ This sets up:
 
 Runtime source of truth:
 - Canonical runtime source is `.cursor/skills/` + `.cursor/agents/`
-- `.claude/skills/` + `.claude/agents/` are symlinked from `.cursor/` for Claude Code compatibility
+- `.claude/skills/`, `.codex/skills/`, and `.agents/skills/` symlink to `.cursor/skills/`. Agents are generated per-harness via `npm run gen-agents` (not symlinked).
 - Sync manually with: `bash .speck/scripts/bash/sync-claude-runtime.sh` (manages symlinks)
 
 Instruction source of truth:

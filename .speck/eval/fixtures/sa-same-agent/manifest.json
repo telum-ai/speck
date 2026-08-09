@@ -1,0 +1,6 @@
+{
+  "id": "sa-same-agent",
+  "class": "self-audit",
+  "expect": "catch",
+  "description": "self-audit"
+}

@@ -1,7 +1,6 @@
 ---
 name: speck-larp
-description: First-class persona-based runtime LARP (Live-Action Role Play). Cold-starts the actual target build (not dev server), drives it as a named persona through the JTBD flow, captures screenshots + AX trees + timings + taste notes, validates magic moments, and produces checked-in evidence. Recipe-driven via visual_testing config — supports iOS (AXe), Android (Maestro), Web (Playwright/Browser MCP), Desktop (WebdriverIO/Playwright Electron), Flutter (golden tests). Load when validating UI stories/epics, when /recheck runs persona cold-start, or when user says "LARP this", "test as a user", "use the app as a real user", "is this real".
-disable-model-invocation: false
+description: Runtime persona LARP (DOES-IT-WORK + IS-IT-GOOD). Use at UI validate.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
@@ -12,7 +11,7 @@ $ARGUMENTS
 
 ---
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 Before any other action, read:
 ```
@@ -56,7 +55,7 @@ LARP uses the actual target build (not dev server), cold-starts fresh per person
 
 If launch-build doesn't exist: STOP and report. Tell user "LARP requires the target build. Run [build command] first."
 
-### 💡 UI LARP Setup Recipe (Sandbox-Friendly)
+### UI LARP Setup Recipe (Sandbox-Friendly)
 
 To execute browser LARPs successfully in sandboxed or restricted environments without real production databases/credentials:
 1. **Throwaway/Local DB**: Seed a local/SQLite or Docker-based database with minimal test fixtures.
@@ -153,7 +152,7 @@ Per the template's findings format, with **separate DOES-IT-WORK, IS-IT-GOOD, an
 
 Standard report format. Report **all three** job verdicts (DOES-IT-WORK / IS-IT-GOOD / IS-IT-CRAFTED); never collapse Job B into Job A, nor Job C into Job B.
 
-## 🧭 LARP Must Reach Everything (P3)
+## LARP Must Reach Everything (P3)
 
 If automation cannot reach a control, focus a field, or complete a flow, that is a **finding**, not a valid skip reason (#75-G2).
 

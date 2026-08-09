@@ -1,7 +1,6 @@
 ---
 name: epic-scan
-description: Retired in Speck v8 (alias-shim). Epic-scoped brownfield code scanning is now /speck-scan --level epic (one recipe-driven scan skill for project/epic/story). New invocations route there.
-disable-model-invocation: false
+description: Alias of speck-scan --level epic. Use when /epic-scan named.
 ---
 
 # /epic-scan — retired in Speck v8 (alias-shim)

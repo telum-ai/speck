@@ -1,7 +1,6 @@
 ---
 name: speck-premise-challenge
-description: Premise-challenge (anti-spec) pass. Questions whether the contract's underlying design decisions are good (rather than whether the code conforms to them).
-disable-model-invocation: false
+description: Anti-spec premise challenge. Use before UX-RC+ on high-impact UI.
 ---
 
 ## Purpose
@@ -12,7 +11,7 @@ The **Premise-Challenge (Anti-Spec) Pass** is an adversarial review step designe
 
 ---
 
-## 🎯 Target Surfaces
+## Target Surfaces
 
 A Premise-Challenge pass is **mandatory** for stories and epics touching high-impact user experience surfaces:
 1. **Onboarding / First-Run**: The very first screen, setup flows, or tutorial.
@@ -23,7 +22,7 @@ A Premise-Challenge pass is **mandatory** for stories and epics touching high-im
 
 ---
 
-## 🛠️ Core Process
+## Core Process
 
 When executing a Premise-Challenge pass, the agent must adopt a hostile, highly skeptical user perspective and ask:
 
@@ -44,7 +43,7 @@ When executing a Premise-Challenge pass, the agent must adopt a hostile, highly 
 
 ---
 
-## 📋 Outputs & Escalation
+## Outputs & Escalation
 
 A Premise-Challenge pass results in one of two outcomes:
 
@@ -55,7 +54,7 @@ A Premise-Challenge pass results in one of two outcomes:
 
 ---
 
-## ⚖️ Operator Guidance & Anti-Laundering Rules
+## Operator Guidance & Anti-Laundering Rules
 
 - **"This feels off" is a first-class thread**: Never ignore a gut-level taste or UX concern. If something feels awkward, clunky, or confusing, it is a failed premise. The AI is expected to apply this taste judgment itself — that is the whole point of the FELT-GOOD axis.
 - **Never conflate CORRECT/ON-CONTRACT with good**: A green test suite and a conforming LARP do not mean the product is ready to ship.

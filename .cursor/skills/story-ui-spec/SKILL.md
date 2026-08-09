@@ -1,7 +1,6 @@
 ---
 name: story-ui-spec
-description: Load when a story has significant UI work — multiple components, interaction states, animations, or complex layouts. Run after story-plan and before story-tasks. Produces ui-spec.md with exact styling, component hierarchy, and interaction details. Required for UI-heavy stories; skip for backend/API-only stories. FIRST ACTION after loading: read template at .speck/templates/story/ui-spec-template.md before any context loading or artifact generation.
-disable-model-invocation: false
+description: UI spec for UI-bearing stories. Use when story has UI.
 ---
 
 
@@ -11,7 +10,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now using the Read tool:
 ```
@@ -73,7 +72,7 @@ Load context:
   - Populate **Responsive Behavior** with the actual breakpoints/devices we will validate
   - Populate **Testing Checklist** coverage matrix (web browsers vs mobile devices vs desktop OS)
   - Add **stability requirements** for automation (e.g. `data-testid`/`testID`/Flutter keys for critical elements)
-  - Reference `.cursor/skills/visual-testing-web/SKILL.md (or platform-specific skill per visual_testing.pattern_file)` so implementers know the expected visual test approach
+  - Reference `.cursor/skills/visual-testing/references/web.md (or platform-specific skill per visual_testing.pattern_file)` so implementers know the expected visual test approach
 
 ### Step 2: Component Discovery
 

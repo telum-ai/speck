@@ -45,9 +45,9 @@ const PRESERVE_SUBDIRS = {
 
 /**
  * ALWAYS_OVERWRITE directories where PROJECT-CUSTOM subdirectories (ones Speck never
- * shipped) must survive upgrades. Skills are symlinked into .claude/.codex from .cursor;
- * agents are GENERATED per-harness into each runtime dir (see generate-agents.js), so a
- * custom agent subdir is preserved in all three — wholesale replacement would delete it.
+ * shipped) must survive upgrades. Skills are symlinked into .claude/.codex/.agents from
+ * .cursor; agents are GENERATED per-harness into each runtime dir (see generate-agents.js),
+ * so a custom agent subdir is preserved — wholesale replacement would delete it.
  * Anything Speck ships (including retired-skill shims) comes back from the source copy;
  * explicit removals still happen via REMOVE_FILES afterward.
  */
@@ -138,6 +138,35 @@ const REMOVE_FILES = [
   '.cursor/commands',
   '.cursor/rules/speck',
   '.claude/commands',
+  // v11.0.0: Generic domain/integration skills deleted (Context7 + recipes JIT)
+  '.cursor/skills/clerk-authentication',
+  '.cursor/skills/oauth-implementation',
+  '.cursor/skills/stripe-integration',
+  '.cursor/skills/revenuecat-integration',
+  '.cursor/skills/saas-billing-patterns',
+  '.cursor/skills/supabase-integration',
+  '.cursor/skills/firebase-integration',
+  '.cursor/skills/resend-integration',
+  '.cursor/skills/sentry-integration',
+  '.cursor/skills/posthog-integration',
+  '.cursor/skills/tanstack-query',
+  '.cursor/skills/progressive-web-apps',
+  '.cursor/skills/websocket-implementation',
+  '.cursor/skills/multi-tenancy-patterns',
+  '.cursor/skills/offline-first-architecture',
+  '.cursor/skills/serverless-architecture',
+  '.cursor/skills/docker-containerization',
+  '.cursor/skills/github-actions-cicd',
+  '.cursor/skills/gdpr-compliance',
+  '.cursor/skills/model-selection',
+  '.cursor/skills/ai-api-integration',
+  // v11.0.0: visual-testing host skills folded into visual-testing/references/
+  '.cursor/skills/visual-testing-web',
+  '.cursor/skills/visual-testing-desktop-electron',
+  '.cursor/skills/visual-testing-desktop-tauri',
+  '.cursor/skills/visual-testing-extension',
+  '.cursor/skills/visual-testing-mobile-flutter',
+  '.cursor/skills/visual-testing-mobile-react-native',
 ];
 
 // ============================================================
@@ -999,10 +1028,11 @@ export function smartSync(sourceDir, targetDir, options = {}) {
   const readmeSync = syncProjectReadme(targetDir, results, verbose);
   results.readmeRepaired = readmeSync.repaired;
 
-  // 5. Symlink Cursor SKILLS into .claude and .codex for cross-tool parity. Agents are NOT
+  // 5. Symlink Cursor SKILLS into .claude, .codex, and .agents for cross-tool parity.
+  //    Codex discovers skills under `.agents/skills` (canonical). Agents are NOT
   //    symlinked — each harness has a different model vocabulary, so agents are generated
   //    per-harness (generate-agents.js) and copied as real dirs via ALWAYS_OVERWRITE above.
-  for (const runtimeDir of ['.claude', '.codex']) {
+  for (const runtimeDir of ['.claude', '.codex', '.agents']) {
     for (const relativeDir of ['skills']) {
       try {
         const symlinkResult = symlinkCursorDir(targetDir, runtimeDir, relativeDir);

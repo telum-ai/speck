@@ -1,0 +1,639 @@
+The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
+
+User input:
+
+$ARGUMENTS
+
+## Step 0: Read v7 Template First
+
+**Before any other action** — read this template now:
+```
+.speck/templates/story/validation-report-template.md
+```
+
+The v7 template centers on **readiness state declaration**. Validation does NOT produce PASS/FAIL — it produces one of:
+- `NO-SHIP` — blockers remain
+- `IMPL-GREEN` — tests/lint/types pass
+- `INTEGRATION-GREEN` — real round-trip smoke against each external service in evidence-contract §7 (catches mock-blind transport failures)
+- `UX-RC` — primary flows pass in target runtime with LARP evidence
+- `API-RC` — backend operational walkthrough + contract/schema gates met (no rendered surface required)
+- `COMMERCIAL-RC` — billing/entitlements/legal pass (paid products)
+- `SHIP-RC` — all gates pass against launch build
+- `SHIP` — post-deploy proof complete
+
+**Checkpoint**: After reading, note the v7 frontmatter fields (`readiness_state_claimed`, `readiness_state_verified`, `build_sha`, `build_artifact`, `audit_report`, `larp_evidence`).
+
+---
+
+## Pre-Validate Gates (v7 — Mandatory)
+
+Before doing ANY validation work, verify:
+
+1. **`/audit` was run for this story and produced `audit-report.md`** (in story dir)
+   - If missing: STOP. Tell user "Run `/audit` first — story-validate requires the audit report as input."
+   - If `audit-report.md` shows P0 findings: STOP. Tell user "P0 findings in audit-report.md must be fixed before validation."
+
+2. **Check Project Archetype & UI Presence**:
+   - Read `.speck/project.json` → `project_archetype` (and `play_level`).
+   - If `project_archetype` is `infra_service` or `backend_api`, or if the story is backend-only / non-UI: **Bypass `/larp` and Premise-Challenge requirements**. Proceed directly.
+   - For all UI-facing stories (archetypes `consumer_product`, `b2b_saas`, `internal_tool` with active UI components):
+     - **`/larp` MUST have been run** producing `larp-recordings/<sha>-<persona>-findings.md`
+       - If missing: STOP. Tell user "Run `/larp [persona]` first — UI story validation requires LARP evidence per evidence-contract.md."
+       - If LARP findings show FAIL: lower the maximum claimable state.
+     - **Premise-Challenge (Anti-Spec) Pass**: If the story touches high-impact surfaces (onboarding/first-run, empty states, paywalls/billing, error/degraded states, celebration surfaces), a **Premise-Challenge pass MUST have been run** (using `/speck-premise-challenge`) and documented.
+       - If missing or failed: cap the maximum claimable state at `IMPL-GREEN` or `INTEGRATION-GREEN` (cannot claim `UX-RC` or higher).
+
+3. **`evidence-contract.md` exists at the project root**
+   - If missing: STOP. Tell user "Run `/project-evidence-contract` first — validation needs the gate criteria definition."
+
+4. **The user (or skill caller) has declared a claimed readiness state**
+   - Default: claim the highest state where evidence supports (e.g. `IMPL-GREEN` or `OPERATIONAL-RC` for infra/backend; `SHIP-RC` / `SHIP` for release candidates).
+   - User can pass `--claim IMPL-GREEN` / `--claim UX-RC` / `--claim API-RC` / `--claim OPERATIONAL-RC` / etc.
+
+If any pre-gate fails: refuse to proceed. Surface what's missing.
+
+---
+
+## v7 Validation Algorithm
+
+1. Read `audit-report.md` — if any P0, mark as BLOCKED for the claimed state
+2. Read `evidence-contract.md` gate criteria for the claimed state
+3. For each gate criterion at the claimed state and ALL LOWER states:
+   - Find the supporting evidence (test output, LARP findings, lint output, build log)
+   - Mark ✅ / ⚠️ / ❌
+4. Evaluate verifiability tiers (agent-LARP vs. device-walk):
+   - Check if any acceptance scenario or evidence requirement in the spec is marked `device-walk` (or `always-manual`).
+   - If `device-walk` criteria exist, the AI agent CANNOT autonomously verify them; they must be marked as `⚠️ Manual` or `❌ Ungrounded` in the report unless a valid human attestation file exists at `larp-recordings/<sha>-human-attestation.md`.
+   - If `device-walk` criteria are present and `larp-recordings/<sha>-human-attestation.md` is missing, the AI agent MUST cap the verified state at `UX-RC` (agent-verified) and refuse to claim `SHIP-RC` or higher, detailing that the story is "Awaiting human device walk" to complete `SHIP-RC+`.
+4b. Evaluate Keystone dependencies:
+   - Identify any founder-provisioned secrets/keys declared in `evidence-contract.md` or `spec.md`.
+   - If a Keystone dependency is absent, verify that the test output or CI log includes an explicit `skip-with-reason` message (not silent).
+   - If an active Keystone is missing but skip-with-reason logs are recorded, do NOT fail the validation run; instead, mark the gate as `⚠️ Skipped (Awaiting Keystone)` and cap the maximum claimable state at `UX-RC` (allowing the story to pass green for `IMPL-GREEN` and `UX-RC`).
+4c. Verify Deferrals / What this validation did NOT verify section:
+   - Ensure the report explicitly populates `## 🔬 What this validation did NOT verify / Deferrals`. If left blank or containing boilerplate, fail the validation.
+   - **Cap Status enforcement**: every deferral row MUST include `Cap Status` (`evidence-pending` or `implementation-pending`). Any row tagged `implementation-pending` (code path not built) → verified state MUST cap at `NO-SHIP` — unbuilt code cannot pass as IMPL-GREEN. Any row tagged `autonomous-not-done` is NOT allowed for the browser cold-start LARP (which is required and non-deferrable for UI archetypes); any other autonomous deferral row tagged `autonomous-not-done` → cap at `IMPL-GREEN`/`INTEGRATION-GREEN` (cannot claim UX-RC/API-RC). Any `INTEGRATION-GREEN` cap justified by a "named infrastructure blocker" requires a **logged, reproduced failure of the actual LARP recipe** in the validation records (the attempted run + the specific error) — never an assertion, memory, or a prior session's precedent (P3, #76.1).
+
+### UI LARP Setup Recipe (Sandbox-Friendly)
+
+To execute browser LARPs successfully in sandboxed or restricted environments without real production databases/credentials:
+1. **Throwaway/Local DB**: Seed a local/SQLite or Docker-based database with minimal test fixtures.
+2. **Loopback/Review-Session Backdoor**: Implement a secure backdoor route or environment flag (e.g. `VITE_DEV_HTTP=true` or `process.env.PLAYWRIGHT_TEST=true`) that bypasses external OAuth/Clerk redirects and logs in a test user.
+3. **localStorage Token Re-injection**: Pre-populate `localStorage` or cookies with mock JWTs or session tokens before navigating, to simulate an authenticated state.
+4. **Loopback/Mock Server**: Run a lightweight local mock server (e.g., MSW or wiremock) to intercept and mock third-party API calls (e.g., Stripe, Resend) during the browser run.
+4d. **INTEGRATION-GREEN gate** (when story depends on external services in evidence-contract §7 or is DB-backed):
+   - If §7 lists services this story touches, verify at least one **real round-trip** succeeded per service (not mock-only). Capture logs/traces in validation records.
+   - If the project is DB-backed AND a reachable `DATABASE_URL` exists for this environment, run `validate-schema-drift.sh --live --strict --target "$DATABASE_URL"` — plain `--strict` with no `--live --target` never asks the live leg to run at all; it reports SKIPPED for schema parity and still exits 0, which is exactly how #95 P2-3 found this gate sanctioned as a checkbox pass with zero live schema evidence behind it. Ensure at least one real write path is exercised (reads can fail-close or swallow missing tables).
+   - If no reachable `DATABASE_URL` exists for this environment, do NOT check the "Live DB schema matches migrations" row off as ✅. SKIPPED is a real, honest verdict — nothing was proven, and a check nobody asked to run is not evidence the schema is correct. Record it as ⚠️ with `Cap Status: evidence-pending` in the Deferrals section (4c) instead.
+   - Mock-green alone is insufficient for INTEGRATION-GREEN — transport failures (429, auth, payload shape) and schema-drift database errors only appear on real calls.
+   - If no §7 services apply and the project is not DB-backed, INTEGRATION-GREEN auto-passes (skip to UX-RC/API-RC criteria).
+4e. **Clean-Build gate** (for UX-RC+ claims):
+   - For UX-RC or higher, verify that `clean_build: yes` is declared in the report's frontmatter.
+   - Any UX-RC+ claim using `clean_build: no` or unspecified must be rejected/downgraded (cap verified readiness state at `INTEGRATION-GREEN` or lower). Stale compiled assets from incremental caches are a surrogate for the code under test.
+4f. **Evaluate the FELT-GOOD axis** (the AI covers this — do NOT defer it to a human):
+   - Read `.speck/project.json` → `project_archetype`.
+   - For UI-facing consumer archetypes at `UX-RC` or higher, the AI **MUST have run the naive-hostile LARP** (First-Viewport Reaction + taste-judgment rubric) and recorded a first-impression taste verdict. Set `felt_axis: ai-verified` and cite the naive-hostile findings (`larp-recordings/<sha>-naive-hostile-findings.md`) in the Three-Axis Readiness section.
+     - If the naive-hostile pass has NOT been run, `felt_axis` is `uncovered` → cap the verified state at the last clean state below `UX-RC` and run the pass. (Do NOT wait for a human — the AI performs this judgment itself.)
+     - If the naive-hostile taste verdict surfaces confusion/disorientation/revulsion, treat it as a PASS-blocking finding and lower the state accordingly.
+   - A recorded human taste review (`larp-recordings/<sha>-felt-attestation.md`) is an **optional stronger signal** that promotes `felt_axis` to `human-verified`. It is never required to reach `SHIP-RC`.
+5. If any required-at-claimed-state gate is ❌ (including an `uncovered` FELT axis for a consumer UX-RC+ claim, or missing Keystones for SHIP-RC+): lower the verified state to the highest state where all gates pass
+6. Run the banned-phrase self-check on the report's own language before publishing
+7. Apply SHA stamp to the report
+7b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md` to ensure four-axis compliance and that the AI-covered FELT-GOOD axis is not left `uncovered` for consumer UX-RC+ claims.
+7c. **Run TASTE axis validation:** run `bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict validation-report.md` to ensure the AI-covered TASTE (connoisseur) axis is not left `uncovered` for consumer UX-RC+ claims, that a `forks-open` claim actually lists its aesthetic forks, and that a `universal-only` anchor doesn't back a premium ship claim. If TASTE is uncovered, run the connoisseur-hostile pass (`/speck-larp` Job C) first.
+8. **Before claiming SHIP-RC or SHIP:** run `bash .speck/scripts/validation/validators/validate-readme.sh --strict` and `bash .speck/scripts/profile-drift-check.sh`. Block SHIP-RC+ if any `PROFILE_DRIFT.P1` finding.
+9. **UI stories touching PROFILE surfaces** (landing, marketing, package.json): run `regenerate-project-readme.sh --check` before UX-RC+ claim.
+10. Trigger `/project-state` regeneration
+
+### Continuous Feedback Capture Trigger
+If any gate is bypassed, skipped, or marked `⚠️ Skipped` due to environment or tooling limitations, you **MUST** run `/speck-feedback` (or read `.cursor/skills/speck-feedback/SKILL.md`) to document the limitation and propose a sandbox-friendly setup or mock. Do not let workarounds go undocumented.
+
+The legacy v6 validation algorithm follows below (use it for tests/lint/quality details, but the verdict MUST be a readiness state, not PASS/FAIL).
+
+---
+
+Goal: Comprehensively validate that the implementation fulfills the specification, meets non-functional requirements, adheres to constitutional principles, AND is verified at the claimed readiness state per evidence-contract.md.
+
+## Subagent Parallelization
+
+This command benefits from parallel speck-auditor execution for independent validation aspects:
+
+```
+├── [Parallel] speck-auditor: "Check all FR-XXX requirements are implemented with tests"
+├── [Parallel] speck-auditor: "Run test suite and verify all tests pass"
+├── [Parallel] speck-auditor: "Validate performance against spec targets"
+├── [Parallel] speck-auditor: "Verify constitution principle compliance"
+├── [Parallel] speck-auditor: "Check Cursor rules compliance for changed files"
+├── [Parallel] speck-auditor: "Run linters and type checks"
+├── [Parallel] speck-auditor: "Code review for security and maintainability"
+├── [Parallel] speck-auditor: "Check documentation completeness"
+└── [Wait] → Synthesize into validation-report.md
+
+Each auditor returns: PASS | FAIL | PARTIAL with evidence
+```
+
+**Speedup**: 6-8x compared to sequential validation.
+
+## Execution steps
+
+1. Locate the active story directory (STORY_DIR):
+   - Preferred: user is already in the story directory (or a subfolder like `contracts/`)
+   - Determine STORY_DIR by walking up from current directory until you find `spec.md`
+   - If no `spec.md` found: instruct user to `cd` into the story directory or run `/speck` to route
+   - Require:
+     - `{STORY_DIR}/spec.md`
+     - `{STORY_DIR}/plan.md`
+     - `{STORY_DIR}/tasks.md`
+   - If any missing: ERROR "Run /story-specify, /story-plan, and /story-tasks first"
+
+2. Load artifacts and extract validation criteria:
+   - **spec.md**: Functional requirements (FR-XXX), acceptance scenarios, user stories, non-functional requirements, performance targets, key entities
+   - **plan.md**: Technical context, constitution check gates, complexity tracking, project structure
+   - **tasks.md**: All task IDs and their completion status
+   - **Constitution chain** (if exists): Project-specific principles and quality gates
+     - Project: `specs/projects/<PROJECT_ID>/constitution.md` (optional)
+     - Epic: `{EPIC_DIR}/constitution.md` (optional)
+   - **quickstart.md** (if exists): Integration test scenarios
+   - **contracts/** (if exists): API specifications to verify
+   - **ui-spec.md** (if exists): UI component specifications and Testing Checklist
+   
+   **Load Visual Testing Configuration** (for UI stories):
+   - Navigate to project root: `specs/projects/<PROJECT_ID>/`
+   - Read `project.md` frontmatter for `_active_recipe:` field
+   - If recipe found, load `.speck/recipes/[recipe-name]/recipe.yaml`
+   - Extract `visual_testing:` section:
+     ```yaml
+     visual_testing:
+       platform: [web|mobile-flutter|mobile-rn|desktop-electron|desktop-tauri|extension|api|cli]
+      strategy: [browser-mcp|golden-tests|maestro|playwright|playwright-electron|webdriverio|puppeteer|none]
+      # Varies by platform (see `.cursor/skills/` e.g. visual-testing/references/web.md, visual-testing/references/mobile-flutter.md), e.g.:
+      # - web: "visual-testing/web-visual-testing.md"
+      # - mobile-flutter: "visual-testing/mobile-flutter-visual-testing.md"
+      # - mobile-rn: "visual-testing/mobile-react-native-visual-testing.md"
+      pattern_file: "visual-testing/web-visual-testing.md"
+       breakpoints: {...}
+       devices: {...}
+       tools: {...}
+       agent_commands: {...}
+     ```
+   - Load platform skill: `.cursor/skills/visual-testing/references/web.md` (or visual-testing/references/mobile-flutter.md, etc. per pattern_file)
+   - Store visual config for use in step 10.5
+   - If `platform: api` or `platform: cli`: Skip visual validation (no UI)
+
+3. Task completion verification:
+   - Parse tasks.md for all task checkboxes
+   - Report completion percentage (e.g., "28/32 tasks complete (87.5%)")
+   - If any tasks incomplete: WARN with list of incomplete task IDs
+   - User can override with `--allow-incomplete` flag if iterating
+
+4. Functional requirements traceability:
+   - For each FR-XXX in spec.md, determine verification method:
+     * If contract test exists → check test passes
+     * If integration test exists → check test passes
+     * If mentioned in quickstart.md → mark for scenario execution
+     * If no test coverage → FLAG as "Untested requirement"
+   - Generate requirements traceability matrix (RTM)
+   - **Cite discharged PRM rows (promise conservation)**: open the epic's `traceability-matrix.md` and find the `PRM-NNN` rows whose Discharge column names THIS story (e.g. `S0NN / AC-x`). For each, confirm the acceptance criterion actually passed with evidence in this validation, then record the PRM-id + the evidence that discharges it in the report's `## 📋 Spec Coverage (Requirements Traceability)` section (e.g. "Discharges PRM-014, PRM-021 — see LARP step 3 + axe JSON"). If an assigned PRM row's AC did NOT pass, the row stays `mapped` (not `discharged`) and the story cannot claim it. Do not silently drop an assigned promise.
+   - **Set each discharged row's `Grain (proven-at)` at the grain the evidence was actually collected (#87)** — NOT the story's headline `readiness_state_verified` (that is only the CEILING). A helper-importing unit test = `impl-green`; a live DB round-trip = `integration-green`; a cold-start build-LARP on the shipped artifact = `ux-rc`+. One story can discharge PRM-A via a unit test (`impl-green`) and PRM-B via a build-LARP (`ux-rc`) — grade each row on its own evidence. A row you can only prove by importing a helper is `impl-green`, and honestly so; leaving it un-graded pins it at story-grain (`integration-green`) and caps the epic below product grain. Grade the row down when that is the truth — the grain floor is where #87's false discharges get caught before they read as product claims.
+
+5. Execute quickstart scenarios (if quickstart.md exists):
+   - Parse quickstart.md for step-by-step test scenarios
+   - Attempt to execute each scenario programmatically:
+     * API scenarios: send HTTP requests, validate responses
+     * CLI scenarios: execute commands, validate output
+     * Integration scenarios: run test files, capture results
+   - For manual scenarios: provide checklist for user validation
+   - Capture pass/fail status for each scenario
+
+6. Run test suite validation:
+   - Detect project type and test commands from plan.md:
+     * Python: `pytest` (or as specified in Technical Context)
+     * JavaScript/TypeScript: `npm test` or `npm run test:ci`
+     * Rust: `cargo test`
+     * Go: `go test ./...`
+     * (Add others based on Language/Version in plan.md)
+   - Run tests and capture output
+   - Parse test results: total, passed, failed, skipped
+   - If any failures: HALT with detailed error report (unless `--force` flag)
+
+6b. Mutation-prove every guard you are about to CITE (fills `## 🧬 Mutation Record`):
+   - A green suite is not evidence. The report's Evidence column names specific guards as the reason
+     an AC is discharged, and a guard is not evidence until someone watched it fail. The suspect
+     population is small and specific — **one row per guard whose path appears in the Evidence
+     column**, not one per test in the suite. The highest-yield suspect is the guard authored in the
+     same increment as the code it protects, because it was designed against the same model of the
+     behaviour that could be wrong.
+   - For each such guard, run:
+     ```
+     .speck/scripts/validation/mutate-guard.sh \
+       --file <production path> --pattern '<the shipped line>' --replacement '<the defect>' \
+       --red '<the cited guard invocation>' --green '<a control that must STAY green>' \
+       [--expect-count N]
+     ```
+     It mutates inside a **throwaway worktree**, so there is nothing to revert and an interrupted run
+     cannot leave a mutated production file behind. It refuses a pattern that does not match exactly
+     once, a comment or docstring line, and a test or fixture path — the three ways a mutation is
+     silently a no-op. **Transcribe its `SPECK_MUTATION_*` output into the Mutation Record; never
+     type a verdict by hand.**
+   - If the mutation comes back **`GUARD_MUTATION_GREEN.P2`, record it green** and write the honest
+     scope onto the test ("this guard does not observe X"). **Never tune the mutation until it
+     reddens** — that manufactures exactly the evidence the section exists to prevent. A cited guard
+     carrying `GUARD_UNMUTATED.P2` measured nothing, so it does not discharge its AC at this state.
+   - A guard cited as evidence must **import and call the shipped function or the shipped SQL
+     literal**, not a transcription of it — a guard that re-derives its own predicate cannot observe
+     its own removal. For a **drop / filter / redact** guard the required control is that
+     **legitimate content survives**; proving bad content is caught is satisfied by a guard that
+     drops everything, and over-removal is the bug that actually ships.
+   - Each run drops a receipt in `.speck/mutation-receipts/` pinning the SHA, the site, and a content
+     hash of the mutated line. Cross-check the finished report at step 13.
+
+7. Performance validation (if targets specified in spec.md):
+   - Extract performance targets from spec.md Non-Functional Requirements
+   - Look for performance test files (tests/performance/, tests/load/, etc.)
+   - Run performance tests and compare against targets
+   - Report: Target vs Actual for each metric
+   - Flag any violations as PERFORMANCE_GAP
+
+8. Constitution compliance verification:
+   - Re-evaluate Constitution Check section from plan.md against actual code
+   - For each principle gate:
+     * Verify claimed compliance is implemented (e.g., if "feature flags" claimed, check they exist)
+     * Check Complexity Tracking justifications are valid
+     * Scan codebase for anti-patterns (if constitution defines them)
+   - If violations found that weren't in Complexity Tracking: FLAG as "Undocumented deviation"
+
+9. Cursor rules compliance check:
+   - Check if `.cursor/rules/` directory exists
+   - If exists, scan for all `*.mdc` or `*.md` rule files
+   - For each rule file found:
+     * Read the rule to understand its trigger conditions and requirements
+     * Determine if rule applies to this story based on:
+       - File types changed (e.g., `.tsx` files → frontend rules apply)
+       - Feature areas mentioned in spec.md (e.g., "migration" → migration rules apply)
+       - Technologies used in plan.md (e.g., "React" → React rules apply)
+     * If rule applies, validate implementation against rule requirements:
+       - Check for required patterns mentioned in rule
+       - Check for prohibited patterns mentioned in rule
+       - Verify best practices described in rule are followed
+     * Document compliance status for each applicable rule
+   - Generate rules compliance section:
+     ```
+     ## Cursor Rules Compliance
+     
+     Rules Evaluated: [X total, Y applicable to this story]
+     
+     | Rule | Applicability | Status | Findings |
+     |------|---------------|--------|----------|
+     | design-system-enforcement.mdc | ✅ Applies (frontend files changed) | ✅ PASS | All components use design system |
+     | migrations-safety.mdc | ❌ Not applicable (no migrations) | N/A | - |
+     | testing.mdc | ✅ Applies (all stories) | ⚠️ WARN | 2 tests marked .skip() |
+     ```
+   - If no `.cursor/rules/` directory: Note "No project-specific rules found"
+   - If any rule violations found: Include detailed explanation and remediation steps
+
+10. Code quality gates (run from repository root):
+   - **Linting**: Run linters specified in plan.md
+     * Python: flake8, mypy, black --check
+     * JavaScript/TypeScript: eslint, prettier --check
+     * Rust: cargo clippy
+     * Go: golangci-lint
+   - **Type checking** (if applicable):
+     * TypeScript: tsc --noEmit
+     * Python: mypy
+   - **Security scanning** (optional, if tools available):
+     * Python: bandit, safety
+     * JavaScript: npm audit
+   - Capture all violations and warnings
+
+10.5. **Visual/UX Validation** (if ui-spec.md exists OR story has UI components):
+   
+   **SKIP if**: visual_testing.platform is `api` or `cli` (loaded in step 2)
+   
+   **Use Recipe Configuration** (loaded in step 2):
+   ```
+   Platform: {visual_testing.platform}
+   Strategy: {visual_testing.strategy}
+   Pattern: .cursor/skills/{skill_from_pattern_file}/SKILL.md (e.g. visual-testing/references/web.md for web)
+   Breakpoints: {visual_testing.breakpoints}
+   Devices: {visual_testing.devices}
+   Agent Commands: {visual_testing.agent_commands}
+   ```
+   
+   **Reference**: Load `.cursor/skills/visual-testing/references/web.md` (or visual-testing/references/mobile-flutter.md, etc. per platform) for platform-specific guidance.
+   
+   **Load Design Specifications**:
+   - `specs/projects/[PROJECT_ID]/design-system.md` → tokens, breakpoints
+   - `specs/projects/[PROJECT_ID]/ux-strategy.md` → voice/tone, accessibility
+   - `{STORY_DIR}/ui-spec.md` → component specs, Testing Checklist
+   - `{EPIC_DIR}/wireframes.md` → layouts (if exists)
+ 
+   **Define Visual Test Scope (fast loop)**:
+   - From `git diff --name-only` + ui-spec/wireframes, list the 1–3 screens/components most impacted
+   - For each, capture: default + loading + empty + error (as applicable)
+   - Capture at least one interaction state (hover/focus/pressed) if specified in ui-spec.md
+   
+   **LOCAL-FIRST MULTI-MODAL VISUAL REVIEW (CRITICAL FOR AGENTS)**:
+   - If screenshots are captured in `larp-recordings/*.png`, and you are a multi-modal AI agent, **you MUST use the `Read` tool on these image files** to visually inspect the actual rendered UI.
+   - Do NOT just look at the HTML/CSS code; analyze the real visual rendering for typography hierarchy, active negative space, layout consistency, and brand alignment.
+   - Use these visual readings to assign the Aesthetic Grade and First-Time Comprehension rating based on *actual visual evidence*, citing the specific screenshot path you read.
+ 
+   **Execute Platform Pattern (recipe-driven)**:
+   - Load `.cursor/skills/visual-testing/references/web.md` (or platform-specific skill) and follow it
+   - Use `visual_testing.agent_commands` as the source of truth for what to run (Playwright/Maestro/goldens/WebdriverIO/etc.)
+   - Use `visual_testing.breakpoints` / `visual_testing.devices` / `visual_testing.window_sizes` to drive capture
+ 
+   **Speed Defaults (only expand if something looks off)**:
+   - Web: start with `mobile` + `desktop`; add `tablet`/`wide` only if responsive behavior is in scope
+   - Mobile: start with one iOS + one Android; add tablet/dark-mode only if specified
+   - Desktop: start with `normal` window size; add small/large + dark-mode only if specified
+   - Extension: start with popup `standard`; add compact/wide only if specified
+ 
+   **If automation is unavailable**:
+   - Generate a manual checklist from the platform pattern + ui-spec checklist and mark items as MANUAL in the report
+ 
+   ---
+   
+   **Design Token Compliance Check** (ALL platforms):
+   - Grep changed files for hardcoded values:
+     * Hex colors: `#[0-9A-Fa-f]{6}`
+     * Pixel values: raw `px` instead of tokens
+   - Compare against design-system.md tokens
+   - Report: "[X/Y] properties use design tokens ([Z]%)"
+   
+   **Voice/Tone Compliance** (load ux-strategy.md):
+   - Check UI copy (error messages, button labels, empty states)
+   - Compare against voice attributes in ux-strategy.md
+   - Flag generic/technical copy that doesn't match voice
+   
+   **ui-spec.md Testing Checklist** (if exists):
+   - Load Testing Checklist section from ui-spec.md
+   - Check off each item during validation
+   - Unchecked items become validation issues
+   
+   **Aesthetic Quality Gate** (REQUIRED for all UI stories):
+   
+   Beyond token compliance — judge the DESIGN QUALITY of the implementation:
+   
+   Load from `design-system.md`:
+   - **Design Philosophy** (core principle, emotional keywords, anti-patterns)
+   - **Bold Choices (Non-Negotiable)** (the personality-defining rules)
+   - **What Success Looks Like** (the feel test)
+   
+   Evaluate each screen/component against:
+   
+   | Dimension | Question | Rating |
+   |-----------|----------|--------|
+   | Design Philosophy | Does the UI express the project's core design principle? | ✅/⚠️/❌ |
+   | Bold Choices | Are ALL non-negotiable design rules honored? (Check each) | ✅/⚠️/❌ |
+   | Feel Test | Would this pass the "What Success Looks Like" description? | ✅/⚠️/❌ |
+   | Visual Personality | Is this intentionally designed or generic/boilerplate? | ✅/⚠️/❌ |
+   | Typography Hierarchy | Is it dramatic/intentional or flat/boring? | ✅/⚠️/❌ |
+   | Negative Space | Active and deliberate or cramped/random? | ✅/⚠️/❌ |
+   | Interactive States | Do hover/focus/active feel designed or browser-default? | ✅/⚠️/❌ |
+   | Motion | Matches the motion philosophy or random/jarring/missing? | ✅/⚠️/❌ |
+   | Texture & Depth | Does the UI have surface quality or is it flat/lifeless? | ✅/⚠️/❌ |
+   | Component Character | Do buttons/cards/inputs have personality or feel generic? | ✅/⚠️/❌ |
+
+   **First-Time User Comprehension Rubric** (REQUIRED for all UI stories):
+   
+   Evaluate whether a first-time user can instantly understand and navigate this view:
+   
+   1. **What am I seeing?** (Understand screen context within 2 seconds of landing)
+   2. **Why does it matter?** (Value matches user's active JTBD)
+   3. **What do I do next?** (Primary continuation action is obvious with zero hunting)
+   
+   | Dimension | Question | Rating | Evidential Rationale |
+   |-----------|----------|--------|----------------------|
+   | Clutter | Is the screen free of technical jargon, system details, or redundant elements? | ✅/⚠️/❌ | |
+   | Visual Dominance | Is there a single, clear visual focal point on landing? | ✅/⚠️/❌ | |
+   | Direct Value Signal | Does the screen display a concrete, immediate signal of value? | ✅/⚠️/❌ | |
+   | Obvious Handoff | Is the primary call to action (or continuation path) clear and distinct? | ✅/⚠️/❌ | |
+
+   *If any First-Time Comprehension dimension is ❌: First-Time Comprehension is **FAIL**.*
+   
+   **Aesthetic Grade**:
+   - **BEAUTIFUL** — Exceeds design system expectations, passes first-time comprehension with flying colors, feels polished and intentional.
+   - **ACCEPTABLE** — Honors design system, comprehension is clear, no major aesthetic issues.
+   - **NEEDS_WORK** — Functionally correct, but aesthetically weak OR fails First-Time Comprehension in specific areas.
+   - **UGLY** — Generic, boilerplate, violates design personality, or first-time comprehension is completely blocked.
+   
+   **If NEEDS_WORK or UGLY**: Flag as validation issue and **CAP maximum verified state at `IMPL-GREEN`** (refuse to grant `UX-RC` or higher):
+   - Specific dimensions that failed (from tables above)
+   - Concrete improvement suggestions (not vague "make it better")
+   - Reference to the Bold Choices, Design Philosophy, or Comprehension rules being violated
+   - This MUST be treated as a validation failure — functionally correct is NOT done.
+
+   **Evaluative Change Explanation (If applicable)**:
+   If this evaluation changes a previous rating, state, or recommendation, you **MUST** include an explicit section detailing exactly what changed, what has been updated in code or specifications, and the logical reasons for the new verdict.
+   
+   **Store Screenshots**:
+   - Create `{STORY_DIR}/screenshots/` directory
+   - Save screenshots with convention: `{screen}-{breakpoint|state|device}.png`
+   
+   **Generate Visual Validation Section**:
+   - Include in validation-report.md:
+     * Screenshot gallery with annotations
+     * Design token compliance percentage
+     * **Aesthetic Quality Grade** with dimension-by-dimension ratings
+     * Bold Choices compliance (each rule checked individually)
+     * Accessibility audit results
+     * Voice/tone compliance notes
+     * ui-spec.md checklist status
+   
+   **FEEDBACK LOOP** (Critical for methodology improvement):
+   - If design token violations found → Flag for design-system.md update
+   - If voice/tone issues found → Flag for ux-strategy.md update
+   - If new UI patterns discovered → Flag for design-system.md addition
+   - If accessibility issues found → Add to story-retro.md as GOTCHA
+   - If visual test command failed → Document in commit as GOTCHA tag
+
+10.7. **User Reachability Check** (REQUIRED for stories with any UI):
+
+   **This prevents the "feature exists but nobody can use it" problem.**
+
+   SKIP ONLY if: story is pure backend, API-only, CLI-only, migration, or infrastructure.
+
+   | Check | Question | How to Verify | FAIL if |
+   |-------|----------|---------------|---------|
+   | **Discoverability** | Can a user find this feature from navigation? | Trace the path from app entry/home to this feature | No navigation path exists to the feature |
+   | **Auth** | Can a user authenticate to reach this? | Check if real auth flow (login page, session) exists | Feature requires dev-mode headers, hardcoded tokens, or UUIDs |
+   | **Scaffolding** | Are dev shortcuts still in the UI? | Inspect inputs, forms, API calls | UUID text fields, debug headers, x-user-id inputs remain |
+   | **End-to-end** | Can a user complete this workflow? | Attempt the user story from spec.md as a real user | Workflow requires developer knowledge to operate |
+   | **Feedback** | Does every action have user feedback? | Check success/error/loading states | Silent failures, missing confirmations, no loading states |
+
+   **Generate User Reachability Section** in validation-report.md:
+   ```
+   ## User Reachability
+
+   | Check | Status | Evidence |
+   |-------|--------|----------|
+   | Navigation path exists | ✅/❌ | [How user reaches this feature] |
+   | Real auth (no dev shortcuts) | ✅/❌ | [Auth method used] |
+   | No scaffolding in UI | ✅/❌ | [Any dev-mode elements found] |
+   | User can complete workflow | ✅/❌ | [End-to-end result] |
+   | Action feedback present | ✅/❌ | [Loading/success/error states] |
+
+   **Reachability**: [REACHABLE / PARTIAL / UNREACHABLE]
+   ```
+
+   **If UNREACHABLE**: Validation is **FAIL** — the feature works but users can't use it.
+   **If PARTIAL**: Validation is **CONDITIONAL_PASS** — list what's missing.
+
+11. Code audit (manual, REQUIRED — "meets requirements" is not enough):
+   - Identify the change surface:
+     * List changed files (prefer: `git diff --name-only` and `git diff` for the story’s branch)
+     * Identify entrypoints touched: API routes, background jobs, UI pages/routes, migrations, cron, etc.
+     * For critical code paths: find 1–3 call sites and trace end-to-end flow
+   - Audit checklist (record concrete findings + file references):
+     * **Correctness & edge cases**:
+       - Untrusted inputs validated/sanitized? Boundaries handled (null/empty/invalid)?
+       - Error handling: failure paths are explicit and safe (no silent partial writes)
+       - Time: timezones, clock skew, ordering, idempotency, retries, timeouts
+       - Concurrency: race conditions, transactions, locking, background task reentrancy
+     * **Maintainability**:
+       - Clear naming, small functions, single-responsibility boundaries
+       - Avoids unnecessary abstractions (Simplicity-First). Complexity justified in plan.md
+       - No duplicated logic that should be extracted (or extraction justified)
+       - No “mystery meat” config/magic values; TODO/FIXME/HACK clearly tracked or removed
+     * **Security & privacy**:
+       - AuthN/AuthZ checks correct and consistent (no missing permission gates)
+       - No secrets/keys/PII in logs, errors, or client responses
+       - Injection risks addressed (SQL/NoSQL/command/template), unsafe deserialization avoided
+       - Rate limits / abuse considerations noted for public endpoints (if applicable)
+     * **Performance**:
+       - Avoids N+1 queries, unbounded loops, unpaged lists, large payloads
+       - Hot paths are reasonably efficient; perf targets in spec.md are plausibly met
+     * **Operability / observability**:
+       - Logs/errors are actionable; failures have context (request IDs, user IDs where safe)
+       - Metrics/tracing hooks added when warranted by plan/context
+     * **Frontend UX/a11y** (if applicable):
+       - Uses existing design system; no arbitrary styling
+       - Loading/error/empty states exist; keyboard navigation & ARIA are reasonable
+     * **Test quality**:
+       - Tests cover critical success + failure cases; assertions are meaningful
+       - Avoids flakiness (timing, randomness), avoids over-mocking core behavior
+   - Determine audit outcome (this feeds overall validation status):
+     * **FAIL** if any high-severity issue exists (security vulnerability, data-loss risk, broken authz, major unhandled edge case, pathological perf risk, missing critical tests)
+     * **CONDITIONAL_PASS** if implementation works but needs cleanup/refactor/docs/tests before merge (list required follow-ups)
+     * **PASS** if maintainable, safe, and consistent with plan/constitution
+
+12. Documentation completeness check:
+    - If new entities in data-model.md: Check models have docstrings/comments
+    - If new API endpoints in contracts/: Check OpenAPI/GraphQL schema exists
+    - If new CLI commands: Check --help text exists
+    - If breaking changes: Check migration guide exists
+    - Agent context files updated: Verify recent changes include this feature
+
+13. Generate validation report in `{STORY_DIR}/validation-report.md`:
+   
+   **CRITICAL**: Load and follow the template exactly:
+   ```
+   .speck/templates/story/validation-report-template.md
+   ```
+   
+   The template is self-documenting - follow all sections and guidelines within it.
+
+   **Then cross-check the Mutation Record against the receipts:**
+   ```
+   .speck/scripts/validation/mutate-guard.sh --verify-receipt {STORY_DIR}/validation-report.md
+   ```
+   - `RECEIPT_VERIFIED` — every cited site resolves to a real line whose pinned content recomputes
+     at the receipt's SHA.
+   - `RECEIPT_MISMATCH.P1` — **blocks.** A cited site contradicts the receipts this repo itself
+     produces: an invented site, a site-less verdict row, a receipt whose content does not
+     recompute, or a report claiming a stronger verdict than the run recorded.
+   - `RECEIPT_MISSING.P2` / `RECEIPT_NO_CITATIONS.P2` — honest degrades, non-blocking. A project that
+     has never emitted a receipt is not held to one; a report with no filled row has recorded
+     nothing to check.
+
+   **Know exactly what this proves, and do not report more than it does.** The cross-check binds a
+   *citation* to a real line at a real SHA — it kills the invented site, the site-less row and the
+   silently-upgraded verdict. It **cannot** prove a mutation was actually run: the receipt is a
+   local file written by a local script, so an agent with shell access can synthesise one. The
+   forgery cost rises from "type a verdict into a cell" to "produce a receipt that recomputes
+   against the real line at the real SHA" — real, bounded, and not a proof of execution.
+   **`RECEIPT_VERIFIED` means the citation is real, never that the mutation happened.** The
+   validator enforces that a verdict was *recorded*, not that a mutation was *run*.
+
+14. **Project Truth Update Prompt** (if PASS):
+    
+    After successful validation, prompt user to update project-level docs:
+    
+    ```
+    ✅ Validation PASSED! 
+    
+    Before completing this story, consider updating project-level truth:
+    
+    Project-level docs that MAY need updates based on this story:
+    - [ ] `project.md` → If scope/vision expanded
+    - [ ] `PRD.md` → If new features delivered or requirements changed
+    - [ ] `architecture.md` → If new patterns introduced
+    - [ ] `context.md` → If new constraints discovered
+    - [ ] `design-system.md` → If new UI patterns added
+    - [ ] `ux-strategy.md` → If UX principles validated/changed
+    
+    To update:
+    1. Review validation-report.md for actual changes
+    2. Update relevant project docs with "(Added in Story [ID])"
+    3. Commit updates with "docs: update project truth after [story-id]"
+    
+    Skip with: --skip-truth-update
+    ```
+    
+    **Include in validation-report.md**:
+    ```markdown
+    ## Project Truth Update Checklist
+    
+    This story delivered features that may require project-level documentation updates:
+    
+    - [ ] `project.md` → [Relevant? Y/N] - [What changed]
+    - [ ] `PRD.md` → [Relevant? Y/N] - [What changed]
+    - [ ] `architecture.md` → [Relevant? Y/N] - [What changed]
+    - [ ] `context.md` → [Relevant? Y/N] - [What changed]
+    - [ ] `design-system.md` → [Relevant? Y/N] - [What changed]
+    - [ ] `ux-strategy.md` → [Relevant? Y/N] - [What changed]
+    
+    **Note**: Project-level docs are the source of truth for "what exists now".
+    Stories are proposals; after validation, project docs must reflect new reality.
+    ```
+
+15. Report completion to user:
+    - Path to validation-report.md
+    - Overall status (PASS / CONDITIONAL_PASS / FAIL)
+    - If FAIL: List top 3 blockers to fix
+    - If PASS: Suggest "Ready for PR - see validation-report.md for details"
+    - If PASS: Remind about project truth updates
+    - Command to re-run: `/story-validate` (after fixes)
+
+Behavior rules:
+- NEVER skip test execution - if tests fail, validation fails (unless `--force`)
+- NEVER mark requirements as "verified" without evidence (test or scenario)
+- If quickstart.md missing, WARN but continue (use test suite as primary validation)
+- Performance validation is optional (only if targets specified in spec.md)
+- Constitution check MUST run - it's non-negotiable for Speck workflow
+- Code audit MUST run - if audit finds high-severity issues, validation MUST be FAIL even if requirements/tests pass
+- Include timestamps in validation report for audit trail
+- Allow flags: `--allow-incomplete`, `--force`, `--skip-perf`, `--skip-quickstart`
+
+Error handling:
+- If test suite fails: Capture errors, include in report, mark as FAIL
+- If performance tests not found but targets exist: WARN, skip performance section
+- If quickstart.md malformed: WARN, mark scenarios as "Unable to parse"
+- If linting fails: Include in report; treat as CONDITIONAL_PASS unless it indicates correctness/safety (then FAIL)
+
+Context: $ARGUMENTS
+
+## Cross-Host Portability & Compatibility
+
+This process skill is fully supported across all primary AI runtimes (Claude, Cursor, Codex) with identical evidence requirements.
+
+| Capability | Claude Code | Cursor | Codex |
+|------------|-------------|--------|-------|
+| **Execution** | Interactive skill command | Interactive skill command | Interactive skill command |
+| **Automation** | Full lifecycle hooks, `/goal` | `afterFileEdit` hooks | Manual or CI-driven checks |
+| **Parallelization** | Spawns parallel `speck-auditor` | Fallback to sequential main context | Fallback to sequential main context |
+
+### Fallbacks & Adaptations
+- **Subagents**: Spawning subagents (`speck-auditor` / `speck-scanner`) is a Claude-only feature. If running on Cursor or Codex, execute the checklist sequentially in your main context.
+- **Hook-based Gates**: If your host doesn't support pre-edit blocks or stop gates, rely on manual `/story-validate` executions and local validators (`.speck/scripts/validation/`) run with `--strict`.
+
+

@@ -1,7 +1,6 @@
 ---
 name: adjust
-description: Level-dispatching adjust (Speck v8 unified entry) for deliberate re-engineering of already-validated work. Routes to the level-appropriate adjust skill — project-adjust / epic-adjust / story-adjust — based on --level or blast radius. Use for the Post-Completion Triage Router's "deliberate redesign/pivot" branch. The per-level specialists own the delta-spec, promise-conservation, and cascade logic.
-disable-model-invocation: false
+description: Routes adjust by --level story|epic|project. Use when redesigning validated work.
 ---
 
 The user input can be provided directly by the agent or as a command argument:

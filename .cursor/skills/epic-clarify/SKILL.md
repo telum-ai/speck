@@ -1,7 +1,6 @@
 ---
 name: epic-clarify
-description: Load after epic.md exists but scope, boundaries, or technical approach are ambiguous. Use when acceptance criteria are missing or the epic could be interpreted multiple ways. Run before epic-outline or epic-plan to prevent rework.
-disable-model-invocation: false
+description: Fills gaps in epic.md. Use when epic scope/boundaries unclear.
 ---
 
 

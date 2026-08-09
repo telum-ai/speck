@@ -1,5 +1,47 @@
 # Speck Changelog
 
+## v11.0.0 — 2026-08-09 — Subtraction + JIT + meta-methodology
+
+Speck's always-on surface shrank with teeth. Host loaders (Cursor / Claude Code / Codex) set the
+ceilings; P1–P4 and prove gates stayed load-bearing.
+
+### Budget (before → after)
+
+| Metric | Before (~10.5) | After (11.0) |
+|--------|----------------|--------------|
+| AGENTS.md | ~62810 bytes / 578 lines | ~6258 bytes / 120 lines |
+| Auto skill description sum | ~30k chars | ~4831 chars |
+| Domain/integration skills | ~20 | **0** (deleted) |
+| `disable-model-invocation: true` | inverted / scattered | **only** `/speck` `/story` `/epic` |
+
+### Immune system
+
+- `validate-corpus-budget.sh` hard-fails regressions (AGENTS ≤16KiB/≤200 lines; desc ≤120/≤10k sum;
+  disable-model allowlist; skill body ≤200; agent-prose emoji-header lint).
+- A1-lite: 12 seeded fixtures / 6 classes; `bash .speck/eval/score.sh` → `.speck/eval/reports/`.
+- Methodology ADRs: `docs/decisions/` + `docs/v11/v11-north-star.md`.
+
+### Catalog surgery
+
+- Deleted generic domain skills (Stripe/Clerk/Supabase/…/`model-selection`). Substitutes: recipes +
+  Context7 / official docs JIT.
+- Visual-testing hosts folded under `visual-testing/references/`.
+- Oversized skill bodies → skill-local `references/procedure.md` (progressive disclosure).
+- Encyclopedic AGENTS sections → `.speck/reference/` (canonical-routing, command-phases, host-capabilities).
+- Evidence-contract template principle-compressed (≤400 lines); detail JIT under `.speck/reference/evidence-*`.
+
+### Host wiring
+
+- `.agents/skills` → `.cursor/skills` (Codex discovery); `smartSync` creates the symlink on upgrade.
+- Upgrade `REMOVE_FILES` deletes retired domain + visual-testing host skill dirs from consumer projects.
+- `sync-claude-runtime.sh` syncs **skills only** (no longer clobbers generated agents/).
+
+### Agent prose
+
+AGENTS.md / skills / reference files are dense imperative instructions (no emoji section headers).
+
+---
+
 ## v10.5.0 — 2026-08-07 — Nine gates, and the population each one never reached
 
 Nine issues from one epic in one project, and eight of them are the same sentence: **a check that

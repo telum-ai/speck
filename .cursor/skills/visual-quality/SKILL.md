@@ -1,6 +1,6 @@
 ---
 name: visual-quality
-description: Enforce visual design quality in every UI file. Fires for .tsx, .jsx, .vue, .svelte, and similar component files. Ensures implementations express the project's design personality rather than producing generic/boilerplate UI.
+description: Visual design quality rules. Use when building or reviewing UI.
 ---
 
 # Visual Quality Gate

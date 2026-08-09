@@ -1,7 +1,6 @@
 ---
 name: speck-learn
-description: Load to capture a quick learning, pattern, or insight outside the formal retrospective process. Use for mid-story discoveries, surprising gotchas, or performance insights that shouldn't wait until story completion.
-disable-model-invocation: false
+description: Captures learnings/patterns. Use after discoveries or retros.
 ---
 
 
@@ -108,7 +107,7 @@ GOTCHA: Timezone must be normalized before comparison - PostgreSQL stores in UTC
 
 ### Step 5: Output Confirmation
 
-### 🚦 Continuous Feedback Capture Trigger
+### Continuous Feedback Capture Trigger
 If you capture a `GOTCHA` or `DEBT` that stems from a Speck template or script limitation, you **MUST** run `/speck-feedback` (or read `.cursor/skills/speck-feedback/SKILL.md`) to propose a template or script enhancement. Do not let workarounds go undocumented.
 
 ```

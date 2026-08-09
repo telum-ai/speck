@@ -1,7 +1,6 @@
 ---
 name: epic-journey
-description: Load for UX-heavy epics to map user touchpoints, emotions, and flow before planning. Use when the epic significantly changes how users interact with the product. Run before epic-wireframes and epic-plan.
-disable-model-invocation: false
+description: User journey map for UX-heavy epics. Use after specify when journeys matter.
 ---
 
 

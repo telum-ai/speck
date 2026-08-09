@@ -1,7 +1,6 @@
 ---
 name: validate
-description: Level-dispatching validator (Speck v8 unified entry). Routes to the level-appropriate validation skill — project-validate / epic-validate / story-validate — based on --level or the current directory. Use when the user says "validate this", "is this done?", "check readiness". The per-level specialists own the full readiness-state taxonomy, evidence gates, LARP hooks, and cap logic; this skill only picks the right one.
-disable-model-invocation: false
+description: Routes validate by --level. Use when validating story/epic/project.
 ---
 
 The user input can be provided directly by the agent or as a command argument:

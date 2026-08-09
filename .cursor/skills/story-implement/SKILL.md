@@ -1,7 +1,6 @@
 ---
 name: story-implement
-description: Load when user says 'implement this', 'write the code', 'build it', or all planning artifacts are in place and reviewed. PREREQUISITE GATE — before executing, verify the three required artifacts exist in the story directory: spec.md (from /story-specify), plan.md (from /story-plan), and tasks.md (from /story-tasks, whose tail includes the spec↔plan↔tasks consistency cross-check). If any are missing, do NOT implement — route to the missing step first (story-specify → story-plan → story-tasks → story-implement). The adversarial behavior-vs-spec check is /audit, run AFTER implementation and before /story-validate (v7+: /story-analyze is retired; a standalone analysis-report.md is optional, not a hard prereq).
-disable-model-invocation: false
+description: Implements story from plan/tasks. Use when coding the story.
 ---
 
 

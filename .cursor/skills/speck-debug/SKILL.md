@@ -1,7 +1,6 @@
 ---
 name: speck-debug
-description: Load when any error, test failure, unexpected behavior, or broken workflow occurs during Speck execution. Provides structured root-cause analysis and treats errors as learning opportunities.
-disable-model-invocation: false
+description: Systematic debug for errors/failures. Use when something breaks.
 ---
 
 

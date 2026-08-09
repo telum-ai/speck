@@ -1,7 +1,6 @@
 ---
 name: epic-wireframes
-description: Load for UX-heavy epics after epic-journey to create screen-by-screen wireframes for all states. Produces wireframes.md — input for epic-plan. Skip for backend-only or API epics.
-disable-model-invocation: false
+description: Epic wireframes. Use for UX-heavy epics after journey.
 ---
 
 

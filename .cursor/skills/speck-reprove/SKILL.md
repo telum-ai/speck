@@ -1,7 +1,6 @@
 ---
 name: speck-reprove
-description: Drive a v7→v8-migrated project to v8-honest reality (the catch-up analog for the v8 thesis "Evaluation Over Verification"). v7-era "green" was optimized for the letter of v7 gates, not evaluation-proven — this skill triages that suspect green against the four v8 principles (P1-P4), caps effective shippable state at INTEGRATION-GREEN, reverts consumer FELT-GOOD to uncovered, preserves each historical claim but stamps it [pre-v8-proof], and builds a prioritized re-prove worklist in project-v8-reprove-report.md. Load when .speck/.v8-reprove-needed exists, when /recheck raises V8_REPROVE.P1 (pre-v8 stamps), or when the user says "reprove", "bring this up to v8", "/speck-reprove".
-disable-model-invocation: false
+description: v7→v8 truth re-prove. Use when .v8-reprove-needed present.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

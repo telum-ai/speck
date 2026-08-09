@@ -1,0 +1,255 @@
+The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
+
+User input:
+
+$ARGUMENTS
+
+The text the user typed after `/story-specify` in the triggering message **is** the story description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
+
+## Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/story/story-template.md
+```
+The template defines required sections and formatting for `spec.md`. Reading it first shapes your Q&A — you'll know exactly what information you need to gather. Generating `spec.md` from memory without reading this template produces structurally incorrect output.
+
+**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
+
+## Play Level Check
+
+Read `.speck/project.json` (if it exists) for `play_level`.
+
+- **Sprint**: Sprint projects don't use stories — just ship it. Tell the user: "Sprint projects skip formal story specs. Just build what's in your PRD.md Build Plan. If the project is growing, run `/project-promote` to move to Build level."
+- **Build**: Proceed with a lightweight spec (spec.md + plan.md only). Skip tasks.md, validation-report.md, and story-retro.md from next-step recommendations unless the user asks.
+- **Platform**: Full story workflow, proceed normally below.
+
+## Context-Aware Story Creation
+
+Since commands can't rely on directory context, establish hierarchy:
+
+### Step 1: Context Discovery
+
+Parse arguments for context:
+- "project:XXX epic:YYY [story description]"
+- "in epic YYY of project XXX"
+- "for [epic name] in [project name]"
+
+If context missing, ask progressively:
+1. "Which project is this story for?"
+2. "Which epic does this story belong to?"
+3. "What's the story description?"
+
+List available options:
+```bash
+# List projects
+find specs/projects -name "project.md" -exec dirname {} \; | xargs -I {} basename {}
+
+# List epics for selected project
+ls specs/projects/[PROJECT_ID]/epics/
+```
+
+### Step 2: Detect Placeholder Spec (From Epic Breakdown)
+
+Check if a `spec.md` already exists for this story (created as a placeholder by `/epic-breakdown`):
+
+```bash
+SPEC=$(ls -1 specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-*/spec.md 2>/dev/null | head -1 || true)
+```
+
+**If `spec.md` exists, check its lifecycle state**:
+- Read the `**Current State**` line in the file
+- If state is `Draft (Placeholder)` or `Draft`:
+  - This is a `/epic-breakdown` placeholder — proceed with the enhance flow below
+  - Display to user: "Found a draft placeholder spec from epic breakdown. I'll fill it in."
+  - **Preserve the YAML frontmatter** (especially `depends_on` and `blocks`)
+  - Validate and enhance through interactive Q&A (Steps 4-8)
+  - Save the completed version back to the same `spec.md`
+  - Update lifecycle state to `Specified`
+- If state is already `Specified`:
+  - Warn: "This story's spec.md already shows 'Specified' — `/story-specify` appears to have already run. Do you want to re-specify or refine?"
+  - Wait for user confirmation before overwriting
+
+**CRITICAL**: The `depends_on` field in the YAML frontmatter is read by the orchestrator to determine story blocking. Always preserve it.
+
+**If no spec.md exists**: Continue with normal interactive specification flow (create from scratch).
+
+
+### Step 3: Pre-Validation Checklist (Prevent Duplication)
+
+Before creating the story, check:
+
+**Duplication Check (Docs/Specs Only)**:
+- [ ] Check if similar story already exists in this epic
+  - Search epic-breakdown.md for similar story names/descriptions
+  - Review existing story specs in `stories/` directory
+  - If similar exists: Suggest updating existing vs creating new
+  
+- [ ] Check if this belongs at story level
+  - Is it small enough for a story? (5-minute explainability)
+  - Or should it be an epic? (if >10 stories or major feature)
+  
+- [ ] Review epic scope alignment
+  - Load epic.md to understand epic goals
+  - Validate story aligns with epic scope
+  - If misaligned: Suggest different epic or epic scope expansion
+
+**Clarify if Ambiguous**:
+- [ ] If request is ambiguous: Ask 1-2 clarifying questions before scaffolding
+- [ ] Verify user intent before creating spec
+
+**Note**: Only check specs/docs for duplication, not implementation code.
+
+### Step 4: Load Context Documents
+
+Load project-level documents for consistency:
+```
+LOAD (if exists):
+- specs/projects/[PROJECT_ID]/domain-model.md → Domain terminology and rules
+- specs/projects/[PROJECT_ID]/ux-strategy.md → UX principles and voice
+- specs/projects/[PROJECT_ID]/design-system.md → UI components and tokens
+```
+
+**Domain Model Usage**:
+- Use glossary terms from domain-model.md in story descriptions
+- Respect domain invariants in acceptance criteria
+- Reference domain entities for data requirements
+
+### Step 5: Story Validation
+
+Validate story fits epic scope:
+- Load epic spec: `specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/epic.md`
+- Validate story aligns with epic goals
+- If duplication found: "Similar story exists: [name]. Should we update that instead?"
+
+If mismatch: "This story seems outside the epic scope. Would you like to:
+1. Create it in a different epic?
+2. Expand the current epic scope?
+3. Create a new epic for this?"
+
+### Step 6: Interactive Story Development
+
+If minimal description (or upgrading from draft), gather/validate details:
+
+**If upgrading from a Draft placeholder spec.md**:
+- Show draft content to user
+- Ask: "Does this draft capture your intent? What would you change?"
+- Focus on gaps and refinements rather than starting from scratch
+
+**If starting fresh**, gather details:
+
+**Story Essentials:**
+1. "As a [who], I want to [what], so that [why]"
+2. "What triggers this story?"
+3. "What indicates completion?"
+
+**Acceptance Criteria:**
+4. "What are the must-have requirements?" (Utilize EARS format where applicable: `WHEN <trigger>, the system SHALL <response>`)
+5. "Any specific constraints?"
+6. "How will we test this?"
+
+**Technical Considerations:**
+7. "Frontend, backend, or both?"
+8. "Any API changes needed?"
+9. "Database impacts?"
+
+### Step 7: Create Story Structure
+
+Create directly in the **current hierarchical structure** (if not already created by epic-breakdown):
+```bash
+# Generate story ID and create directory (skip if already exists from epic-breakdown)
+mkdir -p specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-[story-name]
+```
+
+Note: Speck stories live in the hierarchical structure under:
+`specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-[story-name]/`
+
+### Step 8: Story Specification
+
+**CRITICAL**: Load and follow the template exactly:
+```
+.speck/templates/story/story-template.md
+```
+
+The template is self-documenting - follow all sections and guidelines within it.
+
+**Acceptance Criteria & EARS Syntax**:
+When writing acceptance criteria and functional requirements, recommend using the Easy Approach to Requirements Syntax (EARS) format (e.g. `WHEN <trigger>, the system SHALL <response>`, or `WHILE <state>, the system SHALL <response>`) alongside Gherkin (Given/When/Then). This makes expectations extremely explicit for coding agents and prevents downstream scope interpretation issues.
+
+**Output**: Save as `spec.md` with lifecycle state updated to `Specified`.
+
+**Lifecycle state** — always set in the saved `spec.md`:
+- `**Current State**: Specified`
+- Checkboxes:
+  ```
+  - [x] **Draft** - Placeholder spec.md created by `/epic-breakdown` (check if was a draft)
+  - [x] **Specified** - spec.md completed by `/story-specify`
+  ```
+  (If the spec was previously a Draft placeholder, check both boxes to show full progression.
+  If created fresh from scratch, only the Specified box is checked.)
+
+### Step 9: Apply 10-Minute Understandability Rule
+
+Before finalizing, validate story scope:
+
+**5-Minute Test**: Can you explain this story to a new teammate in <5 minutes?
+- What it does
+- Why it's needed  
+- How success is measured
+
+**If NO** → Story is too complex, split it!
+
+**Check for "AND"**: Does the story description need "AND"?
+- Example: "Add login form AND registration flow"
+- Action: Split into separate stories
+
+**Complexity Indicators**:
+- Needs >3 acceptance scenarios → Might be multiple stories
+- Touches >3 different components → Might be too broad
+- Requires extensive context to explain → Simplify or split
+
+If story seems too complex, suggest splitting and ask user approval.
+
+### Step 10: Update Epic Tracking
+
+Add story to epic's story list with status "specified"
+
+### Step 11: Optional Step Evaluation + Guide Next Steps
+
+After saving `spec.md`, scan its content and evaluate each optional step. Output a recommendation table with **specific text or observations from spec.md** that drove each decision — not generic advice.
+
+**Evaluation criteria**:
+
+| Step | 🔴 Required when | ⚠️ Recommended when | ⬜ Skip when |
+|------|-----------------|---------------------|------------|
+| `/story-clarify` | Acceptance criteria vague or missing; scope boundary unclear; edge cases unaddressed; [NEEDS CLARIFICATION] markers | Some scenarios lack explicit success criteria | All criteria are specific and testable; scope is unambiguous |
+| `/story-outline` | Technology not used elsewhere in project; TBD/unknown sections; multiple competing implementation approaches mentioned | One or two minor unknowns; would benefit from a quick research pass | Implementation path clear; follows well-established project patterns |
+| `/story-scan` | Story extends, modifies, or refactors existing code modules; brownfield context | Story touches code that exists but isn't deeply modified | Fully greenfield story with no existing code to understand |
+| `/story-ui-spec` | Any mention of: UI, screen, form, modal, component, button, layout, page, design, front-end, UX | Story has minor UI concerns alongside backend work | Pure backend, API-only, or CLI-only story |
+
+**Output format** (fill from actual spec content — no placeholders):
+
+```
+## Optional Step Evaluation
+
+| Step | Recommendation | Evidence from spec.md |
+|------|---------------|----------------------|
+| /story-clarify | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
+| /story-outline | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
+| /story-scan    | ⬜ / ⚠️ / 🔴 | "[specific quote or observation]" |
+| /story-ui-spec | ⬜ / 🔴       | "[specific quote or observation]" |
+
+Recommended path to /story-plan:
+→ [only Required/Recommended steps in flow order] → /story-plan → [/story-ui-spec if needed] → /story-tasks → /story-implement → /audit → /story-validate
+```
+
+**Continuation (do NOT treat this menu as a stop):**
+- **Orchestrated / background / delegated run** (invoked by `/story` or a conductor): this table is informational — **immediately proceed to the first recommended step**. Do NOT end your turn here; the lifecycle is incomplete until validate. Ending after the menu silently leaves the story half-built.
+- **Interactive single-step run** (a human invoked `/story-specify` directly): end with "Shall I proceed with [first recommended step]?" and wait.
+
+**Flow order**: `/story-clarify` → [`/speck-skeptical-review` if approach unclear] → [`/speck-scan --level story` if brownfield] → `/story-plan` → `/story-ui-spec` → `/story-tasks` → `/story-implement` → `/audit` → `/story-validate`
+
+**If `/story-ui-spec` is 🔴 Required**, note it clearly after `/story-plan`:
+> "This story has UI components — run `/story-ui-spec` after `/story-plan` and before `/story-tasks`. Skipping it means the implementation will guess at layout, states, and design token usage."
+
+Note: If your team uses a branch-based workflow, create a branch for this story (e.g. `[STORY_ID]-[story-name]`) before implementation.
