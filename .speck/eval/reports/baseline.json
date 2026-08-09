@@ -1,0 +1,15 @@
+{
+  "version": "11.0.0-rework",
+  "fixtures": 12,
+  "correct": 12,
+  "catch_rate_pct": 100.0,
+  "clean_rate_pct": 100.0,
+  "by_class_pct": {
+    "banned-language": 100.0,
+    "fabricated-evidence": 100.0,
+    "fake-green": 100.0,
+    "phantom-promise": 100.0,
+    "self-audit": 100.0,
+    "unreachable-excuse": 100.0
+  }
+}
