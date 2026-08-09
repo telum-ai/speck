@@ -1,6 +1,8 @@
 ---
 name: project-retrospective
 description: Project retro after validate. Use when closing project phase.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-retrospective

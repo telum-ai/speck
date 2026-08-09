@@ -1,6 +1,12 @@
 ---
 name: story-adjust
 description: Re-specs validated story deltas. Use for story redesigns.
+paths:
+  - "specs/projects/**/S*/**"
+  - "specs/projects/**/stories/**"
+  - "specs/projects/**/**/spec.md"
+  - "specs/projects/**/**/plan.md"
+  - "specs/projects/**/**/tasks.md"
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

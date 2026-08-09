@@ -1,6 +1,12 @@
 ---
 name: story-scan
 description: Alias of speck-scan --level story. Use when /story-scan named.
+paths:
+  - "specs/projects/**/S*/**"
+  - "specs/projects/**/stories/**"
+  - "specs/projects/**/**/spec.md"
+  - "specs/projects/**/**/plan.md"
+  - "specs/projects/**/**/tasks.md"
 ---
 
 # /story-scan — retired in Speck v8 (alias-shim)

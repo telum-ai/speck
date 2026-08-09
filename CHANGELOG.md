@@ -41,9 +41,9 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 AGENTS.md / skills / skill `references/` / `.speck/reference/` are dense imperative instructions
 (ADR-0003/0004). Field evidence for analyze gates (`001-odd` / #106) lives in ADR-0004 + CHANGELOG only.
 
-Skill load (ADR-0005): always-path skills are **inlined** into `SKILL.md`; branching skills are
-**routers** with multi-node refs loaded only on taken edges. Corpus-budget forbids single
-`references/procedure.md` pointer theater.
+Skill load (ADR-0005): complete map in `docs/decisions/skill-load-map.md` — **36 multi-ref** DAGs/domain-refs
+(analyze/validate/larp/router/orchestrators/clarify/…); **43 inline** always-path skills. Anti-theater CI.
+Cursor `paths:` on story/epic/project/UI skills.
 
 ---
 

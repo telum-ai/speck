@@ -1,6 +1,8 @@
 ---
 name: project-readme
 description: Refresh root README PROFILE. Use after product-contract / on PROFILE drift.
+paths:
+  - "specs/projects/**"
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

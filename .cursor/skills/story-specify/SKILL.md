@@ -1,6 +1,12 @@
 ---
 name: story-specify
 description: Creates story spec.md. Use when specifying a story.
+paths:
+  - "specs/projects/**/S*/**"
+  - "specs/projects/**/stories/**"
+  - "specs/projects/**/**/spec.md"
+  - "specs/projects/**/**/plan.md"
+  - "specs/projects/**/**/tasks.md"
 ---
 
 # story-specify

@@ -1,6 +1,12 @@
 ---
 name: story-plan
 description: Writes story plan.md. Use after clarify/scan.
+paths:
+  - "specs/projects/**/S*/**"
+  - "specs/projects/**/stories/**"
+  - "specs/projects/**/**/spec.md"
+  - "specs/projects/**/**/plan.md"
+  - "specs/projects/**/**/tasks.md"
 ---
 
 # story-plan

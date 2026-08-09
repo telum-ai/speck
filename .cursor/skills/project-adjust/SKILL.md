@@ -1,6 +1,8 @@
 ---
 name: project-adjust
 description: Project directional/contract pivot + cascade. Use on strategic intent change.
+paths:
+  - "specs/projects/**"
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

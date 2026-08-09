@@ -1,0 +1,118 @@
+# epic-breakdown / step-0-read-template-first
+
+## Step 0: Read Template First
+
+**Before any other action** — read this template now using the Read tool:
+```
+.speck/templates/epic/breakdown-template.md
+```
+The template defines required sections and formatting for `epic-breakdown.md`, including story table format, dependency mapping, parallel markers, and phase grouping. Without reading it, generated breakdowns have wrong structure. Also note: placeholder `spec.md` files created here must use lifecycle state `Draft (Placeholder)` — the template documents this.
+
+**Checkpoint**: After reading, note the story table format and dependency notation. Then continue to Step 1.
+
+Create a comprehensive story breakdown that maps all user stories within the epic, showing dependencies, parallelization opportunities, and suggested implementation order. This is NOT about concrete development tasks - it's about story organization and sequencing.
+
+1. Load epic implementation context:
+   - Epic specification (epic.md)
+   - Technical specification (epic-tech-spec.md) - required (includes embedded research)
+   - Epic codebase scan (epic-codebase-scan.md) - if exists, for brownfield code analysis
+   - Project constraints from PRD
+   - If tech spec missing: ERROR "Run /epic-plan first"
+   
+   **Load Constitution Chain (if present)**:
+   - `[EPIC_DIR]/constitution.md` — epic-level principles governing story boundaries, interfaces,
+     and quality standards. Use when deciding how to slice stories (e.g., data ownership rules
+     might force a story boundary; API versioning rules might require a dedicated contract story).
+   - `specs/projects/[PROJECT_ID]/constitution.md` — project-level principles to honour across all stories.
+   
+   **Brownfield Adaptation**: If epic-codebase-scan.md exists, use it to identify existing code that needs refactoring or enhancement as part of story breakdown.
+   
+   **Note**: Research is now embedded in epic-tech-spec.md - no separate research.md file to load.
+
+2. Story extraction and analysis:
+   - Extract all user stories from epic.md
+   - Map to technical implementation from tech spec
+   - Identify story dependencies
+   - Determine parallelization opportunities
+
+3. Story breakdown approach:
+
+   **User Stories**
+   - Extract all user stories from epic.md
+   - Map to technical approach from tech spec
+   - Include acceptance criteria
+   - Identify dependencies between stories
+
+   **Technical Stories**
+   - Infrastructure setup stories
+   - Integration stories
+   - Migration stories
+   - Configuration stories
+
+   **Quality Stories**
+   - Testing stories
+   - Documentation stories
+   - Performance validation stories
+   - Security review stories
+
+4. Generate epic breakdown:
+
+   **CRITICAL**: Load and follow the template exactly:
+   ```
+   .speck/templates/epic/breakdown-template.md
+   ```
+
+   Write output to: `[EPIC_DIR]/epic-breakdown.md`
+
+5. Create story directories with placeholder specs:
+
+   **Subagent Parallelization** - Spawn speck-scribe for each story spec:
+   ```
+   ├── [Parallel] speck-scribe: Draft S001 spec.md (Draft state) from epic-tech-spec.md
+   ├── [Parallel] speck-scribe: Draft S002 spec.md (Draft state) from epic-tech-spec.md
+   ├── [Parallel] speck-scribe: Draft S003 spec.md (Draft state) from epic-tech-spec.md
+   └── [Wait] → Create all story directories with drafted specs
+   ```
+
+   Each speck-scribe receives:
+   - Story requirements from epic-breakdown.md
+   - Technical context from epic-tech-spec.md
+   - Template from .speck/templates/story/story-template.md
+   - **Dependencies from epic-breakdown.md** (for YAML frontmatter)
+
+   **Speedup**: Nx (where N = number of stories)
+
+   **IMPORTANT**: Placeholder specs are saved as `spec.md` with lifecycle state `Draft (Placeholder)`.
+   The **lifecycle state** — not the filename — is what signals that `/story-specify` still needs to run.
+   This eliminates the `spec-draft.md` vs `spec.md` confusion: there is always exactly one file.
+
+   **CRITICAL — Lifecycle state for placeholder spec.md files**:
+   Set `**Current State**: Draft (Placeholder)` and mark lifecycle checkboxes as:
+   ```
+   - [x] **Draft** - Placeholder spec.md created by `/epic-breakdown` (not yet specified)
+   - [ ] **Specified** - spec.md enhanced by `/story-specify`
+   ```
+   **NEVER set `**Current State**: Specified` in a placeholder** — that falsely signals
+   that `/story-specify` has already been run and can be skipped.
+
+   **CRITICAL**: Include dependencies in YAML frontmatter:
+   ```yaml
+   ---
+   depends_on: [S004]  # From "Depends on" in epic-breakdown.md
+   blocks: [S006]      # From Inter-Story Dependencies table
+   ---
+   ```
+
+   The orchestrator reads `depends_on` from `spec.md` to determine which stories are blocked.
+
+   Create story directories:
+   ```
+   [EPIC_DIR]/
+   └── stories/
+       ├── S001-technical-setup/
+       │   └── spec.md (lifecycle: Draft, depends_on: [] in frontmatter)
+       ├── S005-story-name/
+       │   └── spec.md (lifecycle: Draft, depends_on: [S004] in frontmatter)
+       └── .../
+   ```
+

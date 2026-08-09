@@ -1,6 +1,11 @@
 ---
 name: visual-testing
 description: UI visual testing coordinator. Use at story/epic validate with UI.
+paths:
+  - "**/*.{tsx,jsx,vue,svelte,css,scss}"
+  - "specs/projects/**/**/ui-spec.md"
+  - "specs/projects/**/**/wireframes.md"
+  - "specs/projects/**/design-system.md"
 ---
 
 # visual-testing

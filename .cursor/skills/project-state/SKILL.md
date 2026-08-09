@@ -1,6 +1,8 @@
 ---
 name: project-state
 description: Regenerates project-state.md. Use after truth-affecting gates on main.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-state

@@ -1,6 +1,8 @@
 ---
 name: project-specify
 description: Creates project.md vision. Use when starting a new project.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-specify

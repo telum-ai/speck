@@ -31,3 +31,7 @@ Cuts invoke tokens on Build-tier analyze (3 lenses not 7), backend validate (no 
 ## Consequences
 
 More files per DAG skill; agents must follow Read edges (discipline + CI shape checks). Fake single-procedure pointers are forbidden.
+
+## Complete inventory
+
+See [`docs/decisions/skill-load-map.md`](skill-load-map.md) for the full classification of every Speck skill (`dag` | `domain-refs` | `inline` | `shim`). That map is the source of truth for “done.”

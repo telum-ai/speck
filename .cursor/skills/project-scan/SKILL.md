@@ -1,6 +1,8 @@
 ---
 name: project-scan
 description: Alias of speck-scan --level project. Use when /project-scan named.
+paths:
+  - "specs/projects/**"
 ---
 
 # /project-scan — retired in Speck v8 (alias-shim)

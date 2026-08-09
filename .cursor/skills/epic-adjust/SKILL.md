@@ -1,6 +1,10 @@
 ---
 name: epic-adjust
 description: Re-specs validated epic deltas. Use when epic IA/structure pivots.
+paths:
+  - "specs/projects/**/E*/**"
+  - "specs/projects/**/epics/**"
+  - "specs/projects/**/**/epic.md"
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

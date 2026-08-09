@@ -1,6 +1,8 @@
 ---
 name: project-context
 description: Constraints/compliance/team context. Use before plan.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-context

@@ -1,6 +1,8 @@
 ---
 name: project-domain
 description: Domain model/terminology. Use for specialized domains.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-domain

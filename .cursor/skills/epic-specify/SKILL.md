@@ -1,6 +1,10 @@
 ---
 name: epic-specify
 description: Creates epic.md from project plan. Use when starting a new epic.
+paths:
+  - "specs/projects/**/E*/**"
+  - "specs/projects/**/epics/**"
+  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-specify

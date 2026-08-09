@@ -1,6 +1,10 @@
 ---
 name: epic-analyze
 description: Decorrelated epic planning analysis. Use after epic-breakdown before stories.
+paths:
+  - "specs/projects/**/E*/**"
+  - "specs/projects/**/epics/**"
+  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-analyze

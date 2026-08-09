@@ -1,6 +1,10 @@
 ---
 name: epic-plan
 description: Writes epic-tech-spec + traceability. Use after epic clarify/architecture.
+paths:
+  - "specs/projects/**/E*/**"
+  - "specs/projects/**/epics/**"
+  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-plan

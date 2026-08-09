@@ -1,6 +1,12 @@
 ---
 name: story-analyze
 description: Retired alias → audit. Use when /story-analyze named.
+paths:
+  - "specs/projects/**/S*/**"
+  - "specs/projects/**/stories/**"
+  - "specs/projects/**/**/spec.md"
+  - "specs/projects/**/**/plan.md"
+  - "specs/projects/**/**/tasks.md"
 ---
 
 # /story-analyze — retired in Speck v8 (alias-shim)

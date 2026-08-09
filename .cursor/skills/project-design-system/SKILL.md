@@ -1,6 +1,8 @@
 ---
 name: project-design-system
 description: Design tokens/primitives. Use for UI Platform/optional Build.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-design-system

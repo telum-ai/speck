@@ -1,6 +1,12 @@
 ---
 name: story-validate
 description: Validates story after audit. Use at story prove; claim readiness state.
+paths:
+  - "specs/projects/**/S*/**"
+  - "specs/projects/**/stories/**"
+  - "specs/projects/**/**/spec.md"
+  - "specs/projects/**/**/plan.md"
+  - "specs/projects/**/**/tasks.md"
 ---
 
 # story-validate

@@ -1,6 +1,10 @@
 ---
 name: epic-scan
 description: Alias of speck-scan --level epic. Use when /epic-scan named.
+paths:
+  - "specs/projects/**/E*/**"
+  - "specs/projects/**/epics/**"
+  - "specs/projects/**/**/epic.md"
 ---
 
 # /epic-scan — retired in Speck v8 (alias-shim)

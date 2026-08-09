@@ -1,6 +1,8 @@
 ---
 name: project-analyze
 description: Decorrelated project planning analysis. Use after plan before epic-specify.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-analyze

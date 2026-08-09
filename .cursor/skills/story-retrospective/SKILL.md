@@ -1,6 +1,12 @@
 ---
 name: story-retrospective
 description: Story retro after validate. Use when closing a story.
+paths:
+  - "specs/projects/**/S*/**"
+  - "specs/projects/**/stories/**"
+  - "specs/projects/**/**/spec.md"
+  - "specs/projects/**/**/plan.md"
+  - "specs/projects/**/**/tasks.md"
 ---
 
 # story-retrospective

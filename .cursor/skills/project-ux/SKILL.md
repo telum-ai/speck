@@ -1,6 +1,8 @@
 ---
 name: project-ux
 description: UX strategy. Use before plan when Platform / 4+ epic Build.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-ux

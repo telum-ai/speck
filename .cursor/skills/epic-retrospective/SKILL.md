@@ -1,6 +1,10 @@
 ---
 name: epic-retrospective
 description: Epic retro after validate. Use when closing an epic.
+paths:
+  - "specs/projects/**/E*/**"
+  - "specs/projects/**/epics/**"
+  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-retrospective

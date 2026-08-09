@@ -1,6 +1,8 @@
 ---
 name: project-architecture
 description: Project system design. Use before plan when cross-system / Platform / 4+ epics.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-architecture

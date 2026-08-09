@@ -1,6 +1,8 @@
 ---
 name: project-roadmap
 description: Project roadmap. Use for Platform sequencing.
+paths:
+  - "specs/projects/**"
 ---
 
 

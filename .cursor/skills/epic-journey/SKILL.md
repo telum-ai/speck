@@ -1,6 +1,10 @@
 ---
 name: epic-journey
 description: User journey map for UX-heavy epics. Use after specify when journeys matter.
+paths:
+  - "specs/projects/**/E*/**"
+  - "specs/projects/**/epics/**"
+  - "specs/projects/**/**/epic.md"
 ---
 
 

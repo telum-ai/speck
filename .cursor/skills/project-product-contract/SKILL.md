@@ -1,6 +1,8 @@
 ---
 name: project-product-contract
 description: Creates product-contract.md. Use for Build/Platform PROMISE core.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-product-contract

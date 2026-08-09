@@ -1,6 +1,8 @@
 ---
 name: project-import
 description: Brownfield import. Use when starting from existing codebase/docs.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-import

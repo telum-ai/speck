@@ -1,6 +1,10 @@
 ---
 name: epic-discover
 description: Discovers epic candidates. Use when scanning for new epic scope.
+paths:
+  - "specs/projects/**/E*/**"
+  - "specs/projects/**/epics/**"
+  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-discover

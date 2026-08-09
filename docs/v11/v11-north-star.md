@@ -26,8 +26,9 @@ Progressive disclosure ([agentskills.io](https://agentskills.io/specification)):
 2. **Invocation**: `disable-model-invocation: true` only on `speck`, `story`, `epic`. All other skills auto-invocable.
 3. **Domain skills deleted**: Stripe/Clerk/Supabase/… pack removed. Stack start = `.speck/recipes/`. Vendor APIs = Context7 / official docs JIT.
 4. **Agent prose**: AGENTS.md, SKILL.md, skill refs, `.speck/reference/*` are imperative, dense (ADR-0003/0004).
-5. **Skill load DAG** (ADR-0005): always-path → inline in `SKILL.md`; branching path → router + multi-node refs; anti-theater CI bans single-`procedure.md` pointers.
+5. **Skill load DAG** (ADR-0005): always-path → inline in `SKILL.md`; branching/multi-domain → router + multi-node refs; anti-theater CI. Complete inventory: `docs/decisions/skill-load-map.md`.
 6. **Meta-methodology**: every always-on expansion needs ADR + budget room (or equal retirement) + scorecard for gates. See `docs/decisions/`.
+7. **Cursor `paths:`**: story/epic/project/UI skills scoped to matching globs (see apply-skill-paths.py).
 
 ## 4. Corpus budget ceilings
 

@@ -1,6 +1,10 @@
 ---
 name: epic-wireframes
 description: Epic wireframes. Use for UX-heavy epics after journey.
+paths:
+  - "specs/projects/**/E*/**"
+  - "specs/projects/**/epics/**"
+  - "specs/projects/**/**/epic.md"
 ---
 
 

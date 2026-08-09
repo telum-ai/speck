@@ -1,6 +1,8 @@
 ---
 name: project-brainstorm
 description: Vague idea → structured problem. Use at very start when intent is fuzzy.
+paths:
+  - "specs/projects/**"
 ---
 
 # project-brainstorm

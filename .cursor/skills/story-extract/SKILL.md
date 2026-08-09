@@ -1,6 +1,12 @@
 ---
 name: story-extract
 description: Extracts stories from epic materials. Use when mining story candidates.
+paths:
+  - "specs/projects/**/S*/**"
+  - "specs/projects/**/stories/**"
+  - "specs/projects/**/**/spec.md"
+  - "specs/projects/**/**/plan.md"
+  - "specs/projects/**/**/tasks.md"
 ---
 
 # story-extract
