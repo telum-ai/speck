@@ -36,11 +36,14 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 - Upgrade `REMOVE_FILES` deletes retired domain + visual-testing host skill dirs from consumer projects.
 - `sync-claude-runtime.sh` syncs **skills only** (no longer clobbers generated agents/).
 
-### Agent prose
+### Agent prose + load DAG
 
 AGENTS.md / skills / skill `references/` / `.speck/reference/` are dense imperative instructions
-(no emoji section headers, no field-evidence essays in invoke paths). ADR-0003 + ADR-0004.
-Field evidence for the analyze gates (`001-odd` / #106) lives in ADR-0004 + CHANGELOG only.
+(ADR-0003/0004). Field evidence for analyze gates (`001-odd` / #106) lives in ADR-0004 + CHANGELOG only.
+
+Skill load (ADR-0005): always-path skills are **inlined** into `SKILL.md`; branching skills are
+**routers** with multi-node refs loaded only on taken edges. Corpus-budget forbids single
+`references/procedure.md` pointer theater.
 
 ---
 

@@ -76,7 +76,7 @@ Post-completion triage: defect→harden; story redesign→story-adjust; epic IA�
 ## Skills
 
 User-only (`disable-model-invocation: true`): `/speck` `/story` `/epic`.
-All other process skills: model auto-invoke via short descriptions. Read SKILL.md + template before writing artifacts.
+All other process skills: model auto-invoke via short descriptions. Read SKILL.md; follow load-DAG Reads (ADR-0005) — never treat a single `procedure.md` pointer as JIT.
 Vendor APIs: Context7 / official docs JIT. Stack start: `.speck/recipes/`.
 Hosts/MCP/model tiers: `.speck/reference/host-capabilities.md`.
 

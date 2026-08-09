@@ -5,9 +5,79 @@ description: Creates project.md vision. Use when starting a new project.
 
 # project-specify
 
-1. Read and fully execute `references/procedure.md` (authoritative procedure for this skill).
-2. Read the matching template under `.speck/templates/` before writing any artifact.
-3. STOP if any step in the procedure says STOP / blocked / fail.
-4. Stamp truth artifacts per AGENTS.md when the procedure requires it.
+Input: `$ARGUMENTS` (project description — use conversation text if `$ARGUMENTS` literal).
+Output: `[PROJECT_DIR]/project.md` (+ play-level artifacts).
+Template: `.speck/templates/project/project-template.md`.
 
-Output: whatever `references/procedure.md` specifies.
+## 0. Completed project check
+
+If project validated/completed and user wants pivot/redesign → STOP; route `/project-adjust` (not this skill).
+
+## 1. Template
+
+Read `.speck/templates/project/project-template.md` before writing.
+
+## 2. Archetype + play level
+
+Infer **archetype**: `consumer_product` | `b2b_saas` | `internal_tool` | `infra_service` | `backend_api`. Ask if unclear. Write to `.speck/project.json` → `project_archetype`.
+
+Infer **play level** from signals:
+
+| Level | Signals | Artifacts |
+|-------|---------|-----------|
+| Sprint | weekend, prototype, ship fast | `sprint-prd-template.md` → `PRD.md` + `sprint-log.md`; `play_level: sprint` |
+| Build | subscription, dashboard, v2 | `PRD.md`, `context.md`, `COMMERCIAL.md`; skip constitution/design-system in next-steps |
+| Platform | enterprise, marketplace, full governance | Full flow below |
+
+Sprint/Build branches skip sections marked below.
+
+## 3. Mode
+
+| Indicator | Mode |
+|-----------|------|
+| `project-import.md` OR `project-landscape-overview.md` | Brownfield |
+| Neither | Greenfield |
+
+## 4. Greenfield — recipe (optional)
+
+Scan `.speck/recipes/*/recipe.yaml` `keywords:` vs description. Match → offer recipe; on accept set `_active_recipe:` in `project.md` metadata.
+
+## 5. Greenfield — create
+
+Parse description; ask gaps: product type, users, problem, scale.
+
+Domain expertise required? → note in `project.md`; flag `/project-domain`.
+
+```bash
+bash .speck/scripts/bash/create-new-project.sh --json "$ARGUMENTS"
+```
+
+Fill template; mark gaps `[NEEDS CLARIFICATION: …]`.
+
+## 6. Brownfield — pre-fill
+
+Load import + landscape. Pre-fill template:
+- `[FROM IMPORT]` — import data
+- `[INFERRED FROM CODE]` — scan data
+- `[NEEDS VALIDATION]` — uncertain
+
+Ask only strategic gaps (vision, personas, metrics, positioning, hidden constraints). Skip discoverable-from-code questions.
+
+## 7. PROFILE refresh
+
+After `project.md` written:
+```bash
+bash .speck/scripts/regenerate-project-readme.sh
+```
+
+## 8. Next
+
+Consult `AGENTS.md` command phases for play-level order. Typical: `/project-clarify` → contracts → context → architecture (Platform) → plan.
+
+## NEVER / ALWAYS
+
+- NEVER run on validated project for pivots — use `/project-adjust`
+- NEVER skip template read
+- NEVER leave generic placeholders unfilled
+- ALWAYS write `project_archetype` + `play_level` to `.speck/project.json`
+- ALWAYS regenerate README after `project.md`

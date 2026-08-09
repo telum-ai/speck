@@ -18,15 +18,16 @@ v11 subtracts context tax without weakening P1–P4, LARP axes, `/audit`, or gra
 | Claude Code | `CLAUDE.md` → `@AGENTS.md` | Listing ~1% context; `disable-model-invocation` removes listing ([docs](https://code.claude.com/docs/en/skills)) |
 | Codex | AGENTS.md; default **32 KiB** `project_doc_max_bytes` | `.agents/skills` discovery; progressive disclosure |
 
-Progressive disclosure ([agentskills.io](https://agentskills.io/specification)): metadata always → body on invoke → `references/` on demand.
+Progressive disclosure ([agentskills.io](https://agentskills.io/specification)): metadata always → body on invoke → `references/` **only on taken branch edges** (ADR-0005). A single always-loaded `procedure.md` is forbidden theater.
 
 ## 3. Locked policies
 
 1. **Hybrid fitness**: hard corpus budget CI + A1-lite seeded scorecard.
 2. **Invocation**: `disable-model-invocation: true` only on `speck`, `story`, `epic`. All other skills auto-invocable.
 3. **Domain skills deleted**: Stripe/Clerk/Supabase/… pack removed. Stack start = `.speck/recipes/`. Vendor APIs = Context7 / official docs JIT.
-4. **Agent prose**: AGENTS.md, SKILL.md, `.speck/reference/*` are imperative, dense, no emoji headers, no tutorial filler. Humans read CHANGELOG / this doc / README.
-5. **Meta-methodology**: every always-on expansion needs ADR + budget room (or equal retirement) + scorecard for gates. See `docs/decisions/`.
+4. **Agent prose**: AGENTS.md, SKILL.md, skill refs, `.speck/reference/*` are imperative, dense (ADR-0003/0004).
+5. **Skill load DAG** (ADR-0005): always-path → inline in `SKILL.md`; branching path → router + multi-node refs; anti-theater CI bans single-`procedure.md` pointers.
+6. **Meta-methodology**: every always-on expansion needs ADR + budget room (or equal retirement) + scorecard for gates. See `docs/decisions/`.
 
 ## 4. Corpus budget ceilings
 
@@ -37,9 +38,11 @@ Progressive disclosure ([agentskills.io](https://agentskills.io/specification)):
 | `disable-model-invocation: true` | allowlist `{speck, story, epic}` only |
 | Per auto skill description chars | ≤ 120 |
 | Sum auto skill description chars | ≤ 10000 |
-| SKILL.md body lines (ex-frontmatter) | ≤ 200 (grandfather shrink-only) |
-| Skill `references/**/*.md` lines | ≤ 280 (same agent-prose bar; ADR-0004) |
+| SKILL.md body (always-path) | ≤ 200 |
+| SKILL.md body (DAG router) | ≤ 80 |
+| Skill `references/**/*.md` | ≤ 120 per node; skill must be 0 refs (inline) or ≥2 refs (DAG) |
 | Agent-prose lint | AGENTS + SKILL.md + skill refs + `.speck/reference/` |
+| Anti-theater | Fail single `procedure.md` pointer skills |
 
 Enforced by `.speck/scripts/validation/validators/validate-corpus-budget.sh`.
 

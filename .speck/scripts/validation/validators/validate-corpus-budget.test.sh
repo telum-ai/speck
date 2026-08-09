@@ -69,4 +69,30 @@ if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$
   exit 1
 fi
 
+# Anti-theater: single procedure.md pointer
+rm -rf "$TMP/.cursor/skills/essay"
+mkdir -p "$TMP/.cursor/skills/theater/references"
+cat > "$TMP/.cursor/skills/theater/SKILL.md" <<'EOF'
+---
+name: theater
+description: Short desc. Use when testing anti-theater.
+---
+
+# theater
+1. Read and fully execute `references/procedure.md`.
+EOF
+echo '# procedure' > "$TMP/.cursor/skills/theater/references/procedure.md"
+# slim AGENTS again (essay test may have left FAIL state only)
+{
+  echo '<!-- SPECK:START -->'
+  for i in $(seq 1 10); do echo "line $i"; done
+  echo '<!-- SPECK:END -->'
+} > "$TMP/AGENTS.md"
+
+echo "Test: single procedure.md pointer fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected anti-theater failure"
+  exit 1
+fi
+
 echo "All corpus-budget tests passed"

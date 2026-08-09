@@ -8,7 +8,6 @@ from pathlib import Path
 
 ALLOW_DISABLE = {"speck", "story", "epic"}
 
-# Essay / history patterns banned in agent-consumed instruction files
 ESSAY_RES = [
     re.compile(p, re.I)
     for p in (
@@ -23,8 +22,13 @@ ESSAY_RES = [
     )
 ]
 EMOJI_HEADER = re.compile(r"^## .*[🎯🔄✅❌🚨📋🧠🔧💡🧪📊🧭🧱🏁]", re.M)
+POINTER_ONLY = re.compile(
+    r"Read and fully execute `?references/procedure\.md`?",
+    re.I,
+)
 
-MAX_REF_LINES = 280
+MAX_REF_LINES = 120
+MAX_ROUTER_BODY = 80
 
 
 def parse_fm(text: str) -> tuple[str, str]:
@@ -113,27 +117,40 @@ def main() -> int:
             if dlen > max_desc:
                 err(f"skill {name} description length {dlen} > {max_desc}: {desc[:80]}...")
 
+        refs = skill_md.parent / "references"
+        ref_mds = sorted(refs.rglob("*.md")) if refs.is_dir() else []
+        n_refs = len(ref_mds)
+
+        # Anti-theater: single procedure.md pointer (ADR-0005)
+        if n_refs == 1 and ref_mds[0].name == "procedure.md":
+            err(
+                f"skill {name} has single references/procedure.md — "
+                "inline into SKILL.md or split into a real load DAG (≥2 refs) (ADR-0005)"
+            )
+        elif n_refs == 1 and POINTER_ONLY.search(body):
+            err(f"skill {name} is a single-ref pointer theater pattern (ADR-0005)")
+
         body_lines = len(body.splitlines())
-        if body_lines > max_body:
-            if name in grandfather:
-                print(f"WARN grandfather body {name} lines={body_lines}")
+        body_cap = MAX_ROUTER_BODY if n_refs >= 2 else max_body
+        if body_lines > body_cap:
+            gf_key = name if n_refs < 2 else f"{name}#router"
+            if gf_key in grandfather or name in grandfather:
+                print(f"WARN grandfather body {name} lines={body_lines} cap={body_cap}")
             else:
-                err(f"skill {name} body lines {body_lines} > {max_body} (not grandfathered)")
+                err(f"skill {name} body lines {body_lines} > {body_cap} (refs={n_refs})")
 
         lint_agent_prose(skill_md, body, err)
 
-        refs = skill_md.parent / "references"
-        if refs.is_dir():
-            for ref in sorted(refs.rglob("*.md")):
-                rtext = ref.read_text()
-                rlines = len(rtext.splitlines())
-                key = f"{name}/references/{ref.relative_to(refs).as_posix()}"
-                if rlines > MAX_REF_LINES:
-                    if key in grandfather:
-                        print(f"WARN grandfather ref {key} lines={rlines}")
-                    else:
-                        err(f"skill ref {key} lines {rlines} > {MAX_REF_LINES}")
-                lint_agent_prose(ref, rtext, err)
+        for ref in ref_mds:
+            rtext = ref.read_text()
+            rlines = len(rtext.splitlines())
+            key = f"{name}/references/{ref.relative_to(refs).as_posix()}"
+            if rlines > MAX_REF_LINES:
+                if key in grandfather:
+                    print(f"WARN grandfather ref {key} lines={rlines}")
+                else:
+                    err(f"skill ref {key} lines {rlines} > {MAX_REF_LINES}")
+            lint_agent_prose(ref, rtext, err)
 
     ref_root = root / ".speck" / "reference"
     if ref_root.is_dir():
@@ -147,7 +164,6 @@ def main() -> int:
     if gf_path.is_file():
         for name in sorted(grandfather):
             if "/" in name:
-                # skill/references/path.md grandfather
                 sm = skills / name
                 if not sm.is_file():
                     err(f"grandfather entry '{name}' missing — remove from grandfather file")
