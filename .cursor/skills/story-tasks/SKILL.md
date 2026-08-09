@@ -11,7 +11,9 @@ paths:
 
 # story-tasks
 
-1. MUST Read template, then MUST Read `references/spine.md`.
-2. UI story: also MUST Read `references/ui-tasks.md`.
-3. API/backend story: also MUST Read `references/api-tasks.md`.
-4. Write tasks.md; cross-check vs plan/spec.
+Cheap keys: UI-bearing story vs API/backend story (from spec/plan/ui-spec presence).
+
+1. MUST Read template, then MUST Read `references/spine.md` (and `spine-2.md` if linked).
+2. If UI-bearing: MUST Read `references/ui-tasks.md` (and `ui-tasks-2.md` if linked). Else do not.
+3. If API/backend story (endpoints/schema/migrations; or no UI): MUST Read `references/api-tasks.md`. Else do not.
+4. Write `tasks.md`; cross-check vs plan/spec.

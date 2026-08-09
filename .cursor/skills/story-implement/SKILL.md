@@ -11,7 +11,9 @@ paths:
 
 # story-implement
 
-1. MUST Read `references/spine.md` (locate story, execute tasks, track).
-2. UI-bearing: also MUST Read `references/ui.md`.
-3. Backend/API-heavy: also MUST Read `references/backend.md`.
-4. Mark tasks done; do not claim validate.
+Cheap keys: `STORY_DIR` has `ui-spec.md` / UI tasks in `tasks.md` (UI-bearing); or API/backend-only story.
+
+1. MUST Read `references/spine.md` (locate story, execute tasks, track, complete). If `spine-2.md` is linked from spine, Read it too.
+2. If UI-bearing (ui-spec present OR tasks create/modify UI): MUST Read `references/ui.md`. Else do not.
+3. If API/backend-heavy (migrations, endpoints, services; or no UI): MUST Read `references/backend.md`. Else do not.
+4. Mark tasks done. Do not claim validate.

@@ -9,6 +9,8 @@ paths:
 
 # epic-architecture
 
-1. MUST Read `references/decisions.md`.
-2. MUST Read `references/seams.md`.
-3. MUST Read `references/alternatives.md` before lock.
+Cheap keys: whether the epic crosses system/package boundaries; whether you are locking a choice.
+
+1. MUST Read `references/decisions.md` (architecture decisions for this epic).
+2. If the epic crosses systems/packages/teams (shared contracts, multi-service): MUST Read `references/seams.md`. Else do not.
+3. ONLY before locking an architecture choice (N≥3): MUST Read `references/alternatives.md`. Else do not.

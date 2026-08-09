@@ -6,8 +6,10 @@ disable-model-invocation: true
 
 # speck
 
-1. MUST Read `references/first-actions.md` — stop at first hit.
+Cheap keys: first-actions ladder hit; whether user asked status/`/goal` vs new work.
+
+1. MUST Read `references/first-actions.md` — stop at first hit (graph/reprove/catch-up/state/play/recheck).
 2. MUST Read `references/spine.md` (NEVER/ALWAYS).
-3. `/goal` / status: MUST Read `references/gap-routes.md`.
-4. New work: MUST Read `references/scale-route.md` then `references/triage.md`.
-5. Route to the named skill; do not invent specs filenames.
+3. If status / continue / `/goal` / gap check: MUST Read `references/gap-routes.md`. Else skip.
+4. If routing new work (feature/fix/scale): MUST Read `references/scale-route.md` then `references/triage.md`. Else skip.
+5. Route to the named skill; never invent `specs/` filenames.

@@ -23,6 +23,8 @@ v11 relocated oversized bodies into `references/procedure.md` with a thin SKILL 
 - One concern per ref (spine | tier | lens | state | axis | host).
 - Required edges: `MUST Read X before Y`. Optional: `Read X only if …`.
 - No essay nodes; no part1/part2 splits without a branch key.
+- **Predicates live in the router.** `SKILL.md` must state the cheap key and the branch (`If archetype is backend: Read backend-skip; Do not Read larp`). Forbidden: `Read X when that domain applies` — loading X to learn whether X applies is not JIT.
+- **Always-path → inline.** If every successful run MUST Read every ref, delete `references/` and put the dense procedure in `SKILL.md`. A multi-ref folder of unconditional MUSTs is theater.
 
 ## Budget delta
 

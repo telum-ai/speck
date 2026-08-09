@@ -130,6 +130,37 @@ def main() -> int:
         elif n_refs == 1 and POINTER_ONLY.search(body):
             err(f"skill {name} is a single-ref pointer theater pattern (ADR-0005)")
 
+        # Ban predicate-hiding routers (ADR-0005): agent must know the branch
+        # without reading the ref.
+        if re.search(
+            r"when that domain applies|Read `references/[^`]+` when that domain|"
+            r"Read `references/[^`]+` when applicable|"
+            r"Read `references/[^`]+` if relevant",
+            body,
+            re.I,
+        ):
+            err(
+                f"skill {name} hides branch predicates ('when domain applies') — "
+                "state cheap keys inline in SKILL.md (ADR-0005)"
+            )
+
+        # Ban always-all fake DAGs: ≥2 refs but every Read is unconditional MUST
+        # with no If/Else/Only/Cheap keys — that is always-path; inline instead.
+        if n_refs >= 2:
+            has_pred = bool(
+                re.search(
+                    r"Cheap keys:|\bIf\b|\bElse\b|Only (after|when|before)|"
+                    r"Do not Read|matching `|Skip if|UI-bearing|play_level|"
+                    r"archetype|claimed_state|Backend/",
+                    body,
+                )
+            )
+            if not has_pred:
+                err(
+                    f"skill {name} has {n_refs} refs but no inline branch predicates — "
+                    "inline always-path into SKILL.md or add cheap keys (ADR-0005)"
+                )
+
         body_lines = len(body.splitlines())
         body_cap = MAX_ROUTER_BODY if n_refs >= 2 else max_body
         if body_lines > body_cap:
