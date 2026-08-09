@@ -102,13 +102,10 @@ Speck's rigor lives in the **skills** (the adversarial `/audit` probes, honest r
 
 **Verify-skills gate** — before ACCEPTING/merging a delegated result, the conductor MUST:
 
-1. Confirm required reports exist AND pass `.speck/scripts/validation/validate-template.sh --strict` (template-compliant, not merely right-shaped).
-2. Verify **≥2 real skill invocations** in the sub-agent's transcript — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. If `skills_invoked` is empty or the transcript shows zero `Skill` calls → **REJECT + re-run**.
-   > 🔍 **TRANSCRIPT GREP RECIPE**: The conductor MUST actively verify the sub-agent's JSON transcript file or tool execution log for real skill tool calls. Run a grep search for `"name":"Skill"` (the host's tool invocation signature) to confirm at least N real skill invocations corresponding to the required lifecycle skills exist in the logs. Reject any hand-rolled file writes or copy-pasted templates.
-3. Require a **genuinely independent `audit-report.md`** authored by a **SEPARATE** auditor agent (e.g. `@speck-auditor` or a separate session), and NEVER the same agent who implemented/validated the story. Self-auditing is heavily prone to confirmation bias.
-   - **Multi-Lens/N-Skeptic Default for High-Risk Stories**: For any story/epic classified as high-risk (P0/P1 severity, or those handling sensitive user data, privacy, or security-critical authentication/billing flows), N-independent diverse-lens auditors (Security/Privacy, Performance/Scalability, UX/Accessibility) are required by default. A majority-refute rule applies to findings, and the lenses deployed must be listed in the report.
-   > 📊 **FIELD EVIDENCE**: In a parallel-epic SaaS project, role separation and the transcript verify-gate caught **4 critical defects across 9 stories** that self-audits completely missed (including a `use-server` build-breaker, a fabricated readiness claim citing nonexistent mock paths, an unrun build failure, and a runtime database function mismatch).
-4. Verify that **`gate_checks`** shows that the project's full pre-commit gate (lint, typecheck, tests, build, banned-language) ran and passed (reject on any missing, skipped, or failed checks; green tests alone do not equal a green gate).
-5. Treat `/audit` as **non-skippable** before any merge in delegated flows.
+1. Confirm required reports exist AND pass `.speck/scripts/validation/validate-template.sh --strict`.
+2. Verify ≥2 real skill invocations in the sub-agent transcript — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. Grep transcript/tool log for `"name":"Skill"`. Empty `skills_invoked` or zero Skill calls → REJECT + re-run.
+3. Require an independent `audit-report.md` by a SEPARATE auditor (not the implementer/validator). High-risk (P0/P1, sensitive data, auth/billing): N diverse-lens auditors; majority-refute; list lenses in the report.
+4. Verify `gate_checks` shows full pre-commit gate ran and passed (lint, typecheck, tests, build, banned-language). Missing/skipped/failed → reject. Green tests alone ≠ green gate.
+5. Treat `/audit` as non-skippable before merge in delegated flows.
 
-A unit that produced passing-looking artifacts with zero skill calls is **simulated, not validated** — reject it.
+A unit with passing-looking artifacts and zero skill calls is simulated, not validated — reject it.

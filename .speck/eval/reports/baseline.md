@@ -1,6 +1,6 @@
 # A1-lite scorecard
 
-Generated: 2026-08-09T15:57:34Z
+Generated: 2026-08-09T16:45:17Z
 
 | Fixture | Class | Expect | Result |
 |---------|-------|--------|--------|

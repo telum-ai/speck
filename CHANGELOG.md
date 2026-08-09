@@ -38,7 +38,9 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 
 ### Agent prose
 
-AGENTS.md / skills / reference files are dense imperative instructions (no emoji section headers).
+AGENTS.md / skills / skill `references/` / `.speck/reference/` are dense imperative instructions
+(no emoji section headers, no field-evidence essays in invoke paths). ADR-0003 + ADR-0004.
+Field evidence for the analyze gates (`001-odd` / #106) lives in ADR-0004 + CHANGELOG only.
 
 ---
 

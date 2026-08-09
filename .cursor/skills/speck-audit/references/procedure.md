@@ -1,264 +1,150 @@
-The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
+# speck-audit — procedure
 
-User input:
+Mandatory between implement and validate. Replaces v6 `/story-analyze`.
+Output: `<story-or-epic-dir>/audit-report.md`.
+P4: auditor ≠ implementer; judged by defects found, not green. P2: every claim resolves to a mechanism.
 
-$ARGUMENTS
+## 0. When to run
 
----
+| Trigger | Target |
+|---------|--------|
+| `/story-implement` completed | That story |
+| All stories validated in epic | Epic (cross-story) |
+| User: audit / are we sure | Current context |
+| Before `/recheck` → LARP | Current scope |
+| Banned phrase in implementer summary | Auto-trigger |
 
-## Purpose
+## 1. Locate target + prereqs
 
-`/audit` is the skeptical pass that catches what the implementer missed. From Splang's retro:
+- `--story <id>` → story dir; `--epic <id>` → epic dir; default → active story.
+- Story: `spec.md`, `plan.md`, `tasks.md`, implementation done, `evidence-contract.md`.
+- Epic: every story has completed `/audit` + `/story-validate`.
+- STOP if prereqs missing.
 
-> Every "ship" doc I wrote was honest about what I'd done — but silent about what I hadn't checked. The methodology failure isn't that the specs were bad. It's that Speck's notion of "done" was satisfiable by tests passing, screenshots looking good, and commit messages reading nicely — none of which are reality checks.
+## 2. Role separation (P4)
 
-The auditor:
-- Does NOT trust the implementer's self-report
-- For each acceptance criterion, asks: negative case? evidence? regression guard?
-- Auto-runs the adversarial probe suite per `evidence-contract.md`
-- Flags banned-phrases in implementation summaries
-- Produces a findings report that blocks validate-claim-of-PASS until resolved
+1. Auditor ≠ implementer (separate subagent / session / model).
+2. High-risk default (P0/P1 severity, privacy, security-critical auth/billing): **3+ independent lens auditors** — Security/Privacy · Performance/Scalability · UX/Accessibility.
+3. Any lens P0 → BLOCKED. P1 disagreement → majority-refute (2 of 3).
+4. Report lists deployed lenses under `## Multi-Lens Audit Team`.
 
-This step is **mandatory** between implement and validate. Replaces the v6 `/story-analyze` skill.
+## 3. Load context (parallel)
 
-**P4 — the auditor is the structural adversary**: a separate role judged by *defects found*, not by declaring green. Every probe here prompts the search; none of them defines "done." **P2** — every claim under audit must resolve to a mechanism: a fired endpoint, a written row, a real forbidden op attempted as a real principal — not the implementer's word, not a green-looking suite.
+- `spec.md`, `plan.md`, `tasks.md`, `evidence-contract.md`, `product-contract.md`
+- Changed files; implementer commit messages / handoff notes
 
-## When to Run
+## 4. Spec-to-implementation traceability
 
-| Trigger | What to do |
-|---------|------------|
-| `/story-implement` just completed | Run `/audit` for that story |
-| All stories in an epic are validated | Run `/audit` for the epic (cross-story coverage check) |
-| User says "audit" / "are we sure" / "what's missing" | Run for current context |
-| Before `/recheck` proceeds to LARP cold-start | Run audit to surface known issues first |
-| Banned-phrase detected in implementer's summary | Auto-trigger |
-
-## Prerequisites
-
-For a story audit: `spec.md`, `plan.md`, `tasks.md` exist; implementation done; `evidence-contract.md` exists.
-For an epic audit: all stories in epic have completed `/audit` + `/story-validate`.
-
-## Execution Steps
-
-### 1. Locate target
-
-If `--story <id>`: audit that story.
-If `--epic <id>`: audit that epic.
-Default: audit the active story.
-
-### 1b. Multi-Lens/N-Skeptic Audit for High-Risk Stories (Default for P0/P1/Privacy)
-
-For any story/epic classified as high-risk (P0/P1 severity, or those handling sensitive user data, privacy, or security-critical authentication/billing flows), a single auditor is highly prone to confirmation bias. Therefore, **N-independent diverse-lens auditors (majority-refute)** is the default:
-1. **Deploy 3+ distinct auditor subagents** (or run 3+ separate sequential passes with distinct persona lenses):
-   - **Security/Privacy Lens**: Focuses on access control, data leakages, sanitization, token exposure, and compliance.
-   - **Performance/Scalability Lens**: Focuses on N+1 queries, memory leaks, unpaged lists, and database indexing.
-   - **UX/Accessibility Lens**: Focuses on form validation, keyboard trap, screen readers, and rendering gotchas.
-2. **Consensus & Majority-Refute**:
-   - If *any* auditor lens raises a P0 finding, the audit is blocked.
-   - If there is a disagreement on a P1 finding, a majority-refute rule applies (if 2 out of 3 lenses agree it is a violation, it is treated as a P1 finding).
-3. **Log the Lenses**: The final `audit-report.md` MUST explicitly list the lenses deployed under a `## 👥 Multi-Lens Audit Team` section.
-
-### 2. Load context (parallel)
-
-```
-├── [Parallel] speck-explorer: Read spec.md, plan.md, tasks.md
-├── [Parallel] speck-explorer: Read evidence-contract.md
-├── [Parallel] speck-explorer: Read product-contract.md
-├── [Parallel] speck-explorer: List changed files
-└── [Parallel] speck-explorer: Read implementer's commit messages
-```
-
-### 3. Spec-to-implementation traceability check
-
-For each acceptance criterion / FR in spec.md:
-- Find supporting code
-- Find supporting test
-- Verify test asserts BEHAVIOR, not current (buggy) state
-- Flag `expect().toBe(<wrong>)` + "BUG/TODO/should be/fix later" comments
+Per AC / FR in `spec.md`:
+- Supporting code + test exist
+- Test asserts behavior, not buggy current state
+- Flag `expect().toBe(<wrong>)`, BUG/TODO/fix-later comments
 - Flag `test.skip` without reason
 
-### 3b. Promise↔Source Fidelity Sweep (opt-in semantic, #86)
+## 5. Promise↔Source fidelity sweep (opt-in semantic)
 
-The cheap structural check — `validate-traceability-matrix.sh --check-fidelity` — verifies a row's `Promise` shares vocabulary with the `Source` it names and that the artifact/anchor exists. It checks **presence + overlap only**; it *provably cannot* catch the live #86 miss: a `discharged` row whose `Promise` states a hard conditional ("X **only if** Y") that the discharging predicate never implements. That is a semantic judgment, so it needs an evaluator, not a parser.
+Run before epic close, when `--check-fidelity` WARN, or on demand.
+Scope: mandatory on differentiator (product-contract §3) + magic-moment (§5) rows; widen on request.
 
-This sweep is **opt-in and lazy** (v8 SHRINK ethos) — run it at `/audit` before an epic close, or when `--check-fidelity` raised a WARN, or on demand. Default **scope: sampled on load-bearing Sources** — the differentiator (product-contract §3) and magic-moment (§5) rows are **mandatory**; widen to all rows on request.
+Structural pre-pass:
 
-For each in-scope `discharged` row, dispatch an adversarial `@speck-auditor` subagent (reuse the harness from step 1b) with: the **named Source clause** (verbatim, resolved from the artifact the `Source` cell names), the row's **`Promise`**, and the **discharged predicate** (the code/function the story+AC discharges to). The auditor returns exactly one verdict:
+```bash
+bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --check-fidelity specs/projects/[PROJECT_ID]/epics/[EPIC_ID]
+```
 
-- **`faithful`** — the shipped predicate keeps the promise the Source states (including every limiting clause: "only", "never", "without", "unless", conditionals).
-- **`drift`** — the `Promise` restates the Source minus a load-bearing clause (the #86(b) truncation), or the predicate partially implements it. → **P2** punch-list item (reconcile the row / DEC the descope).
-- **`contradictory`** — the `Promise` faithfully restates the Source, but the discharged predicate has **no term for a hard condition the promise requires** (the live #86(a) repro: a guarantee that "only holds once Y", where the guarding function carries no data from which a caller could supply Y). → **P1** punch-list item; blocks the epic claiming ≥ UX-RC on that row until re-specified or descoped.
+Per in-scope `discharged` row: adversarial subagent gets Source clause (verbatim), row `Promise`, discharged predicate.
+Verdict: `faithful` | `drift` (P2) | `contradictory` (P1 — false discharge).
+Log Source, Promise, predicate location. Never auto-resolve subjective faithfulness.
 
-Log each verdict with the Source clause, the Promise, and the predicate location. A `contradictory` on a `discharged` row is a false discharge — treat it as the grain problem's sibling: the row is honestly discharged at story grain and false at product grain. Never auto-resolve a subjective faithfulness call; surface `drift`/`contradictory` for the owner.
+## 6. Adversarial probe suite
 
-### 4. Adversarial probe suite (parallel subagents)
+Per `evidence-contract.md` §11. Run applicable probes; log genuine break attempts.
+Dispatch parallel subagents when available. Skipped probe or false-green → run `/speck-feedback`.
 
-Per evidence-contract.md. Standard 10 probes (see claude skill for full list). Each subagent runs probe + verifies response.
+## 7. Failure modes + DB cascade
 
-### 5. Failure-mode-handling check
+- External deps: verify failure handling per spec `failure_modes_handled`.
+- DB writes: verify cascade/anonymize per spec `related_tables`.
 
-For each external dep, verify implementation handles its failure mode per spec's `failure_modes_handled` section.
+## 8. Exhaustive reader/writer sweep (security/privacy epics)
 
-### 6. Cascade-on-write check (DB)
+Never trust documented single injection point. Enumerate **every** reader/writer of sensitive model across whole codebase before trusting gate design.
+Fan-out all references — seam-local gate over incomplete inventory ships privacy hole.
 
-For each DB write path, list related tables per spec's `related_tables` section, verify cascade/anonymize behavior.
-
-### 6b. Exhaustive reader/writer sweep (security/privacy epics, #76.4)
-
-For any epic whose gate protects a sensitive/regulated resource (privacy, leakage, tenant isolation): **never trust a documented "single injection point" or a seam-local comment.** Enumerate EVERY reader and writer of the sensitive model across the WHOLE codebase (not just the documented seam) before trusting the gate design. A documented seam reflects one author's local view; real leak surfaces recur across reader families *outside* the primary module (e.g. a greeting/memory service reading the resource with only a GDPR guard). Run this as a fan-out over all references — a seam-local gate over an incomplete reader inventory ships a privacy hole. (`/epic-plan` should do this pre-impl; `/audit` re-sweeps post-impl — the re-sweep is what actually catches residual risk.)
-
-### 7. Quality patterns scan
+## 9. Quality patterns
 
 N+1 queries, unpaged lists, type coverage, env-var validation, observability reach.
 
-### 8. Banned-phrase detection in implementer summary
+## 10. Test isolation + async + authz (mandatory at story audit)
 
-Search commit messages + handoff notes for banned phrases. If found, require enumeration.
+**10a. Test pollution (#77.1)** — run suite default order AND random order (`vitest --sequence.shuffle`, `pytest -p randomly`). Results differ → **P0**.
+Grep: `mockClear()` in `beforeEach` where `mockReset()` required.
 
-### 9. Test pollution check (story-level AND epic-level, #77.1)
+**10b. Async teardown** — mocks must model async close/late callbacks; no post-close rescheduled work; regression tests simulate late callback on closed dep. Over-simplified mock → **P1**.
 
-Run the test suite twice — default order AND random order (e.g. Vitest `--sequence.shuffle`, pytest `-p randomly`). Results differ → **P0 test-isolation finding**. **This is mandatory at the STORY audit, not only the epic audit** — a single leaky harness silently poisons every downstream story that shares it, and order-dependence stays invisible (every story green in default order) until it compounds at epic close.
+**10c. Boundary-crossing try-catch** — multi-boundary catch must classify which boundary failed; no catch-all attributing config/network to validation. Lazy attribution → **P1**.
 
-Common root cause to grep for: a `beforeEach` using `mockClear()` (clears call history but NOT a persistent `mockResolvedValue` / `mockResolvedValueOnce` queue) instead of `mockReset()` — one test's mock override leaks into a sibling under shuffle and flips a branch assertion. Optional stronger signal: the mutation sanity check in step 9d.
+**10d. Negative-test authenticity (#77.2)** — authz/RLS/tenant tests: real least-privileged principal, actually attempt forbidden op; no bypass role (`service_role`, superuser, RLS-bypass connection); no silent collect-time skip. Surrogate/dead-guard → **P1**. Optional: remove guard clause — no red = untested.
 
-### 9b. Async teardown / late callback mock validation
+**10e. Pass-count honesty** — tautologies (`expect(true).toBe(true)`) → **P2**. Collect-time skips hiding suites → flag; standing/guarded suites must report RUN in CI, not skipped (#76.2).
 
-For any story involving async resources (WebSockets, timers, subscriptions, auto-retrying dependencies, closeable connections):
+## 11. UI stories
 
-1. **Verify mock behavior**: Check if unit/integration test mocks synchronously and immediately mark resources closed/disposed, or if they accurately model real async callback latency (e.g. firing close callbacks asynchronously).
-2. **Scan for teardown bugs**: Look at implementation teardowns / cleanup hooks (`useEffect` cleanups, `.close()`, `.destroy()`, `clearInterval`) to verify no background work, retries, or queued timers are scheduled *after* the close call.
-3. **Verify late callback regression tests**: If a fix for a late-firing callback or background re-scheduling exists, assert that the regression test explicitly *simulates* the late callback firing on a closed dependency (rather than just checking synchronous closed state).
-4. Any mock found to be over-simplifying async close behavior or failing to model late events/retries → **P1 finding** ("incomplete async mock — hides post-teardown execution bugs").
+**11a. Reachability** — real nav path, no dev shortcuts, real auth. **Non-Surrogate Rule**: no API/programmatic substitute for UI interaction → **P0 surrogate-proof drift**.
 
-### 9c. Boundary-crossing try-catch error attribution check
+**11b. Rendering gotchas** — if `design-system/primitives.md` has `## Rendering Gotchas`: grep each signature on changed UI files; match without canonical safe form → **P1**.
 
-For any user-facing or logged error raised in a block (like a `try-catch`) that spans **two or more trust boundaries** (e.g., calling a third-party SDK like Stytch/Clerk, AND making an internal API/backend sync call, or database operations + external webhooks):
+**11c. Form Validation Matrix** — if `ui-spec.md` has matrix: interactive tests/LARP assert exact inline messages; generic page error without field highlight → **P1**; submit pending disables inputs + CTA; double-submit protection.
 
-1. **Verify specific error handling**: Assert that the `catch` block does not use a lazy, catch-all error message that incorrectly attributes failure to the wrong boundary (e.g., assuming any failure is "wrong code" or "invalid OTP" when in fact the backend post-verify sync failed due to config or host down).
-2. **Examine boundary separation**: Check that each distinct boundary has explicit, separate error classification (or typed/property checks on the caught error object) to accurately identify and log *which* specific connection or provider failed.
-3. **Assert helpful feedback**: The user-facing error message or detailed debug logs must clearly distinguish network-level/config failures (such as a backend host returning a 502/HTML gateway page) from application-level validation failures (such as an expired token).
-4. Any block spanning multiple boundaries with lazy, unified `catch-all` error messages or logs → **P1 finding** ("lazy error attribution — hides multi-boundary config/network failures").
+## 12. Decision-lock application
 
-### 9d. Negative-test authenticity — backend Non-Surrogate Rule (P2, #77.2)
+Scan `project-decisions-log.md` for decisions locked in scope or last 14 days. Multi-file reconciliation specified but not applied → **P1** drift.
 
-The backend sibling of the UI Non-Surrogate Rule (step 10). For any test asserting an authz / RLS / tenant-isolation / permission guard:
+## 13. Banned language + gate liveness
 
-1. **Real principal**: the test MUST run as a real, least-privileged authenticated principal (mint a real token/JWT carrying the relevant claim) and **actually attempt the forbidden operation** — never as a bypass-capable role (`service_role` / superuser / a connection that structurally bypasses row-level-security `WITH CHECK`), or the forbidden op "succeeds" and proves nothing.
-2. **Not silently skipped**: the guard test must not sit behind a collect-time `skipIf` that removes it from the run.
-3. Flag as **P1 "surrogate-proof / dead-guard test"** any negative test asserting a guard while running as a principal that structurally cannot reach it, or gated behind a silent skip — it stays green even if you delete the guard clause it claims to defend.
-4. **Optional mutation sanity check**: remove the guard clause; if no test goes red, the guard is untested.
-
-### 10. Reachability + scaffolding check (UI stories)
-
-Navigation path, no dev shortcuts, real auth flow.
-
-**Hard Non-Surrogate Rule**: The audit of a UI surface MUST NOT substitute API/programmatic calls for real UI interaction. If a human enters input and clicks a button, the audit (and subsequent LARPs) must exercise the real input fields and click the real UI elements. Mocking or bypassing UI forms via API client calls is strictly prohibited for UI story validation and is classified as **P0 surrogate-proof drift** if attempted.
-
-### 10b. Rendering gotchas grep (UI stories)
-
-If `design-system/primitives.md` exists and has a `## Rendering Gotchas` section:
-
-1. Parse the gotchas table — extract **Grep signature** and **Canonical safe form** from each row (skip placeholder/template rows).
-2. For each grep signature, run against changed UI files in the story scope (`rg` or equivalent on `.tsx`, `.jsx`, `.vue`, `.svelte`, `.css`).
-3. For each match, verify the line also contains the canonical safe form (utility class, component name, or documented exception comment).
-4. Raw anti-pattern without safe form → **P1 finding** ("correct code, wrong pixels — survives TDD").
-
-Example: `bg-clip-text` without `.gradient-text-safe` (or project equivalent) on a headline.
-
-Skip this step if no `## Rendering Gotchas` section exists (project has not registered any yet).
-
-### 10c. Form Validation Matrix Check (UI stories)
-
-If `ui-spec.md` exists and contains a **Form Validation Matrix**:
-
-1. Validate that all field-level validation rules declared in the matrix are covered by interactive validation tests or real browser LARPs.
-2. Confirm that invalid inputs are tested by driving the real form and asserting that the *exact* inline validation messages are rendered on their respective fields.
-3. Assert that generic page-level errors (e.g. "Something went wrong") that do not mark/highlight the invalid fields are flagged as **P1 form-UX violations** ("handled but not guided").
-4. Check that Submit Pending states disable all inputs and the submit CTA, and that double-submit protection is implemented (e.g., CTA disabled immediately on click).
-
-### 10d. Pass-Count Honesty & Test Hygiene Check
-
-To prevent test-suite inflation and "false green" theater:
-
-1. **Grep for Tautologies**: Scan the tests in the story scope for meaningless sentinels like unconditional `expect(true).toBe(true)` environment checks used to inflate test counts. Flag these as **P2 informational-only passes**.
-2. **Scan for Silent Skips**: Check for collect-time skip conditions (such as `describe.skipIf` evaluated before runtime setups) that silently skip suites without displaying execution-time skip-with-reason logs in test outputs. **A skipped standing/guarded regression suite is not a gate (#76.2)**: a leakage-probe or isolation suite `skipif`'d because CI lacks its throwaway DB reads as green with zero probes executed — worse than a failing suite (invisibly green). Verify standing/guarded suites report as RUN, not skipped, in the target CI.
-3. Recommend using runtime skips (`it.skip(reason)`) or context-based skips (`beforeEach((ctx) => ctx.skip(reason))`) over static collect-time skips, so skips are clearly visible in the CI log.
-
-### 10e. Decision-Lock Application Check
-
-Verify that recent locked decisions (`DEC-XXXX`) from `project-decisions-log.md` are applied consistently across all referenced artifacts:
-
-1. Scan `project-decisions-log.md` for decisions locked in the active scope or within the last 14 days.
-2. If a decision specifies application or reconciliation across multiple files (e.g., "reconcile term in primitives.md, spec.md, and context.md"), verify that ALL listed files have been touched and aligned.
-3. Unreconciled drift across documents listed in a locked decision → **P1 finding** ("decision-lock application drift").
-
-### 11. Banned-language scan
-
-Run `.speck/scripts/banned-language-lint.sh` against changed files.
-
-Also run the product contract validator to ensure the contract itself does not self-violate any of its own banned terms:
-```
-bash .speck/scripts/validation/validators/validate-product-contract.sh --strict specs/projects/<PROJECT_ID>/product-contract.md
-```
-
-**Gate-liveness (wiring) — the gate that checks the other gates actually run (#88).** A gate declared in `evidence-contract.md` §6a but wired nowhere (or off its declared stage) is indistinguishable from a passing one — a dark gate manufactures a clean evidence trail. Diff the §6a registry against the committed hook/CI config:
 ```bash
-bash .speck/scripts/validation/validators/validate-gate-liveness.sh --strict specs/projects/<PROJECT_ID>/evidence-contract.md
+bash .speck/scripts/banned-language-lint.sh <changed-files>
+bash .speck/scripts/validation/validators/validate-product-contract.sh --strict specs/projects/[PROJECT_ID]/product-contract.md
+bash .speck/scripts/validation/validators/validate-gate-liveness.sh --strict specs/projects/[PROJECT_ID]/evidence-contract.md
 ```
 
-**Gate-liveness (canary probe) — prove the gate is LOAD-BEARING, not just wired (#88 Phase 2, opt-in).** Wiring proves a gate runs; the canary proves it would actually go red on a real defect. On-demand at `/audit` (heavier — mutation runs in a throwaway worktree, so not on the push path):
+Opt-in canary (on-demand, throwaway worktree):
+
 ```bash
-bash .speck/scripts/validation/validators/gate-liveness-probe.sh --require-liveness specs/projects/<PROJECT_ID>/evidence-contract.md
+bash .speck/scripts/validation/validators/gate-liveness-probe.sh --require-liveness specs/projects/[PROJECT_ID]/evidence-contract.md
 ```
-A `GATE_DISARMED.P1` (baseline green, defect injected in the gate's required scope, gate still green — incl. the #85 scope-hole shape) is a P0-adjacent finding: the guardrail is manufacturing false evidence. `GATE_LIVENESS_UNVERIFIED.P2` degrades honestly (caps the ship claim, never blocks). Never runs a destructive gate.
 
-**Promise↔Source structural fidelity (opt-in, #86).** For each epic under audit, run the WARN-only structural fidelity pass — it never touches the conservation exit code, it just surfaces phantom/renamed Sources and vocabulary-drifting Promises:
+`GATE_DISARMED.P1` → P0-adjacent (gate green on injected defect). `GATE_LIVENESS_UNVERIFIED.P2` → cap ship claim, never blocks.
+
+Search implementer summary for banned phrases; require enumeration if found.
+
+## 14. Compose report + stamp
+
+Write `<dir>/audit-report.md`. Sections: findings by severity (P0/P1/P2/P3), probe results, banned-language, multi-lens roster if used.
+
 ```bash
-bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --check-fidelity specs/projects/<PROJECT_ID>/epics/<EPIC_ID>
-```
-Any `[fidelity]` WARN feeds step 3b's semantic sweep — the structural check finds candidates, the AI sweep adjudicates `faithful | drift | contradictory`.
-
-### 12. Compose audit report
-
-Write to `<story-or-epic-dir>/audit-report.md` (template per claude skill).
-
-### 13. Apply stamp + decision gate
-
-```
-.speck/scripts/stamp-truth.sh <story-or-epic-dir>/audit-report.md
+bash .speck/scripts/stamp-truth.sh <dir>/audit-report.md
 ```
 
-Decision:
-- P0 → BLOCKED. Validate must refuse PASS.
-- P1-P3 only → NEEDS_FIXES. Surface; user choice.
-- Clean → CLEAN. Validate can proceed.
+## 15. Verdict + continuation
 
-### 14. Report (standard format per claude skill)
+| Verdict | Condition | Next |
+|---------|-----------|------|
+| BLOCKED | Any P0 | Validate refuses PASS |
+| NEEDS_FIXES | P1–P3 only | Surface; owner choice |
+| CLEAN | No open P0 | Chain to `/story-validate` or `/epic-validate` |
 
-### Continuous Feedback Capture Trigger
-If any adversarial probe is skipped or false-green theater is detected, you **MUST** run `/speck-feedback` (or read `.cursor/skills/speck-feedback/SKILL.md`) to document the probe gap. Do not let workarounds go undocumented.
+Orchestrated/delegated run: on CLEAN (or NEEDS_FIXES without P0) → **immediately proceed to validate** — audit is mid-lifecycle, not turn boundary.
+Stop only on P0 or when user must choose P1–P3 handling.
 
-**Continuation (do NOT treat the report as a stop):**
-- **Orchestrated / background / delegated run**: when the decision gate is CLEAN (or NEEDS_FIXES with no P0), **immediately proceed to `/story-validate` (or `/epic-validate`)** — the audit is a mid-lifecycle step, not a turn boundary. Stopping after the audit silently leaves the unit unvalidated.
-- **Stop only** on a P0 finding (validate must refuse PASS) or when the user must choose how to handle P1–P3 findings in an interactive run.
+## NEVER / ALWAYS
 
-## Behavior Rules
-
-- NEVER skip the adversarial probe suite
-- NEVER claim CLEAN without the random-order test rerun — at the STORY audit, not only the epic audit (#77.1)
-- NEVER accept a guard/authz/RLS test that runs as a bypass-capable role or is silently skipped (P2, #77.2)
-- NEVER treat a skipped standing/guarded suite as covered — verify it reported as RUN (#76.2)
-- NEVER take the implementer's word — verify with evidence (a mechanism, not a self-report)
-- NEVER end an orchestrated turn at the audit report when CLEAN — chain to validate
-- ALWAYS apply SHA stamp
+- NEVER skip adversarial probe suite
+- NEVER claim CLEAN without random-order test rerun (story audit)
+- NEVER accept guard test as bypass role or silent skip
+- NEVER treat skipped standing/guarded suite as covered
+- NEVER take implementer's word — verify mechanism
+- NEVER end orchestrated turn at audit report when CLEAN
+- ALWAYS SHA-stamp report
 - ALWAYS write report even if CLEAN
-- BLOCK validate on P0 findings
-
-## Integration Points
-
-- Reads: `spec.md`, `plan.md`, `tasks.md`, `evidence-contract.md`, `product-contract.md`, `design-system/primitives.md` (Rendering Gotchas), code
-- Writes: `<dir>/audit-report.md`
-- Invokes: `banned-language-lint.sh`, `stamp-truth.sh`
-- Required before: `/story-validate`, `/epic-validate`
-
-## Context: $ARGUMENTS
+- BLOCK validate on P0

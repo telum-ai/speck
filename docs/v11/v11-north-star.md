@@ -37,7 +37,9 @@ Progressive disclosure ([agentskills.io](https://agentskills.io/specification)):
 | `disable-model-invocation: true` | allowlist `{speck, story, epic}` only |
 | Per auto skill description chars | ≤ 120 |
 | Sum auto skill description chars | ≤ 10000 |
-| SKILL.md body lines (ex-frontmatter) | ≤ 200 (grandfather worklist shrink-only) |
+| SKILL.md body lines (ex-frontmatter) | ≤ 200 (grandfather shrink-only) |
+| Skill `references/**/*.md` lines | ≤ 280 (same agent-prose bar; ADR-0004) |
+| Agent-prose lint | AGENTS + SKILL.md + skill refs + `.speck/reference/` |
 
 Enforced by `.speck/scripts/validation/validators/validate-corpus-budget.sh`.
 

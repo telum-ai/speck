@@ -1,480 +1,148 @@
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
+# epic-validate — procedure
 
-User input:
+Prereq: all stories ≥ `IMPL-GREEN`; `/audit --epic <id>` → epic `audit-report.md`.
+Output: `[EPIC_DIR]/epic-validation-report.md`, `[EPIC_DIR]/epic-punch-list.md`.
+Templates: `.speck/templates/epic/epic-validation-report-template.md`, `.speck/templates/epic/epic-punch-list-template.md`, `.speck/templates/story/validation-report-template.md` (readiness taxonomy).
+Verdict: readiness state — never PASS/FAIL.
 
-$ARGUMENTS
+## 0. Template
 
-## Step 0: Read Templates First
+Read epic + story validation templates before writing.
 
-**Before any other action** — read templates now:
-```
-.speck/templates/epic/epic-validation-report-template.md
-.speck/templates/story/validation-report-template.md   # readiness state structure (epic uses same taxonomy)
-.speck/templates/epic/epic-punch-list-template.md
-```
+## 1. Readiness states
 
-**Checkpoint**: After reading, note the v7 readiness states (`NO-SHIP`, `IMPL-GREEN`, `INTEGRATION-GREEN`, `UX-RC`, `API-RC`, `COMMERCIAL-RC`, `SHIP-RC`, `SHIP`) and the v7 gate criteria.
+Same taxonomy as story-validate: `NO-SHIP` → `SHIP`.
+Epic MAX claimable = `MIN(story verified states, MATRIX_GRAIN_CAP, GRAPH_CAP)`.
 
----
+## 2. Pre-validate gates (STOP on fail)
 
-## Pre-Validate Gates (v7 — Mandatory)
+1. Every story `validation-report.md` with verified state ≥ `IMPL-GREEN`. Any `NO-SHIP` → STOP.
+2. **`/audit --epic <id>` → `audit-report.md`**. Missing or P0 → STOP.
+3. **`evidence-contract.md`**. Missing → STOP.
+4. **Archetype** — `.speck/project.json` → `project_archetype`.
+   - `infra_service` / `backend_api` / no UI → skip LARP + Premise-Challenge.
+   - UI-facing epic → full-flow `/larp` per persona (JTBD end-to-end, not per-story segments). Missing → STOP.
+   - High-impact surfaces → `/speck-premise-challenge` documented. Missing/failed → cap `IMPL-GREEN`/`INTEGRATION-GREEN`.
 
-Before doing ANY epic-level validation work, verify:
+## 3. Four axes
 
-1. **Every story in the epic has its own `validation-report.md` with verified state >= IMPL-GREEN**
-   - If any story is still NO-SHIP: STOP. Tell user "Story <id> is at NO-SHIP. Fix and re-validate before epic-validate."
+| Axis | Epic validate |
+|------|---------------|
+| CORRECT | Story rollup, audit, matrix, graph, mutation |
+| ON-CONTRACT | evidence-contract gates |
+| FELT-GOOD | Naive-hostile LARP on cold-start JTBD walkthrough (consumer UX-RC+) |
+| TASTE | Connoisseur-hostile (`/speck-larp` Job C) for consumer UX-RC+ |
 
-2. **`/audit --epic <id>` was run** producing `audit-report.md` at the epic level
-   - If missing: STOP. Tell user "Run `/audit --epic <id>` first — epic-validate requires the cross-story audit."
-   - If P0 findings: STOP. Resolve before proceeding.
+LARP: **DOES-IT-WORK** = JTBD cold-start walkthrough on built artifact; **IS-IT-GOOD** = FELT + TASTE + comprehension rubric.
+Graph proves traceable/complete/fresh — never faithful/good/excellent.
 
-3. **Check Project Archetype & UI Presence**:
-   - Read `.speck/project.json` → `project_archetype` (and `play_level`).
-   - If `project_archetype` is `infra_service` or `backend_api`, or if the epic has no user-facing UI components: **Bypass human `/larp` and Premise-Challenge requirements**. Proceed directly.
-   - For all UI-facing epics (archetypes `consumer_product`, `b2b_saas`, `internal_tool` with user-facing interfaces):
-     - **full-flow `/larp` MUST have been run** for every persona per evidence-contract
-       - Captures the JTBD walkthrough end-to-end across stories (not just per-story segments)
-       - If missing: STOP. Tell user "Run `/larp` for each persona's full epic flow first."
-     - **Premise-Challenge (Anti-Spec) Pass**: If the epic touches high-impact surfaces (onboarding/first-run, empty states, paywalls/billing, error/degraded states, celebration surfaces), a **Premise-Challenge pass MUST have been run** (using `/speck-premise-challenge`) and documented.
-       - If missing or failed: cap the maximum claimable state at `IMPL-GREEN` or `INTEGRATION-GREEN` (cannot claim `UX-RC` or higher).
+## 4. Algorithm
 
-4. **`evidence-contract.md` exists**
-   - If missing: STOP.
+1. Read every story `validation-report.md` — extract verified states + evidence paths.
+2. MAX claimable = MIN(story states, **MATRIX_GRAIN_CAP**, **GRAPH_CAP**).
+3. **Device-walk**: epic/story criteria marked `device-walk` without `larp-recordings/<sha>-human-attestation.md` → cap epic at `UX-RC`; refuse `SHIP-RC+`.
+4. Read epic `audit-report.md` — P0 lowers max.
+5. **JTBD cold-start LARP** (UI epics — mandatory centerpiece, non-deferrable):
+   - Clean boot, no dev shortcuts, real nav/auth on **built artifact** (browser/operator LARP).
+   - Store axe-core JSON; code-level composition reading is NOT UX-RC evidence.
+   - First-Time Comprehension rubric on walkthrough.
+   - Fail/dead-end/404 on primary path → cap `IMPL-GREEN` regardless of story passes.
+   - Infra blocker cap at `INTEGRATION-GREEN` only with logged reproduced LARP failure (P3). Try sandbox recipe first (local DB, review-session backdoor, token injection, MSW/wiremock).
+6. **FELT-GOOD**: consumer UX-RC+ → naive-hostile across epic JTBD; not run → `felt_axis: uncovered`, cap below UX-RC.
+7. **Deferrals** — required section with `Cap Status` per row; same cap rules as story-validate; browser cold-start LARP never `autonomous-not-done`.
+8. **INTEGRATION-GREEN**: real round-trip per §7 service across stories; live schema drift when DB + `DATABASE_URL`; no URL → honest ⚠️ deferral.
+9. Non-UI epics: Option B System Operational Scenario Walkthrough → declare `API-RC` when evidence-contract §8 criteria pass.
 
-If any pre-gate fails: refuse to proceed. Surface what's missing.
+## 5. Promise conservation (gates readiness)
 
----
-
-## v7 Epic Validation Algorithm
-
-1. Read every story's `validation-report.md` — extract verified states + evidence paths.
-2. The epic's MAX claimable state = MIN(story states, **MATRIX_GRAIN_CAP**). `MATRIX_GRAIN_CAP` is the MIN grain over ALL discharged traceability rows, emitted by `validate-traceability-matrix.sh` (step 5b) — an un-graded/story-grain matrix caps the epic below product grain even when every story claims UX-RC. This is the #87 fix: story-grain evidence cannot launder into a product-grain claim.
-2b. Evaluate verifiability tiers (agent-LARP vs. device-walk):
-    - Check if any story spec in the epic or the epic spec contains criteria marked `device-walk`.
-    - If `device-walk` criteria exist and no valid human-attestation file is recorded in `larp-recordings/<sha>-human-attestation.md` at the epic level (or linked from the stories), the AI agent's maximum claimable epic state is capped at `UX-RC` (agent-verified) and the agent CANNOT claim `SHIP-RC` or higher, marking the epic as "Awaiting human device walk" to complete `SHIP-RC+`.
-2c. **Parallel-Auditor Graceful Degradation Protocol**:
-    - The `/audit --epic` step uses parallel `speck-auditor` subagents. If any subagent stalls (e.g., reaches maximum timeout or watchdogs on large file reads), the main orchestrator MUST NOT block the entire validation.
-    - Instead, the orchestrator MUST gracefully degrade, take over the stalled subagent's scope, complete the check sequentially or via lighter heuristics, and explicitly disclose in `audit-report.md` and `epic-validation-report.md` that a fallback check was performed.
-2d. **Evaluate the FELT-GOOD axis** (the AI covers this — do NOT defer it to a human):
-    - Read `.speck/project.json` → `project_archetype`.
-    - For UI-facing consumer archetypes at `UX-RC` or higher, the AI **MUST have run the naive-hostile LARP** across the epic's cold-start JTBD walkthrough (First-Viewport Reaction + taste-judgment rubric) and recorded a first-impression taste verdict. Set `felt_axis: ai-verified` and cite the naive-hostile findings.
-      - If the naive-hostile pass has NOT been run, `felt_axis` is `uncovered` → cap the verified state at the last clean state below `UX-RC` and run the pass. (Do NOT wait for a human — the AI performs this judgment itself.)
-      - If the naive-hostile taste verdict surfaces confusion/disorientation/revulsion on any primary surface, treat it as a PASS-blocking finding and lower the state accordingly.
-    - A recorded human taste review (`larp-recordings/<sha>-felt-attestation.md`) is an **optional stronger signal** that promotes `felt_axis` to `human-verified`. It is never required to reach `SHIP-RC`.
-3. Read `audit-report.md` — any P0 lowers max claimable state.
-4. **Primary UI Gate — JTBD Cold-Start LARP (Mandatory Centerpiece)**:
-    - Running the individual stories' validations is necessary but completely insufficient to prove a product works, because stories are isolated islands and are vulnerable to the composition fallacy.
-    - For all UI-facing epics, the **JTBD cold-start LARP walkthrough is the absolute centerpiece of validation and is REQUIRED and non-deferrable**. You must execute a complete end-to-end walkthrough starting from a clean, non-seeded, cold-booted target build (no dev shortcuts, real navigation paths, real login flows).
-    - Read epic-level `larp-recordings/` — full JTBD walkthrough must PASS for UX-RC+.
-    - **Drive the real built app — do not substitute a code-level reading.** Whenever a browser/preview/simulator tool is available, the agent MUST drive the actual built artifact (browser/operator LARP) and **store the axe-core JSON**, rather than concluding "the stories compose end-to-end" by inspecting code. A code-level composition reading is NOT UX-RC evidence. This autonomous portion (build + browser LARP + stored axe + JTBD walkthrough) is REQUIRED. Deferring the browser cold-start LARP is strictly prohibited. If there is an infrastructure limitation, it must be reported as a hard blocker (`NO-SHIP`) rather than allowing a bypass. A cap at `INTEGRATION-GREEN` for a "named infrastructure blocker" is valid ONLY with a **logged, reproduced failure of the actual LARP recipe** — the attempted run + the specific error captured in the validation records — never an assertion, memory, or a prior epic's precedent (P3, #76.1). Try the Sandbox-Friendly recipe in `/larp` first.
-    - Run the **First-Time User Comprehension Rubric** on the walkthrough (What am I seeing? Why does it matter? What do I do next?).
-    - If the JTBD cold-start LARP walkthrough fails, or if first-time user comprehension is blocked on any primary screen/step (e.g. dead-end placeholders, broken navigation headers, hard 404s), **the epic validation is FAIL regardless of story-level results**, and the maximum claimable/verified state is strictly capped at `IMPL-GREEN`.
-
-### UI LARP Setup Recipe (Sandbox-Friendly)
-
-To execute browser LARPs successfully in sandboxed or restricted environments without real production databases/credentials:
-1. **Throwaway/Local DB**: Seed a local/SQLite or Docker-based database with minimal test fixtures.
-2. **Loopback/Review-Session Backdoor**: Implement a secure backdoor route or environment flag (e.g. `VITE_DEV_HTTP=true` or `process.env.PLAYWRIGHT_TEST=true`) that bypasses external OAuth/Clerk redirects and logs in a test user.
-3. **localStorage Token Re-injection**: Pre-populate `localStorage` or cookies with mock JWTs or session tokens before navigating, to simulate an authenticated state.
-4. **Loopback/Mock Server**: Run a lightweight local mock server (e.g., MSW or wiremock) to intercept and mock third-party API calls (e.g., Stripe, Resend) during the browser run.
-
-4b. **Verify Deferrals / What this validation did NOT verify**:
-    - Require that the epic validation report populates the `## 🔬 What this validation did NOT verify / Deferrals` section. Failure to declare what was unchecked or untested will fail the validation.
-    - **Cap Status enforcement**: every deferral row MUST include `Cap Status` (`evidence-pending` or `implementation-pending`). Any row tagged `implementation-pending` (code path not built) → verified state MUST cap at `NO-SHIP`. Any row tagged `autonomous-not-done` is NOT allowed for the browser cold-start LARP; any other autonomous deferral row tagged `autonomous-not-done` → cap at `IMPL-GREEN`/`INTEGRATION-GREEN` (cannot claim UX-RC/API-RC).
-4c. **INTEGRATION-GREEN gate** (when epic depends on external services in evidence-contract §7 or is DB-backed):
-    - If §7 lists services this epic touches, verify at least one **real round-trip** succeeded per service across the epic's stories (not mock-only). Capture logs/traces.
-    - If the project is DB-backed AND a reachable `DATABASE_URL` exists for this environment, run `validate-schema-drift.sh --live --strict --target "$DATABASE_URL"` — plain `--strict` with no `--live --target` never asks the live leg to run at all; it reports SKIPPED for schema parity and still exits 0, which is exactly how #95 P2-3 found this gate sanctioned as a checkbox pass with zero live schema evidence behind it. Ensure at least one real write path is exercised (reads can fail-close or swallow missing tables).
-    - If no reachable `DATABASE_URL` exists for this environment, do NOT check the "Live DB schema matches migrations" row off as ✅. SKIPPED is a real, honest verdict — nothing was proven, and a check nobody asked to run is not evidence the schema is correct. Record it as ⚠️ with `Cap Status: evidence-pending` in the Deferrals section (4b) instead.
-    - Mock-green + adversarial audit alone is insufficient — the E002 LLM epic passed both with zero real Gemini calls; INTEGRATION-GREEN requires proof of at least one live call per §7 service + schema-drift validation.
-    - If no §7 services apply and the project is not DB-backed, INTEGRATION-GREEN auto-passes.
-5. For non-UI epics (e.g. `infra_service` / `backend_api`): Validate the core system transaction flow via the Option B "System Operational Scenario Walkthrough". Verify all performance, load-handling, and failover invariants hold under disruption. Declare `API-RC` when autonomous API-RC criteria pass (see evidence-contract §8).
-
-5b. **Promise Conservation Re-Walk + Evaporation Audit (REQUIRED — gates the readiness state)**:
-   - **Re-walk the matrix with evidence**: run
-     ```
-     bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --require-evidence [EPIC_DIR]
-     ```
-     (For a quick, status-only check without cross-referencing story validation reports, you can append `--status-only`.)
-     Every `PRM-NNN` row MUST be `discharged` (a validated story cited it with evidence — see story-validate Spec Coverage), `descoped` (a DEC), or `pilot-gated` (deferred to the pilot program with a valid backing reference). The JTBD walkthrough is necessary but **NOT sufficient** — a passing JTBD sample does not prove the long tail of promised screens/elements/seams exists. **Any open/undischarged row → the epic CANNOT claim any readiness state** (cap at the last clean state, surface the gap).
-   - **Fold in MATRIX_GRAIN_CAP (#87)**: the run prints `MATRIX_GRAIN_CAP=<enum>` (MIN grain over all discharged rows) and a GRAIN FLOOR line. Read it and apply **MAX claimable = MIN(story states, MATRIX_GRAIN_CAP)** (step 2). An un-graded matrix caps at `INTEGRATION-GREEN` — so an epic whose stories claim UX-RC but whose matrix rows were discharged at story grain (unit test / helper import) cannot be validated at UX-RC until those rows are re-graded from real product-grain evidence (a cold-start build-LARP). Grade discharged rows at the grain their evidence was collected. As of v8.5.0 the per-row grain **teeth** BLOCK under `--require-evidence` (grain ≤ story effective state; a ≥ ux-rc row must cite walk-evidence; invalid grain token rejected) — a grain violation fails the matrix gate (separate from, and additive to, promise conservation). On the fast path (default mode) grain stays surfaced-only. `MATRIX_GRAIN_CAP` is load-bearing.
-   - **Evaporation audit (dead-seam detection)**: grep the shipped data model + code for affordances that exist but are never populated, rendered, or wired — e.g. an `urgent` enum value never set by any writer, a prop-gated button with no caller, a status column no query reads, a route with no link. These are promises that were half-built then abandoned — **descope-by-silence**. Each finding must become either a DEC (intentional descope) or a P1 fix; record them in the report's Promise Conservation section. A drawn-but-dead seam is not "done", it is evaporated.
-5c. **Gate-liveness (wiring + canary, #88):** run the wiring check (`validate-gate-liveness.sh --strict`) at this readiness transition. For a `UX-RC`+ epic, also run the opt-in canary probe — it proves each §6a-declared gate would actually go red on a real defect in its domain (not just that it's wired):
-   ```bash
-   bash .speck/scripts/validation/validators/gate-liveness-probe.sh --require-liveness specs/projects/<PROJECT_ID>/evidence-contract.md
-   ```
-   A `GATE_DISARMED.P1` (baseline green, in-scope defect not caught — incl. the #85 scope-hole) is a P1 finding: the gate manufactures false evidence. `GATE_LIVENESS_UNVERIFIED.P2` caps the claimable state (fold into MAX claimable, like `MATRIX_GRAIN_CAP`). Hard-blocks only at COMMERCIAL-RC/SHIP-RC (project-validate owns that gate); mutation runs in a throwaway worktree and never touches the real tree or runs a destructive gate.
-5d. **Witness-graph forcing gates (structural traceability, v8.8):** rebuild the graph and run its gates:
-   ```bash
-   python3 .speck/scripts/graph/speck_graph.py build  specs/projects/<PROJECT_ID>
-   python3 .speck/scripts/graph/speck_graph.py check   specs/projects/<PROJECT_ID>
-   ```
-   A `DANGLING_REF.P1` (a discharge/dep pointing at a story or `AC-N` that does not exist), `DUP_ID.P1` (two story dirs sharing an S-number in one epic), or `PHANTOM_PROMISE.P1` (an `MM-N`/`JOB-N` the contract promises but NO story delivers — "build the right thing") is a P1 finding: fix the anchor/add the discharge, do not hand-wave. `GRAPH_CAP` (lowered by `GRAPH_UNMIGRATED.P3`, `GRAPH_STALE.P2`) folds into MAX claimable exactly like `MATRIX_GRAIN_CAP` — an un-migrated or stale graph caps at `INTEGRATION-GREEN`. **The graph proves traceable/complete/fresh only** — it never certifies faithful/good/excellent (those remain owned by the four-axis LARP + `/audit`; the graph feeds them, it does not replace them). `UNJUDGED_SURFACE.P2` (v9.4) caps `ux-rc+` for any `MM-N` with no recorded verdict — the graph proves the IS-IT-GOOD machinery RAN (a verdict exists), never that the verdict is honest (that stays with this LARP + `/audit`). `ORPHAN_CODE` reports as NOT-evaluated until tests-as-join (P5) — never counted as a pass.
-6. Cross-epic integration check: any seams to other epics tested?
-7. If any previous rating, state, or recommendation has changed, write the `### Evaluative Drift / Change Explanation` section with detailed logical rationale.
-8. Run banned-phrase self-check on this report's own language before publishing
-9. Apply SHA stamp; trigger `/project-state` regeneration
-9b. **Run FELT-GOOD axis validation:** run `bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict epic-validation-report.md` to ensure four-axis compliance and that the AI-covered FELT-GOOD axis is not left `uncovered` for consumer UX-RC+ claims.
-9c. **Run TASTE axis validation:** run `bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict epic-validation-report.md` to ensure the AI-covered TASTE (connoisseur) axis is not left `uncovered` for consumer UX-RC+ claims, that a `forks-open` claim lists its aesthetic forks, and that a `universal-only` anchor doesn't back a premium ship claim. If TASTE is uncovered, run the connoisseur-hostile pass (`/speck-larp` Job C) first.
-
-### Continuous Feedback Capture Trigger
-If any story-level validation is bypassed or the JTBD LARP is blocked by infrastructure, you **MUST** run `/speck-feedback` (or read `.cursor/skills/speck-feedback/SKILL.md`) to document the block and propose an upstream fix. Do not let workarounds go undocumented.
-10. **If readiness >= UX-RC:** run `.speck/scripts/regenerate-project-readme.sh --epic-validated <E###>` to update README magic-moments / recently-validated sections
-
-The legacy v6 epic validation algorithm follows below (use for cross-story integration details, but verdict MUST be a readiness state).
-
----
-
-Comprehensive validation that the epic delivers on its promises and integrates properly with the system.
-
-## Subagent Parallelization
-
-This command benefits from parallel validation checks:
-
-```
-├── [Parallel] speck-auditor: "Verify all story validations pass"
-├── [Parallel] speck-auditor: "Check epic goals from epic.md are achieved"
-├── [Parallel] speck-auditor: "Verify architecture matches epic-architecture.md"
-├── [Parallel] speck-auditor: "Test integration with other epics works"
-├── [Parallel] speck-auditor: "Check code quality, tests, and docs"
-├── [Parallel] speck-auditor: "Verify Cursor rules compliance"
-└── [Wait] → Synthesize into epic-validation-report.md
-
-Each auditor returns PASS | FAIL | PARTIAL with evidence.
+```bash
+bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --require-evidence [EPIC_DIR]
 ```
 
-**Speedup**: 5-6x compared to sequential validation.
+- Every `PRM-NNN`: `discharged` | `descoped` (DEC) | `pilot-gated`. Open/undischarged → cap at last clean state.
+- Read `MATRIX_GRAIN_CAP=<enum>` + GRAIN FLOOR line. Un-graded matrix caps `INTEGRATION-GREEN`.
+- `--require-evidence`: per-row grain teeth BLOCK (grain ≤ story effective state; ≥ ux-rc row needs walk evidence).
+- **Evaporation audit**: grep shipped model/code for dead seams (enum never set, prop-gated button uncalled, orphan route). Each → DEC or P1 fix in Promise Conservation section.
 
----
+## 6. Gate liveness (#88)
 
-1. Load epic completion status:
-   - Original specs: epic.md, epic-tech-spec.md
-   - Story status: Check epic-breakdown.md completion
-   - Story validations: Check each story directory
-   - Integration with other epics
-   - If files missing: ERROR "Epic planning artifacts not found"
-
-2. Story completion verification:
-   ```
-   For each story in epic-breakdown.md:
-   - Check stories/[story-id]/validation-report.md
-   - Verify implementation matches spec
-   - Confirm tests passing
-   - Note any deviations
-   ```
-
-3. Multi-level validation:
-
-   **Epic Vision Validation**
-   - Original value proposition achieved?
-   - All user stories implemented?
-   - Success criteria met?
-   - Business value delivered?
-
-   **Technical Implementation Validation**
-   - Architecture as designed?
-   - All APIs implemented correctly?
-   - Data models match spec?
-   - Performance targets met?
-
-   **Integration Validation**
-   - Works with dependent epics?
-   - Provides promised interfaces?
-   - No breaking changes?
-   - End-to-end flows work?
-
-   **Quality Standards Validation**
-   - Code quality gates passed?
-   - Test coverage adequate?
-   - Documentation complete?
-   - Security requirements met?
-   - Cursor rules compliance across stories?
-
-4. Cursor rules compliance aggregation:
-   - Check if `.cursor/rules/` directory exists
-   - If exists, load all rule files (`*.mdc` or `*.md`)
-   - Aggregate rule compliance from story validation reports:
-     * For each story in epic, check if validation-report.md includes Cursor Rules section
-     * Collect compliance status for each applicable rule across all stories
-     * Identify patterns: rules consistently passed vs consistently violated
-   - For epic-level validation, check rules that apply to epic scope:
-     * Cross-story integration patterns
-     * Epic-wide architectural rules
-     * Consistency rules (e.g., same patterns used across stories)
-   - Generate epic-level rules compliance summary:
-     ```
-     ## Cursor Rules Compliance (Epic Summary)
-     
-     **Rules Directory**: `.cursor/rules/` [exists/not found]
-     **Total Rules**: [X]
-     **Applicable to Epic**: [Y]
-     
-     | Rule File | Stories Using | Pass Rate | Common Issues |
-     |-----------|---------------|-----------|---------------|
-     | [rule.mdc] | 8/8 | 100% (8/8) | None |
-     | [rule.mdc] | 5/8 | 60% (3/5) | [pattern] violated in S002, S005, S007 |
-     
-     **Epic-Level Rule Checks**:
-     - Consistency across stories: [✅/⚠️/❌]
-     - Integration patterns: [✅/⚠️/❌]
-     - Cross-story architectural compliance: [✅/⚠️/❌]
-     ```
-   - If no `.cursor/rules/` directory: Note "No project-specific rules found"
-   - If patterns of violations across stories: Flag for epic-level retrospective
-
-4.5. **Visual Design Validation** (if epic has UI components):
-
-   **Reference**: `.cursor/skills/visual-testing/SKILL.md`
-   
-   **Load Epic-Level Visual Artifacts**:
-   - `[EPIC_DIR]/wireframes.md` → Layout expectations
-   - `[EPIC_DIR]/user-journey.md` → Touchpoint visual requirements
-   - `specs/projects/[PROJECT_ID]/design-system.md` → Tokens, patterns
-   - `specs/projects/[PROJECT_ID]/ux-strategy.md` → Voice/tone, accessibility
-   
-   **Aggregate Story Visual Results**:
-   - Collect screenshots from all story `larp-recordings/` and story validation folders.
-   - Check each story's validation-report.md for visual validation section.
-   - Aggregate design token compliance percentages.
-   - Aggregate accessibility audit results.
-   
-   **LOCAL-FIRST MULTI-MODAL VISUAL REVIEW (CRITICAL FOR AGENTS)**:
-   - If screenshots or recordings exist, and you are a multi-modal AI agent, **you MUST use the `Read` tool on these image files** to visually inspect the overall coherence, layouts, spacing, and brand feel of the epic.
-   - Evaluate the screens against the user journey touchpoints to ensure transitions and page flows feel integrated and smooth, citing the specific screenshot path read in your review.
-   
-   **Wireframe Adherence Check**:
-   - Compare implemented screens against wireframes.md layouts
-   - Check grid alignment, spacing, hierarchy
-   - Verify responsive breakpoints match wireframe variants
-   - Note deviations with justification
-   
-   **User Journey Visual Completion**:
-   - For each touchpoint in user-journey.md:
-     * Verify screen exists and is implemented
-     * Check visual treatment matches emotional goals
-     * Verify transitions/animations between touchpoints
-   - Flag missing or incomplete touchpoints
-   
-   **Cross-Story Visual Consistency**:
-   - Same components look identical across stories
-   - Consistent spacing, typography, colors
-   - No one-off styling deviations
-   - All use design system tokens (no hardcoded values)
-   
-   **Design System Adoption**:
-   - Calculate % of components using design-system.md patterns
-   - Flag custom components that should use existing patterns
-   - Note design system gaps (patterns needed but not defined)
-   
-   **Voice/Tone Consistency**:
-   - Aggregate voice/tone compliance from story validations
-   - Check consistency across epic (same voice everywhere)
-   - Flag mixed messaging or tonal inconsistencies
-
-5. Execute validation suites:
-
-   **Automated Testing**
-   - Run all story unit tests
-   - Run epic integration tests
-   - Run cross-epic tests
-   - Performance benchmarks
-   - Security scans
-
-   **Manual Validation**
-   - User acceptance scenarios
-   - Epic-level user journeys
-   - Edge case verification
-   - Stakeholder demos
-
-5b. Mutation-prove every guard you are about to CITE (fills `## 🧬 Mutation Record`):
-
-   - A green suite is not evidence. The report's Evidence column names specific guards as the reason
-     an epic-level AC is discharged, and a guard is not evidence until someone watched it fail.
-     **One row per guard whose path appears in the Evidence column**, not one per test in the suite —
-     a suite-wide version of this section would be filled in mostly with fiction and become the
-     surrogate proof it exists to kill.
-   - For each such guard, run:
-     ```
-     .speck/scripts/validation/mutate-guard.sh \
-       --file <production path> --pattern '<the shipped line>' --replacement '<the defect>' \
-       --red '<the cited guard invocation>' --green '<a control that must STAY green>' \
-       [--expect-count N]
-     ```
-     It mutates inside a **throwaway worktree**, so there is nothing to revert and an interrupted run
-     cannot leave a mutated production file behind. It refuses a pattern that does not match exactly
-     once, a comment or docstring line, and a test or fixture path — the three ways a mutation is
-     silently a no-op. **Transcribe its `SPECK_MUTATION_*` output into the Mutation Record; never
-     type a verdict by hand.**
-   - If the mutation comes back **`GUARD_MUTATION_GREEN.P2`, record it green** and write the honest
-     scope onto the test. **Never tune the mutation until it reddens.** A cited guard carrying
-     `GUARD_UNMUTATED.P2` measured nothing, so it does not discharge its AC at this state.
-   - **Merged-tree rule.** In a fan-out, the Mutation SHA is the MERGE commit and the conductor
-     re-runs each mutation itself, in the merged tree. A worktree-branch SHA is a finding: a mutation
-     proved in worktree *k* is a statement about a tree that no longer exists — and its receipt pins
-     a SHA that will not resolve, so the cross-check below reports it.
-
-6. Generate validation report:
-
-   **CRITICAL**: Load and follow the template exactly:
-   ```
-   .speck/templates/epic/epic-validation-report-template.md
-   ```
-
-   Write output to: `[EPIC_DIR]/epic-validation-report.md`
-
-   **Then cross-check the Mutation Record against the receipts:**
-   ```
-   .speck/scripts/validation/mutate-guard.sh --verify-receipt [EPIC_DIR]/epic-validation-report.md
-   ```
-   - `RECEIPT_VERIFIED` — every cited site resolves to a real line whose pinned content recomputes
-     at the receipt's SHA.
-   - `RECEIPT_MISMATCH.P1` — **blocks.** A cited site contradicts the receipts this repo itself
-     produces: an invented site, a site-less verdict row, a receipt whose content does not
-     recompute, or a report claiming a stronger verdict than the run recorded.
-   - `RECEIPT_MISSING.P2` / `RECEIPT_NO_CITATIONS.P2` — honest degrades, non-blocking. A project that
-     has never emitted a receipt is not held to one; a report with no filled row has recorded
-     nothing to check.
-
-   **Know exactly what this proves, and do not report more than it does.** The cross-check binds a
-   *citation* to a real line at a real SHA — it kills the invented site, the site-less row and the
-   silently-upgraded verdict. It **cannot** prove a mutation was actually run: the receipt is a local
-   file written by a local script, so an agent with shell access can synthesise one. The forgery cost
-   rises from "type a verdict into a cell" to "produce a receipt that recomputes against the real
-   line at the real SHA" — real, bounded, and not a proof of execution. **`RECEIPT_VERIFIED` means
-   the citation is real, never that the mutation happened.** The validator enforces that a verdict
-   was *recorded*, not that a mutation was *run*.
-
-7. Generate punch list:
-
-   **CRITICAL**: Load and follow the template exactly:
-   ```
-   .speck/templates/epic/epic-punch-list-template.md
-   ```
-
-   Write output to: `[EPIC_DIR]/epic-punch-list.md`
-
-8. Save validation artifacts:
-   - Report: `[EPIC_DIR]/epic-validation-report.md`
-   - Punch list: `[EPIC_DIR]/epic-punch-list.md`
-
-9. Update epic status:
-   - Update epic.md status field
-   - Note completion date
-   - Link validation report
-
-10. Output summary:
-   ```
-   ✅ Epic Validation Complete!
-   
-   Epic: [Name]
-   Status: [COMPLETE/PARTIAL/FAILED]
-   
-   Results:
-   - Stories Complete: [X of Y]
-   - Tests Passing: [A]%
-   - Performance: [Met/Not Met]
-   - Quality Gates: [Passed/Failed]
-   
-   Outstanding Issues: [Count]
-   - Critical: [X]
-   - Important: [Y]
-   - Minor: [Z]
-   
-   [If APPROVED]:
-   Epic ready for production!
-   Next: Integration with other epics
-   
-   [If CONDITIONAL]:
-   Fix required items, then re-validate
-   
-   Reports:
-   - epic-validation-report.md
-   - epic-punch-list.md
-   ```
-
----
-
-## JTBD Walkthrough (REQUIRED — Top-Down Product Coherence)
-
-**This section prevents the composition fallacy** — where each story passes individually but the epic doesn't work as a product.
-
-After all bottom-up validation passes (steps 1-10), perform a **top-down walkthrough** of the epic's core JTBD:
-
-### Step A: Identify the Epic's Core JTBD
-
-Read `epic.md` and extract:
-- What workflow does this epic enable?
-- What is the user trying to accomplish?
-- What does success look like from the user's perspective?
-
-### Step B: Walk the Journey End-to-End
-
-Starting from the app's entry point (login page, home screen, etc.):
-1. Attempt to complete the epic's core workflow as a real user would
-2. Do NOT use dev shortcuts, hardcoded UUIDs, or API headers
-3. Do NOT assume knowledge of internal IDs or system internals
-4. Record every step, noting what works and what doesn't
-
-### Step C: Check Composition
-
-| Check | Question | FAIL if |
-|-------|----------|---------|
-| Discoverability | Can a user find every feature in this epic? | Features exist but aren't reachable from navigation |
-| Auth continuity | Does authentication work through the entire flow? | Dev-mode headers, hardcoded tokens, or missing login |
-| Scaffolding | Are any dev shortcuts still in the UI? | UUID text fields, debug panels, placeholder auth |
-| Connected flow | Do the stories connect into a coherent journey? | Stories are isolated islands with no navigation between them |
-| Platform coverage | If multi-platform, does each platform deliver usable experience? | "Use the other platform for this" for core features |
-
-### Step D: Cross-Epic Integration (if dependencies exist)
-
-Read `epics.md` or `epic-breakdown.md` for this epic's dependencies:
-- For each upstream epic: verify data/auth/context flows correctly into this epic
-- For each downstream epic: verify this epic exposes what dependents need
-- Test navigation between features from different epics
-- Verify shared state (auth tokens, user context, org context) carries through
-
-### Step E: Generate JTBD Walkthrough Section
-
-Include in `epic-validation-report.md`:
-
-```markdown
-## JTBD Walkthrough
-
-**Core Job**: [What the user is trying to accomplish]
-**Entry Point**: [Where the user starts — e.g., login page, home dashboard]
-**Date**: [When walkthrough was performed]
-
-### Journey Steps
-
-| Step | User Action | Expected Result | Actual Result | Status |
-|------|-------------|-----------------|---------------|--------|
-| 1 | Open app | See login/home | [What happened] | ✅/❌ |
-| 2 | Navigate to [feature] | Find via [nav element] | [What happened] | ✅/❌ |
-| ... | ... | ... | ... | ... |
-
-### Composition Assessment
-
-- **JTBD Completion**: [COMPLETE / PARTIAL / BLOCKED]
-- **Blocking Issues**: [List if not COMPLETE]
-- **Scaffolding Remaining**: [List any dev shortcuts still in UI]
-- **Platform Coverage**: [Which platforms deliver this workflow]
-
-### Cross-Epic Integration
-
-- **Upstream Dependencies Tested**: [List epics and results]
-- **Downstream Interfaces Verified**: [List epics and results]
-- **Shared State**: [Auth/context carries through? Y/N]
+```bash
+bash .speck/scripts/validation/validators/validate-gate-liveness.sh --strict
+bash .speck/scripts/validation/validators/gate-liveness-probe.sh --require-liveness specs/projects/<PROJECT_ID>/evidence-contract.md
 ```
 
-### Step F: Determine Final Status
+- `GATE_DISARMED.P1` → P1 (gate manufactures false evidence).
+- `GATE_LIVENESS_UNVERIFIED.P2` → fold into MAX claimable.
+- Hard-block at COMMERCIAL-RC/SHIP-RC owned by project-validate; epic runs probe at UX-RC+ transition.
 
-**CRITICAL**: If JTBD completion is BLOCKED or PARTIAL, the epic validation is **FAIL** — regardless of whether all individual story validations passed. Each part working is not enough; the whole must work.
+## 7. Witness graph (v8.8)
 
-| JTBD Status | Epic Validation |
-|-------------|-----------------|
-| COMPLETE | PASS (if all other checks also pass) |
-| PARTIAL | CONDITIONAL_PASS — list what's missing, create punch-list items |
-| BLOCKED | FAIL — users cannot accomplish the core job |
+```bash
+python3 .speck/scripts/graph/speck_graph.py build specs/projects/<PROJECT_ID>
+python3 .speck/scripts/graph/speck_graph.py check specs/projects/<PROJECT_ID>
+```
 
----
+| Code | Meaning |
+|------|---------|
+| `DANGLING_REF.P1` | Discharge points at missing story/AC |
+| `DUP_ID.P1` | Two story dirs share S-number |
+| `PHANTOM_PROMISE.P1` | MM/JOB promised, no story delivers |
+| `GRAPH_CAP` | Un-migrated/stale graph caps `INTEGRATION-GREEN` |
+| `UNJUDGED_SURFACE.P2` | MM-N with no verdict caps ux-rc+ |
 
-Note: Epic validation ensures the feature set works as a cohesive whole — both bottom-up (spec compliance) AND top-down (product coherence).
+`ORPHAN_CODE` → NOT-evaluated until tests-as-join — never a pass.
+
+## 8. Cross-epic + composition
+
+- Test seams to dependent epics (data/auth/navigation).
+- JTBD walkthrough section in report: core job, entry point, journey steps, composition assessment, cross-epic integration.
+- JTBD `BLOCKED`/`PARTIAL` → epic fails regardless of story greens.
+
+## 9. Visual (UI epics)
+
+Reference: `.cursor/skills/visual-testing/SKILL.md` + `.cursor/skills/visual-testing/references/<host>.md`.
+Aggregate story `larp-recordings/` + visual sections; wireframe adherence; user-journey touchpoints; cross-story consistency; design-system adoption %.
+Multimodal: `Read` screenshots for coherence — cite paths.
+
+## 10. Mutation (epic-cited guards)
+
+Same rules as story-validate. **Merged-tree rule**: mutation SHA = merge commit; conductor re-runs in merged tree. Worktree-branch SHA = finding.
+
+Receipt verify:
+```bash
+.speck/scripts/validation/mutate-guard.sh --verify-receipt [EPIC_DIR]/epic-validation-report.md
+```
+
+## 11. Legacy rollup checks
+
+Epic vision vs `epic.md`; architecture vs `epic-tech-spec.md`; story completion from `epic-breakdown.md`; aggregate tests; Cursor rules compliance across stories; performance/security/docs.
+
+Parallel subagents when host supports; else sequential.
+
+## 12. Write outputs
+
+1. `epic-validation-report.md` — match template; evaluative drift section if state changed.
+2. `epic-punch-list.md` — match template.
+3. Update `epic.md` status + link report.
+
+Post-write:
+```bash
+bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict epic-validation-report.md
+bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict epic-validation-report.md
+```
+
+Readiness ≥ UX-RC: `.speck/scripts/regenerate-project-readme.sh --epic-validated <E###>`.
+Trigger `/project-state`. Bypass/blocked LARP → `/speck-feedback`.
+
+Audit subagent stall: degrade gracefully, complete scope sequentially, disclose fallback in audit + epic reports.
+
+## NEVER / ALWAYS
+
+- NEVER claim epic UX-RC from story greens alone (composition fallacy)
+- NEVER defer browser cold-start LARP for UI epics
+- NEVER discharge PRM from JTBD sample alone (long tail must exist)
+- NEVER hand-wave phantom/dead seams
+- NEVER substitute PASS/FAIL for readiness state
+- ALWAYS run `/audit --epic` first
+- ALWAYS apply MIN(story, MATRIX_GRAIN_CAP, GRAPH_CAP)
+- ALWAYS SHA-stamp report

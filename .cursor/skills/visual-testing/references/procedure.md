@@ -1,202 +1,118 @@
-## Host references
-Read exactly one under `references/`: web.md, desktop-electron.md, desktop-tauri.md, extension.md, mobile-flutter.md, mobile-react-native.md.
+# visual-testing — procedure
 
-# Visual Testing
+Prereq: UI story/epic validate; `ui-spec.md` exists → visual testing REQUIRED.
+Output: screenshots + audit results → `validation-report.md` **Visual/UX Validation** section.
 
-When validating UI stories, capture screenshots, run audits, and compare against design specifications.
+Read exactly one host reference under `references/` (see §2).
 
----
+## 1. Tight loop (default)
 
-## Core Principle
+Scope before expanding:
 
-Visual testing ensures that:
-1. Implementation matches design specifications (`ui-spec.md`, `wireframes.md`)
-2. Design system tokens are used correctly (no hardcoded values)
-3. Responsive behavior works across breakpoints
-4. Accessibility requirements are met (color contrast, touch targets)
-5. Voice/tone in UI copy matches `ux-strategy.md`
+| Dimension | Start | Expand when |
+|-----------|-------|-------------|
+| Screens | 1–3 most impacted | More issues or story scope |
+| Breakpoints | mobile + desktop | Responsive in scope |
+| States | default + loading + empty + error + one interaction | Epic cross-story check |
 
-**Visual testing is NOT optional for UI-heavy stories** - it catches bugs that functional tests miss.
+Skip entirely: `cli` / `api` archetype; API-only, CLI, migrations, config stories without UI.
 
----
+## 2. Platform detection
 
-## Tight Loop (Default)
+1. `project.md` frontmatter `_active_recipe`
+2. Recipe `visual_testing.platform`
+3. Fallback: `architecture.md` stack
 
-**Goal**: Get high-signal visual feedback fast (minutes, not hours) with minimal flake.
+| Platform | Read | Tools |
+|----------|------|-------|
+| `web` | `references/web.md` | Browser MCP, Playwright |
+| `mobile-flutter` | `references/mobile-flutter.md` | Golden tests, Alchemist |
+| `mobile-rn` | `references/mobile-react-native.md` | Maestro, Detox |
+| `desktop-electron` | `references/desktop-electron.md` | Playwright Electron |
+| `desktop-tauri` | `references/desktop-tauri.md` | WebdriverIO |
+| `extension` | `references/extension.md` | Puppeteer/Playwright |
+| `cli` / `api` | None | Skip |
 
-**Start Small**:
-- **Screens**: Focus on 1–3 screens/components most impacted by the story
-- **Breakpoints**: Start with `mobile` + `desktop` (expand only if responsive behavior is in scope)
-- **States**: Cover default + loading + empty + error (as applicable) + one interaction state
+Execute host-specific steps from chosen reference only.
 
-**Expand Only When**:
-- Initial findings reveal more issues
-- Story explicitly covers responsive edge cases
-- Epic validation requires cross-story consistency check
+## 3. Load specs
 
----
+Read before capture:
 
-## Platform Detection
+| File | Use |
+|------|-----|
+| `design-system.md` | Tokens, breakpoints, components |
+| `ui-spec.md` | States, Testing Checklist |
+| `wireframes.md` | Layouts (if exists) |
+| `ux-strategy.md` | Voice/tone, a11y |
 
-Determine the testing platform from:
+## 4. Capability check
 
-1. Read `_active_recipe` from `project.md` frontmatter
-2. Load the recipe's `visual_testing.platform` field
-3. Fallback: detect stack from `architecture.md`
+Verify runtime + tools (browser MCP, emulator, app window). Unavailable → generate manual validation checklist instead of blocking silently.
 
-Based on platform, Read exactly one host reference under this skill's `references/` (v11 consolidated host skills here):
+## 5. Capture
 
-| Platform | Host rule to Read | Tools |
-|----------|-------------------|-------|
-| `web` | `.cursor/skills/visual-testing/references/web.md` | Browser MCP, Playwright |
-| `mobile-flutter` | `.cursor/skills/visual-testing/references/mobile-flutter.md` | Golden tests, Alchemist |
-| `mobile-rn` | `.cursor/skills/visual-testing/references/mobile-react-native.md` | Maestro, Detox |
-| `desktop-electron` | `.cursor/skills/visual-testing/references/desktop-electron.md` | Playwright Electron |
-| `desktop-tauri` | `.cursor/skills/visual-testing/references/desktop-tauri.md` | WebdriverIO |
-| `extension` | `.cursor/skills/visual-testing/references/extension.md` | Puppeteer/Playwright |
-| `cli` / `api` | None | Skip visual testing |
+Navigate; screenshot at scoped breakpoints/states. Store:
 
----
+```
+{STORY_DIR}/screenshots/{screen}-{breakpoint|state}.png
+```
 
-## Validation Workflow
+## 6. Audits
 
-### 1. Load Design Specifications
+| Platform | Run |
+|----------|-----|
+| Web | `runAccessibilityAudit()`, console errors |
+| Mobile | Runtime warnings |
+| All | Grep hardcoded colors/sizes |
 
-Read these files to understand what to validate:
-- `design-system.md` → tokens, breakpoints, components
-- `ui-spec.md` → component specs, states, Testing Checklist
-- `wireframes.md` → layouts (if exists)
-- `ux-strategy.md` → voice/tone, accessibility requirements
+Token violations:
 
-### 2. Check Capabilities
+```bash
+grep -r '#[0-9A-Fa-f]\{6\}' src/
+grep -r '[0-9]\+px' src/components/
+```
 
-Before attempting visual testing, verify:
-- **Web**: Are Browser MCP tools available?
-- **Mobile**: Is emulator/simulator running?
-- **Desktop**: Can you access the application window?
-
-If tools unavailable, generate a manual validation checklist instead.
-
-### 3. Capture Screenshots (Tight Loop Scope)
-
-For 1–3 key screens/components in the story:
-- Navigate to the page/component
-- Capture at `mobile` + `desktop` breakpoints
-- Trigger and capture key states (default, hover, error, empty)
-- Store in `{STORY_DIR}/screenshots/`
-
-### 4. Run Platform Audits
-
-- **Web**: Run `runAccessibilityAudit()`, `getConsoleErrors()`
-- **Mobile**: Check for runtime warnings
-- **All**: Grep source for hardcoded hex colors and pixel values
-
-### 5. Validate Against Specs
-
-Compare findings to specifications:
-- Screenshots match wireframes/layouts?
-- `ui-spec.md` Testing Checklist items pass?
-- Voice/tone matches `ux-strategy.md`?
-- Accessibility requirements met?
-
-### 6. Generate Report Section
-
-Add a "Visual/UX Validation" section to `validation-report.md`:
-- Screenshot gallery with annotations
-- Design token compliance percentage
-- Accessibility audit results
-- Issues found (with severity)
-
----
-
-## Design Token Validation
-
-Check that implementation uses tokens, not hardcoded values:
-
-| Property | ✅ Token | ❌ Hardcoded |
-|----------|----------|--------------|
+| Property | Token | Hardcoded |
+|----------|-------|-----------|
 | Color | `var(--primary-500)` | `#0EA5E9` |
 | Spacing | `space-4` | `16px` |
 | Typography | `text-lg` | `font-size: 18px` |
-| Border Radius | `rounded-lg` | `border-radius: 8px` |
+| Radius | `rounded-lg` | `border-radius: 8px` |
 
-**Detection**:
-```bash
-# Find hardcoded hex colors
-grep -r "#[0-9A-Fa-f]\{6\}" src/
+## 7. Validate against specs
 
-# Find pixel values
-grep -r "[0-9]\+px" src/components/
-```
+- Layout vs wireframes/ui-spec
+- `ui-spec.md` Testing Checklist pass
+- Copy vs `ux-strategy.md`
+- A11y: contrast 4.5:1 text / 3:1 UI; 44×44 touch; focus visible; ARIA on interactives
 
-Flag violations in the validation report.
+Critical a11y failure → block validation.
 
----
+## 8. Report section
 
-## Accessibility Requirements
+Add to `validation-report.md`:
 
-Run accessibility audit and verify:
+- Screenshot gallery + annotations
+- Token compliance %
+- A11y audit results
+- Issues with severity
 
-| Check | Target | Tool |
-|-------|--------|------|
-| Color contrast | 4.5:1 text, 3:1 UI (WCAG AA) | `runAccessibilityAudit` |
-| Touch targets | 44×44px minimum | Manual/computed styles |
-| Focus indicators | 2px+ visible outline | Visual inspection |
-| ARIA labels | All interactive elements | DOM inspection |
+## 9. Feedback loop
 
-**Block validation on critical accessibility failures.**
+| Finding | Action | Tag |
+|---------|--------|-----|
+| Token violation | Fix + report | `GOTCHA` |
+| Voice mismatch | Note for ux-strategy | — |
+| A11y failure | Block; add tasks | `GOTCHA` |
+| New UI pattern | Flag design-system | `PATTERN` |
 
----
+Feed into `story-retro.md`.
 
-## Screenshot Storage
+## NEVER / ALWAYS
 
-Store screenshots consistently:
-
-```
-{STORY_DIR}/
-├── screenshots/
-│   ├── {screen}-mobile.png
-│   ├── {screen}-desktop.png
-│   ├── {screen}-hover.png
-│   └── {screen}-error.png
-```
-
----
-
-## Feedback Loop
-
-Visual testing findings must flow back into the methodology:
-
-| Finding | Immediate Action | Commit Tag |
-|---------|------------------|------------|
-| Design token violation | Flag in report, fix code | `GOTCHA` |
-| Voice/tone mismatch | Note for ux-strategy.md update | - |
-| Accessibility failure | Block validation, add to tasks.md | `GOTCHA` |
-| New UI pattern discovered | Flag for design-system.md addition | `PATTERN` |
-
-After validation, findings feed into `story-retro.md`.
-
----
-
-## When to Skip Visual Testing
-
-Skip for:
-- API-only stories (no UI)
-- CLI commands
-- Data migrations
-- Configuration changes
-
-**Rule**: If `ui-spec.md` exists, visual testing is REQUIRED.
-
----
-
-## Platform-Specific Rules
-
-Host details live under this skill's `references/` (v11). Read exactly one:
-
-- `references/web.md` — Browser MCP tools, Playwright, Percy
-- `references/mobile-flutter.md` — Golden tests, Alchemist
-- `references/mobile-react-native.md` — Maestro, Detox
-- `references/desktop-electron.md` — Playwright Electron
-- `references/desktop-tauri.md` — WebdriverIO
-- `references/extension.md` — Puppeteer, CDP
+- NEVER skip when `ui-spec.md` exists
+- NEVER expand scope before tight loop runs
+- NEVER block on missing tools without manual checklist fallback
+- ALWAYS read one host reference for platform steps
+- ALWAYS store screenshots under story dir

@@ -1,387 +1,106 @@
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
+# project-plan — procedure
 
-User input:
+Input: `$ARGUMENTS`.
+Output: `[PROJECT_DIR]/PRD.md`, `[PROJECT_DIR]/epics.md`, `[PROJECT_DIR]/epics/E###-*/epic.md` placeholders.
+Templates: `.speck/templates/project/prd-template.md`, `.speck/templates/project/epics-list-template.md`.
+Prereq: `project.md`; Platform requires `architecture.md`.
 
-$ARGUMENTS
+## 0. Templates
 
-## Step 0: Read Templates First
+Read both templates before writing.
 
-**Before any other action** — read BOTH templates now using the Read tool:
+## 1. Play level
+
+Read `.speck/project.json` → `play_level`.
+
+| Level | Action |
+|-------|--------|
+| Sprint | STOP — use `sprint-prd-template.md`; `/project-promote` first |
+| Build | Proceed; architecture optional unless 4+ epics (gate below) |
+| Platform | Full flow; `architecture.md` REQUIRED |
+
+### Build complexity gate
+
+If `play_level=build` and plan yields **≥4 epics** → STOP; warn:
+
+Required before continue: `architecture.md`, `ux-strategy.md`.
+Required after plan: `/project-analyze` (3 lenses) before any `/epic-specify`.
+
+Options: `/project-promote` (6+ epics) · architecture+ux then continue · reduce to ≤3 epics.
+
+Platform: `/project-analyze` required regardless of epic count.
+
+## 2. Load foundation
+
+STOP if `project.md` missing → `/project-specify`.
+STOP if Platform and `architecture.md` missing → `/project-architecture`.
+
+Load:
+- **Required**: `architecture.md`, `context.md`
+- **Recommended**: `ux-strategy.md`, `constitution.md`, `domain-model.md`, `design-system.md`
+- **Brownfield**: `project-landscape-overview.md`, `project-import.md`
+- **Research**: `*-research-report-*.md`
+- **Recipe**: `_active_recipe:` in `project.md` → `.speck/recipes/[name]/recipe.yaml` (`suggested_epics`, `patterns`, `external_services`)
+
+JIT research (`.cursor/skills/just-in-time-research/SKILL.md`) for market/competition/pricing gaps → embed in PRD "Research Informing This Plan."
+
+## 3. Scale
+
+Map scope → Level 0–4 (atomic → 40+ stories, 5+ epics). Adaptive PRD depth by level.
+
+## 4. Phase 1 — PRD
+
+Fill `prd-template.md` from foundation + research + `project.md` vision. Incorporate architecture decisions, UX principles, constraints, domain terms, constitution MUSTs.
+
+## 5. Phase 2 — Epics
+
+Recipe present → start from `suggested_epics`; customize. Else derive from PRD.
+
+Each epic: standalone value, deployable slice, clear success criteria, 3–15 stories typical, dependencies noted.
+
+**E000 gate** — ask: include Developer Infrastructure epic (CI, tests, lint, env)? Default YES for production; skip reason in `epics.md` if NO.
+
+## 6. Phase 3 — epics.md + placeholders
+
+Write `epics.md` from `epics-list-template.md`.
+
+**Concurrency waves** (required: Platform OR ≥4 epics):
+- Assign every epic to exactly one wave
+- Fill Touch-points per epic (Migrations, Models/Services, Files/Components)
+- Validate:
+```bash
+bash .speck/scripts/validation/validators/validate-wave-safety.sh epics.md
 ```
-.speck/templates/project/prd-template.md
-.speck/templates/project/epics-list-template.md
+- Wave 0 = E000; parallel waves = independent slices; integrators last
+
+Create `epics/E###-[name]/epic.md` placeholders:
 ```
-This skill produces two primary artifacts. Reading both templates first tells you what the PRD and epic index need to contain, shaping what you extract from architecture.md, context.md, and upstream artifacts.
-
-**Checkpoint**: After reading both, note each template's top-level sections. Then continue to Play Level Check.
-
-## Play Level Check
-
-Read `.speck/project.json` (if it exists) for `play_level`.
-
-- **Sprint**: Tell the user: "Sprint projects use the one-page PRD in `sprint-prd-template.md`, not a full project plan. If the project is growing, run `/project-promote` to Build level first, then return here."
-- **Build**: Proceed, but skip constitution/design-system prerequisites. Epics are supported; recommend context.md but not architecture.md unless the project warrants it. **HOWEVER**: After drafting epics, check the epic count — see "Build Complexity Gate" below.
-- **Platform** (or no project.json): Full flow below.
-
-### Build Complexity Gate (CRITICAL)
-
-If `play_level` is "build" and the plan produces **4 or more epics**, STOP and warn the user:
-
+**Current State**: Draft (Placeholder)
+- [x] **Draft** - Placeholder created by `/project-plan`
+- [ ] **Specified**
 ```
-⚠️ Build Complexity Gate Triggered
+NEVER set `Specified` on placeholders.
 
-This project has [N] epics — that's a full product, not a lightweight Build.
-Build-level shortcuts are not appropriate at this scale.
+## 7. Validation
 
-The following artifacts are now REQUIRED before continuing:
-- architecture.md — How do these [N] epics connect as a system?
-- ux-strategy.md — How does a user navigate between [N] sets of features?
+PRD covers project goals; epics cover scope; no gaps/overlaps; dependencies + metrics clear.
 
-And REQUIRED after this plan, before any /epic-specify:
-- project-analysis-report.md — /project-analyze, run by lenses that did NOT
-  author this corpus (3 mandatory: promise-coverage, cross-artifact drift,
-  completeness critic). /epic-specify will refuse to start until it clears.
+## 8. Next
 
-Without these, each epic will be designed in isolation and the product
-will suffer from the composition fallacy (each part works, whole doesn't).
+| Step | When |
+|------|------|
+| `/project-analyze` | REQUIRED Platform; Build 4+; recommended Build 1–3 |
+| `/project-roadmap` | Optional timeline |
+| `/epic-specify` | Blocked until analyze gate clears |
+| `/project-validate` | Post-implementation only — NOT now |
 
-Options:
-1. Run /project-promote to Platform level (recommended for 6+ epics)
-2. Run /project-architecture + /project-ux before continuing (minimum for 4-5 epics)
-3. Reduce scope to 3 or fewer epics (simplify the product)
-```
+Never write `.analysis-gate-grandfathered` on new plans.
 
-If the user chooses option 2 or insists on continuing: require `architecture.md` and `ux-strategy.md` before producing the final PRD. The gate is non-negotiable for 4+ epics.
+## NEVER / ALWAYS
 
-The **same 4+ epic threshold** also makes `/project-analyze` required *after* this skill finishes. It is a separate gate at a later moment — architecture and ux-strategy are inputs to the plan; `/project-analyze` is the decorrelated adversary applied to the finished plan (P4 at the planning altitude). Do not treat one as a substitute for the other, and do not let this skill's own author be the lens that certifies its output. At Platform, `/project-analyze` is required regardless of epic count.
-
----
-
-Generate a Product Requirements Document (PRD) and identify epics based on project specification and upstream artifacts.
-
-**Research Approach**: If planning needs market/business research, uses just-in-time research pattern (`.cursor/skills/just-in-time-research/SKILL.md`)
-
-## Subagent Parallelization
-
-This command benefits from parallel execution:
-
-**Epic Spec Drafting** - Spawn parallel speck-scribe:
-```
-├── [Parallel] speck-scribe: Draft E001 epic.md placeholder
-├── [Parallel] speck-scribe: Draft E002 epic.md placeholder
-├── [Parallel] speck-scribe: Draft E003 epic.md placeholder
-└── [Wait] → Create all epic directories with drafted specs
-```
-
-**Research Phase** (if needed) - Spawn parallel speck-researcher:
-```
-├── [Parallel] speck-researcher: "Market sizing for [domain]"
-├── [Parallel] speck-researcher: "Competitor analysis"
-├── [Parallel] speck-researcher: "Pricing strategies"
-└── [Wait] → Embed findings in PRD
-```
-
-**Speedup**: Nx (where N = number of epics) for spec drafting.
-
-1. Load project context and foundation artifacts:
-   - Find active project directory (check cwd, then scan specs/projects/)
-   - Load and validate project.md
-   - Check for existing research reports: *-research-report-*.md (from earlier commands)
-   - Check for brownfield artifacts:
-     * project-landscape-overview.md (brownfield code analysis)
-     * project-import.md (brownfield non-code aspects)
-   - **Load REQUIRED foundation artifacts**:
-     * **architecture.md** (from /project-architecture) - REQUIRED! Architecture decisions inform planning
-     * ux-strategy.md (from /project-ux) - for UX principles and user journeys
-     * context.md (from /project-context) - for constraints and requirements
-   - **Load OPTIONAL foundation artifacts**:
-     * domain-model.md (from /project-domain) - for domain terminology, rules, and principles
-     * design-system.md (from /project-design-system) - for UI requirements
-     * constitution.md (from /project-constitution) - for technical principles
-   - If project.md missing: ERROR "Run /project-specify first"
-   - If architecture.md missing: ERROR "Run /project-architecture first - design decisions must inform planning!"
-   
-   **Check for Active Recipe**:
-   - Look for `_active_recipe:` in project.md metadata
-   - If found, load `.speck/recipes/[recipe-name]/recipe.yaml`
-   - Recipe provides:
-     * `suggested_epics:` → Pre-defined epic structure for this project type
-     * `external_services:` → Recommended services to consider
-     * `patterns:` → Implementation patterns to reference
-   - Use recipe's suggested_epics as starting point in Phase 2 (Epic Identification)
-   - Customize epic list based on project-specific requirements
-   
-   **Note**: UX-strategy.md and context.md are strongly recommended. Design-system.md is optional but valuable for UI-heavy projects.
-
-2. Determine project scale (Level 0-4):
-   - Analyze project scope and complexity
-   - Consider: feature count, user types, integrations, technical complexity
-   - Map to scale:
-     * Level 0: Single atomic change
-     * Level 1: 1-10 stories, 1 epic
-     * Level 2: 5-15 stories, 1-2 epics
-     * Level 3: 12-40 stories, 2-5 epics
-     * Level 4: 40+ stories, 5+ epics
-
-3. Just-In-Time Research (if needed for planning):
-   
-   If planning requires market/business insights not yet available:
-   - **Market Sizing**: Web search for market data, growth trends
-   - **Competition**: Web search for competitor analysis
-   - **Business Model**: Web search for pricing strategies, monetization patterns
-   - **Deep Research** (if needed): Detailed market analysis, business model validation
-   
-   Document findings in PRD's "Research Informing This Plan" section.
-
-4. Planning execution phases:
-
-   **Phase 1: PRD Generation**
-   - Use `.speck/templates/project/prd-template.md`
-   - Fill sections with project-specific content
-   - **Incorporate architecture decisions** (REQUIRED):
-     * Technology stack choices and rationale
-     * Architectural patterns and constraints
-     * Component structure and boundaries
-     * Integration approaches
-     * Performance and scalability considerations
-   - **Incorporate UX strategy**:
-     * UX principles and user journeys from ux-strategy.md
-     * Design philosophy and patterns
-   - **Incorporate context constraints**:
-     * Non-functional requirements from context.md
-     * Team skills and infrastructure constraints
-     * Compliance and regulatory requirements
-   - **Incorporate design system** (if exists):
-     * UI component inventory
-     * Design token requirements
-     * Accessibility standards
-   - **Incorporate technical principles** (if exists):
-     * Constitution-mandated approaches from constitution.md
-   - **Incorporate domain expertise** (if exists):
-     * Use domain-model.md glossary terms in PRD consistently
-     * Reference domain entities when defining features
-     * Ensure domain rules/invariants are respected in requirements
-     * Align feature scope with domain principles
-   - Incorporate research findings if available
-   - Include landscape-overview insights if brownfield
-   - Ensure alignment with project.md vision
-   - Mark sections as "[To be defined]" only if critical inputs genuinely missing
-
-   **Phase 2: Epic Identification**
-   
-   **If Active Recipe exists**:
-   - Start with recipe's `suggested_epics:` as base structure
-   - E000 (Infrastructure) is already in recipe → use as first epic
-   - Customize epics marked with `[CUSTOMIZE]` for project-specific features
-   - Add/remove epics based on project.md scope
-   - Skip optional epics (`optional: true`) unless project needs them
-   
-   **If No Recipe**:
-   - Based on PRD scope, identify logical epic boundaries
-   
-   **For all epics**:
-   - Each epic should:
-     * Deliver standalone value
-     * Be independently deployable
-     * Have clear success criteria
-     * Support 3-15 stories typically
-   - Consider dependencies between epics
-   - **If domain-model.md exists**:
-     * Consider organizing epics around domain concepts
-     * Use domain terminology in epic names and descriptions
-     * Ensure each epic respects domain invariants
-   - **Consider business value for prioritization**:
-     * Revenue impact (enables monetization, unlocks paid tier)
-     * Customer acquisition (improves funnel, reduces CAC)
-     * Retention impact (reduces churn, increases LTV)
-     * Competitive necessity (table stakes vs differentiation)
-     * Market timing (time-sensitive opportunities)
-   - Prioritize for MVP vs post-MVP based on:
-     * User value + Business value + Technical dependency
-     * Highest business ROI + foundational capabilities first
-   
-   **Phase 2.5: Foundation Check (IMPORTANT)**
-   
-   Before finalizing epics, check if a Developer Infrastructure epic is needed:
-   
-   **Ask the user**:
-   ```
-   🏗️ Foundation Check
-   
-   Should I include "E000: Developer Infrastructure" epic as the first epic?
-   
-   This epic sets up:
-   - Testing framework (unit, integration tests)
-   - CI/CD pipeline (lint, test, build, deploy)
-   - Linting & formatting (consistent code style)
-   - Error tracking (Sentry or equivalent)
-   - Environment configuration (.env patterns)
-   
-   Recommended: YES for any production-bound project
-   Skip only if: Existing infrastructure or throwaway prototype
-   
-   Include Developer Infrastructure epic? [Y/n]
-   ```
-   
-   **If YES (default)**:
-   - Add E000 epic before all other epics
-   - Use tech stack from architecture.md to specify testing framework
-   - Reference recipe (if used) for tech-specific tooling recommendations
-   
-   **If NO**:
-   - Document skip reason in epics.md
-   - Note: User accepts responsibility for infrastructure setup
-
-   **Phase 3: Epic Documentation**
-   - Create epics.md using `.speck/templates/project/epics-list-template.md`
-   - For each epic include:
-     * Epic ID and name
-     * Business value statement (user value + business impact)
-     * High-level scope
-     * Success criteria
-     * Dependencies
-     * Estimated story count
-     * Business metrics (if applicable): Revenue impact, CAC/LTV impact, retention impact
-  - **Concurrency waves** (required when 4+ epics OR Platform play level):
-    * Fill `## Epic Concurrency Waves & Rebase Cadence` — assign every epic to exactly one wave
-    * Fill out the `Touch-points (creates/modifies)` section for each epic (specifying Migrations, Models/Services, and Files/Components) to identify potential conflicts
-    * Validate the wave assignments using the wave safety validator:
-      ```
-      bash .speck/scripts/validation/validators/validate-wave-safety.sh epics.md
-      ```
-      Ensure no two concurrent epics touch the same files or both author migrations (which breaks the linear Alembic head).
-    * Wave 0 = E000 foundation; parallel waves = independent slices; final waves = integrators (2+ upstream deps)
-     * Document daily rebase cadence (`git fetch && git rebase origin/main`) for each parallel wave
-     * Flag integrator epics that MUST NOT start until upstream wave merges to `main`
-
-5. PRD structure (adaptive by level):
-
-   **Level 0-1**: Focused PRD
-   - Problem & solution (1 page)
-   - Single epic with stories
-   - Basic requirements list
-   - Simple success metrics
-
-   **Level 2**: Standard PRD  
-   - Full problem space analysis
-   - 1-2 epics with clear boundaries
-   - Detailed requirements by epic
-   - Phased delivery plan
-
-   **Level 3-4**: Comprehensive PRD
-   - Market & competitive analysis
-   - 3-5+ epics with dependencies
-   - Detailed user journeys
-   - Architecture considerations
-   - Rollout and adoption strategy
-
-6. Epic identification patterns:
-
-   **By User Journey**
-   - Onboarding epic
-   - Core workflow epic
-   - Admin/settings epic
-
-   **By Technical Layer**
-   - Infrastructure epic
-   - API/backend epic
-   - UI/frontend epic
-
-   **By Feature Area**
-   - Authentication epic
-   - Data management epic
-   - Reporting epic
-
-   **By Release Phase**
-   - MVP epic
-   - Enhancement epic
-   - Scale epic
-
-7. Generate planning artifacts:
-
-   ```
-   [PROJECT_DIR]/
-   ├── project.md (already exists)
-   ├── PRD.md (new - with embedded research if any)
-   ├── epics.md (new)
-   └── epics/
-       ├── E001-[epic-name]/
-       ├── E002-[epic-name]/
-       └── .../
-   ```
-
-8. Epic directory initialization:
-   - Create directory for each epic
-   - Add placeholder epic.md with:
-     * Epic name and ID
-     * Initial scope from PRD
-     * Dependencies identified
-     * Placeholder sections for details
-   - **CRITICAL — Lifecycle state for placeholder files**:
-     Set `**Current State**: Draft (Placeholder)` and mark the lifecycle checkboxes as:
-     ```
-     - [x] **Draft** - Placeholder created by `/project-plan` (not yet specified)
-     - [ ] **Specified** - epic.md created by `/epic-specify`
-     ```
-     **NEVER set `**Current State**: Specified` on a placeholder** — that would falsely signal
-     that `/epic-specify` has already been run and can be skipped.
-   - Ready for /epic-specify to enhance
-
-9. Validation and review:
-   - PRD addresses all project goals
-   - Epics cover full scope
-   - No gaps or overlaps
-   - Dependencies identified
-   - Success metrics clear
-
-10. Output summary:
-   ```
-   ✅ Project Planning Complete!
-   
-   Project: [Name]
-   Scale: Level [0-4]
-   
-   Documents Generated:
-   - PRD.md (Product Requirements Document with embedded research)
-   - epics.md (Epic breakdown)
-   
-   Epic Summary:
-   1. [Epic Name]: ~[X] stories
-   2. [Epic Name]: ~[X] stories
-   [...]
-   
-   Total Estimated Scope: ~[X] stories
-   
-   Next Steps:
-   1. Review PRD with stakeholders
-   2. Validate epic boundaries
-   3. Optional: /project-roadmap (for epic timeline and dependencies)
-      - If you intentionally skipped /project-design-system and later decide you need it, run /project-design-system and then update PRD.md accordingly (or re-run /project-plan to re-synthesize PRD + epics with design-system inputs).
-   4. Planning analysis gate:
-      - /project-analyze — REQUIRED at Platform and at Build with 4+ epics,
-        before ANY /epic-specify. Recommended (not required) at Build with 1-3 epics.
-        Lenses must be decorrelated from whoever authored this corpus:
-        3 mandatory at Build 4+ (promise-coverage, cross-artifact drift,
-        completeness critic), all 7 at Platform.
-      - Note: Do NOT run /project-validate yet. /project-validate is strictly the final post-implementation release gate run only after ALL epics are validated.
-   5. Begin epic development (blocked until the gate above clears):
-      - cd epics/E001-[epic-name]
-      - /epic-specify (enhances the placeholder epic.md)
-      - /epic-clarify (if needed)
-      - /epic-plan (generates tech spec)
-      
-   Note: Epic placeholder files are created with basic structure.
-   Running /epic-specify in each epic directory will complete the specification.
-   ```
-
-11. Important notes:
-    - For Level 0-1: Can skip epic level, go directly to story
-    - For Level 3-4: Epic planning is critical for success
-    - PRD is living document - update as learning occurs
-    - Epic boundaries can be adjusted based on implementation learning
-    - A project planned by this skill is planned **on v10.3 or later**, so it is NOT grandfathered:
-      never write a `.analysis-gate-grandfathered` marker here. That marker exists only for corpora
-      that predate the gate, and only the `v10-3-analysis-gate-grandfather` upgrade migration writes
-      it (and only where `PRD.md` + `epics.md` already exist without a report). Writing one here would turn a real
-      forward gate into a permanently advisory one — the exact overclaim the asymmetry is disclosed
-      to avoid.
+- NEVER plan Platform without architecture.md
+- NEVER skip wave validation at 4+ epics
+- NEVER mark placeholder epics Specified
+- NEVER grandfather a new corpus
+- ALWAYS read both templates first
+- ALWAYS run `/project-analyze` before first `/epic-specify` when gate applies
