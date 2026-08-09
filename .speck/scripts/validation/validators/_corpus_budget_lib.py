@@ -2,6 +2,7 @@
 """Skill-catalog + agent-prose half of validate-corpus-budget.sh"""
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -28,7 +29,79 @@ POINTER_ONLY = re.compile(
 )
 
 MAX_REF_LINES = 120
+MAX_REF_BYTES = 8192
 MAX_ROUTER_BODY = 80
+LOCAL_REF_EDGE = re.compile(
+    r"(?<![A-Za-z0-9_./-])references/([A-Za-z0-9_./<>#*-]+\.md)"
+)
+
+
+def router_owns_ref(body: str, rel: str) -> bool:
+    """A DAG node must be directly reachable from its router, not another node."""
+    if f"references/{rel}" in body:
+        return True
+    if rel.startswith("states/") and "references/states/<kebab>.md" in body:
+        return True
+    if rel.startswith("lenses/L") and "references/lenses/L#.md" in body:
+        return True
+    return False
+
+
+def lint_load_budgets(root: Path, err) -> None:
+    """Enforce byte ceilings for declared branch-specific execution paths."""
+    budget_path = root / ".speck" / "reference" / "skill-load-budgets.json"
+    if not budget_path.is_file():
+        return
+    try:
+        data = json.loads(budget_path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        err(f"invalid skill load budget file: {exc}")
+        return
+
+    cases = data.get("cases")
+    if not isinstance(cases, list):
+        err("skill load budget file must contain a cases list")
+        return
+
+    seen: set[str] = set()
+    for case in cases:
+        if not isinstance(case, dict):
+            err("skill load budget case must be an object")
+            continue
+        case_id = case.get("id")
+        files = case.get("files")
+        max_bytes = case.get("max_bytes")
+        if not isinstance(case_id, str) or not case_id or case_id in seen:
+            err(f"invalid or duplicate skill load budget id: {case_id!r}")
+            continue
+        seen.add(case_id)
+        if not isinstance(files, list) or not files or not all(isinstance(p, str) for p in files):
+            err(f"skill load budget {case_id} requires a non-empty files list")
+            continue
+        if not isinstance(max_bytes, int) or max_bytes <= 0:
+            err(f"skill load budget {case_id} requires positive max_bytes")
+            continue
+
+        total = 0
+        valid = True
+        for rel in files:
+            path = (root / rel).resolve()
+            try:
+                path.relative_to(root.resolve())
+            except ValueError:
+                err(f"skill load budget {case_id} escapes repository: {rel}")
+                valid = False
+                continue
+            if not path.is_file():
+                err(f"skill load budget {case_id} missing path: {rel}")
+                valid = False
+                continue
+            total += path.stat().st_size
+        if not valid:
+            continue
+        print(f"load_path={case_id} bytes={total} (max {max_bytes})")
+        if total > max_bytes:
+            err(f"skill load path {case_id} bytes {total} > {max_bytes}")
 
 
 def parse_fm(text: str) -> tuple[str, str]:
@@ -130,6 +203,14 @@ def main() -> int:
         elif n_refs == 1 and POINTER_ONLY.search(body):
             err(f"skill {name} is a single-ref pointer theater pattern (ADR-0005)")
 
+        for ref in ref_mds:
+            rel = ref.relative_to(refs).as_posix()
+            if not router_owns_ref(body, rel):
+                err(
+                    f"skill ref {name}/references/{rel} is not directly owned by its router — "
+                    "declare the edge in SKILL.md or delete the orphan (ADR-0005)"
+                )
+
         # Ban predicate-hiding routers (ADR-0005): agent must know the branch
         # without reading the ref.
         if re.search(
@@ -176,11 +257,22 @@ def main() -> int:
             rtext = ref.read_text()
             rlines = len(rtext.splitlines())
             key = f"{name}/references/{ref.relative_to(refs).as_posix()}"
+            if not rtext.strip():
+                err(f"skill ref {key} is empty — a load edge must carry executable instruction")
+            nested_edges = LOCAL_REF_EDGE.findall(rtext)
+            if nested_edges:
+                err(
+                    f"skill ref {key} routes to {', '.join(sorted(set(nested_edges)))} — "
+                    "all load edges must be declared in SKILL.md (ADR-0005)"
+                )
             if rlines > MAX_REF_LINES:
                 if key in grandfather:
                     print(f"WARN grandfather ref {key} lines={rlines}")
                 else:
                     err(f"skill ref {key} lines {rlines} > {MAX_REF_LINES}")
+            rbytes = len(rtext.encode())
+            if rbytes > MAX_REF_BYTES:
+                err(f"skill ref {key} bytes {rbytes} > {MAX_REF_BYTES}")
             lint_agent_prose(ref, rtext, err)
 
     ref_root = root / ".speck" / "reference"
@@ -191,6 +283,8 @@ def main() -> int:
     print(f"auto_skills={auto} desc_sum={desc_sum} (max {max_sum})")
     if desc_sum > max_sum:
         err(f"description sum {desc_sum} > {max_sum}")
+
+    lint_load_budgets(root, err)
 
     if gf_path.is_file():
         for name in sorted(grandfather):

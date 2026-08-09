@@ -13,19 +13,19 @@
 8. Output summary:
    ```
     Epic Architecture Designed!
-   
+
    Epic: [Name]
    Pattern: [Architecture pattern]
    Components: [Number]
-   
+
    Key Design Decisions:
    - [Decision 1]
    - [Decision 2]
-   
+
    Integration Points:
    - Depends on: [List]
    - Consumed by: [List]
-   
+
    Next Steps:
    - Required: /epic-plan (create tech spec)
    - Then: /epic-breakdown (map stories)

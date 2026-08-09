@@ -95,4 +95,66 @@ if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$
   exit 1
 fi
 
+rm -r "$TMP/.cursor/skills/theater"
+mkdir -p "$TMP/.cursor/skills/nested/references"
+cat > "$TMP/.cursor/skills/nested/SKILL.md" <<'EOF'
+---
+name: nested
+description: Short desc. Use when testing nested load edges.
+---
+
+# nested
+If mode A: MUST Read `references/a.md`. Else MUST Read `references/b.md`.
+EOF
+cat > "$TMP/.cursor/skills/nested/references/a.md" <<'EOF'
+# a
+MUST Read `references/b.md` to continue.
+EOF
+echo '# b' > "$TMP/.cursor/skills/nested/references/b.md"
+
+echo "Test: reference-to-reference load edge fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected nested-edge failure"
+  exit 1
+fi
+
+echo '# orphan' > "$TMP/.cursor/skills/nested/references/orphan.md"
+sed -i.bak '/MUST Read `references\/b.md` to continue/d' "$TMP/.cursor/skills/nested/references/a.md"
+rm "$TMP/.cursor/skills/nested/references/a.md.bak"
+
+echo "Test: router-orphaned reference fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected orphan failure"
+  exit 1
+fi
+
+rm "$TMP/.cursor/skills/nested/references/orphan.md"
+printf '' > "$TMP/.cursor/skills/nested/references/a.md"
+
+echo "Test: empty reference node fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected empty-node failure"
+  exit 1
+fi
+
+echo '# a' > "$TMP/.cursor/skills/nested/references/a.md"
+mkdir -p "$TMP/.speck/reference"
+cat > "$TMP/.speck/reference/skill-load-budgets.json" <<'EOF'
+{
+  "cases": [
+    {
+      "id": "deliberate-overflow",
+      "files": [".cursor/skills/good/SKILL.md"],
+      "max_bytes": 1
+    }
+  ]
+}
+EOF
+
+echo "Test: declared execution-path byte overflow fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected load-path budget failure"
+  exit 1
+fi
+
 echo "All corpus-budget tests passed"

@@ -3,10 +3,10 @@
 If deep research needed, PAUSE and instruct user:
    ```
    ⏸ Deep Research Needed
-   
+
    Topic: [Research Area]
    Prompt Generated: epic-architecture-research-prompt-[topic].md
-   
+
    Please:
    1. Review research prompt in epic directory
    2. Run in Perplexity/Claude/Gemini/Grok
@@ -23,19 +23,19 @@ If deep research needed, PAUSE and instruct user:
    - Scalability needs specific to epic
 
 3. Design epic architecture:
-   
+
    **Component Design**:
    - Identify epic-specific components
    - Define component responsibilities
    - Map component interactions
    - Establish clear boundaries
-   
+
    **Data Architecture**:
    - Epic's data models
    - Data flow within epic
    - Storage requirements
    - State management approach
-   
+
    **API Design**:
    - External APIs epic exposes
    - Internal APIs epic consumes

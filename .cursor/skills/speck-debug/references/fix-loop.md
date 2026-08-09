@@ -17,7 +17,7 @@ If you suspect context rot (accumulated stale context causing confusion):
 1. Prompt the user: "I recommend running `/summarize` to compact context"
 2. After summarize, reload only the essential files:
    - Current spec.md
-   - Current plan.md  
+   - Current plan.md
    - Specific file(s) being worked on
 3. Re-attempt the operation with fresh, focused context
 

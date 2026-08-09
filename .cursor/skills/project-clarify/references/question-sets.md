@@ -6,13 +6,13 @@
    - Project boundaries and success definition
    - Explicit exclusions and v2+ deferrals
    - Stakeholder alignment and priorities
-   
+
    User & Market Understanding:
    - User segment definition and validation
    - Problem severity and frequency
    - Alternative solutions evaluation
    - Market timing and urgency
-   
+
    Business Model & Constraints:
    - Revenue/cost model implications
    - Monetization strategy clarity
@@ -22,13 +22,13 @@
    - Resource availability and skills
    - Timeline drivers and flexibility
    - Compliance and policy requirements
-   
+
    Technical Landscape:
    - Integration requirements specificity
    - Performance and scale expectations
    - Security and privacy requirements
    - Platform and deployment constraints
-   
+
    Risk & Dependencies:
    - Critical path dependencies
    - Technical feasibility concerns
@@ -41,7 +41,7 @@
    - Each question must be specific and actionable
    - Provide 2-3 answer options where helpful
    - Mark which section each answer will clarify
-   
+
    **Brownfield Adaptation**:
    - If project-landscape-overview.md exists, SKIP questions about:
      * Existing features (already discovered in scan)
@@ -79,7 +79,7 @@ Error conditions:
 
    1. **[Category] - [Specific Question]**
       Context: [Why this matters for project success]
-      Options: 
+      Options:
       a) [Option 1]
       b) [Option 2]
       c) [Other/Custom]

@@ -37,12 +37,12 @@ Research Needed: 3 areas identified
    - Why: Need competitive positioning before defining features
 
 2. Load ONLY upstream context (do NOT load downstream artifacts):
-   
+
    **ALWAYS Load** (upstream/input to clarify):
    - `project.md` (the spec to clarify)
    - `project-import.md` (if exists - brownfield non-code extraction)
    - `project-landscape-overview.md` (if exists - brownfield code extraction)
-   
+
    **NEVER Load** (downstream/created AFTER clarify):
    -  `PRD.md` - Created by /project-plan (comes AFTER clarify)
    -  `context.md` - Created by /project-context (comes AFTER clarify)
@@ -50,9 +50,9 @@ Research Needed: 3 areas identified
    -  `design-system.md` - Created later (comes AFTER clarify)
    -  `ux-strategy.md` - Created by /project-ux (parallel/before clarify)
    -  `epics.md` - Created by /project-plan (comes AFTER clarify)
-   
+
    **Why**: Clarify refines the INPUT (project.md). Don't confuse it with OUTPUT artifacts.
 
-2. **Technical Feasibility** (Important)  
+2. **Technical Feasibility** (Important)
    - Query: "LLM fine-tuning costs and performance at scale"
    - Why: Architecture decisions depend on cost constraints

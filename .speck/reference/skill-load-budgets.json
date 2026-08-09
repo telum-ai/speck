@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "basis": "v10 inline skill byte size before v11 refactoring",
+  "cases": [
+    {
+      "id": "story-implement-ui",
+      "files": [
+        ".cursor/skills/story-implement/SKILL.md",
+        ".cursor/skills/story-implement/references/spine.md",
+        ".cursor/skills/story-implement/references/ui.md"
+      ],
+      "max_bytes": 10622
+    },
+    {
+      "id": "story-implement-backend",
+      "files": [
+        ".cursor/skills/story-implement/SKILL.md",
+        ".cursor/skills/story-implement/references/spine.md",
+        ".cursor/skills/story-implement/references/backend.md"
+      ],
+      "max_bytes": 10622
+    },
+    {
+      "id": "story-tasks-ui",
+      "files": [
+        ".cursor/skills/story-tasks/SKILL.md",
+        ".cursor/skills/story-tasks/references/spine.md",
+        ".cursor/skills/story-tasks/references/ui-tasks.md"
+      ],
+      "max_bytes": 9617
+    },
+    {
+      "id": "story-tasks-backend",
+      "files": [
+        ".cursor/skills/story-tasks/SKILL.md",
+        ".cursor/skills/story-tasks/references/spine.md",
+        ".cursor/skills/story-tasks/references/api-tasks.md"
+      ],
+      "max_bytes": 9617
+    },
+    {
+      "id": "project-evidence-ui-platform",
+      "files": [
+        ".cursor/skills/project-evidence-contract/SKILL.md",
+        ".cursor/skills/project-evidence-contract/references/spine.md",
+        ".cursor/skills/project-evidence-contract/references/tiers/platform.md",
+        ".cursor/skills/project-evidence-contract/references/archetype/ui.md"
+      ],
+      "max_bytes": 8900
+    },
+    {
+      "id": "project-evidence-backend-build",
+      "files": [
+        ".cursor/skills/project-evidence-contract/SKILL.md",
+        ".cursor/skills/project-evidence-contract/references/spine.md",
+        ".cursor/skills/project-evidence-contract/references/tiers/build.md",
+        ".cursor/skills/project-evidence-contract/references/archetype/backend.md"
+      ],
+      "max_bytes": 8900
+    },
+    {
+      "id": "project-promote-sprint-build",
+      "files": [
+        ".cursor/skills/project-promote/SKILL.md",
+        ".cursor/skills/project-promote/references/spine.md",
+        ".cursor/skills/project-promote/references/transitions/sprint-to-build.md"
+      ],
+      "max_bytes": 5469
+    },
+    {
+      "id": "project-promote-build-platform",
+      "files": [
+        ".cursor/skills/project-promote/SKILL.md",
+        ".cursor/skills/project-promote/references/spine.md",
+        ".cursor/skills/project-promote/references/transitions/build-to-platform.md"
+      ],
+      "max_bytes": 5469
+    },
+    {
+      "id": "speck-skeptical-review-lock",
+      "files": [
+        ".cursor/skills/speck-skeptical-review/SKILL.md",
+        ".cursor/skills/speck-skeptical-review/references/alternatives.md",
+        ".cursor/skills/speck-skeptical-review/references/tradeoffs.md",
+        ".cursor/skills/speck-skeptical-review/references/lock.md"
+      ],
+      "max_bytes": 6210
+    },
+    {
+      "id": "speck-larp-backend",
+      "files": [
+        ".cursor/skills/speck-larp/SKILL.md",
+        ".cursor/skills/speck-larp/references/backend-skip.md"
+      ],
+      "max_bytes": 17285
+    },
+    {
+      "id": "speck-larp-ui-does-it-work",
+      "files": [
+        ".cursor/skills/speck-larp/SKILL.md",
+        ".cursor/skills/speck-larp/references/spine.md",
+        ".cursor/skills/speck-larp/references/jobs/does-it-work.md",
+        ".cursor/skills/speck-larp/references/recording.md"
+      ],
+      "max_bytes": 17285
+    },
+    {
+      "id": "speck-larp-ui-all-axes",
+      "files": [
+        ".cursor/skills/speck-larp/SKILL.md",
+        ".cursor/skills/speck-larp/references/spine.md",
+        ".cursor/skills/speck-larp/references/jobs/does-it-work.md",
+        ".cursor/skills/speck-larp/references/jobs/felt.md",
+        ".cursor/skills/speck-larp/references/jobs/taste.md",
+        ".cursor/skills/speck-larp/references/recording.md"
+      ],
+      "max_bytes": 17285
+    },
+    {
+      "id": "visual-testing-web",
+      "files": [
+        ".cursor/skills/visual-testing/SKILL.md",
+        ".cursor/skills/visual-testing/references/web.md"
+      ],
+      "max_bytes": 6922
+    },
+    {
+      "id": "visual-testing-flutter",
+      "files": [
+        ".cursor/skills/visual-testing/SKILL.md",
+        ".cursor/skills/visual-testing/references/mobile-flutter.md"
+      ],
+      "max_bytes": 6922
+    },
+    {
+      "id": "visual-testing-react-native",
+      "files": [
+        ".cursor/skills/visual-testing/SKILL.md",
+        ".cursor/skills/visual-testing/references/mobile-react-native.md"
+      ],
+      "max_bytes": 6922
+    },
+    {
+      "id": "visual-testing-electron",
+      "files": [
+        ".cursor/skills/visual-testing/SKILL.md",
+        ".cursor/skills/visual-testing/references/desktop-electron.md"
+      ],
+      "max_bytes": 6922
+    },
+    {
+      "id": "visual-testing-tauri",
+      "files": [
+        ".cursor/skills/visual-testing/SKILL.md",
+        ".cursor/skills/visual-testing/references/desktop-tauri.md"
+      ],
+      "max_bytes": 6922
+    },
+    {
+      "id": "visual-testing-extension",
+      "files": [
+        ".cursor/skills/visual-testing/SKILL.md",
+        ".cursor/skills/visual-testing/references/extension.md"
+      ],
+      "max_bytes": 6922
+    }
+  ]
+}

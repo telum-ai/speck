@@ -12,7 +12,7 @@ Canonical inventory for ADR-0005. Every skill is exactly one class:
 
 **Hard rule:** The agent must decide whether to load a ref from the router alone. Never “Read X when that domain applies” — that forces loading X to learn the predicate and defeats JIT.
 
-CI enforces: ban predicate-hiding phrasing; ban ≥2 refs with no inline `If`/`Else`/`Only`/`Cheap keys` (always-path must be inline); ban single `procedure.md` theater.
+CI enforces: ban predicate-hiding phrasing; ban unconditional fake DAGs; require direct router ownership of every node; ban ref-to-ref continuations; cap declared branch bytes against v10.
 
 ## dag (conditional load — predicates live in SKILL.md)
 
@@ -23,11 +23,11 @@ CI enforces: ban predicate-hiding phrasing; ban ≥2 refs with no inline `If`/`E
 | story-validate | archetype, claimed_state, UI, visual host | spine, backend-skip, larp, states/*, axes/*, … |
 | epic-validate | archetype, claimed_state, UI | rollup/matrix/graph + states + axes |
 | project-validate | claimed_state, PROFILE, commercial | states/*, profile, coverage, gate-liveness, … |
-| visual-testing | platform host | procedure + one host ref |
+| visual-testing | platform host | common workflow inline + exactly one real host ref |
 | speck-larp | archetype, Job A/B/C, auth blocked? | spine, backend-skip, sandbox, jobs/*, recording |
 | speck | first-actions hit; status vs new work | first-actions, spine, gap-routes, scale-route, triage |
 | speck-audit | UI story? | spine, multi-lens, fidelity, sweeps, chain |
-| project-evidence-contract | play_level, archetype | spine, tiers/*, archetype/*, probes |
+| project-evidence-contract | play_level, archetype | spine, tiers/*, archetype/* |
 | project-promote | from→to play_level | spine, transitions/* |
 | story-implement | UI-bearing vs API/backend | spine, ui, backend |
 | story-tasks | UI-bearing vs API/backend | spine, ui-tasks, api-tasks |

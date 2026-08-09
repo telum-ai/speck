@@ -14,15 +14,16 @@ v11 relocated oversized bodies into `references/procedure.md` with a thin SKILL 
 1. **Honest always-path** — if every successful run needs the whole procedure, put it in `SKILL.md` (dense, ≤200 lines). Do not keep a single always-loaded `references/procedure.md`.
 2. **Load DAG** — if runs diverge on cheap branch keys (`play_level`, epic count, archetype, claimed readiness state, host, lens id), `SKILL.md` is a **router**. Reference files are **nodes** loaded only on taken edges.
 3. **Subagent = one ref** — parallel units (e.g. analyze lenses) each receive one self-contained lens file; the conductor does not preload sibling lenses.
-4. **Anti-theater CI** — corpus-budget fails a skill whose `references/` contains exactly one `*.md` named `procedure.md` (or exactly one md) while SKILL only points at it. Skills must be **inline (0 refs)** or **multi-node DAG (≥2 refs with explicit branch Reads)**.
-5. **Ceilings** — router `SKILL.md` body ≤80 lines for DAG skills; each ref node ≤120 lines; essay bans from ADR-0004 still apply.
+4. **Router-owned edges** — every ref node must be named directly by `SKILL.md`; ref-to-ref routing is forbidden. This makes every load decision inspectable before any node is loaded.
+5. **Anti-theater CI** — corpus-budget fails single-procedure pointers, router-orphaned nodes, hidden continuation edges, and declared branch paths that exceed their pre-v11 inline byte ceiling.
+6. **Ceilings** — router `SKILL.md` body ≤80 lines; each ref node ≤120 lines and ≤8 KiB; declared hot paths are capped in `.speck/reference/skill-load-budgets.json`; essay bans from ADR-0004 still apply.
 
 ## Decomposition rules
 
 - Split only on branch keys the router can compute cheaply.
 - One concern per ref (spine | tier | lens | state | axis | host).
 - Required edges: `MUST Read X before Y`. Optional: `Read X only if …`.
-- No essay nodes; no part1/part2 splits without a branch key.
+- No essay nodes or part1/part2 continuations. A reference never routes to another reference.
 - **Predicates live in the router.** `SKILL.md` must state the cheap key and the branch (`If archetype is backend: Read backend-skip; Do not Read larp`). Forbidden: `Read X when that domain applies` — loading X to learn whether X applies is not JIT.
 - **Always-path → inline.** If every successful run MUST Read every ref, delete `references/` and put the dense procedure in `SKILL.md`. A multi-ref folder of unconditional MUSTs is theater.
 
@@ -32,7 +33,7 @@ Cuts invoke tokens on Build-tier analyze (3 lenses not 7), backend validate (no 
 
 ## Consequences
 
-More files per DAG skill; agents must follow Read edges (discipline + CI shape checks). Fake single-procedure pointers are forbidden.
+More files per DAG skill; agents follow only router-declared edges. Byte caps make “smaller” an execution-path property, not a file-count or line-count proxy.
 
 ## Complete inventory
 

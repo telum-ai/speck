@@ -1,3 +1,3 @@
 # State: INTEGRATION-GREEN
 
-MUST also follow `references/integration-green.md`.
+The router also loads the integration gate for this claim.

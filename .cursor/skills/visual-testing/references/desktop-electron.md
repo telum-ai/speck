@@ -2,7 +2,7 @@
 
 Platform: `desktop-electron`. Recipes: `electron-react`. Tools: Playwright Electron, Storybook, Percy.
 
-Read after `references/procedure.md` §2 selects this host.
+Load only when the router selects `desktop-electron`.
 
 ## Tight loop
 

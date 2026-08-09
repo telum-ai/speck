@@ -22,7 +22,7 @@ Progressive disclosure ([agentskills.io](https://agentskills.io/specification)):
 
 ## 3. Locked policies
 
-1. **Hybrid fitness**: hard corpus budget CI + A1-lite seeded scorecard.
+1. **Hybrid fitness**: hard corpus/path budget CI + fail-closed A1-lite seeded contract smoke against the candidate corpus and an immutable baseline. It protects named gate capabilities; it does not substitute for runtime agent LARP.
 2. **Invocation**: `disable-model-invocation: true` only on `speck`, `story`, `epic`. All other skills auto-invocable.
 3. **Domain skills deleted**: Stripe/Clerk/Supabase/… pack removed. Stack start = `.speck/recipes/`. Vendor APIs = Context7 / official docs JIT.
 4. **Agent prose**: AGENTS.md, SKILL.md, skill refs, `.speck/reference/*` are imperative, dense (ADR-0003/0004).
@@ -41,9 +41,10 @@ Progressive disclosure ([agentskills.io](https://agentskills.io/specification)):
 | Sum auto skill description chars | ≤ 10000 |
 | SKILL.md body (always-path) | ≤ 200 |
 | SKILL.md body (DAG router) | ≤ 80 |
-| Skill `references/**/*.md` | ≤ 120 per node; skill must be 0 refs (inline) or ≥2 refs (DAG) |
+| Skill `references/**/*.md` | ≤ 120 lines / ≤8 KiB per node; every node directly router-owned |
+| Declared execution paths | ≤ pre-v11 inline byte cap in `skill-load-budgets.json` |
 | Agent-prose lint | AGENTS + SKILL.md + skill refs + `.speck/reference/` |
-| Anti-theater | Fail single `procedure.md` pointer skills |
+| Anti-theater | Fail single-procedure pointers, orphan nodes, and ref-to-ref edges |
 
 Enforced by `.speck/scripts/validation/validators/validate-corpus-budget.sh`.
 

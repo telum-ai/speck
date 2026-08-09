@@ -1,3 +1,3 @@
 # State: COMMERCIAL-RC
 
-MUST also follow `references/commercial.md`.
+The router also loads the commercial gate for this claim.
