@@ -1,3 +1,3 @@
-# State: commercial-rc
+# State: COMMERCIAL-RC
 
-MUST Read commercial.md + gate-liveness hard.
+MUST also follow `references/commercial.md`.

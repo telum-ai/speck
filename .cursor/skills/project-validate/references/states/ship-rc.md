@@ -1,3 +1,4 @@
-# State: ship-rc
+# State: SHIP-RC
 
-MUST Read profile.md + commercial.md + coverage --strict if required.
+All gates against launch build. Never from dev-server evidence alone.
+README + PROFILE drift required (post-write).

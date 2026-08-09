@@ -1,3 +1,3 @@
-# State: ship
+# State: SHIP
 
-Post-deploy proof.
+Post-deploy proof complete.

@@ -9,6 +9,6 @@ paths:
 
 # epic-breakdown
 
-1. MUST Read `references/spine.md`.
-2. Read `references/step-0-read-template-first.md` when that domain applies.
-3. STOP if instructed. Write artifacts.
+1. MUST Read `references/story-map.md`.
+2. MUST Read `references/deps.md`.
+3. MUST Read `references/estimates.md`. Write epic-breakdown.md.

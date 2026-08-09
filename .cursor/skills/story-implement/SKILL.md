@@ -11,6 +11,7 @@ paths:
 
 # story-implement
 
-1. MUST Read `references/spine.md` + plan/tasks.
-2. Branch archetype: MUST Read `references/backend.md` or `references/ui.md`.
-3. Implement; mark tasks; leave ready for /audit.
+1. MUST Read `references/spine.md` (locate story, execute tasks, track).
+2. UI-bearing: also MUST Read `references/ui.md`.
+3. Backend/API-heavy: also MUST Read `references/backend.md`.
+4. Mark tasks done; do not claim validate.

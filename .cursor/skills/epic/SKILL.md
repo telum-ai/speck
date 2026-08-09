@@ -10,6 +10,6 @@ paths:
 
 # epic
 
-1. MUST Read `references/spine.md`.
-2. MUST Read `references/phases.md`.
-3. Invoke the next incomplete child skill for this epic.
+1. MUST Read `references/spine.md` (purpose, verify-skills, stop conditions).
+2. MUST Read `references/phases.md` for next phase routing.
+3. Invoke the next phase skill; never skip audit before validate.

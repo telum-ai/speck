@@ -1,3 +1,3 @@
-# State: impl-green
+# State: IMPL-GREEN
 
-Stories IMPL-GREEN floor; composition not yet proven.
+Tests/lint/types pass. CORRECT axis sufficient to claim. Does not prove integration or UX.

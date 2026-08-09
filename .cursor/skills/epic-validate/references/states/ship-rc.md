@@ -1,3 +1,4 @@
-# State: ship-rc
+# State: SHIP-RC
 
-Launch build; refuse if device-walk unattested or graph/matrix caps apply.
+All gates against launch build. Never from dev-server evidence alone.
+README + PROFILE drift required (post-write).

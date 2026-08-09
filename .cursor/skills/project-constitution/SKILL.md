@@ -7,7 +7,5 @@ paths:
 
 # project-constitution
 
-1. MUST Read `references/spine.md`.
-2. Read `references/play-level-check.md` when that domain applies.
-3. Read `references/step-0-read-template-first.md` when that domain applies.
-4. STOP if instructed. Write artifacts.
+1. MUST Read `references/principles.md`.
+2. MUST Read `references/enforcement.md`. Write constitution; SHA-stamp.

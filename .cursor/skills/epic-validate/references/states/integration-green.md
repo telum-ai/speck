@@ -1,3 +1,3 @@
-# State: integration-green
+# State: INTEGRATION-GREEN
 
-Real §7 round-trips across stories; live schema when DB+DATABASE_URL; else honest deferral.
+MUST also follow `references/integration-green.md`.

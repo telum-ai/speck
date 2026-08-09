@@ -12,6 +12,6 @@ paths:
 
 # story
 
-1. MUST Read `references/spine.md`.
-2. MUST Read `references/phases.md`.
-3. Invoke the next incomplete child skill for this story.
+1. MUST Read `references/spine.md` (purpose, stop conditions).
+2. MUST Read `references/phases.md` for next phase routing.
+3. Invoke next phase; `/audit` before `/story-validate`; LARP if UI.

@@ -1,3 +1,3 @@
-# State: commercial-rc
+# State: COMMERCIAL-RC
 
-Paid-product gates; usually project-owned hard-block.
+MUST also follow `references/commercial.md`.

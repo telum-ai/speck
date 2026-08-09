@@ -1,3 +1,3 @@
-# State: integration-green
+# State: INTEGRATION-GREEN
 
-Infra-limited project ceiling.
+MUST also follow `references/integration-green.md`.

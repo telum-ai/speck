@@ -9,10 +9,5 @@ paths:
 
 # epic-constitution
 
-1. MUST Read `references/spine.md`.
-2. Read `references/common-epic-constitution-patterns.md` when that domain applies.
-3. Read `references/constitution-generation.md` when that domain applies.
-4. Read `references/interactive-constitution-development.md` when that domain applies.
-5. Read `references/more.md` when that domain applies.
-6. Read `references/step-7-review-and-activation.md` when that domain applies.
-7. STOP if instructed. Write artifacts.
+1. MUST Read `references/principles.md`.
+2. MUST Read `references/enforcement.md`. Write constitution; SHA-stamp.

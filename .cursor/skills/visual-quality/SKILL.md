@@ -10,10 +10,5 @@ paths:
 
 # visual-quality
 
-1. MUST Read `references/spine.md`.
-2. Read `references/integration-with-speck-workflow.md` when that domain applies.
-3. Read `references/more.md` when that domain applies.
-4. Read `references/self-check-before-committing.md` when that domain applies.
-5. Read `references/source-of-truth.md` when that domain applies.
-6. Read `references/universal-design-quality-principles.md` when that domain applies.
-7. STOP if instructed. Write artifacts.
+1. MUST Read `references/rubrics.md`.
+2. MUST Read `references/caps.md`.

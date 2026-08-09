@@ -1,3 +1,8 @@
-# UI archetype
+# project-evidence-contract / ui
 
-LARP substrates, device-walk, visual host, FELT/TASTE axes required at UX-RC+.
+## Integration Points
+
+- Required input: `product-contract.md`, `context.md`, optionally `architecture.md`, recipe
+- Required output: `evidence-contract.md` (with SHA stamp)
+- Downstream consumers: every `/story-validate`, `/epic-validate`, `/project-validate`, `/audit`, `/larp`, `/recheck`
+- Updates: `project-state.md`

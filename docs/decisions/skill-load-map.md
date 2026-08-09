@@ -1,5 +1,7 @@
 # Speck skill load map (complete)
 
+**Status: implemented** in `.cursor/skills/**` (routers + contentful `references/` nodes; anti-theater CI). Not a paper inventory.
+
 Canonical inventory for ADR-0005. Every skill is exactly one class:
 
 | Class | Rule |

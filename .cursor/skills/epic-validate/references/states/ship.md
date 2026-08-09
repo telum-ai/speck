@@ -1,3 +1,3 @@
-# State: ship
+# State: SHIP
 
-Post-deploy — rare at epic.
+Post-deploy proof complete.

@@ -1,5 +1,7 @@
-# Visual (UI epics)
+# epic-validate / visual
 
-Read `.cursor/skills/visual-testing/SKILL.md` then exactly one `visual-testing/references/<host>.md`.
-Aggregate story larp-recordings + visual sections; wireframe/journey consistency; design-system %.
-Multimodal: Read screenshots — cite paths.
+## 9. Visual (UI epics)
+
+Reference: `.cursor/skills/visual-testing/SKILL.md` + `.cursor/skills/visual-testing/references/<host>.md`.
+Aggregate story `larp-recordings/` + visual sections; wireframe adherence; user-journey touchpoints; cross-story consistency; design-system adoption %.
+Multimodal: `Read` screenshots for coherence — cite paths.

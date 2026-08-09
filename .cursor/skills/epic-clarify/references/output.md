@@ -1,41 +1,6 @@
-# epic-clarify — output
+# epic-clarify / output
 
-complete?
-   - Error scenarios covered?
-   - Accessibility requirements?
-
-3. Generate clarification questions (max 5):
-   - Focus on epic-specific concerns
-   - Prioritize blockers for story breakdown
-   - Include context for each question
-   - Suggest options where helpful
-
-4. Present questions professionally:
-   ```
-   I've analyzed the epic specification and found areas to clarify:
-   
-   1. **[Area] - [Specific Question]**
-      Context: [Why this matters for epic success]
-      Options:
-      a) [Option 1]
-      b) [Option 2]
-      (This will clarify the [Section] section)
-   ```
-
-5. Update epic.md with clarifications:
-   - Add "## Clarifications" section
-   - Document each Q&A
-   - Update affected sections
-   - Remove [NEEDS CLARIFICATION] markers
-
-6. Report completion and re-evaluate optional steps:
-
-   Output:
-   ```
-    Epic Clarifications Complete!
-
-   Clarified: [X] questions
-   Sections Updated: [List]
+Sections Updated: [List]
    ```
 
    Then immediately run an **Optional Step Evaluation** based on the *updated* `epic.md` (clarifications may have revealed new signals):

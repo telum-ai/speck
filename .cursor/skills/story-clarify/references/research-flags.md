@@ -1,28 +1,53 @@
-# story-clarify — research-flags
+# story-clarify / research-flags
 
-Flag unknowns needing just-in-time-research before plan.
+8. Report completion and re-evaluate optional steps:
 
+   Output coverage summary:
+   ```
+    Story Clarification Complete!
 
-       | Option | Description |
-       |--------|-------------|
-       | A | <Option A description> |
-       | B | <Option B description> |
-       | C | <Option C description> | (add D/E as needed up to 5)
-       | Short | Provide a different short answer (<=5 words) | (Include only if free-form alternative is appropriate)
+   Questions Asked: [X] of 5
+   Spec Updated: [Path]
 
-    - For short‑answer style (no meaningful discrete options), output a single line after the question: `Format: Short answer (<=5 words)`.
-    - After the user answers:
-       * Validate the answer maps to one option or fits the <=5 word constraint.
-       * If ambiguous, ask for a quick disambiguation (count still belongs to same question; do not advance).
-       * Once satisfactory, record it in working memory (do not yet write to disk) and move to the next queued question.
-    - Stop asking further questions when:
-       * All critical ambiguities resolved early (remaining queued items become unnecessary), OR
-       * User signals completion ("done", "good", "no more"), OR
-       * You reach 5 asked questions.
-    - Never reveal future queued questions in advance.
-    - If no valid questions exist at start, immediately report no critical ambiguities.
+   Coverage Summary:
+   - Functional Scope: [Clear/Resolved/Deferred]
+   - Technical Constraints: [Clear/Resolved/Deferred]
+   - Data Requirements: [Clear/Resolved/Deferred]
+   - Integration Points: [Clear/Resolved/Deferred]
+   - UI/UX Details: [Clear/Resolved/Deferred]
+   ```
 
-5. Integration after EACH accepted answer (incremental update approach):
-    - Maintain in-memory representation of the spec (loaded once at start) plus the raw file contents.
-    - For the first integrated answer in this session:
-       * Ensure a `## Clarifications` section exists (create it just after
+   Then immediately run an **Optional Step Evaluation** based on the *updated* `spec.md` (clarifications often reveal new signals about complexity and UI):
+
+   | Step | 🔴 Required when |  Recommended when | ⬜ Skip when |
+   |------|-----------------|---------------------|------------|
+   | `/story-outline` | Unfamiliar technology; TBD sections remain; multiple competing implementation approaches | Minor unknowns after clarification | Path clear, follows established patterns |
+   | `/story-scan` | Story extends or modifies existing code; brownfield context confirmed | Story touches existing functionality | Fully greenfield |
+   | `/story-ui-spec` | Any mention of UI, screens, forms, components, layout, UX | Minor UI elements alongside backend work | Pure backend / API / CLI |
+
+   Output:
+   ```
+   ## Optional Step Evaluation (post-clarification)
+
+   | Step | Recommendation | Evidence from spec.md |
+   |------|---------------|----------------------|
+   | /story-outline | ⬜ /  / 🔴 | "[observation]" |
+   | /story-scan    | ⬜ /  / 🔴 | "[observation]" |
+   | /story-ui-spec | ⬜ / 🔴       | "[observation]" |
+
+   Recommended path to /story-plan:
+   → [only Required/Recommended steps] → /story-plan → [/story-ui-spec if needed] → /story-tasks → /story-implement → /audit → /story-validate
+
+   Shall I proceed with [first recommended step]?
+   ```
+
+Behavior rules:
+- If no meaningful ambiguities found (or all potential questions would be low-impact), respond: "No critical ambiguities detected worth formal clarification." and suggest proceeding.
+- If spec file missing, instruct user to run `/story-specify` first (do not create a new spec here).
+- Never exceed 5 total asked questions (clarification retries for a single question do not count as new questions).
+- Avoid speculative tech stack questions unless the absence blocks functional clarity.
+- Respect user early termination signals ("stop", "done", "proceed").
+ - If no questions asked due to full coverage, output a compact coverage summary (all categories Clear) then suggest advancing.
+ - If quota reached with unresolved high-impact categories remaining, explicitly flag them under Deferred with rationale.
+
+Context for prioritization: $ARGUMENTS

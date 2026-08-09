@@ -7,6 +7,7 @@ paths:
 
 # project-promote
 
-1. MUST Read `references/spine.md`.
-2. Detect from→to. MUST Read matching `references/transitions/*.md`.
-3. Apply updates; decision-log; project-state.
+1. MUST Read `references/spine.md` (current state + target).
+2. Sprint→Build: MUST Read `references/transitions/sprint-to-build.md`.
+3. Build→Platform: MUST Read `references/transitions/build-to-platform.md`.
+4. Update `.speck/project.json`; report next steps.

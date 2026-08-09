@@ -7,8 +7,7 @@ paths:
 
 # project-evidence-contract
 
-1. MUST Read template + `references/spine.md`.
-2. Read play_level → MUST Read matching `references/tiers/<sprint|build|platform>.md`.
-3. Read archetype → MUST Read `references/archetype/backend.md` or `ui.md`.
-4. Read `references/probes.md` when authoring probe rows.
-5. Write evidence-contract.md; run validators.
+1. MUST Read template, then MUST Read `references/spine.md`.
+2. MUST Read `references/tiers/<play_level>.md`.
+3. MUST Read `references/archetype/<ui|backend>.md` from project archetype.
+4. MUST Read `references/probes.md`. Write evidence-contract.md; SHA-stamp.

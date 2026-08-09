@@ -1,3 +1,3 @@
-# State: api-rc
+# State: API-RC
 
-Non-UI Option B walkthrough per evidence-contract §8.
+Backend operational walkthrough + contract/schema gates (no rendered surface).

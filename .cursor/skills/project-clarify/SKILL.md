@@ -7,9 +7,7 @@ paths:
 
 # project-clarify
 
-1. MUST Read `references/spine.md`.
-2. MUST Read `references/load-rules.md` when executing that phase.
-3. MUST Read `references/output.md` when executing that phase.
-4. MUST Read `references/question-sets.md` when executing that phase.
-5. MUST Read `references/research-flags.md` when executing that phase.
-6. STOP if instructed. Write updated artifact.
+1. MUST Read `references/load-rules.md` (locate project, upstream-only load).
+2. MUST Read `references/question-sets.md`; ask + apply answers.
+3. MUST Read `references/research-flags.md` after Q&A.
+4. MUST Read `references/output.md`; report completion.

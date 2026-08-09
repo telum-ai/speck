@@ -1,8 +1,30 @@
-# UI JTBD cold-start LARP (mandatory)
+# epic-validate / larp
 
-- Full-flow `/larp` per persona (JTBD end-to-end, not per-story segments). Missing → STOP.
-- High-impact surfaces → `/speck-premise-challenge`. Missing/failed → cap IMPL-GREEN/INTEGRATION-GREEN.
-- Clean boot, no dev shortcuts, **built artifact**. Store axe-core JSON; composition reading ≠ UX-RC evidence.
-- First-Time Comprehension rubric. Fail/dead-end/404 on primary path → cap IMPL-GREEN.
-- Infra blocker at INTEGRATION-GREEN only with logged reproduced LARP failure (P3). Try sandbox recipe first.
-- Browser cold-start never `autonomous-not-done`.
+## 3. Four axes
+
+| Axis | Epic validate |
+|------|---------------|
+| CORRECT | Story rollup, audit, matrix, graph, mutation |
+| ON-CONTRACT | evidence-contract gates |
+| FELT-GOOD | Naive-hostile LARP on cold-start JTBD walkthrough (consumer UX-RC+) |
+| TASTE | Connoisseur-hostile (`/speck-larp` Job C) for consumer UX-RC+ |
+
+LARP: **DOES-IT-WORK** = JTBD cold-start walkthrough on built artifact; **IS-IT-GOOD** = FELT + TASTE + comprehension rubric.
+Graph proves traceable/complete/fresh — never faithful/good/excellent.
+
+## 9. Visual (UI epics)
+
+Reference: `.cursor/skills/visual-testing/SKILL.md` + `.cursor/skills/visual-testing/references/<host>.md`.
+Aggregate story `larp-recordings/` + visual sections; wireframe adherence; user-journey touchpoints; cross-story consistency; design-system adoption %.
+Multimodal: `Read` screenshots for coherence — cite paths.
+
+## NEVER / ALWAYS
+
+- NEVER claim epic UX-RC from story greens alone (composition fallacy)
+- NEVER defer browser cold-start LARP for UI epics
+- NEVER discharge PRM from JTBD sample alone (long tail must exist)
+- NEVER hand-wave phantom/dead seams
+- NEVER substitute PASS/FAIL for readiness state
+- ALWAYS run `/audit --epic` first
+- ALWAYS apply MIN(story, MATRIX_GRAIN_CAP, GRAPH_CAP)
+- ALWAYS SHA-stamp report

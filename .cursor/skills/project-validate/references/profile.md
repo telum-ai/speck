@@ -1,7 +1,7 @@
-# PROFILE / README
+# project-validate / profile
 
-```bash
-bash .speck/scripts/validation/validators/validate-readme.sh --strict
-bash .speck/scripts/profile-drift-check.sh
-```
-PROFILE_DRIFT.P1 blocks SHIP-RC+.
+## 11. Commercial gates
+
+Paid products at COMMERCIAL-RC+: billing round-trip, entitlements, legal/compliance per evidence-contract.
+SHIP-RC: launch build, all gates, PROFILE clean.
+SHIP: post-deploy proof.

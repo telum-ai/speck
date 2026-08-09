@@ -1,3 +1,3 @@
-# State: api-rc
+# State: API-RC
 
-API-product ambition path.
+Backend operational walkthrough + contract/schema gates (no rendered surface).
