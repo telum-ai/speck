@@ -74,6 +74,7 @@ function unknownSubdirs(sourcePath, targetPath) {
  */
 const SMART_MERGE_FILES = {
   'AGENTS.md': mergeAgentsMd,
+  'CLAUDE.md': mergeClaudeMd,
   '.gitignore': mergeGitignore,
   '.cursor/hooks/hooks.json': mergeHooksJson,
   '.cursor/mcp.json': mergeMcpJson,
@@ -200,6 +201,41 @@ function mergeAgentsMd(sourceContent, targetContent) {
   }
   
   return { content: merged, action: 'merge' };
+}
+
+/**
+ * Merge CLAUDE.md - Speck owns only its managed import block.
+ * Existing project instructions before/after the block remain byte-stable apart from
+ * surrounding blank-line normalization. A legacy bare @AGENTS.md import is adopted.
+ */
+function mergeClaudeMd(sourceContent, targetContent) {
+  const start = '<!-- SPECK:START -->';
+  const end = '<!-- SPECK:END -->';
+  const sourceMatch = sourceContent.match(/<!-- SPECK:START -->[\s\S]*?<!-- SPECK:END -->/);
+  if (!sourceMatch) {
+    throw new Error('source CLAUDE.md is missing the managed SPECK block');
+  }
+  const managed = sourceMatch[0];
+
+  if (!targetContent) {
+    return { content: managed + '\n', action: 'create' };
+  }
+
+  const blockPattern = /<!-- SPECK:START -->[\s\S]*?<!-- SPECK:END -->/;
+  if (blockPattern.test(targetContent)) {
+    const content = targetContent.replace(blockPattern, managed);
+    return { content: content.trimEnd() + '\n', action: content === targetContent ? 'skip' : 'merge' };
+  }
+
+  // v11 preview builds wrote a bare import. Adopt it into the managed block so repeated
+  // upgrades cannot accumulate duplicate imports.
+  const userContent = targetContent
+    .split('\n')
+    .filter(line => line.trim() !== '@AGENTS.md')
+    .join('\n')
+    .trim();
+  const content = userContent ? `${managed}\n\n${userContent}\n` : `${managed}\n`;
+  return { content, action: 'merge' };
 }
 
 /**
