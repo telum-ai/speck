@@ -629,8 +629,16 @@ def command_judge(args: argparse.Namespace) -> int:
 def command_rescore(args: argparse.Namespace) -> int:
     manifest = load_manifest(args.run_id)
     mapping = manifest["anonymous_mapping"]
+    selected_ids = [value.strip() for value in args.cases.split(",") if value.strip()]
+    if selected_ids == ["all"]:
+        selected = list(CASES)
+    else:
+        unknown = sorted(set(selected_ids) - set(CASE_BY_ID))
+        if unknown:
+            raise RuntimeError(f"unknown cases: {', '.join(unknown)}")
+        selected = [CASE_BY_ID[value] for value in selected_ids]
     count = 0
-    for case in CASES:
+    for case in selected:
         for condition in ("v10", "v11"):
             label = mapping[case.case_id][condition]
             result_file, patch_file, final_file = result_paths(args.run_id, case.case_id, label)
@@ -1072,6 +1080,7 @@ def build_parser() -> argparse.ArgumentParser:
     judge.set_defaults(func=command_judge)
     rescore = sub.add_parser("rescore", help="apply current scorers to frozen subject artifacts")
     rescore.add_argument("--run-id", default=DEFAULT_RUN_ID)
+    rescore.add_argument("--cases", default="all", help="comma-separated case ids or all")
     rescore.set_defaults(func=command_rescore)
     report = sub.add_parser("report", help="aggregate paired results")
     report.add_argument("--run-id", default=DEFAULT_RUN_ID)
