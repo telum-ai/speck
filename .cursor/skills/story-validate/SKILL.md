@@ -28,6 +28,9 @@ Output: `[STORY_DIR]/validation-report.md`.
    actually earned; then close the report loop:
    - SHA-stamp the report, then run every post-write gate selected by the
      receipt;
+   - use one direct shell tool call per gate, with the gate as the event's
+     primary command, so that event exit code belongs to that gate; never group
+     it with other commands or merely print collected statuses;
    - if any gate is red, correct or lower the report, re-stamp it, and run the
      complete gate set again;
    - stop only after every selected gate exits 0 after the most recent stamp,

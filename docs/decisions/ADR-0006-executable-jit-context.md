@@ -56,9 +56,13 @@ agent understood or used it correctly.
    `REACH`, `SELECTIVITY`, `TIMING`, and `GATE_USE`. It fails when any applicable
    axis fails and explicitly disclaims semantic-use and output-quality proof.
    Gate checks match executable argv and exact repository script paths, not
-   substrings or basenames. Selector-specific `all` gates preserve state
-   obligations such as FELT and TASTE at UI UX-RC+. Shell redirects and known
-   write-capable interpreter forms count as mutations when host events are thin.
+   substrings, basenames, heredoc bodies, or pipelines. A gate counts only as
+   the primary command in its own tool event, where it directly owns the event
+   exit code; command lists, substitution-wrapped gates, background jobs, and
+   collected exit codes are not proof. Selector-specific `all` gates preserve
+   state obligations such as truth stamps, FELT, and TASTE at UI UX-RC+. Shell
+   redirects and known write-capable interpreter forms count as mutations when
+   host events are thin.
 5. Load-bearing output obligations remain at their JIT point of use. The
    manifest and receipt do not replace templates, artifact validators,
    adversarial audit, LARP, or behavioral evaluation.

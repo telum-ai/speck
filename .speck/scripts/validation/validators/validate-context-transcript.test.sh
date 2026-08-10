@@ -159,17 +159,27 @@ run_validator "$WORK" --transcript "$TRANSCRIPT_OK" --profile "$PROFILE" --json
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
   && pass "conforming transcript passes all axes" || fail "conforming transcript (rc=$RC)"
 
-echo "── validator: discrete commands in a multi-line shell call ───────────────────────────────"
+echo "── validator: loader discovery in a multi-line shell call ────────────────────────────────"
 TRANSCRIPT_MULTILINE="$T/multiline.jsonl"
 MULTILINE_LOADER_CMD=$(printf 'rg --files | sed -n '\''1,2p'\''\npython3 .speck/scripts/context/speck_context.py %s --root %s' "$PROFILE" "$WORK")
-MULTILINE_GATE_CMD=$(printf 'git diff --check\nbash .speck/scripts/validation/validators/%s specs/projects/demo/stories/S001/tasks.md\ngit status --short' "$GATE_SUB")
 write_transcript "$TRANSCRIPT_MULTILINE" \
   cmd "$MULTILINE_LOADER_CMD" "$LOADER_OUT_FILE" 0 \
   change "specs/projects/demo/stories/S001/tasks.md" \
-  cmd "$MULTILINE_GATE_CMD" /dev/null 0
+  cmd "bash .speck/scripts/validation/validators/$GATE_SUB specs/projects/demo/stories/S001/tasks.md" /dev/null 0
 run_validator "$WORK" --transcript "$TRANSCRIPT_MULTILINE" --profile "$PROFILE" --json
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
-  && pass "discrete loader and gate segments survive multi-line shell wrapping" || fail "multi-line discrete commands should pass (rc=$RC)"
+  && pass "loader discovery survives multi-line shell wrapping" || fail "multi-line loader should pass (rc=$RC)"
+
+echo "── validator: grouped gate commands are not direct evidence ───────────────────────────────"
+TRANSCRIPT_GROUPED_GATE="$T/grouped-gate.jsonl"
+GROUPED_GATE_CMD=$(printf 'set -e\ngit diff --check\nbash .speck/scripts/validation/validators/%s specs/projects/demo/stories/S001/tasks.md\ngit status --short' "$GATE_SUB")
+write_transcript "$TRANSCRIPT_GROUPED_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "$GROUPED_GATE_CMD" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_GROUPED_GATE" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "a gate grouped with other commands cannot borrow the event exit" || fail "grouped gate should fail GATE_USE (rc=$RC)"
 
 echo "── validator: missing receipt ─────────────────────────────────────────────────────────────"
 TRANSCRIPT_NOREC="$T/norec.jsonl"
@@ -293,6 +303,61 @@ write_transcript "$TRANSCRIPT_BAD_GATE" \
 run_validator "$WORK" --transcript "$TRANSCRIPT_BAD_GATE" --profile "$PROFILE"
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
   && pass "failed gate command fails GATE_USE" || fail "failed gate should fail GATE_USE (rc=$RC)"
+
+TRANSCRIPT_CAPTURED_GATE="$T/captured-gate.jsonl"
+CAPTURED_GATE_CMD=$(printf "set +e\nbash .speck/scripts/validation/validators/%s x; gate_rc=\$?\nprintf 'gate_rc=%%s\\n' \"\$gate_rc\"\ngit diff --check" "$GATE_SUB")
+write_transcript "$TRANSCRIPT_CAPTURED_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "$CAPTURED_GATE_CMD" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_CAPTURED_GATE" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "capturing a gate exit under set +e cannot turn the outer zero into proof" || fail "captured gate exit should fail GATE_USE (rc=$RC)"
+
+TRANSCRIPT_PREFIX_ASSIGN_GATE="$T/prefix-assign-gate.jsonl"
+write_transcript "$TRANSCRIPT_PREFIX_ASSIGN_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "GATE_RC=\$(bash .speck/scripts/validation/validators/$GATE_SUB x) true" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_PREFIX_ASSIGN_GATE" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "a gate hidden in a prefix assignment cannot borrow a trailing zero" || fail "prefix-assignment gate should fail GATE_USE (rc=$RC)"
+
+TRANSCRIPT_ENV_ASSIGN_GATE="$T/env-assign-gate.jsonl"
+write_transcript "$TRANSCRIPT_ENV_ASSIGN_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "env GATE_RC=\$(bash .speck/scripts/validation/validators/$GATE_SUB x) true" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_ENV_ASSIGN_GATE" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "an env-wrapped substitution cannot expose a nested gate" || fail "env-assignment gate should fail GATE_USE (rc=$RC)"
+
+TRANSCRIPT_BACKGROUND_GATE="$T/background-gate.jsonl"
+write_transcript "$TRANSCRIPT_BACKGROUND_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "bash .speck/scripts/validation/validators/$GATE_SUB x &" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_BACKGROUND_GATE" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "a backgrounded gate cannot inherit the shell event's zero" || fail "background gate should fail GATE_USE (rc=$RC)"
+
+TRANSCRIPT_BACKGROUND_CHAIN="$T/background-chain.jsonl"
+write_transcript "$TRANSCRIPT_BACKGROUND_CHAIN" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "bash .speck/scripts/validation/validators/$GATE_SUB x && true &" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_BACKGROUND_CHAIN" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "a backgrounded AND-chain cannot launder its gate" || fail "backgrounded gate chain should fail GATE_USE (rc=$RC)"
+
+TRANSCRIPT_OR_GATE="$T/or-gate.jsonl"
+write_transcript "$TRANSCRIPT_OR_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "bash .speck/scripts/validation/validators/$GATE_SUB x || true" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_OR_GATE" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "an OR-list cannot mask a red gate" || fail "OR-masked gate should fail GATE_USE (rc=$RC)"
 
 TRANSCRIPT_PIPE_GATE="$T/pipe-gate.jsonl"
 write_transcript "$TRANSCRIPT_PIPE_GATE" \

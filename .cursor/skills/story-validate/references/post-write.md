@@ -10,6 +10,12 @@ gate. Finish only when all selected gates exit 0 after the most recent stamp,
 with no later report edit; a different green validator cannot substitute for a
 required red one.
 
+Use one direct shell tool call per required gate, with the gate as the event's
+primary command. Its event exit code must be the gate's exit code. Pipelines,
+command lists, background jobs, substitution-wrapped gates, grouped status
+collection, or printing a captured `$?` do not prove a gate passed and fail
+transcript conformance.
+
 ```bash
 bash .speck/scripts/validation/validate-template.sh validation-report.md --strict
 ```

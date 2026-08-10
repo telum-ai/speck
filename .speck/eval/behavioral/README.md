@@ -87,8 +87,9 @@ python3 .speck/scripts/validation/validators/validate-context-transcript.py \
 
 The non-collapsible axes are REACH, SELECTIVITY, TIMING, and GATE_USE.
 The exact loader argv, explicit zero exit, emitted context bodies, receipt
-order, hashes, and byte counts are checked. Gate use is invocation-shaped, not
-substring-shaped; selected states may require multiple gates. Passing these
+order, hashes, and byte counts are checked. Gate use is a direct, single-command
+event, not a substring: the gate is the primary command and owns the recorded
+tool exit. Selected states may require multiple gates. Passing these
 axes proves context-path conformance only; hidden scoring, blind judgment,
 audit, and LARP still own semantic use and quality. Subject execution validity,
 artifact mutation, and context conformance are reported separately. A red

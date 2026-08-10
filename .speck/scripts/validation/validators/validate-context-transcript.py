@@ -461,8 +461,33 @@ def _script_path_matches(token: str, gate: str, root: Path) -> bool:
         return False
 
 
+def _direct_gate_words(segment: list[str]) -> list[str]:
+    """Unwrap only literal, exit-preserving prefixes for direct gate proof."""
+    words = list(segment)
+
+    def pop_safe_assignments() -> bool:
+        while words and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", words[0]):
+            assignment = words.pop(0)
+            if any(marker in assignment for marker in ("$(", "`", "<(", ">(")):
+                return False
+        return True
+
+    if not pop_safe_assignments():
+        return []
+    if words and Path(words[0]).name in {"env", "command", "time"}:
+        words.pop(0)
+        while words and words[0].startswith("-"):
+            words.pop(0)
+        if not pop_safe_assignments():
+            return []
+    return words
+
+
 def _segment_invokes_gate(segment: list[str], gate: str, root: Path) -> bool:
-    words = _effective_words(segment)
+    # shlex does not understand command substitution. A dedicated direct-word
+    # parser prevents `RC=$(bash gate) true` and
+    # `env RC=$(bash gate) true` from exposing the nested gate as argv[0].
+    words = _direct_gate_words(segment)
     if not words:
         return False
     program = Path(words[0]).name
@@ -490,17 +515,18 @@ def _segment_invokes_gate(segment: list[str], gate: str, root: Path) -> bool:
     return [actual_program, *words[1 : len(expected)]] == [expected_program, *expected[1:]]
 
 
-def _command_invokes_gate(command: str, gate: str, root: Path) -> bool:
-    for segment, next_separator in _command_parts(command):
-        if not _segment_invokes_gate(segment, gate, root):
-            continue
-        # Gates are required as individual commands. Even with pipefail, a
-        # pipeline changes the observed command/output boundary and needlessly
-        # asks this validator to emulate shell execution state.
-        followed_by_pipe = "|" in next_separator and "||" not in next_separator
-        if not followed_by_pipe:
-            return True
-    return False
+def _command_proves_gate(command: str, gate: str, root: Path) -> bool:
+    parts = _command_parts(command)
+    # The contract deliberately requires one direct gate command per tool
+    # event. That makes the recorded event exit code the gate exit code without
+    # emulating shell state across `set -e`, lists, pipelines,
+    # substitution-wrapped gates, background jobs, functions, or wrappers that
+    # can launder a failure.
+    return (
+        len(parts) == 1
+        and parts[0][1] == ""
+        and _segment_invokes_gate(parts[0][0], gate, root)
+    )
 
 
 def _inferred_mutation_paths(command: CommandEvent, root: Path) -> list[str]:
@@ -680,24 +706,24 @@ def evaluate_axes(
     else:
         last_change_idx = mutations[-1].index
         after = [c for c in transcript.commands if c.index > last_change_idx and c.success]
-        any_matches = [c for c in after if any(_command_invokes_gate(c.command, gate, root) for gate in gates)]
+        any_matches = [c for c in after if any(_command_proves_gate(c.command, gate, root) for gate in gates)]
         missing_all = [
             gate for gate in all_gates
-            if not any(_command_invokes_gate(c.command, gate, root) for c in after)
+            if not any(_command_proves_gate(c.command, gate, root) for c in after)
         ]
         if gates and not any_matches:
-            gate_use.details.append(f"no successful post-mutation invocation of any gate in {gates!r}")
+            gate_use.details.append(f"no exit-bound successful post-mutation invocation of any gate in {gates!r}")
         if missing_all:
             gate_use.details.append(f"missing required post-mutation gate invocation(s): {missing_all}")
         if (not gates or any_matches) and not missing_all:
             witnessed = [any_matches[0].command] if any_matches else []
             witnessed.extend(
-                next(c.command for c in after if _command_invokes_gate(c.command, gate, root))
+                next(c.command for c in after if _command_proves_gate(c.command, gate, root))
                 for gate in all_gates
             )
             gate_use.status = "pass"
             gate_use.ok = True
-            gate_use.details.append(f"successful gate invocation(s) after last mutation: {witnessed!r}")
+            gate_use.details.append(f"successful exit-bound gate invocation(s) after last mutation: {witnessed!r}")
         else:
             gate_use.details.append(f"last mutation event was {last_change_idx}")
 
