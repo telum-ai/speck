@@ -970,7 +970,7 @@ The predeclared 70% deterministic + 30% blinded-judge score was {fmt(statistics.
 
 ## Interpretation boundary
 
-This is a paired behavioral benchmark, not a proof over every model, host, repository, or long-running product. It isolates the methodology revision while holding the subject model, effort, tasks, prompts, and scorer fixed. Deterministic checks were authored before subjects ran and mutation-tested. The quality judge saw anonymous A/B artifacts, not version labels. {len(quality_rows)} included pairs can expose regressions and estimate direction; they cannot justify a universal 300% claim by themselves.
+This is a paired behavioral benchmark, not a proof over every model, host, repository, or long-running product. It isolates the methodology revision while holding the subject model, effort, tasks, and prompts fixed. The original deterministic checks were authored before subjects ran; disclosed post-run evaluator corrections were mutation-tested and applied only to frozen outputs. The quality judge saw anonymous A/B artifacts, not version labels. {len(quality_rows)} included pairs can expose regressions and estimate direction; they cannot justify a universal 300% claim by themselves.
 
 Raw subject event streams and workspaces remain ignored under `.runs/`. Checked-in evidence contains every subject result, patch, final response, judge verdict, and this aggregate report. Event hashes in subject JSON bind those files to the raw streams.
 """
