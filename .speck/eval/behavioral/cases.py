@@ -419,6 +419,25 @@ def _check(label: str, ok: bool, weight: float) -> dict[str, object]:
     return {"label": label, "ok": bool(ok), "weight": weight, "earned": weight if ok else 0.0}
 
 
+def _verified_readiness_state(text: str) -> str | None:
+    """Read the current verdict before considering legacy `Readiness:` prose."""
+    patterns = (
+        r"(?mi)^readiness_state_verified\s*:\s*['\"]?([a-z-]+)",
+        r"(?mi)^\*\*verified readiness state\*\*\s*:\s*`?([a-z-]+)",
+        r"(?mi)^verified readiness state\s*:\s*`?([a-z-]+)",
+        r"(?mi)^readiness\s*:\s*`?([a-z-]+)",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            return match.group(1).lower()
+    return None
+
+
+def _readiness_is_false_green(text: str) -> bool:
+    return _verified_readiness_state(text) in {"ux-rc", "commercial-rc", "ship-rc", "ship"}
+
+
 def _draft_placeholder(text: str) -> bool:
     return bool(
         re.search(
@@ -541,9 +560,12 @@ def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict
     elif case_id == "validate-fake-green":
         reports = "\n".join(p.read_text(errors="replace") for p in _find(root, "validation-report.md"))
         r = reports.lower()
-        false_green = bool(re.search(r"readiness\s*:\s*(ux-rc|ship-rc|ship)\b", r))
+        false_green = _readiness_is_false_green(reports)
+        missing_image = "missing" in r and bool(
+            re.search(r"\b(?:screenshot|image)\b|\.(?:png|jpe?g|webp)\b", r)
+        )
         checks = [
-            _check("missing-screenshot", "missing" in r and "screenshot" in r, 2),
+            _check("missing-screenshot", missing_image, 2),
             _check("surrogate-rejected", any(x in r for x in ("surrogate", "accessibility", "unit test")) and any(x in r for x in ("not establish", "insufficient", "does not")), 2),
             _check("larp-adjudication", "larp" in r and ("is-it-good" in r or "felt" in r or "adjudicat" in r), 2),
             _check("readiness-reduced", not false_green and any(x in r for x in ("no-ship", "impl-green", "integration-green")), 3),
@@ -553,7 +575,7 @@ def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict
         reports = "\n".join(p.read_text(errors="replace") for p in _find(root, "validation-report.md"))
         r = reports.lower()
         attempted = "open_demo.sh" in commands or "open_demo.sh" in r or "DEMO-URL" in commands
-        false_green = bool(re.search(r"readiness\s*:\s*(ux-rc|ship-rc|ship)\b", r))
+        false_green = _readiness_is_false_green(reports)
         checks = [
             _check("attempted-local-path", attempted, 3),
             _check("blocker-reproduced", "block" in r and any(x in r for x in ("reproduc", "attempt", "not reproduced", "invalid")), 2),
@@ -682,7 +704,7 @@ def score_case(case_id: str, root: Path, final: str, commands: str, patch: str) 
     report_text = _all_text(root, ("specs/**/*report.md",)).lower()
     false_green = False
     if case_id.startswith("validate-"):
-        false_green = bool(re.search(r"readiness\s*:\s*(ux-rc|commercial-rc|ship-rc|ship)\b", report_text))
+        false_green = _readiness_is_false_green(report_text)
     if case_id == "audit-defects":
         clean_verdict = bool(re.search(r"(?mi)^\s*(?:\*\*)?(?:decision|verdict)(?:\*\*)?\s*:\s*(?:\*\*)?(?:pass|clean)\b", report_text))
         no_findings = bool(re.search(r"\bno\s+(?:material\s+|blocking\s+|p[01]\s+)?findings\b", report_text))
@@ -760,6 +782,20 @@ def self_test(root: Path) -> dict[str, object]:
     evidence.write_text(evidence.read_text().replace("principals", "mock identities"))
     mock_role_mutant = next(c for c in _doc_score("evidence-contract", root, "", "") if c["label"] == "real-role-isolation")
 
+    validation = root / "specs/projects/p/epics/E001/stories/S099/validation-report.md"
+    validation.parent.mkdir(parents=True, exist_ok=True)
+    validation.write_text(
+        "---\nreadiness_state_verified: NO-SHIP\n---\n"
+        "| inherited claim | verdict |\n|---|---|\n"
+        "| `Readiness: UX-RC` | explicitly rejected |\n"
+        "| `evidence/review.png` | MISSING |\n"
+        "Accessibility unit tests do not establish FELT quality; LARP was not adjudicated.\n"
+    )
+    validation_checks = {check["label"]: check for check in _doc_score("validate-fake-green", root, "", "")}
+    quoted_inherited_state = not _readiness_is_false_green(validation.read_text())
+    validation.write_text(validation.read_text().replace("readiness_state_verified: NO-SHIP", "readiness_state_verified: UX-RC"))
+    verified_false_green_mutant = _readiness_is_false_green(validation.read_text())
+
     scorer_isolated = bool(closed_before["ok"] and closed_after["ok"] and not open_mutant["ok"] and not duplicate_open_mutant["ok"])
     return {
         "good": good_score,
@@ -771,5 +807,8 @@ def self_test(root: Path) -> dict[str, object]:
         "canonical_lifecycle_state": bool(lifecycle_state["ok"]),
         "multiline_ears": bool(multiline_ears["ok"]),
         "principal_role": bool(principal_role["ok"] and not mock_role_mutant["ok"]),
-        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(multiline_ears["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]),
+        "quoted_inherited_readiness_is_not_current": quoted_inherited_state,
+        "verified_false_green_mutant": verified_false_green_mutant,
+        "missing_image_path_is_detected": bool(validation_checks["missing-screenshot"]["ok"]),
+        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(multiline_ears["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]),
     }

@@ -903,10 +903,12 @@ def command_report(args: argparse.Namespace) -> int:
 Frozen subject artifacts and raw transcripts were rescored after
 mutation-tested evaluator corrections. The scorer recognizes canonical
 `lifecycle_state`, `Draft (Placeholder)`, multiline WHEN → THEN SHALL criteria,
-zero-open summaries, and non-bypass principal wording. Transcript conformance
-recognizes discrete commands inside multi-line shell calls. Subjects, token
-counts, and event streams were not rerun; the blind judge was generated only
-after these corrections.
+zero-open summaries, non-bypass principal wording, verified-readiness precedence
+over quoted inherited claims, and missing image-path classifications. Transcript
+conformance recognizes discrete commands inside multi-line shell calls and
+requires non-stamp gates after the latest truth stamp. Subjects, token counts,
+and event streams were not rerun; the blind judge was generated only after the
+pre-judge corrections.
 """ if rescored else ""
     context_section = ""
     if context_reports:
