@@ -20,9 +20,12 @@ LARP = DOES-IT-WORK + IS-IT-GOOD.
 ## Inherited-claim challenge
 
 Cross-examine every evidence claim already present in the report before
-replacing it. For each, state whether the cited artifact exists and whether its
-instrument can observe the claimed axis. Explicitly reject unsupported or
-surrogate claims; omission is not adjudication.
+replacing it. Classify each cited artifact `PRESENT`, `MISSING`, or
+`UNREACHABLE-ATTEMPTED`, then state whether its instrument can observe the
+claimed axis. For an inherited blocker, record the exact attempt and verdict
+`REPRODUCED` or `NOT REPRODUCED`; explicitly reject an invalid blocker.
+Explicitly reject unsupported or surrogate claims; omission is not
+adjudication.
 
 ## Readiness enum
 

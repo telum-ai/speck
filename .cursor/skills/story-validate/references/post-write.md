@@ -6,25 +6,19 @@ banned-phrase self-check.
 The receipt's gate arrays are exact. Closure cycle:
 
 1. SHA-stamp the report.
-2. Run each gate in its own shell tool event, as the primary command. Lists,
-   pipelines, background jobs, substitutions, and collected `$?` fail
-   conformance because the event exit no longer belongs to the gate.
-3. On red, edit or lower, re-stamp, and rerun the full set.
+2. Run every gate, even after downgrade. Each gets its own shell event as the
+   primary command; lists, pipes, backgrounding, substitution, or collected
+   `$?` do not bind the event exit to the gate.
+3. Correctable red → edit/lower, re-stamp, rerun all. Otherwise name the blocker
+   and still run the remaining gates.
 
-A direct red remains visible as `conformant_red`, but closure stays open. Finish
-only after every gate is zero after the latest stamp and no later report edit.
+`conformant_red` may finish NO-SHIP only after all gates ran after the latest
+stamp, every red is named, and no later report edit occurred. Green = all zero.
 
-```bash
-bash .speck/scripts/validation/validate-template.sh validation-report.md --strict
-```
+Gate argv comes only from the receipt arrays; never reconstruct it from nodes,
+examples, or state.
 
-UI axis gates come from the selected FELT/TASTE nodes. Backend skips them.
-
-SHIP-RC/SHIP+:
-```bash
-bash .speck/scripts/validation/validators/validate-readme.sh --strict
-bash .speck/scripts/profile-drift-check.sh
-```
+SHIP-RC/SHIP+ uses the literal receipt entries for README and PROFILE checks.
 `PROFILE_DRIFT.P1` blocks SHIP-RC+.
 
 UI touching PROFILE: `regenerate-project-readme.sh --check` before UX-RC+.

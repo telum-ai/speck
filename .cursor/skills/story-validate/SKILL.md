@@ -25,17 +25,10 @@ Output: `[STORY_DIR]/validation-report.md`.
    state, archetype, axis, or host references. The receipt's
    `post_write_gates`, `post_write_gates_all`, and `gate_policy` fields are the
    exact executable closure contract; do not reconstruct or batch it.
-4. Execute every receipted node in order. Locate and record `build_sha`; run the
-   real checks/probes; write the report; lower the claim to the highest state
-   actually earned; then close the report loop:
-   - SHA-stamp the report, then run every post-write gate selected by the
-     receipt;
-   - use one direct shell tool call per gate, with the gate as the event's
-     primary command, so that event exit code belongs to that gate; never group
-     it with other commands or merely print collected statuses;
-   - if any gate is red, correct or lower the report, re-stamp it, and run the
-     complete gate set again;
-   - stop only after every selected gate exits 0 after the most recent stamp,
-     with no later report edit.
+4. Execute every receipted node in order; record `build_sha`, run real probes,
+   and lower the claim to what is earned. Follow the receipted post-write node
+   literally: after the latest stamp, run every gate individually even on a
+   downgrade. Correctable red may edit, re-stamp, and rerun all; otherwise run
+   the remaining gates, record `conformant_red` blockers, then make no edit.
 
 STOP on any node STOP / P0 / missing required evidence.
