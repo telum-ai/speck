@@ -1,0 +1,94 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
+index e409942..16c7dc8 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
+@@ -1,5 +1,86 @@
+-# Validation report
++---
++speck_version: 11.0.0
++artifact_type: validation-report
++readiness_state_claimed: UX-RC
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: a81086fe66e38cd89d268c5b2c1877283079888f
++build_artifact: not-run
++audit_report: audit-report.md
++larp_evidence: not-run
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S009 Review screen
+ 
+-The developer says the page looks good. Screenshot: evidence/review.png. Accessibility unit tests passed. Therefore the experience is intuitive and pleasant.
++**Subject**: S009 Review screen
++**Date**: 2026-08-10
++**Build SHA**: a81086fe66e38cd89d268c5b2c1877283079888f
++**Build Artifact**: Not available in this workspace.
++**Clean Build (caches cleared)**: no
++**Claimed Readiness State**: UX-RC
++**Verified Readiness State**: NO-SHIP
++
++## Readiness State Claim
++
++The prior UX-RC claim is not earned. A developer opinion, an unverified screenshot reference, and an asserted accessibility-unit-test result do not establish a production build, primary-flow reachability, a recorded LARP, FELT-GOOD, or TASTE.
++
++NO-SHIP is the highest state earned because the validation prerequisites are absent: `plan.md`, `tasks.md`, and the project `evidence-contract.md`. There is also no implementation, test command, build artifact, LARP record, or supporting screenshot in this workspace.
++
++## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
++
++| Axis | Evidence | Verdict |
++|---|---|---|
++| CORRECT | `audit-report.md` contains only a static assertion and no executable evidence; no test or implementation files are present. | Unverified |
++| ON-CONTRACT | `spec.md` is a one-sentence outcome with no acceptance criteria; the required plan, tasks, and evidence contract are missing. | Unverified |
++| FELT-GOOD | No production build or naive-hostile LARP record exists. | uncovered |
++| TASTE | No production build or connoisseur evaluation exists. | uncovered |
++
++## Gate Criteria Check
++
++| Gate | Required at UX-RC? | Evidence | Status |
++|---|---:|---|---|
++| Validation prerequisites (`spec.md`, `plan.md`, `tasks.md`, `audit-report.md`) | Yes | `plan.md` and `tasks.md` are absent. | ❌ |
++| Project evidence contract | Yes | `evidence-contract.md` is absent. | ❌ |
++| Tests, lint, types, build | Yes | No source tree, test configuration, plan command, or build artifact is present. | ❌ |
++| Clean production build | Yes | No build output or build log is present. | ❌ |
++| Persona LARP and reachability | Yes | No `larp-recordings/` evidence is present. | ❌ |
++| Naive-hostile FELT-GOOD evaluation | Yes | No evidence is present. | ❌ |
++| Connoisseur TASTE evaluation | Yes | No evidence is present. | ❌ |
++
++## Audit and Mutation Evidence
++
++`audit-report.md` reports no P0/P1 findings from static review, but it does not provide a change surface, tests, mutation record, or runtime evidence. No guard can be mutation-tested because this workspace contains no implementation or test files.
++
++## 🧬 Mutation Record
++
++No mutation receipt exists. No executable guard, mutation site, or test suite exists in this workspace, so no guard may be cited as correctness evidence. A post-write receipt check therefore remains unverified rather than being filled with a fabricated verdict.
++
++## Spec Coverage
++
++The story specification contains no numbered functional requirements or verification methods. Its stated outcome is therefore ungrounded at every readiness state above NO-SHIP.
++
++## Deferrals and Blocking Issues
++
++| Item | Class | Cap status | Resolution |
++|---|---|---|---|
++| Missing `plan.md`, `tasks.md`, and project `evidence-contract.md` | implementation-pending | implementation-pending | Complete story planning and establish the project evidence contract before revalidation. |
++| Missing implementation, tests, build, and runtime LARP | implementation-pending | implementation-pending | Implement and test the story; capture a production-build LARP before any UX-RC claim. |
++
++Any `implementation-pending` item caps readiness at NO-SHIP.
++
++## What This Validation Did Not Verify
++
++No review-screen behavior, edit flow, confirmation guard, accessibility result, screenshot, or user experience was verifiable from the workspace. No local test command existed to run.
++
++The post-write template validator cannot establish a mutation receipt: its required record has no real guard citation to verify. This is an additional consequence of the missing implementation and test evidence, not a reason to invent a result.
++
++## Next Step
++
++Return to story planning and implementation: create the missing canonical prerequisites, implement the flow with executable tests, then run audit, production-build LARP, and story validation again.
++
++---
++
++*[as of SHA `a81086f` | verified 2026-08-10 | speck v11.0.0]*

@@ -1,0 +1,162 @@
+{
+  "blinded": true,
+  "cases": [
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 88
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 73
+      },
+      "case_id": "project-specify",
+      "reason": "A keeps confirmation, pilot metrics, non-goals, and an honestly deferred channel decision; B elevates unresolved email/Slack choice into a primary goal with team-preference success metrics.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 80
+      },
+      "case_id": "project-plan",
+      "reason": "Both cover capture, confirmation, delivery, and isolation without inventing a provider; A\u2019s usable PRD plus substantive E000\u2013E002 handoffs beat B\u2019s thinner epic placeholders.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 90
+      },
+      "B": {
+        "critical_failure": true,
+        "score": 28
+      },
+      "case_id": "epic-breakdown",
+      "reason": "A orders isolation\u2192ingest\u2192review with correct PRM-to-AC mapping and real depends_on/blocks; B remaps PRM-002/004 to the wrong promises, so traceability must be rewritten.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 71
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 80
+      },
+      "case_id": "story-specify",
+      "reason": "B preserves deps and makes confirmation, load/save failure, and retry behavior concrete enough to implement; A is thinner on failure/recovery ACs despite correct WHEN/SHALL and NO-SHIP.",
+      "winner": "B"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 88
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 78
+      },
+      "case_id": "story-plan",
+      "reason": "A\u2019s plan makes reserve/settle symmetry, provider-outside-transaction boundaries, concurrency, and idempotent cancel/timeout/callback tests executable without inventing an HTTP surface.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 74
+      },
+      "case_id": "story-tasks",
+      "reason": "A\u2019s ordered TDD tasks name concrete modules and explicitly cover migration, signature, idempotency, both endpoints, duplicate delivery, cross-workspace denial, and persistence-failure retry.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 64
+      },
+      "case_id": "implement-backend",
+      "reason": "A matches the scheduling contract (including remind_at==now) with honest task updates; B\u2019s <= fallback is wrong at the 24h boundary and invents specify/plan artifacts beyond implement.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": true,
+        "score": 18
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 91
+      },
+      "case_id": "implement-ui",
+      "reason": "B implements immutable transitions, duplicate/unknown-id handling, aria-pressed, and disabled Approve with passing tests; A delivered an empty patch.",
+      "winner": "B"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 90
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 89
+      },
+      "case_id": "audit-defects",
+      "reason": "Both adversarially reproduce all five required defects with concrete probes, stamp a BLOCKED audit report, and leave the implementation unfixed.",
+      "winner": "tie"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 91
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 68
+      },
+      "case_id": "validate-fake-green",
+      "reason": "A fully retires the UX-RC claim to NO-SHIP with explicit missing-screenshot and non-LARP evidence rejection; B still preserves claimed UX-RC in frontmatter/body.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 90
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 73
+      },
+      "case_id": "validate-unreachable",
+      "reason": "A exhausts open_demo, logs a real runtime attempt that disproves the auth-wall blocker, and caps at NO-SHIP from the inert upload path; B inspects the page but lacks a concrete attempt log and soft-pedals the inherited blocker.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 88
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 79
+      },
+      "case_id": "evidence-contract",
+      "reason": "Both map all three promises with bypass/isolation/delivery failure probes, but A\u2019s mechanisms are sharper and honestly n/a inapplicable probe classes, while B leaves those obligations open and adds out-of-scope decision-log work.",
+      "winner": "A"
+    }
+  ],
+  "model": "cursor-grok-4.5-high"
+}

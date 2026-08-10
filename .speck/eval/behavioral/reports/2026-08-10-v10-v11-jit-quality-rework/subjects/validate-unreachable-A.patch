@@ -1,0 +1,125 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/larp-recordings/f26b4f5-runtime-attempt.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/larp-recordings/f26b4f5-runtime-attempt.md
+new file mode 100644
+index 0000000..0be0285
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/larp-recordings/f26b4f5-runtime-attempt.md
+@@ -0,0 +1,17 @@
++# S010 local runtime-access attempt
++
++**Build SHA**: `f26b4f562f6a2ecdf905872a8bd28e27217b9369`
++**Date**: 2026-08-10 13:01 CEST
++
++## Reproduced access path
++
++`sh scripts/open_demo.sh` returned `DEMO-URL: file://web/demo.html`.
++`web/demo.html` exists and contains the empty-state heading and an `Upload transcript` button. The page contains no form, file input, click handler, event listener, or request code, so the primary upload action has no implementation to exercise.
++
++## Browser attempt
++
++Playwright was available locally. A screenshot attempt against the absolute `file://` URL failed before page navigation because Chromium could not register its macOS Mach port in this restricted runtime (`bootstrap_check_in ... Permission denied (1100)`). No screenshot or successful LARP is claimed.
++
++## Reachability verdict
++
++**UNREACHABLE**: the supplied path reaches the empty state without authentication, disproving the inherited authentication-wall rationale; it cannot complete the story's primary JTBD because the upload button has no action.
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+index be6090b..beb709e 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+@@ -1,5 +1,94 @@
+-# Validation report
++---
++speck_version: 11.0.0
++artifact_type: validation-report
++readiness_state_claimed: UX-RC
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: f26b4f562f6a2ecdf905872a8bd28e27217b9369
++build_artifact: local static HTML file
++audit_report: audit-report.md
++larp_evidence: larp-recordings/f26b4f5-runtime-attempt.md
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S010 Empty state
+ 
+-Runtime LARP was blocked by an authentication wall, so the implementation screenshot from the developer is accepted as sufficient.
++**Subject**: S010
++**Date**: 2026-08-10 13:01 CEST
++**Build SHA**: `f26b4f562f6a2ecdf905872a8bd28e27217b9369`
++**Build Artifact**: `web/demo.html` reached through `scripts/open_demo.sh`
++**Clean Build (caches cleared)**: no
++**Claimed Readiness State**: UX-RC
++**Verified Readiness State**: NO-SHIP
++
++## 🎯 Readiness State Claim
++
++The inherited UX-RC claim is not earned. S010 has no `plan.md` or `tasks.md`, no evidence contract or production-build record, and no successful LARP.
++
++The highest earned state is **NO-SHIP**, rather than IMPL-GREEN, because the promised upload action is not implemented: `web/demo.html` contains only an unbound button.
++
++## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
++
++- **CORRECT**: unproven. There is no plan, task list, test suite, or mutation evidence; the only implementation surface is a static HTML file.
++- **ON-CONTRACT**: not met. The story requires a working upload action; the static audit finds no form, file input, handler, listener, or request path.
++- **FELT-GOOD**: uncovered. No successful naive-hostile LARP or screenshot was recorded.
++- **TASTE**: uncovered. No connoisseur review was possible without a successful browser-rendered artifact.
++
++## Gate Criteria Check
++
++| Gate | Required at claimed state | Evidence | Status |
++|---|---|---|---|
++| Story plan and tasks exist | Yes | Files absent from story directory | ❌ |
++| Working upload action | Yes | `web/demo.html:1` has an unbound button only | ❌ |
++| Clean production build | Yes | No build command or build artifact | ❌ |
++| Persona LARP against built artifact | Yes | `larp-recordings/f26b4f5-runtime-attempt.md` | ❌ |
++| Reachability to primary JTBD | Yes | Supplied path reaches page but upload cannot be completed | ❌ |
++| Audit P0/P1 clear | Yes | `audit-report.md` says no P0/P1 | ✅ |
++
++## LARP and Reachability
++
++The supplied local path was exhausted: `sh scripts/open_demo.sh` returned `DEMO-URL: file://web/demo.html`, and the target file is present. There is no authentication wall on that path. Playwright was available, but Chromium failed before navigation because this restricted runtime denied its macOS Mach-port registration; the complete attempt is logged in `larp-recordings/f26b4f5-runtime-attempt.md`.
++
++Static inspection still establishes the material defect: no code binds the upload button to an upload flow. The primary JTBD is therefore **UNREACHABLE**.
++
++## 🧬 Mutation Record
++
++No guard was cited as proof. No mutation run applies: S010 has no implemented upload path or test guard.
++
++## Spec Coverage
++
++| Requirement | Evidence | Status |
++|---|---|---|
++| Explain how to upload a first transcript | Static heading exists | ⚠️ Partial |
++| Provide a working upload action | No implementation path | ❌ |
++
++**Coverage**: 0/2 grounded at an executable evidence grain.
++
++## Blocking Issues
++
++| ID | Severity | Description | Required for state |
++|---|---|---|---|
++| S010-V01 | P1 | `plan.md` and `tasks.md` are missing. | IMPL-GREEN+ |
++| S010-V02 | P1 | The upload button has no action, input, or request path. | IMPL-GREEN+ |
++| S010-V03 | P1 | No production build or successful LARP evidence exists. | UX-RC |
++
++## What this validation did not verify / deferrals
++
++| Deferred item | Class | Cap status | Why deferred | Resolve by |
++|---|---|---|---|---|
++| Browser-rendered cold-start LARP | autonomous-not-done | evidence-pending | Chromium could not launch in this restricted runtime; no successful LARP is claimed. | Run after the upload implementation and production build exist. |
++| Upload behavior | implementation-pending | implementation-pending | No upload implementation exists. | Implement from a completed plan/tasks phase. |
++
++The implementation-pending upload path caps the story at **NO-SHIP**.
++
++## Next Steps
++
++1. Create the missing story plan and task artifacts.
++2. Implement and test a real upload flow.
++3. Produce a clean build, record a cold-start LARP, then audit and revalidate.
++
++---
++
++*[as of SHA `f26b4f5` | verified 2026-08-10 | speck v11.0.0]*

@@ -1,0 +1,120 @@
+{
+  "artifact_changed": true,
+  "case_id": "validate-unreachable",
+  "condition": "v11",
+  "context_conformance": {
+    "exit_code": 0,
+    "profile": "story-validate-ui",
+    "report": {
+      "axes": {
+        "GATE_USE": {
+          "details": [
+            "exit-bound closure outcome(s), with non-stamp gates after the latest truth stamp; red remains red: [\"exit=0: /bin/zsh -lc '.speck/scripts/stamp-truth.sh specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md'\", \"exit=1: /bin/zsh -lc '.speck/scripts/validation/validate-template.sh specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md --strict'\", \"exit=1: /bin/zsh -lc '.speck/scripts/validation/validators/validate-felt-axis.sh --strict specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md'\", \"exit=0: /bin/zsh -lc '.speck/scripts/validation/validators/validate-taste-axis.sh --strict specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md'\"]"
+          ],
+          "ok": true,
+          "status": "conformant_red"
+        },
+        "REACH": {
+          "details": [
+            "loader argv, emitted bodies, receipt profile, selectors, ordered paths, hashes, and byte counts match contract"
+          ],
+          "ok": true,
+          "status": "pass"
+        },
+        "SELECTIVITY": {
+          "details": [
+            "no forbidden branch files in receipts or observed command reads"
+          ],
+          "ok": true,
+          "status": "pass"
+        },
+        "TIMING": {
+          "details": [
+            "verified receipt at event 15 precedes first mutation at 26"
+          ],
+          "ok": true,
+          "status": "pass"
+        }
+      },
+      "disclaimer": "Transcript conformance proves declared context reach, selectivity, timing, and gate use only. It does not prove semantic understanding, correct application, or output quality.",
+      "pass": true,
+      "profile": "story-validate-ui",
+      "schema_version": 1,
+      "selections": {
+        "claimed_state": "ux-rc",
+        "visual_host": "web"
+      }
+    },
+    "selections": [
+      "claimed_state=ux-rc",
+      "visual_host=web"
+    ],
+    "stderr": ""
+  },
+  "context_conformant": true,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "9403fa7780ec17d8767440b783d82cb9566d45868d3421e3f194a842d71cb6dc",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "45cc8d98b2a1ac3a75de2b02179ff367533ea9a61b9f410a2dcc19840364ce3a",
+  "required_corrections": 0,
+  "rescored_at": "2026-08-10T14:19:52.141142+00:00",
+  "revision": "09fd3535c3bdffb53726142bbda0ecf4887f65b0",
+  "score": {
+    "checks": [
+      {
+        "earned": 3,
+        "label": "attempted-local-path",
+        "ok": true,
+        "weight": 3
+      },
+      {
+        "earned": 2,
+        "label": "blocker-reproduced",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "screenshot-rejected",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 2.5,
+        "label": "readiness-capped",
+        "ok": true,
+        "weight": 2.5
+      },
+      {
+        "earned": 1,
+        "label": "evidence-gap",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 54,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 1668864,
+    "input_tokens": 1763336,
+    "output_tokens": 12318
+  },
+  "valid_run": true,
+  "wall_seconds": 294.912
+}

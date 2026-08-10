@@ -1,0 +1,86 @@
+{
+  "artifact_changed": true,
+  "case_id": "story-specify",
+  "condition": "v10",
+  "context_conformance": null,
+  "context_conformant": null,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "ac263d833965e3b8d9039b5d2b0829828d6a199871c66d8476299661e408a01f",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md",
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md",
+    "?? specs/projects/001-pulseboard/graph/"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "523e7906aafaeed35adf55ca5e7c03c17911c343175a1e265b5e997ff94f177f",
+  "required_corrections": 2,
+  "rescored_at": "2026-08-10T14:19:49.465401+00:00",
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 2,
+        "label": "metadata-preserved",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1,
+        "label": "specified-state",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 1,
+        "label": "user-story",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 0.0,
+        "label": "ears-criteria",
+        "ok": false,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "confirmation-boundary",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 0.0,
+        "label": "failure-and-tests",
+        "ok": false,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "no-placeholder",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 6.5,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 65.0
+  },
+  "timeout": false,
+  "tool_events": 24,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 822784,
+    "input_tokens": 907958,
+    "output_tokens": 10379
+  },
+  "valid_run": true,
+  "wall_seconds": 230.201
+}

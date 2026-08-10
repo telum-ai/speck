@@ -1,0 +1,753 @@
+diff --git a/specs/projects/001-pulseboard/PRD.md b/specs/projects/001-pulseboard/PRD.md
+new file mode 100644
+index 0000000..b10bfe9
+--- /dev/null
++++ b/specs/projects/001-pulseboard/PRD.md
+@@ -0,0 +1,329 @@
++# Product Requirements Document (PRD)
++
++**Project**: Pulseboard  
++**Version**: 1.0.0  
++**Date**: 2026-08-10  
++**Status**: Planning  
++**Scale**: Level 2
++
++---
++
++## 📊 Information Sources
++
++**Traceability**:
++
++- `project.md` — pilot goal, non-goals, and success targets.
++- `product-contract.md` — PRM-001 through PRM-004.
++- `context.md` — two engineers, four-week pilot, Python API, browser UI, and an undecided reminder provider.
++- `evidence-contract.md` — required end-to-end, isolation, and facilitator-LARP evidence.
++
++**Unavailable optional foundation**: `architecture.md`, `ux-strategy.md`, `domain-model.md`, `design-system.md`, and `constitution.md` were not supplied. This plan uses the reversible implementation assumptions in Appendix B; the later epic-planning phase must replace them if an architecture decision is introduced.
++
++No market research or brownfield artifacts were supplied or needed to plan the bounded pilot.
++
++---
++
++## Executive Summary
++
++Pulseboard helps meeting facilitators turn an uploaded transcript into reviewed action items. A facilitator must explicitly confirm every item’s text, owner, and due date before Pulseboard schedules a reminder. The four-week pilot measures whether five teams review at least 80% of proposals and reduce unowned overdue actions by 30%.
++
++## Product Vision & Strategy
++
++### Vision Statement
++
++Meeting follow-through is trustworthy when actions are proposed quickly but never acted on autonomously. Pulseboard makes the review step the product, rather than hiding it behind automation.
++
++### Strategic Objectives
++
++1. **Make action capture faster**: convert an uploaded transcript into actionable proposals for facilitator review.
++2. **Keep facilitators in control**: make text, owner, and due date explicit confirmation gates.
++3. **Prove pilot value safely**: send one reminder through a configurable provider while keeping workspace data isolated.
++
++### Success Definition
++
++- **Pilot success**: five teams use the pilot in four weeks.
++- **User success**: at least 80% of proposed actions are reviewed.
++- **Outcome success**: 30% fewer unowned overdue actions versus each pilot team’s baseline.
++
++## Market Analysis
++
++### Target Market
++
++The initial market is the five pilot teams. No TAM, SAM, SOM, or competitor claims are asserted because the supplied foundation contains no market evidence.
++
++### Competitive Landscape
++
++| Alternative | Strength | Limitation for this pilot | Pulseboard distinction |
++|-------------|----------|---------------------------|------------------------|
++| Manual meeting notes | Familiar and controllable | Actions can be missed or remain unowned | Proposes actions from a transcript, then requires review |
++| Calendar/task tools | Can send reminders | Do not establish that a facilitator approved the meeting action | Confirmation is required before a reminder is scheduled |
++
++### Market Opportunity
++
++The pilot tests a narrow, observable workflow before any market-scale claim: upload, review, confirm, deliver one reminder, and inspect its status.
++
++## User Analysis
++
++### User Personas
++
++**Meeting Facilitator**
++
++- **Goals**: turn discussion into clear owned actions without retyping notes.
++- **Pain Points**: actions are missed, have ambiguous owners or dates, and reminders can be sent too early.
++- **Success Looks Like**: reviewing a short set of proposals, correcting them where needed, and knowing exactly what reminder was delivered.
++
++**Action Owner**
++
++- **Goals**: receive a clear reminder for a confirmed action.
++- **Pain Points**: vague or unowned follow-up from meetings.
++- **Success Looks Like**: a single reminder names a clear action and due date.
++
++### User Journey Map: Reviewed meeting follow-through
++
++1. **Awareness**: a facilitator sees that meeting actions are slipping through ordinary notes.
++2. **Consideration**: the facilitator chooses a transcript to upload.
++3. **Onboarding**: the facilitator uploads it and sees proposed actions.
++4. **Value realization**: the facilitator confirms text, owner, and due date; Pulseboard schedules the reminder.
++5. **Advocacy**: the facilitator can point to delivery status and fewer unowned overdue actions.
++
++## Functional Requirements
++
++### Core Features
++
++#### Reviewed action workflow
++
++**Transcript action proposals**
++
++- **Description**: a facilitator uploads a transcript and receives proposed action items.
++- **User Stories**:
++  - As a facilitator, I want to upload a transcript so that I can review proposed actions without manually extracting each one.
++- **Acceptance Criteria**:
++  - A workspace-scoped upload produces action proposals linked to that transcript.
++  - A proposal is visibly distinguishable from a confirmed action.
++- **Priority**: P0 (PRM-001)
++
++**Explicit confirmation**
++
++- **Description**: confirmation requires action text, owner, and due date.
++- **User Stories**:
++  - As a facilitator, I want to correct and confirm an action so that no incomplete action is scheduled.
++- **Acceptance Criteria**:
++  - The system cannot schedule an action without facilitator confirmation of all three fields.
++  - Confirmed actions retain their approved values.
++- **Priority**: P0 (PRM-002)
++
++#### Workspace access and isolation
++
++**Workspace-scoped data**
++
++- **Description**: transcripts and actions are visible only in their owning workspace.
++- **Acceptance Criteria**:
++  - A real request made as a principal from workspace B cannot read workspace A’s transcripts or actions.
++- **Priority**: P0 (PRM-004)
++
++#### Reminder delivery
++
++**Configurable reminder provider**
++
++- **Description**: a confirmed action sends one reminder through the selected provider and displays its delivery status.
++- **Acceptance Criteria**:
++  - The provider is configurable without changing the reviewed-action workflow.
++  - Each attempted delivery records a user-visible status.
++- **Priority**: P0 (PRM-003)
++
++### Platform Requirements
++
++- **Web**: browser UI for facilitators; responsive enough for common laptop and tablet browser use during the pilot.
++- **Mobile**: no native mobile app is in pilot scope.
++- **Desktop**: no native desktop app is in pilot scope.
++
++### Integration Requirements
++
++| System | Type | Purpose | Priority |
++|--------|------|---------|----------|
++| Reminder provider (TBD) | Provider adapter/API | Deliver one configured reminder and receive delivery result | P0 |
++
++## Non-Functional Requirements
++
++### Performance
++
++- Transcript upload and proposal generation must give the facilitator a clear progress or completion state; no numeric latency target is supplied.
++- Pilot capacity is five teams; no throughput or scale claim is made beyond that bounded use.
++
++### Reliability
++
++- A reminder delivery attempt must persist a status that the facilitator can inspect.
++- Failed provider delivery must be represented as a status, not presented as a successful reminder.
++
++### Security
++
++- Workspace scoping is mandatory for transcripts and actions.
++- Isolation evidence must use a negative probe through the real request role.
++- No regulated health or payment data is in scope.
++
++### Usability
++
++- The confirmation gate must clearly identify missing text, owner, or due date.
++- A facilitator LARP is required for user-facing quality evidence.
++
++### Scalability
++
++- The pilot is deliberately limited to five teams; broader growth is a revisit trigger, not a current requirement.
++
++## Design Principles
++
++### User Experience Principles
++
++1. **Propose, then confirm**: AI-assisted extraction may suggest an action, but the facilitator owns the decision to schedule it.
++2. **Make state legible**: distinguish proposed, confirmed, scheduled, delivered, and failed states.
++3. **Keep the workflow short**: the primary job is upload → review → confirm → inspect delivery.
++
++### Technical Principles
++
++1. **Workspace isolation at the request boundary**: scope reads and writes by the acting workspace rather than filtering only in the browser.
++2. **Provider behind a boundary**: reminder delivery is an adapter so the unselected provider remains a reversible choice.
++3. **Evidence follows the real path**: prove the complete upload-to-delivery path and the cross-workspace negative probe.
++
++## Constraints & Assumptions
++
++### Business Constraints
++
++- **Timeline**: four-week pilot.
++- **Resources**: two engineers.
++- **Pilot population**: five teams.
++- **Legal**: no regulated health or payment data.
++
++### Technical Constraints
++
++- **Application shape**: Python API and browser UI.
++- **Reminder provider**: not selected at planning time.
++- **Non-goals**: meeting recording, calendar replacement, and autonomous outbound messaging.
++
++### Assumptions
++
++1. **A workspace principal will be available to the API**: required to enforce PRM-004; revisit if the chosen authentication model cannot supply it.
++2. **Transcripts can be uploaded as pilot inputs**: revisit if file handling, size, or retention constraints emerge.
++3. **A provider can report a delivery result**: revisit if the selected provider has only fire-and-forget semantics.
++
++## Release Strategy
++
++### MVP Scope
++
++The MVP is the single facilitator workflow: upload transcript, review proposed actions, explicitly confirm text/owner/due date, deliver one reminder via the configured provider, and inspect its status with workspace isolation enforced.
++
++#### MVP Features
++
++- Reviewed transcript-to-action workflow — delivers PRM-001 and PRM-002.
++- Workspace-scoped access — delivers PRM-004.
++- One configurable reminder delivery with status — delivers PRM-003.
++
++#### MVP Success Criteria
++
++- Five teams can complete the primary workflow during the pilot.
++- At least 80% of proposals are reviewed.
++- Unowned overdue actions decrease by 30% over four weeks.
++
++### Release Phases
++
++**Phase 0: Foundation**
++
++- Features: local test/lint/build path, CI, environment configuration, and pilot-safe error observability.
++- Success: the team can exercise and protect the pilot path before feature work.
++
++**Phase 1: Reviewed actions**
++
++- Features: workspace access, transcript upload, action proposals, and explicit confirmation.
++- Success: a facilitator completes the review gate without a reminder being sent automatically.
++
++**Phase 2: Delivery and pilot proof**
++
++- Features: provider adapter, one reminder delivery, status, and pilot metrics.
++- Success: the end-to-end evidence path is available for the chosen provider.
++
++### Rollout Strategy
++
++- **Beta program**: invite the five pilot teams only.
++- **Feature flags**: use a reversible pilot enablement mechanism if the selected deployment environment supports it.
++- **Rollback plan**: disable reminder dispatch while preserving confirmation and delivery-attempt status for investigation.
++
++## Success Metrics
++
++### Key Performance Indicators
++
++**User and outcome metrics**
++
++- Proposal review rate: at least 80% during the four-week pilot.
++- Unowned overdue actions: 30% reduction from each team’s baseline at pilot end.
++- Active pilot teams: five teams.
++
++**Technical metrics**
++
++- End-to-end path: upload-to-confirmation-to-delivery runtime evidence captured for the selected provider.
++- Isolation: a real cross-workspace negative probe is denied.
++
++### Measurement Plan
++
++- **Analytics**: record proposal created, reviewed, confirmed, delivery attempted, and delivery-status events with workspace-safe aggregation.
++- **Feedback loops**: facilitator LARP during validation plus pilot facilitator feedback during the four weeks.
++- **Review cycle**: review pilot metrics weekly; compare unowned overdue actions at pilot end.
++
++## Risk Analysis
++
++### Risk Matrix
++
++| Risk | Probability | Impact | Mitigation | Owner |
++|------|------------|--------|------------|-------|
++| Proposed action is wrong or incomplete | M | H | Require confirmation of text, owner, and due date | Product/engineering |
++| Reminder provider is delayed or unsuitable | M | H | Use a provider adapter and make delivery status explicit | Engineering |
++| Workspace data leaks across teams | L | H | Enforce request-boundary scoping and run a real negative probe | Engineering |
++| Four-week scope expands | M | H | Keep recording, calendar replacement, and autonomous outreach out of scope | Product/engineering |
++| Facilitators do not find review valuable | M | M | Run facilitator LARP and inspect review-rate metric early | Product |
++
++### Contingency Plans
++
++- **If the provider is not selected in time**: complete E001 and keep dispatch disabled; do not simulate delivery as successful.
++- **If review rate is low after the first week**: inspect the facilitator workflow and prioritize friction reduction before expanding scope.
++
++## Dependencies
++
++### External Dependencies
++
++- **Reminder provider (TBD)**: required only for actual dispatch and delivery status.
++
++### Internal Dependencies
++
++- **E000**: provides the test, CI, environment, and observability baseline.
++- **E001**: supplies confirmed actions and workspace context consumed by E002.
++
++## Appendices
++
++### A. Research Data
++
++No research reports were supplied; this plan makes no external market, pricing, or competitor claims.
++
++### B. Technical Architecture
++
++The supplied foundation specifies only a Python API and browser UI. Planning assumes a workspace-scoped persistence layer, a reviewed-action workflow in the API, and a reminder-provider adapter. These are reversible assumptions, not an architecture lock.
++
++### C. Mockups/Wireframes
++
++No design artifacts were supplied. UI-bearing stories must create their canonical UI/experience artifacts in their later lifecycle phases.
++
++### D. Glossary
++
++- **Proposal**: an action candidate extracted from a transcript, not yet eligible for scheduling.
++- **Confirmed action**: an action for which a facilitator has explicitly confirmed text, owner, and due date.
++- **Delivery status**: the recorded state of one reminder attempt through the configured provider.
++- **Workspace**: the tenant boundary for transcript and action access.
++
++---
++
++## Revision History
++
++| Version | Date | Changes | Author |
++|---------|------|---------|--------|
++| 1.0.0 | 2026-08-10 | Initial pilot plan | Codex |
++
++---
++
++*[as of SHA `eddefc8` | verified 2026-08-10 | speck v10.5.0]*
+diff --git a/specs/projects/001-pulseboard/epics.md b/specs/projects/001-pulseboard/epics.md
+new file mode 100644
+index 0000000..58be214
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics.md
+@@ -0,0 +1,197 @@
++# Epic Breakdown: Pulseboard
++
++**Project**: Pulseboard  
++**Date**: 2026-08-10  
++**Total Epics**: 3 (E000 plus 2 product epics)  
++**Estimated Total Stories**: 11-17
++
++---
++
++## Epic Dependency Map
++
++```text
++E000 Developer Infrastructure → E001 Reviewed Action Workflow → E002 Reminder Delivery & Pilot Evidence
++```
++
++## Epic Prioritization
++
++### MVP Epics (Must Have)
++
++- E000: Developer Infrastructure
++- E001: Reviewed Action Workflow
++- E002: Reminder Delivery & Pilot Evidence
++
++### Enhancement Epics (Should Have)
++
++- None in the bounded pilot plan.
++
++### Future Epics (Nice to Have)
++
++- Not planned. Meeting recording, calendar replacement, and autonomous outbound messaging are explicit non-goals.
++
++---
++
++## Epic Definitions
++
++### E000: Developer Infrastructure
++
++**Value Statement**: This epic gives the two-engineer pilot team a reliable way to test, build, configure, and observe the product before user-facing work begins.
++
++**Scope Summary**: Establish the Python API and browser UI development baseline: local lint/test/build commands, CI for documentation-appropriate code paths, environment configuration, and error observability. It does not select the reminder provider or implement product workflows.
++
++**Success Criteria**:
++
++- [ ] A developer can run the agreed lint, test, and build checks locally.
++- [ ] CI runs the relevant checks for product changes.
++- [ ] Environment configuration separates local and pilot values without committing secrets.
++- [ ] Pilot failures have enough error context to investigate.
++
++**User Stories Summary**:
++
++- Python API and browser UI project baseline.
++- Unit/integration test, lint, formatting, and build commands.
++- CI checks and environment configuration.
++- Error observability for the pilot.
++
++**Dependencies**:
++
++- **Depends On**: None.
++- **Enables**: E001, E002.
++
++**Touch-points (creates/modifies)**:
++
++- Migrations: —
++- Models/Services: application configuration and observability bootstrap
++- Files/Components: API/UI project configuration, CI workflows, test configuration, environment templates
++
++**Estimated Stories**: 3-5  
++**Priority**: P0 — Foundation  
++**Target Phase**: Phase 0
++
++---
++
++### E001: Reviewed Action Workflow
++
++**Value Statement**: This epic enables meeting facilitators to turn a transcript into workspace-safe, reviewed action items, so that no reminder can be scheduled from an unconfirmed proposal.
++
++**Scope Summary**: Build the primary pilot workflow: workspace-aware access, transcript upload, action proposal generation, and explicit facilitator confirmation of text, owner, and due date. This epic delivers PRM-001, PRM-002, and PRM-004; it does not send reminders.
++
++**Success Criteria**:
++
++- [ ] A facilitator can upload a transcript and review proposed action items.
++- [ ] Scheduling is unavailable until the facilitator confirms action text, owner, and due date.
++- [ ] A real request from another workspace cannot read the workspace’s transcripts or actions.
++- [ ] A facilitator LARP can complete the upload-to-confirmation experience.
++
++**User Stories Summary**:
++
++- Workspace principal and workspace-scoped transcript/action access.
++- Transcript upload and proposal presentation.
++- Proposal editing and explicit confirmation gate.
++- Proposed versus confirmed action state and review instrumentation.
++
++**Dependencies**:
++
++- **Depends On**: E000.
++- **Enables**: E002.
++
++**Touch-points (creates/modifies)**:
++
++- Migrations: workspace, transcript, action proposal, and confirmed action persistence (schema finalized in E001)
++- Models/Services: workspace request scoping, transcript ingestion, action proposal, confirmation workflow
++- Files/Components: transcript upload, action review, confirmation UI, workspace-scoped API routes
++
++**Estimated Stories**: 5-8  
++**Priority**: P0 — MVP critical  
++**Target Phase**: Phase 1
++
++---
++
++### E002: Reminder Delivery & Pilot Evidence
++
++**Value Statement**: This epic enables facilitators to send one reminder for a confirmed action and inspect its delivery status, turning reviewed actions into observable follow-through during the pilot.
++
++**Scope Summary**: Add a configurable reminder-provider adapter, one reminder delivery attempt per confirmed action, user-visible delivery status, and pilot-safe measurement for review and outcome metrics. The provider remains undecided until a later decision; E002 consumes E001’s frozen action and workspace schema.
++
++**Success Criteria**:
++
++- [ ] A confirmed action can trigger one reminder through the configured provider.
++- [ ] Delivery success or failure is recorded and visible to the facilitator.
++- [ ] Runtime evidence exercises upload → confirmation → delivery through the real selected provider path.
++- [ ] Pilot metrics capture review rate and allow the agreed overdue-action comparison.
++
++**User Stories Summary**:
++
++- Configurable reminder provider adapter and safe credentials handling.
++- One reminder attempt for a confirmed action.
++- Delivery status display and failure handling.
++- Pilot measurement events and reporting export/view.
++
++**Dependencies**:
++
++- **Depends On**: E000, E001.
++- **Enables**: Pilot outcome assessment.
++
++**Touch-points (creates/modifies)**:
++
++- Migrations: delivery-attempt/status and pilot-measurement fields only; no changes to E001 frozen shared tables without an explicit later decision
++- Models/Services: reminder provider adapter, delivery-status service, pilot metrics aggregation
++- Files/Components: reminder configuration, action delivery status, pilot metrics surface, provider integration routes
++
++**Estimated Stories**: 3-4  
++**Priority**: P0 — MVP critical  
++**Target Phase**: Phase 2
++
++---
++
++## Epic Execution Strategy
++
++### Phase 0: Developer Infrastructure
++
++**Goal**: establish a reliable development and evidence baseline.
++
++**Epics**: E000
++
++**Success Gate**: local checks and CI are available; pilot configuration and error observability are defined.
++
++### Phase 1: Reviewed Actions
++
++**Goal**: let a facilitator safely create confirmed actions from an uploaded transcript.
++
++**Epics**: E001
++
++**Success Gate**: the primary workflow satisfies PRM-001, PRM-002, and a real cross-workspace negative probe for PRM-004.
++
++### Phase 2: Reminder Delivery and Pilot Evidence
++
++**Goal**: deliver one confirmed reminder and prove the complete pilot path.
++
++**Epics**: E002
++
++**Success Gate**: the real upload-to-confirmation-to-delivery path and delivery status are evidenced for the selected provider.
++
++## Risk Mitigation by Epic
++
++| Epic | Primary Risk | Mitigation Strategy |
++|------|--------------|-------------------|
++| E000 | A rushed baseline leaves the pilot untestable | Make local checks, CI, and configuration explicit before feature work |
++| E001 | An unconfirmed or cross-workspace action is exposed | Enforce confirmation and request-role isolation; prove the negative path |
++| E002 | Provider uncertainty blocks pilot delivery | Isolate provider behind an adapter and represent failure honestly |
++
++## Success Metrics by Epic
++
++| Epic | Key Metric | Target | Measurement |
++|------|-----------|--------|-------------|
++| E000 | Relevant check path available | Local and CI checks exist before E001 | CI and developer walkthrough |
++| E001 | Proposal review rate | ≥80% during pilot | Proposal/review events |
++| E002 | Unowned overdue actions | 30% reduction after four weeks | Per-team baseline comparison |
++
++## Notes
++
++- This is a sequential three-epic plan; concurrency waves are not required for a Build project below the four-epic threshold.
++- The reminder provider choice remains open and is deliberately isolated to E002.
++- E001 owns the initial shared schema so E002 can consume a stable action/workspace boundary.
++
++---
++
++*[as of SHA `eddefc8` | verified 2026-08-10 | speck v10.5.0]*
+diff --git a/specs/projects/001-pulseboard/epics/E000-developer-infrastructure/epic.md b/specs/projects/001-pulseboard/epics/E000-developer-infrastructure/epic.md
+new file mode 100644
+index 0000000..a9ab3c9
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E000-developer-infrastructure/epic.md
+@@ -0,0 +1,42 @@
++# Epic Specification: Developer Infrastructure
++
++**Epic ID**: E000  
++**Project**: Pulseboard  
++**Created**: 2026-08-10  
++**Status**: Planning  
++**Estimated Stories**: 3-5
++
++---
++
++## Epic Lifecycle State Tracking
++
++**Current State**: Draft (Placeholder)
++
++- [x] **Draft** - Placeholder created by `/project-plan` (not yet specified)
++- [ ] **Specified** - epic.md created by `/epic-specify`
++- [ ] **Clarified** - Ambiguities resolved (`/epic-clarify` complete)
++- [ ] **Architected** - epic-architecture.md created (`/epic-architecture` complete)
++- [ ] **Planned** - epic-tech-spec.md created (`/epic-plan` complete)
++- [ ] **Stories Mapped** - epic-breakdown.md created (`/epic-breakdown` complete)
++- [ ] **Validated** - epic integration verified (`/epic-validate` complete)
++
++## Overview
++
++**Epic Summary**: Establish the test, CI, configuration, and observability baseline that lets two engineers build and evaluate the four-week Pulseboard pilot safely.
++
++**Business Value Statement**: This epic enables the pilot team to develop and diagnose Pulseboard reliably, reducing avoidable delivery risk for every later workflow.
++
++**Initial Scope**: Local checks, CI, environment configuration, and pilot error context. Product features and provider selection are out of scope.
++
++## Dependencies
++
++- **Depends On**: None.
++- **Enables**: E001, E002.
++
++## Specification Handoff
++
++`/epic-specify` must refine this placeholder from `PRD.md` and `epics.md`, select implementation tooling appropriate to the Python API and browser UI, and create the complete epic specification.
++
++---
++
++*[as of SHA `eddefc8` | verified 2026-08-10 | speck v10.5.0]*
+diff --git a/specs/projects/001-pulseboard/epics/E001-reviewed-action-workflow/epic.md b/specs/projects/001-pulseboard/epics/E001-reviewed-action-workflow/epic.md
+new file mode 100644
+index 0000000..225261b
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E001-reviewed-action-workflow/epic.md
+@@ -0,0 +1,42 @@
++# Epic Specification: Reviewed Action Workflow
++
++**Epic ID**: E001  
++**Project**: Pulseboard  
++**Created**: 2026-08-10  
++**Status**: Planning  
++**Estimated Stories**: 5-8
++
++---
++
++## Epic Lifecycle State Tracking
++
++**Current State**: Draft (Placeholder)
++
++- [x] **Draft** - Placeholder created by `/project-plan` (not yet specified)
++- [ ] **Specified** - epic.md created by `/epic-specify`
++- [ ] **Clarified** - Ambiguities resolved (`/epic-clarify` complete)
++- [ ] **Architected** - epic-architecture.md created (`/epic-architecture` complete)
++- [ ] **Planned** - epic-tech-spec.md created (`/epic-plan` complete)
++- [ ] **Stories Mapped** - epic-breakdown.md created (`/epic-breakdown` complete)
++- [ ] **Validated** - epic integration verified (`/epic-validate` complete)
++
++## Overview
++
++**Epic Summary**: Deliver workspace-safe transcript upload, proposed action review, and explicit facilitator confirmation of action text, owner, and due date.
++
++**Business Value Statement**: This epic enables meeting facilitators to turn a transcript into approved action items without allowing unreviewed automation to schedule follow-up.
++
++**Initial Scope**: PRM-001, PRM-002, and PRM-004. Reminder dispatch, provider configuration, and delivery status belong to E002.
++
++## Dependencies
++
++- **Depends On**: E000.
++- **Enables**: E002.
++
++## Specification Handoff
++
++`/epic-specify` must refine the facilitator journey and workspace isolation requirements, including the real request-role negative probe required by `evidence-contract.md`.
++
++---
++
++*[as of SHA `eddefc8` | verified 2026-08-10 | speck v10.5.0]*
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminder-delivery-and-pilot-evidence/epic.md b/specs/projects/001-pulseboard/epics/E002-reminder-delivery-and-pilot-evidence/epic.md
+new file mode 100644
+index 0000000..66c4844
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminder-delivery-and-pilot-evidence/epic.md
+@@ -0,0 +1,42 @@
++# Epic Specification: Reminder Delivery & Pilot Evidence
++
++**Epic ID**: E002  
++**Project**: Pulseboard  
++**Created**: 2026-08-10  
++**Status**: Planning  
++**Estimated Stories**: 3-4
++
++---
++
++## Epic Lifecycle State Tracking
++
++**Current State**: Draft (Placeholder)
++
++- [x] **Draft** - Placeholder created by `/project-plan` (not yet specified)
++- [ ] **Specified** - epic.md created by `/epic-specify`
++- [ ] **Clarified** - Ambiguities resolved (`/epic-clarify` complete)
++- [ ] **Architected** - epic-architecture.md created (`/epic-architecture` complete)
++- [ ] **Planned** - epic-tech-spec.md created (`/epic-plan` complete)
++- [ ] **Stories Mapped** - epic-breakdown.md created (`/epic-breakdown` complete)
++- [ ] **Validated** - epic integration verified (`/epic-validate` complete)
++
++## Overview
++
++**Epic Summary**: Deliver one reminder through a configurable provider, expose the delivery result, and capture the pilot evidence that connects reviewed actions to follow-through.
++
++**Business Value Statement**: This epic enables facilitators to see that a confirmed action reached the chosen reminder provider and gives the pilot a measurable outcome path.
++
++**Initial Scope**: PRM-003, delivery-status visibility, and pilot instrumentation. It consumes E001’s confirmed actions and does not broaden into calendar replacement or autonomous outbound messaging.
++
++## Dependencies
++
++- **Depends On**: E000, E001.
++- **Enables**: Pilot outcome assessment.
++
++## Specification Handoff
++
++`/epic-specify` must select or explicitly defer the provider decision, preserve the confirmation gate, and plan runtime proof for the real upload-to-confirmation-to-delivery path.
++
++---
++
++*[as of SHA `eddefc8` | verified 2026-08-10 | speck v10.5.0]*
+diff --git a/specs/projects/001-pulseboard/project-decisions-log.md b/specs/projects/001-pulseboard/project-decisions-log.md
+new file mode 100644
+index 0000000..889b2ba
+--- /dev/null
++++ b/specs/projects/001-pulseboard/project-decisions-log.md
+@@ -0,0 +1,65 @@
++---
++speck_version: 10.5.0
++artifact_type: decisions-log
++append_only: true
++---
++
++# Project Decisions Log
++
++**Project**: Pulseboard
++**Project ID**: `001-pulseboard`
++**Speck Version**: 10.5.0
++
++---
++
++## Decision Index
++
++| ID | Date | SHA | Title | Phase | Status |
++|----|------|-----|-------|-------|--------|
++| DEC-0001 | 2026-08-10 | eddefc8 | Compact pilot epic split | project-plan | LOCKED |
++
++---
++
++## Decisions
++
++### DEC-0001 — Compact pilot epic split
++
++- **Phase**: project-plan
++- **Date**: 2026-08-10
++- **SHA at decision time**: `eddefc8`
++- **Status**: LOCKED
++- **Owner**: AI agent
++- **Reconstructed**: false
++
++**Question**: How should the four-week, two-engineer pilot be split into independently valuable epics while preserving the product contract?
++
++**Alternatives considered**:
++
++1. **E000 plus one combined product epic** — ship all product work as a single vertical slice.
++   - Strengths: fewest handoffs and lowest planning overhead.
++   - Weaknesses: provider uncertainty and delivery work obscure the review and isolation core.
++   - Score: 2/5 for risk isolation.
++
++2. **E000 plus two product epics** — separate reviewed action workflow from reminder delivery and pilot evidence.
++   - Strengths: preserves the confirmation/tenant boundary as a testable first release and confines provider uncertainty to the second epic.
++   - Weaknesses: requires a stable confirmed-action boundary between epics.
++   - Score: 5/5 for pilot fit.
++
++3. **E000 plus three product epics** — make workspace isolation, review, and reminders separate releases.
++   - Strengths: narrower individual scopes.
++   - Weaknesses: adds coordination overhead and delays a complete facilitator workflow for a two-engineer, four-week pilot.
++   - Score: 3/5 for pilot fit.
++
++**Chosen**: E000 plus E001 Reviewed Action Workflow and E002 Reminder Delivery & Pilot Evidence.
++
++**Rationale**: The split keeps PRM-001, PRM-002, and PRM-004 together because safe review is the core user value and its evidence includes a real workspace-isolation probe. It then isolates the unselected reminder provider in E002, leaving that decision reversible while retaining a complete pilot path.
++
++**Consequences accepted**: E001 must establish a stable confirmed-action and workspace boundary before E002 starts. No additional product epic is planned for the pilot; recording, calendar replacement, and autonomous outbound messaging remain out of scope.
++
++**Revisit if**: The selected provider requires substantial identity or calendar integration, the pilot expands beyond five teams, or early facilitator feedback shows the review workflow needs a separate usability-focused epic.
++
++**Evidence**: `project.md`, `product-contract.md`, `context.md`, and `evidence-contract.md`.
++
++---
++
++*[as of SHA `eddefc8` | verified 2026-08-10 | speck v10.5.0]*

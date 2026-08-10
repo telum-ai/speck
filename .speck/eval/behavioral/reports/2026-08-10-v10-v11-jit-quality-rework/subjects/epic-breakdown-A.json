@@ -1,0 +1,125 @@
+{
+  "artifact_changed": true,
+  "case_id": "epic-breakdown",
+  "condition": "v11",
+  "context_conformance": {
+    "exit_code": 1,
+    "profile": "epic-breakdown",
+    "report": {
+      "axes": {
+        "GATE_USE": {
+          "details": [
+            "no exit-bound invocation after latest mutation of any gate in ['.speck/scripts/validation/validators/validate-traceability-matrix.sh']",
+            "last mutation event was 13"
+          ],
+          "ok": false,
+          "status": "fail"
+        },
+        "REACH": {
+          "details": [
+            "loader argv, emitted bodies, receipt profile, selectors, ordered paths, hashes, and byte counts match contract"
+          ],
+          "ok": true,
+          "status": "pass"
+        },
+        "SELECTIVITY": {
+          "details": [
+            "no forbidden branch files in receipts or observed command reads"
+          ],
+          "ok": true,
+          "status": "pass"
+        },
+        "TIMING": {
+          "details": [
+            "verified receipt at event 3 precedes first mutation at 12"
+          ],
+          "ok": true,
+          "status": "pass"
+        }
+      },
+      "disclaimer": "Transcript conformance proves declared context reach, selectivity, timing, and gate use only. It does not prove semantic understanding, correct application, or output quality.",
+      "pass": false,
+      "profile": "epic-breakdown",
+      "schema_version": 1,
+      "selections": {}
+    },
+    "selections": [],
+    "stderr": ""
+  },
+  "context_conformant": false,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "f28409a9445ba5fe9c5e672478bb87e857961b656fa749ba938840039bc5d3c6",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    " D specs/projects/001-pulseboard/traceability-matrix.md",
+    "?? specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md",
+    "?? specs/projects/001-pulseboard/epics/E001-capture-review/stories/",
+    "?? specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md",
+    "?? specs/projects/001-pulseboard/graph/"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "4fad1c0b705815221f572a6d8b2ea6e5321feb429d9715df912111be2cb8c85d",
+  "required_corrections": 0,
+  "rescored_at": "2026-08-10T14:19:49.458257+00:00",
+  "revision": "a3c3cacb97e4bbba0113a699082e5fc1ab7a65ac",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.5,
+        "label": "breakdown",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "three-stories",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "placeholder-state",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 1.5,
+        "label": "dependency-metadata",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "scope-coverage",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 3,
+        "label": "traceability-closed",
+        "ok": true,
+        "weight": 3
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 16,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 432640,
+    "input_tokens": 495709,
+    "output_tokens": 9361
+  },
+  "valid_run": true,
+  "wall_seconds": 196.608
+}

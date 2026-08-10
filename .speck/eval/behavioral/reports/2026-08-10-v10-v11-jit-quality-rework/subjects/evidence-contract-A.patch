@@ -1,0 +1,382 @@
+diff --git a/specs/projects/001-pulseboard/evidence-contract.md b/specs/projects/001-pulseboard/evidence-contract.md
+new file mode 100644
+index 0000000..677c6a1
+--- /dev/null
++++ b/specs/projects/001-pulseboard/evidence-contract.md
+@@ -0,0 +1,180 @@
++---
++speck_version: 11.0
++artifact_type: evidence-contract
++play_levels: [build, platform]
++---
++
++# Evidence Contract: Pulseboard
++
++**Project**: Pulseboard
++**Project ID**: `001-pulseboard`
++**Project Archetype**: b2b_saas
++**Play Level**: build
++**Speck Version**: 11.0.0
++**Last Updated**: 2026-08-10
++
++## 0. How this contract is read — the Four Principles
++
++P1: evidence is judged by what could make the claim false, not by its existence. P2: every promise below names the runtime mechanism that must fire. P3: an unreachable control or unavailable production boundary is a finding, never a pass. P4: the probe suite prompts an independent auditor to break the product; it is not a finite definition of done.
++
++## 1. Target Launch Platforms
++
++The only reversible platform assumption supported by the workspace is a browser-based B2B UI. No host, delivery provider, database, or deployment configuration is yet selected; those are unresolved build decisions, not evidence.
++
++| Platform | Build artifact | Distribution |
++|---|---|---|
++| Web browser | Clean production web bundle, identified by commit SHA | Production web deployment (host not yet selected) |
++
++### 1a. Promise Proof Map
++
++| Promise | Claim | Observable mechanism | Admissible evidence | Failure probe |
++|---|---|---|---|---|
++| PRM-001 | No reminder is scheduled before explicit confirmation of action text, owner, and due date. | The scheduling write accepts only a server-validated confirmed action whose text, owner, and due date are all present; unconfirmed drafts have no schedule record. | `live-probe:specs/projects/001-pulseboard/evidence/PRM-001-confirmation-rejection.md@58256ec` — real API/browser walk plus baselined datastore read-back as the acting workspace principal. | Submit each missing field; tamper a draft to `confirmed`; replay a stale confirmation. Any scheduled record or provider request makes the promise fail. |
++| PRM-002 | A workspace cannot read another workspace's transcript, action, or delivery status. | Every transcript, action, and delivery-status read is evaluated against the authenticated workspace boundary in the real datastore/API. | `live-probe:specs/projects/001-pulseboard/evidence/PRM-002-cross-workspace-read.md@58256ec` — bidirectional live reads as two non-bypass workspace principals. | Seed data in workspace A, authenticate as workspace B, and attempt direct IDs, list/search endpoints, and delivery-status reads. Any returned A data makes the promise fail. |
++| PRM-003 | A confirmed reminder is delivered exactly once or exposes a truthful terminal failure state. | A durable delivery ledger atomically records one accepted delivery attempt per confirmed reminder; retries resolve to one delivered record or a terminal failed record visible to the owner. | `live-probe:specs/projects/001-pulseboard/evidence/PRM-003-delivery-ledger.md@58256ec` and `db-catalog:specs/projects/001-pulseboard/evidence/PRM-003-delivery-readback.md@58256ec` — real provider boundary plus pre/post datastore reads. | Force timeout after provider acceptance, duplicate queue messages, concurrent retries, and provider rejection. More than one delivery, no terminal state, or a success label after failure makes the promise fail. |
++
++## 2. Valid Proof Sources (per platform)
++
++### Platform: Web browser
++
++- A clean production bundle exercised at the deployed target with its real authentication, persistence, and delivery boundaries.
++- `ax-dump` plus `geometry` measurements from the running production-like bundle at 320px, 768px, and 1440px widths for the confirmation and delivery-status flows.
++- Baseline-before / read-back-after datastore evidence for any persistence claim.
++- A real provider acceptance/rejection observed at the provider boundary for the delivery claim.
++
++### 2a. Claim-type admissibility
++
++| Claim type | Admissible | Does not count |
++|---|---|---|
++| correctness | Tests, mutation guards, live probes, datastore reads, or static checks that can observe the stated invariant | A screenshot alone |
++| visibility | A live, bidirectional read as the actual allowed and denied workspace principals | Service-role/superuser reads, mocks, or endpoint-shaped 404s |
++| acceptance | Request issued to the deployed target or real service boundary | Mocked clients or hand-written fixtures without provenance |
++| persistence | Pre-walk baseline plus post-walk datastore read-back | Success UI or a post-walk read with no baseline |
++| fit | Baked-build AX tree plus measured container/content geometry at three widths | Rule-engine pass, props assertion, jsdom geometry, or unmeasured screenshot |
++| behaviour | Control-versus-treatment on the composed prompt with shipped model, if an AI behavior claim is added | Source-text assertion that a prompt rule exists |
++
++### 2b. Typed citations
++
++A typed citation has the form `<type>:<path>@<sha>`. The contract accepts only the following types: `test`, `mutation-guard`, `live-probe`, `db-catalog`, `ax-dump`, `geometry`, `capture`, `device-walk`, `model-eval`, and `static`.
++
++| Claim type | Discharge artifact | Notes |
++|---|---|---|
++| correctness | `test:path/to/suite@sha` | A correctness suite may discharge a correctness claim only. |
++| visibility | `live-probe:path/to/bidirectional-read@sha` | The denied and allowed principals must both be real. |
++| acceptance | `live-probe:path/to/real-boundary@sha` | The target must be deployed or the real engine. |
++| persistence | `db-catalog:path/to/baseline-and-readback@sha` | Both baseline and read-back are required. |
++| fit | `ax-dump:path/to/tree@sha` and `geometry:path/to/measurements@sha` | Both substrates are required. |
++| behaviour | `model-eval:path/to/control-treatment@sha` | Applies only if a generative behavior promise is added. |
++
++## 3. Invalid Proof Sources (anti-proof)
++
++- Dev-server screenshots or unadjudicated captures as launch proof.
++- Mock-only tests as proof that the deployed target, datastore authorization, or delivery provider accepts an interaction.
++- A service-role, superuser, or otherwise bypass-capable read as proof of workspace isolation.
++- A success screen as proof that a schedule or delivery record was persisted.
++- A single post-run database read with no baseline.
++- Tests passing as a readiness or ship claim.
++
++## 4. Required Runtime LARP / Integration Stress Tests
++
++| Test | Persona / principal | Pass condition | Evidence home |
++|---|---|---|---|
++| Confirm a reviewed action | Facilitator in workspace A | Cold-start user can review action text, owner, and due date, explicitly confirm, and see one scheduled reminder; each incomplete confirmation is rejected without a schedule write. | `specs/projects/001-pulseboard/evidence/PRM-001-confirmation-rejection.md` |
++| Attempt cross-workspace access | Facilitators in workspaces A and B | A can read its own transcript/action/status; B cannot discover or read any of A's records through UI or direct request. | `specs/projects/001-pulseboard/evidence/PRM-002-cross-workspace-read.md` |
++| Deliver and recover a reminder | Facilitator in workspace A; real delivery provider | One confirmed reminder produces exactly one provider delivery, or a visible terminal failure state after bounded retries. | `specs/projects/001-pulseboard/evidence/PRM-003-delivery-ledger.md` |
++
++Each UI LARP must use a clean production bundle, cold start, runtime logs, AX dump, geometry measurements, and separately recorded DOES-IT-WORK and IS-IT-GOOD judgments. An inability to reach the confirmation or status surface is a P3 finding with a reproduced attempt log.
++
++## 5. Quality Judgment & Scoring Protocol
++
++Evidence makes a feature eligible for judgment; it does not make it good. Functional, emotional, social, trust, and commercial dimensions are scored 0–10 by an independent skeptical evaluator. A 9 requires a distinct dimension-specific skeptical note and no active P0/P1; a 10 additionally requires complete relevant runtime evidence and no active P2. Active P0/P1 caps a score at 4, active P2 caps it at 8, and a newer runtime contradiction immediately supersedes an older scorecard.
++
++## 6. Required Static Evidence
++
++Every UX-RC-or-higher report records the commit SHA, clean-build identifier, sanitized production configuration, primary-flow screenshots, browser accessibility tree, geometry measurements, browser logs with no unhandled errors, and network/backend traces for confirmation and delivery calls.
++
++### 6a. CI-Enforced Gate Registry
++
++No implementation or recipe is present, so no project gate can honestly be declared wired. The following Speck evidence checks are manual until a concrete recipe and CI configuration are selected.
++
++| Gate ID | Command / Script | Stage | Domain | Scope | Subject | Canary | Waiver |
++|---|---|---|---|---|---|---|---|
++| speck:evidence-citations | `.speck/scripts/validation/validators/validate-evidence-citations.sh specs/projects/001-pulseboard/evidence-contract.md` | manual | evidence | `specs/projects/001-pulseboard/**` | `citations>0` | — | — |
++| speck:probe-library | `.speck/scripts/validation/validators/validate-evidence-citations.sh --check-probe-library specs/projects/001-pulseboard/evidence-contract.md` | manual | evidence | `specs/projects/001-pulseboard/**` | `probe_classes>0` | — | — |
++
++## 7. Required Live-Service Evidence
++
++| Boundary | Required proof | Failure posture that must be observed |
++|---|---|---|
++| Authentication and workspace authorization | Two real workspace principals perform allowed and denied reads across transcript, action, and delivery status. | Missing/invalid identity is denied without leaking membership or records. |
++| Scheduling persistence | Baseline query, confirmation attempt, then datastore read-back of one schedule record. | Invalid confirmation leaves no schedule record. |
++| Delivery provider | Real acceptance and real forced rejection/timeout against the selected provider. | The system either records one delivery or exposes a truthful terminal failed state; it never silently hangs or reports success without evidence. |
++
++### PROFILE Gate Criteria
++
++No PROFILE claim is eligible until a production deployment and distribution are selected, the three promise rows have their required live evidence, and the UI LARPs are independently judged.
++
++## 8. Readiness Criteria
++
++| State | Required evidence | Blockers |
++|---|---|---|
++| NO-SHIP | Current state: no implementation or runtime evidence. | All promises lack live discharge. |
++| IMPL-GREEN | Relevant tests, types, lint, and a mutation check for each implemented guard. | Mock-only or skipped tests. |
++| INTEGRATION-GREEN | Real authorization, confirmation persistence, and delivery-provider round trips; live schema matches migrations. | Any unproven boundary or duplicate/ambiguous delivery outcome. |
++| UX-RC | Clean production bundle LARP for all §4 flows with AX, geometry, logs, and independent functional/taste judgments. | Any unreachable required flow, active P0/P1, or unjudged capture. |
++| COMMERCIAL-RC | Delivery cost/entitlement, support, legal, and value evidence for the paid reminder workflow. | No chosen provider, billing posture, or truthful failure communication. |
++| SHIP-RC | Actual distributed artifact, production configuration, all live evidence current at HEAD, and release decision. | Dev-server evidence, stale evidence, or unresolved failure-path probe. |
++| SHIP | Post-deploy smoke repeats the three promise probes against production. | Any production smoke mismatch. |
++
++## 9. Evidence Storage
++
++Evidence is stored under `specs/projects/001-pulseboard/evidence/` using `<short-sha>-<promise>-<scenario>.<ext>`. UI captures, AX trees, geometry measurements, transcripts, network logs, and datastore read-backs are kept with the corresponding promise probe so a future evaluator can inspect the exact build and failure attempt.
++
++## 10. Who Can Mark a Gate Passed
++
++The agent may record automated correctness and live-boundary evidence. An independent auditor judges the adversarial probe results and the UI's FELT-GOOD/TASTE axes. A human owns release and any irreversible external delivery, production deployment, or charge.
++
++## 11. Adversarial Probe Suite
++
++| Probe | Expected behavior |
++|---|---|
++| Incomplete confirmation | Missing action text, owner, or due date is rejected and writes no schedule. |
++| Draft-state tampering | A client cannot schedule by changing an unconfirmed draft locally. |
++| Cross-workspace enumeration | Direct IDs, lists, search, and delivery-status calls reveal no other-workspace data. |
++| Duplicate delivery trigger | Concurrent/replayed queue messages produce one delivery ledger outcome, never duplicate user delivery. |
++| Provider timeout after acceptance | The final state is reconciled to delivered or terminal failure, never an indefinite/successful-looking ambiguity. |
++| Provider rejection/outage | Bounded retries end in a truthful user-visible terminal failure state. |
++| Missing auth header | The request is denied without a 500 or data leak. |
++| Oversized/malformed confirmation payload | Rejected without partial schedule or delivery writes. |
++| Evaluator-tampering scan | The change does not weaken test harnesses, CI, or evidence validators to manufacture a pass. |
++
++## 11a. Standard Probe Library
++
++No runtime, datastore, model, migration, or revenue implementation exists in this workspace. These are honest pre-build exceptions, not discharges; each must be replaced with an admissible typed citation before the relevant readiness state can advance.
++
++| Probe ID | Class | Claim type | Admissible substrate | Required negative controls | Discharge artifact | Exception |
++|---|---|---|---|---|---|---|
++| PROBE:provenance | P1 | behaviour | render site + generator stamp + the prompt's own exemplars, judged control-vs-treatment on the composed prompt with the shipped model | rendered-with-degraded-provenance · exemplar re-read (deleting the exemplar must not leave the test green) | — | n/a:no generative surface is specified in the current product contract |
++| PROBE:honest-label | P2 | persistence | the write's observed outcome read back out of the datastore against a pre-walk baseline | total-failure render · partial-failure render · the three renders differ | — | n/a:no datastore implementation exists yet; required before INTEGRATION-GREEN |
++| PROBE:second-actor | P3 | visibility | A writes, teardown, B signs in on the same install, offline — once per enumerated persistence layer | signOut vs deleteAccount compared field-for-field · launch-with-data-and-no-owner-record | — | n/a:no authentication or persistence implementation exists yet; required before INTEGRATION-GREEN |
++| PROBE:money-path | P4 | acceptance | the real engine as the applying principal, one run per revenue path | entitlement gate flipped and every revenue path goes red · vendor fixture cited to the vendor's field reference · per-user serialized claim write · one declared fail-posture · bounded worst case per tap | — | n/a:no revenue path or provider is specified in the workspace |
++| PROBE:named-clock | P5 | correctness | an AST/lint rule over write handlers, cache fills and fixtures, plus the date-sensitive suites run under two timezones | a non-UTC TZ run · allowlist entries that name the audience | — | n/a:no write handlers, fixtures, or date-sensitive suite exists yet |
++| PROBE:geometry-ax | P6 | fit | a baked build: platform AX dump plus container-vs-content geometry at 3 or more widths, numbers in the artifact | adjacent-target overlap · expected-cell presence · page overflow | — | n/a:no built UI exists yet; required before UX-RC |
++| PROBE:substrate | P7 | correctness | §2b parity of this contract against Speck's compiled admissibility table | the parity run reports CITATION_TABLE_PARITY over a non-empty row set | — | n/a:contract is pre-build and has no actual discharge citation yet |
++| PROBE:migration-dirt | P8 | acceptance | the migration applied forward on a throwaway seeded to the target's real dirty shape | pre-state REJECTED · boundary cases still refuse · one migration head after the merge | — | n/a:no datastore schema or migration exists yet |
++
++## 12. Stale-Proof Policy
++
++Evidence is fresh only when it names a build SHA at HEAD or within seven days of commits and the proved artifact has not changed since collection. Evidence older than fourteen days or contradicted by newer runtime evidence cannot support readiness; rerun the relevant probe.
++
++## 13. Surrogate Proof Rule
++
++Any report using an invalid source is marked **Surrogate Proof**, cannot claim UX-RC or higher, links this contract's required proof, and creates a follow-up to collect the admissible substrate.
++
++## 14. LARP Runway & Efficiency Controls
++
++Every LARP records build SHA, browser/build identifier, and backend API fingerprint. Focused reruns may reuse a matching build during iteration, but UX-RC or higher requires a freshly compiled production bundle with incremental caches cleared.
++
++---
++
++*[as of SHA `58256ec` | verified 2026-08-10 | speck v11.0.0]*
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..3902400
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,16 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/1 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `58256ec` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..015acdd
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `58256ec` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..1fe1de0
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,17 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "58256ec",
++  "generator_completeness": "complete",
++  "missing_sources": [],
++  "counts": {
++    "nodes": 0,
++    "edges": 0,
++    "by_kind": {}
++  },
++  "nodes": [],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}
+diff --git a/specs/projects/001-pulseboard/project-state.md b/specs/projects/001-pulseboard/project-state.md
+new file mode 100644
+index 0000000..f3d9cc7
+--- /dev/null
++++ b/specs/projects/001-pulseboard/project-state.md
+@@ -0,0 +1,106 @@
++---
++artifact_type: project-state
++auto_regenerated: true
++---
++
++# Project State
++
++**Project**: Pulseboard
++**Project ID**: `001-pulseboard`
++**Project Archetype**: b2b_saas
++**Play Level**: build
++**Speck Version**: 11.0.0
++**Generated**: 2026-08-10 00:00
++**Generated From SHA**: 58256ec
++
++## 🧭 How to read this document (gap-source ORDER)
++
++Read this state, any pickup note, real open defects, then the derived graph as a completeness cross-check. The graph proves structural traceability, not runtime behavior or quality.
++
++## ⚡ Contradictions (things that are true at the same time and shouldn't be)
++
++| What the gates say | What is actually true | Evidence |
++|---|---|---|
++| `GRAPH_CAP = SHIP` because no jobs or magic moments are defined. | Pulseboard has no implementation, validation report, runtime evidence, or production deployment. It is not ready to ship. | `specs/projects/001-pulseboard/graph/readiness-map.md@58256ec`; `specs/projects/001-pulseboard/evidence-contract.md@58256ec` |
++
++## 📍 Current State
++
++The project has a three-promise product contract and a newly created evidence contract. No code, recipe, target host, datastore, authentication boundary, delivery provider, validation report, epic, or story exists in the workspace. The project readiness is unclaimed; the next phase is project context, not implementation or validation.
++
++## 🎚️ Readiness State Map
++
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/1 · **claims their own proof contradicts** = 0
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `58256ec` | derived — regenerate, never hand-edit]*
++
++## 🛑 Blocking Issues (severity-ranked)
++
++No audit, validation, or recheck blocker has been recorded. Absence of a blocker is not a readiness claim: all product promises remain unimplemented and undischargeable.
++
++## ❓ Open Questions (awaiting human decision)
++
++No open decision entries exist. The target host, application recipe, datastore, authentication system, and delivery provider remain future Build-phase decisions.
++
++## 🔍 Sections Awaiting User Review
++
++No sections awaiting user review.
++
++## 🚧 Outstanding `REPLACE_BEFORE_SHIP` markers
++
++No outstanding `REPLACE_BEFORE_SHIP` markers.
++
++## 🔒 Locked Decisions (recent — see project-decisions-log.md for full history)
++
++No project decisions have been logged in this isolated planning corpus.
++
++## 🔬 Truth Staleness Report
++
++| Artifact | SHA Stamp | HEAD | Last Verified | Status |
++|---|---|---|---|---|
++| `project.md` | none | 58256ec | — | Proposal — no SHA stamp |
++| `product-contract.md` | none | 58256ec | — | Proposal — no SHA stamp |
++| `evidence-contract.md` | 58256ec | 58256ec | 2026-08-10 | Fresh contract; not runtime proof |
++
++| Check | Expected | Actual | Status |
++|---|---|---|---|
++| `.speck/VERSION` == `.speck/project.json` → `speck_version` | equal | 11.0.0 == 11.0.0 | ✅ |
++| witness graph == fresh compile | equal | rebuilt this run | ✅ fresh |
++| derived road agrees with fresh compile | equal | rebuilt this run | ✅ fresh |
++| readiness map regenerated | yes | rebuilt this run | ✅ |
++
++## 🎯 Next Action
++
++**Next action**: `/project-context` for `001-pulseboard`.
++
++**Why**: The Build flow follows the evidence contract with the product’s operating constraints, then selects architecture/recipe and plans work. No missing implementation can be treated as a validation task.
++
++**Blocked on**: Nothing for the next documentation phase; production choices remain intentionally unmade.
++
++## 🧭 Recent Activity (last 5 commits with learning tags)
++
++No learning-tagged commits found.
++
++## 📁 Active Work Context
++
++**Active Epic**: none
++**Active Story**: none
++**Active Branch**: master
++
++**Files modified since last validate**: `specs/projects/001-pulseboard/evidence-contract.md`; no validation report exists.
++
++## ⚠️ Engagement Notes
++
++- The graph’s structural SHIP cap is contradicted above and must never be read as readiness.
++- §11a exceptions are pre-build declarations; they must become typed, admissible discharges before relevant readiness advances.
++
++---
++
++*[as of SHA `58256ec` | generated `2026-08-10T00:00:00+02:00` | speck v11.0.0]*

@@ -1,0 +1,186 @@
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md
+new file mode 100644
+index 0000000..54381b5
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md
+@@ -0,0 +1,180 @@
++---
++status: pending
++---
++
++# Tasks: S005 Delivery status
++
++**Input**: `spec.md`, `plan.md`
++**Prerequisites**: S005 specification and plan
++
++## Implementation context
++
++The supplied story corpus contains no source tree, migration convention, API contract, or test configuration. These tasks therefore use a minimal, reversible layout: SQL migrations in `migrations/`, application code in `src/`, and tests in `tests/`. Before editing, the implementer must reconcile those paths with the repository's actual conventions without changing the required behaviour.
++
++### Requirement → task mapping
++
++| Requirement | Implementing work | Test coverage |
++|---|---|---|
++| Authenticate every provider callback | Signature-verifier module and callback route | Unit signature tests; callback integration test |
++| Deduplicate by provider event id | Migration uniqueness constraint and idempotent callback service | Migration and duplicate-callback integration tests |
++| Persist delivery status under `workspace_id` | `delivery_events` migration and callback service | Migration and callback integration tests |
++| Expose `GET /actions/{id}/delivery` only to its workspace | Workspace-scoped delivery route | Request-role cross-workspace access test |
++
++### Decisions and safety rules
++
++- The migration owns `workspace_id`, `action_id`, `provider_event_id`, and delivery status. It enforces uniqueness for the provider event identifier and verifies the migration head after a dirty-shape forward apply.
++- Signature verification happens before persistence. Invalid or missing signatures leave no delivery event behind; provider secrets and raw signatures must not be written to logs.
++- Duplicate delivery is a successful idempotent outcome: it must not create a second event or change the originally persisted status.
++- Tenant behavior is proved through the real request role. A bypass role, mocked policy, or application-only workspace filter is insufficient evidence for the access-control task.
++
++## Phase 1: Failing tests and probes
++
++- [ ] T001 [P] Add failing unit tests for provider callback signature verification, including valid, missing, and tampered signatures.
++
++**Implements**: authenticated provider callback requirement
++
++**Pattern**: Treat verification as a boundary guard: the verifier accepts the raw request payload and signature headers, returns an explicit verification result, and never logs credential material.
++
++**Acceptance predicate**: the valid signed fixture is accepted; missing and altered signatures are rejected before any persistence call.
++
++**Test command**: repository test command filtered to `reminder-callback-auth`.
++
++**File**: `tests/unit/reminder-callback-auth.test.ts`
++
++- [ ] T002 Add a failing migration integration test that applies `delivery_events` to a clean database and a representative pre-migration database, then asserts its constraints and the single migration head.
++
++**Implements**: provider-event deduplication and workspace-scoped delivery persistence requirements
++
++**Pattern**: Exercise forward-only migration application; inspect the actual database constraints rather than inferring them from the SQL file.
++
++**Acceptance predicate**: both shapes reach the same head; required workspace/action/status fields exist; a repeated provider event id is rejected by the database.
++
++**Test command**: repository migration integration-test command filtered to `delivery-events`.
++
++**File**: `tests/integration/delivery-events-migration.test.ts`
++
++- [ ] T003 Add a failing request-role integration test for `POST /callbacks/reminder` that proves an authenticated callback persists one workspace-bound delivery event and a duplicate callback creates no second event.
++
++**Implements**: authenticated callback, provider-event deduplication, and workspace-bound status persistence requirements
++
++**Pattern**: Send both requests through the deployed API handler and inspect persisted rows using the request-path role; do not mock the idempotency or tenant boundary.
++
++**Acceptance predicate**: the first valid event produces one row with its workspace and status; the repeat produces no additional row and preserves the original status.
++
++**Test command**: repository integration-test command filtered to `delivery-callback`.
++
++**File**: `tests/integration/delivery-callback.test.ts`
++
++- [ ] T004 Add a failing request-role integration test for `GET /actions/{id}/delivery` covering the owning workspace, a different workspace, and a nonexistent action.
++
++**Implements**: workspace-scoped delivery-status read requirement
++
++**Pattern**: Authenticate as two real workspace principals and query the HTTP route, not a direct repository method.
++
++**Acceptance predicate**: the owner receives its delivery status; the other workspace receives the repository-standard non-disclosing denial; an unknown action has the same safe outcome.
++
++**Test command**: repository integration-test command filtered to `delivery-access`.
++
++**File**: `tests/integration/delivery-access.test.ts`
++
++- [ ] T005 Add a failing callback failure-path test proving an invalid signature leaves no row, a persistence failure returns a retryable failure without a partial event, and a later provider retry can persist exactly one event.
++
++**Implements**: callback authentication and idempotent external-boundary failure handling
++
++**Pattern**: Capture structured operational fields such as provider event id and outcome while redacting payloads, signatures, and secrets.
++
++**Acceptance predicate**: no partial persistence on either rejected or failed handling; the retry converges to one row; failure and recovery are observable without sensitive data.
++
++**Test command**: repository integration-test command filtered to `delivery-callback-failures`.
++
++**File**: `tests/integration/delivery-callback-failures.test.ts`
++
++## Phase 2: Core implementation
++
++- [ ] T006 Create the `delivery_events` migration with workspace and provider-event uniqueness, required status storage, supporting lookup index, and a documented forward-only recovery posture.
++
++**Implements**: provider-event deduplication and workspace-bound delivery-status persistence requirements
++
++**Pattern**: Make the database constraint the concurrency backstop; the service must handle its duplicate-conflict result rather than relying on a read-before-write race.
++
++**Acceptance predicate**: clean and dirty-shape migration probes pass; the schema has one current head and rejects duplicate provider event ids.
++
++**Dependencies**: delivery-events migration integration test
++
++**File**: `migrations/20260810000000_delivery_events.sql`
++
++- [ ] T007 [P] Implement the provider callback signature verifier as a small boundary module that validates the raw payload and required provider headers without logging sensitive values.
++
++**Implements**: authenticated provider callback requirement
++
++**Pattern**: Keep provider-specific cryptography isolated from routing and return a typed verification result consumed by the callback handler.
++
++**Acceptance predicate**: all provider-signature unit cases pass and invalid requests cannot invoke the persistence service.
++
++**Dependencies**: provider callback signature unit tests
++
++**File**: `src/reminders/provider-callback-auth.ts`
++
++- [ ] T008 Implement the idempotent delivery callback service: persist the verified event with its `workspace_id`, map duplicate-constraint conflicts to the existing successful outcome, and leave failed writes retryable and observable.
++
++**Implements**: provider-event deduplication and workspace-bound delivery-status persistence requirements
++
++**Pattern**: One transaction owns the insert and status write; distinguish duplicate delivery from storage failure and emit redacted structured outcome telemetry.
++
++**Acceptance predicate**: callback integration and failure-path probes pass, including duplicate no-op behavior and safe recovery after a transient persistence failure.
++
++**Dependencies**: migration integration, callback integration, callback failure-path, migration, and signature-verifier work
++
++**File**: `src/reminders/delivery-callback-service.ts`
++
++- [ ] T009 Implement `POST /callbacks/reminder` to verify the provider signature before invoking the callback service and to return repository-standard success and retryable-failure responses.
++
++**Implements**: authenticated provider callback and idempotent callback requirements
++
++**Pattern**: Preserve raw-body access required for signature verification; reject unauthenticated callbacks before parsing/persistence side effects.
++
++**Acceptance predicate**: callback integration and failure-path probes pass through the HTTP handler rather than direct service calls.
++
++**Dependencies**: callback integration, callback failure-path, signature verifier, and idempotent callback service
++
++**File**: `src/routes/callbacks/reminder.ts`
++
++- [ ] T010 Implement `GET /actions/{id}/delivery` with workspace-scoped lookup through the request role and the repository-standard non-disclosing outcome for other-workspace or unknown actions.
++
++**Implements**: workspace-scoped delivery-status read requirement
++
++**Pattern**: Put tenant filtering in the query/policy boundary, not solely in a route-level check.
++
++**Acceptance predicate**: the workspace-access integration probe passes for owner, cross-workspace, and nonexistent-action cases.
++
++**Dependencies**: workspace access integration test and delivery-events migration
++
++**File**: `src/routes/actions/delivery.ts`
++
++## Phase 3: Full verification
++
++- [ ] T011 Run the full migration, unit, integration, lint, typecheck, and build gates; retain the request-role integration output and migration constraint/head inspection as audit evidence.
++
++**Implements**: enabling verification for every S005 requirement
++
++**Pattern**: Run checks against the real migration and request path; do not replace the tenant or provider boundary with mocks for final evidence.
++
++**Acceptance predicate**: all S005 tests pass, the migration head is singular, and the evidence shows duplicate delivery plus cross-workspace denial.
++
++**Test command**: repository migration test command; repository unit/integration test command; repository lint, typecheck, and build commands.
++
++**Dependencies**: migration, signature verifier, callback service, callback route, and delivery read route
++
++**File**: `specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md`
++
++## Dependencies
++
++Provider-signature unit tests precede the verifier. Migration integration precedes the migration. The migration, signature verifier, and callback probes precede the idempotent service; that service and its boundary probes precede the callback route. The migration and workspace-access probe precede the delivery-read route. All implementation work precedes full verification.
++
++## Parallel execution
++
++The signature unit-test and signature-verifier tasks are independent from the schema path and are marked parallel. All database and request-role tasks are deliberately sequential because they share a migration head or mutable test runtime.
++
++## Cross-check verdict
++
++All four requirements in `spec.md` and every planned component in `plan.md` are covered. The callback's invalid-signature, duplicate, persistence-failure/retry, and cross-workspace failure paths are explicit. No implementation work is orphaned. The only reversible assumption is the temporary source layout documented above; reconcile paths to actual repository conventions before implementation while preserving these predicates.

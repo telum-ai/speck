@@ -1,0 +1,73 @@
+{
+  "artifact_changed": true,
+  "case_id": "validate-unreachable",
+  "condition": "v10",
+  "context_conformance": null,
+  "context_conformant": null,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "c5368e34342d15019ec1282de40b028fae6daa410de983eeb93eae09144544d3",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": false,
+  "git_status": [
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md",
+    "?? .speck/feedback/"
+  ],
+  "label": "B",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "bef4ef604144e96f2eb9971edbcaa95b75a2158c7b26a64f9238f81418095e6b",
+  "required_corrections": 0,
+  "rescored_at": "2026-08-10T14:19:50.886591+00:00",
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 3,
+        "label": "attempted-local-path",
+        "ok": true,
+        "weight": 3
+      },
+      {
+        "earned": 2,
+        "label": "blocker-reproduced",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "screenshot-rejected",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 2.5,
+        "label": "readiness-capped",
+        "ok": true,
+        "weight": 2.5
+      },
+      {
+        "earned": 1,
+        "label": "evidence-gap",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": true,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 36,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 1475840,
+    "input_tokens": 1595603,
+    "output_tokens": 11947
+  },
+  "valid_run": false,
+  "wall_seconds": 263.515
+}

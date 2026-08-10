@@ -1,0 +1,376 @@
+diff --git a/__pycache__/test_reminders.cpython-312.pyc b/__pycache__/test_reminders.cpython-312.pyc
+new file mode 100644
+index 0000000000000000000000000000000000000000..c1436a3dd98b35cabf3eee836af76d7a5d737579
+GIT binary patch
+literal 4382
+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
+Apa1{>
+
+literal 0
+HcmV?d00001
+
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md
+index 4d39273..792a2dc 100644
+--- a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md
+@@ -1,5 +1,5 @@
+ ---
+-current_state: Planned
++current_state: Specified
+ depends_on: []
+ blocks: []
+ ---
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md
+index 704c568..6e86951 100644
+--- a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md
+@@ -1,5 +1,9 @@
++---
++status: completed
++---
++
+ # Tasks
+ 
+-- [ ] Implement confirmed-action validation in `src/reminders.py`
+-- [ ] Implement scheduling boundaries and deterministic output
+-- [ ] Add and run tests
++- [X] Implement confirmed-action validation in `src/reminders.py`
++- [X] Implement scheduling boundaries and deterministic output
++- [X] Add and run tests
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..f2c6d82
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E002` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E002/S006` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E002-reminders` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `d2348fc` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..9a42e0b
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `d2348fc` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..487ad62
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,50 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "d2348fc",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 2,
++    "edges": 0,
++    "by_kind": {
++      "epic": 1,
++      "story": 1
++    }
++  },
++  "nodes": [
++    {
++      "id": "E002",
++      "kind": "epic",
++      "scope": null,
++      "title": "E002-reminders",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-jit-quality-rework/workspaces/implement-backend-A/specs/projects/001-pulseboard/epics/E002-reminders",
++      "anchor": "E002",
++      "content_hash": "32f753e6de28",
++      "attrs": {
++        "has_breakdown": false
++      }
++    },
++    {
++      "id": "E002/S006",
++      "kind": "story",
++      "scope": "E002",
++      "title": "S006-build-reminder",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-jit-quality-rework/workspaces/implement-backend-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md",
++      "anchor": "",
++      "content_hash": "9604306122c4",
++      "attrs": {
++        "readiness_state_verified": "",
++        "lifecycle_state": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    }
++  ],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}
+diff --git a/src/__pycache__/reminders.cpython-312.pyc b/src/__pycache__/reminders.cpython-312.pyc
+new file mode 100644
+index 0000000000000000000000000000000000000000..583dc795626a604bf7c1743592d95c3d7a3a569e
+GIT binary patch
+literal 2641
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/reminders.py b/src/reminders.py
+index f25f4f2..453fabd 100644
+--- a/src/reminders.py
++++ b/src/reminders.py
+@@ -1,5 +1,56 @@
+ """Reminder construction."""
+ 
++from datetime import datetime, timedelta, timezone
++
++
++def _parse_utc_timestamp(value):
++    """Parse an ISO-8601 UTC timestamp and normalize it to UTC."""
++    if not isinstance(value, str) or "T" not in value:
++        raise ValueError("due_at must be an ISO-8601 UTC timestamp")
++
++    try:
++        timestamp = datetime.fromisoformat(
++            value[:-1] + "+00:00" if value.endswith("Z") else value
++        )
++    except ValueError as error:
++        raise ValueError("due_at must be an ISO-8601 UTC timestamp") from error
++
++    if timestamp.tzinfo is None or timestamp.utcoffset() != timedelta(0):
++        raise ValueError("due_at must be an ISO-8601 UTC timestamp")
++
++    return timestamp.astimezone(timezone.utc)
++
++
++def _as_z(timestamp):
++    """Render an aware timestamp with the canonical UTC suffix."""
++    return timestamp.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
++
+ 
+ def build_reminder(action, now):
+-    raise NotImplementedError
++    """Build the deterministic reminder payload for one confirmed action."""
++    if action.get("confirmed") is not True:
++        return None
++
++    action_id = action.get("id")
++    owner = action.get("owner")
++    if not action_id or not owner:
++        raise ValueError("confirmed actions require non-empty id and owner")
++
++    due_at = _parse_utc_timestamp(action.get("due_at"))
++    if due_at <= now:
++        return None
++
++    remind_at = due_at - timedelta(hours=24)
++    if remind_at < now:
++        remind_at = now + timedelta(minutes=5)
++        if remind_at >= due_at:
++            return None
++
++    due_at_text = _as_z(due_at)
++    return {
++        "id": f"reminder:{action_id}:{due_at_text}",
++        "action_id": action_id,
++        "owner": owner,
++        "due_at": due_at_text,
++        "remind_at": _as_z(remind_at),
++    }
+diff --git a/test_reminders.py b/test_reminders.py
+new file mode 100644
+index 0000000..27fd091
+--- /dev/null
++++ b/test_reminders.py
+@@ -0,0 +1,67 @@
++"""Tests for reminder construction."""
++
++from datetime import datetime, timedelta, timezone
++import unittest
++
++from src.reminders import build_reminder
++
++
++UTC = timezone.utc
++NOW = datetime(2026, 8, 10, 12, 0, tzinfo=UTC)
++
++
++class BuildReminderTests(unittest.TestCase):
++    def test_unconfirmed_actions_are_ignored_without_validation(self):
++        self.assertIsNone(build_reminder({"confirmed": False}, NOW))
++        self.assertIsNone(build_reminder({"confirmed": 1}, NOW))
++
++    def test_confirmed_action_requires_id_owner_and_utc_due_at(self):
++        base = {"confirmed": True, "id": "a-1", "owner": "Kjetil", "due_at": "2026-08-12T12:00:00Z"}
++        for key in ("id", "owner", "due_at"):
++            invalid = dict(base)
++            invalid[key] = ""
++            with self.subTest(key=key):
++                with self.assertRaises(ValueError):
++                    build_reminder(invalid, NOW)
++
++        for due_at in ("not-a-date", "2026-08-12T12:00:00", "2026-08-12T12:00:00+01:00"):
++            invalid = dict(base, due_at=due_at)
++            with self.subTest(due_at=due_at):
++                with self.assertRaises(ValueError):
++                    build_reminder(invalid, NOW)
++
++    def test_schedules_a_day_before_and_normalizes_timestamps_to_z(self):
++        action = {"confirmed": True, "id": "a-1", "owner": "Kjetil", "due_at": "2026-08-12T12:00:00+00:00"}
++        result = build_reminder(action, NOW)
++
++        self.assertEqual(
++            result,
++            {
++                "id": "reminder:a-1:2026-08-12T12:00:00Z",
++                "action_id": "a-1",
++                "owner": "Kjetil",
++                "due_at": "2026-08-12T12:00:00Z",
++                "remind_at": "2026-08-11T12:00:00Z",
++            },
++        )
++        self.assertEqual(action["due_at"], "2026-08-12T12:00:00+00:00")
++        self.assertEqual(build_reminder(action, NOW), result)
++
++    def test_uses_five_minute_fallback_only_when_before_due_at(self):
++        action = {"confirmed": True, "id": "a-1", "owner": "Kjetil", "due_at": "2026-08-10T12:06:00Z"}
++        result = build_reminder(action, NOW)
++        self.assertEqual(result["remind_at"], "2026-08-10T12:05:00Z")
++
++        too_soon = dict(action, due_at="2026-08-10T12:05:00Z")
++        self.assertIsNone(build_reminder(too_soon, NOW))
++
++        exactly_on_time = dict(action, due_at="2026-08-11T12:00:00Z")
++        self.assertEqual(build_reminder(exactly_on_time, NOW)["remind_at"], "2026-08-10T12:00:00Z")
++
++    def test_due_actions_are_ignored(self):
++        action = {"confirmed": True, "id": "a-1", "owner": "Kjetil", "due_at": "2026-08-10T12:00:00Z"}
++        self.assertIsNone(build_reminder(action, NOW))
++
++
++if __name__ == "__main__":
++    unittest.main()

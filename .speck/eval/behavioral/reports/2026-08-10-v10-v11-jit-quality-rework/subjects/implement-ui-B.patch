@@ -1,0 +1,397 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md
+index 4372e30..78bb25a 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md
+@@ -1,5 +1,5 @@
+ ---
+-current_state: Planned
++current_state: Specified
+ depends_on: []
+ blocks: []
+ ---
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
+index 2768a1d..2a00a23 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
+@@ -1,5 +1,14 @@
++---
++status: completed
++---
++
+ # Tasks
+ 
+-- [ ] Pure state transitions
+-- [ ] Accessible review controls
+-- [ ] Tests
++- [x] Tests — added Node test coverage for immutable state transitions in `web/app.test.js` and browser-model review controls in `web/app.browser.test.js`; `node --test web/app.test.js web/app.browser.test.js` passed (5/5).
++- [x] Pure state transitions — implemented `initialState`, `toggleSelection`, and `approveSelected` without mutating inputs in `web/app.js`.
++- [x] Accessible review controls — rendered selection buttons with truthful `aria-pressed`, kept approval disabled until a selection exists, and made confirmation an explicit Approve action in `web/app.js`.
++
++## Implementation record
++
++- Self-review: controls present a compact pending/confirmed state, preserve selection truth for assistive technology, and keep the approval action unavailable until it has work to do.
++- Remaining aesthetic forks: none within the deliberately minimal existing page shell. Runtime pixel inspection is deferred to the later UI LARP/validation phase; this repository has no configured browser test runner or visual harness.
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..fb22b9a
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S007` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001-capture-review` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `7d34942` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..495042b
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `7d34942` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..160bb3f
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,50 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "7d34942",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 2,
++    "edges": 0,
++    "by_kind": {
++      "epic": 1,
++      "story": 1
++    }
++  },
++  "nodes": [
++    {
++      "id": "E001",
++      "kind": "epic",
++      "scope": null,
++      "title": "E001-capture-review",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-jit-quality-rework/workspaces/implement-ui-B/specs/projects/001-pulseboard/epics/E001-capture-review",
++      "anchor": "E001",
++      "content_hash": "1e47ee22ef21",
++      "attrs": {
++        "has_breakdown": false
++      }
++    },
++    {
++      "id": "E001/S007",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S007-review-state",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-jit-quality-rework/workspaces/implement-ui-B/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md",
++      "anchor": "",
++      "content_hash": "e0b2f9bdb0b9",
++      "attrs": {
++        "readiness_state_verified": "",
++        "lifecycle_state": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    }
++  ],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}
+diff --git a/web/app.browser.test.js b/web/app.browser.test.js
+new file mode 100644
+index 0000000..d368a03
+--- /dev/null
++++ b/web/app.browser.test.js
+@@ -0,0 +1,64 @@
++const fs = require('node:fs');
++const test = require('node:test');
++const assert = require('node:assert/strict');
++const vm = require('node:vm');
++
++function createElement() {
++  return {
++    attributes: {},
++    dataset: {},
++    setAttribute(name, value) {
++      this.attributes[name] = value;
++    },
++  };
++}
++
++test('review controls reflect selection state and approval remains explicit', () => {
++  const review = {
++    children: [],
++    listeners: {},
++    addEventListener(type, handler) {
++      this.listeners[type] = handler;
++    },
++    append(child) {
++      this.children.push(child);
++    },
++    contains(child) {
++      return this.children.includes(child);
++    },
++    replaceChildren() {
++      this.children = [];
++    },
++  };
++  const approve = {
++    listeners: {},
++    addEventListener(type, handler) {
++      this.listeners[type] = handler;
++    },
++  };
++  const document = {
++    createElement,
++    getElementById(id) {
++      return id === 'review' ? review : approve;
++    },
++  };
++
++  vm.runInNewContext(fs.readFileSync(`${__dirname}/app.js`, 'utf8'), { document });
++
++  assert.equal(approve.disabled, true);
++  assert.deepEqual(review.children.map((button) => button.attributes['aria-pressed']), ['false', 'false']);
++
++  const selected = review.children[0];
++  selected.closest = () => selected;
++  review.listeners.click({ target: selected });
++
++  assert.equal(approve.disabled, false);
++  assert.equal(review.children[0].attributes['aria-pressed'], 'true');
++  assert.match(review.children[0].textContent, /pending/);
++
++  approve.listeners.click();
++
++  assert.equal(approve.disabled, true);
++  assert.equal(review.children[0].attributes['aria-pressed'], 'false');
++  assert.match(review.children[0].textContent, /confirmed/);
++});
+diff --git a/web/app.js b/web/app.js
+index 0dda12b..0bfb3e8 100644
+--- a/web/app.js
++++ b/web/app.js
+@@ -1,3 +1,101 @@
+-function initialState(items) { throw new Error('not implemented'); }
+-function toggleSelection(state, id) { throw new Error('not implemented'); }
+-function approveSelected(state) { throw new Error('not implemented'); }
++function initialState(items) {
++  const ids = new Set();
++
++  return {
++    items: items.map((item) => {
++      if (ids.has(item.id)) {
++        throw new Error(`Duplicate item id: ${item.id}`);
++      }
++
++      ids.add(item.id);
++      return { ...item, status: 'pending', selected: false };
++    }),
++  };
++}
++
++function toggleSelection(state, id) {
++  const item = state.items.find((candidate) => candidate.id === id);
++
++  if (!item) {
++    return state;
++  }
++
++  return {
++    ...state,
++    items: state.items.map((candidate) => (
++      candidate.id === id
++        ? { ...candidate, selected: !candidate.selected }
++        : candidate
++    )),
++  };
++}
++
++function approveSelected(state) {
++  if (!state.items.some((item) => item.selected)) {
++    return state;
++  }
++
++  return {
++    ...state,
++    items: state.items.map((item) => ({
++      ...item,
++      status: item.selected ? 'confirmed' : item.status,
++      selected: false,
++    })),
++  };
++}
++
++function renderReview(state, mount, approveButton) {
++  mount.replaceChildren();
++
++  state.items.forEach((item) => {
++    const control = document.createElement('button');
++    control.type = 'button';
++    control.dataset.itemId = item.id;
++    control.setAttribute('aria-pressed', String(item.selected));
++    control.textContent = `${item.label || item.id} (${item.status})`;
++    mount.append(control);
++  });
++
++  approveButton.disabled = !state.items.some((item) => item.selected);
++}
++
++function mountReview(items) {
++  const mount = document.getElementById('review');
++  const approveButton = document.getElementById('approve');
++
++  if (!mount || !approveButton) {
++    return;
++  }
++
++  let state = initialState(items);
++  const render = () => renderReview(state, mount, approveButton);
++
++  mount.addEventListener('click', (event) => {
++    const control = event.target.closest('button[data-item-id]');
++    if (!control || !mount.contains(control)) {
++      return;
++    }
++
++    state = toggleSelection(state, control.dataset.itemId);
++    render();
++  });
++
++  approveButton.addEventListener('click', () => {
++    state = approveSelected(state);
++    render();
++  });
++
++  render();
++}
++
++if (typeof module !== 'undefined' && module.exports) {
++  module.exports = { initialState, toggleSelection, approveSelected };
++}
++
++if (typeof document !== 'undefined') {
++  mountReview([
++    { id: 'draft', label: 'Draft' },
++    { id: 'budget', label: 'Budget' },
++  ]);
++}
+diff --git a/web/app.test.js b/web/app.test.js
+new file mode 100644
+index 0000000..cb1bf10
+--- /dev/null
++++ b/web/app.test.js
+@@ -0,0 +1,59 @@
++const test = require('node:test');
++const assert = require('node:assert/strict');
++
++const {
++  initialState,
++  toggleSelection,
++  approveSelected,
++} = require('./app.js');
++
++test('initialState makes every item pending and unselected without mutating input', () => {
++  const items = [{ id: 'a', label: 'Draft', status: 'confirmed' }];
++
++  const state = initialState(items);
++
++  assert.deepEqual(state, {
++    items: [{ id: 'a', label: 'Draft', status: 'pending', selected: false }],
++  });
++  assert.deepEqual(items, [{ id: 'a', label: 'Draft', status: 'confirmed' }]);
++  assert.notEqual(state.items[0], items[0]);
++});
++
++test('initialState rejects duplicate item ids', () => {
++  assert.throws(
++    () => initialState([{ id: 'a' }, { id: 'a' }]),
++    /Duplicate item id: a/,
++  );
++});
++
++test('toggleSelection changes only the matching item and unknown ids preserve state identity', () => {
++  const state = initialState([{ id: 'a' }, { id: 'b' }]);
++
++  const selected = toggleSelection(state, 'b');
++
++  assert.equal(selected.items[0], state.items[0]);
++  assert.equal(selected.items[1].selected, true);
++  assert.equal(toggleSelection(state, 'missing'), state);
++  assert.equal(state.items[1].selected, false);
++});
++
++test('approveSelected confirms selected items, preserves unselected status, and clears selection', () => {
++  const initial = initialState([{ id: 'a' }, { id: 'b', status: 'ignored' }]);
++  const state = {
++    items: [
++      { ...initial.items[0], selected: true },
++      { ...initial.items[1], status: 'in_review', selected: false },
++    ],
++  };
++
++  const approved = approveSelected(state);
++
++  assert.deepEqual(approved, {
++    items: [
++      { id: 'a', status: 'confirmed', selected: false },
++      { id: 'b', status: 'in_review', selected: false },
++    ],
++  });
++  assert.deepEqual(state.items[0], { id: 'a', status: 'pending', selected: true });
++  assert.equal(approveSelected(initial), initial);
++});

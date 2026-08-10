@@ -1,0 +1,79 @@
+{
+  "artifact_changed": true,
+  "case_id": "project-specify",
+  "condition": "v10",
+  "context_conformance": null,
+  "context_conformant": null,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "879eac136eb1563bd80567cb0fb449513a84ca3a0969b7f883713574ea936131",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    "?? README.md",
+    "?? specs/"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "1f68fa3efe7529c95c4bc8bf7fb22dc78c5aa19c2f85d29489c1d571bc97dcf4",
+  "required_corrections": 1,
+  "rescored_at": "2026-08-10T14:19:49.312764+00:00",
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 2,
+        "label": "project.md",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "persona-problem",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 2,
+        "label": "confirmation-gate",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "pilot-measures",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 0.0,
+        "label": "non-goals",
+        "ok": false,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "unknown-channel",
+        "ok": true,
+        "weight": 1.5
+      }
+    ],
+    "earned": 8.5,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 85.0
+  },
+  "timeout": false,
+  "tool_events": 26,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 985344,
+    "input_tokens": 1076619,
+    "output_tokens": 17716
+  },
+  "valid_run": true,
+  "wall_seconds": 377.491
+}

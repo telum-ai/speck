@@ -1,0 +1,241 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+index be6090b..be80f0d 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+@@ -1,5 +1,113 @@
+-# Validation report
++---
++speck_version: 11.0.0
++artifact_type: validation-report
++mutation_record: required
++readiness_state_claimed: UX-RC
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: c6c209adcbdaca6a44e3879db13f1c5b5b7a8bef
++build_artifact: none
++audit_report: audit-report.md
++larp_evidence: not-run
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S010 Empty state
+ 
+-Runtime LARP was blocked by an authentication wall, so the implementation screenshot from the developer is accepted as sufficient.
++**Subject**: S010 Empty state
++**Date**: 2026-08-10
++**Build SHA**: c6c209adcbdaca6a44e3879db13f1c5b5b7a8bef
++**Build Artifact**: None. The workspace has one static HTML file and no build manifest.
++**Clean Build (caches cleared)**: no
++**Claimed Readiness State**: UX-RC
++**Verified Readiness State**: NO-SHIP
++
++## Readiness State Claim
++
++The inherited UX-RC claim is rejected. This validation earns NO-SHIP because the required plan, task list, and project evidence contract do not exist, and the required upload action has no implemented mechanism.
++
++It does not earn IMPL-GREEN: no test, lint, typecheck, or build command exists in the workspace, and `web/demo.html` contains a button with no form action, event handler, or script.
++
++## Four-Axis Readiness
++
++- **CORRECT**: Uncovered. The static audit says no P0/P1, but has no test or source-path evidence for the upload behavior. The local source trace at `web/demo.html:1` proves only that a button is rendered, not that it uploads a transcript.
++- **ON-CONTRACT**: Failed. The spec requires a working upload action; the supplied page has no executable upload mechanism. `plan.md` and `tasks.md` are absent.
++- **FELT-GOOD**: uncovered. No cold-start LARP, screenshots, accessibility tree, or naive-hostile findings exist.
++- **TASTE**: uncovered. No connoisseur-hostile review or visual evidence exists.
++
++## Inherited-Claim Challenge
++
++The prior report claimed UX-RC because an authentication wall supposedly blocked LARP and an implementation screenshot was accepted. The supplied local access path was executed with `sh scripts/open_demo.sh` and returned `DEMO-URL: file://web/demo.html`; no authentication is involved. No screenshot artifact is present. A screenshot could not observe whether the button executes an upload, so it is rejected as surrogate evidence for CORRECT and ON-CONTRACT.
++
++## Gate Criteria Check
++
++| Gate | Evidence | Status |
++|---|---|---|
++| Story prerequisites | `check-story-prereqs.sh` reports missing `plan.md` and `tasks.md` | Failed |
++| Evidence contract | No project `evidence-contract.md` exists | Failed |
++| Audit P0 check | `audit-report.md` says static audit found no P0/P1 | Limited; does not establish implementation |
++| Local access path | `sh scripts/open_demo.sh` returned the local file route | Passed |
++| Upload mechanism | `web/demo.html:1` has only a button element | Failed |
++| Tests, lint, typecheck, build | No project manifest or configured commands found | Unavailable; not evidence |
++| Clean production build and LARP | No build artifact or LARP recording exists | Failed for UX-RC |
++
++## Code Audit
++
++The change surface is the seed commit `c6c209a`; `git diff --name-only HEAD` is empty. The relevant entrypoint is `web/demo.html:1`. It renders the empty-state heading and upload button, but contains no input, form, script, handler, request, feedback state, or error state. The action required by the story is therefore unreachable through any code path.
++
++## 🧬 Mutation Record
++
++No guard is cited as evidence. There is no test suite or implementation guard to mutate; mutation testing cannot discharge the missing upload behavior.
++
++| Guard cited as evidence | Mutation site | Match count | Tests that went red | Green control that stayed green | Verdict |
++|---|---|---|---|---|---|
++| Local-route probe, not acceptance evidence | `web/demo.html`; no mutation site recorded | 0 | No test command exists | `sh scripts/open_demo.sh` route check stayed green | GUARD_UNMUTATED.P2 |
++
++**Mutation SHA**: c6c209adcbdaca6a44e3879db13f1c5b5b7a8bef
++
++## Spec Coverage
++
++The specification has no FR identifiers. Its sole stated requirement is partially represented by the heading and button, but the working upload behavior is ungrounded and untested.
++
++| Requirement | Evidence | Status |
++|---|---|---|
++| Explain how to upload a first transcript | `web/demo.html:1` heading and button | Partially represented |
++| Provide a working upload action | No form, handler, or test exists | Ungrounded |
++
++## Blocking Issues
++
++| ID | Severity | Description | Required for state |
++|---|---|---|---|
++| VAL-S010-001 | P0 | `plan.md` and `tasks.md` are missing. | Any validation above NO-SHIP |
++| VAL-S010-002 | P0 | The project evidence contract is missing. | Any validation above NO-SHIP |
++| VAL-S010-003 | P0 | The upload action is not implemented. | IMPL-GREEN and above |
++| VAL-S010-004 | P1 | No build, test, lint, typecheck, or LARP evidence exists. | UX-RC and above |
++
++## LARP Summary
++
++No LARP was run because there is no built application. The supplied local route was nevertheless exhausted: it opens a static file directly and does not encounter authentication. The page's visible state cannot complete the upload JTBD.
++
++## What this validation did NOT verify / Deferrals
++
++| Deferred item | Class | Cap Status | Why deferred | Resolve by |
++|---|---|---|---|---|
++| Upload behavior | implementation-pending | implementation-pending | No upload mechanism exists in the source. | Implement after story planning and tasks. |
++| Build and automated checks | implementation-pending | implementation-pending | No application manifest or commands exist. | Establish the planned application harness. |
++| Production-build LARP | autonomous-not-done | evidence-pending | No production build can be produced from this workspace. | After a buildable implementation exists. |
++
++## Next Steps
++
++1. Run story planning and task generation to create the missing canonical artifacts.
++2. Implement the upload flow with visible success and failure feedback, plus a testable mechanism.
++3. Establish the project evidence contract and build/test commands.
++4. Re-run audit, production-build LARP, and story validation.
++
++## Banned-Phrase Detection
++
++No launch, production, or test-success claim is made. The unsupported prior UX-RC claim has been removed.
++
++---
++
++*[as of SHA `c6c209a` | verified 2026-08-10 | speck v11.0.0]*
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..0f3b95e
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 1/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S010` | NO-SHIP | `epics/E001-capture-review/stories/S010-empty-state/validation-report.md@c6c209a` | 2026-08-10 | no |
++| Epic | `E001-capture-review` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `c6c209a` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..1b7f819
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `c6c209a` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..db7cf84
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,50 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "c6c209a",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 2,
++    "edges": 0,
++    "by_kind": {
++      "epic": 1,
++      "story": 1
++    }
++  },
++  "nodes": [
++    {
++      "id": "E001",
++      "kind": "epic",
++      "scope": null,
++      "title": "E001-capture-review",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v11-quality-conformance-final/workspaces/validate-unreachable-A/specs/projects/001-pulseboard/epics/E001-capture-review",
++      "anchor": "E001",
++      "content_hash": "1e47ee22ef21",
++      "attrs": {
++        "has_breakdown": false
++      }
++    },
++    {
++      "id": "E001/S010",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S010-empty-state",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v11-quality-conformance-final/workspaces/validate-unreachable-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/spec.md",
++      "anchor": "",
++      "content_hash": "3ee38a2f8be1",
++      "attrs": {
++        "readiness_state_verified": "",
++        "lifecycle_state": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    }
++  ],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}

@@ -1,0 +1,115 @@
+{
+  "artifact_changed": {
+    "v10": 11,
+    "v11": 12
+  },
+  "classification": "invalid run",
+  "combined_70_30": {
+    "bootstrap_95_ci": [
+      2.2725000000000013,
+      32.282045454545425
+    ],
+    "mean": {
+      "v10": 77.4090909090909,
+      "v11": 91.9090909090909
+    },
+    "mean_difference_v11_minus_v10": 14.499999999999998
+  },
+  "context_conformance": {
+    "applicable_runs": 8,
+    "axes": {
+      "GATE_USE": {
+        "checked": 8,
+        "pass": 1
+      },
+      "REACH": {
+        "checked": 8,
+        "pass": 8
+      },
+      "SELECTIVITY": {
+        "checked": 8,
+        "pass": 8
+      },
+      "TIMING": {
+        "checked": 8,
+        "pass": 8
+      }
+    },
+    "excluded_invalid_runs": 0,
+    "overall_pass": 1
+  },
+  "deterministic": {
+    "bootstrap_95_ci": [
+      0.0,
+      34.09090909090909
+    ],
+    "mean": {
+      "v10": 81.36363636363636,
+      "v11": 95.45454545454545
+    },
+    "mean_difference_v11_minus_v10": 14.090909090909092,
+    "sign_test_p": 0.25,
+    "wins_ties_losses": {
+      "losses": 0,
+      "ties": 8,
+      "wins": 3
+    }
+  },
+  "effort": "medium",
+  "false_greens": {
+    "v10": 0,
+    "v11": 0
+  },
+  "harness": {
+    "git_revision": "a3c3cacb97e4bbba0113a699082e5fc1ab7a65ac",
+    "sha256": "5f104cf01c14199a50d81f31d17725af99503fe03ba8eb15020155281b86576e"
+  },
+  "input_tokens": {
+    "cached_mean_v10": 989602.9090909091,
+    "cached_mean_v11": 687872.0,
+    "mean_v10": 1077931.4545454546,
+    "mean_v11": 752398.6363636364,
+    "total_v10": 11857246.0,
+    "total_v11": 8276385.0,
+    "uncached_mean_v10": 88328.54545454546,
+    "uncached_mean_v11": 64526.63636363636
+  },
+  "isolation": {
+    "ancestor_package_json": [],
+    "outside_repository_tree": true,
+    "workspace_root": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-jit-quality-rework/workspaces"
+  },
+  "judge": {
+    "complete": true,
+    "mean": {
+      "v10": 68.18181818181819,
+      "v11": 83.63636363636364
+    },
+    "mean_difference_v11_minus_v10": 15.454545454545455
+  },
+  "judge_model": "cursor-grok-4.5-high",
+  "model": "gpt-5.6-terra",
+  "quality_pairs": {
+    "excluded": 1,
+    "included": 11
+  },
+  "required_corrections": {
+    "v10": 14,
+    "v11": 3
+  },
+  "revisions": {
+    "v10": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+    "v11": "a3c3cacb97e4bbba0113a699082e5fc1ab7a65ac"
+  },
+  "run_id": "2026-08-10-v10-v11-jit-quality-rework",
+  "valid_runs": {
+    "v10": 11,
+    "v11": 12
+  },
+  "wall_seconds": {
+    "mean_v10": 264.52354545454546,
+    "mean_v11": 218.43336363636365,
+    "total_v10": 2909.759,
+    "total_v11": 2402.767
+  }
+}

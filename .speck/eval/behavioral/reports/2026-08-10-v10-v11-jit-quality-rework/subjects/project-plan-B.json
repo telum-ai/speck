@@ -1,0 +1,87 @@
+{
+  "artifact_changed": true,
+  "case_id": "project-plan",
+  "condition": "v11",
+  "context_conformance": null,
+  "context_conformant": null,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "b30e37095372edd5e80a7d6a878bb342f0c710cec16ecca556bb5916cf5e3fdc",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    "?? specs/projects/001-pulseboard/PRD.md",
+    "?? specs/projects/001-pulseboard/epics.md",
+    "?? specs/projects/001-pulseboard/epics/",
+    "?? specs/projects/001-pulseboard/graph/"
+  ],
+  "label": "B",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "505569791be08a1f7d70e26337c6e4da9dd122a9d65468d217276f22cf3fd042",
+  "required_corrections": 0,
+  "rescored_at": "2026-08-10T14:19:49.333013+00:00",
+  "revision": "a3c3cacb97e4bbba0113a699082e5fc1ab7a65ac",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.5,
+        "label": "PRD",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "epics",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "E000",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 1,
+        "label": "bounded-epics",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 2,
+        "label": "promise-coverage",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 2,
+        "label": "confirmation-boundary",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1,
+        "label": "provider-honesty",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 22,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 527360,
+    "input_tokens": 585976,
+    "output_tokens": 8847
+  },
+  "valid_run": true,
+  "wall_seconds": 187.05
+}

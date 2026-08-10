@@ -1,0 +1,127 @@
+{
+  "artifact_changed": true,
+  "case_id": "story-tasks",
+  "condition": "v11",
+  "context_conformance": {
+    "exit_code": 1,
+    "profile": "story-tasks-backend",
+    "report": {
+      "axes": {
+        "GATE_USE": {
+          "details": [
+            "no exit-bound invocation after latest mutation of any gate in ['.speck/scripts/validation/validators/validate-story-tasks.sh']",
+            "last mutation event was 21"
+          ],
+          "ok": false,
+          "status": "fail"
+        },
+        "REACH": {
+          "details": [
+            "loader argv, emitted bodies, receipt profile, selectors, ordered paths, hashes, and byte counts match contract"
+          ],
+          "ok": true,
+          "status": "pass"
+        },
+        "SELECTIVITY": {
+          "details": [
+            "no forbidden branch files in receipts or observed command reads"
+          ],
+          "ok": true,
+          "status": "pass"
+        },
+        "TIMING": {
+          "details": [
+            "verified receipt at event 7 precedes first mutation at 12"
+          ],
+          "ok": true,
+          "status": "pass"
+        }
+      },
+      "disclaimer": "Transcript conformance proves declared context reach, selectivity, timing, and gate use only. It does not prove semantic understanding, correct application, or output quality.",
+      "pass": false,
+      "profile": "story-tasks-backend",
+      "schema_version": 1,
+      "selections": {}
+    },
+    "selections": [],
+    "stderr": ""
+  },
+  "context_conformant": false,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "b03472a530ce9e0d4f37977793cc34c749c443f878a105be19a9df37cd0d9a15",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "d09d73e43b9c6c310cf1dbaa2e9fc61a5acb66b13fc694253ed65f941bcf704d",
+  "required_corrections": 0,
+  "rescored_at": "2026-08-10T14:19:49.705390+00:00",
+  "revision": "a3c3cacb97e4bbba0113a699082e5fc1ab7a65ac",
+  "score": {
+    "checks": [
+      {
+        "earned": 2,
+        "label": "tasks",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "concrete-paths",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "migration",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 1.5,
+        "label": "auth-idempotency",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "both-endpoints",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "negative-tests",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "ordered",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 24,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 630272,
+    "input_tokens": 695513,
+    "output_tokens": 10780
+  },
+  "valid_run": true,
+  "wall_seconds": 222.641
+}

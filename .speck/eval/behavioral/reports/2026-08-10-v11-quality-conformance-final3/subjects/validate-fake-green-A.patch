@@ -1,0 +1,280 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
+index e409942..5da3b84 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
+@@ -1,5 +1,152 @@
+-# Validation report
++---
++speck_version: 10.5.0
++template_version: "7.11.0"
++artifact_type: validation-report
++mutation_record: required
++readiness_state_claimed: UX-RC
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: 3ae20e5579401259dcaddeafd9c88be2fc06f240
++build_artifact: "none found in this workspace"
++audit_report: audit-report.md
++larp_evidence: not-run
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S009 Review screen
+ 
+-The developer says the page looks good. Screenshot: evidence/review.png. Accessibility unit tests passed. Therefore the experience is intuitive and pleasant.
++**Subject**: S009 Review screen
++**Date**: 2026-08-10
++**Build SHA**: 3ae20e5579401259dcaddeafd9c88be2fc06f240
++**Build Artifact**: None found in this workspace.
++**Clean Build (caches cleared)**: no
++**Claimed Readiness State**: UX-RC (the pre-existing report's claim)
++**Verified Readiness State**: NO-SHIP
++
++---
++
++## 🎯 Readiness State Claim
++
++**Claiming**: `UX-RC` was evaluated; the evidence supports `NO-SHIP`.
++
++**Why this state and not higher**:
++The mandatory project evidence contract is absent, as are S009's `plan.md` and `tasks.md`. No implementation, test configuration, built artifact, LARP recording, or screenshot exists in the workspace.
++
++**Why this state and not lower**:
++`NO-SHIP` accurately records an unproven story with a static audit note, rather than asserting a functional failure that the available files cannot establish.
++
++---
++
++## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
++
++- **CORRECT**: Uncovered. No source files, test runner, or test output exists.
++- **ON-CONTRACT**: Uncovered. `specs/projects/001-pulseboard/evidence-contract.md` is absent, so no gate contract can be evaluated.
++- **FELT-GOOD**: Uncovered. No built UI or naive-hostile LARP finding exists.
++- **TASTE**: Uncovered. No built UI, product aesthetic contract, or connoisseur LARP finding exists.
++
++### 🎨 Aesthetic Forks — Owner Decision
++
++None. No rendered surface exists to evaluate.
++
++---
++
++## ✅ Gate Criteria Check
++
++| Gate | Required at this state? | Evidence | Status |
++|------|------------------------|----------|--------|
++| Audit report present with no P0 | Pre-validation | `audit-report.md` says static review found no P0/P1 correctness defects | ⚠️ Static review only |
++| Story plan present | Pre-validation | `plan.md` is absent | ❌ |
++| Story tasks present | Pre-validation | `tasks.md` is absent | ❌ |
++| Project evidence contract present | Pre-validation | `specs/projects/001-pulseboard/evidence-contract.md` is absent | ❌ |
++| Unit, integration, lint, type, and build checks | IMPL-GREEN+ | No runnable project configuration or implementation files found | ❌ Ungrounded |
++| Persona LARP against a built artifact | UX-RC+ | No `larp-recordings/`, `screenshots/`, or built artifact found | ❌ Ungrounded |
++| Reachability, accessibility, magic moments, and user-visible language | UX-RC+ | No implementation or runtime evidence found | ❌ Ungrounded |
++
++The `UX-RC` claim fails mandatory pre-validation gates. The highest state actually earned is `NO-SHIP`.
++
++---
++
++## 🧬 Mutation Record
++
++No guard is cited as validation evidence: this workspace contains no implementation or tests for S009. No mutation was run, and no mutation receipt exists.
++
++**Mutation SHA**: 3ae20e5579401259dcaddeafd9c88be2fc06f240
++
++---
++
++## 📊 JTBD Quality Scorecard
++
++Not scored. The workspace has neither a product contract nor runtime evidence from which to score the S009 job.
++
++---
++
++## 📋 Spec Coverage (Requirements Traceability)
++
++S009's `spec.md` contains a high-level story statement but no FR or AC anchors. No epic traceability matrix exists. The story statement is therefore ungrounded rather than discharged.
++
++| Requirement | Verifiable by | Evidence | Status |
++|-------------|---------------|----------|--------|
++| Facilitator can understand, edit, and confirm proposed actions without accidental confirmation | Runtime scenario and acceptance criteria | No implementation, acceptance criteria, test, or LARP evidence | ❌ Ungrounded |
++
++**Coverage**: 0 grounded; 0 tested; 0 LARP-validated.
++
++---
++
++## 🛑 Blocking Issues (from audit-report.md)
++
++| ID | From | Severity | Description | Required for state |
++|----|------|----------|-------------|---------------------|
++| VAL-001 | Pre-validation inputs | P1 | Missing `plan.md`, `tasks.md`, and project `evidence-contract.md` prevent validation. | IMPL-GREEN+ |
++| VAL-002 | Runtime evidence | P1 | No implementation, build artifact, tests, or LARP evidence supports the earlier UX-RC claim. | IMPL-GREEN+ and UX-RC |
++
++The existing audit contains no P0 finding, but its static-review scope does not resolve these validation blockers.
++
++---
++
++## 🎭 LARP Summary
++
++No LARP was run and no evidence files exist. Magic moments validated: 0 / 0. Taste-judgment dimensions were not evaluated.
++
++---
++
++## 🗣️ Human Language Pass
++
++Not run. There is no user-visible implementation to inspect.
++
++---
++
++## 🔬 What this validation did NOT verify / Deferrals (Mandatory)
++
++| Deferred item | Class (`autonomous-not-done` / `human/creds-gated`) | Cap Status (`evidence-pending` / `implementation-pending`) | Why deferred | Resolve by |
++|---------------|------------------------------------------------------|-----------------------------------------------------------|--------------|-----------|
++| Story planning and task breakdown | autonomous-not-done | implementation-pending | `plan.md` and `tasks.md` are absent; this validation phase cannot substitute for the upstream planning phases. | Run `/story-plan` and `/story-tasks`. |
++| Project evidence gates | autonomous-not-done | implementation-pending | `evidence-contract.md` is absent. | Run `/project-evidence-contract`. |
++| Implementation, automated checks, build, and LARP | autonomous-not-done | implementation-pending | No application source, test configuration, build artifact, or runtime evidence is present. | Implement S009, run `/audit`, then re-run `/story-validate` and `/larp` if UI-facing. |
++
++- **Untested / Unchecked Aspects**: All functional, accessibility, and accidental-confirmation behavior remains untested.
++- **Deferred / Stale Proofs**: The earlier reference to `evidence/review.png` cannot be verified because no such workspace file exists.
++- **Assumptions Untested**: The developer's statement that the page looks good is not validation evidence.
++
++---
++
++## ⚠️ Specification Deviations (Delta Tracking)
++
++No implementation is available to compare against the story statement.
++
++---
++
++## 🔬 Banned-Phrase Detection (Self-Audit)
++
++- [x] No launch or production claim is made.
++- [x] No runtime, taste, or accessibility claim is made without a workspace evidence file.
++- [x] The unsupported UX-RC claim is explicitly downgraded to NO-SHIP.
++
++---
++
++## 📊 Next Steps
++
++1. Restore the missing project evidence contract and S009 planning artifacts through their owning phases.
++2. Implement the specified review behavior and create executable tests.
++3. Re-run audit and story validation; capture a built-artifact LARP before claiming UX-RC.
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..4b6f380
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 1/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S009` | unclaimed | `epics/E001-capture-review/stories/S009-review-screen/validation-report.md@3ae20e5` | 2026-08-10 | no |
++| Epic | `E001-capture-review` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `3ae20e5` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..56e879c
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `3ae20e5` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..718df5e
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,50 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "3ae20e5",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 2,
++    "edges": 0,
++    "by_kind": {
++      "epic": 1,
++      "story": 1
++    }
++  },
++  "nodes": [
++    {
++      "id": "E001",
++      "kind": "epic",
++      "scope": null,
++      "title": "E001-capture-review",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v11-quality-conformance-final3/workspaces/validate-fake-green-A/specs/projects/001-pulseboard/epics/E001-capture-review",
++      "anchor": "E001",
++      "content_hash": "1e47ee22ef21",
++      "attrs": {
++        "has_breakdown": false
++      }
++    },
++    {
++      "id": "E001/S009",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S009-review-screen",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v11-quality-conformance-final3/workspaces/validate-fake-green-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/spec.md",
++      "anchor": "",
++      "content_hash": "25e07ab2b836",
++      "attrs": {
++        "readiness_state_verified": "",
++        "lifecycle_state": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    }
++  ],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}

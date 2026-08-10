@@ -1,0 +1,169 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
+index e409942..360be17 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
+@@ -1,5 +1,161 @@
+-# Validation report
++---
++speck_version: "10.5.0"
++template_version: "7.11.0"
++artifact_type: validation-report
++mutation_record: required
++readiness_state_claimed: NO-SHIP
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: 7ea9bd3a13c7e60ed3ecd244ea01e36ca2739457
++build_artifact: not-built
++audit_report: specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/audit-report.md
++larp_evidence: not-run
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S009 Review screen
+ 
+-The developer says the page looks good. Screenshot: evidence/review.png. Accessibility unit tests passed. Therefore the experience is intuitive and pleasant.
++**Subject**: S009
++**Date**: 2026-08-10 15:14 CEST
++**Build SHA**: `7ea9bd3a13c7e60ed3ecd244ea01e36ca2739457`
++**Build Artifact**: Not built; no application source or build manifest exists in this workspace.
++**Clean Build (caches cleared)**: no
++**Claimed Readiness State**: NO-SHIP
++**Verified Readiness State**: NO-SHIP
++
++---
++
++## 🎯 Readiness State Claim
++
++**Claiming**: `NO-SHIP`
++
++**Why this state and not higher**:
++The workspace has the story spec and a brief static audit note, but no implementation, `plan.md`, `tasks.md`, project `evidence-contract.md`, test/build manifest, test output, built artifact, or runtime evidence. None of the IMPL-GREEN or UX-RC gates can be grounded.
++
++**Why this state and not lower**:
++NO-SHIP is the lowest readiness state and accurately expresses that the story is not currently shippable from this workspace.
++
++---
++
++## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
++
++- **CORRECT**: Uncovered. No shipped implementation or executable test evidence exists.
++- **ON-CONTRACT**: Uncovered. The only story requirement is a one-sentence intent; there are no acceptance criteria, plan, tasks, or runtime walkthrough proving it.
++- **FELT-GOOD** *(legibility — not broken / not confusing)*: Uncovered. No built review screen, screenshot, or naive-hostile LARP findings exist.
++- **TASTE** *(connoisseur craft — crafted / premium / it sings)*: Uncovered. No rendered surface, product aesthetic contract, design system, or connoisseur review exists. `taste_anchor` is `universal-only` solely because no product-relative anchor exists; it is not a taste pass.
++
++### 🎨 Aesthetic Forks — Owner Decision
++
++None. Aesthetic evaluation cannot start until an implemented, rendered review screen exists.
++
++---
++
++## ✅ Gate Criteria Check
++
++| Gate | Required at this state? | Evidence | Status |
++|------|------------------------|----------|--------|
++| Audit report exists and has no P0 finding | Pre-validation gate | `audit-report.md` says no P0/P1 defects in static review | ✅ Limited: this is not implementation or runtime evidence |
++| Story plan and tasks exist | Pre-validation gate | Neither `plan.md` nor `tasks.md` exists | ❌ |
++| Project evidence contract exists | Pre-validation gate | `specs/projects/001-pulseboard/evidence-contract.md` is absent | ❌ |
++| Unit/integration tests pass | IMPL-GREEN+ | No source, test files, test manifest, or test output exists | ❌ |
++| Lint, type check, and build pass | IMPL-GREEN+ | No runnable project or build manifest exists | ❌ |
++| Clean build compiled | UX-RC+ | No build artifact exists | ❌ |
++| Persona LARP against built artifact | UX-RC+ | No `larp-recordings/`, `screenshots/`, or `larp-evidence/` files exist | ❌ |
++| Reachability, automation-language, and magic moments | UX-RC+ | No UI or LARP evidence exists | ❌ |
++
++The former `UX-RC` claim is ungrounded: a developer assertion, an unverified screenshot reference, and unspecified accessibility-test prose do not establish a built artifact, primary-flow LARP, or any of the four readiness axes.
++
++---
++
++## 🧬 Mutation Record
++
++No guard is cited as evidence. There is no production implementation or test guard to mutate.
++
++**Mutation SHA**: `7ea9bd3a13c7e60ed3ecd244ea01e36ca2739457`
++
++---
++
++## 📊 JTBD Quality Scorecard
++
++No score is assigned. A review-screen artifact was not available for functional, emotional, social, trust, or commercial evaluation.
++
++---
++
++## 📋 Spec Coverage (Requirements Traceability)
++
++| Requirement | Description | Verifiable by | Code | Test | LARP | Status |
++|-------------|-------------|---------------|------|------|------|--------|
++| S009 intent | A facilitator can understand, edit, and confirm proposed actions without accidental confirmation. | Runtime walkthrough | — | — | — | ❌ Ungrounded |
++
++**Coverage**: 0/1 grounded, 0/1 tested, 0/1 LARP-validated.
++
++---
++
++## 🛑 Blocking Issues (from audit-report.md and validation)
++
++| ID | From | Severity | Description | Required for state |
++|----|------|----------|-------------|--------------------|
++| VAL-S009-001 | Validation | P1 | No implementation, plan, tasks, test/build configuration, or executable evidence. | IMPL-GREEN+ |
++| VAL-S009-002 | Validation | P1 | `evidence-contract.md` is absent, so readiness criteria are undefined. | Any validation above NO-SHIP |
++| VAL-S009-003 | Validation | P1 | No runtime evidence supports the prior UX-RC claim. | UX-RC+ |
++
++The audit report contains no recorded P0 finding, but its static-review statement cannot clear the missing evidence above.
++
++---
++
++## 🎭 LARP Summary
++
++| Persona | Flow | Verdict | Evidence path |
++|---------|------|---------|---------------|
++| Facilitator | Understand, edit, and safely confirm proposed actions | NOT RUN | — |
++
++**Magic moments validated**: 0 / not specified
++
++---
++
++## 🗣️ Human Language Pass
++
++Not assessed: no user-visible implementation or generated output exists in the workspace.
++
++---
++
++## 🔬 What this validation did NOT verify / Deferrals (Mandatory)
++
++| Deferred item | Class (`autonomous-not-done` / `human/creds-gated`) | Cap Status (`evidence-pending` / `implementation-pending`) | Why deferred | Resolve by |
++|---------------|------------------------------------------------------|-----------------------------------------------------------|--------------|-----------|
++| Review-screen implementation and its acceptance criteria | autonomous-not-done | implementation-pending | No application source exists in this workspace. Implementing it is outside the requested validation phase. | Complete story planning, tasks, and implementation before re-validating. |
++| Test, lint, type, and clean-build execution | autonomous-not-done | evidence-pending | No source tree or project manifest provides runnable commands. | Add the implementation and its local validation commands. |
++| Runtime LARP, reachability, FELT-GOOD, and TASTE evaluation | autonomous-not-done | evidence-pending | No built UI or evidence files exist. | Build the screen and record persona, naive-hostile, and connoisseur LARPs. |
++| Gate criteria from the evidence contract | autonomous-not-done | evidence-pending | The project `evidence-contract.md` does not exist. | Create the project evidence contract before validation. |
++
++- **Untested / Unchecked Aspects**: All behavioral, accessibility, accidental-confirmation, and visual-quality assertions remain untested.
++- **Deferred / Stale Proofs**: The prior report’s screenshot reference has no corresponding file in this workspace and is not usable proof.
++- **Assumptions Untested**: None accepted; no unsupported implementation assumptions were used.
++
++---
++
++## ⚠️ Specification Deviations (Delta Tracking)
++
++### REMOVED / DEFERRED
++
++- No product behavior is recorded as delivered. The prior UX-RC declaration was replaced with the evidence-supported NO-SHIP state.
++
++---
++
++## 🔬 Banned-Phrase Detection (Self-Audit)
++
++- [x] No launch-readiness claim is made.
++- [x] No production-behavior claim is made.
++- [x] No test-suite result is asserted without an output file.
++- [x] No visual, intuition, or pleasantness claim is made without LARP evidence.
++- [ ] The project banned-language lint could not run because the required `product-contract.md` is absent; this is recorded as VAL-S009-002 rather than treated as a pass.
++
++---
++
++## 📊 Next Steps
++
++1. Create the missing project evidence contract and complete S009’s planning and task artifacts.
++2. Implement the review screen with testable safeguards against accidental confirmation.
++3. Run local tests, lint, type checks, and a clean build; then capture the required runtime LARP evidence before a new readiness claim.
