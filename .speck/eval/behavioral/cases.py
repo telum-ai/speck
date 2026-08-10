@@ -419,6 +419,36 @@ def _check(label: str, ok: bool, weight: float) -> dict[str, object]:
     return {"label": label, "ok": bool(ok), "weight": weight, "earned": weight if ok else 0.0}
 
 
+def _draft_placeholder(text: str) -> bool:
+    return bool(
+        re.search(
+            r"(?:current_state|lifecycle_state):\s*Draft(?:\s*\(\s*Placeholder\s*\)|\s+Placeholder)",
+            text,
+            re.I,
+        )
+        or re.search(r"Current State\*{0,2}:?\s*Draft\s*\(\s*Placeholder\s*\)", text, re.I)
+    )
+
+
+def _closed_promise_rows(matrix: str, promise_ids: tuple[str, ...]) -> bool:
+    lines = matrix.splitlines()
+    for promise_id in promise_ids:
+        candidates = [line for line in lines if re.search(rf"\b{re.escape(promise_id)}\b", line)]
+        if any(re.search(r"\bOPEN\b", line, re.I) for line in candidates) or not any(
+            not re.search(r"\bOPEN\b", line, re.I)
+            and re.search(r"\bS\d{3}\b.*\bAC(?:-|\s)?\d+\b", line, re.I)
+            for line in candidates
+        ):
+            return False
+    return True
+
+
+def _when_shall_count(text: str) -> int:
+    # Canonical EARS is often rendered as adjacent WHEN / THEN SHALL bullets.
+    # Bound each match before the next WHEN so unrelated prose cannot combine.
+    return len(re.findall(r"\bWHEN\b(?:(?!\bWHEN\b)[\s\S]){0,500}?\bSHALL\b", text, re.I))
+
+
 def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict[str, object]]:
     spec_text = _all_text(root, ("specs/**/*.md",))
     low = spec_text.lower()
@@ -456,10 +486,10 @@ def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict
         checks = [
             _check("breakdown", bool(breakdown), 1.5),
             _check("three-stories", len(story_specs) >= 3, 1.5),
-            _check("placeholder-state", len(story_specs) >= 3 and all("draft placeholder" in p.read_text(errors="replace").lower() for p in story_specs), 1),
+            _check("placeholder-state", len(story_specs) >= 3 and all(_draft_placeholder(p.read_text(errors="replace")) for p in story_specs), 1),
             _check("dependency-metadata", any("depends_on:" in p.read_text(errors="replace") and "[" in p.read_text(errors="replace").split("depends_on:", 1)[1][:30] and "[]" not in p.read_text(errors="replace").split("depends_on:", 1)[1][:30] for p in story_specs), 1.5),
             _check("scope-coverage", all(x in b for x in ("upload", "review", "workspace")), 1.5),
-            _check("traceability-closed", all(x in matrix for x in ("PRM-001", "PRM-002", "PRM-004")) and matrix.upper().count("OPEN") == 0 and bool(re.search(r"S\d{3}.*AC", matrix, re.I)), 3),
+            _check("traceability-closed", _closed_promise_rows(matrix, ("PRM-001", "PRM-002", "PRM-004")), 3),
         ]
     elif case_id == "story-specify":
         specs = [p.read_text(errors="replace") for p in _find(root, "spec.md")]
@@ -469,7 +499,7 @@ def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict
             _check("metadata-preserved", "depends_on: [S001]" in s and "blocks: [S003]" in s, 2),
             _check("specified-state", bool(re.search(r"(?:current_state|lifecycle_state):\s*(specified|ready)", s, re.I)), 1),
             _check("user-story", "as a" in sl and "i want" in sl and "so that" in sl, 1),
-            _check("ears-criteria", len(re.findall(r"\bWHEN\b.*\bSHALL\b", s, re.I)) >= 3, 2),
+            _check("ears-criteria", _when_shall_count(s) >= 3, 2),
             _check("confirmation-boundary", "confirm" in sl and "before" in sl and "schedul" in sl, 1.5),
             _check("failure-and-tests", "failure" in sl and "test" in sl, 1.5),
             _check("no-placeholder", "todo" not in sl and "draft placeholder" not in sl, 1),
@@ -539,7 +569,7 @@ def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict
             _check("all-promises", all(x in reports for x in ("PRM-001", "PRM-002", "PRM-003")), 1.5),
             _check("mapping", all(x in r for x in ("claim", "mechanism", "evidence")), 1.5),
             _check("confirmation-negative", "confirm" in r and any(x in r for x in ("bypass", "unconfirmed", "negative")), 1.5),
-            _check("real-role-isolation", "request role" in r and "cross-workspace" in r and any(x in r for x in ("deny", "denial", "cannot")), 2),
+            _check("real-role-isolation", any(x in r for x in ("request role", "request-path role", "principal")) and "cross-workspace" in r and any(x in r for x in ("deny", "denial", "cannot")), 2),
             _check("delivery-failures", "duplicate" in r and "timeout" in r and "terminal" in r, 2),
         ]
     return checks
@@ -689,29 +719,47 @@ def self_test(root: Path) -> dict[str, object]:
     for sid in ("S001", "S002", "S003"):
         story = stories / sid
         story.mkdir(parents=True, exist_ok=True)
-        (story / "spec.md").write_text("lifecycle_state: Draft Placeholder\ndepends_on: [S000]\n")
+        (story / "spec.md").write_text("lifecycle_state: Draft (Placeholder)\ndepends_on: [S000]\n")
     matrix = epic / "traceability-matrix.md"
-    matrix.write_text("PRM-001 S001 AC-1 mapped\nPRM-002 S002 AC-1 mapped\nPRM-004 S003 AC-1 mapped\n")
+    matrix.write_text("PRM-001 S001 AC-1 mapped\nPRM-002 S002 AC-1 mapped\nPRM-004 S003 AC-1 mapped\nOpen / unmapped: 0\n")
     closed_before = next(c for c in _doc_score("epic-breakdown", root, "", "") if c["label"] == "traceability-closed")
+    placeholder_parenthesized = next(c for c in _doc_score("epic-breakdown", root, "", "") if c["label"] == "placeholder-state")
     contaminant = root / ".speck/eval/fixtures/pp-open-prm"
     contaminant.mkdir(parents=True, exist_ok=True)
     (contaminant / "traceability-matrix.md").write_text("PRM-999 OPEN OPEN\n")
     closed_after = next(c for c in _doc_score("epic-breakdown", root, "", "") if c["label"] == "traceability-closed")
     matrix.write_text("PRM-001 OPEN OPEN\nPRM-002 OPEN OPEN\nPRM-004 OPEN OPEN\n")
     open_mutant = next(c for c in _doc_score("epic-breakdown", root, "", "") if c["label"] == "traceability-closed")
+    matrix.write_text("PRM-001 S001 AC-1 mapped\nPRM-001 still OPEN\nPRM-002 S002 AC-1 mapped\nPRM-004 S003 AC-1 mapped\n")
+    duplicate_open_mutant = next(c for c in _doc_score("epic-breakdown", root, "", "") if c["label"] == "traceability-closed")
 
     specified = root / "specs/projects/p/epics/E001/stories/S010/spec.md"
     specified.parent.mkdir(parents=True, exist_ok=True)
-    specified.write_text("depends_on: [S001]\nblocks: [S003]\nlifecycle_state: Specified\nAs a user, I want review so that I can confirm.\nWHEN x SHALL y\nWHEN a SHALL b\nWHEN c SHALL d\nconfirm before scheduling\nfailure test\n")
+    specified.write_text("depends_on: [S001]\nblocks: [S003]\nlifecycle_state: Specified\nAs a user, I want review so that I can confirm.\nWHEN x\nTHEN system SHALL y\nWHEN a\nTHEN system SHALL b\nWHEN c\nTHEN system SHALL d\nconfirm before scheduling\nfailure test\n")
     lifecycle_state = next(c for c in _doc_score("story-specify", root, "", "") if c["label"] == "specified-state")
+    multiline_ears = next(c for c in _doc_score("story-specify", root, "", "") if c["label"] == "ears-criteria")
 
-    scorer_isolated = bool(closed_before["ok"] and closed_after["ok"] and not open_mutant["ok"])
+    evidence = root / "specs/projects/p/evidence-contract.md"
+    evidence.write_text(
+        "PRM-001 PRM-002 PRM-003 claim mechanism evidence\n"
+        "confirm unconfirmed negative bypass\n"
+        "cross-workspace denial exercised as two non-bypass principals\n"
+        "duplicate timeout terminal\n"
+    )
+    principal_role = next(c for c in _doc_score("evidence-contract", root, "", "") if c["label"] == "real-role-isolation")
+    evidence.write_text(evidence.read_text().replace("principals", "mock identities"))
+    mock_role_mutant = next(c for c in _doc_score("evidence-contract", root, "", "") if c["label"] == "real-role-isolation")
+
+    scorer_isolated = bool(closed_before["ok"] and closed_after["ok"] and not open_mutant["ok"] and not duplicate_open_mutant["ok"])
     return {
         "good": good_score,
         "mutant": mutant_score,
         "ui_array_good": ui_array_good,
         "ui_clobber_mutant": ui_clobber_mutant,
         "project_fixture_isolation": scorer_isolated,
+        "parenthesized_placeholder": bool(placeholder_parenthesized["ok"]),
         "canonical_lifecycle_state": bool(lifecycle_state["ok"]),
-        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(lifecycle_state["ok"]),
+        "multiline_ears": bool(multiline_ears["ok"]),
+        "principal_role": bool(principal_role["ok"] and not mock_role_mutant["ok"]),
+        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(multiline_ears["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]),
     }

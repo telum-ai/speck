@@ -25,7 +25,12 @@ Output: `[STORY_DIR]/validation-report.md`.
    state, archetype, axis, or host references.
 4. Execute every receipted node in order. Locate and record `build_sha`; run the
    real checks/probes; write the report; lower the claim to the highest state
-   actually earned; SHA-stamp; run the post-write validator after the last
-   mutation.
+   actually earned; then close the report loop:
+   - SHA-stamp the report, then run every post-write gate selected by the
+     receipt;
+   - if any gate is red, correct or lower the report, re-stamp it, and run the
+     complete gate set again;
+   - stop only after every selected gate exits 0 after the most recent stamp,
+     with no later report edit.
 
 STOP on any node STOP / P0 / missing required evidence.

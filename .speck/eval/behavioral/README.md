@@ -31,7 +31,7 @@ Secondary endpoints:
 - required corrections, defined as failed hidden checks;
 - blinded judge quality, 0-100;
 - total, cached, and uncached input tokens reported by the subject runtime;
-- wall time and valid-run rate.
+- wall time and valid subject-execution rate.
 
 The summary also reports a predeclared composite of 70% deterministic score and 30% blinded-judge score. Axes remain visible; the composite cannot hide a false-green regression.
 
@@ -90,15 +90,16 @@ The exact loader argv, explicit zero exit, emitted context bodies, receipt
 order, hashes, and byte counts are checked. Gate use is invocation-shaped, not
 substring-shaped; selected states may require multiple gates. Passing these
 axes proves context-path conformance only; hidden scoring, blind judgment,
-audit, and LARP still own semantic use and quality. A contracted subject with a
-red conformance report is an invalid run, so it cannot support an improvement
-classification.
+audit, and LARP still own semantic use and quality. Subject execution validity,
+artifact mutation, and context conformance are reported separately. A red
+conformance report is a methodology-adherence finding; it neither invalidates
+the experiment nor changes the artifact-quality score.
 The runner applies the declared profile automatically to the eight relevant
 v11 cases and records the report alongside each subject result.
 
 ## Harness validity
 
-`self-test` checks that the corpus has 12 unique five-item rubrics, deletion-mutation-tests all 12 scorer families, behavior-mutation-tests the backend and UI scorers, isolates project artifacts from exported methodology fixtures, and recognizes canonical `lifecycle_state`. A conforming backend implementation must score 8/8 behavior checks; an always-green mutant must score lower. Every case family must turn red when its artifact is deleted. Subject validity additionally requires exit 0, a runtime `turn.completed` event, at least one tool event, and a changed artifact.
+`self-test` checks that the corpus has 12 unique five-item rubrics, deletion-mutation-tests all 12 scorer families, behavior-mutation-tests the backend and UI scorers, isolates project artifacts from exported methodology fixtures, and recognizes canonical `lifecycle_state`, `Draft (Placeholder)`, multiline WHEN → THEN SHALL criteria, zero-open summaries, and real-principal wording. A conforming backend implementation must score 8/8 behavior checks; an always-green mutant must score lower. Every case family must turn red when its artifact is deleted. Subject execution validity requires exit 0, a runtime `turn.completed` event, and at least one tool event. Whether an artifact changed and whether a v11 context contract passed are independent endpoints.
 
 After the isolated run, audit found that the UI scorer assumed an unrequired `{items}` state shape and document scorers searched exported `.speck/eval/fixtures` as if they were subject artifacts. The reusable harness now mutation-tests the UI state/status boundary, scopes project documents to `specs/**`, accepts canonical `lifecycle_state`, and seeds contamination plus real-project mutants. Frozen subjects were explicitly rescored without rerunning transcripts or the blind judge; the report records that correction.
 

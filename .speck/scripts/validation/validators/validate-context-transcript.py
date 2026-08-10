@@ -201,22 +201,114 @@ def _shell_script(command: str) -> str:
     return command
 
 
-def _command_segments(command: str) -> list[list[str]]:
+def _heredoc_delimiters(line: str) -> list[tuple[str, bool]]:
+    """Return unquoted shell heredoc delimiters declared on one command line."""
+    found: list[tuple[str, bool]] = []
+    index = 0
+    quote: str | None = None
+    escaped = False
+    while index < len(line):
+        char = line[index]
+        if escaped:
+            escaped = False
+            index += 1
+            continue
+        if char == "\\" and quote != "'":
+            escaped = True
+            index += 1
+            continue
+        if quote:
+            if char == quote:
+                quote = None
+            index += 1
+            continue
+        if char in {"'", '"'}:
+            quote = char
+            index += 1
+            continue
+        if char == "#" and (index == 0 or line[index - 1].isspace()):
+            break
+        if line.startswith("<<<", index) or not line.startswith("<<", index):
+            index += 1
+            continue
+        cursor = index + 2
+        strip_tabs = False
+        if cursor < len(line) and line[cursor] == "-":
+            strip_tabs = True
+            cursor += 1
+        while cursor < len(line) and line[cursor] in " \t":
+            cursor += 1
+        if cursor >= len(line):
+            break
+        token_quote = line[cursor] if line[cursor] in {"'", '"'} else None
+        if token_quote:
+            cursor += 1
+            end = line.find(token_quote, cursor)
+            if end < 0:
+                break
+            delimiter = line[cursor:end]
+            cursor = end + 1
+        else:
+            end = cursor
+            while end < len(line) and not line[end].isspace() and line[end] not in ";&|<>":
+                end += 1
+            delimiter = line[cursor:end]
+            cursor = end
+        if delimiter:
+            found.append((delimiter, strip_tabs))
+        index = max(cursor, index + 2)
+    return found
+
+
+def _without_heredoc_bodies(script: str) -> str:
+    """Blank heredoc payloads so prose cannot impersonate executed argv."""
+    pending: list[tuple[str, bool]] = []
+    rendered: list[str] = []
+    for line in script.splitlines(keepends=True):
+        newline = "\n" if line.endswith(("\n", "\r")) else ""
+        logical = line.rstrip("\r\n")
+        if pending:
+            delimiter, strip_tabs = pending[0]
+            candidate = logical.lstrip("\t") if strip_tabs else logical
+            if candidate == delimiter:
+                pending.pop(0)
+            rendered.append(newline)
+            continue
+        rendered.append(line)
+        pending.extend(_heredoc_delimiters(logical))
+    return "".join(rendered)
+
+
+def _command_parts(command: str) -> list[tuple[list[str], str]]:
     try:
-        lexer = shlex.shlex(_shell_script(command), posix=True, punctuation_chars=";&|")
+        # A Codex command frequently contains a real multi-line shell script.
+        # Newlines are command separators in the shell, not ordinary spaces.
+        # Keeping them as punctuation prevents `read-only-command\nloader` from
+        # being misparsed as one argv vector while still respecting quoted
+        # newlines through shlex.
+        lexer = shlex.shlex(_without_heredoc_bodies(_shell_script(command)), posix=True, punctuation_chars=";&|\n")
+        lexer.whitespace = " \t\r"
         lexer.whitespace_split = True
         lexer.commenters = "#"
         words = list(lexer)
     except ValueError:
         return []
-    segments: list[list[str]] = [[]]
+    parts: list[tuple[list[str], str]] = []
+    current: list[str] = []
     for word in words:
-        if word and set(word) <= {";", "&", "|"}:
-            if segments[-1]:
-                segments.append([])
+        if word and set(word) <= {";", "&", "|", "\n"}:
+            if current:
+                parts.append((current, word))
+                current = []
             continue
-        segments[-1].append(word)
-    return [segment for segment in segments if segment]
+        current.append(word)
+    if current:
+        parts.append((current, ""))
+    return parts
+
+
+def _command_segments(command: str) -> list[list[str]]:
+    return [segment for segment, _ in _command_parts(command)]
 
 
 def _effective_words(segment: list[str]) -> list[str]:
@@ -399,7 +491,16 @@ def _segment_invokes_gate(segment: list[str], gate: str, root: Path) -> bool:
 
 
 def _command_invokes_gate(command: str, gate: str, root: Path) -> bool:
-    return any(_segment_invokes_gate(segment, gate, root) for segment in _command_segments(command))
+    for segment, next_separator in _command_parts(command):
+        if not _segment_invokes_gate(segment, gate, root):
+            continue
+        # Gates are required as individual commands. Even with pipefail, a
+        # pipeline changes the observed command/output boundary and needlessly
+        # asks this validator to emulate shell execution state.
+        followed_by_pipe = "|" in next_separator and "||" not in next_separator
+        if not followed_by_pipe:
+            return True
+    return False
 
 
 def _inferred_mutation_paths(command: CommandEvent, root: Path) -> list[str]:

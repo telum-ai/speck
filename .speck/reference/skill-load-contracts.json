@@ -143,6 +143,7 @@
         ".cursor/skills/story-validate/references/backend-skip.md"
       ],
       "post_write_gates": [".speck/scripts/validation/validate-template.sh"],
+      "post_write_gates_all": [".speck/scripts/stamp-truth.sh"],
       "selectors": {
         "claimed_state": {
           "required": true,
@@ -279,6 +280,7 @@
         ".cursor/skills/story-validate/references/axes/taste.md"
       ],
       "post_write_gates": [".speck/scripts/validation/validate-template.sh"],
+      "post_write_gates_all": [".speck/scripts/stamp-truth.sh"],
       "selectors": {
         "claimed_state": {
           "required": true,

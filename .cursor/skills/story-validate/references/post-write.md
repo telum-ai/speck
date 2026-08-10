@@ -1,7 +1,14 @@
 # Post-write
 
 Lower `readiness_state_verified` to highest state where all gates pass.
-Banned-phrase self-check. SHA-stamp report.
+Banned-phrase self-check.
+
+This is a closure loop, not a one-shot check. Run every gate selected by the
+receipt individually. First SHA-stamp the report, then run the complete set. A
+red gate means edit or lower the report, re-stamp it, and rerun every selected
+gate. Finish only when all selected gates exit 0 after the most recent stamp,
+with no later report edit; a different green validator cannot substitute for a
+required red one.
 
 ```bash
 bash .speck/scripts/validation/validate-template.sh validation-report.md --strict

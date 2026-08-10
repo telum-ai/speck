@@ -167,18 +167,22 @@ def parse_events(raw: str) -> dict[str, Any]:
     return {"usage": usage, "commands": "\n".join(commands), "turn_completed": completed, "tool_events": tool_events, "errors": errors}
 
 
-def subject_run_valid(
+def subject_execution_valid(
     *,
     exit_code: int,
     turn_completed: bool,
     tool_events: int,
-    changed: bool,
-    context_required: bool,
-    context_conformance: dict[str, Any] | None,
 ) -> bool:
-    base = exit_code == 0 and turn_completed and tool_events > 0 and changed
-    if not base or not context_required:
-        return base
+    """Whether the subject cell executed to a usable experimental outcome.
+
+    Refusing to mutate after a methodology gate, producing no patch, or
+    missing a JIT contract are measured behavioral outcomes. They must not be
+    recoded as harness failures or leaked into the artifact-quality judge.
+    """
+    return exit_code == 0 and turn_completed and tool_events > 0
+
+
+def context_conformance_passed(context_conformance: dict[str, Any] | None) -> bool:
     return bool(
         isinstance(context_conformance, dict)
         and context_conformance.get("exit_code") == 0
@@ -305,6 +309,12 @@ def run_subject(
             "stderr": context_proc.stderr[-2000:],
         }
     usage = parsed["usage"]
+    changed = bool(status.strip())
+    execution_valid = subject_execution_valid(
+        exit_code=proc.returncode,
+        turn_completed=parsed["turn_completed"],
+        tool_events=parsed["tool_events"],
+    )
     result: dict[str, Any] = {
         "case_id": case.case_id,
         "label": label,
@@ -322,17 +332,19 @@ def run_subject(
         "required_corrections": sum(1 for check in scoring["checks"] if not check["ok"]),
         "score": scoring,
         "context_conformance": context_conformance,
+        "context_conformant": (
+            context_conformance_passed(context_conformance)
+            if condition == "v11" and context_profile is not None
+            else None
+        ),
         "git_status": status.splitlines(),
+        "artifact_changed": changed,
         "events_sha256": hashlib.sha256(raw.encode()).hexdigest(),
         "patch_sha256": hashlib.sha256(patch.encode()).hexdigest(),
-        "valid_run": subject_run_valid(
-            exit_code=proc.returncode,
-            turn_completed=parsed["turn_completed"],
-            tool_events=parsed["tool_events"],
-            changed=bool(status.strip()),
-            context_required=condition == "v11" and context_profile is not None,
-            context_conformance=context_conformance,
-        ),
+        "execution_valid": execution_valid,
+        # Kept for report compatibility. This is deliberately execution-only;
+        # artifact production and context conformance are separate endpoints.
+        "valid_run": execution_valid,
     }
     result_file.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     patch_file.write_text(patch)
@@ -473,7 +485,8 @@ def judge_prompt(bundle: list[Case], run_id: str, mapping: dict[str, dict[str, s
             final = scrub_for_judge(final_file.read_text(errors="replace"), revisions)
             if len(patch) > 30000:
                 patch = patch[:30000] + "\n[patch truncated]\n"
-            outputs.append(f"### Output {label}\nFinal response:\n{final}\n\nArtifact patch:\n```diff\n{patch}\n```\nRun completed: {result['valid_run']}")
+            completed = result.get("execution_valid", result["valid_run"])
+            outputs.append(f"### Output {label}\nFinal response:\n{final}\n\nArtifact patch:\n```diff\n{patch}\n```\nSubject execution completed: {completed}")
         blocks.append(
             f"""## Case {case.case_id}
 Task: {case.task}
@@ -556,15 +569,56 @@ def command_rescore(args: argparse.Namespace) -> int:
             work = workspace_path(args.run_id, case.case_id, label)
             raw = (RUNS / args.run_id / "raw" / f"{case.case_id}-{label}.events.jsonl").read_text(errors="replace")
             result = json.loads(result_file.read_text())
+            parsed = parse_events(raw)
             scoring = score_case(
                 case.case_id,
                 work,
                 final_file.read_text(errors="replace"),
-                parse_events(raw)["commands"],
+                parsed["commands"],
                 patch_file.read_text(errors="replace"),
             )
+            context_conformance: dict[str, Any] | None = None
+            context_profile = CONTEXT_PROFILES.get(case.case_id)
+            if condition == "v11" and context_profile:
+                profile, selections = context_profile
+                context_cmd = [
+                    sys.executable,
+                    str(REPO / ".speck/scripts/validation/validators/validate-context-transcript.py"),
+                    "--transcript", str(RUNS / args.run_id / "raw" / f"{case.case_id}-{label}.events.jsonl"),
+                    "--profile", profile,
+                    "--root", str(work),
+                    "--contract", str(work / ".speck/reference/skill-load-contracts.json"),
+                    "--json",
+                ]
+                for selection in selections:
+                    context_cmd.extend(("--select", selection))
+                context_proc = run_command(context_cmd, cwd=work, timeout=120)
+                try:
+                    context_report = json.loads(context_proc.stdout)
+                except json.JSONDecodeError:
+                    context_report = {"pass": False, "parse_error": context_proc.stdout[-2000:]}
+                context_conformance = {
+                    "profile": profile,
+                    "selections": list(selections),
+                    "exit_code": context_proc.returncode,
+                    "report": context_report,
+                    "stderr": context_proc.stderr[-2000:],
+                }
             result["score"] = scoring
             result["required_corrections"] = sum(1 for check in scoring["checks"] if not check["ok"])
+            result["context_conformance"] = context_conformance
+            result["context_conformant"] = (
+                context_conformance_passed(context_conformance)
+                if condition == "v11" and context_profile is not None
+                else None
+            )
+            result["artifact_changed"] = bool(result.get("git_status"))
+            result["execution_valid"] = subject_execution_valid(
+                exit_code=int(result["exit_code"]),
+                turn_completed=bool(result["turn_completed"]),
+                tool_events=int(result["tool_events"]),
+            )
+            result["valid_run"] = result["execution_valid"]
             result["rescored_at"] = datetime.now(timezone.utc).isoformat()
             result_file.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
             count += 1
@@ -644,8 +698,10 @@ def command_report(args: argparse.Namespace) -> int:
         combined_ci = det_ci
     false_v10 = sum(bool(row["v10"]["score"]["false_green"]) for row in rows)
     false_v11 = sum(bool(row["v11"]["score"]["false_green"]) for row in rows)
-    valid_v10 = sum(bool(row["v10"]["valid_run"]) for row in rows)
-    valid_v11 = sum(bool(row["v11"]["valid_run"]) for row in rows)
+    valid_v10 = sum(bool(row["v10"].get("execution_valid", row["v10"]["valid_run"])) for row in rows)
+    valid_v11 = sum(bool(row["v11"].get("execution_valid", row["v11"]["valid_run"])) for row in rows)
+    changed_v10 = sum(bool(row["v10"].get("artifact_changed", row["v10"].get("git_status"))) for row in rows)
+    changed_v11 = sum(bool(row["v11"].get("artifact_changed", row["v11"].get("git_status"))) for row in rows)
     rescored = any("rescored_at" in row[condition] for row in rows for condition in ("v10", "v11"))
     context_reports = [
         row["v11"]["context_conformance"]
@@ -691,6 +747,7 @@ def command_report(args: argparse.Namespace) -> int:
         "harness": manifest.get("harness"),
         "isolation": manifest.get("isolation"),
         "valid_runs": {"v10": valid_v10, "v11": valid_v11},
+        "artifact_changed": {"v10": changed_v10, "v11": changed_v11},
         "deterministic": {
             "mean": {"v10": statistics.mean(det_v10), "v11": statistics.mean(det_v11)},
             "mean_difference_v11_minus_v10": statistics.mean(det_diff),
@@ -743,13 +800,15 @@ def command_report(args: argparse.Namespace) -> int:
         )
     ratio = statistics.mean(combined_v11) / statistics.mean(combined_v10) if statistics.mean(combined_v10) else float("inf")
     scorer_note = """
-## Scorer isolation correction
+## Frozen-artifact rescore
 
-Frozen subject artifacts were rescored after document discovery was scoped to
-`specs/**` and the canonical `lifecycle_state` field was recognized. Subjects,
-token counts, transcripts, and blinded judge verdicts were not rerun. The
-scorer self-test now seeds both methodology-fixture contamination and a real
-project mutant so this correction can no longer green itself.
+Frozen subject artifacts and raw transcripts were rescored after
+mutation-tested evaluator corrections. The scorer recognizes canonical
+`lifecycle_state`, `Draft (Placeholder)`, multiline WHEN → THEN SHALL criteria,
+zero-open summaries, and non-bypass principal wording. Transcript conformance
+recognizes discrete commands inside multi-line shell calls. Subjects, token
+counts, and event streams were not rerun; the blind judge was generated only
+after these corrections.
 """ if rescored else ""
     context_section = ""
     if context_reports:
@@ -802,7 +861,8 @@ The predeclared 70% deterministic + 30% blinded-judge score was {fmt(statistics.
 | Mean cached input tokens | {fmt(summary['input_tokens']['cached_mean_v10'], 0)} | {fmt(summary['input_tokens']['cached_mean_v11'], 0)} | {100 * (summary['input_tokens']['cached_mean_v11'] / summary['input_tokens']['cached_mean_v10'] - 1):+.1f}% |
 | Mean uncached input tokens | {fmt(summary['input_tokens']['uncached_mean_v10'], 0)} | {fmt(summary['input_tokens']['uncached_mean_v11'], 0)} | {100 * (summary['input_tokens']['uncached_mean_v11'] / summary['input_tokens']['uncached_mean_v10'] - 1):+.1f}% |
 | Mean wall time | {fmt(summary['wall_seconds']['mean_v10'])}s | {fmt(summary['wall_seconds']['mean_v11'])}s | {100 * (summary['wall_seconds']['mean_v11'] / summary['wall_seconds']['mean_v10'] - 1):+.1f}% |
-| Valid subject runs | {valid_v10}/12 | {valid_v11}/12 | {valid_v11 - valid_v10:+d} |
+| Valid subject executions | {valid_v10}/12 | {valid_v11}/12 | {valid_v11 - valid_v10:+d} |
+| Artifacts changed | {changed_v10}/12 | {changed_v11}/12 | {changed_v11 - changed_v10:+d} |
 
 {context_section}
 
@@ -829,11 +889,11 @@ def command_self_test(_: argparse.Namespace) -> int:
     outcome["all_case_families_turn_red"] = all(float(score) < 50 for score in deletion_scores.values())
     conformance_green = {"exit_code": 0, "report": {"pass": True}}
     conformance_red = {"exit_code": 1, "report": {"pass": False}}
-    outcome["context_conformance_blocks_valid_run"] = bool(
-        subject_run_valid(exit_code=0, turn_completed=True, tool_events=1, changed=True, context_required=False, context_conformance=None)
-        and subject_run_valid(exit_code=0, turn_completed=True, tool_events=1, changed=True, context_required=True, context_conformance=conformance_green)
-        and not subject_run_valid(exit_code=0, turn_completed=True, tool_events=1, changed=True, context_required=True, context_conformance=conformance_red)
-        and not subject_run_valid(exit_code=0, turn_completed=True, tool_events=1, changed=True, context_required=True, context_conformance=None)
+    outcome["execution_and_conformance_are_separate"] = bool(
+        subject_execution_valid(exit_code=0, turn_completed=True, tool_events=1)
+        and context_conformance_passed(conformance_green)
+        and not context_conformance_passed(conformance_red)
+        and not context_conformance_passed(None)
     )
     outcome["passed"] = bool(
         outcome["passed"]
@@ -841,7 +901,7 @@ def command_self_test(_: argparse.Namespace) -> int:
         and outcome["unique_case_ids"]
         and outcome["five_item_rubrics"]
         and outcome["all_case_families_turn_red"]
-        and outcome["context_conformance_blocks_valid_run"]
+        and outcome["execution_and_conformance_are_separate"]
     )
     print(json.dumps(outcome, indent=2))
     return 0 if outcome["passed"] else 1

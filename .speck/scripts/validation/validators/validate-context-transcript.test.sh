@@ -159,6 +159,18 @@ run_validator "$WORK" --transcript "$TRANSCRIPT_OK" --profile "$PROFILE" --json
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
   && pass "conforming transcript passes all axes" || fail "conforming transcript (rc=$RC)"
 
+echo "── validator: discrete commands in a multi-line shell call ───────────────────────────────"
+TRANSCRIPT_MULTILINE="$T/multiline.jsonl"
+MULTILINE_LOADER_CMD=$(printf 'rg --files | sed -n '\''1,2p'\''\npython3 .speck/scripts/context/speck_context.py %s --root %s' "$PROFILE" "$WORK")
+MULTILINE_GATE_CMD=$(printf 'git diff --check\nbash .speck/scripts/validation/validators/%s specs/projects/demo/stories/S001/tasks.md\ngit status --short' "$GATE_SUB")
+write_transcript "$TRANSCRIPT_MULTILINE" \
+  cmd "$MULTILINE_LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "$MULTILINE_GATE_CMD" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_MULTILINE" --profile "$PROFILE" --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "discrete loader and gate segments survive multi-line shell wrapping" || fail "multi-line discrete commands should pass (rc=$RC)"
+
 echo "── validator: missing receipt ─────────────────────────────────────────────────────────────"
 TRANSCRIPT_NOREC="$T/norec.jsonl"
 echo "no receipt here" > "$T/norec.out"
@@ -219,6 +231,16 @@ run_validator "$WORK" --transcript "$TRANSCRIPT_PROFILE_COMMENT" --profile "$PRO
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "no completed loader command" \
   && pass "profile name in a shell comment cannot bind a loader" || fail "profile comment should fail REACH (rc=$RC)"
 
+TRANSCRIPT_LOADER_HEREDOC="$T/loader-heredoc.jsonl"
+LOADER_HEREDOC_CMD=$(printf "cat <<'EOF'\npython3 .speck/scripts/context/speck_context.py %s --root %s\nEOF" "$PROFILE" "$WORK")
+write_transcript "$TRANSCRIPT_LOADER_HEREDOC" \
+  cmd "$LOADER_HEREDOC_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "bash .speck/scripts/validation/validators/$GATE_SUB x" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_LOADER_HEREDOC" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -q "no completed loader command" \
+  && pass "loader argv inside a heredoc cannot satisfy REACH" || fail "heredoc loader text should fail REACH (rc=$RC)"
+
 echo "── validator: completed commands require an explicit exit code ────────────────────────────"
 TRANSCRIPT_NO_EXIT="$T/no-exit.jsonl"
 write_transcript "$TRANSCRIPT_NO_EXIT" \
@@ -272,6 +294,45 @@ run_validator "$WORK" --transcript "$TRANSCRIPT_BAD_GATE" --profile "$PROFILE"
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
   && pass "failed gate command fails GATE_USE" || fail "failed gate should fail GATE_USE (rc=$RC)"
 
+TRANSCRIPT_PIPE_GATE="$T/pipe-gate.jsonl"
+write_transcript "$TRANSCRIPT_PIPE_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "bash .speck/scripts/validation/validators/$GATE_SUB x | sed -n '1p'" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_PIPE_GATE" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "a formatter cannot launder an earlier failing pipeline gate" || fail "unprotected piped gate should fail GATE_USE (rc=$RC)"
+
+TRANSCRIPT_PIPEFAIL_GATE="$T/pipefail-gate.jsonl"
+PIPEFAIL_GATE_CMD=$(printf "set -o pipefail\nbash .speck/scripts/validation/validators/%s x | sed -n '1p'" "$GATE_SUB")
+write_transcript "$TRANSCRIPT_PIPEFAIL_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "$PIPEFAIL_GATE_CMD" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_PIPEFAIL_GATE" --profile "$PROFILE" --json
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "even pipefail-protected gates must run individually" || fail "piped gate should fail even with pipefail (rc=$RC)"
+
+TRANSCRIPT_LATE_PIPEFAIL_GATE="$T/late-pipefail-gate.jsonl"
+LATE_PIPEFAIL_GATE_CMD=$(printf "bash .speck/scripts/validation/validators/%s x | sed -n '1p'\nset -o pipefail" "$GATE_SUB")
+write_transcript "$TRANSCRIPT_LATE_PIPEFAIL_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "$LATE_PIPEFAIL_GATE_CMD" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_LATE_PIPEFAIL_GATE" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "enabling pipefail after a pipe cannot launder its gate" || fail "late pipefail should not protect an earlier gate (rc=$RC)"
+
+TRANSCRIPT_DISABLED_PIPEFAIL_GATE="$T/disabled-pipefail-gate.jsonl"
+DISABLED_PIPEFAIL_GATE_CMD=$(printf "set -o pipefail\nset +o pipefail\nbash .speck/scripts/validation/validators/%s x | sed -n '1p'" "$GATE_SUB")
+write_transcript "$TRANSCRIPT_DISABLED_PIPEFAIL_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "$DISABLED_PIPEFAIL_GATE_CMD" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_DISABLED_PIPEFAIL_GATE" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "disabled pipefail cannot launder a later piped gate" || fail "disabled pipefail should fail GATE_USE (rc=$RC)"
+
 echo "── validator: gate names in echo output are not invocations ────────────────────────────────"
 TRANSCRIPT_ECHO_GATE="$T/echo-gate.jsonl"
 write_transcript "$TRANSCRIPT_ECHO_GATE" \
@@ -281,6 +342,16 @@ write_transcript "$TRANSCRIPT_ECHO_GATE" \
 run_validator "$WORK" --transcript "$TRANSCRIPT_ECHO_GATE" --profile "$PROFILE"
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
   && pass "echoing a gate name cannot satisfy GATE_USE" || fail "echo gate should fail GATE_USE (rc=$RC)"
+
+TRANSCRIPT_HEREDOC_GATE="$T/heredoc-gate.jsonl"
+HEREDOC_GATE_CMD=$(printf "cat <<'EOF'\nbash .speck/scripts/validation/validators/%s x\nEOF" "$GATE_SUB")
+write_transcript "$TRANSCRIPT_HEREDOC_GATE" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "$HEREDOC_GATE_CMD" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_HEREDOC_GATE" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
+  && pass "gate argv inside a heredoc cannot satisfy GATE_USE" || fail "heredoc gate text should fail GATE_USE (rc=$RC)"
 
 TRANSCRIPT_TROJAN_GATE="$T/trojan-gate.jsonl"
 write_transcript "$TRANSCRIPT_TROJAN_GATE" \
@@ -376,10 +447,22 @@ run_validator "$ROOT" --transcript "$TRANSCRIPT_UI_THIN" --profile "$UI_PROFILE"
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "validate-felt-axis.sh" && echo "$OUT" | grep -q "validate-taste-axis.sh" \
   && pass "UX-RC cannot pass GATE_USE without FELT and TASTE validators" || fail "thin UX-RC gates should fail (rc=$RC)"
 
+TRANSCRIPT_UI_NO_STAMP="$T/ui-no-stamp.jsonl"
+write_transcript "$TRANSCRIPT_UI_NO_STAMP" \
+  cmd "$UI_LOADER_CMD" "$T/ui-loader.out" 0 \
+  change "specs/projects/demo/stories/S001/validation-report.md" \
+  cmd "bash .speck/scripts/validation/validate-template.sh validation-report.md" /dev/null 0 \
+  cmd "bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md" /dev/null 0 \
+  cmd "bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict validation-report.md" /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_UI_NO_STAMP" --profile "$UI_PROFILE" --select claimed_state=ux-rc --select visual_host=web
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -q "stamp-truth.sh" \
+  && pass "UX-RC cannot pass GATE_USE without a fresh truth stamp" || fail "missing truth stamp should fail (rc=$RC)"
+
 TRANSCRIPT_UI_FULL="$T/ui-full.jsonl"
 write_transcript "$TRANSCRIPT_UI_FULL" \
   cmd "$UI_LOADER_CMD" "$T/ui-loader.out" 0 \
   change "specs/projects/demo/stories/S001/validation-report.md" \
+  cmd "bash .speck/scripts/stamp-truth.sh validation-report.md" /dev/null 0 \
   cmd "bash .speck/scripts/validation/validate-template.sh validation-report.md" /dev/null 0 \
   cmd "bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md" /dev/null 0 \
   cmd "bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict validation-report.md" /dev/null 0
