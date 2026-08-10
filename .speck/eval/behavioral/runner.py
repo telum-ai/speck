@@ -44,6 +44,16 @@ FORBIDDEN_JUDGE_PATTERNS = (
     r"(?i)speck[_ ]version", r"51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
     r"8ff081f1436024e5315fd68a3c2af505bd09ab83",
 )
+CONTEXT_PROFILES: dict[str, tuple[str, tuple[str, ...]]] = {
+    "epic-breakdown": ("epic-breakdown", ()),
+    "story-specify": ("story-specify", ()),
+    "story-tasks": ("story-tasks-backend", ()),
+    "implement-backend": ("story-implement-backend", ()),
+    "implement-ui": ("story-implement-ui", ()),
+    "validate-fake-green": ("story-validate-ui", ("claimed_state=ux-rc", "visual_host=web")),
+    "validate-unreachable": ("story-validate-ui", ("claimed_state=ux-rc", "visual_host=web")),
+    "evidence-contract": ("project-evidence-ui-build", ()),
+}
 
 
 def run_command(
@@ -157,6 +167,25 @@ def parse_events(raw: str) -> dict[str, Any]:
     return {"usage": usage, "commands": "\n".join(commands), "turn_completed": completed, "tool_events": tool_events, "errors": errors}
 
 
+def subject_run_valid(
+    *,
+    exit_code: int,
+    turn_completed: bool,
+    tool_events: int,
+    changed: bool,
+    context_required: bool,
+    context_conformance: dict[str, Any] | None,
+) -> bool:
+    base = exit_code == 0 and turn_completed and tool_events > 0 and changed
+    if not base or not context_required:
+        return base
+    return bool(
+        isinstance(context_conformance, dict)
+        and context_conformance.get("exit_code") == 0
+        and context_conformance.get("report", {}).get("pass") is True
+    )
+
+
 def anonymous_map(seed: int) -> dict[str, dict[str, str]]:
     rng = random.Random(seed)
     mapping: dict[str, dict[str, str]] = {}
@@ -209,6 +238,7 @@ def run_subject(
     model: str,
     effort: str,
     force: bool,
+    revision: str,
 ) -> dict[str, Any]:
     result_file, patch_file, final_file = result_paths(run_id, case.case_id, label)
     if result_file.exists() and not force:
@@ -219,7 +249,7 @@ def run_subject(
         shutil.rmtree(work)
     raw_dir.mkdir(parents=True, exist_ok=True)
     result_file.parent.mkdir(parents=True, exist_ok=True)
-    export_methodology(REVISIONS[condition], work)
+    export_methodology(revision, work)
     write_fixture(case, condition, work)
     final_path = raw_dir / f"{case.case_id}-{label}.final.txt"
     command = [
@@ -246,12 +276,40 @@ def run_subject(
     git("add", "-A", cwd=work, check=False)
     patch = git("diff", "--cached", "--binary", cwd=work, check=False)
     scoring = score_case(case.case_id, work, final, parsed["commands"], patch)
+    context_conformance: dict[str, Any] | None = None
+    context_profile = CONTEXT_PROFILES.get(case.case_id)
+    context_validator = work / ".speck/scripts/validation/validators/validate-context-transcript.py"
+    if condition == "v11" and context_profile and context_validator.is_file():
+        profile, selections = context_profile
+        context_cmd = [
+            sys.executable,
+            str(context_validator),
+            "--transcript", str(raw_path),
+            "--profile", profile,
+            "--root", str(work),
+            "--contract", str(work / ".speck/reference/skill-load-contracts.json"),
+            "--json",
+        ]
+        for selection in selections:
+            context_cmd.extend(("--select", selection))
+        context_proc = run_command(context_cmd, cwd=work, timeout=120)
+        try:
+            context_report = json.loads(context_proc.stdout)
+        except json.JSONDecodeError:
+            context_report = {"pass": False, "parse_error": context_proc.stdout[-2000:]}
+        context_conformance = {
+            "profile": profile,
+            "selections": list(selections),
+            "exit_code": context_proc.returncode,
+            "report": context_report,
+            "stderr": context_proc.stderr[-2000:],
+        }
     usage = parsed["usage"]
     result: dict[str, Any] = {
         "case_id": case.case_id,
         "label": label,
         "condition": condition,
-        "revision": REVISIONS[condition],
+        "revision": revision,
         "model": model,
         "effort": effort,
         "exit_code": proc.returncode,
@@ -263,10 +321,18 @@ def run_subject(
         "usage": usage,
         "required_corrections": sum(1 for check in scoring["checks"] if not check["ok"]),
         "score": scoring,
+        "context_conformance": context_conformance,
         "git_status": status.splitlines(),
         "events_sha256": hashlib.sha256(raw.encode()).hexdigest(),
         "patch_sha256": hashlib.sha256(patch.encode()).hexdigest(),
-        "valid_run": proc.returncode == 0 and parsed["turn_completed"] and parsed["tool_events"] > 0 and bool(status.strip()),
+        "valid_run": subject_run_valid(
+            exit_code=proc.returncode,
+            turn_completed=parsed["turn_completed"],
+            tool_events=parsed["tool_events"],
+            changed=bool(status.strip()),
+            context_required=condition == "v11" and context_profile is not None,
+            context_conformance=context_conformance,
+        ),
     }
     result_file.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     patch_file.write_text(patch)
@@ -285,13 +351,18 @@ def command_run(args: argparse.Namespace) -> int:
     run_root = RUNS / args.run_id
     run_root.mkdir(parents=True, exist_ok=True)
     mapping = anonymous_map(args.seed)
+    revisions = dict(REVISIONS)
+    if args.v10_revision:
+        revisions["v10"] = git("rev-parse", args.v10_revision).strip()
+    if args.v11_revision:
+        revisions["v11"] = git("rev-parse", args.v11_revision).strip()
     manifest_path = run_root / "manifest.json"
     frozen = harness_fingerprint()
     isolation = isolation_evidence(args.run_id)
     manifest = {
         "run_id": args.run_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "revisions": REVISIONS,
+        "revisions": revisions,
         "model": args.model,
         "effort": args.effort,
         "seed": args.seed,
@@ -319,7 +390,7 @@ def command_run(args: argparse.Namespace) -> int:
         if unknown:
             raise RuntimeError(f"unknown cases: {', '.join(unknown)}")
         selected = [CASE_BY_ID[x] for x in selected_ids]
-    jobs = [(case, condition, mapping[case.case_id][condition]) for case in selected for condition in ("v10", "v11")]
+    jobs = [(case, condition, mapping[case.case_id][condition], revisions[condition]) for case in selected for condition in ("v10", "v11")]
     random.Random(args.seed + 1).shuffle(jobs)
     print(f"run={args.run_id} jobs={len(jobs)} model={args.model} effort={args.effort} workers={args.workers}", flush=True)
     failures = 0
@@ -334,8 +405,9 @@ def command_run(args: argparse.Namespace) -> int:
                 model=args.model,
                 effort=args.effort,
                 force=args.force,
+                revision=revision,
             ): (case, condition, label)
-            for case, condition, label in jobs
+            for case, condition, label, revision in jobs
         }
         for future in concurrent.futures.as_completed(futures):
             case, condition, label = futures[future]
@@ -351,18 +423,20 @@ def command_run(args: argparse.Namespace) -> int:
     return 1 if failures else 0
 
 
-def scrub_for_judge(text: str) -> str:
+def scrub_for_judge(text: str, revisions: dict[str, str]) -> str:
     text = re.sub(r"(?i)^.*speck[_ ]version.*$", "[condition metadata removed]", text, flags=re.M)
     text = re.sub(r"(?i)\(\s*speck\s+\d+(?:\.\d+)*\s*\)", "(Speck condition)", text)
     text = re.sub(r"(?i)\bspeck\s+v?\d+(?:\.\d+)*\b", "Speck condition", text)
     text = re.sub(r"\b(?:10\.5\.0|11\.0\.0)\b", "[condition-version]", text)
-    text = text.replace(REVISIONS["v10"], "[condition-revision]").replace(REVISIONS["v11"], "[condition-revision]")
+    for revision in revisions.values():
+        text = text.replace(revision, "[condition-revision]")
     text = re.sub(r"(?i)\bv(?:ersion\s*)?(?:10|11)(?:\.\d+)*\b", "condition", text)
     return text
 
 
-def assert_judge_blind(text: str) -> None:
-    hits = [pattern for pattern in FORBIDDEN_JUDGE_PATTERNS if re.search(pattern, text)]
+def assert_judge_blind(text: str, revisions: dict[str, str]) -> None:
+    patterns = (*FORBIDDEN_JUDGE_PATTERNS, *(re.escape(revision) for revision in revisions.values()))
+    hits = [pattern for pattern in patterns if re.search(pattern, text)]
     if hits:
         raise RuntimeError(f"judge prompt leaked condition identity: {hits}")
 
@@ -386,7 +460,7 @@ def extract_json_payload(stdout: str) -> dict[str, Any]:
     return value
 
 
-def judge_prompt(bundle: list[Case], run_id: str, mapping: dict[str, dict[str, str]]) -> str:
+def judge_prompt(bundle: list[Case], run_id: str, mapping: dict[str, dict[str, str]], revisions: dict[str, str]) -> str:
     blocks: list[str] = []
     for case in bundle:
         outputs: list[str] = []
@@ -395,8 +469,8 @@ def judge_prompt(bundle: list[Case], run_id: str, mapping: dict[str, dict[str, s
             condition = condition_by_label[label]
             result_file, patch_file, final_file = result_paths(run_id, case.case_id, label)
             result = json.loads(result_file.read_text())
-            patch = scrub_for_judge(patch_file.read_text(errors="replace"))
-            final = scrub_for_judge(final_file.read_text(errors="replace"))
+            patch = scrub_for_judge(patch_file.read_text(errors="replace"), revisions)
+            final = scrub_for_judge(final_file.read_text(errors="replace"), revisions)
             if len(patch) > 30000:
                 patch = patch[:30000] + "\n[patch truncated]\n"
             outputs.append(f"### Output {label}\nFinal response:\n{final}\n\nArtifact patch:\n```diff\n{patch}\n```\nRun completed: {result['valid_run']}")
@@ -418,13 +492,14 @@ Return JSON only, exactly:
 
 {chr(10).join(blocks)}
 """
-    assert_judge_blind(prompt)
+    assert_judge_blind(prompt, revisions)
     return prompt
 
 
 def command_judge(args: argparse.Namespace) -> int:
     manifest = load_manifest(args.run_id)
     mapping = manifest["anonymous_mapping"]
+    revisions = manifest["revisions"]
     missing: list[str] = []
     for case in CASES:
         for condition in ("v10", "v11"):
@@ -439,7 +514,7 @@ def command_judge(args: argparse.Namespace) -> int:
     all_cases: list[dict[str, Any]] = []
     blind_checks: list[dict[str, Any]] = []
     for index, bundle in enumerate(bundles, 1):
-        prompt = judge_prompt(bundle, args.run_id, mapping)
+        prompt = judge_prompt(bundle, args.run_id, mapping, revisions)
         prompt_path = judge_dir / f"bundle-{index}.prompt.md"
         raw_path = judge_dir / f"bundle-{index}.raw.json"
         prompt_path.write_text(prompt)
@@ -465,7 +540,8 @@ def command_judge(args: argparse.Namespace) -> int:
         print(f"judge bundle {index}/{len(bundles)} complete", flush=True)
     output = REPORTS / args.run_id / "judge.json"
     output.write_text(json.dumps({"model": args.model, "blinded": True, "cases": all_cases}, indent=2, sort_keys=True) + "\n")
-    (REPORTS / args.run_id / "judge-blinding.json").write_text(json.dumps({"checks": blind_checks, "patterns": FORBIDDEN_JUDGE_PATTERNS}, indent=2) + "\n")
+    blind_patterns = (*FORBIDDEN_JUDGE_PATTERNS, *(re.escape(revision) for revision in revisions.values()))
+    (REPORTS / args.run_id / "judge-blinding.json").write_text(json.dumps({"checks": blind_checks, "patterns": blind_patterns}, indent=2) + "\n")
     return 0
 
 
@@ -570,6 +646,20 @@ def command_report(args: argparse.Namespace) -> int:
     false_v11 = sum(bool(row["v11"]["score"]["false_green"]) for row in rows)
     valid_v10 = sum(bool(row["v10"]["valid_run"]) for row in rows)
     valid_v11 = sum(bool(row["v11"]["valid_run"]) for row in rows)
+    rescored = any("rescored_at" in row[condition] for row in rows for condition in ("v10", "v11"))
+    context_reports = [
+        row["v11"]["context_conformance"]
+        for row in rows
+        if isinstance(row["v11"].get("context_conformance"), dict)
+    ]
+    context_axes: dict[str, dict[str, int]] = {}
+    for conformance in context_reports:
+        axes = conformance.get("report", {}).get("axes", {})
+        for axis in ("REACH", "SELECTIVITY", "TIMING", "GATE_USE"):
+            if axis in axes:
+                counts = context_axes.setdefault(axis, {"pass": 0, "checked": 0})
+                counts["checked"] += 1
+                counts["pass"] += int(bool(axes[axis].get("ok")))
     input_v10 = values("v10", lambda x: x["usage"]["input_tokens"])
     input_v11 = values("v11", lambda x: x["usage"]["input_tokens"])
     cached_v10 = values("v10", lambda x: x["usage"]["cached_input_tokens"])
@@ -581,10 +671,19 @@ def command_report(args: argparse.Namespace) -> int:
     parity = det_ci[0] > -5 and false_v11 <= false_v10
     improvement = statistics.mean(det_diff) > 0 and false_v11 <= false_v10 and judge_direction is not None and judge_direction >= 0
     drastic = statistics.mean(det_diff) >= 15 and statistics.mean(input_v11) <= 0.75 * statistics.mean(input_v10) and false_v11 <= false_v10
-    classification = "regression" if regression else "drastic improvement" if drastic else "improvement" if improvement else "behavioral parity" if parity else "inconclusive"
+    all_runs_valid = valid_v10 == len(CASES) and valid_v11 == len(CASES)
+    classification = (
+        "invalid run"
+        if not all_runs_valid
+        else "regression" if regression
+        else "drastic improvement" if drastic
+        else "improvement" if improvement
+        else "behavioral parity" if parity
+        else "inconclusive"
+    )
     summary = {
         "run_id": args.run_id,
-        "revisions": REVISIONS,
+        "revisions": manifest["revisions"],
         "model": manifest["model"],
         "effort": manifest["effort"],
         "judge_model": judge_data.get("model"),
@@ -610,6 +709,11 @@ def command_report(args: argparse.Namespace) -> int:
             "bootstrap_95_ci": combined_ci,
         },
         "false_greens": {"v10": false_v10, "v11": false_v11},
+        "context_conformance": {
+            "applicable_runs": len(context_reports),
+            "overall_pass": sum(bool(item.get("report", {}).get("pass")) for item in context_reports),
+            "axes": context_axes,
+        },
         "required_corrections": {
             "v10": sum(int(row["v10"]["required_corrections"]) for row in rows),
             "v11": sum(int(row["v11"]["required_corrections"]) for row in rows),
@@ -638,11 +742,38 @@ def command_report(args: argparse.Namespace) -> int:
             f"{v10['required_corrections']} | {v11['required_corrections']} | {v10['usage']['input_tokens']} | {v11['usage']['input_tokens']} |"
         )
     ratio = statistics.mean(combined_v11) / statistics.mean(combined_v10) if statistics.mean(combined_v10) else float("inf")
+    scorer_note = """
+## Scorer isolation correction
+
+Frozen subject artifacts were rescored after document discovery was scoped to
+`specs/**` and the canonical `lifecycle_state` field was recognized. Subjects,
+token counts, transcripts, and blinded judge verdicts were not rerun. The
+scorer self-test now seeds both methodology-fixture contamination and a real
+project mutant so this correction can no longer green itself.
+""" if rescored else ""
+    context_section = ""
+    if context_reports:
+        axis_rows = "\n".join(
+            f"| {axis} | {counts['pass']}/{counts['checked']} |"
+            for axis, counts in context_axes.items()
+        )
+        overall_context_pass = sum(bool(item.get("report", {}).get("pass")) for item in context_reports)
+        context_section = f"""
+## JIT context conformance
+
+Executable profiles applied to {len(context_reports)} v11 subject runs; {overall_context_pass}/{len(context_reports)} passed all applicable axes.
+
+| Axis | Passing / checked |
+|---|---:|
+{axis_rows}
+
+This is a leading process signal only. It does not raise hidden-check or blind-judge quality scores.
+"""
     report = f"""# Speck v10-v11 behavioral tournament
 
 Run: `{args.run_id}`
 Subjects: `{manifest['model']}` at `{manifest['effort']}` reasoning, identical prompts, isolated workspaces
-Revisions: v10 `{REVISIONS['v10']}` · v11 `{REVISIONS['v11']}`
+Revisions: v10 `{manifest['revisions']['v10']}` · v11 `{manifest['revisions']['v11']}`
 Blinded judge: `{judge_data.get('model')}` ({'complete' if judge_complete else 'not complete'})
 
 ## Verdict
@@ -650,6 +781,8 @@ Blinded judge: `{judge_data.get('model')}` ({'complete' if judge_complete else '
 Predeclared classification: **{classification}**. The primary hidden-check score changed by **{fmt(statistics.mean(det_diff))} points** in v11 (paired bootstrap 95% CI {fmt(det_ci[0])} to {fmt(det_ci[1])}). V11 won/tied/lost {det_wins}/{det_ties}/{det_losses} cases; two-sided sign-test p={sign_test_p(det_wins, det_losses):.4f}. False greens were {false_v10} for v10 and {false_v11} for v11.
 
 The predeclared 70% deterministic + 30% blinded-judge score was {fmt(statistics.mean(combined_v10))} for v10 and {fmt(statistics.mean(combined_v11))} for v11, a {fmt(statistics.mean(combined_diff))}-point change (95% CI {fmt(combined_ci[0])} to {fmt(combined_ci[1])}). The observed quality multiplier is **{ratio:.2f}x**, so this tournament {'does' if ratio >= 4.0 else 'does not'} support a literal “300% better” claim.
+
+{scorer_note}
 
 ## Paired results
 
@@ -670,6 +803,8 @@ The predeclared 70% deterministic + 30% blinded-judge score was {fmt(statistics.
 | Mean uncached input tokens | {fmt(summary['input_tokens']['uncached_mean_v10'], 0)} | {fmt(summary['input_tokens']['uncached_mean_v11'], 0)} | {100 * (summary['input_tokens']['uncached_mean_v11'] / summary['input_tokens']['uncached_mean_v10'] - 1):+.1f}% |
 | Mean wall time | {fmt(summary['wall_seconds']['mean_v10'])}s | {fmt(summary['wall_seconds']['mean_v11'])}s | {100 * (summary['wall_seconds']['mean_v11'] / summary['wall_seconds']['mean_v10'] - 1):+.1f}% |
 | Valid subject runs | {valid_v10}/12 | {valid_v11}/12 | {valid_v11 - valid_v10:+d} |
+
+{context_section}
 
 ## Interpretation boundary
 
@@ -692,7 +827,22 @@ def command_self_test(_: argparse.Namespace) -> int:
         deletion_scores = {case.case_id: score_case(case.case_id, Path(directory) / case.case_id, "", "", "")["score"] for case in CASES}
     outcome["deletion_mutant_scores"] = deletion_scores
     outcome["all_case_families_turn_red"] = all(float(score) < 50 for score in deletion_scores.values())
-    outcome["passed"] = bool(outcome["passed"] and outcome["case_count"] == 12 and outcome["unique_case_ids"] and outcome["five_item_rubrics"] and outcome["all_case_families_turn_red"])
+    conformance_green = {"exit_code": 0, "report": {"pass": True}}
+    conformance_red = {"exit_code": 1, "report": {"pass": False}}
+    outcome["context_conformance_blocks_valid_run"] = bool(
+        subject_run_valid(exit_code=0, turn_completed=True, tool_events=1, changed=True, context_required=False, context_conformance=None)
+        and subject_run_valid(exit_code=0, turn_completed=True, tool_events=1, changed=True, context_required=True, context_conformance=conformance_green)
+        and not subject_run_valid(exit_code=0, turn_completed=True, tool_events=1, changed=True, context_required=True, context_conformance=conformance_red)
+        and not subject_run_valid(exit_code=0, turn_completed=True, tool_events=1, changed=True, context_required=True, context_conformance=None)
+    )
+    outcome["passed"] = bool(
+        outcome["passed"]
+        and outcome["case_count"] == 12
+        and outcome["unique_case_ids"]
+        and outcome["five_item_rubrics"]
+        and outcome["all_case_families_turn_red"]
+        and outcome["context_conformance_blocks_valid_run"]
+    )
     print(json.dumps(outcome, indent=2))
     return 0 if outcome["passed"] else 1
 
@@ -709,6 +859,8 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--effort", default=DEFAULT_EFFORT)
     run.add_argument("--seed", type=int, default=DEFAULT_SEED)
     run.add_argument("--workers", type=int, default=2)
+    run.add_argument("--v10-revision", help="override the pinned baseline revision")
+    run.add_argument("--v11-revision", help="override the pinned candidate revision")
     run.add_argument("--force", action="store_true")
     run.set_defaults(func=command_run)
     judge = sub.add_parser("judge", help="run blinded Cursor judge")

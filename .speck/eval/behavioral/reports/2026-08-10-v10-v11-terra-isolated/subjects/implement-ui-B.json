@@ -16,7 +16,8 @@
   "label": "B",
   "model": "gpt-5.6-terra",
   "patch_sha256": "236d78ee80a8e7e0c4d7d96b084ed665755da65fafaa52a05921b9b34e1baff7",
-  "required_corrections": 0,
+  "required_corrections": 1,
+  "rescored_at": "2026-08-10T09:42:34.978441+00:00",
   "revision": "8ff081f1436024e5315fd68a3c2af505bd09ab83",
   "score": {
     "checks": [
@@ -39,9 +40,9 @@
         "weight": 1.25
       },
       {
-        "earned": 1.25,
+        "earned": 0.0,
         "label": "ui-behavior-4",
-        "ok": true,
+        "ok": false,
         "weight": 1.25
       },
       {
@@ -69,12 +70,12 @@
         "weight": 1.25
       }
     ],
-    "earned": 10.0,
+    "earned": 8.75,
     "false_green": false,
     "intervention": false,
     "methodology_edit": false,
     "possible": 10.0,
-    "score": 100.0
+    "score": 87.5
   },
   "timeout": false,
   "tool_events": 28,

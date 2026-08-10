@@ -29,6 +29,37 @@ def router_reaches(router: str, rel: str) -> bool:
     return False
 
 
+def contracted_files(root: Path, entrypoint: str) -> list[Path]:
+    """Return the union of files executable profiles can load for an entrypoint."""
+    contract_path = root / ".speck" / "reference" / "skill-load-contracts.json"
+    try:
+        data = json.loads(contract_path.read_text())
+        profiles = data["profiles"]
+    except (OSError, KeyError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"executable load contracts unavailable: {exc}") from exc
+
+    paths: set[str] = set()
+    for profile in profiles.values():
+        if profile.get("entrypoint") != entrypoint:
+            continue
+        paths.update(profile.get("required_files", []))
+        for selector in profile.get("selectors", {}).values():
+            for value in selector.get("values", {}).values():
+                paths.update(value.get("required_files", []))
+
+    resolved: list[Path] = []
+    for rel in sorted(paths):
+        path = (root / rel).resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as exc:
+            raise RuntimeError(f"contracted path escapes repository: {rel}") from exc
+        if not path.is_file():
+            raise RuntimeError(f"contracted corpus file missing: {rel}")
+        resolved.append(path)
+    return resolved
+
+
 def skill_corpus(root: Path, skill: str) -> str:
     skill_dir = root / ".cursor" / "skills" / skill
     router_path = skill_dir / "SKILL.md"
@@ -36,10 +67,17 @@ def skill_corpus(root: Path, skill: str) -> str:
         raise RuntimeError(f"owning skill missing: {skill}")
     router = router_path.read_text()
     parts = [router]
+    loaded = {router_path.resolve()}
     refs = skill_dir / "references"
     for path in sorted(refs.rglob("*.md")) if refs.is_dir() else []:
         if router_reaches(router, path.relative_to(refs).as_posix()):
             parts.append(path.read_text())
+            loaded.add(path.resolve())
+    entrypoint = router_path.relative_to(root).as_posix()
+    for path in contracted_files(root, entrypoint):
+        if path not in loaded:
+            parts.append(path.read_text())
+            loaded.add(path)
     return "\n".join(parts)
 
 

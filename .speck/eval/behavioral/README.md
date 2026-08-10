@@ -58,6 +58,12 @@ python3 .speck/eval/behavioral/runner.py run \
 # Complete remaining pairs without overwriting the pilot.
 python3 .speck/eval/behavioral/runner.py run --cases all --workers 2
 
+# Re-test a committed candidate without changing the frozen defaults.
+python3 .speck/eval/behavioral/runner.py run \
+  --run-id <new-run-id> \
+  --v11-revision <candidate-commit> \
+  --cases all --workers 2
+
 # Discover the installed Cursor model slug first, then judge and report.
 cursor-agent status --format json
 cursor-agent --list-models
@@ -67,10 +73,33 @@ python3 .speck/eval/behavioral/runner.py report
 
 Raw event streams and workspaces are ignored under `.runs/`. Checked-in evidence lives under `reports/<run-id>/`: result JSON, subject patches, final responses, blinded judge output, summary JSON, and report Markdown. Result JSON records event hashes, model/effort, token usage, wall time, completion signals, and artifact changes.
 
+For revisions with executable JIT profiles, inspect methodology conformance
+separately from output quality:
+
+```bash
+python3 .speck/scripts/validation/validators/validate-context-transcript.py \
+  --transcript <subject.events.jsonl> \
+  --profile story-validate-ui \
+  --select claimed_state=ux-rc \
+  --select visual_host=web \
+  --root <subject-workspace> --json
+```
+
+The non-collapsible axes are REACH, SELECTIVITY, TIMING, and GATE_USE.
+The exact loader argv, explicit zero exit, emitted context bodies, receipt
+order, hashes, and byte counts are checked. Gate use is invocation-shaped, not
+substring-shaped; selected states may require multiple gates. Passing these
+axes proves context-path conformance only; hidden scoring, blind judgment,
+audit, and LARP still own semantic use and quality. A contracted subject with a
+red conformance report is an invalid run, so it cannot support an improvement
+classification.
+The runner applies the declared profile automatically to the eight relevant
+v11 cases and records the report alongside each subject result.
+
 ## Harness validity
 
-`self-test` checks that the corpus has 12 unique five-item rubrics, deletion-mutation-tests all 12 scorer families, and behavior-mutation-tests the backend scorer. A conforming backend implementation must score 8/8 behavior checks; an always-green mutant must score lower. Every case family must turn red when its artifact is deleted. Subject validity additionally requires exit 0, a runtime `turn.completed` event, at least one tool event, and a changed artifact.
+`self-test` checks that the corpus has 12 unique five-item rubrics, deletion-mutation-tests all 12 scorer families, behavior-mutation-tests the backend and UI scorers, isolates project artifacts from exported methodology fixtures, and recognizes canonical `lifecycle_state`. A conforming backend implementation must score 8/8 behavior checks; an always-green mutant must score lower. Every case family must turn red when its artifact is deleted. Subject validity additionally requires exit 0, a runtime `turn.completed` event, at least one tool event, and a changed artifact.
 
-After the isolated run, audit found that the frozen UI scorer assumed an unrequired `{items}` state shape. The reusable harness now mutation-tests a conforming array-state implementation and a status-clobbering mutant, accepts array or object state, and requires already-confirmed unselected items to remain confirmed. The completed isolated run is not silently rescored; its `decision.md` excludes/sensitivity-tests that invalid primary pair.
+After the isolated run, audit found that the UI scorer assumed an unrequired `{items}` state shape and document scorers searched exported `.speck/eval/fixtures` as if they were subject artifacts. The reusable harness now mutation-tests the UI state/status boundary, scopes project documents to `specs/**`, accepts canonical `lifecycle_state`, and seeds contamination plus real-project mutants. Frozen subjects were explicitly rescored without rerunning transcripts or the blind judge; the report records that correction.
 
 The first run id, `2026-08-10-v10-v11-terra`, is retained as invalid evidence. Its audit found parent-repository ESM contamination, incomplete judge scrubbing/order blinding, and an unverifiable post-run scorer freeze. It must not be used for a branch decision. The corrected decision run uses the `-isolated` suffix.

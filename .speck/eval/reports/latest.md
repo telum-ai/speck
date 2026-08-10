@@ -1,6 +1,6 @@
 # A1-lite scorecard
 
-Candidate: current working tree (fixture rules + owning skill corpus)
+Candidate: current working tree (fixture rules + executable skill corpus)
 Baseline: immutable `reports/baseline.json`
 
 | Fixture | Class | Expect | Result | Verdict |

@@ -14,6 +14,7 @@
   "model": "gpt-5.6-terra",
   "patch_sha256": "f3e3c599de5c26da01ea2afd0af17f44b8444fb963a8b0d7f532244ddbb6bd23",
   "required_corrections": 0,
+  "rescored_at": "2026-08-10T09:42:34.846658+00:00",
   "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
   "score": {
     "checks": [

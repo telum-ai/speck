@@ -110,7 +110,7 @@ def main() -> int:
     report = [
         "# A1-lite scorecard",
         "",
-        "Candidate: current working tree (fixture rules + owning skill corpus)",
+        "Candidate: current working tree (fixture rules + executable skill corpus)",
         "Baseline: immutable `reports/baseline.json`",
         "",
         "| Fixture | Class | Expect | Result | Verdict |",
@@ -139,7 +139,7 @@ def main() -> int:
     )
     report.extend(f"  - {item}" for item in regressions)
     report.append("")
-    rendered = "\n".join(report) + "\n"
+    rendered = "\n".join(report).rstrip() + "\n"
     print(rendered, end="")
     if not args.check:
         latest_path.write_text(rendered)

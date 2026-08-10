@@ -17,44 +17,45 @@
   "label": "A",
   "model": "gpt-5.6-terra",
   "patch_sha256": "3088797700ec41c0000eb254f2c0577f7e96696c10bf7988f1a31ce06397fa17",
-  "required_corrections": 6,
+  "required_corrections": 0,
+  "rescored_at": "2026-08-10T09:42:34.939050+00:00",
   "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
   "score": {
     "checks": [
       {
-        "earned": 0.0,
+        "earned": 1.25,
         "label": "ui-behavior-1",
-        "ok": false,
+        "ok": true,
         "weight": 1.25
       },
       {
-        "earned": 0.0,
+        "earned": 1.25,
         "label": "ui-behavior-2",
-        "ok": false,
+        "ok": true,
         "weight": 1.25
       },
       {
-        "earned": 0.0,
+        "earned": 1.25,
         "label": "ui-behavior-3",
-        "ok": false,
+        "ok": true,
         "weight": 1.25
       },
       {
-        "earned": 0.0,
+        "earned": 1.25,
         "label": "ui-behavior-4",
-        "ok": false,
+        "ok": true,
         "weight": 1.25
       },
       {
-        "earned": 0.0,
+        "earned": 1.25,
         "label": "ui-behavior-5",
-        "ok": false,
+        "ok": true,
         "weight": 1.25
       },
       {
-        "earned": 0.0,
+        "earned": 1.25,
         "label": "ui-behavior-6",
-        "ok": false,
+        "ok": true,
         "weight": 1.25
       },
       {
@@ -70,12 +71,12 @@
         "weight": 1.25
       }
     ],
-    "earned": 2.5,
+    "earned": 10.0,
     "false_green": false,
     "intervention": false,
     "methodology_edit": false,
     "possible": 10.0,
-    "score": 25.0
+    "score": 100.0
   },
   "timeout": false,
   "tool_events": 46,

@@ -2,30 +2,35 @@
   "classification": "inconclusive",
   "combined_70_30": {
     "bootstrap_95_ci": [
-      -9.333541666666667,
-      11.533541666666645
+      -7.229166666666671,
+      0.5626041666666575
     ],
     "mean": {
-      "v10": 84.45833333333333,
-      "v11": 84.80833333333334
+      "v10": 88.83333333333333,
+      "v11": 85.5375
     },
-    "mean_difference_v11_minus_v10": 0.3499999999999985
+    "mean_difference_v11_minus_v10": -3.2958333333333365
+  },
+  "context_conformance": {
+    "applicable_runs": 0,
+    "axes": {},
+    "overall_pass": 0
   },
   "deterministic": {
     "bootstrap_95_ci": [
-      -8.75,
-      17.916666666666668
+      -7.083333333333333,
+      1.25
     ],
     "mean": {
-      "v10": 84.58333333333333,
-      "v11": 87.08333333333333
+      "v10": 90.83333333333333,
+      "v11": 88.125
     },
-    "mean_difference_v11_minus_v10": 2.5,
-    "sign_test_p": 1.0,
+    "mean_difference_v11_minus_v10": -2.7083333333333335,
+    "sign_test_p": 0.625,
     "wins_ties_losses": {
       "losses": 3,
-      "ties": 7,
-      "wins": 2
+      "ties": 8,
+      "wins": 1
     }
   },
   "effort": "medium",
@@ -63,7 +68,7 @@
   "judge_model": "cursor-grok-4.5-high",
   "model": "gpt-5.6-terra",
   "required_corrections": {
-    "v10": 13,
+    "v10": 7,
     "v11": 9
   },
   "revisions": {
