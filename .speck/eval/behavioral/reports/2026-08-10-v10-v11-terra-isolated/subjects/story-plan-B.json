@@ -1,0 +1,75 @@
+{
+  "case_id": "story-plan",
+  "condition": "v10",
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "e19c64b63a03ccbe009b95729b7e59b644a7ca77aaab17229bfb5a771f6abdb8",
+  "exit_code": 0,
+  "git_status": [
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/",
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/data-model.md",
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/plan.md",
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/quickstart.md"
+  ],
+  "label": "B",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "bc7718be471caaaf5350a44acdd04a430882272bcb551a32dfa47b933127d867",
+  "required_corrections": 0,
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.5,
+        "label": "plan",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "reserve-finalize",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 2.5,
+        "label": "symmetric-recredit",
+        "ok": true,
+        "weight": 2.5
+      },
+      {
+        "earned": 1.5,
+        "label": "atomic-concurrency",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "idempotency",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 2,
+        "label": "failure-tests",
+        "ok": true,
+        "weight": 2
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 34,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 1124352,
+    "input_tokens": 1272437,
+    "output_tokens": 23278
+  },
+  "valid_run": true,
+  "wall_seconds": 478.666
+}

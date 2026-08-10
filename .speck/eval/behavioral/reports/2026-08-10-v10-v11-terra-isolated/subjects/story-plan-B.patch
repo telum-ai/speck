@@ -1,0 +1,458 @@
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/retry-credit-reservation.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/retry-credit-reservation.md
+new file mode 100644
+index 0000000..81c4708
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/retry-credit-reservation.md
+@@ -0,0 +1,55 @@
++# Retry credit reservation contract
++
++## Scope
++
++Internal application-service contract. No HTTP, GraphQL, or message-bus convention exists in this workspace, so this document does not invent an external endpoint.
++
++## Shared result
++
++`ReservationResult`: `reservation_id`, `workspace_id`, `attempt_key`, `status`, `credit_amount`, optional `provider_correlation_id`, optional `terminal_reason`, and `idempotent_replay`.
++
++## Operations
++
++### `reserveRetryCredit`
++
++**Input**: trusted `workspace_id`, stable `attempt_key`.  
++**Success**: atomically decrement one available credit and create `reserved`.  
++**Replay**: return existing reservation, with no second decrement.  
++**Exhausted**: return a distinct quota-exhausted result; do not invoke the provider.
++
++### `finalizeRetryCredit`
++
++**Input**: trusted workspace, attempt key, optional provider correlation after acceptance.  
++**Success**: conditionally change `reserved → finalized` once; balance stays charged.  
++**Replay/conflict**: return terminal record; never alter a released record.
++
++### `releaseRetryCredit`
++
++**Input**: trusted workspace, attempt key, reason `provider_failed`, `timed_out`, or `cancelled`.  
++**Success**: conditionally change `reserved → released` and re-credit one in the same transaction.  
++**Replay/conflict**: return terminal record; never alter a finalized record.
++
++### `dispatchReminderRetry`
++
++1. Reserve before provider I/O.
++2. Skip provider I/O when quota is exhausted.
++3. Invoke provider outside transaction, using attempt key as provider idempotency key when supported.
++4. Finalize on acceptance; release on failure, timeout, or cancellation.
++5. Route callback redelivery through the same terminal operations.
++
++## Error semantics
++
++| Condition | Result |
++|-----------|--------|
++| Unknown/mismatched workspace or callback correlation | Reject and audit; no mutation. |
++| Duplicate terminal callback | Existing terminal result with `idempotent_replay=true`. |
++| Conflicting terminal callback | Persisted terminal result remains authoritative; no mutation. |
++| Interruption after reserve | Recovery resolves durable reservation through the same service operations. |
++
++## Contract-test obligations
++
++- One credit plus two concurrent distinct attempts yields one reservation and no negative balance.
++- Replayed reserve does not debit twice.
++- Accepted flow finalizes without re-credit.
++- Failed, timed-out, and cancelled flows release once.
++- Replayed and racing terminal signals produce one terminal effect.
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/retry-credit-reservation.yaml b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/retry-credit-reservation.yaml
+new file mode 100644
+index 0000000..1bb0279
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/retry-credit-reservation.yaml
+@@ -0,0 +1,37 @@
++contract_version: "1.0"
++kind: internal-service
++name: retry-credit-reservation
++idempotency:
++  key: attempt_key
++  uniqueness_scope:
++    - workspace_id
++    - attempt_key
++reservation:
++  credit_amount: 1
++  states: [reserved, finalized, released]
++  transitions:
++    reserve: { from: new, to: reserved, balance_delta: -1, requires_available_credits: 1 }
++    finalize: { from: reserved, to: finalized, balance_delta: 0 }
++    release:
++      from: reserved
++      to: released
++      balance_delta: 1
++      reasons: [provider_failed, timed_out, cancelled]
++operations:
++  reserveRetryCredit:
++    input: [workspace_id, attempt_key]
++    replay: return_existing_reservation
++    quota_exhausted: no_provider_dispatch
++  finalizeRetryCredit:
++    input: [workspace_id, attempt_key, provider_correlation_id]
++    predicate: status_is_reserved
++  releaseRetryCredit:
++    input: [workspace_id, attempt_key, terminal_reason]
++    predicate: status_is_reserved
++  dispatchReminderRetry:
++    sequence: [reserveRetryCredit, provider_dispatch, finalizeRetryCredit_or_releaseRetryCredit]
++invariants:
++  - available_retry_credits_non_negative
++  - terminal_transition_is_exactly_once
++  - provider_io_outside_transaction
++  - callback_workspace_and_correlation_must_match
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/data-model.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/data-model.md
+new file mode 100644
+index 0000000..f385c2e
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/data-model.md
+@@ -0,0 +1,54 @@
++# S004 Provider retry quota — Data model
++
++## Scope
++
++This logical model supplies durable, exactly-once accounting. Concrete types and migration syntax wait for the repository's actual runtime and persistence conventions.
++
++## Entities
++
++### WorkspaceRetryQuota
++
++| Field | Type | Rules |
++|-------|------|-------|
++| `workspace_id` | stable workspace identifier | Primary key; trusted dispatch context determines it. |
++| `available_retry_credits` | non-negative integer | Must remain `>= 0`; reservation decrements and release increments it. |
++| `updated_at` | timestamp | Updated with each balance mutation. |
++
++### RetryCreditReservation
++
++| Field | Type | Rules |
++|-------|------|-------|
++| `reservation_id` | stable identifier | Primary key. |
++| `workspace_id` | identifier | References its workspace quota. |
++| `attempt_key` | opaque key | Unique with workspace; stable across retries and callbacks. |
++| `credit_amount` | integer | Fixed positive value `1` for S004. |
++| `status` | enum | `reserved`, `finalized`, or `released`. |
++| `provider_correlation_id` | nullable opaque id | Stored when the provider supplies one. |
++| `terminal_reason` | nullable | Required for release: `provider_failed`, `timed_out`, or `cancelled`. |
++| `created_at`, `terminal_at` | timestamps | Terminal timestamp is written once. |
++
++## Relationships and state machine
++
++- One workspace quota has many reservations.
++- Unique `(workspace_id, attempt_key)` binds duplicate requests to one reservation.
++
++```
++new --reserve--> reserved --accepted--> finalized
++                    └--failed / timeout / cancelled--> released
++```
++
++`finalized` and `released` are immutable terminal states. A duplicate reserve returns the existing record. A duplicate terminal call returns the persisted result; a conflicting terminal signal changes neither status nor balance.
++
++## Transactional invariants
++
++1. Reserve conditionally decrements a balance only when it is at least one and inserts `reserved` in the same transaction; otherwise neither mutation occurs.
++2. Finalize conditionally moves only `reserved → finalized`; it does not alter balance.
++3. Release conditionally moves only `reserved → released` and increments the balance by one in the same transaction.
++4. Provider I/O occurs outside transactions. Recovery resolves any stale reservation through the release/finalize boundary, never a direct balance edit.
++
++## Validation and migration notes
++
++- Reject non-positive credit amounts and blank/changing attempt keys.
++- Reject callback workspace/correlation mismatches without mutation.
++- Add non-negative-balance and unique-attempt constraints before enabling dispatch.
++- If a quota/ledger model already exists when implementation begins, extend it rather than create a second balance authority.
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/plan.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/plan.md
+new file mode 100644
+index 0000000..222495b
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/plan.md
+@@ -0,0 +1,242 @@
++# Implementation Plan: Provider retry quota
++
++**Branch**: `master` | **Date**: 2026-08-10 | **Spec**: [spec.md](spec.md)  
++**Input**: Story specification from `specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/spec.md`
++
++## Execution Flow (/story-plan command scope)
++
++```
++1. Load the story specification.
++2. Check outline.md: absent; use full planning mode.
++3. Fill technical context from repository evidence.
++4. Check constitutions and project context: none exist.
++5. Record the initial constitution result.
++6. Reuse local research if available: none exists; external research is disallowed.
++7. Produce data-model.md, contracts/, and quickstart.md.
++8. Re-check the design against the derived gates.
++9. Describe task generation without creating tasks.md.
++10. STOP — ready for /story-tasks.
++```
++
++## Summary
++
++Wrap each reminder provider retry in a durable, transactional credit reservation. Reserve one workspace credit before dispatch; on provider acceptance finalize it, and on failure, timeout, or cancellation release it. A stable attempt key plus conditional transitions prevents duplicate callbacks and concurrent attempts from double-changing the balance.
++
++## Technical Approach
++
++Create one retry-quota domain boundary with reserve, finalize, and release operations. In one datastore transaction, reserve conditionally decrements a workspace balance only when it is at least one and inserts a `reserved` record keyed by the retry attempt. The dispatcher calls the provider only after that transaction commits. Finalize and release use compare-and-set transitions from `reserved`; release increments the balance in the same transaction as its transition. Repeated calls return the existing durable result without a second debit or credit. Use the attempt key as the provider idempotency key whenever the adapter supports one. This is a backend-only story; `/story-ui-spec` is not required.
++
++## Dependencies
++
++- Requires: a transactional persistent store; an existing/future reminder dispatcher; a stable retry-attempt identifier; and a provider adapter that reports accepted, failed, timed-out, and cancelled outcomes.
++- Provides: a reusable quota-reservation boundary for later reminder work.
++
++## Testing Strategy
++
++- Unit tests: state transitions, invalid transitions, and duplicate-operation results.
++- Integration tests: accepted, failed, timed-out, and cancelled provider outcomes plus callback redelivery.
++- Concurrency test: two distinct attempts against one remaining credit using a real transactional datastore.
++- Contract tests: the service operations in [retry-credit-reservation.md](contracts/retry-credit-reservation.md).
++
++## Technical Context
++
++**Language/Version**: Language-neutral; no source or runtime manifest exists.  
++**Primary Dependencies**: Reminder dispatcher and provider adapter; no library is selected.  
++**Storage**: Transactional relational-style persistence (reversible assumption; no storage evidence exists).  
++**Testing**: Framework not evidenced; implement [quickstart.md](quickstart.md) in the repository's eventual test convention.  
++**Target Platform**: Backend reminder-processing path.  
++**Project Type**: Single backend/service component.  
++**Performance Goals**: Keep transactions short; never hold one during provider network I/O.  
++**Constraints**: Atomic accounting, exactly-once terminal effect, non-negative balance, duplicate-safe callbacks.  
++**Scale/Scope**: One credit per provider retry, scoped by workspace.
++
++## Constitution Check
++
++*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
++
++No project/epic constitution, context, domain model, UX strategy, design system, codebase scan, outline, or research report exists. These gates therefore derive directly from S004:
++
++**Product Principles**:
++
++- Failed, timed-out, and cancelled sends do not consume a credit.
++- Duplicate callbacks do not add a charge or refund.
++
++**Technical Excellence**:
++
++- Code Quality: quota mutation has one domain/service owner.
++- Quality Assurance: deterministic provider-fake and real transactional-datastore tests cover all terminal states and contention.
++- Performance: provider I/O remains outside transaction scope.
++- UX Standards: not applicable; no UI is specified.
++
++**Brand Alignment**: not applicable; there is no copy or design surface.
++
++**Initial Constitution Check**: PASS. The reservation state machine is the minimum mechanism for the requested guarantees.
++
++## Project Structure
++
++### Documentation (this feature)
++
++```
++specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/
++├── spec.md
++├── plan.md
++├── data-model.md
++├── quickstart.md
++└── contracts/
++    ├── retry-credit-reservation.md
++    └── retry-credit-reservation.yaml
++```
++
++### Source Code (repository root)
++
++No source tree exists. This is the planned single-service layout, to be reconciled with the first established repository convention:
++
++```
++src/
++├── domain/retry-quota/        # state machine and invariants
++├── services/reminder-dispatch/# reserve → provider → terminal accounting
++├── persistence/retry-quota/   # transactional repository
++└── providers/                 # provider adapters
++tests/
++├── unit/retry-quota/
++└── integration/reminder-dispatch/
++```
++
++**Structure Decision**: single backend/service layout; reversible because no source pattern exists.
++
++## Research Informing This Plan
++
++**Local Evidence Reviewed**:
++
++- [spec.md](spec.md) supplies all five acceptance requirements.
++- There are no local research reports, scans, project documents, or source files.
++
++**Web Search Findings**: None. External research is disallowed; this plan uses the established transactional-reservation pattern without selecting an external API or library.
++
++**Deep Research Reports**: None.
++
++**Research Impact on Implementation Decisions**: Durable reservation state and conditional transitions are necessary for atomicity and exactly-once effects; an in-memory counter or compensating action without a reservation cannot meet the specification.
++
++## Planning Phase 1: Design & Contracts
++
++1. Define durable quota and reservation entities plus state transitions in [data-model.md](data-model.md).
++2. Define internal service contracts in [retry-credit-reservation.md](contracts/retry-credit-reservation.md) and its machine-readable schema, [retry-credit-reservation.yaml](contracts/retry-credit-reservation.yaml). No HTTP/GraphQL boundary is evidenced, so none is invented.
++3. Define test and validation scenarios in [quickstart.md](quickstart.md).
++4. Preserve symmetry in this story: reserve, finalize, and release are designed together; no refund behavior is deferred.
++
++## Planning Phase 2: Implementation Guidance (For /story-tasks)
++
++### Functional Requirements Extraction
++
++| FR ID | Requirement Summary | Acceptance Criteria | Priority |
++|-------|---------------------|---------------------|----------|
++| FR-001 | Reserve before send. | Debit and reservation are atomic. | Critical |
++| FR-002 | Finalize accepted sends. | `reserved → finalized` once; no re-credit. | Critical |
++| FR-003 | Release unsuccessful sends. | Failed, timed-out, cancelled attempts restore once. | Critical |
++| FR-004 | Protect concurrent balance. | Balance never becomes negative. | Critical |
++| FR-005 | Make callbacks idempotent. | Replays have no second balance effect. | Critical |
++
++### Research Findings Preservation
++
++**Decision 1: Durable reservation state machine**
++
++- **Rationale**: pairs each debit with exactly one terminal operation.
++- **Rejected Alternatives**: in-memory accounting and compensate-later flows cannot distinguish duplicate callbacks reliably.
++- **Implementation Pattern**: conditional decrement plus reservation insert; conditional terminal transition afterward.
++- **Performance**: commit before provider I/O.
++- **Security**: derive workspace identity from trusted dispatch context, not callback payload.
++- **Relevant Tasks**: Assigned by `/story-tasks`.
++
++**Decision 2: Stable attempt key**
++
++- **Rationale**: one identity joins reserve retries, provider retries, and callback redelivery.
++- **Rejected Alternatives**: fresh keys per callback cannot find the original reservation.
++- **Implementation Pattern**: unique `(workspace_id, attempt_key)`; pass it to providers as idempotency key where supported.
++- **Relevant Tasks**: Assigned by `/story-tasks`.
++
++**Decision 3: Compare-and-set terminal transitions**
++
++- **Rationale**: finalization and release must be mutually exclusive.
++- **Rejected Alternatives**: read-then-write races can double-credit or double-finalize.
++- **Implementation Pattern**: predicate terminal updates on `status = reserved`; release increments in the same transaction.
++- **Relevant Tasks**: Assigned by `/story-tasks`.
++
++### Codebase Patterns for Reuse
++
++No source or scan exists. Before implementation, reconcile these logical seams with existing patterns introduced by prerequisite work rather than creating parallel persistence or provider abstractions.
++
++### Performance Optimization Guide
++
++| Performance Target | Technique | Existing Infrastructure | Validation | Tasks |
++|--------------------|-----------|-------------------------|------------|-------|
++| Short DB critical section | Commit reservation before provider I/O | None | Hold provider fake; verify no transaction is open | Assigned by `/story-tasks` |
++| No negative balance | Conditional decrement/lock | None | Concurrent integration test | Assigned by `/story-tasks` |
++
++### Security Implementation Checklist
++
++- [ ] Bind quota mutation to trusted workspace context.
++- [ ] Enforce unique `(workspace_id, attempt_key)`.
++- [ ] Validate callback correlation against stored state.
++- [ ] Keep raw quota mutation unavailable to untrusted callers.
++- [ ] Retain non-secret audit metadata for terminal outcomes.
++
++### Design System Component Registry
++
++Not applicable: no UI requirement or design-system artifact exists.
++
++### Brand Voice Copy Bank
++
++Not applicable: no user-facing copy or UX strategy exists.
++
++### Constitution Compliance Gates
++
++**Gate 1: Atomic non-negative balance** — conditional decrement and reservation insert occur together; release transitions and increments together.  
++**Gate 2: Exactly-once terminal accounting** — both terminal operations predicate on `reserved` and return existing terminal state for replays.  
++**Gate 3: Provider-boundary safety** — provider call is outside the transaction and uses the persisted attempt key.  
++**Tasks affected**: assigned by `/story-tasks`.
++
++## Planning Phase 3: Task Planning Approach
++
++*This describes the next phase; it does not create `tasks.md`.*
++
++**Task Generation Strategy**: derive test-first work from the five FRs, state machine, service contract, and validation scenarios. Create persistence work before service work, then dispatcher/provider correlation, then concurrency and callback-redelivery proof.
++
++**Ordering Strategy**: models and constraints precede repository operations; reservation behavior precedes provider dispatch; terminal-idempotency and contention tests precede completion.
++
++**Estimated Output**: `/story-tasks` determines concrete numbered tasks after source and framework conventions exist. No tasks are created here.
++
++## Execution Phases (Beyond /story-plan scope)
++
++**Phase 3**: `/story-tasks` creates `tasks.md`  
++**Phase 4**: `/story-implement` executes it  
++**Phase 5**: `/story-validate` produces evidence
++
++## Complexity Tracking
++
++No constitution deviations. The reservation state machine is the minimum design satisfying atomicity, symmetry, concurrency safety, and idempotency.
++
++## Progress Tracking
++
++**Planning Phase Status**:
++
++- [x] Research embedded in plan (local-evidence-only)
++- [x] Planning Phase 1: Design complete
++- [x] Planning Phase 2: Implementation guidance complete
++- [x] Planning Phase 3: Task approach described
++
++**Execution Phase Status**:
++
++- [ ] Tasks generated (`/story-tasks`)
++- [ ] Implementation complete (`/story-implement`)
++- [ ] Validation passed (`/story-validate`)
++
++**Gate Status**:
++
++- [x] Initial Constitution Check: PASS
++- [x] Post-Design Constitution Check: PASS
++- [x] All NEEDS CLARIFICATION resolved through documented reversible assumptions
++- [x] Complexity deviations documented (none)
++
++---
++
++*Based on the story specification; no project or epic constitution exists in this workspace.*
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/quickstart.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/quickstart.md
+new file mode 100644
+index 0000000..0fed44b
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/quickstart.md
+@@ -0,0 +1,40 @@
++# S004 Provider retry quota — Validation scenarios
++
++## Preconditions
++
++1. A workspace begins with one available retry credit.
++2. A deterministic provider fake produces accepted, failed, timed-out, cancelled, and duplicate-callback outcomes.
++3. Concurrency scenarios use a real transactional datastore, not an in-memory counter.
++
++## Scenarios
++
++### Reserve before provider send
++
++Pause the provider after dispatch begins. Verify one durable `reserved` record and zero credits before provider completion. Verify no provider call occurs if reservation reports quota exhaustion.
++
++### Accepted provider send
++
++Return acceptance. Verify `reserved → finalized`, balance remains zero, and an acceptance replay changes nothing.
++
++### Failed, timed-out, and cancelled sends
++
++Run each outcome independently. Verify `reserved → released`, its reason is persisted, balance returns to one, and replay does not increment again.
++
++### Concurrent distinct attempts
++
++Start two attempt keys concurrently with one credit. Verify exactly one reservation/provider call, one quota-exhausted result, and no negative balance.
++
++### Duplicate reserve and terminal race
++
++Start the same attempt key twice; verify one reservation/debit. Race acceptance against failure; verify one terminal status, exactly its one balance effect, and no mutation from the later conflicting callback.
++
++### Untrusted callback correlation
++
++Attempt a terminal transition with mismatched workspace or provider correlation. Verify rejection/audit and unchanged reservation/balance.
++
++## Evidence for `/story-validate`
++
++- Output from all scenarios, including the real concurrent-datastore run.
++- Before/after reservation and quota values for duplicate and contention tests.
++- Provider-fake log proving quota exhaustion prevents provider dispatch.
++- An observable record of duplicate/conflicting callbacks with unchanged balance.

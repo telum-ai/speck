@@ -1,0 +1,75 @@
+{
+  "case_id": "evidence-contract",
+  "condition": "v10",
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "9a8a1fc944134c4fb3e91cf72efa4bdee60cc2edd527e2658dc273af79cd86b5",
+  "exit_code": 0,
+  "git_status": [
+    "?? README.md",
+    "?? specs/projects/001-pulseboard/evidence-contract.md",
+    "?? specs/projects/001-pulseboard/graph/",
+    "?? specs/projects/001-pulseboard/project-state.md"
+  ],
+  "label": "B",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "f5b02a9f9a7c813675d3cad478eddeb7f4063908b738804da6c9279019843e0a",
+  "required_corrections": 1,
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.5,
+        "label": "contract",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "all-promises",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "mapping",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "confirmation-negative",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 0.0,
+        "label": "real-role-isolation",
+        "ok": false,
+        "weight": 2
+      },
+      {
+        "earned": 2,
+        "label": "delivery-failures",
+        "ok": true,
+        "weight": 2
+      }
+    ],
+    "earned": 8.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 80.0
+  },
+  "timeout": false,
+  "tool_events": 40,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 1708800,
+    "input_tokens": 1832604,
+    "output_tokens": 13773
+  },
+  "valid_run": true,
+  "wall_seconds": 294.884
+}

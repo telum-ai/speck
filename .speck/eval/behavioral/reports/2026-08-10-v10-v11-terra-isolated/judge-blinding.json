@@ -1,0 +1,37 @@
+{
+  "checks": [
+    {
+      "bundle": 1,
+      "forbidden_hits": [],
+      "output_order": "A-then-B",
+      "prompt_sha256": "8e0c8c5d68d96ca5d65d31f47ff519250c31512158f2be29e2d64a2b63e1d246"
+    },
+    {
+      "bundle": 2,
+      "forbidden_hits": [],
+      "output_order": "A-then-B",
+      "prompt_sha256": "21c62272965e8f5f3d7e748d662824b7cc5d8d6337bd3cb8668ec6f6cb1af5e2"
+    },
+    {
+      "bundle": 3,
+      "forbidden_hits": [],
+      "output_order": "A-then-B",
+      "prompt_sha256": "31fa16d6b06335c84d8bc5c2cbb7c6568d080301c06c942174d589e4a9462403"
+    },
+    {
+      "bundle": 4,
+      "forbidden_hits": [],
+      "output_order": "A-then-B",
+      "prompt_sha256": "7b122ca31a48fcf36b16e728fbbf8dfc101f5f3d30934b474adcb5ab93272f6c"
+    }
+  ],
+  "patterns": [
+    "(?i)\\bv10\\b",
+    "(?i)\\bv11\\b",
+    "\\b10\\.5\\.0\\b",
+    "\\b11\\.0\\.0\\b",
+    "(?i)speck[_ ]version",
+    "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+    "8ff081f1436024e5315fd68a3c2af505bd09ab83"
+  ]
+}

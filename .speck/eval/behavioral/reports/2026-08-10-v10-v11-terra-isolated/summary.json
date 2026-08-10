@@ -1,0 +1,84 @@
+{
+  "classification": "inconclusive",
+  "combined_70_30": {
+    "bootstrap_95_ci": [
+      -9.333541666666667,
+      11.533541666666645
+    ],
+    "mean": {
+      "v10": 84.45833333333333,
+      "v11": 84.80833333333334
+    },
+    "mean_difference_v11_minus_v10": 0.3499999999999985
+  },
+  "deterministic": {
+    "bootstrap_95_ci": [
+      -8.75,
+      17.916666666666668
+    ],
+    "mean": {
+      "v10": 84.58333333333333,
+      "v11": 87.08333333333333
+    },
+    "mean_difference_v11_minus_v10": 2.5,
+    "sign_test_p": 1.0,
+    "wins_ties_losses": {
+      "losses": 3,
+      "ties": 7,
+      "wins": 2
+    }
+  },
+  "effort": "medium",
+  "false_greens": {
+    "v10": 0,
+    "v11": 0
+  },
+  "harness": {
+    "git_revision": "c23561ea4f924a3725b2ce8c9400411a9a149d76",
+    "sha256": "245a78504e9b451e7a80869b65e67f6ec99a2a0c0c04b68a4bf7d9b96488008a"
+  },
+  "input_tokens": {
+    "cached_mean_v10": 1311381.3333333333,
+    "cached_mean_v11": 755285.3333333334,
+    "mean_v10": 1412656.8333333333,
+    "mean_v11": 822551.4166666666,
+    "total_v10": 16951882.0,
+    "total_v11": 9870617.0,
+    "uncached_mean_v10": 101275.5,
+    "uncached_mean_v11": 67266.08333333333
+  },
+  "isolation": {
+    "ancestor_package_json": [],
+    "outside_repository_tree": true,
+    "workspace_root": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces"
+  },
+  "judge": {
+    "complete": true,
+    "mean": {
+      "v10": 84.16666666666667,
+      "v11": 79.5
+    },
+    "mean_difference_v11_minus_v10": -4.666666666666667
+  },
+  "judge_model": "cursor-grok-4.5-high",
+  "model": "gpt-5.6-terra",
+  "required_corrections": {
+    "v10": 13,
+    "v11": 9
+  },
+  "revisions": {
+    "v10": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+    "v11": "8ff081f1436024e5315fd68a3c2af505bd09ab83"
+  },
+  "run_id": "2026-08-10-v10-v11-terra-isolated",
+  "valid_runs": {
+    "v10": 12,
+    "v11": 12
+  },
+  "wall_seconds": {
+    "mean_v10": 306.40883333333335,
+    "mean_v11": 237.38475,
+    "total_v10": 3676.906,
+    "total_v11": 2848.6169999999997
+  }
+}

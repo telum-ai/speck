@@ -267,7 +267,7 @@ Implement `initialState(items)`, `toggleSelection(state, id)`, and `approveSelec
 
 - Initial items are pending and unselected.
 - Toggle changes selection only for the matching id; unknown ids leave state unchanged.
-- Approval confirms only selected items, leaves others pending, and clears all selection. With no selection it leaves state unchanged.
+- Approval confirms only selected items, preserves the current status of every unselected item, and clears all selection. With no selection it leaves state unchanged.
 - Duplicate item ids are invalid.
 - Render buttons with truthful aria-pressed state and keep Approve disabled until at least one item is selected. Nothing is auto-confirmed.
 - Export the three functions with CommonJS while keeping browser use possible.
@@ -583,19 +583,21 @@ def _ui_hidden(root: Path) -> list[dict[str, object]]:
     if js.exists():
         probe = r"""
 const f = require(process.argv[1]);
+const itemsOf = state => Array.isArray(state) ? state : state.items;
 const input = [{id:'a', text:'One'}, {id:'b', text:'Two'}];
 const s0 = f.initialState(input);
 const snapshot = JSON.stringify(s0);
 const s1 = f.toggleSelection(s0, 'a');
 const sx = f.toggleSelection(s1, 'missing');
 const s2 = f.approveSelected(s1);
+const s3 = f.approveSelected(f.toggleSelection(s2, 'b'));
 let dup = false; try { f.initialState([{id:'a'},{id:'a'}]); } catch (_) { dup = true; }
 const emptyApproved = f.approveSelected(s0);
 const result = [
-  s0.items.every(x => x.status === 'pending' && x.selected === false),
-  s1.items[0].selected === true && s1.items[1].selected === false && JSON.stringify(s0) === snapshot,
+  itemsOf(s0).every(x => x.status === 'pending' && x.selected === false),
+  itemsOf(s1)[0].selected === true && itemsOf(s1)[1].selected === false && JSON.stringify(s0) === snapshot,
   JSON.stringify(sx) === JSON.stringify(s1),
-  s2.items[0].status === 'confirmed' && s2.items[1].status === 'pending' && s2.items.every(x => x.selected === false),
+  itemsOf(s2)[0].status === 'confirmed' && itemsOf(s2)[1].status === 'pending' && itemsOf(s2).every(x => x.selected === false) && itemsOf(s3).every(x => x.status === 'confirmed'),
   dup,
   JSON.stringify(emptyApproved) === JSON.stringify(s0)
 ];
@@ -658,4 +660,19 @@ def self_test(root: Path) -> dict[str, object]:
     good_score = sum(float(c["earned"]) for c in _backend_hidden(root))
     target.write_text("def build_reminder(action, now):\n    return {'id': 'always-green'}\n")
     mutant_score = sum(float(c["earned"]) for c in _backend_hidden(root))
-    return {"good": good_score, "mutant": mutant_score, "passed": good_score == 8.0 and mutant_score < good_score}
+    web = root / "web"
+    web.mkdir(parents=True, exist_ok=True)
+    (web / "index.html").write_text('<main id="review"></main><button id="approve" disabled>Approve</button>')
+    array_good = '''function initialState(items){const ids=new Set();return items.map(x=>{if(ids.has(x.id))throw Error("duplicate");ids.add(x.id);return {...x,status:"pending",selected:false}})}\nfunction toggleSelection(s,id){if(!s.some(x=>x.id===id))return s;return s.map(x=>x.id===id?{...x,selected:!x.selected}:x)}\nfunction approveSelected(s){if(!s.some(x=>x.selected))return s;return s.map(x=>x.selected?{...x,status:"confirmed",selected:false}:x)}\nif(typeof module!=="undefined")module.exports={initialState,toggleSelection,approveSelected};\n// render uses aria-pressed and keeps approve.disabled based on selected items\n'''
+    (web / "app.js").write_text(array_good)
+    ui_array_good = sum(float(c["earned"]) for c in _ui_hidden(root))
+    clobber = array_good.replace(':x)}\nif(typeof module', ':{...x,status:"pending",selected:false})}\nif(typeof module')
+    (web / "app.js").write_text(clobber)
+    ui_clobber_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
+    return {
+        "good": good_score,
+        "mutant": mutant_score,
+        "ui_array_good": ui_array_good,
+        "ui_clobber_mutant": ui_clobber_mutant,
+        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good,
+    }

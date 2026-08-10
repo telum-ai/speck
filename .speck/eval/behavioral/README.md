@@ -71,4 +71,6 @@ Raw event streams and workspaces are ignored under `.runs/`. Checked-in evidence
 
 `self-test` checks that the corpus has 12 unique five-item rubrics, deletion-mutation-tests all 12 scorer families, and behavior-mutation-tests the backend scorer. A conforming backend implementation must score 8/8 behavior checks; an always-green mutant must score lower. Every case family must turn red when its artifact is deleted. Subject validity additionally requires exit 0, a runtime `turn.completed` event, at least one tool event, and a changed artifact.
 
+After the isolated run, audit found that the frozen UI scorer assumed an unrequired `{items}` state shape. The reusable harness now mutation-tests a conforming array-state implementation and a status-clobbering mutant, accepts array or object state, and requires already-confirmed unselected items to remain confirmed. The completed isolated run is not silently rescored; its `decision.md` excludes/sensitivity-tests that invalid primary pair.
+
 The first run id, `2026-08-10-v10-v11-terra`, is retained as invalid evidence. Its audit found parent-repository ESM contamination, incomplete judge scrubbing/order blinding, and an unverifiable post-run scorer freeze. It must not be used for a branch decision. The corrected decision run uses the `-isolated` suffix.

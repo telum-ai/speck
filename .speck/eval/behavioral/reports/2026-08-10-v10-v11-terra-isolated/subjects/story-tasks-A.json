@@ -1,0 +1,78 @@
+{
+  "case_id": "story-tasks",
+  "condition": "v11",
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "1759ea9095a26fed0be15f2cd99454344ddbfd5692a5e4f98b362e4456b7c5b6",
+  "exit_code": 0,
+  "git_status": [
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "f1972648afc06dea6579fd4943a9d829fe2fca06f2504fb5e6542f6c91485096",
+  "required_corrections": 0,
+  "revision": "8ff081f1436024e5315fd68a3c2af505bd09ab83",
+  "score": {
+    "checks": [
+      {
+        "earned": 2,
+        "label": "tasks",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "concrete-paths",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "migration",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 1.5,
+        "label": "auth-idempotency",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "both-endpoints",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "negative-tests",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "ordered",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 32,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 802304,
+    "input_tokens": 863960,
+    "output_tokens": 13328
+  },
+  "valid_run": true,
+  "wall_seconds": 278.387
+}

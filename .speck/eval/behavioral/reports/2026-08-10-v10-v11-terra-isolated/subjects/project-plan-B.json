@@ -1,0 +1,81 @@
+{
+  "case_id": "project-plan",
+  "condition": "v11",
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "bff85afb8dc243f8d6076449708ccce3d72a0a9974b1a38952917cc102e3e151",
+  "exit_code": 0,
+  "git_status": [
+    "?? specs/projects/001-pulseboard/PRD.md",
+    "?? specs/projects/001-pulseboard/epics.md",
+    "?? specs/projects/001-pulseboard/epics/",
+    "?? specs/projects/001-pulseboard/graph/"
+  ],
+  "label": "B",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "92208d888a844f3cad9652a0ce6a06214c1ef788cc19a6c830ed05d3111ac5f1",
+  "required_corrections": 0,
+  "revision": "8ff081f1436024e5315fd68a3c2af505bd09ab83",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.5,
+        "label": "PRD",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "epics",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "E000",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 1,
+        "label": "bounded-epics",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 2,
+        "label": "promise-coverage",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 2,
+        "label": "confirmation-boundary",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1,
+        "label": "provider-honesty",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 22,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 676608,
+    "input_tokens": 750827,
+    "output_tokens": 14919
+  },
+  "valid_run": true,
+  "wall_seconds": 294.215
+}

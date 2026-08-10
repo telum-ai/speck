@@ -1,0 +1,108 @@
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S008-send-service/audit-report.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S008-send-service/audit-report.md
+new file mode 100644
+index 0000000..717e094
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S008-send-service/audit-report.md
+@@ -0,0 +1,102 @@
++# S008 Send service — adversarial audit
++
++**Verdict: BLOCKED.** Three P0 defects allow an unconfirmed external send, cross-workspace data disclosure, and SQL injection through untrusted callback input. Validation must not pass until the P0 findings are remediated and independently re-audited.
++
++## Scope and evidence inspected
++
++- Contract: `spec.md` (all five stated requirements).
++- Implementation: `src/send_service.py`.
++- User-visible copy: `web/copy.txt`.
++- Repository history: `54fb110` (the only implementation commit).
++
++## Multi-Lens Audit Team
++
++One independent auditor performed three separate adversarial lenses because this audit was constrained to the local workspace:
++
++| Lens | Focus | Result |
++|---|---|---|
++| Security and privacy | confirmation boundary, workspace isolation, callback input | P0 findings P0-001, P0-002, P0-003 |
++| Reliability and recovery | provider failure and quota restoration | P1 finding P1-001 |
++| Contract and user truthfulness | specification fidelity, test evidence, public copy | P1 findings P1-002 through P1-004 |
++
++## P0 — blocking findings
++
++### P0-001 — `send` transmits unconfirmed actions
++
++**Requirement:** “Only confirmed actions may send.”
++
++**Mechanism:** `src/send_service.py:9-11` decrements credits and calls `provider.send` without reading an action confirmation state. The reproduced probe passed `{'confirmed': False}` and received `sent`; the provider recorded the message and credits fell from 2 to 1.
++
++**Impact:** Any caller can trigger an external reminder before the required human confirmation.
++
++### P0-002 — action cache and underlying read are not workspace-isolated
++
++**Requirement:** “Cached actions and reads must be workspace-isolated.”
++
++**Mechanism:** `src/send_service.py:4` uses `action_id` alone as the cache key, and line 6 calls `db.fetch(action_id)` without a workspace identifier. The reproduced probe fetched `same-id` in `workspace-a`, then requested it from `workspace-b`; it received the exact same cached object marked `workspace-a`, and the database was called only once.
++
++**Impact:** A tenant can receive another workspace’s action whenever action identifiers collide or are guessable; a database implementation cannot enforce a workspace predicate from this call shape.
++
++### P0-003 — callback event ID is interpolated into executable SQL
++
++**Requirement:** “Provider callbacks are untrusted input.”
++
++**Mechanism:** `src/send_service.py:13-14` builds SQL by interpolation. With event ID `x' OR '1'='1`, the probe produced `SELECT * FROM events WHERE id = 'x' OR '1'='1'`.
++
++**Impact:** An untrusted callback value can alter the query predicate, exposing or modifying records once this query is executed.
++
++## P1 — fixes required
++
++### P1-001 — failed provider sends permanently consume retry credits
++
++**Requirement:** “Retry credits must be restored on every failed path.”
++
++**Mechanism:** `src/send_service.py:10-11` debits before calling the provider and has no exception handling or compensation. A provider that raised `RuntimeError` left credits at 1 after starting at 2.
++
++### P1-002 — public copy contradicts the human-confirmation promise
++
++**Requirement:** Product copy must describe human confirmation truthfully.
++
++**Mechanism:** `web/copy.txt:1` says reminders are sent “without anyone lifting a finger.” It omits and conflicts with the required human-confirmation step.
++
++### P1-003 — no behavioral tests cover the contract or failure paths
++
++**Mechanism:** There are no project test files. `pytest -q` reported “no tests ran”; therefore neither normal-order nor shuffled-order execution can exercise confirmation, tenant isolation, provider exceptions, or callback handling. `pytest -q --randomly-seed=1` could not run because the random-order plugin is absent.
++
++### P1-004 — required project-level audit gates are unavailable
++
++**Mechanism:** `specs/projects/001-pulseboard/product-contract.md` and `evidence-contract.md` do not exist. The banned-language lint cannot locate a project contract (exit 2), and gate-liveness validation reports the evidence contract missing (exit 2). This prevents the required contract and gate-liveness checks from establishing evidence.
++
++## P2
++
++No additional P2 findings.
++
++## P3
++
++No additional P3 findings.
++
++## Probe results
++
++| Probe | Result |
++|---|---|
++| Python compilation | `python3 -m compileall -q src` exited 0. |
++| Unconfirmed send | Sent successfully; provider recorded the message; credits reduced from 2 to 1. |
++| Cross-workspace cache read | Second workspace received the first workspace’s cached action; database called once. |
++| Failed provider send | `RuntimeError`; credits remained debited (2 → 1). |
++| Callback input injection | Quote-containing ID changed the generated SQL predicate. |
++| Default test execution | `pytest -q`: no tests ran (exit 5). |
++| Random-order test execution | `pytest -q --randomly-seed=1`: unsupported option because no randomization plugin is installed (exit 4). |
++
++## Banned-language and gate checks
++
++- `banned-language-lint.sh` could not run: no project `product-contract.md` exists (exit 2). The user-visible copy was nevertheless inspected directly and is contradictory (P1-002).
++- `validate-product-contract.sh --strict` was attempted against the absent path and returned exit 0 without producing an artifact verdict; it is not accepted as evidence.
++- `validate-gate-liveness.sh --strict` reported the missing `evidence-contract.md` (exit 2).
++
++## Continuation
++
++Route to `/harden` for the P0 and P1 remediation. Re-run this audit after fixes; do not start story validation from this report.
++
++---
++
++*[as of SHA `54fb110` | verified 2026-08-10 | speck v11.0.0]*

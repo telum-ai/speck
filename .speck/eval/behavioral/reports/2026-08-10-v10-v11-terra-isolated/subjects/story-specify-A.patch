@@ -1,0 +1,179 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md b/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md
+index 2ada73b..ea373fc 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md
+@@ -1,3 +1,9 @@
+ # Breakdown
+ 
+ S001 uploads and extracts proposals. S002 reviews and confirms them. S003 schedules confirmed actions. S002 depends on S001 and blocks S003.
++
++## Stories
++
++| Story | Status | Dependencies | Blocks |
++|-------|--------|--------------|--------|
++| S002 Review and confirm | specified | S001 | S003 |
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md
+index 2ed59a4..596ad1a 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md
+@@ -1,9 +1,157 @@
+ ---
+-current_state: Draft Placeholder
++speck_version: "10.5.0"
++artifact_type: story-spec
++current_state: Specified
+ depends_on: [S001]
+ blocks: [S003]
++serves: []
++persona: []
++readiness_target: IMPL-GREEN
++readiness_state_verified: NO-SHIP
++lifecycle_state: Specified
+ ---
+ 
+-# S002 Review and confirm
++# Story: Review and confirm
+ 
+-TODO
++**Story ID**: `S002-review-confirm` &nbsp;·&nbsp; **Qualified**: `E001/S002`
++**Created**: 2026-08-10
++**Status**: Specified
++**Current State**: Specified
++**Input**: Review and confirm action proposals extracted by S001 before S003 schedules confirmed actions.
++
++---
++
++## 1. Experience (What the user lives)
++
++### 1a. JTBD Context
++
++**When** action proposals have been extracted by S001 and are awaiting human review, the human reviewer wants to inspect and explicitly confirm a proposal, **so that** only human-approved actions can proceed to scheduling in S003.
++
++This story makes one bounded, reversible assumption from the epic breakdown: S001 makes one or more action proposals available for review. It does not define their extraction, storage, scheduling, or delivery.
++
++### 1b. Primary User Story
++
++As a human reviewer, I want to review available action proposals and explicitly confirm them so that only proposals I approve can be scheduled.
++
++### 1c. Felt Quality (How the user feels)
++
++| Surface | Entry emotional state | Target felt outcome | Banned feelings |
++|---------|----------------------|--------------------|-----------------|
++| Proposal review | Cautious because the proposal originated before this review step | In control because the proposal is visible before confirmation | pressured, surprised, uncertain whether approval happened |
++| Confirmation result | Ready to hand the approved proposal to the next step | Certain that the proposal is confirmed and eligible for S003 | ambiguous, silently changed, falsely assured |
++
++### 1d. Magic Moments Tied to This Story
++
++No product contract or magic-moment catalogue exists in this workspace. This story deliberately claims no promise until such a catalogue is established.
++
++## 2. Acceptance LARP (How we prove the experience works)
++
++### 2a. Required Personas to LARP
++
++| Persona | Flow | Build artifact | Evidence required |
++|---------|------|----------------|-------------------|
++| Human reviewer (provisional; no persona catalogue exists) | Review a proposal and confirm it | Running review surface | Screenshot and interaction transcript showing the proposal before and confirmed state after the explicit action |
++
++### 2b. Acceptance Scenarios
++
++#### AC-1 — Review and explicitly confirm an available proposal
++- **GIVEN** the running build presents a human reviewer with an action proposal made available by S001 and not yet confirmed
++- **WHEN** the reviewer inspects that proposal and performs the explicit confirmation action
++- **THEN** the same proposal is shown as confirmed
++- **AND** the result makes clear that the proposal may proceed to S003 scheduling
++- **EVIDENCE** `screenshots/<sha>-review-confirmed.png` and `larp-recordings/<sha>-review-confirm.transcript.md`
++- **VERIFIABILITY** agent-LARP
++
++#### AC-2 — Do not imply confirmation before an explicit reviewer action
++- **GIVEN** the running build presents a proposal made available by S001 that the reviewer has not confirmed
++- **WHEN** the reviewer reviews it without performing the confirmation action
++- **THEN** the proposal remains unconfirmed
++- **AND** the surface does not represent it as eligible for S003 scheduling
++- **EVIDENCE** `screenshots/<sha>-review-unconfirmed.png` and `larp-recordings/<sha>-review-unconfirmed.transcript.md`
++- **VERIFIABILITY** agent-LARP
++
++#### AC-3 — Handle an unavailable proposal without a false confirmation
++- **GIVEN** the reviewer opens the review flow and the selected S001 proposal is unavailable or cannot be loaded
++- **WHEN** the review surface resolves that condition
++- **THEN** it communicates that the proposal cannot be confirmed
++- **AND** it does not show a confirmed state or make the proposal eligible for S003 scheduling
++- **EVIDENCE** `screenshots/<sha>-review-unavailable.png` and `larp-recordings/<sha>-review-unavailable.transcript.md`
++- **VERIFIABILITY** agent-LARP
++
++## 3. Evidence Required
++
++| Evidence type | Required for state | Verifiable by | Path / convention |
++|---------------|--------------------|---------------|-------------------|
++| Review state before confirmation | IMPL-GREEN | agent-LARP | `screenshots/<sha>-review-unconfirmed.png` |
++| Confirmed result | IMPL-GREEN | agent-LARP | `screenshots/<sha>-review-confirmed.png` |
++| Unavailable-proposal result | IMPL-GREEN | agent-LARP | `screenshots/<sha>-review-unavailable.png` |
++| Interaction transcripts for AC-1 through AC-3 | IMPL-GREEN | agent-LARP | `larp-recordings/<sha>-review-*.transcript.md` |
++
++## 4. Adversarial Cases (What must NOT happen)
++
++| Condition | Must NOT happen | Probe used to verify |
++|-----------|-----------------|----------------------|
++| A proposal is visible but not explicitly confirmed | It is shown as confirmed or eligible for S003 scheduling | Complete the review flow without using the confirmation action and inspect the rendered state |
++| A proposal is unavailable or fails to load | The surface shows a false confirmed state | Simulate the unavailable proposal condition and capture the result |
++| The reviewer confirms a proposal | The result leaves the reviewer unable to tell whether confirmation succeeded | Capture the post-action surface and transcript after the explicit confirmation action |
++
++## 5. Failure-Modes Handled
++
++| Dependency | Failure mode | Behavior | Verified by |
++|------------|--------------|----------|-------------|
++| S001 proposal availability | A selected proposal is unavailable or cannot be loaded | The reviewer is told it cannot be confirmed; no confirmed or schedulable state is shown | AC-3 agent-LARP |
++
++## 6. Related Tables / Surfaces (Cascade)
++
++| Write target | Related tables | Cascade behavior | Verified |
++|--------------|----------------|-------------------|----------|
++| Proposal confirmation state (logical state only; physical storage is unspecified) | S003 scheduling eligibility | Explicit confirmation makes the proposal eligible for S003; lack of confirmation and load failure do not | AC-1 through AC-3 agent-LARP |
++
++## 7. Performance + Non-Functional Targets
++
++- Performance: No project performance target is present; the review result must remain visibly attributable to the reviewer’s explicit action.
++- Accessibility: The proposal and confirmation result must be exposed in the running surface sufficiently to capture the required agent-LARP evidence.
++- Security/privacy: Human confirmation is required before S003 scheduling eligibility; no further policy is evidenced in this workspace.
++- Observability: The required LARP transcript must distinguish unconfirmed, confirmed, and unavailable outcomes.
++
++## 8. Data + API (Last, not first)
++
++### Key Entities
++- **Action proposal**: A proposal extracted by S001 that is awaiting human review.
++- **Confirmation state**: The logical outcome of an explicit human approval; its persistence mechanism is intentionally deferred to `plan.md`.
++
++### API Surface
++
++No API surface is specified. The source and persistence mechanisms for action proposals and their confirmation belong to the later planning phase.
++
++## 9. Implementation Hint (Optional)
++
++Keep S002 bounded to human review and explicit confirmation. S001 owns proposal extraction; S003 owns scheduling after confirmation.
++
++## Acceptance Checklist
++
++### Content Quality
++- [x] Experience (Section 1) explains the user boundary before technical detail
++- [x] Felt quality is named per surface
++- [x] No magic moments are claimed because no `product-contract.md` exists
++- [x] No user-visible product copy is prescribed
++
++### Verifiability
++- [x] Every acceptance scenario specifies evidence
++- [x] Every acceptance scenario declares a verifiability tier
++- [x] Every identified dependency has a failure-mode-handled row
++- [x] Related downstream surface is enumerated
++- [x] Adversarial cases invert the positive confirmation claims
++
++### Cross-Reference
++- [x] No persona catalogue exists; the provisional human reviewer is declared without inventing a persona id
++- [x] `serves: []` makes no unsupported magic-moment claims
++- [x] Every acceptance scenario has a stable `AC-N` id
++- [x] `depends_on: [S001]` and `blocks: [S003]` preserve same-epic dependency metadata
++- [x] No evidence contract exists; this spec declares the minimum evidence needed for its readiness target
++
++### Lifecycle
++- [x] **Draft** - Placeholder spec.md created by `/epic-breakdown`
++- [x] **Specified** - spec.md completed by `/story-specify`
++
++*[as of SHA `b0d7113` | verified 2026-08-10 | speck]*

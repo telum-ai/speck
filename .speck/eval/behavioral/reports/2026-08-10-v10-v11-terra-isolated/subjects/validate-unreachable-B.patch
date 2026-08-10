@@ -1,0 +1,202 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+index be6090b..26da9f8 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+@@ -1,5 +1,194 @@
+-# Validation report
++---
++speck_version: 10.5.0
++template_version: "7.11.0"
++artifact_type: validation-report
++mutation_record: required
++readiness_state_claimed: NO-SHIP
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: 0b4ec52a00794ad9461b44b393ec759f43cb1f88
++build_artifact: web/demo.html via scripts/open_demo.sh
++audit_report: specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/audit-report.md
++larp_evidence: not-run
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S010 Empty state
+ 
+-Runtime LARP was blocked by an authentication wall, so the implementation screenshot from the developer is accepted as sufficient.
++**Subject**: S010 Empty state
++**Date**: 2026-08-10 10:18 Europe/Oslo
++**Build SHA**: `0b4ec52a00794ad9461b44b393ec759f43cb1f88`
++**Build Artifact**: `web/demo.html`, exposed by `scripts/open_demo.sh`
++**Clean Build (caches cleared)**: no — this repository has no build manifest or build command.
++**Claimed Readiness State**: NO-SHIP
++**Verified Readiness State**: NO-SHIP
++
++---
++
++## 🎯 Readiness State Claim
++
++**Claiming**: `NO-SHIP`
++
++**Why this state and not higher**:
++The delivered local artifact contains a visible `Upload transcript` button but no file input, form action, script, event handler, or upload request. Clicking the native button has no upload mechanism to invoke, so the story's required working upload action is absent.
++
++**Why this state and not lower**:
++`NO-SHIP` is the defined readiness state for an implementation blocker. The supplied local path was reachable and inspected, so this verdict is based on the delivered artifact rather than the prior unsupported authentication claim.
++
++---
++
++## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
++
++- **CORRECT**: Failed. The static interaction assertion found the upload button but no executable upload mechanism in `web/demo.html:1`.
++- **ON-CONTRACT**: Failed. `spec.md` requires a working upload action; the delivered button cannot perform one.
++- **FELT-GOOD**: `uncovered`. No LARP finding exists, and the browser capture attempt failed at Chromium sandbox startup; this does not substitute for functional evidence.
++- **TASTE**: `uncovered`. No connoisseur LARP was possible or needed to establish the earlier functional blocker.
++
++### 🎨 Aesthetic Forks — Owner Decision
++
++None. The validation stops at the missing core behavior; no aesthetic fork can raise readiness above NO-SHIP.
++
++---
++
++## ✅ Gate Criteria Check
++
++| Gate | Required at this state? | Evidence | Status |
++|------|------------------------|----------|--------|
++| Core upload action exists and can be invoked | Required before IMPL-GREEN | Static assertion against `web/demo.html:1`: button present; file input, form action, script, event handler, and upload endpoint all absent | ❌ |
++| Story spec is validation-ready | Required before a higher claim | `validate-story-spec.sh --strict spec.md` exited 1: no user story and no acceptance scenarios | ❌ |
++| Story plan and tasks exist | Required validation inputs | `plan.md` and `tasks.md` are absent | ❌ |
++| Project evidence contract exists | Mandatory pre-validation input | `specs/projects/001-pulseboard/evidence-contract.md` is absent | ❌ |
++| Audit report exists with no P0 finding | Mandatory pre-validation input | `audit-report.md` states no P0/P1 findings | ✅ |
++| Persona LARP against a built artifact | Required only for UX-RC+ | No evidence. Playwright screenshot launch attempted against the supplied local `file://` path and failed with `bootstrap_check_in ... Permission denied (1100)` before a page rendered | ⚠️ |
++| Clean build compiled | Required only for UX-RC+ | No project build manifest or build command exists | ⚠️ |
++
++The prior report's authentication-wall explanation is not evidence: `scripts/open_demo.sh` prints `DEMO-URL: file://web/demo.html`, and that file was readable locally.
++
++---
++
++## 🧬 Mutation Record
++
++The static interaction assertion is recorded only as negative evidence; it does not discharge an acceptance criterion. Its mutation probe could not create the required disposable worktree, so no production line was mutated.
++
++| Guard cited as evidence | Mutation site | Match count | Tests that went red | Green control that stayed green | Verdict |
++|---|---|---|---|---|---|
++| Static interaction assertion (non-discharge) | `web/demo.html:1` — not mutated; throwaway worktree creation failed | 0 | 0 | Not run | GUARD_UNMUTATED.P2 |
++
++**Mutation SHA**: `0b4ec52a00794ad9461b44b393ec759f43cb1f88`
++
++---
++
++## 📊 JTBD Quality Scorecard
++
++| Dimension | Score (0-10) | Evidence Path | Distinct Skeptical Note (Required for >=9) | Cap Reason (if any) |
++|-----------|--------------|---------------|--------------------------------------------|---------------------|
++| **Functional** | 0 | `web/demo.html:1` | The only primary action has no behavior. | Core action absent |
++| **Emotional** | 0 | N/A | Not assessed after functional failure. | NO-SHIP |
++| **Social** | 0 | N/A | Not assessed after functional failure. | NO-SHIP |
++| **Trust** | 0 | `validation-report.md` gate table | A button labelled as an upload action cannot upload. | Core action absent |
++| **Commercial** | 0 | N/A | Not applicable to the supplied story evidence. | NO-SHIP |
++
++**Aggregate Quality Score**: 0/10
++
++---
++
++## 📋 Spec Coverage (Requirements Traceability)
++
++The supplied spec has no FR identifiers or acceptance scenarios. Its sole stated requirement is recorded below without inventing IDs.
++
++| FR | Description | Verifiable by | Code | Test | LARP | Status |
++|----|-------------|---------------|------|------|------|--------|
++| Unnumbered requirement | Review screen explains first transcript upload and has a working upload action | local artifact inspection | `web/demo.html:1` | Static interaction assertion | Not reached | ❌ |
++
++**Coverage**: 0/1 grounded, 0/1 tested, 0/1 LARP-validated
++
++No epic `traceability-matrix.md` exists, so no PRM row can be discharged.
++
++---
++
++## 🛑 Blocking Issues (from audit-report.md)
++
++| ID | From | Severity | Description | Required for state |
++|----|------|----------|-------------|---------------------|
++| VAL-001 | Local artifact inspection | P0 | The upload button has no executable upload mechanism. | IMPL-GREEN+ |
++| VAL-002 | Validation pre-gates | P1 | `evidence-contract.md`, `plan.md`, and `tasks.md` are absent; the spec also fails strict validation. | Any validated state above NO-SHIP |
++
++The supplied audit report records no P0/P1, but this validation found VAL-001 independently.
++
++---
++
++## 🎭 LARP Summary
++
++| Persona | Flow | Verdict | Evidence path |
++|---------|------|---------|---------------|
++| First-time reviewer | Open empty review screen and select Upload transcript | FAIL before LARP: no executable upload control exists | `scripts/open_demo.sh`, `web/demo.html:1` |
++
++**Magic moments validated**: 0 / not specified
++**Taste-judgment dimensions failed**: Not assessed; functional blocker precedes visual judgment.
++
++---
++
++## 🗣️ Human Language Pass
++
++- [x] **No Cringe:** The visible heading and button are concise.
++- [x] **No Jargon Leak:** The two visible strings contain no internal methodology language.
++- [x] **AI Output Governed:** No AI-generated output surface is present.
++
++---
++
++## 🔬 What this validation did NOT verify / Deferrals (Mandatory)
++
++| Deferred item | Class (`autonomous-not-done` / `human/creds-gated`) | Cap Status (`evidence-pending` / `implementation-pending`) | Why deferred | Resolve by |
++|---------------|------------------------------------------------------|-----------------------------------------------------------|--------------|-----------|
++| Browser screenshot and click LARP | human/creds-gated | evidence-pending | Playwright reached the local artifact but Chromium exited before rendering with `bootstrap_check_in ... Permission denied (1100)`. This is recorded after an actual supplied-path attempt, not accepted as an authentication blocker. | Run the local file in a browser-capable host after the upload behavior exists. |
++| Upload action implementation | autonomous-not-done | implementation-pending | `web/demo.html:1` has no file input, form action, script, handler, or request. | Implement and test the action before another validation run. |
++| Evidence contract and planning artifacts | autonomous-not-done | implementation-pending | Required `evidence-contract.md`, `plan.md`, and `tasks.md` do not exist; the spec lacks testable acceptance scenarios. | Complete the upstream specify/plan/tasks/evidence-contract phases. |
++
++- **Untested / Unchecked Aspects**: No real file selection, upload request, success state, failure state, or accessibility behavior could be tested because no upload behavior is implemented.
++- **Deferred / Stale Proofs**: The existing UX-RC claim is superseded; it relied on an unsupported authentication-wall statement and lacks LARP evidence.
++- **Assumptions Untested**: None accepted. The core action was inspected through the supplied local access path.
++
++---
++
++## ⚠️ Specification Deviations (Delta Tracking)
++
++### MODIFIED
++
++None.
++
++### ADDED
++
++None.
++
++### REMOVED / DEFERRED
++
++- The required working upload action is not delivered in the current artifact.
++
++---
++
++## 🔬 Banned-Phrase Detection (Self-Audit)
++
++- [x] No launch-readiness language is used without launch-build evidence.
++- [x] No unreachable-path claim is used; the supplied path was executed and inspected.
++- [x] No premium-polish claim is used.
++- [x] No production behavior is asserted without evidence.
++- [x] No test-suite result is treated as proof of runtime behavior.
++- [x] No AI confirmation is asserted without a cited local artifact.
++
++---
++
++## 📊 Next Steps
++
++1. Implement an actual upload flow behind the visible control, including file selection and a user-visible success or error result.
++2. Complete the missing project evidence contract plus S010 plan, tasks, and acceptance scenarios.
++3. Run `/audit`, a browser-capable local LARP, and `/story-validate` again after the implementation exists.
++
++---
++
++## 🧭 Project Documentation Updates
++
++No project-truth update is warranted: this validation found missing behavior rather than a delivered feature.
++
++*[as of SHA `0b4ec52` | verified `2026-08-10` | speck v10.5.0]*

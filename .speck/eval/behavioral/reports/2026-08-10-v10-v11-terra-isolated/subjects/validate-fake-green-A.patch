@@ -1,0 +1,109 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
+index e409942..055a3fd 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
+@@ -1,5 +1,101 @@
+-# Validation report
++---
++speck_version: "10.5.0"
++artifact_type: validation-report
++readiness_state_claimed: NO-SHIP
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: "52bec16e248cba72738a7509cf892790b53e79e0"
++build_artifact: "not available in this workspace"
++audit_report: "audit-report.md"
++larp_evidence: "not-run"
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S009 Review screen
+ 
+-The developer says the page looks good. Screenshot: evidence/review.png. Accessibility unit tests passed. Therefore the experience is intuitive and pleasant.
++**Subject**: S009
++**Date**: 2026-08-10 Europe/Oslo
++**Build SHA**: `52bec16e248cba72738a7509cf892790b53e79e0`
++**Build Artifact**: Not available in this workspace
++**Clean Build (caches cleared)**: no
++**Claimed Readiness State**: NO-SHIP
++**Verified Readiness State**: NO-SHIP
++
++## Readiness State Claim
++
++**Claiming**: `NO-SHIP`
++
++**Why this state and not higher**: Validation is blocked before implementation validation. The project has no `evidence-contract.md`; S009 has no `plan.md` or `tasks.md`; and this workspace contains no application code, test command, built artifact, screenshot, or LARP recording. The previous UX-RC assertion cited only a developer statement and an absent `evidence/review.png`, neither of which is admissible evidence.
++
++**Why this state and not lower**: `NO-SHIP` is the lowest readiness state and accurately records that no implementation readiness has been established.
++
++## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
++
++- **CORRECT**: Uncovered. `audit-report.md` reports no P0/P1 defects in a static review, but no implementation, tests, lint, type check, or build is present to validate.
++- **ON-CONTRACT**: Uncovered. The required project `evidence-contract.md` is absent.
++- **FELT-GOOD**: Uncovered. No built UI or naive-hostile LARP findings exist.
++- **TASTE**: Uncovered. No rendered artifact or connoisseur LARP findings exist.
++
++## Gate Criteria Check
++
++| Gate | Required at this state? | Evidence | Status |
++|---|---|---|---|
++| Audit report exists and has no P0 finding | Pre-validation | `audit-report.md`: “No P0/P1 correctness defects found in static review.” | ✅ |
++| Project evidence contract exists | Pre-validation | `specs/projects/001-pulseboard/evidence-contract.md` is absent | ❌ |
++| Story plan exists | Validation input | `plan.md` is absent | ❌ |
++| Story tasks exist | Validation input | `tasks.md` is absent | ❌ |
++| Unit/integration tests pass | IMPL-GREEN+ | No source or test suite exists in this workspace | ❌ |
++| Lint, type check, and build pass | IMPL-GREEN+ | No application manifest or build artifact exists in this workspace | ❌ |
++| Persona LARP against built artifact | UX-RC+ | No `larp-recordings/`, `screenshots/`, or `larp-evidence/` exists | ❌ |
++| Clean build compiled | UX-RC+ | No build artifact exists | ❌ |
++
++## 🧬 Mutation Record
++
++No guard is cited as acceptance evidence because this workspace has no implementation or tests. No mutation record can be produced without inventing a production mutation site or test invocation. No acceptance criterion is discharged.
++
++**Mutation SHA**: `52bec16e248cba72738a7509cf892790b53e79e0`
++
++## Spec Coverage
++
++The story specification contains only the outcome statement, with no FR/AC identifiers or executable acceptance scenarios. Its outcome is ungrounded because no implementation or runtime evidence exists.
++
++| Requirement | Evidence | Status |
++|---|---|---|
++| A facilitator can understand, edit, and confirm proposed actions without accidental confirmation. | No code, tests, build, or LARP evidence in this workspace. | ❌ Ungrounded |
++
++## Blocking Issues
++
++| ID | Severity | Description | Required to clear |
++|---|---|---|
++| VAL-001 | P1 | Project evidence contract is absent, so readiness gate criteria are undefined. | Create the canonical project `evidence-contract.md`. |
++| VAL-002 | P1 | S009 lacks `plan.md` and `tasks.md`, required validation inputs. | Complete story planning and tasking. |
++| VAL-003 | P1 | No implementation or executable evidence exists. | Implement S009 and run the relevant local checks. |
++| VAL-004 | P1 | No built-artifact LARP evidence exists for this UI story. | Record the required LARP evidence after a clean build. |
++
++## LARP Summary
++
++No LARP was run. The workspace contains no recording or screenshot evidence.
++
++## What this validation did NOT verify / Deferrals
++
++| Deferred item | Class | Cap Status | Why deferred | Resolve by |
++|---|---|---|---|---|
++| S009 implementation behavior and automated checks | human/creds-gated | implementation-pending | No implementation, test suite, or build inputs exist in this workspace. | Implement S009, then run story validation. |
++| Review-screen runtime and first-time comprehension | human/creds-gated | implementation-pending | No built UI artifact or LARP setup exists in this workspace. | Produce a clean build and LARP recording. |
++| Gate criteria and proof sources | human/creds-gated | implementation-pending | The canonical project evidence contract is absent. | Create `evidence-contract.md` before re-validating. |
++
++## Banned-Phrase Detection (Self-Audit)
++
++- No launch, production, polish, or intuitive-experience claim is made without runtime evidence.
++- No test-suite claim is made; no test suite exists in this workspace.
++- Every readiness conclusion above names the missing mechanism or artifact.
++
++## Next Steps
++
++1. Create the project evidence contract.
++2. Complete S009 planning and tasks, then implement the review screen.
++3. Run audit, local test/lint/type/build checks, and a clean-build LARP before requesting validation again.
++
++*[As of SHA 52bec16e248cba72738a7509cf892790b53e79e0, verified by Speck story validation on 2026-08-10.]*

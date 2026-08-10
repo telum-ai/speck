@@ -1,0 +1,90 @@
+{
+  "case_id": "implement-ui",
+  "condition": "v10",
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "7f6e0005e684dbfc27b3cfea4a267093baa9c0bde34ac3e2c8984eec55ff94f3",
+  "exit_code": 0,
+  "git_status": [
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/plan.md",
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md",
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md",
+    " M web/app.js",
+    " M web/index.html",
+    "?? specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/ui-spec.md",
+    "?? web/app.test.js"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "3088797700ec41c0000eb254f2c0577f7e96696c10bf7988f1a31ce06397fa17",
+  "required_corrections": 6,
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 0.0,
+        "label": "ui-behavior-1",
+        "ok": false,
+        "weight": 1.25
+      },
+      {
+        "earned": 0.0,
+        "label": "ui-behavior-2",
+        "ok": false,
+        "weight": 1.25
+      },
+      {
+        "earned": 0.0,
+        "label": "ui-behavior-3",
+        "ok": false,
+        "weight": 1.25
+      },
+      {
+        "earned": 0.0,
+        "label": "ui-behavior-4",
+        "ok": false,
+        "weight": 1.25
+      },
+      {
+        "earned": 0.0,
+        "label": "ui-behavior-5",
+        "ok": false,
+        "weight": 1.25
+      },
+      {
+        "earned": 0.0,
+        "label": "ui-behavior-6",
+        "ok": false,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-aria-pressed",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-disabled-approve",
+        "ok": true,
+        "weight": 1.25
+      }
+    ],
+    "earned": 2.5,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 25.0
+  },
+  "timeout": false,
+  "tool_events": 46,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 1945600,
+    "input_tokens": 2066647,
+    "output_tokens": 15323
+  },
+  "valid_run": true,
+  "wall_seconds": 327.721
+}

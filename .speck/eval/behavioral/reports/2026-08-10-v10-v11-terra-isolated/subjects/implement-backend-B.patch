@@ -1,0 +1,778 @@
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/contracts/build-reminder.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/contracts/build-reminder.md
+new file mode 100644
+index 0000000..3833123
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/contracts/build-reminder.md
+@@ -0,0 +1,13 @@
++# `build_reminder` Callable Contract
++
++## Signature
++
++```python
++build_reminder(action, now) -> dict | None
++```
++
++`action` is a mapping. The function returns `None` for any action whose `confirmed` value is not the literal `True`.
++
++For a confirmed action, `id` and `owner` must be non-empty strings and `due_at` must be an ISO-8601 UTC string; malformed values raise `ValueError`. `now` accepts an aware UTC `datetime` or UTC ISO-8601 string.
++
++The returned mapping has exactly `id`, `action_id`, `owner`, `due_at`, and `remind_at`. Both timestamps use a `Z` suffix. It has no side effects and does not mutate `action`.
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/data-model.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/data-model.md
+new file mode 100644
+index 0000000..722e8dd
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/data-model.md
+@@ -0,0 +1,21 @@
++# S006 Data Model
++
++## Action input mapping
++
++| Field | Type | Rule |
++|-------|------|------|
++| `confirmed` | boolean-like | Only the literal value `True` enables validation and scheduling. |
++| `id` | string | Required and non-empty when confirmed. |
++| `owner` | string | Required and non-empty when confirmed. |
++| `due_at` | string | Required ISO-8601 UTC timestamp when confirmed. |
++
++## Reminder output mapping
++
++| Field | Source | Rule |
++|-------|--------|------|
++| `id` | action `id` and emitted `due_at` | `reminder:{action_id}:{due_at}` |
++| `action_id` | action `id` | unchanged string |
++| `owner` | action `owner` | unchanged string |
++| `due_at` | action `due_at` | normalized UTC ISO-8601 with `Z` |
++| `remind_at` | derived | normalized UTC ISO-8601 with `Z` |
++
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/plan.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/plan.md
+index 5dca428..10356eb 100644
+--- a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/plan.md
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/plan.md
+@@ -1,3 +1,78 @@
+-# Plan
++# Implementation Plan: Build reminder
+ 
+-Implement the pure function, then cover boundary and invalid-input behavior.
++**Date**: 2026-08-10
++**Spec**: `specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md`
++
++## Summary
++
++Implement one pure Python function in `src/reminders.py`. It will validate confirmed action mappings, parse only UTC ISO-8601 timestamps, derive the normal or five-minute fallback reminder time, and serialize output timestamps with `Z`.
++
++## Technical Approach
++
++Use Python's standard-library `datetime` module; no package or persistence layer is required. Normalize a trailing `Z` to `+00:00` for parsing and reject timestamps that have no UTC offset or whose offset is not zero. Treat `confirmed is True` as an identity check so values such as `1` do not schedule reminders. Serialize all output through one helper that emits a trailing `Z`, and construct a fresh dictionary without modifying `action`.
++
++## Dependencies
++
++- Requires: Python standard library only.
++- Provides: deterministic reminder payloads to downstream scheduling code.
++
++## Testing Strategy
++
++- Unit tests use `unittest` in `tests/test_reminders.py`.
++- Test the normal 24-hour path, five-minute fallback, all strict boundaries, validation failures, exact-`True` confirmation, UTC serialization, determinism, and input immutability.
++- No integration test applies: the function has no I/O boundary.
++
++## Technical Context
++
++**Language/Version**: Python 3 (standard library only)
++**Primary Dependencies**: `datetime`
++**Storage**: N/A
++**Testing**: `python3 -m unittest`
++**Target Platform**: Python runtime
++**Project Type**: single-module backend utility
++**Performance Goals**: constant work per invocation
++**Constraints**: UTC-only emitted timestamps; no input mutation
++
++## Constitution Check
++
++No project constitution or context artifact exists in this isolated corpus. The applicable local quality gates are explicit validation, deterministic output, boundary coverage, and a passing standard-library test run.
++
++## Project Structure
++
++```
++src/reminders.py                 # implementation
++tests/test_reminders.py          # unit tests
++specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/
++├── spec.md
++├── plan.md
++├── data-model.md
++├── quickstart.md
++└── tasks.md
++```
++
++## Research Informing This Plan
++
++No external research is needed: Python's `datetime.fromisoformat`, `timedelta`, and `timezone.utc` cover the specified behavior without a new dependency.
++
++## Planning Phase 1: Design & Contracts
++
++- `data-model.md` documents the action input and reminder output mappings.
++- There is no HTTP or third-party API contract; the Python function signature is the contract.
++- `quickstart.md` records executable boundary scenarios.
++
++## Planning Phase 2: Implementation Guidance
++
++| FR ID | Requirement | Acceptance criteria | Priority |
++|-------|-------------|---------------------|----------|
++| FR-001 | Ignore actions unless `confirmed is True` | AC-3 | Critical |
++| FR-002 | Validate confirmed action identity and UTC due time | AC-3 | Critical |
++| FR-003 | Schedule 24 hours before a future due time | AC-1 | Critical |
++| FR-004 | Use only a strictly-valid five-minute fallback | AC-2 | Critical |
++| FR-005 | Return deterministic, `Z`-serialized payload without mutation | AC-1, AC-3 | High |
++
++### Key implementation decisions
++
++1. Use exact boolean identity (`is True`) for confirmation; it is the literal contract.
++2. Parse a trailing `Z` as UTC and reject other offsets, naïve values, and non-strings.
++3. Compare using timezone-aware UTC `datetime` values. The fallback condition is `fallback < due_at`, not `<=`.
++4. Keep parsing and formatting in private helpers to make invalid input behavior consistent and testable.
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/quickstart.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/quickstart.md
+new file mode 100644
+index 0000000..f7c22c0
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/quickstart.md
+@@ -0,0 +1,10 @@
++# S006 Quickstart
++
++Run the unit tests from the repository root:
++
++```bash
++python3 -m unittest discover -s tests -v
++```
++
++The suite demonstrates normal scheduling, fallback scheduling, strict no-reminder boundaries, invalid confirmed actions, exact confirmation semantics, deterministic output, and non-mutation.
++
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md
+index 4d39273..36b5a5e 100644
+--- a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md
+@@ -1,16 +1,138 @@
+ ---
+-current_state: Planned
++speck_version: "10.5.0"
++artifact_type: story-spec
+ depends_on: []
+ blocks: []
++serves: []
++persona: []
++readiness_target: IMPL-GREEN
++readiness_state_verified: NO-SHIP
++lifecycle_state: Specified
+ ---
+ 
+-# S006 Build reminder
++# Story: Build reminder
+ 
+-Implement `build_reminder(action, now)` in `src/reminders.py`.
++**Story ID**: `S006-build-reminder` · **Qualified**: `E002/S006`
++**Status**: Specified
++**Input**: Implement `build_reminder(action, now)` in `src/reminders.py`.
+ 
+-- Return None unless `confirmed is True`.
+-- A confirmed action requires non-empty id and owner plus an ISO-8601 UTC due_at; otherwise raise ValueError.
+-- Return None when due_at is not in the future.
+-- Normally schedule 24 hours before due_at. If that has passed, schedule five minutes after now only when that remains strictly before due_at; otherwise return None.
+-- Return a dict with id `reminder:{action id}:{due_at}`, action_id, owner, due_at, remind_at; emitted timestamps use `Z`.
+-- The result is deterministic and the input is not mutated.
++## Purpose
++
++Prevent confirmed actions from being forgotten while ensuring that callers never receive a malformed, stale, or impossible reminder payload.
++
++## 1. Experience (What the caller lives)
++
++### 1a. JTBD Context
++
++When a confirmed action has a UTC due time, a reminder-producing caller wants a deterministic reminder payload so that it can notify the assigned owner at a useful time without scheduling stale or impossible reminders.
++
++### 1b. Primary User Story
++
++As a reminder-producing caller, I want to derive a reminder from a confirmed action so that an owner is reminded before its due time.
++
++### 1c. Felt Quality (How the caller feels)
++
++| Surface | Entry state | Target outcome | Banned outcome |
++|---------|-------------|----------------|----------------|
++| `build_reminder` result | A confirmed or unconfirmed action | A predictable payload or a safe `None` | A malformed, late, or nondeterministic reminder |
++
++### 1d. Magic Moments Tied to This Story
++
++No project-level magic moments are present in this isolated project corpus; this story claims none (`serves: []`).
++
++### 1e. Functional Requirements
++
++- **FR-001**: The function SHALL return `None` unless `action["confirmed"] is True`.
++- **FR-002**: For confirmed actions, the function SHALL raise `ValueError` unless `id`, `owner`, and UTC ISO-8601 `due_at` are valid and non-empty.
++- **FR-003**: The function SHALL return `None` when `due_at` is not strictly in the future.
++- **FR-004**: The function SHALL schedule 24 hours before `due_at`, or five minutes after `now` only when the normal time has passed and that fallback is strictly before `due_at`.
++- **FR-005**: The function SHALL return deterministic, `Z`-serialized output without mutating the action mapping.
++
++## 2. Acceptance LARP (How we prove the behavior works)
++
++### 2a. Required Personas to LARP
++
++| Persona | Flow | Build artifact | Evidence required |
++|---------|------|----------------|-------------------|
++| module caller | Call the pure function with representative mappings | unit-test transcript | passing `unittest` output |
++
++### 2b. Acceptance Scenarios
++
++#### AC-1 — Schedule a confirmed future action
++- **GIVEN** a mapping with `confirmed is True`, a non-empty `id` and `owner`, and a future UTC `due_at`
++- **WHEN** `build_reminder(action, now)` is called
++- **THEN** it returns `id`, `action_id`, `owner`, `due_at`, and `remind_at` with `Z` timestamps
++- **AND** `remind_at` is 24 hours before `due_at` when that time is still ahead of `now`
++- **EVIDENCE** `tests/test_reminders.py` successful-path test
++- **VERIFIABILITY** agent-LARP
++
++#### AC-2 — Avoid a late or impossible reminder
++- **GIVEN** a confirmed action whose normal reminder time has passed
++- **WHEN** five minutes after `now` remains strictly before `due_at`
++- **THEN** the fallback reminder uses that time
++- **AND** the function returns `None` when the due time is not future or the fallback would be at/after it
++- **EVIDENCE** `tests/test_reminders.py` boundary tests
++- **VERIFIABILITY** agent-LARP
++
++#### AC-3 — Reject malformed confirmed actions and ignore unconfirmed ones
++- **GIVEN** an unconfirmed action or a confirmed action missing a required field or UTC due timestamp
++- **WHEN** the function is called
++- **THEN** it returns `None` for unconfirmed input and raises `ValueError` for invalid confirmed input
++- **EVIDENCE** `tests/test_reminders.py` validation tests
++- **VERIFIABILITY** agent-LARP
++
++## 3. Evidence Required
++
++| Evidence type | Required for state | Verifiable by | Path / convention |
++|---------------|--------------------|---------------|-------------------|
++| Unit-test transcript | IMPL-GREEN | `python3 -m unittest` | terminal output for `tests/test_reminders.py` |
++| Adversarial probe results | SHIP-RC | audit | `audit-report.md` |
++
++## 4. Adversarial Cases (What must NOT happen)
++
++| Condition | Must NOT happen | Probe |
++|-----------|-----------------|-------|
++| `confirmed` is falsey or merely truthy | Validate or schedule a reminder | Use `False`, `1`, and missing `confirmed` |
++| Confirmed input lacks `id`, `owner`, or UTC `due_at` | Return an incomplete reminder | Parametrized invalid-input tests |
++| Due time is past/equal to `now`, or fallback is equal to due time | Schedule a stale or impossible reminder | Exact-boundary tests |
++| Valid input is passed in | Mutate the caller's mapping | Equality check after invocation |
++
++## 5. Failure-Modes Handled
++
++| Dependency | Failure mode | Behavior | Verified by |
++|------------|--------------|----------|-------------|
++| Input mapping | Missing or malformed required data | `ValueError` for confirmed actions | validation tests |
++| Time values | Non-UTC or malformed ISO-8601 data | `ValueError` for confirmed actions | timestamp tests |
++
++## 6. Related Tables / Surfaces (Cascade)
++
++This pure function performs no writes, cache updates, network calls, or background scheduling.
++
++## 7. Performance + Non-Functional Targets
++
++- Deterministic and side-effect free.
++- Constant-time parsing and construction for one action.
++- Input mapping remains unchanged.
++
++## 8. Data + API (Last, not first)
++
++### Key Entity
++- **Action mapping**: `confirmed`, `id`, `owner`, and `due_at` fields used to derive a reminder.
++
++### API Surface
++- **`build_reminder(action, now)`**: returns a reminder mapping or `None`; raises `ValueError` only for malformed confirmed actions.
++
++## Acceptance Checklist
++
++- [x] Acceptance scenarios have stable `AC-N` identifiers and test evidence.
++- [x] Adversarial cases invert each positive behavior.
++- [x] The scope is explainable in under five minutes and contains one coherent concern.
++
++## Story Lifecycle State Tracking
++
++- [x] **Specified** - requirements completed
++- [x] **Planned** - implementation plan completed
++- [x] **Tasks Generated** - executable TDD checklist completed
++- [x] **Implemented** - code and local tests completed
++- [ ] **Audited** - reserved for `/audit`
++- [ ] **Validated** - reserved for `/story-validate`
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md
+index 704c568..a88d2f9 100644
+--- a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md
+@@ -1,5 +1,46 @@
+-# Tasks
++---
++status: completed
++---
+ 
+-- [ ] Implement confirmed-action validation in `src/reminders.py`
+-- [ ] Implement scheduling boundaries and deterministic output
+-- [ ] Add and run tests
++# Tasks: Build reminder
++
++## FR → Task Mapping
++
++| FR ID | Requirement | Implementing tasks | Test coverage |
++|-------|-------------|--------------------|---------------|
++| FR-001 | Exact-`True` confirmation | T001, T002 | `test_unconfirmed_actions_return_none` |
++| FR-002 | Confirmed-action validation | T001, T002 | `test_invalid_confirmed_actions_raise_value_error` |
++| FR-003 | Normal 24-hour scheduling | T001, T002 | `test_schedules_twenty_four_hours_before_due_time` |
++| FR-004 | Strict fallback boundaries | T001, T002 | fallback and boundary tests |
++| FR-005 | Deterministic, immutable `Z` output | T001, T002 | output and immutability tests |
++
++## Phase 1: Tests First (TDD)
++
++- [x] T001 Add focused `unittest` coverage for validation, normal and fallback timing, strict boundaries, `Z` serialization, determinism, and input non-mutation in `tests/test_reminders.py`.
++
++**Implements**: FR-001, FR-002, FR-003, FR-004, FR-005
++**Pattern**: use fixed UTC timestamps and call the public `build_reminder` function only.
++**File**: `tests/test_reminders.py`
++
++## Phase 2: Core Implementation
++
++- [x] T002 Implement UTC parsing/formatting, confirmed-action validation, and reminder derivation in `src/reminders.py` so T001 passes.
++
++**Implements**: FR-001, FR-002, FR-003, FR-004, FR-005
++**Pattern**: standard-library `datetime`; exact `confirmed is True`; strict `<` comparisons; return a fresh mapping.
++**File**: `src/reminders.py`
++
++## Phase 3: Verification
++
++- [x] T003 Run the documented unit-test command and inspect the changed files for only S006 scope.
++
++**Implements**: FR-001, FR-002, FR-003, FR-004, FR-005
++**Pattern**: `python3 -m unittest discover -s tests -v`.
++**File**: `tests/test_reminders.py`
++
++## Consistency Cross-check
++
++- [x] Every FR and AC maps to T001 and T002; T003 verifies the full set.
++- [x] Tasks use the single-module Python plan and no unavailable project patterns.
++- [x] This backend-only story needs no UI task or UI specification.
++- [x] Ordering is TDD: T001 precedes T002, then T003.
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..17250b1
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E002` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E002/S006` | NO-SHIP | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E002-reminders` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `5f51e1c` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..e736b2a
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `5f51e1c` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..8e1757d
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,81 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "5f51e1c",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 5,
++    "edges": 0,
++    "by_kind": {
++      "epic": 1,
++      "story": 1,
++      "ac": 3
++    }
++  },
++  "nodes": [
++    {
++      "id": "E002",
++      "kind": "epic",
++      "scope": null,
++      "title": "E002-reminders",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces/implement-backend-B/specs/projects/001-pulseboard/epics/E002-reminders",
++      "anchor": "E002",
++      "content_hash": "32f753e6de28",
++      "attrs": {
++        "has_breakdown": false
++      }
++    },
++    {
++      "id": "E002/S006",
++      "kind": "story",
++      "scope": "E002",
++      "title": "S006-build-reminder",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces/implement-backend-B/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md",
++      "anchor": "",
++      "content_hash": "a74f50f76ae8",
++      "attrs": {
++        "readiness_state_verified": "NO-SHIP",
++        "lifecycle_state": "Specified",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    },
++    {
++      "id": "E002/S006/AC-1",
++      "kind": "ac",
++      "scope": "E002",
++      "title": "Schedule a confirmed future action",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces/implement-backend-B/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md",
++      "anchor": "AC-1",
++      "content_hash": "0e1e725bcce3",
++      "attrs": {}
++    },
++    {
++      "id": "E002/S006/AC-2",
++      "kind": "ac",
++      "scope": "E002",
++      "title": "Avoid a late or impossible reminder",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces/implement-backend-B/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md",
++      "anchor": "AC-2",
++      "content_hash": "5b8f36593065",
++      "attrs": {}
++    },
++    {
++      "id": "E002/S006/AC-3",
++      "kind": "ac",
++      "scope": "E002",
++      "title": "Reject malformed confirmed actions and ignore unconfirmed ones",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces/implement-backend-B/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md",
++      "anchor": "AC-3",
++      "content_hash": "968c2bff8382",
++      "attrs": {}
++    }
++  ],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}
+diff --git a/src/__pycache__/reminders.cpython-312.pyc b/src/__pycache__/reminders.cpython-312.pyc
+new file mode 100644
+index 0000000000000000000000000000000000000000..641b095906eb4bbf73f0f85c3e82a9e3b2157767
+GIT binary patch
+literal 3628
+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
+D#gsZq
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/reminders.py b/src/reminders.py
+index f25f4f2..fb7358c 100644
+--- a/src/reminders.py
++++ b/src/reminders.py
+@@ -1,5 +1,72 @@
+ """Reminder construction."""
+ 
++from datetime import datetime, timedelta, timezone
++from collections.abc import Mapping
++
++
++def _parse_utc_timestamp(value, field_name):
++    """Return a UTC datetime for an ISO-8601 UTC timestamp."""
++    if not isinstance(value, str) or not value:
++        raise ValueError(f"{field_name} must be a non-empty ISO-8601 UTC timestamp")
++
++    normalized = f"{value[:-1]}+00:00" if value.endswith("Z") else value
++    try:
++        parsed = datetime.fromisoformat(normalized)
++    except ValueError as error:
++        raise ValueError(f"{field_name} must be an ISO-8601 UTC timestamp") from error
++
++    if parsed.tzinfo is None or parsed.utcoffset() != timedelta(0):
++        raise ValueError(f"{field_name} must be an ISO-8601 UTC timestamp")
++    return parsed.astimezone(timezone.utc)
++
++
++def _format_utc(value):
++    """Serialize a UTC datetime with the contract's ``Z`` suffix."""
++    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
++
+ 
+ def build_reminder(action, now):
+-    raise NotImplementedError
++    """Build a reminder payload for a confirmed action, when one is possible."""
++    if not isinstance(action, Mapping) or action.get("confirmed") is not True:
++        return None
++
++    action_id = action.get("id")
++    owner = action.get("owner")
++    if not isinstance(action_id, str) or not action_id:
++        raise ValueError("confirmed action requires a non-empty id")
++    if not isinstance(owner, str) or not owner:
++        raise ValueError("confirmed action requires a non-empty owner")
++
++    due_at = _parse_utc_timestamp(action.get("due_at"), "due_at")
++    now_at = (
++        _parse_utc_timestamp(now, "now")
++        if isinstance(now, str)
++        else _parse_utc_datetime(now, "now")
++    )
++    if due_at <= now_at:
++        return None
++
++    remind_at = due_at - timedelta(hours=24)
++    if remind_at < now_at:
++        fallback = now_at + timedelta(minutes=5)
++        if fallback >= due_at:
++            return None
++        remind_at = fallback
++
++    due_at_value = _format_utc(due_at)
++    return {
++        "id": f"reminder:{action_id}:{due_at_value}",
++        "action_id": action_id,
++        "owner": owner,
++        "due_at": due_at_value,
++        "remind_at": _format_utc(remind_at),
++    }
++
++
++def _parse_utc_datetime(value, field_name):
++    """Validate a timezone-aware UTC ``datetime`` supplied by the caller."""
++    if not isinstance(value, datetime):
++        raise ValueError(f"{field_name} must be a UTC datetime or ISO-8601 UTC timestamp")
++    if value.tzinfo is None or value.utcoffset() != timedelta(0):
++        raise ValueError(f"{field_name} must be a UTC datetime or ISO-8601 UTC timestamp")
++    return value.astimezone(timezone.utc)
+diff --git a/tests/__pycache__/test_reminders.cpython-312.pyc b/tests/__pycache__/test_reminders.cpython-312.pyc
+new file mode 100644
+index 0000000000000000000000000000000000000000..005280a21746e63ba91dd417cd96b494d9bfddfb
+GIT binary patch
+literal 5029
+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
+R;Tyxhy!47jOqaES{{VCrnd1Ne
+
+literal 0
+HcmV?d00001
+
+diff --git a/tests/test_reminders.py b/tests/test_reminders.py
+new file mode 100644
+index 0000000..0befb6c
+--- /dev/null
++++ b/tests/test_reminders.py
+@@ -0,0 +1,83 @@
++"""Behavioral tests for reminder construction."""
++
++from copy import deepcopy
++from datetime import datetime, timezone
++import unittest
++
++from src.reminders import build_reminder
++
++
++NOW = datetime(2026, 8, 10, 12, 0, tzinfo=timezone.utc)
++
++
++def action(**overrides):
++    value = {
++        "confirmed": True,
++        "id": "action-42",
++        "owner": "alex",
++        "due_at": "2026-08-12T12:00:00Z",
++    }
++    value.update(overrides)
++    return value
++
++
++class BuildReminderTests(unittest.TestCase):
++    def test_unconfirmed_actions_return_none(self):
++        for confirmed in (False, None, 0, 1, "true"):
++            with self.subTest(confirmed=confirmed):
++                self.assertIsNone(build_reminder(action(confirmed=confirmed), NOW))
++
++    def test_invalid_confirmed_actions_raise_value_error(self):
++        invalid_actions = (
++            action(id=""),
++            action(owner=""),
++            action(due_at="not-a-date"),
++            action(due_at="2026-08-12T12:00:00"),
++            action(due_at="2026-08-12T13:00:00+01:00"),
++        )
++        for invalid_action in invalid_actions:
++            with self.subTest(invalid_action=invalid_action):
++                with self.assertRaises(ValueError):
++                    build_reminder(invalid_action, NOW)
++
++    def test_schedules_twenty_four_hours_before_due_time(self):
++        result = build_reminder(action(), NOW)
++
++        self.assertEqual(
++            result,
++            {
++                "id": "reminder:action-42:2026-08-12T12:00:00Z",
++                "action_id": "action-42",
++                "owner": "alex",
++                "due_at": "2026-08-12T12:00:00Z",
++                "remind_at": "2026-08-11T12:00:00Z",
++            },
++        )
++
++    def test_uses_five_minute_fallback_only_when_strictly_before_due(self):
++        result = build_reminder(action(due_at="2026-08-10T12:10:01Z"), NOW)
++        self.assertEqual(result["remind_at"], "2026-08-10T12:05:00Z")
++
++        self.assertIsNone(build_reminder(action(due_at="2026-08-10T12:05:00Z"), NOW))
++
++    def test_keeps_the_normal_reminder_when_it_is_exactly_now(self):
++        result = build_reminder(action(due_at="2026-08-11T12:00:00Z"), NOW)
++        self.assertEqual(result["remind_at"], "2026-08-10T12:00:00Z")
++
++    def test_does_not_schedule_due_or_past_actions(self):
++        self.assertIsNone(build_reminder(action(due_at="2026-08-10T12:00:00Z"), NOW))
++        self.assertIsNone(build_reminder(action(due_at="2026-08-10T11:59:59Z"), NOW))
++
++    def test_output_is_deterministic_and_does_not_mutate_input(self):
++        input_action = action(due_at="2026-08-11T12:00:00Z")
++        original = deepcopy(input_action)
++
++        first = build_reminder(input_action, NOW)
++        second = build_reminder(input_action, NOW)
++
++        self.assertEqual(first, second)
++        self.assertEqual(input_action, original)
++
++
++if __name__ == "__main__":
++    unittest.main()
