@@ -36,6 +36,7 @@ class CommandEvent:
     index: int
     command: str
     output: str
+    exit_code: int | None
     success: bool
 
 
@@ -55,10 +56,10 @@ class ParsedTranscript:
 
 def load_speck_context_module() -> Any:
     here = Path(__file__).resolve()
-    module_path = here.parents[2] / "context" / "speck_context.py"
-    spec = importlib.util.spec_from_file_location("speck_context", module_path)
+    local_path = here.parents[2] / "context" / "speck_context.py"
+    spec = importlib.util.spec_from_file_location("speck_context", local_path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"cannot import loader module from {module_path}")
+        raise RuntimeError(f"cannot import loader module from {local_path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -68,15 +69,15 @@ def _as_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
-def _command_success(item: dict[str, Any], event: dict[str, Any]) -> bool:
+def _command_exit_code(item: dict[str, Any], event: dict[str, Any]) -> int | None:
     for key in ("exit_code", "return_code", "status_code"):
         value = item.get(key, event.get(key))
         if value is not None:
             try:
-                return int(value) == 0
+                return int(value)
             except (TypeError, ValueError):
-                return False
-    return False
+                return None
+    return None
 
 
 def _extract_paths_from_change(item: dict[str, Any]) -> list[str]:
@@ -121,12 +122,14 @@ def parse_codex_transcript(text: str) -> ParsedTranscript:
         ):
             cmd = str(item.get("command") or "")
             output = str(item.get("aggregated_output") or item.get("output") or item.get("stdout") or "")
+            exit_code = _command_exit_code(item, event)
             parsed.commands.append(
                 CommandEvent(
                     index=idx,
                     command=cmd,
                     output=output,
-                    success=_command_success(item, event),
+                    exit_code=exit_code,
+                    success=exit_code == 0,
                 )
             )
             continue
@@ -405,15 +408,41 @@ def _context_blocks(output: str, loader: Any) -> tuple[list[tuple[str, bytes]], 
 
 
 def _receipt_integrity(
-    receipt: dict[str, Any], *, output: str, root: Path, required: list[str], selections: dict[str, str], loader: Any
+    receipt: dict[str, Any],
+    *,
+    output: str,
+    root: Path,
+    required: list[str],
+    selections: dict[str, str],
+    gates: list[str],
+    all_gates: list[str],
+    expected_schema: int,
+    loader: Any,
 ) -> list[str]:
     problems: list[str] = []
-    if receipt.get("schema_version") != 1:
-        problems.append("receipt schema_version is not 1")
+    if receipt.get("schema_version") != expected_schema:
+        problems.append(
+            f"receipt schema_version {receipt.get('schema_version')!r} != expected {expected_schema}"
+        )
     if receipt.get("selections", {}) != selections:
         problems.append(
             f"receipt selections {receipt.get('selections', {})!r} != expected {selections!r}"
         )
+    if expected_schema >= 2:
+        if receipt.get("post_write_gates") != gates:
+            problems.append(
+                f"receipt post_write_gates {receipt.get('post_write_gates')!r} != expected {gates!r}"
+            )
+        if receipt.get("post_write_gates_all") != all_gates:
+            problems.append(
+                "receipt post_write_gates_all "
+                f"{receipt.get('post_write_gates_all')!r} != expected {all_gates!r}"
+            )
+        expected_policy = getattr(loader, "GATE_POLICY", "direct-event-exit-bound")
+        if receipt.get("gate_policy") != expected_policy:
+            problems.append(
+                f"receipt gate_policy {receipt.get('gate_policy')!r} != expected {expected_policy!r}"
+            )
     files = receipt.get("files")
     if not isinstance(files, list) or len(files) != len(required):
         problems.append("receipt file records do not match required file count")
@@ -585,6 +614,7 @@ def evaluate_axes(
     transcript: ParsedTranscript,
     root: Path,
     loader: Any,
+    expected_receipt_schema: int,
 ) -> list[AxisResult]:
     required = spec["required_files"]
     forbidden = set(spec["forbidden_files"])
@@ -647,6 +677,9 @@ def evaluate_axes(
         root=root,
         required=required,
         selections=selections,
+        gates=gates,
+        all_gates=all_gates,
+        expected_schema=expected_receipt_schema,
         loader=loader,
     )
     if receipt_profile != profile:
@@ -662,8 +695,6 @@ def evaluate_axes(
 
     read_paths: set[str] = set(receipt_paths)
     for cmd in transcript.commands:
-        if not cmd.success:
-            continue
         read_paths.update(_paths_from_command(cmd.command, root))
         for rec in _receipts_from_output(cmd.output, loader):
             read_paths.update(_receipt_paths(rec))
@@ -674,7 +705,7 @@ def evaluate_axes(
     else:
         selectivity.status = "pass"
         selectivity.ok = True
-        selectivity.details.append("no forbidden branch files in receipts or successful command reads")
+        selectivity.details.append("no forbidden branch files in receipts or observed command reads")
 
     inferred_changes: list[FileChangeEvent] = []
     for command in transcript.commands:
@@ -705,25 +736,33 @@ def evaluate_axes(
         gate_use.details.append("no explicit or inferred mutation event; post-write gate ordering cannot be established")
     else:
         last_change_idx = mutations[-1].index
-        after = [c for c in transcript.commands if c.index > last_change_idx and c.success]
+        after = [
+            command
+            for command in transcript.commands
+            if command.index > last_change_idx and command.exit_code is not None
+        ]
         any_matches = [c for c in after if any(_command_proves_gate(c.command, gate, root) for gate in gates)]
         missing_all = [
             gate for gate in all_gates
             if not any(_command_proves_gate(c.command, gate, root) for c in after)
         ]
         if gates and not any_matches:
-            gate_use.details.append(f"no exit-bound successful post-mutation invocation of any gate in {gates!r}")
+            gate_use.details.append(f"no exit-bound post-mutation invocation of any gate in {gates!r}")
         if missing_all:
             gate_use.details.append(f"missing required post-mutation gate invocation(s): {missing_all}")
         if (not gates or any_matches) and not missing_all:
-            witnessed = [any_matches[0].command] if any_matches else []
+            witnessed = [any_matches[-1]] if any_matches else []
             witnessed.extend(
-                next(c.command for c in after if _command_proves_gate(c.command, gate, root))
+                next(c for c in reversed(after) if _command_proves_gate(c.command, gate, root))
                 for gate in all_gates
             )
-            gate_use.status = "pass"
             gate_use.ok = True
-            gate_use.details.append(f"successful exit-bound gate invocation(s) after last mutation: {witnessed!r}")
+            gate_use.status = "pass" if all(c.success for c in witnessed) else "conformant_red"
+            outcomes = [f"exit={c.exit_code}: {c.command}" for c in witnessed]
+            gate_use.details.append(
+                "exit-bound gate outcome(s) after last mutation; red remains red: "
+                f"{outcomes!r}"
+            )
         else:
             gate_use.details.append(f"last mutation event was {last_change_idx}")
 
@@ -731,8 +770,11 @@ def evaluate_axes(
 
 
 def run_validator(args: argparse.Namespace) -> int:
+    requested_root = args.root.resolve() if args.root else None
+    # The validator owns its parser and contract semantics. Importing Python
+    # from the workspace being judged would let the subject redefine its judge.
     loader = load_speck_context_module()
-    root = (args.root or loader.repo_root()).resolve()
+    root = (requested_root or loader.repo_root()).resolve()
     contract_path = (args.contract or (root / loader.DEFAULT_CONTRACT)).resolve()
 
     if not args.transcript.is_file():
@@ -753,7 +795,14 @@ def run_validator(args: argparse.Namespace) -> int:
         return 2
 
     parsed = parse_codex_transcript(transcript_text)
-    axes = evaluate_axes(profile=args.profile, spec=spec, transcript=parsed, root=root, loader=loader)
+    axes = evaluate_axes(
+        profile=args.profile,
+        spec=spec,
+        transcript=parsed,
+        root=root,
+        loader=loader,
+        expected_receipt_schema=args.receipt_schema,
+    )
     required_fail = [a for a in axes if not a.ok and a.status != "not_applicable"]
 
     report = {
@@ -789,6 +838,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--select", action="append", default=[], metavar="KEY=VALUE", help="Resolve a declared JIT branch selector")
     parser.add_argument("--root", type=Path, default=None, help="Repository root")
     parser.add_argument("--contract", type=Path, default=None, help="Contract JSON path")
+    parser.add_argument(
+        "--receipt-schema",
+        type=int,
+        choices=(1, 2),
+        default=2,
+        help="Expected receipt schema; use 1 only when rescoring a pinned legacy revision",
+    )
     parser.add_argument("--format", choices=["codex"], default="codex", help="Transcript format")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     args = parser.parse_args(argv)

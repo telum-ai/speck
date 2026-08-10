@@ -87,16 +87,21 @@ python3 .speck/scripts/validation/validators/validate-context-transcript.py \
 
 The non-collapsible axes are REACH, SELECTIVITY, TIMING, and GATE_USE.
 The exact loader argv, explicit zero exit, emitted context bodies, receipt
-order, hashes, and byte counts are checked. Gate use is a direct, single-command
-event, not a substring: the gate is the primary command and owns the recorded
-tool exit. Selected states may require multiple gates. Passing these
-axes proves context-path conformance only; hidden scoring, blind judgment,
-audit, and LARP still own semantic use and quality. Subject execution validity,
-artifact mutation, and context conformance are reported separately. A red
+order, hashes, byte counts, gate lists, and gate policy are checked. Gate use is
+a direct, single-command event, not a substring: the gate is the primary
+command and owns the recorded tool exit. Selected states may require multiple
+gates. A direct nonzero gate is preserved as `conformant_red`: the agent used
+the method and the artifact remains red. Passing these axes proves context-path
+conformance only; hidden scoring, blind judgment, audit, and LARP still own
+semantic use and quality. Subject execution validity, artifact mutation, and
+context conformance are reported separately. A red
 conformance report is a methodology-adherence finding; it neither invalidates
 the experiment nor changes the artifact-quality score.
 The runner applies the declared profile automatically to the eight relevant
-v11 cases and records the report alongside each subject result.
+v11 cases using a repository-trusted validator and a contract snapshotted from
+the pinned revision outside the subject workspace. It records the report
+alongside each result; methodology-contaminated or otherwise invalid subjects
+remain visible but cannot contribute a green conformance aggregate.
 
 ## Harness validity
 

@@ -26,6 +26,12 @@ Transcript conformance remains narrower than quality. It can prove that the
 declared context was reached selectively and on time; it cannot prove that the
 agent understood or used it correctly.
 
+Anthropic's current context-engineering guidance supports the direction:
+advanced models benefit from less repeated upfront instruction, progressive
+disclosure, expressive interfaces instead of examples, and room for judgment.
+This ADR applies exact machinery only to P1-P4 proof invariants; it does not
+turn ordinary implementation judgment into more rules. ([source](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models), 2026-07-24)
+
 ## Alternatives considered
 
 | Mechanism | JIT fidelity | Quality leverage | Auditability | Context cost | Decision |
@@ -45,10 +51,11 @@ agent understood or used it correctly.
    of the receipt and unselected values become forbidden branches.
 2. `.speck/scripts/context/speck_context.py PROFILE` is the only receipt-bearing
    load path. It fails closed, reads only contract-declared files, and emits a
-   deterministic receipt containing selectors, ordered paths, byte counts, and
-   hashes. The transcript validator binds the exact loader argv, requires an
-   explicit zero exit code, and byte-compares every emitted BEGIN/END body with
-   the isolated workspace; a receipt without its bodies fails REACH.
+   deterministic schema-versioned receipt containing selectors, ordered paths, byte counts,
+   hashes, resolved post-write gates, and their direct-event policy. The
+   transcript validator binds the exact loader argv, requires an explicit zero
+   exit code, and byte-compares every emitted BEGIN/END body with the isolated
+   workspace; a receipt without its bodies fails REACH.
 3. Skills with a declared profile route through the loader before their first
    write. Cheap branch keys are still computed before loading; selection does
    not require preloading a branch.
@@ -60,9 +67,13 @@ agent understood or used it correctly.
    the primary command in its own tool event, where it directly owns the event
    exit code; command lists, substitution-wrapped gates, background jobs, and
    collected exit codes are not proof. Selector-specific `all` gates preserve
-   state obligations such as truth stamps, FELT, and TASTE at UI UX-RC+. Shell
-   redirects and known write-capable interpreter forms count as mutations when
-   host events are thin.
+   state obligations such as truth stamps, FELT, and TASTE at UI UX-RC+. A
+   direct nonzero gate is a conforming red outcome, not process failure or
+   artifact success. Shell redirects and known write-capable interpreter forms
+   count as mutations when host events are thin.
+   The independent validator executes only its own trusted parsing code; a
+   workspace under evaluation cannot supply or downgrade that code. Legacy
+   receipt schemas are selected explicitly from the pinned revision.
 5. Load-bearing output obligations remain at their JIT point of use. The
    manifest and receipt do not replace templates, artifact validators,
    adversarial audit, LARP, or behavioral evaluation.
@@ -106,8 +117,10 @@ unselected reference content.
 
 Agents have one portable way to load a selected context path, and later review
 can distinguish missing context, branch pollution, late loading, and skipped
-post-write gates. A contracted behavioral subject is invalid when context
-conformance fails; process evidence cannot be laundered into a quality verdict.
+post-write gates. A contracted behavioral subject reports context conformance
+separately from artifact quality and execution validity. Failed conformance
+cannot support a process claim, while a methodology-contaminated subject is
+excluded from conformance aggregates and the controlled comparison.
 Receipts add small command/output overhead. Profiles must be kept aligned with
 router DAGs and tight post-subtraction load budgets; corpus validation owns that
 drift check.

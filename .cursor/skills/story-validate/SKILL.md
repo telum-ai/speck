@@ -22,7 +22,9 @@ Output: `[STORY_DIR]/validation-report.md`.
    - Backend: `python3 .speck/scripts/context/speck_context.py story-validate-backend --select claimed_state=<state>`
    - UI: `python3 .speck/scripts/context/speck_context.py story-validate-ui --select claimed_state=<state> --select visual_host=<host>`
 3. Require exit 0 and `SPECK_CONTEXT_RECEIPT`. Do not directly load unselected
-   state, archetype, axis, or host references.
+   state, archetype, axis, or host references. The receipt's
+   `post_write_gates`, `post_write_gates_all`, and `gate_policy` fields are the
+   exact executable closure contract; do not reconstruct or batch it.
 4. Execute every receipted node in order. Locate and record `build_sha`; run the
    real checks/probes; write the report; lower the claim to the highest state
    actually earned; then close the report loop:

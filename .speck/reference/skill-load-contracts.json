@@ -83,7 +83,8 @@
         ".cursor/skills/project-evidence-contract/references/tiers/sprint.md",
         ".cursor/skills/project-evidence-contract/references/archetype/backend.md"
       ],
-      "post_write_gates": [".speck/scripts/validation/validate-template.sh", ".speck/scripts/stamp-truth.sh"]
+      "post_write_gates": [".speck/scripts/validation/validate-template.sh"],
+      "post_write_gates_all": [".speck/scripts/stamp-truth.sh"]
     },
     "project-evidence-ui-platform": {
       "entrypoint": ".cursor/skills/project-evidence-contract/SKILL.md",
@@ -98,7 +99,8 @@
         ".cursor/skills/project-evidence-contract/references/tiers/sprint.md",
         ".cursor/skills/project-evidence-contract/references/archetype/backend.md"
       ],
-      "post_write_gates": [".speck/scripts/validation/validate-template.sh", ".speck/scripts/stamp-truth.sh"]
+      "post_write_gates": [".speck/scripts/validation/validate-template.sh"],
+      "post_write_gates_all": [".speck/scripts/stamp-truth.sh"]
     },
     "project-evidence-backend-build": {
       "entrypoint": ".cursor/skills/project-evidence-contract/SKILL.md",
@@ -113,7 +115,8 @@
         ".cursor/skills/project-evidence-contract/references/tiers/sprint.md",
         ".cursor/skills/project-evidence-contract/references/archetype/ui.md"
       ],
-      "post_write_gates": [".speck/scripts/validation/validate-template.sh", ".speck/scripts/stamp-truth.sh"]
+      "post_write_gates": [".speck/scripts/validation/validate-template.sh"],
+      "post_write_gates_all": [".speck/scripts/stamp-truth.sh"]
     },
     "project-evidence-backend-platform": {
       "entrypoint": ".cursor/skills/project-evidence-contract/SKILL.md",
@@ -128,7 +131,8 @@
         ".cursor/skills/project-evidence-contract/references/tiers/sprint.md",
         ".cursor/skills/project-evidence-contract/references/archetype/ui.md"
       ],
-      "post_write_gates": [".speck/scripts/validation/validate-template.sh", ".speck/scripts/stamp-truth.sh"]
+      "post_write_gates": [".speck/scripts/validation/validate-template.sh"],
+      "post_write_gates_all": [".speck/scripts/stamp-truth.sh"]
     },
     "story-validate-ui": {
       "max_bytes": 28000,

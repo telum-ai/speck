@@ -110,6 +110,17 @@ RECEIPT1=$(grep '^SPECK_CONTEXT_RECEIPT:' "$T/loader.out" | tail -1)
 run_loader "$WORK" "$PROFILE" "$T/loader2.out"
 RECEIPT2=$(grep '^SPECK_CONTEXT_RECEIPT:' "$T/loader2.out" | tail -1)
 [[ "$RECEIPT1" == "$RECEIPT2" ]] && pass "receipt line is deterministic across runs" || fail "deterministic receipt mismatch"
+[[ "$RECEIPT1" == *'"schema_version":2'* ]] \
+  && [[ "$RECEIPT1" == *'"post_write_gates":[".speck/scripts/validation/validators/validate-story-tasks.sh"]'* ]] \
+  && [[ "$RECEIPT1" == *'"post_write_gates_all":[]'* ]] \
+  && [[ "$RECEIPT1" == *'"gate_policy":"direct-event-exit-bound"'* ]] \
+  && pass "receipt exposes the exact executable gate contract" || fail "receipt gate contract missing or incorrect"
+
+python3 "$LOADER" project-evidence-ui-build --root "$ROOT" > "$T/evidence-loader.out"
+EVIDENCE_RECEIPT=$(grep '^SPECK_CONTEXT_RECEIPT:' "$T/evidence-loader.out" | tail -1)
+[[ "$EVIDENCE_RECEIPT" == *'"post_write_gates":[".speck/scripts/validation/validate-template.sh"]'* ]] \
+  && [[ "$EVIDENCE_RECEIPT" == *'"post_write_gates_all":[".speck/scripts/stamp-truth.sh"]'* ]] \
+  && pass "evidence contract requires both template validation and truth stamp" || fail "evidence contract gate semantics are not exact"
 
 echo "── loader: missing required file ──────────────────────────────────────────────────────────"
 MISS="$T/missing"
@@ -158,6 +169,15 @@ write_transcript "$TRANSCRIPT_OK" \
 run_validator "$WORK" --transcript "$TRANSCRIPT_OK" --profile "$PROFILE" --json
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
   && pass "conforming transcript passes all axes" || fail "conforming transcript (rc=$RC)"
+
+echo "── validator: workspace loader cannot redefine its judge ─────────────────────────────────"
+MALICIOUS_MARKER="$T/workspace-loader-executed"
+mkdir -p "$WORK/.speck/scripts/context"
+printf 'from pathlib import Path\nPath("%s").write_text("executed")\nRECEIPT_SCHEMA_VERSION = 1\n' \
+  "$MALICIOUS_MARKER" > "$WORK/.speck/scripts/context/speck_context.py"
+run_validator "$WORK" --transcript "$TRANSCRIPT_OK" --profile "$PROFILE" --json
+[[ "$RC" == 0 ]] && [[ ! -e "$MALICIOUS_MARKER" ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "validator ignores workspace Python and keeps current receipt semantics" || fail "workspace loader must not execute or downgrade receipt checks (rc=$RC)"
 
 echo "── validator: loader discovery in a multi-line shell call ────────────────────────────────"
 TRANSCRIPT_MULTILINE="$T/multiline.jsonl"
@@ -220,6 +240,43 @@ run_validator "$WORK" --transcript "$TRANSCRIPT_FORGED_HASH" --profile "$PROFILE
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "sha256 mismatch" \
   && pass "exact-path forged hash fails REACH" || fail "forged hash should fail REACH (rc=$RC)"
 
+echo "── validator: forged receipt gate contract ────────────────────────────────────────────────"
+python3 - "$LOADER_OUT_FILE" "$T/forged-gates.out" <<'PY'
+import json, pathlib, sys
+source = pathlib.Path(sys.argv[1])
+line = next(x for x in source.read_text().splitlines() if x.startswith("SPECK_CONTEXT_RECEIPT:"))
+payload = json.loads(line.split(":", 1)[1])
+payload["post_write_gates"] = []
+text = source.read_text().replace(line, "SPECK_CONTEXT_RECEIPT:" + json.dumps(payload, separators=(",", ":"), sort_keys=True))
+pathlib.Path(sys.argv[2]).write_text(text)
+PY
+TRANSCRIPT_FORGED_GATES="$T/forged-gates.jsonl"
+write_transcript "$TRANSCRIPT_FORGED_GATES" \
+  cmd "$LOADER_CMD" "$T/forged-gates.out" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "bash .speck/scripts/validation/validators/$GATE_SUB x" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_FORGED_GATES" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -q "receipt post_write_gates" \
+  && pass "forged gate list fails REACH" || fail "forged gate list should fail REACH (rc=$RC)"
+
+python3 - "$LOADER_OUT_FILE" "$T/forged-policy.out" <<'PY'
+import json, pathlib, sys
+source = pathlib.Path(sys.argv[1])
+line = next(x for x in source.read_text().splitlines() if x.startswith("SPECK_CONTEXT_RECEIPT:"))
+payload = json.loads(line.split(":", 1)[1])
+payload["gate_policy"] = "trust-me"
+text = source.read_text().replace(line, "SPECK_CONTEXT_RECEIPT:" + json.dumps(payload, separators=(",", ":"), sort_keys=True))
+pathlib.Path(sys.argv[2]).write_text(text)
+PY
+TRANSCRIPT_FORGED_POLICY="$T/forged-policy.jsonl"
+write_transcript "$TRANSCRIPT_FORGED_POLICY" \
+  cmd "$LOADER_CMD" "$T/forged-policy.out" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "bash .speck/scripts/validation/validators/$GATE_SUB x" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_FORGED_POLICY" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -q "receipt gate_policy" \
+  && pass "forged gate policy fails REACH" || fail "forged gate policy should fail REACH (rc=$RC)"
+
 echo "── validator: correct receipt without emitted bodies ──────────────────────────────────────"
 grep '^SPECK_CONTEXT_RECEIPT:' "$LOADER_OUT_FILE" > "$T/receipt-only.out"
 TRANSCRIPT_RECEIPT_ONLY="$T/receipt-only.jsonl"
@@ -273,6 +330,26 @@ run_validator "$WORK" --transcript "$TRANSCRIPT_FORB" --profile "$PROFILE"
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "SELECTIVITY" \
   && pass "forbidden branch read fails SELECTIVITY" || fail "forbidden branch read should fail (rc=$RC)"
 
+TRANSCRIPT_FAILED_FORB="$T/failed-forbidden.jsonl"
+write_transcript "$TRANSCRIPT_FAILED_FORB" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  cmd "cat $FORBIDDEN; false" "$T/forb-read.out" 1 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "bash .speck/scripts/validation/validators/$GATE_SUB x" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_FAILED_FORB" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "SELECTIVITY" \
+  && pass "a failed command cannot hide its forbidden read" || fail "failed forbidden read should fail SELECTIVITY (rc=$RC)"
+
+TRANSCRIPT_EXIT_UNKNOWN_FORB="$T/exit-unknown-forbidden.jsonl"
+write_transcript "$TRANSCRIPT_EXIT_UNKNOWN_FORB" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  cmd_missing_exit "cat $FORBIDDEN" "$T/forb-read.out" \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd "bash .speck/scripts/validation/validators/$GATE_SUB x" /dev/null 0
+run_validator "$WORK" --transcript "$TRANSCRIPT_EXIT_UNKNOWN_FORB" --profile "$PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "SELECTIVITY" \
+  && pass "a host-thin command cannot hide its forbidden read" || fail "exit-unknown forbidden read should fail SELECTIVITY (rc=$RC)"
+
 echo "── validator: late receipt (mutation before loader) ───────────────────────────────────────"
 TRANSCRIPT_LATE="$T/late.jsonl"
 write_transcript "$TRANSCRIPT_LATE" \
@@ -300,9 +377,19 @@ write_transcript "$TRANSCRIPT_BAD_GATE" \
   cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
   change "specs/projects/demo/stories/S001/tasks.md" \
   cmd "bash .speck/scripts/validation/validators/$GATE_SUB x" "$T/bad-gate.out" 1
-run_validator "$WORK" --transcript "$TRANSCRIPT_BAD_GATE" --profile "$PROFILE"
+run_validator "$WORK" --transcript "$TRANSCRIPT_BAD_GATE" --profile "$PROFILE" --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"status": "conformant_red"' \
+  && echo "$OUT" | grep -q 'exit=1:' \
+  && pass "a direct failed gate is conformant while its red outcome stays visible" || fail "direct red gate should preserve a conformant red outcome (rc=$RC)"
+
+TRANSCRIPT_GATE_NO_EXIT="$T/gate-no-exit.jsonl"
+write_transcript "$TRANSCRIPT_GATE_NO_EXIT" \
+  cmd "$LOADER_CMD" "$LOADER_OUT_FILE" 0 \
+  change "specs/projects/demo/stories/S001/tasks.md" \
+  cmd_missing_exit "bash .speck/scripts/validation/validators/$GATE_SUB x" /dev/null
+run_validator "$WORK" --transcript "$TRANSCRIPT_GATE_NO_EXIT" --profile "$PROFILE"
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -qi "GATE_USE" \
-  && pass "failed gate command fails GATE_USE" || fail "failed gate should fail GATE_USE (rc=$RC)"
+  && pass "a gate without an explicit exit remains non-conforming" || fail "exit-less gate should fail GATE_USE (rc=$RC)"
 
 TRANSCRIPT_CAPTURED_GATE="$T/captured-gate.jsonl"
 CAPTURED_GATE_CMD=$(printf "set +e\nbash .speck/scripts/validation/validators/%s x; gate_rc=\$?\nprintf 'gate_rc=%%s\\n' \"\$gate_rc\"\ngit diff --check" "$GATE_SUB")
@@ -498,6 +585,28 @@ RC=0
 OUT=$(python3 "$LOADER" story-validate-backend --select claimed_state=api-rc --root "$ROOT" --contract "$CONTRACT_SRC" 2>&1) || RC=$?
 [[ "$RC" == 0 ]] && [[ "$OUT" == *'"claimed_state":"api-rc"'* ]] && [[ "$OUT" != *"SPECK_CONTEXT_BEGIN .cursor/skills/story-validate/references/axes/felt.md"* ]] \
   && pass "backend API-RC selector loads its ladder without UI axes" || fail "backend selector resolution (rc=$RC)"
+
+echo "── validator: project evidence requires template plus truth stamp ─────────────────────────"
+EVIDENCE_PROFILE="project-evidence-ui-build"
+EVIDENCE_LOADER_CMD="python3 .speck/scripts/context/speck_context.py $EVIDENCE_PROFILE --root $ROOT"
+TRANSCRIPT_EVIDENCE_THIN="$T/evidence-thin.jsonl"
+write_transcript "$TRANSCRIPT_EVIDENCE_THIN" \
+  cmd "$EVIDENCE_LOADER_CMD" "$T/evidence-loader.out" 0 \
+  change "specs/projects/demo/evidence-contract.md" \
+  cmd "bash .speck/scripts/validation/validate-template.sh specs/projects/demo/evidence-contract.md" /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_EVIDENCE_THIN" --profile "$EVIDENCE_PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -q "stamp-truth.sh" \
+  && pass "template validation alone cannot satisfy evidence-contract closure" || fail "evidence contract without stamp should fail GATE_USE (rc=$RC)"
+
+TRANSCRIPT_EVIDENCE_FULL="$T/evidence-full.jsonl"
+write_transcript "$TRANSCRIPT_EVIDENCE_FULL" \
+  cmd "$EVIDENCE_LOADER_CMD" "$T/evidence-loader.out" 0 \
+  change "specs/projects/demo/evidence-contract.md" \
+  cmd "bash .speck/scripts/validation/validate-template.sh specs/projects/demo/evidence-contract.md" /dev/null 0 \
+  cmd ".speck/scripts/stamp-truth.sh specs/projects/demo/evidence-contract.md" /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_EVIDENCE_FULL" --profile "$EVIDENCE_PROFILE" --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "template validation plus truth stamp satisfies evidence-contract closure" || fail "full evidence-contract gates should pass (rc=$RC)"
 
 echo "── validator: UX-RC requires template plus FELT and TASTE gates ───────────────────────────"
 UI_PROFILE="story-validate-ui"

@@ -17,6 +17,13 @@
 
 LARP = DOES-IT-WORK + IS-IT-GOOD.
 
+## Inherited-claim challenge
+
+Cross-examine every evidence claim already present in the report before
+replacing it. For each, state whether the cited artifact exists and whether its
+instrument can observe the claimed axis. Explicitly reject unsupported or
+surrogate claims; omission is not adjudication.
+
 ## Readiness enum
 
 `NO-SHIP` | `IMPL-GREEN` | `INTEGRATION-GREEN` | `UX-RC` | `API-RC` | `COMMERCIAL-RC` | `SHIP-RC` | `SHIP`
@@ -26,13 +33,3 @@ Frontmatter: `readiness_state_claimed`, `readiness_state_verified`, `build_sha`,
 ## Flags
 
 `--allow-incomplete`, `--force`, `--skip-perf`, `--skip-quickstart`, `--skip-truth-update`, `--claim <state>`.
-
-## NEVER / ALWAYS
-
-- NEVER skip failing tests unless `--force`
-- NEVER verify without evidence; NEVER UX-RC+ from code-read alone
-- NEVER defer browser cold-start LARP for UI archetypes
-- NEVER mark device-walk ✅ without human attestation
-- NEVER hand-type mutation verdicts; NEVER PASS/FAIL instead of state
-- ALWAYS `/audit` before validate; ALWAYS deferrals with Cap Status
-- ALWAYS honest PRM grain; ALWAYS SHA-stamp

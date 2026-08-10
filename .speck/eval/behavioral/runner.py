@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from cases import CASES, CASE_BY_ID, Case, score_case, self_test
+from cases import CASES, CASE_BY_ID, Case, patch_changes_methodology, score_case, self_test
 
 
 HERE = Path(__file__).resolve().parent
@@ -85,6 +85,35 @@ def git(*args: str, cwd: Path = REPO, check: bool = True) -> str:
 def path_exists_at(revision: str, path: str) -> bool:
     proc = run_command(["git", "cat-file", "-e", f"{revision}:{path}"], cwd=REPO, timeout=30)
     return proc.returncode == 0
+
+
+def receipt_schema_at(revision: str) -> int:
+    """Read a pinned revision's literal receipt schema without executing it."""
+    proc = run_command(
+        ["git", "show", f"{revision}:.speck/scripts/context/speck_context.py"],
+        cwd=REPO,
+        timeout=30,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"cannot read receipt schema from pinned revision {revision}: {proc.stderr}")
+    match = re.search(r"(?m)^RECEIPT_SCHEMA_VERSION\s*=\s*(\d+)\s*$", proc.stdout)
+    return int(match.group(1)) if match else 1
+
+
+def revision_file_at(revision: str, path: str, destination: Path) -> None:
+    """Snapshot trusted methodology data from a pinned git object."""
+    proc = run_command(["git", "show", f"{revision}:{path}"], cwd=REPO, timeout=30)
+    if proc.returncode != 0:
+        raise RuntimeError(f"cannot read {path} from pinned revision {revision}: {proc.stderr}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(proc.stdout)
+
+
+def trusted_context_validator() -> Path:
+    path = REPO / ".speck/scripts/validation/validators/validate-context-transcript.py"
+    if not path.is_file():
+        raise RuntimeError(f"trusted context validator missing: {path}")
+    return path
 
 
 def export_methodology(revision: str, destination: Path) -> None:
@@ -182,12 +211,27 @@ def subject_execution_valid(
     return exit_code == 0 and turn_completed and tool_events > 0
 
 
+def subject_experiment_valid(*, execution_valid: bool, methodology_edit: bool) -> bool:
+    """Whether the outcome belongs in the controlled methodology comparison."""
+    return execution_valid and not methodology_edit
+
+
 def context_conformance_passed(context_conformance: dict[str, Any] | None) -> bool:
     return bool(
         isinstance(context_conformance, dict)
         and context_conformance.get("exit_code") == 0
         and context_conformance.get("report", {}).get("pass") is True
     )
+
+
+def context_reports_for_aggregate(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep invalid/contaminated subjects from contributing green process evidence."""
+    return [
+        row["v11"]["context_conformance"]
+        for row in rows
+        if isinstance(row["v11"].get("context_conformance"), dict)
+        and bool(row["v11"].get("experimental_valid", row["v11"]["valid_run"]))
+    ]
 
 
 def anonymous_map(seed: int) -> dict[str, dict[str, str]]:
@@ -255,6 +299,13 @@ def run_subject(
     result_file.parent.mkdir(parents=True, exist_ok=True)
     export_methodology(revision, work)
     write_fixture(case, condition, work)
+    trusted_contract = raw_dir / f"{case.case_id}-{label}.context-contract.json"
+    if condition == "v11" and CONTEXT_PROFILES.get(case.case_id):
+        revision_file_at(
+            revision,
+            ".speck/reference/skill-load-contracts.json",
+            trusted_contract,
+        )
     final_path = raw_dir / f"{case.case_id}-{label}.final.txt"
     command = [
         "codex", "exec", "--ignore-user-config", "--ephemeral", "--json",
@@ -282,17 +333,19 @@ def run_subject(
     scoring = score_case(case.case_id, work, final, parsed["commands"], patch)
     context_conformance: dict[str, Any] | None = None
     context_profile = CONTEXT_PROFILES.get(case.case_id)
-    context_validator = work / ".speck/scripts/validation/validators/validate-context-transcript.py"
+    context_validator = trusted_context_validator()
     if condition == "v11" and context_profile and context_validator.is_file():
         profile, selections = context_profile
+        receipt_schema = receipt_schema_at(revision)
         context_cmd = [
             sys.executable,
             str(context_validator),
             "--transcript", str(raw_path),
             "--profile", profile,
             "--root", str(work),
-            "--contract", str(work / ".speck/reference/skill-load-contracts.json"),
+            "--contract", str(trusted_contract),
             "--json",
+            "--receipt-schema", str(receipt_schema),
         ]
         for selection in selections:
             context_cmd.extend(("--select", selection))
@@ -314,6 +367,10 @@ def run_subject(
         exit_code=proc.returncode,
         turn_completed=parsed["turn_completed"],
         tool_events=parsed["tool_events"],
+    )
+    experimental_valid = subject_experiment_valid(
+        execution_valid=execution_valid,
+        methodology_edit=bool(scoring["methodology_edit"]),
     )
     result: dict[str, Any] = {
         "case_id": case.case_id,
@@ -342,9 +399,8 @@ def run_subject(
         "events_sha256": hashlib.sha256(raw.encode()).hexdigest(),
         "patch_sha256": hashlib.sha256(patch.encode()).hexdigest(),
         "execution_valid": execution_valid,
-        # Kept for report compatibility. This is deliberately execution-only;
-        # artifact production and context conformance are separate endpoints.
-        "valid_run": execution_valid,
+        "experimental_valid": experimental_valid,
+        "valid_run": experimental_valid,
     }
     result_file.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     patch_file.write_text(patch)
@@ -581,14 +637,24 @@ def command_rescore(args: argparse.Namespace) -> int:
             context_profile = CONTEXT_PROFILES.get(case.case_id)
             if condition == "v11" and context_profile:
                 profile, selections = context_profile
+                receipt_schema = receipt_schema_at(str(result["revision"]))
+                trusted_contract = (
+                    RUNS / args.run_id / "raw" / f"{case.case_id}-{label}.context-contract.json"
+                )
+                revision_file_at(
+                    str(result["revision"]),
+                    ".speck/reference/skill-load-contracts.json",
+                    trusted_contract,
+                )
                 context_cmd = [
                     sys.executable,
-                    str(REPO / ".speck/scripts/validation/validators/validate-context-transcript.py"),
+                    str(trusted_context_validator()),
                     "--transcript", str(RUNS / args.run_id / "raw" / f"{case.case_id}-{label}.events.jsonl"),
                     "--profile", profile,
                     "--root", str(work),
-                    "--contract", str(work / ".speck/reference/skill-load-contracts.json"),
+                    "--contract", str(trusted_contract),
                     "--json",
+                    "--receipt-schema", str(receipt_schema),
                 ]
                 for selection in selections:
                     context_cmd.extend(("--select", selection))
@@ -618,7 +684,11 @@ def command_rescore(args: argparse.Namespace) -> int:
                 turn_completed=bool(result["turn_completed"]),
                 tool_events=int(result["tool_events"]),
             )
-            result["valid_run"] = result["execution_valid"]
+            result["experimental_valid"] = subject_experiment_valid(
+                execution_valid=bool(result["execution_valid"]),
+                methodology_edit=bool(scoring["methodology_edit"]),
+            )
+            result["valid_run"] = result["experimental_valid"]
             result["rescored_at"] = datetime.now(timezone.utc).isoformat()
             result_file.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
             count += 1
@@ -698,16 +768,18 @@ def command_report(args: argparse.Namespace) -> int:
         combined_ci = det_ci
     false_v10 = sum(bool(row["v10"]["score"]["false_green"]) for row in rows)
     false_v11 = sum(bool(row["v11"]["score"]["false_green"]) for row in rows)
-    valid_v10 = sum(bool(row["v10"].get("execution_valid", row["v10"]["valid_run"])) for row in rows)
-    valid_v11 = sum(bool(row["v11"].get("execution_valid", row["v11"]["valid_run"])) for row in rows)
+    valid_v10 = sum(bool(row["v10"].get("experimental_valid", row["v10"]["valid_run"])) for row in rows)
+    valid_v11 = sum(bool(row["v11"].get("experimental_valid", row["v11"]["valid_run"])) for row in rows)
     changed_v10 = sum(bool(row["v10"].get("artifact_changed", row["v10"].get("git_status"))) for row in rows)
     changed_v11 = sum(bool(row["v11"].get("artifact_changed", row["v11"].get("git_status"))) for row in rows)
     rescored = any("rescored_at" in row[condition] for row in rows for condition in ("v10", "v11"))
-    context_reports = [
+    all_context_reports = [
         row["v11"]["context_conformance"]
         for row in rows
         if isinstance(row["v11"].get("context_conformance"), dict)
     ]
+    context_reports = context_reports_for_aggregate(rows)
+    excluded_context_reports = len(all_context_reports) - len(context_reports)
     context_axes: dict[str, dict[str, int]] = {}
     for conformance in context_reports:
         axes = conformance.get("report", {}).get("axes", {})
@@ -768,6 +840,7 @@ def command_report(args: argparse.Namespace) -> int:
         "false_greens": {"v10": false_v10, "v11": false_v11},
         "context_conformance": {
             "applicable_runs": len(context_reports),
+            "excluded_invalid_runs": excluded_context_reports,
             "overall_pass": sum(bool(item.get("report", {}).get("pass")) for item in context_reports),
             "axes": context_axes,
         },
@@ -820,7 +893,7 @@ after these corrections.
         context_section = f"""
 ## JIT context conformance
 
-Executable profiles applied to {len(context_reports)} v11 subject runs; {overall_context_pass}/{len(context_reports)} passed all applicable axes.
+Executable profiles applied to {len(context_reports)} experimentally valid v11 subject runs; {overall_context_pass}/{len(context_reports)} passed all applicable axes. {excluded_context_reports} methodology-contaminated or otherwise invalid run(s) were excluded from this rate.
 
 | Axis | Passing / checked |
 |---|---:|
@@ -861,7 +934,7 @@ The predeclared 70% deterministic + 30% blinded-judge score was {fmt(statistics.
 | Mean cached input tokens | {fmt(summary['input_tokens']['cached_mean_v10'], 0)} | {fmt(summary['input_tokens']['cached_mean_v11'], 0)} | {100 * (summary['input_tokens']['cached_mean_v11'] / summary['input_tokens']['cached_mean_v10'] - 1):+.1f}% |
 | Mean uncached input tokens | {fmt(summary['input_tokens']['uncached_mean_v10'], 0)} | {fmt(summary['input_tokens']['uncached_mean_v11'], 0)} | {100 * (summary['input_tokens']['uncached_mean_v11'] / summary['input_tokens']['uncached_mean_v10'] - 1):+.1f}% |
 | Mean wall time | {fmt(summary['wall_seconds']['mean_v10'])}s | {fmt(summary['wall_seconds']['mean_v11'])}s | {100 * (summary['wall_seconds']['mean_v11'] / summary['wall_seconds']['mean_v10'] - 1):+.1f}% |
-| Valid subject executions | {valid_v10}/12 | {valid_v11}/12 | {valid_v11 - valid_v10:+d} |
+| Experimentally valid subjects | {valid_v10}/12 | {valid_v11}/12 | {valid_v11 - valid_v10:+d} |
 | Artifacts changed | {changed_v10}/12 | {changed_v11}/12 | {changed_v11 - changed_v10:+d} |
 
 {context_section}
@@ -895,6 +968,43 @@ def command_self_test(_: argparse.Namespace) -> int:
         and not context_conformance_passed(conformance_red)
         and not context_conformance_passed(None)
     )
+    methodology_patch = "diff --git a/.speck/reference/x.md b/.speck/reference/x.md\n"
+    project_json_patch = "diff --git a/.speck/project.json b/.speck/project.json\n"
+    outcome["methodology_contamination_invalidates_experiment"] = bool(
+        patch_changes_methodology(methodology_patch)
+        and not patch_changes_methodology(project_json_patch)
+        and not subject_experiment_valid(execution_valid=True, methodology_edit=True)
+        and subject_experiment_valid(execution_valid=True, methodology_edit=False)
+    )
+    with tempfile.TemporaryDirectory(prefix="speck-subject-root-") as subject_dir:
+        outcome["context_judge_is_outside_subject_workspace"] = bool(
+            Path(subject_dir).resolve() not in trusted_context_validator().resolve().parents
+        )
+    with tempfile.TemporaryDirectory(prefix="speck-contract-snapshot-") as contract_dir:
+        contract_root = Path(contract_dir)
+        snapshot = contract_root / "trusted.json"
+        subject_contract = contract_root / "subject/skill-load-contracts.json"
+        revision_file_at(
+            git("rev-parse", "HEAD").strip(),
+            ".speck/reference/skill-load-contracts.json",
+            snapshot,
+        )
+        subject_contract.parent.mkdir(parents=True, exist_ok=True)
+        subject_data = json.loads(snapshot.read_text())
+        subject_data["profiles"]["story-tasks-backend"]["post_write_gates"] = []
+        subject_contract.write_text(json.dumps(subject_data))
+        trusted_data = json.loads(snapshot.read_text())
+        outcome["pinned_contract_snapshot_resists_subject_mutation"] = bool(
+            trusted_data["profiles"]["story-tasks-backend"]["post_write_gates"]
+            and not json.loads(subject_contract.read_text())["profiles"]["story-tasks-backend"]["post_write_gates"]
+        )
+    aggregate_fixture = [
+        {"v11": {"context_conformance": conformance_green, "experimental_valid": True, "valid_run": True}},
+        {"v11": {"context_conformance": conformance_green, "experimental_valid": False, "valid_run": False}},
+    ]
+    outcome["invalid_context_green_excluded_from_aggregate"] = bool(
+        len(context_reports_for_aggregate(aggregate_fixture)) == 1
+    )
     outcome["passed"] = bool(
         outcome["passed"]
         and outcome["case_count"] == 12
@@ -902,6 +1012,10 @@ def command_self_test(_: argparse.Namespace) -> int:
         and outcome["five_item_rubrics"]
         and outcome["all_case_families_turn_red"]
         and outcome["execution_and_conformance_are_separate"]
+        and outcome["methodology_contamination_invalidates_experiment"]
+        and outcome["context_judge_is_outside_subject_workspace"]
+        and outcome["pinned_contract_snapshot_resists_subject_mutation"]
+        and outcome["invalid_context_green_excluded_from_aggregate"]
     )
     print(json.dumps(outcome, indent=2))
     return 0 if outcome["passed"] else 1

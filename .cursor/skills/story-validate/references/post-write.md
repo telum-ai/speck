@@ -1,27 +1,24 @@
 # Post-write
 
-Lower `readiness_state_verified` to highest state where all gates pass.
-Banned-phrase self-check.
+Set `readiness_state_verified` to the highest state every gate allows. Run the
+banned-phrase self-check.
 
-This is a closure loop, not a one-shot check. Run every gate selected by the
-receipt individually. First SHA-stamp the report, then run the complete set. A
-red gate means edit or lower the report, re-stamp it, and rerun every selected
-gate. Finish only when all selected gates exit 0 after the most recent stamp,
-with no later report edit; a different green validator cannot substitute for a
-required red one.
+The receipt's gate arrays are exact. Closure cycle:
 
-Use one direct shell tool call per required gate, with the gate as the event's
-primary command. Its event exit code must be the gate's exit code. Pipelines,
-command lists, background jobs, substitution-wrapped gates, grouped status
-collection, or printing a captured `$?` do not prove a gate passed and fail
-transcript conformance.
+1. SHA-stamp the report.
+2. Run each gate in its own shell tool event, as the primary command. Lists,
+   pipelines, background jobs, substitutions, and collected `$?` fail
+   conformance because the event exit no longer belongs to the gate.
+3. On red, edit or lower, re-stamp, and rerun the full set.
+
+A direct red remains visible as `conformant_red`, but closure stays open. Finish
+only after every gate is zero after the latest stamp and no later report edit.
 
 ```bash
 bash .speck/scripts/validation/validate-template.sh validation-report.md --strict
 ```
 
-UI axis validators live in the selected `axes/felt.md` and `axes/taste.md`
-nodes. Backend runs never load or execute them.
+UI axis gates come from the selected FELT/TASTE nodes. Backend skips them.
 
 SHIP-RC/SHIP+:
 ```bash

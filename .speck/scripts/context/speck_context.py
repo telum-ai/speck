@@ -13,6 +13,8 @@ RECEIPT_PREFIX = "SPECK_CONTEXT_RECEIPT:"
 BEGIN_MARKER = "---SPECK_CONTEXT_BEGIN "
 END_MARKER = "---SPECK_CONTEXT_END "
 DEFAULT_CONTRACT = ".speck/reference/skill-load-contracts.json"
+RECEIPT_SCHEMA_VERSION = 2
+GATE_POLICY = "direct-event-exit-bound"
 
 
 class ContextError(Exception):
@@ -206,10 +208,13 @@ def emit_context(
         payloads.append((rel, data))
 
     receipt = {
-        "schema_version": 1,
+        "schema_version": RECEIPT_SCHEMA_VERSION,
         "profile": profile,
         "selections": spec["selections"],
         "files": file_records,
+        "post_write_gates": spec["post_write_gates"],
+        "post_write_gates_all": spec["post_write_gates_all"],
+        "gate_policy": GATE_POLICY,
         "total_bytes": total_bytes,
     }
     out = sys.stdout.buffer
