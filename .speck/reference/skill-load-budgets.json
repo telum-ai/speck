@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "basis": "v10 inline skill byte size before v11 refactoring",
+  "basis": "path-specific regression ceilings; v10 comparison values are locked in ADR-0005/0006",
   "cases": [
     {
       "id": "story-implement-ui",
@@ -9,7 +9,7 @@
         ".cursor/skills/story-implement/references/spine.md",
         ".cursor/skills/story-implement/references/ui.md"
       ],
-      "max_bytes": 10622
+      "max_bytes": 4815
     },
     {
       "id": "story-implement-backend",
@@ -18,45 +18,88 @@
         ".cursor/skills/story-implement/references/spine.md",
         ".cursor/skills/story-implement/references/backend.md"
       ],
-      "max_bytes": 10622
+      "max_bytes": 4608
     },
     {
       "id": "story-tasks-ui",
       "files": [
         ".cursor/skills/story-tasks/SKILL.md",
+        ".speck/templates/story/tasks-template.md",
         ".cursor/skills/story-tasks/references/spine.md",
         ".cursor/skills/story-tasks/references/ui-tasks.md"
       ],
-      "max_bytes": 9617
+      "max_bytes": 21787
     },
     {
       "id": "story-tasks-backend",
       "files": [
         ".cursor/skills/story-tasks/SKILL.md",
+        ".speck/templates/story/tasks-template.md",
         ".cursor/skills/story-tasks/references/spine.md",
         ".cursor/skills/story-tasks/references/api-tasks.md"
       ],
-      "max_bytes": 9617
+      "max_bytes": 21672
     },
     {
       "id": "project-evidence-ui-platform",
       "files": [
         ".cursor/skills/project-evidence-contract/SKILL.md",
+        ".speck/templates/project/evidence-contract-template.md",
         ".cursor/skills/project-evidence-contract/references/spine.md",
         ".cursor/skills/project-evidence-contract/references/tiers/platform.md",
         ".cursor/skills/project-evidence-contract/references/archetype/ui.md"
       ],
-      "max_bytes": 8900
+      "max_bytes": 45250
     },
     {
       "id": "project-evidence-backend-build",
       "files": [
         ".cursor/skills/project-evidence-contract/SKILL.md",
+        ".speck/templates/project/evidence-contract-template.md",
         ".cursor/skills/project-evidence-contract/references/spine.md",
         ".cursor/skills/project-evidence-contract/references/tiers/build.md",
         ".cursor/skills/project-evidence-contract/references/archetype/backend.md"
       ],
-      "max_bytes": 8900
+      "max_bytes": 44950
+    },
+    {
+      "id": "project-evidence-ui-build",
+      "files": [
+        ".cursor/skills/project-evidence-contract/SKILL.md",
+        ".speck/templates/project/evidence-contract-template.md",
+        ".cursor/skills/project-evidence-contract/references/spine.md",
+        ".cursor/skills/project-evidence-contract/references/tiers/build.md",
+        ".cursor/skills/project-evidence-contract/references/archetype/ui.md"
+      ],
+      "max_bytes": 44900
+    },
+    {
+      "id": "project-evidence-backend-platform",
+      "files": [
+        ".cursor/skills/project-evidence-contract/SKILL.md",
+        ".speck/templates/project/evidence-contract-template.md",
+        ".cursor/skills/project-evidence-contract/references/spine.md",
+        ".cursor/skills/project-evidence-contract/references/tiers/platform.md",
+        ".cursor/skills/project-evidence-contract/references/archetype/backend.md"
+      ],
+      "max_bytes": 45300
+    },
+    {
+      "id": "epic-breakdown",
+      "files": [
+        ".cursor/skills/epic-breakdown/SKILL.md",
+        ".speck/templates/epic/breakdown-template.md",
+        ".speck/templates/story/story-template.md"
+      ],
+      "max_bytes": 21417
+    },
+    {
+      "id": "story-specify",
+      "files": [
+        ".cursor/skills/story-specify/SKILL.md",
+        ".speck/templates/story/story-template.md"
+      ],
+      "max_bytes": 15000
     },
     {
       "id": "project-promote-sprint-build",

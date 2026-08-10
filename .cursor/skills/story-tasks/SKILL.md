@@ -13,7 +13,9 @@ paths:
 
 Cheap keys: UI-bearing story vs API/backend story (from spec/plan/ui-spec presence).
 
-1. MUST Read template, then MUST Read `references/spine.md`.
-2. If UI-bearing: MUST Read `references/ui-tasks.md`. Else do not.
-3. If API/backend story (endpoints/schema/migrations; or no UI): MUST Read `references/api-tasks.md`. Else do not.
-4. Write `tasks.md`; run the deterministic validator; cross-check vs plan/spec.
+1. Classify the story before loading branch context.
+2. Before the first mutation, run exactly one:
+   - UI-bearing: `python3 .speck/scripts/context/speck_context.py story-tasks-ui`
+   - API/backend or no UI: `python3 .speck/scripts/context/speck_context.py story-tasks-backend`
+3. Require exit 0 and `SPECK_CONTEXT_RECEIPT`; do not separately load the sibling branch.
+4. Execute the loaded spine/branch, write `tasks.md`, run the deterministic validator, and cross-check vs plan/spec.

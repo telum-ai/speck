@@ -4,9 +4,11 @@ Lower `readiness_state_verified` to highest state where all gates pass.
 Banned-phrase self-check. SHA-stamp report.
 
 ```bash
-bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md
-bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict validation-report.md
+bash .speck/scripts/validation/validate-template.sh validation-report.md --strict
 ```
+
+UI axis validators live in the selected `axes/felt.md` and `axes/taste.md`
+nodes. Backend runs never load or execute them.
 
 SHIP-RC/SHIP+:
 ```bash

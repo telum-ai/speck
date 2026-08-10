@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import itertools
 import re
 import sys
 from pathlib import Path
@@ -104,6 +105,163 @@ def lint_load_budgets(root: Path, err) -> None:
             err(f"skill load path {case_id} bytes {total} > {max_bytes}")
 
 
+def lint_load_contracts(root: Path, err) -> dict[str, set[str]]:
+    """Validate executable JIT contracts and return entrypoint-owned paths."""
+    contract_path = root / ".speck" / "reference" / "skill-load-contracts.json"
+    if not contract_path.is_file():
+        return {}
+    try:
+        data = json.loads(contract_path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        err(f"invalid skill load contract file: {exc}")
+        return {}
+    if data.get("schema_version") != 1 or not isinstance(data.get("profiles"), dict):
+        err("skill load contracts require schema_version 1 and a profiles object")
+        return {}
+
+    budgets: dict[str, dict[str, object]] = {}
+    budget_path = root / ".speck" / "reference" / "skill-load-budgets.json"
+    try:
+        budget_data = json.loads(budget_path.read_text())
+        budgets = {
+            case["id"]: case
+            for case in budget_data.get("cases", [])
+            if isinstance(case, dict) and isinstance(case.get("id"), str)
+        }
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    owned: dict[str, set[str]] = {}
+    root_resolved = root.resolve()
+
+    def normalize(profile_id: str, rel: object) -> str | None:
+        if not isinstance(rel, str) or not rel:
+            err(f"skill load contract {profile_id} has invalid path {rel!r}")
+            return None
+        clean = rel.replace("\\", "/")
+        while clean.startswith("./"):
+            clean = clean[2:]
+        path = (root / clean).resolve()
+        try:
+            path.relative_to(root_resolved)
+        except ValueError:
+            err(f"skill load contract {profile_id} escapes repository: {rel}")
+            return None
+        if not path.is_file():
+            err(f"skill load contract {profile_id} missing path: {clean}")
+            return None
+        return clean
+
+    for profile_id, entry in sorted(data["profiles"].items()):
+        if not isinstance(profile_id, str) or not isinstance(entry, dict):
+            err(f"invalid skill load contract profile: {profile_id!r}")
+            continue
+        entrypoint = normalize(profile_id, entry.get("entrypoint"))
+        required_raw = entry.get("required_files")
+        forbidden_raw = entry.get("forbidden_files", [])
+        gates = entry.get("post_write_gates")
+        all_gates = entry.get("post_write_gates_all", [])
+        if not isinstance(required_raw, list) or not required_raw:
+            err(f"skill load contract {profile_id} requires required_files")
+            continue
+        if not isinstance(forbidden_raw, list):
+            err(f"skill load contract {profile_id} forbidden_files must be a list")
+            continue
+        if not isinstance(gates, list) or not gates or not all(isinstance(x, str) and x for x in gates):
+            err(f"skill load contract {profile_id} requires non-empty post_write_gates")
+        if not isinstance(all_gates, list) or not all(isinstance(x, str) and x for x in all_gates):
+            err(f"skill load contract {profile_id} post_write_gates_all must be a string list")
+        required = [p for p in (normalize(profile_id, x) for x in required_raw) if p]
+        forbidden = [p for p in (normalize(profile_id, x) for x in forbidden_raw) if p]
+        overlap = sorted(set(required) & set(forbidden))
+        if overlap:
+            err(f"skill load contract {profile_id} requires and forbids the same paths: {overlap}")
+        all_owned = set(required) | set(forbidden)
+        all_required = set(required)
+        selectors = entry.get("selectors", {})
+        if not isinstance(selectors, dict):
+            err(f"skill load contract {profile_id} selectors must be an object")
+            selectors = {}
+        selector_values: list[tuple[str, list[tuple[str, dict[str, object]]]]] = []
+        for key, selector in selectors.items():
+            if not isinstance(selector, dict) or not isinstance(selector.get("values"), dict):
+                err(f"skill load contract {profile_id} selector {key!r} requires values")
+                continue
+            values: list[tuple[str, dict[str, object]]] = []
+            for value, branch in selector["values"].items():
+                if not isinstance(branch, dict):
+                    err(f"skill load contract {profile_id} selector {key}={value} must be an object")
+                    continue
+                branch_required_raw = branch.get("required_files", [])
+                branch_forbidden_raw = branch.get("forbidden_files", [])
+                branch_all_gates = branch.get("post_write_gates_all", [])
+                if not isinstance(branch_required_raw, list) or not isinstance(branch_forbidden_raw, list):
+                    err(f"skill load contract {profile_id} selector {key}={value} paths must be lists")
+                    continue
+                if not isinstance(branch_all_gates, list) or not all(isinstance(x, str) and x for x in branch_all_gates):
+                    err(f"skill load contract {profile_id} selector {key}={value} post_write_gates_all must be a string list")
+                branch_required = [p for p in (normalize(profile_id, x) for x in branch_required_raw) if p]
+                branch_forbidden = [p for p in (normalize(profile_id, x) for x in branch_forbidden_raw) if p]
+                all_owned.update(branch_required)
+                all_owned.update(branch_forbidden)
+                all_required.update(branch_required)
+                values.append((str(value), {"required_files": branch_required}))
+            if selector.get("required", False) and not values:
+                err(f"skill load contract {profile_id} selector {key} has no values")
+            selector_values.append((str(key), values))
+
+        if entrypoint:
+            owned.setdefault(entrypoint, set()).update(all_owned)
+            if "speck_context.py" not in (root / entrypoint).read_text():
+                err(f"skill load contract {profile_id} entrypoint does not invoke speck_context.py")
+            instruction_files = {entrypoint, *(path for path in all_required if path.endswith(".md"))}
+            for owner in instruction_files:
+                text = (root / owner).read_text()
+                for target in all_required - {owner}:
+                    duplicate_edge = any(
+                        target in line
+                        and re.search(r"\b(?:read|load|open)\b", line, re.IGNORECASE)
+                        and not re.search(r"\b(?:do not|don't|never)\s+(?:re-?)?(?:read|load|open)\b", line, re.IGNORECASE)
+                        for line in text.splitlines()
+                    )
+                    if duplicate_edge:
+                        err(
+                            f"skill load contract {profile_id} file {owner} restates contract path {target} — "
+                            "use the receipted bytes; do not create a second load edge"
+                        )
+
+        if selector_values:
+            max_bytes = entry.get("max_bytes")
+            if not isinstance(max_bytes, int) or max_bytes <= 0:
+                err(f"dynamic skill load contract {profile_id} requires positive max_bytes")
+            else:
+                groups = [values for _, values in selector_values]
+                worst_total = -1
+                worst_label = ""
+                for combination in itertools.product(*groups):
+                    paths = ([entrypoint] if entrypoint else []) + required[:]
+                    selected_label: list[str] = []
+                    for (key, _), (value, branch) in zip(selector_values, combination):
+                        selected_label.append(f"{key}={value}")
+                        paths.extend(branch["required_files"])
+                    unique = list(dict.fromkeys(paths))
+                    total = sum((root / path).stat().st_size for path in unique)
+                    if total > worst_total:
+                        worst_total = total
+                        worst_label = ",".join(selected_label)
+                print(f"load_contract={profile_id}[worst:{worst_label}] bytes={worst_total} (max {max_bytes})")
+                if worst_total > max_bytes:
+                    err(f"skill load contract {profile_id}[{worst_label}] bytes {worst_total} > {max_bytes}")
+        else:
+            budget = budgets.get(profile_id)
+            combined = ([entrypoint] if entrypoint else []) + required
+            if not budget:
+                err(f"static skill load contract {profile_id} has no matching load budget")
+            elif budget.get("files") != combined:
+                err(f"skill load contract {profile_id} files drift from load budget")
+    return owned
+
+
 def parse_fm(text: str) -> tuple[str, str]:
     m = re.match(r"^---\n(.*?)\n---\n?", text, re.S)
     if not m:
@@ -173,6 +331,8 @@ def main() -> int:
         print(f"FAIL: {msg}")
         fail = 1
 
+    contract_owned = lint_load_contracts(root, err)
+
     for skill_md in sorted(skills.glob("*/SKILL.md")):
         name = skill_md.parent.name
         text = skill_md.read_text()
@@ -205,10 +365,12 @@ def main() -> int:
 
         for ref in ref_mds:
             rel = ref.relative_to(refs).as_posix()
-            if not router_owns_ref(body, rel):
+            repo_rel = ref.relative_to(root).as_posix()
+            entrypoint = skill_md.relative_to(root).as_posix()
+            if not router_owns_ref(body, rel) and repo_rel not in contract_owned.get(entrypoint, set()):
                 err(
-                    f"skill ref {name}/references/{rel} is not directly owned by its router — "
-                    "declare the edge in SKILL.md or delete the orphan (ADR-0005)"
+                    f"skill ref {name}/references/{rel} is not directly owned by its router or executable contract — "
+                    "declare the edge in SKILL.md/skill-load-contracts.json or delete the orphan (ADR-0005/0006)"
                 )
 
         # Ban predicate-hiding routers (ADR-0005): agent must know the branch

@@ -43,6 +43,17 @@ This contract is an instance of Speck v8's four principles, not a checklist to s
 *- Web | Production bundle behind reverse proxy at <domain> | <hosting>*
 *- Desktop | Code-signed installer for macOS/Windows/Linux | <distribution>*
 
+### 1a. Promise Proof Map
+
+*One row per `PRM-NNN` in `product-contract.md`. Preserve the promise claim.
+The mechanism is the runtime fact that makes it true; evidence is the
+admissible instrument and artifact; the failure probe is the negative control
+that would redden this row. Never merge promises into an aggregate row.*
+
+| Promise | Claim | Observable mechanism | Admissible evidence | Failure probe |
+|---------|-------|----------------------|---------------------|---------------|
+| PRM-NNN | REPLACE_BEFORE_SHIP: exact product claim | REPLACE_BEFORE_SHIP: runtime boundary/state transition | REPLACE_BEFORE_SHIP: typed citation + artifact path | REPLACE_BEFORE_SHIP: negative control / injected failure |
+
 ---
 
 ## 2. Valid Proof Sources (per platform)

@@ -1,6 +1,6 @@
 # story-tasks / spine
 
-1. Read `.speck/templates/story/tasks-template.md`; use its exact frontmatter, task ids, `[P]` markers, context cards, mapping table, and checklist.
+1. Use the receipted task template bytes already loaded with this spine; preserve their exact frontmatter, task ids, `[P]` markers, context cards, mapping table, and checklist. Do not reload a contract file directly.
 2. Locate `STORY_DIR` by walking up to `spec.md`. STOP if `plan.md` is missing. Read `spec.md` and `plan.md` fully.
 3. Extract every FR, acceptance scenario, edge case, NFR, security/privacy rule, architecture decision, file path, pattern, constitution gate, and research result.
 4. Read when present: `data-model.md`, `contracts/`, `quickstart.md`, `codebase-scan-*.md`, epic `epic-breakdown.md`, project/epic constitution.

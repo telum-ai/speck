@@ -104,6 +104,7 @@ Speck's rigor lives in the **skills** (the adversarial `/audit` probes, honest r
 
 1. Confirm required reports exist AND pass `.speck/scripts/validation/validate-template.sh --strict`.
 2. Verify ≥2 real skill invocations in the sub-agent transcript — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. Grep transcript/tool log for `"name":"Skill"`. Empty `skills_invoked` or zero Skill calls → REJECT + re-run.
+   For a profile declared in `.speck/reference/skill-load-contracts.json`, also run `validate-context-transcript.py` with its exact selectors and require REACH, SELECTIVITY, TIMING, and GATE_USE independently green. A skill call without its required JIT receipt is incomplete execution.
 3. Require an independent `audit-report.md` by a SEPARATE auditor (not the implementer/validator). High-risk (P0/P1, sensitive data, auth/billing): N diverse-lens auditors; majority-refute; list lenses in the report.
 4. Verify `gate_checks` shows full pre-commit gate ran and passed (lint, typecheck, tests, build, banned-language). Missing/skipped/failed → reject. Green tests alone ≠ green gate.
 5. Treat `/audit` as non-skippable before merge in delegated flows.

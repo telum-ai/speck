@@ -157,4 +157,118 @@ if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$
   exit 1
 fi
 
+cat > "$TMP/.cursor/skills/good/SKILL.md" <<'EOF'
+---
+name: good
+description: Short desc. Use when testing budget.
+---
+
+# good
+Run `python3 .speck/scripts/context/speck_context.py good-static` before writes.
+EOF
+cat > "$TMP/.speck/reference/skill-load-budgets.json" <<'EOF'
+{
+  "cases": [
+    {
+      "id": "good-static",
+      "files": [".cursor/skills/good/SKILL.md", "AGENTS.md"],
+      "max_bytes": 10000
+    }
+  ]
+}
+EOF
+cat > "$TMP/.speck/reference/skill-load-contracts.json" <<'EOF'
+{
+  "schema_version": 1,
+  "profiles": {
+    "good-static": {
+      "entrypoint": ".cursor/skills/good/SKILL.md",
+      "required_files": ["AGENTS.md"],
+      "forbidden_files": [],
+      "post_write_gates": ["test"]
+    }
+  }
+}
+EOF
+
+echo "Test: executable load contract aligned with budget passes"
+bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"
+
+mkdir -p "$TMP/.cursor/skills/good/references"
+printf '# spine\nRead `AGENTS.md` again.\n' > "$TMP/.cursor/skills/good/references/spine.md"
+python3 - "$TMP/.speck/reference/skill-load-budgets.json" "$TMP/.speck/reference/skill-load-contracts.json" <<'PY'
+import json, pathlib, sys
+budget_path, contract_path = map(pathlib.Path, sys.argv[1:])
+budget = json.loads(budget_path.read_text())
+contract = json.loads(contract_path.read_text())
+rel = ".cursor/skills/good/references/spine.md"
+budget["cases"][0]["files"].append(rel)
+contract["profiles"]["good-static"]["required_files"].append(rel)
+budget_path.write_text(json.dumps(budget))
+contract_path.write_text(json.dumps(contract))
+PY
+
+echo "Test: receipted instruction cannot create a second direct load edge"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected duplicate load-edge failure"
+  exit 1
+fi
+rm "$TMP/.cursor/skills/good/references/spine.md"
+python3 - "$TMP/.speck/reference/skill-load-budgets.json" "$TMP/.speck/reference/skill-load-contracts.json" <<'PY'
+import json, pathlib, sys
+budget_path, contract_path = map(pathlib.Path, sys.argv[1:])
+budget = json.loads(budget_path.read_text())
+contract = json.loads(contract_path.read_text())
+rel = ".cursor/skills/good/references/spine.md"
+budget["cases"][0]["files"].remove(rel)
+contract["profiles"]["good-static"]["required_files"].remove(rel)
+budget_path.write_text(json.dumps(budget))
+contract_path.write_text(json.dumps(contract))
+PY
+
+python3 - "$TMP/.speck/reference/skill-load-budgets.json" <<'PY'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+data = json.loads(path.read_text())
+data["cases"][0]["files"] = [".cursor/skills/good/SKILL.md"]
+path.write_text(json.dumps(data))
+PY
+
+echo "Test: contract-to-budget drift fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected contract drift failure"
+  exit 1
+fi
+
+cat > "$TMP/.speck/reference/skill-load-budgets.json" <<'EOF'
+{"cases": []}
+EOF
+cat > "$TMP/.speck/reference/skill-load-contracts.json" <<'EOF'
+{
+  "schema_version": 1,
+  "profiles": {
+    "good-dynamic": {
+      "entrypoint": ".cursor/skills/good/SKILL.md",
+      "required_files": ["AGENTS.md"],
+      "forbidden_files": [],
+      "post_write_gates": ["test"],
+      "max_bytes": 1,
+      "selectors": {
+        "mode": {
+          "required": true,
+          "exclusive": true,
+          "values": {"x": {"required_files": []}}
+        }
+      }
+    }
+  }
+}
+EOF
+
+echo "Test: dynamic contract byte overflow fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected dynamic contract budget failure"
+  exit 1
+fi
+
 echo "All corpus-budget tests passed"

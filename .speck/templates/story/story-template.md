@@ -197,7 +197,7 @@ As a [persona-id], I want to [action] so that I can [outcome].
 ### Verifiability
 - [ ] Every acceptance scenario specifies EVIDENCE (screenshot path, AX tree, transcript line)
 - [ ] Verifiability tier (`Verifiable by: agent-LARP | device-walk`) is declared for each scenario and evidence requirement
-- [ ] Every dependency has a failure-mode-handled row
+- [ ] Every dependency has a failure-mode-handled row with named behavior and a concrete test/LARP probe
 - [ ] Related tables / surfaces enumerated
 - [ ] Adversarial cases match the spec's positive claims
 

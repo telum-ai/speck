@@ -9,7 +9,8 @@ paths:
 
 Cheap keys: `.speck/project.json` → `play_level`, `project_archetype` (UI vs backend).
 
-1. MUST Read template, then MUST Read `references/spine.md`.
-2. MUST Read exactly one of `references/tiers/sprint.md` | `references/tiers/build.md` | `references/tiers/platform.md` matching `play_level`.
-3. MUST Read exactly one of `references/archetype/ui.md` | `references/archetype/backend.md` matching archetype (UI-facing vs backend/infra).
-4. Write `evidence-contract.md`; validate; SHA-stamp; regenerate project state.
+1. Classify `build|platform` and `ui|backend` before loading branch context. Sprint stops here; promote before authoring this contract.
+2. Before the first mutation, run the matching profile:
+   `python3 .speck/scripts/context/speck_context.py project-evidence-<ui|backend>-<build|platform>`.
+3. Require exit 0 and `SPECK_CONTEXT_RECEIPT`; do not separately load sibling tier/archetype branches.
+4. Execute the loaded template/spine/branches. Write `evidence-contract.md`; validate; SHA-stamp; regenerate project state.

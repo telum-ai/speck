@@ -17,7 +17,9 @@ Template: `.speck/templates/story/story-template.md`.
 
 ## 0. Template
 
-Read `.speck/templates/story/story-template.md` before writing.
+Before any mutation, run
+`python3 .speck/scripts/context/speck_context.py story-specify`. Require exit 0
+and `SPECK_CONTEXT_RECEIPT`; follow the receipted story template.
 
 ## 1. Play level
 
@@ -72,6 +74,17 @@ Fill template → `spec.md`:
 **Current State**: Specified
 - [x] **Draft** (if was placeholder)
 - [x] **Specified**
+```
+
+Before save, require all four: canonical frontmatter
+`lifecycle_state: Specified`; stable `AC-N` scenarios with observable outcomes;
+named failure behavior; and a concrete test/LARP approach for every failure.
+Preserve `depends_on` and `blocks` byte-for-byte unless the epic breakdown has
+also been deliberately amended.
+
+After save, run:
+```bash
+bash .speck/scripts/validation/validate-template.sh "$STORY_DIR/spec.md" --strict
 ```
 
 **5-minute test**: explain in <5 min. Needs "AND" or >3 AC scenarios → split.
