@@ -640,9 +640,9 @@ def command_report(args: argparse.Namespace) -> int:
     ratio = statistics.mean(combined_v11) / statistics.mean(combined_v10) if statistics.mean(combined_v10) else float("inf")
     report = f"""# Speck v10-v11 behavioral tournament
 
-Run: `{args.run_id}`  
-Subjects: `{manifest['model']}` at `{manifest['effort']}` reasoning, identical prompts, isolated workspaces  
-Revisions: v10 `{REVISIONS['v10']}` · v11 `{REVISIONS['v11']}`  
+Run: `{args.run_id}`
+Subjects: `{manifest['model']}` at `{manifest['effort']}` reasoning, identical prompts, isolated workspaces
+Revisions: v10 `{REVISIONS['v10']}` · v11 `{REVISIONS['v11']}`
 Blinded judge: `{judge_data.get('model')}` ({'complete' if judge_complete else 'not complete'})
 
 ## Verdict
