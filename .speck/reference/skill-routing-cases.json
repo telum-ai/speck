@@ -1,0 +1,384 @@
+{
+  "schema_version": 1,
+  "minimum_accuracy": 0.95,
+  "cases": [
+    {
+      "id": "adjust-validated-redesign",
+      "prompt": "The validated onboarding story still works, but we want to redesign its information architecture and promises deliberately.",
+      "expect": "adjust",
+      "forbid": ["harden"]
+    },
+    {
+      "id": "analyze-planning-corpus",
+      "prompt": "The project plan and epic map now exist. Have independent reviewers challenge the planning corpus before downstream specification begins.",
+      "expect": "analyze",
+      "forbid": ["speck-audit"]
+    },
+    {
+      "id": "epic-architecture-cross-system",
+      "prompt": "This epic crosses two services, introduces a new shared contract, and adds a complex payment-provider integration. Design those seams before its technical plan.",
+      "expect": "epic-architecture",
+      "forbid": ["project-architecture", "epic-plan"]
+    },
+    {
+      "id": "epic-breakdown-ordered-stories",
+      "prompt": "The epic technical specification is complete. Turn it into dependency-ordered stories and close promise-to-story traceability before story work starts.",
+      "expect": "epic-breakdown",
+      "forbid": ["epic-plan", "story-extract"]
+    },
+    {
+      "id": "epic-clarify-ambiguous-boundaries",
+      "prompt": "The epic document exists, but its boundaries and acceptance criteria can be interpreted several ways. Resolve those gaps before planning.",
+      "expect": "epic-clarify",
+      "forbid": ["epic-plan"]
+    },
+    {
+      "id": "epic-constitution-override",
+      "prompt": "One epic needs technical principles that extend and partially override the project-wide constitution; the other epics do not.",
+      "expect": "epic-constitution",
+      "forbid": ["project-constitution", "epic-architecture"]
+    },
+    {
+      "id": "epic-discover-brownfield-map",
+      "prompt": "This brownfield product has code and documentation but no epic structure. Discover coherent epic boundaries before specifying any epic.",
+      "expect": "epic-discover",
+      "forbid": ["epic-specify", "story-extract", "speck-scan"]
+    },
+    {
+      "id": "epic-experience-chain-ui-seams",
+      "prompt": "The multi-screen epic feels like separate apps stitched together. Define entry states, handoffs, emotional progression, and the magic-moment placement before planning.",
+      "expect": "epic-experience-chain",
+      "forbid": ["epic-journey", "story-ui-spec"]
+    },
+    {
+      "id": "epic-journey-touchpoints",
+      "prompt": "The UX-heavy epic is specified. Map user touchpoints, emotions, and end-to-end flow before wireframes and technical planning.",
+      "expect": "epic-journey",
+      "forbid": ["epic-experience-chain", "epic-wireframes"]
+    },
+    {
+      "id": "epic-plan-technical-spec",
+      "prompt": "The epic scope is clear and its optional architecture work is done. Write the complete technical design and traceability before breaking it into stories.",
+      "expect": "epic-plan",
+      "forbid": ["epic-breakdown"]
+    },
+    {
+      "id": "epic-retrospective-close",
+      "prompt": "Every story in the epic is validated. Synthesize their retrospectives into the epic learning artifact before closing the epic.",
+      "expect": "epic-retrospective",
+      "forbid": ["story-retrospective", "project-retrospective"]
+    },
+    {
+      "id": "epic-specify-placeholder",
+      "prompt": "The project plan contains an epic placeholder. Turn it into the canonical epic vision and scope so the epic lifecycle can begin.",
+      "expect": "epic-specify",
+      "forbid": ["epic-discover", "epic-plan"]
+    },
+    {
+      "id": "epic-validate-prove-gate",
+      "prompt": "All stories are individually validated and the epic audit is complete. Prove the epic goals as a whole and declare its readiness.",
+      "expect": "epic-validate",
+      "forbid": ["story-validate", "project-validate"]
+    },
+    {
+      "id": "epic-wireframes-after-journey",
+      "prompt": "The UX journey is complete. Create screen-by-screen states for the whole epic before its technical plan.",
+      "expect": "epic-wireframes",
+      "forbid": ["story-ui-spec", "visual-testing"]
+    },
+    {
+      "id": "harden-post-validation-bug",
+      "prompt": "A shipped validation flow has a reproducible defect. Fix the bug, explain why the gates missed it, and add the systemic guardrail without redesigning the contract.",
+      "expect": "harden",
+      "forbid": ["adjust"]
+    },
+    {
+      "id": "jit-research-current-standard",
+      "prompt": "Before locking the accessibility requirement, check the current official standard and record the source that informs the decision.",
+      "expect": "just-in-time-research",
+      "forbid": ["speck-frontier-scan"]
+    },
+    {
+      "id": "parallel-execution-worktrees",
+      "prompt": "Two independent epics can run concurrently. Define worktree isolation, seam contracts, and merge choreography before dispatching them.",
+      "expect": "parallel-execution",
+      "forbid": ["project-roadmap"]
+    },
+    {
+      "id": "project-architecture-platform",
+      "prompt": "This Platform project spans several systems and more than four epics. Design the project-wide architecture before creating the project plan.",
+      "expect": "project-architecture",
+      "forbid": ["epic-architecture", "project-plan"]
+    },
+    {
+      "id": "project-brainstorm-fuzzy-intent",
+      "prompt": "I have a loose product idea but cannot yet state the concrete user problem or what should be built. Help crystallize it first.",
+      "expect": "project-brainstorm",
+      "forbid": ["project-specify"]
+    },
+    {
+      "id": "project-clarify-missing-scope",
+      "prompt": "The project vision exists, but the target users, goals, and scope boundaries are still underspecified. Fill those gaps before foundation work continues.",
+      "expect": "project-clarify",
+      "forbid": ["project-brainstorm", "project-context"]
+    },
+    {
+      "id": "project-constitution-governance",
+      "prompt": "The Platform needs explicit project-wide coding principles, governance rules, and non-negotiable technical guardrails.",
+      "expect": "project-constitution",
+      "forbid": ["epic-constitution", "project-context"]
+    },
+    {
+      "id": "project-context-build-constraints",
+      "prompt": "The Build project is clarified. Capture team capacity, stack boundaries, compliance, operational targets, and hard constraints before planning.",
+      "expect": "project-context",
+      "forbid": ["project-constitution", "project-domain"]
+    },
+    {
+      "id": "project-design-system-governance",
+      "prompt": "This UI Platform needs shared design tokens, a primitive registry, component standards, and visual governance before planning.",
+      "expect": "project-design-system",
+      "forbid": ["project-ux", "visual-quality"]
+    },
+    {
+      "id": "project-domain-regulated-model",
+      "prompt": "The healthcare product has regulated terminology, domain rules, and invariants complex enough to deserve a standalone model.",
+      "expect": "project-domain",
+      "forbid": ["project-context", "project-product-contract"]
+    },
+    {
+      "id": "project-evidence-contract-proof",
+      "prompt": "The product contract is locked. Define what counts as proof, what does not, the readiness gates, and adversarial probes before project planning.",
+      "expect": "project-evidence-contract",
+      "forbid": ["project-product-contract", "project-validate"]
+    },
+    {
+      "id": "project-import-existing-docs",
+      "prompt": "Start this brownfield engagement by extracting goals, history, constraints, and team context from the existing documentation before scanning code or writing the vision.",
+      "expect": "project-import",
+      "forbid": ["speck-scan", "project-specify"]
+    },
+    {
+      "id": "project-plan-foundation-complete",
+      "prompt": "The required product, evidence, context, and architecture foundations are complete. Create the PRD, epic structure, and E000 before any epic begins.",
+      "expect": "project-plan",
+      "forbid": ["project-roadmap", "epic-specify"]
+    },
+    {
+      "id": "project-product-contract-promises",
+      "prompt": "For this Build product, lock the differentiator, promises, banned language, and magic moments before project planning or epic work.",
+      "expect": "project-product-contract",
+      "forbid": ["project-evidence-contract", "project-plan"]
+    },
+    {
+      "id": "project-promote-play-level",
+      "prompt": "This started as a Sprint, but its scope and proof needs now require the full Build rigor and artifacts.",
+      "expect": "project-promote",
+      "forbid": ["adjust", "project-specify"]
+    },
+    {
+      "id": "project-readme-profile-drift",
+      "prompt": "The product contract changed and the public root README now misstates the promise. Refresh the public profile from current truth.",
+      "expect": "project-readme",
+      "forbid": ["project-state"]
+    },
+    {
+      "id": "project-retrospective-close",
+      "prompt": "Project validation passed. Synthesize all epic retrospectives and close this project phase with project-level learning.",
+      "expect": "project-retrospective",
+      "forbid": ["epic-retrospective", "speck-learn"]
+    },
+    {
+      "id": "project-roadmap-sequencing",
+      "prompt": "The project plan exists. Sequence its epics, dependencies, resources, and milestones for a multi-team, multi-quarter Platform delivery.",
+      "expect": "project-roadmap",
+      "forbid": ["project-plan", "parallel-execution"]
+    },
+    {
+      "id": "project-specify-clear-start",
+      "prompt": "The product problem is clear. Create the canonical project vision, users, value, boundaries, and success definition so the project can start.",
+      "expect": "project-specify",
+      "forbid": ["project-brainstorm", "project-plan"]
+    },
+    {
+      "id": "project-state-regenerate",
+      "prompt": "Truth-affecting gates have landed on main. Regenerate the concise current-state artifact and next action from the canonical evidence.",
+      "expect": "project-state",
+      "forbid": ["speck-recheck", "project-readme"]
+    },
+    {
+      "id": "project-ux-platform-strategy",
+      "prompt": "Before planning this five-epic UI product, define the project-wide UX strategy, interaction principles, and experience direction.",
+      "expect": "project-ux",
+      "forbid": ["project-design-system", "epic-journey"]
+    },
+    {
+      "id": "project-validate-prove",
+      "prompt": "Every epic is complete and validated. Prove the project-level outcomes and declare the highest readiness supported across the product.",
+      "expect": "project-validate",
+      "forbid": ["epic-validate", "story-validate"]
+    },
+    {
+      "id": "speck-audit-post-implementation",
+      "prompt": "Implementation just finished. Independently attack the acceptance criteria, negative paths, and evidence before allowing validation.",
+      "expect": "speck-audit",
+      "forbid": ["analyze", "story-validate"]
+    },
+    {
+      "id": "speck-catch-up-empty-scaffolds",
+      "prompt": "The v6-to-v7 migration ran, but the generated product and evidence contracts are still empty scaffolds and old readiness claims need honest backfill.",
+      "expect": "speck-catch-up",
+      "forbid": ["speck-migrate", "speck-reprove"]
+    },
+    {
+      "id": "speck-debug-broken-workflow",
+      "prompt": "A Speck validation script is failing unexpectedly. Reproduce the failure, isolate the root cause, and diagnose the broken workflow.",
+      "expect": "speck-debug",
+      "forbid": ["harden", "speck-feedback"]
+    },
+    {
+      "id": "speck-decision-log-lock",
+      "prompt": "We selected one provider after comparing alternatives. Record the locked choice, tradeoffs, rationale, date, and SHA at this phase boundary.",
+      "expect": "speck-decision-log",
+      "forbid": ["speck-skeptical-review"]
+    },
+    {
+      "id": "speck-feedback-method-gap",
+      "prompt": "The methodology itself has a repeatable routing defect. Capture and deduplicate it as Speck feedback rather than product learning.",
+      "expect": "speck-feedback",
+      "forbid": ["speck-learn", "speck-debug"]
+    },
+    {
+      "id": "speck-frontier-scan-sota",
+      "prompt": "Run the quarterly scan of current autonomous-engineering methods and compare the frontier against Speck's methodology baseline.",
+      "expect": "speck-frontier-scan",
+      "forbid": ["just-in-time-research", "speck-self-eval"]
+    },
+    {
+      "id": "speck-graph-up-marker",
+      "prompt": "The repository has a .speck/.v9-graph-needed marker. Establish and heal the witness graph before normal work proceeds.",
+      "expect": "speck-graph-up",
+      "forbid": ["speck-recheck"]
+    },
+    {
+      "id": "speck-larp-real-user",
+      "prompt": "Cold-start the target build and walk the job as a named persona, judging both whether it works and whether the experience is good.",
+      "expect": "speck-larp",
+      "forbid": ["visual-testing", "story-validate"]
+    },
+    {
+      "id": "speck-learn-mid-story",
+      "prompt": "A surprising integration gotcha was discovered mid-story and should become a reusable pattern now rather than wait for the formal retro.",
+      "expect": "speck-learn",
+      "forbid": ["story-retrospective", "speck-feedback"]
+    },
+    {
+      "id": "speck-migrate-version",
+      "prompt": "Upgrade this existing repository to the current Speck version additively while preserving all prior artifacts.",
+      "expect": "speck-migrate",
+      "forbid": ["speck-catch-up", "speck-reprove"]
+    },
+    {
+      "id": "speck-premise-challenge-ui",
+      "prompt": "Before granting UX-RC to this high-impact interface, challenge whether the contract's underlying design decision is worth building at all.",
+      "expect": "speck-premise-challenge",
+      "forbid": ["speck-audit", "speck-skeptical-review"]
+    },
+    {
+      "id": "speck-recheck-engagement-gap",
+      "prompt": "A new agent is taking over after three weeks away. Check current runtime and truth documents for drift before new feature work.",
+      "expect": "speck-recheck",
+      "forbid": ["speck-audit", "project-state"]
+    },
+    {
+      "id": "speck-reprove-marker",
+      "prompt": "The repository has a .speck/.v8-reprove-needed marker. Re-evaluate v7-era green under the v8 evaluation standard.",
+      "expect": "speck-reprove",
+      "forbid": ["speck-catch-up", "speck-migrate"]
+    },
+    {
+      "id": "speck-scan-code-facts",
+      "prompt": "Extract code-side facts for this brownfield epic so planning uses current implementation reality rather than assumptions.",
+      "expect": "speck-scan",
+      "forbid": ["project-import", "epic-discover", "story-extract"]
+    },
+    {
+      "id": "speck-self-eval-gate-fitness",
+      "prompt": "We changed a methodology gate. Measure its fitness against seeded defects and compare the candidate score with the immutable baseline.",
+      "expect": "speck-self-eval",
+      "forbid": ["speck-audit", "speck-frontier-scan"]
+    },
+    {
+      "id": "speck-skeptical-review-alternatives",
+      "prompt": "A non-trivial architecture choice is about to lock. Enumerate and compare at least three alternatives before recording the decision.",
+      "expect": "speck-skeptical-review",
+      "forbid": ["speck-decision-log", "epic-architecture"]
+    },
+    {
+      "id": "story-clarify-ambiguous-ac",
+      "prompt": "The story spec exists, but requirements, acceptance criteria, and scope are still ambiguous. Resolve those gaps before planning.",
+      "expect": "story-clarify",
+      "forbid": ["story-specify", "story-plan"]
+    },
+    {
+      "id": "story-extract-existing-code",
+      "prompt": "A legacy checkout feature already exists in code but has no Speck story artifacts. Reverse-engineer its story spec and code-side scan.",
+      "expect": "story-extract",
+      "forbid": ["epic-discover", "speck-scan", "story-specify"]
+    },
+    {
+      "id": "story-implement-ready-artifacts",
+      "prompt": "The story has reviewed spec.md, plan.md, and tasks.md. Implement it completely, update tasks honestly, and stop before adversarial audit.",
+      "expect": "story-implement",
+      "forbid": ["story-plan", "story-tasks"]
+    },
+    {
+      "id": "story-plan-technical-design",
+      "prompt": "The clarified story specification is ready. Write its technical design, data contracts, and test strategy before creating implementation tasks.",
+      "expect": "story-plan",
+      "forbid": ["story-tasks", "story-implement"]
+    },
+    {
+      "id": "story-retrospective-close",
+      "prompt": "Story validation passed. Capture what happened, mine the commits, and write the story learning artifact before epic synthesis.",
+      "expect": "story-retrospective",
+      "forbid": ["speck-learn", "epic-retrospective"]
+    },
+    {
+      "id": "story-specify-placeholder",
+      "prompt": "The epic breakdown contains a draft story placeholder. Complete its user story, criteria, boundaries, and constraints before planning.",
+      "expect": "story-specify",
+      "forbid": ["story-extract", "story-clarify"]
+    },
+    {
+      "id": "story-tasks-from-plan",
+      "prompt": "The story plan and optional UI specification are complete. Convert them into a dependency-ordered executable checklist before coding.",
+      "expect": "story-tasks",
+      "forbid": ["story-plan", "story-implement"]
+    },
+    {
+      "id": "story-ui-spec-complex-ui",
+      "prompt": "The story plan is done and the interface has multiple components, interaction states, animations, and complex layouts. Specify the exact UI before tasks.",
+      "expect": "story-ui-spec",
+      "forbid": ["epic-wireframes", "visual-quality", "visual-testing"]
+    },
+    {
+      "id": "story-validate-prove",
+      "prompt": "The story implementation passed adversarial audit. Execute the prove gate, correct overclaims, and declare the highest readiness actually earned.",
+      "expect": "story-validate",
+      "forbid": ["speck-audit", "epic-validate"]
+    },
+    {
+      "id": "visual-quality-generic-ui",
+      "prompt": "Review these user-facing components while they are being built and remove generic boilerplate so they express the project's visual personality.",
+      "expect": "visual-quality",
+      "forbid": ["project-design-system", "visual-testing"]
+    },
+    {
+      "id": "visual-testing-validation-evidence",
+      "prompt": "During story validation, coordinate screenshots, accessibility evidence, and host-specific visual checks for the UI described in ui-spec.md.",
+      "expect": "visual-testing",
+      "forbid": ["visual-quality", "speck-larp"]
+    }
+  ]
+}

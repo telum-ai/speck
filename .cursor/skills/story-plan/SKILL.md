@@ -1,6 +1,6 @@
 ---
 name: story-plan
-description: Writes story plan.md. Use after clarify/scan.
+description: Writes plan.md with design, contracts, and tests. Use after story clarification or code scan, before story-tasks.
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"

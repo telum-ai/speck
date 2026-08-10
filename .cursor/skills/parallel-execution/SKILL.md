@@ -1,6 +1,6 @@
 ---
 name: parallel-execution
-description: Parallel epic/chunk concurrency doctrine. Use when running epics in parallel.
+description: Guides safe parallel epic or chunk execution. Use when worktrees, seam contracts, or merge choreography are needed.
 ---
 
 # parallel-execution

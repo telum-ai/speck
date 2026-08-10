@@ -1,6 +1,6 @@
 ---
 name: story-tasks
-description: Writes tasks.md checklist. Use after plan / before implement.
+description: Writes executable tasks.md from the story plan. Use after story-plan and optional UI spec, before implementation.
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"

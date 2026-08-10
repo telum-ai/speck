@@ -1,6 +1,6 @@
 ---
 name: epic-experience-chain
-description: UI epic seams + emotional flow. Use for UI epics before plan.
+description: Defines UI seams and emotional flow across an epic. Use for user-facing epics before epic-plan.
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"

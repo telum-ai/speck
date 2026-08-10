@@ -1,6 +1,6 @@
 ---
 name: speck-decision-log
-description: Appends DEC to project-decisions-log. Use at phase boundaries.
+description: Appends a decision lock to the project log. Use at phase boundaries whenever a non-trivial choice is locked.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

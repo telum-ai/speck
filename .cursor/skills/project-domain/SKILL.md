@@ -1,6 +1,6 @@
 ---
 name: project-domain
-description: Domain model/terminology. Use for specialized domains.
+description: Defines domain terms, rules, and invariants. Use when regulation or specialized terminology warrants a standalone model.
 paths:
   - "specs/projects/**"
 ---

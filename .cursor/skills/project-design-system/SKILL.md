@@ -1,6 +1,6 @@
 ---
 name: project-design-system
-description: Design tokens/primitives. Use for UI Platform/optional Build.
+description: Defines design tokens, primitives, and component standards. Use for UI Platform or Build needing shared visual rules.
 paths:
   - "specs/projects/**"
 ---

@@ -1,6 +1,6 @@
 ---
 name: speck-skeptical-review
-description: N≥3 alternatives before lock. Use at non-trivial decisions.
+description: Compares three-plus alternatives before a lock. Use whenever a non-trivial product or technical decision is proposed.
 ---
 
 # speck-skeptical-review

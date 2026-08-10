@@ -1,6 +1,6 @@
 ---
 name: adjust
-description: Re-specs deliberate changes to validated work. Use for story redesigns, epic pivots, or project direction changes.
+description: Re-specs validated work after deliberate change. Use for story redesigns, epic pivots, or project direction changes.
 ---
 
 # adjust

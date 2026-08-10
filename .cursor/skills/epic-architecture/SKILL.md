@@ -1,6 +1,6 @@
 ---
 name: epic-architecture
-description: Epic cross-cutting architecture. Use when epic spans systems.
+description: Designs architecture across services, packages, or teams. Use before epic-plan for new patterns or complex integrations.
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"

@@ -1,6 +1,6 @@
 ---
 name: speck-debug
-description: Systematic debug for errors/failures. Use when something breaks.
+description: Diagnoses errors and failed Speck workflows systematically. Use when tests, tools, or expected behavior break.
 ---
 
 # speck-debug

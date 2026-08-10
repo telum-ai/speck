@@ -1,6 +1,6 @@
 ---
 name: story-extract
-description: Extracts stories from epic materials. Use when mining story candidates.
+description: Reverse-engineers story specs and code scans. Use when existing implementation lacks Speck story artifacts.
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"

@@ -15,5 +15,17 @@ For DAG changes, add/update every affected static branch in `skill-load-budgets.
 
 One intent family exposes one automatic selection surface. Put cheap level/host/archetype variation behind that canonical router; keep genuinely different evidence models as specialist auto skills. Compatibility aliases and convenience-only routers are user-only and declared in `skill-catalog-policy.json`.
 
+## Automatic description contract
+
+An automatic skill description is discovery infrastructure, not a body summary:
+
+1. **WHAT** — third-person action plus the concrete artifact, outcome, or capability.
+2. **WHEN** — `Use ...` plus observable user intent, artifact state, or concrete cases.
+3. **WHERE / BOUNDARY when selection-critical** — include `after`/`before`, or the neighboring skill to use instead, only when it distinguishes the route.
+
+Target two sentences: `<WHAT>. Use <WHEN, with WHERE or BOUNDARY if needed>.` Template paths, first actions, procedure, and exhaustive outputs stay in the JIT body. User-only routers and compatibility shims instead state that they run only when explicitly named.
+
+Every automatic skill must have a case in `skill-routing-cases.json`. Treat description quality as a routing claim: run the catalog-only evaluator on intended model families. Its reports prove selection only; use separately captured host transcripts to prove invocation, excluded siblings, and load timing. Static lint proves shape and coverage only.
+
 Ceilings: `docs/v11/v11-north-star.md` §4.
 Never mutate P1–P4 / first-actions / readiness axes / audit-before-validate / LARP split / graph hard `.P1`.

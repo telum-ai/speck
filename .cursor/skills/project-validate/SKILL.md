@@ -1,6 +1,6 @@
 ---
 name: project-validate
-description: Project validate after epics. Use at project prove gate.
+description: Validates project outcomes across completed epics. Use at the project prove gate before project retrospective.
 paths:
   - "specs/projects/**"
 ---

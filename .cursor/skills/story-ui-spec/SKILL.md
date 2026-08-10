@@ -1,6 +1,6 @@
 ---
 name: story-ui-spec
-description: UI spec for UI-bearing stories. Use when story has UI.
+description: Creates ui-spec.md for complex UI. Use after story-plan before story-tasks for multi-state or interactive work.
 paths:
   - "**/*.{tsx,jsx,vue,svelte,css,scss}"
   - "specs/projects/**/**/ui-spec.md"

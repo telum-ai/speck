@@ -1,6 +1,6 @@
 ---
 name: speck-self-eval
-description: A1-lite seeded defect scorecard. Use when measuring Speck gate fitness.
+description: Scores Speck gate fitness with seeded defects. Use when evaluating methodology changes or comparing gate performance.
 ---
 
 # Speck self-eval (A1-lite)

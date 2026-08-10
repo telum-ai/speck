@@ -1,6 +1,6 @@
 ---
 name: project-retrospective
-description: Project retro after validate. Use when closing project phase.
+description: Synthesizes epic retros into project-retro.md. Use after project-validate when closing a project phase.
 paths:
   - "specs/projects/**"
 ---

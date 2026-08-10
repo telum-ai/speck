@@ -1,6 +1,6 @@
 ---
 name: project-clarify
-description: Fills gaps in project.md. Use after project-specify.
+description: Fills gaps in project.md. Use after project-specify when goals, users, or scope are underspecified.
 paths:
   - "specs/projects/**"
 ---

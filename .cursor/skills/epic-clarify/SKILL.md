@@ -1,6 +1,6 @@
 ---
 name: epic-clarify
-description: Fills gaps in epic.md. Use when epic scope/boundaries unclear.
+description: Fills gaps in epic.md. Use after epic-specify when scope, boundaries, or technical intent are unclear.
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"

@@ -1,6 +1,6 @@
 ---
 name: analyze
-description: Runs decorrelated project or epic planning analysis. Use after project-plan or epic-breakdown.
+description: Runs decorrelated analysis of project or epic planning. Use after project-plan or epic-breakdown before downstream work.
 ---
 
 # analyze

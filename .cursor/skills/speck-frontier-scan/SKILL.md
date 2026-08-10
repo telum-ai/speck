@@ -1,6 +1,6 @@
 ---
 name: speck-frontier-scan
-description: SOTA frontier scan. Use when researching methodology/product frontier.
+description: Scans current methodology or product frontiers. Use for SOTA research or live-market claim rechecks.
 ---
 
 # speck-frontier-scan

@@ -1,6 +1,6 @@
 ---
 name: speck-larp
-description: Runtime persona LARP (DOES-IT-WORK + IS-IT-GOOD). Use at UI validate.
+description: Runs persona-based target-build LARP for function and quality. Use during UI validation or when testing as a real user.
 ---
 
 # speck-larp

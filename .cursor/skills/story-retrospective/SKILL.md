@@ -1,6 +1,6 @@
 ---
 name: story-retrospective
-description: Story retro after validate. Use when closing a story.
+description: Captures story outcomes and learnings in story-retro.md. Use after story-validate when closing a story.
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"

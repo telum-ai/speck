@@ -1,6 +1,6 @@
 ---
 name: speck-catch-up
-description: v6→v7 catch-up. Use when migration scaffold/catch-up marker present.
+description: Backfills v6→v7 migration scaffolds into honest artifacts. Use when catch-up markers or empty migrated contracts remain.
 ---
 
 # speck-catch-up

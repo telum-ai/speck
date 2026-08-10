@@ -1,6 +1,6 @@
 ---
 name: speck-feedback
-description: Captures Speck methodology feedback/issues. Use when hitting a Speck gap.
+description: Captures and deduplicates Speck methodology issues. Use when the process itself exposes a gap or defect.
 ---
 
 ## Purpose

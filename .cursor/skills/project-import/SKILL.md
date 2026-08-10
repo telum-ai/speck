@@ -1,6 +1,6 @@
 ---
 name: project-import
-description: Brownfield import. Use when starting from existing codebase/docs.
+description: Extracts project context from existing docs. Use at brownfield start before speck-scan and project-specify.
 paths:
   - "specs/projects/**"
 ---

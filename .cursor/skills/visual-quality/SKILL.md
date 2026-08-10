@@ -1,6 +1,6 @@
 ---
 name: visual-quality
-description: Visual design quality rules. Use when building or reviewing UI.
+description: Applies project visual personality and quality rules. Use while building or reviewing user-facing UI components.
 paths:
   - "**/*.{tsx,jsx,vue,svelte,css,scss}"
   - "specs/projects/**/**/ui-spec.md"

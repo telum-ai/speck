@@ -57,8 +57,10 @@ P1–P4; four-axis honesty; first-actions ladder; readiness states; evidence-or-
 1. Classify change: `spine` | `always-on-contract` | `skill-catalog` | `jit` | `delete`
 2. Prefer JIT (`references/`, templates, scripts)
 3. Catalog entry needs ≤120-char description + budget room
-4. ADR in `docs/decisions/` (+ scorecard for gates)
-5. `validate-corpus-budget` green
+4. Automatic descriptions follow WHAT + specific WHEN; add WHERE/boundary only when selection-critical
+5. Add or update its catalog-only routing case; run intended-model checks; validate host transcripts separately when captured
+6. ADR in `docs/decisions/` (+ scorecard for gates)
+7. `validate-corpus-budget` green
 
 ## 7. Out of v11
 

@@ -1,6 +1,6 @@
 ---
 name: harden
-description: Post-validation defect hardening. Use when fixing bugs in validated work.
+description: Hardens post-validation defects and missed gates. Use for bugs; use adjust for deliberate redesign.
 ---
 
 # harden

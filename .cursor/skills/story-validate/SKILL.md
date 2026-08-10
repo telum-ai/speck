@@ -1,6 +1,6 @@
 ---
 name: story-validate
-description: Validates story after audit. Use at story prove; claim readiness state.
+description: Validates a story after audit and declares readiness. Use at the story prove gate before retrospective.
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"

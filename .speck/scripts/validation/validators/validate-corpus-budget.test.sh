@@ -42,7 +42,7 @@ EOF
 cat > "$TMP/.cursor/skills/good/SKILL.md" <<'EOF'
 ---
 name: good
-description: Short desc. Use when testing budget.
+description: Checks deterministic budget behavior. Use when testing catalog and corpus enforcement.
 ---
 
 # good
@@ -61,11 +61,71 @@ fi
   for i in $(seq 1 10); do echo "line $i"; done
   echo '<!-- SPECK:END -->'
 } > "$TMP/AGENTS.md"
+
+python3 - "$TMP/.cursor/skills/good/SKILL.md" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+path.write_text(text.replace(
+    "Checks deterministic budget behavior. Use when testing catalog and corpus enforcement.",
+    "Checks deterministic budget behavior without a trigger clause.",
+))
+PY
+echo "Test: automatic description missing WHAT/WHEN separator fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected description-contract failure"
+  exit 1
+fi
+
+python3 - "$TMP/.cursor/skills/good/SKILL.md" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+path.write_text(text.replace(
+    "Checks deterministic budget behavior without a trigger clause.",
+    "I check deterministic budget behavior. Use when testing catalog and corpus enforcement.",
+))
+PY
+echo "Test: automatic description using first person fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected third-person failure"
+  exit 1
+fi
+
+python3 - "$TMP/.cursor/skills/good/SKILL.md" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+path.write_text(text.replace(
+    "I check deterministic budget behavior. Use when testing catalog and corpus enforcement.",
+    "Checks deterministic budget behavior. Use when needed.",
+))
+PY
+echo "Test: automatic description with vague trigger fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected trigger-specificity failure"
+  exit 1
+fi
+
+python3 - "$TMP/.cursor/skills/good/SKILL.md" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+path.write_text(text.replace(
+    "Checks deterministic budget behavior. Use when needed.",
+    "Checks deterministic budget behavior. Use when testing catalog and corpus enforcement.",
+))
+PY
+
 mkdir -p "$TMP/.cursor/skills/essay/references"
 cat > "$TMP/.cursor/skills/essay/SKILL.md" <<'EOF'
 ---
 name: essay
-description: Short desc. Use when testing essay lint.
+description: Checks prose for forbidden essays. Use when testing agent-context lint enforcement.
 ---
 
 # essay
@@ -89,7 +149,7 @@ mkdir -p "$TMP/.cursor/skills/theater/references"
 cat > "$TMP/.cursor/skills/theater/SKILL.md" <<'EOF'
 ---
 name: theater
-description: Short desc. Use when testing anti-theater.
+description: Checks single-pointer reference structure. Use when testing anti-theater enforcement behavior.
 ---
 
 # theater
@@ -114,7 +174,7 @@ mkdir -p "$TMP/.cursor/skills/nested/references"
 cat > "$TMP/.cursor/skills/nested/SKILL.md" <<'EOF'
 ---
 name: nested
-description: Short desc. Use when testing nested load edges.
+description: Checks nested reference edges. Use when testing direct router ownership and load-DAG enforcement.
 ---
 
 # nested
@@ -174,7 +234,7 @@ fi
 cat > "$TMP/.cursor/skills/good/SKILL.md" <<'EOF'
 ---
 name: good
-description: Short desc. Use when testing budget.
+description: Checks deterministic budget behavior. Use when testing catalog and corpus enforcement.
 ---
 
 # good

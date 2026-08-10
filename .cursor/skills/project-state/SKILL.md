@@ -1,6 +1,6 @@
 ---
 name: project-state
-description: Regenerates project-state.md. Use after truth-affecting gates on main.
+description: Regenerates project-state.md from current truth. Use after truth-affecting gates land on main.
 paths:
   - "specs/projects/**"
 ---

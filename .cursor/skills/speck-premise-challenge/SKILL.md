@@ -1,6 +1,6 @@
 ---
 name: speck-premise-challenge
-description: Anti-spec premise challenge. Use before UX-RC+ on high-impact UI.
+description: Challenges whether a high-impact UI contract is worth building. Use before UX-RC or later premise locks.
 ---
 
 ## Purpose

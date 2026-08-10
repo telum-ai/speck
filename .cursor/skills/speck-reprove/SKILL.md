@@ -1,6 +1,6 @@
 ---
 name: speck-reprove
-description: v7→v8 truth re-prove. Use when .v8-reprove-needed present.
+description: Re-proves v7-era truth under v8 evaluation standards. Use when .speck/.v8-reprove-needed exists.
 ---
 
 # speck-reprove

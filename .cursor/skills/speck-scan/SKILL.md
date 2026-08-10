@@ -1,6 +1,6 @@
 ---
 name: speck-scan
-description: Code-side scan by --level. Use when extracting facts from codebase.
+description: Extracts code-side facts at project, epic, or story scope. Use for brownfield work or a fresh reality check.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).

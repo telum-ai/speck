@@ -1,6 +1,6 @@
 ---
 name: epic-journey
-description: User journey map for UX-heavy epics. Use after specify when journeys matter.
+description: Maps touchpoints, emotions, and flow for UX-heavy epics. Use after epic-specify before wireframes or epic-plan.
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"

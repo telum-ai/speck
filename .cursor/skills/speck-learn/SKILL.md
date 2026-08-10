@@ -1,6 +1,6 @@
 ---
 name: speck-learn
-description: Captures learnings/patterns. Use after discoveries or retros.
+description: Captures a learning or reusable pattern. Use after a discovery that should not wait for formal retrospective.
 ---
 
 # speck-learn

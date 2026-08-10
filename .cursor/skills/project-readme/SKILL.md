@@ -1,6 +1,6 @@
 ---
 name: project-readme
-description: Refresh root README PROFILE. Use after product-contract / on PROFILE drift.
+description: Refreshes the root README profile from Speck truth. Use after product-contract changes or when PROFILE drift appears.
 paths:
   - "specs/projects/**"
 ---

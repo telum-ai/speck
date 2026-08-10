@@ -1,6 +1,6 @@
 ---
 name: epic-validate
-description: Validates epic after stories + audit. Use at epic prove gate.
+description: Validates an epic across completed stories and audit evidence. Use at the epic prove gate before retrospective.
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"

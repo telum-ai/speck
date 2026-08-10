@@ -1,6 +1,6 @@
 ---
 name: project-constitution
-description: Technical principles. Use for Platform (optional Build).
+description: Defines technical principles and guardrails. Use for Platform or when Build needs explicit governance constraints.
 paths:
   - "specs/projects/**"
 ---

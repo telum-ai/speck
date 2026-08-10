@@ -1,6 +1,6 @@
 ---
 name: project-brainstorm
-description: Vague idea → structured problem. Use at very start when intent is fuzzy.
+description: Turns a vague idea into a structured problem. Use before project-specify when product intent is still fuzzy.
 paths:
   - "specs/projects/**"
 ---

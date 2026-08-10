@@ -105,7 +105,7 @@ First-actions ladder. Read SKILL + template. Stamp truth. ≥3 alternatives at d
 
 1. Classify: spine | always-on-contract | skill-catalog | jit | delete
 2. Prefer JIT
-3. Catalog needs ≤120-char description + budget room
+3. Catalog needs a ≤120-char description with WHAT + specific WHEN; add WHERE/boundary only if selection-critical; require routing case + budget room
 4. ADR in `docs/decisions/` (+ A1-lite for gates)
 5. `validate-corpus-budget` must stay green
 Detail: `.speck/reference/methodology-evolution.md`

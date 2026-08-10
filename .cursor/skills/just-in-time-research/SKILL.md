@@ -1,6 +1,6 @@
 ---
 name: just-in-time-research
-description: External research before locking decisions. Use when facts need sources.
+description: Researches current external facts for decisions. Use for technology, standards, compliance, market, or integrations.
 ---
 
 # Just-In-Time Research

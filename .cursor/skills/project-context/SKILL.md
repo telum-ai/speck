@@ -1,6 +1,6 @@
 ---
 name: project-context
-description: Constraints/compliance/team context. Use before plan.
+description: Creates context.md for team, stack, compliance, and constraints. Use after project-clarify before project-plan.
 paths:
   - "specs/projects/**"
 ---

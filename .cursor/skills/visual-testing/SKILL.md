@@ -1,6 +1,6 @@
 ---
 name: visual-testing
-description: UI visual testing coordinator. Use at story/epic validate with UI.
+description: Coordinates visual and accessibility evidence. Use during story or epic validation when UI or ui-spec.md exists.
 paths:
   - "**/*.{tsx,jsx,vue,svelte,css,scss}"
   - "specs/projects/**/**/ui-spec.md"

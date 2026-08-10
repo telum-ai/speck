@@ -1,6 +1,6 @@
 ---
 name: speck-recheck
-description: Engagement-gap drift detector. Use when stale/new-agent/recheck asked.
+description: Detects truth/runtime drift after an engagement gap. Use when work is stale, ownership changes, or recheck is asked.
 ---
 
 # speck-recheck

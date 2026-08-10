@@ -33,6 +33,14 @@ MAX_ROUTER_BODY = 80
 LOCAL_REF_EDGE = re.compile(
     r"(?<![A-Za-z0-9_./-])references/([A-Za-z0-9_./<>#*-]+\.md)"
 )
+AUTO_DESCRIPTION_TRIGGER = re.compile(
+    r"^(?:when|after|before|at|for|only|while|during|whenever)\b",
+    re.I,
+)
+DESCRIPTION_PRONOUN = re.compile(r"\b(?:I|me|my|we|our|you|your)\b", re.I)
+THIRD_PERSON_ACTION = re.compile(r"^[A-Z][A-Za-z-]*s\b")
+MIN_DESCRIPTION_WHAT = 20
+MIN_DESCRIPTION_TRIGGER = 24
 
 
 def router_owns_ref(body: str, rel: str) -> bool:
@@ -348,6 +356,28 @@ def description(fm: str) -> str:
     return d
 
 
+def lint_auto_description(name: str, desc: str, err) -> None:
+    """Enforce the cheap half of ADR-0008; model routing owns semantic fitness."""
+    if not desc:
+        err(f"automatic skill {name} requires a description")
+        return
+    if DESCRIPTION_PRONOUN.search(desc):
+        err(f"automatic skill {name} description must use third person: {desc}")
+    if not THIRD_PERSON_ACTION.match(desc):
+        err(f"automatic skill {name} description WHAT must start with a third-person action: {desc}")
+    if desc.count(". Use ") != 1 or not desc.endswith("."):
+        err(f"automatic skill {name} description must be '<WHAT>. Use <WHEN>.': {desc}")
+        return
+    what, trigger = desc.split(". Use ", 1)
+    trigger = trigger[:-1]
+    if len(what) < MIN_DESCRIPTION_WHAT:
+        err(f"automatic skill {name} description WHAT is too vague ({len(what)} chars): {what}")
+    if len(trigger) < MIN_DESCRIPTION_TRIGGER:
+        err(f"automatic skill {name} description WHEN is too vague ({len(trigger)} chars): {trigger}")
+    if not AUTO_DESCRIPTION_TRIGGER.match(trigger):
+        err(f"automatic skill {name} description WHEN lacks a concrete trigger/context preposition: {trigger}")
+
+
 STRICT_ESSAY = ESSAY_RES
 REF_ROOT_ESSAY = [
     re.compile(p, re.I)
@@ -416,6 +446,7 @@ def main() -> int:
             auto += 1
             dlen = len(desc)
             desc_sum += dlen
+            lint_auto_description(name, desc, err)
             if dlen > max_desc:
                 err(f"skill {name} description length {dlen} > {max_desc}: {desc[:80]}...")
 

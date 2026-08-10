@@ -1,6 +1,6 @@
 ---
 name: speck-audit
-description: Adversarial audit between implement and validate. Use after implement.
+description: Audits implemented work adversarially. Use after implementation and before any story or epic validation.
 ---
 
 # speck-audit

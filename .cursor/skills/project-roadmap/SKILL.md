@@ -1,6 +1,6 @@
 ---
 name: project-roadmap
-description: Project roadmap. Use for Platform sequencing.
+description: Sequences epics, dependencies, and resources. Use after project-plan for multi-team or multi-quarter Platform delivery.
 paths:
   - "specs/projects/**"
 ---

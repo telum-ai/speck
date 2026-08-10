@@ -1,6 +1,6 @@
 ---
 name: story-specify
-description: Creates story spec.md. Use when specifying a story.
+description: Creates or completes a story spec.md. Use when starting a story from an epic placeholder or new scope.
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"

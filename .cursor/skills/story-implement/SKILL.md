@@ -1,6 +1,6 @@
 ---
 name: story-implement
-description: Implements story from plan/tasks. Use when coding the story.
+description: Implements a planned story. Use only after spec.md, plan.md, and tasks.md exist and before speck-audit.
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"

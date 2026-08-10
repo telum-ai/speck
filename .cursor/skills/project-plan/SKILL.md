@@ -1,6 +1,6 @@
 ---
 name: project-plan
-description: Creates PRD + epics + E000. Use after required PROMISE artifacts.
+description: Creates PRD.md, epics, and E000. Use after required PROMISE artifacts and before any epic work.
 paths:
   - "specs/projects/**"
 ---

@@ -1,6 +1,6 @@
 ---
 name: epic-retrospective
-description: Epic retro after validate. Use when closing an epic.
+description: Synthesizes story retros into epic-retro.md. Use after epic-validate when closing an epic.
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"

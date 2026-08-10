@@ -1,6 +1,6 @@
 ---
 name: speck-migrate
-description: Migrates Speck versions. Use when upgrading Speck in a repo.
+description: Migrates a repository between Speck versions additively. Use when upgrading Speck in an existing project.
 ---
 
 # speck-migrate

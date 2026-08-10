@@ -1,6 +1,6 @@
 ---
 name: project-specify
-description: Creates project.md vision. Use when starting a new project.
+description: Creates project.md vision and boundaries. Use when starting after any needed brainstorming or brownfield import.
 paths:
   - "specs/projects/**"
 ---

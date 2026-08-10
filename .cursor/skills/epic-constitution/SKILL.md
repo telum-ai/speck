@@ -1,6 +1,6 @@
 ---
 name: epic-constitution
-description: Epic-specific technical principles. Use rarely when epic needs own constitution.
+description: Defines epic-only technical principles. Use when an epic must extend or override the project constitution.
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"

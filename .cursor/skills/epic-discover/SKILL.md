@@ -1,6 +1,6 @@
 ---
 name: epic-discover
-description: Discovers epic candidates. Use when scanning for new epic scope.
+description: Discovers epic boundaries from existing code and docs. Use before epic-specify when brownfield work has no epic map.
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"
