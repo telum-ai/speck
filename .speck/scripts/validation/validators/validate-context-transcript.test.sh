@@ -602,11 +602,21 @@ TRANSCRIPT_EVIDENCE_FULL="$T/evidence-full.jsonl"
 write_transcript "$TRANSCRIPT_EVIDENCE_FULL" \
   cmd "$EVIDENCE_LOADER_CMD" "$T/evidence-loader.out" 0 \
   change "specs/projects/demo/evidence-contract.md" \
-  cmd "bash .speck/scripts/validation/validate-template.sh specs/projects/demo/evidence-contract.md" /dev/null 0 \
-  cmd ".speck/scripts/stamp-truth.sh specs/projects/demo/evidence-contract.md" /dev/null 0
+  cmd ".speck/scripts/stamp-truth.sh specs/projects/demo/evidence-contract.md" /dev/null 0 \
+  cmd "bash .speck/scripts/validation/validate-template.sh specs/projects/demo/evidence-contract.md" /dev/null 0
 run_validator "$ROOT" --transcript "$TRANSCRIPT_EVIDENCE_FULL" --profile "$EVIDENCE_PROFILE" --json
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
   && pass "template validation plus truth stamp satisfies evidence-contract closure" || fail "full evidence-contract gates should pass (rc=$RC)"
+
+TRANSCRIPT_EVIDENCE_STALE="$T/evidence-stale.jsonl"
+write_transcript "$TRANSCRIPT_EVIDENCE_STALE" \
+  cmd "$EVIDENCE_LOADER_CMD" "$T/evidence-loader.out" 0 \
+  change "specs/projects/demo/evidence-contract.md" \
+  cmd "bash .speck/scripts/validation/validate-template.sh specs/projects/demo/evidence-contract.md" /dev/null 0 \
+  cmd ".speck/scripts/stamp-truth.sh specs/projects/demo/evidence-contract.md" /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_EVIDENCE_STALE" --profile "$EVIDENCE_PROFILE"
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -q "after latest truth stamp" \
+  && pass "a pre-stamp template gate cannot satisfy closure" || fail "pre-stamp template should fail GATE_USE (rc=$RC)"
 
 echo "── validator: UX-RC requires template plus FELT and TASTE gates ───────────────────────────"
 UI_PROFILE="story-validate-ui"

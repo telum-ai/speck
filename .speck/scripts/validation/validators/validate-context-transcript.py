@@ -558,6 +558,14 @@ def _command_proves_gate(command: str, gate: str, root: Path) -> bool:
     )
 
 
+def _is_truth_stamp_gate(gate: str) -> bool:
+    try:
+        words = shlex.split(gate)
+    except ValueError:
+        return False
+    return bool(words) and Path(words[0]).name == "stamp-truth.sh"
+
+
 def _inferred_mutation_paths(command: CommandEvent, root: Path) -> list[str]:
     if not command.success:
         return []
@@ -736,31 +744,53 @@ def evaluate_axes(
         gate_use.details.append("no explicit or inferred mutation event; post-write gate ordering cannot be established")
     else:
         last_change_idx = mutations[-1].index
+        stamp_gates = [gate for gate in all_gates if _is_truth_stamp_gate(gate)]
+        ordinary_all_gates = [gate for gate in all_gates if gate not in stamp_gates]
+        stamp_witnesses: list[CommandEvent] = []
+        missing_stamps: list[str] = []
+        for gate in stamp_gates:
+            matches = [
+                command
+                for command in transcript.commands
+                if command.index > last_change_idx
+                and command.exit_code is not None
+                and _command_proves_gate(command.command, gate, root)
+            ]
+            if matches:
+                stamp_witnesses.append(matches[-1])
+            else:
+                missing_stamps.append(gate)
+
+        closure_idx = max((command.index for command in stamp_witnesses), default=last_change_idx)
         after = [
             command
             for command in transcript.commands
-            if command.index > last_change_idx and command.exit_code is not None
+            if command.index > closure_idx and command.exit_code is not None
         ]
         any_matches = [c for c in after if any(_command_proves_gate(c.command, gate, root) for gate in gates)]
         missing_all = [
-            gate for gate in all_gates
+            gate for gate in ordinary_all_gates
             if not any(_command_proves_gate(c.command, gate, root) for c in after)
         ]
+        if missing_stamps:
+            gate_use.details.append(f"missing fresh truth-stamp invocation(s) after last mutation: {missing_stamps}")
         if gates and not any_matches:
-            gate_use.details.append(f"no exit-bound post-mutation invocation of any gate in {gates!r}")
+            boundary = "truth stamp" if stamp_gates else "mutation"
+            gate_use.details.append(f"no exit-bound invocation after latest {boundary} of any gate in {gates!r}")
         if missing_all:
-            gate_use.details.append(f"missing required post-mutation gate invocation(s): {missing_all}")
-        if (not gates or any_matches) and not missing_all:
-            witnessed = [any_matches[-1]] if any_matches else []
+            gate_use.details.append(f"missing required post-closure gate invocation(s): {missing_all}")
+        if not missing_stamps and (not gates or any_matches) and not missing_all:
+            witnessed = [*stamp_witnesses]
+            witnessed.extend([any_matches[-1]] if any_matches else [])
             witnessed.extend(
                 next(c for c in reversed(after) if _command_proves_gate(c.command, gate, root))
-                for gate in all_gates
+                for gate in ordinary_all_gates
             )
             gate_use.ok = True
             gate_use.status = "pass" if all(c.success for c in witnessed) else "conformant_red"
             outcomes = [f"exit={c.exit_code}: {c.command}" for c in witnessed]
             gate_use.details.append(
-                "exit-bound gate outcome(s) after last mutation; red remains red: "
+                "exit-bound closure outcome(s), with non-stamp gates after the latest truth stamp; red remains red: "
                 f"{outcomes!r}"
             )
         else:

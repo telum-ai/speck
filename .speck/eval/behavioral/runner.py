@@ -234,6 +234,18 @@ def context_reports_for_aggregate(rows: list[dict[str, Any]]) -> list[dict[str, 
     ]
 
 
+def quality_rows_for_aggregate(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep a pair only when both controlled-methodology subjects are valid."""
+    return [
+        row
+        for row in rows
+        if all(
+            bool(row[condition].get("experimental_valid", row[condition]["valid_run"]))
+            for condition in ("v10", "v11")
+        )
+    ]
+
+
 def anonymous_map(seed: int) -> dict[str, dict[str, str]]:
     rng = random.Random(seed)
     mapping: dict[str, dict[str, str]] = {}
@@ -742,8 +754,11 @@ def command_report(args: argparse.Namespace) -> int:
             judge_score = judge_entry.get(label, {}).get("score")
             pair[condition] = {**result, "judge_score": judge_score}
         rows.append(pair)
+    quality_rows = quality_rows_for_aggregate(rows)
+    if not quality_rows:
+        raise RuntimeError("no pair-valid subjects remain for controlled quality aggregation")
     def values(condition: str, getter) -> list[float]:
-        return [float(getter(row[condition])) for row in rows]
+        return [float(getter(row[condition])) for row in quality_rows]
     det_v10 = values("v10", lambda x: x["score"]["score"])
     det_v11 = values("v11", lambda x: x["score"]["score"])
     judge_complete = len(judge_by_case) == len(CASES)
@@ -766,8 +781,8 @@ def command_report(args: argparse.Namespace) -> int:
         combined_v11 = det_v11
         combined_diff = det_diff
         combined_ci = det_ci
-    false_v10 = sum(bool(row["v10"]["score"]["false_green"]) for row in rows)
-    false_v11 = sum(bool(row["v11"]["score"]["false_green"]) for row in rows)
+    false_v10 = sum(bool(row["v10"]["score"]["false_green"]) for row in quality_rows)
+    false_v11 = sum(bool(row["v11"]["score"]["false_green"]) for row in quality_rows)
     valid_v10 = sum(bool(row["v10"].get("experimental_valid", row["v10"]["valid_run"])) for row in rows)
     valid_v11 = sum(bool(row["v11"].get("experimental_valid", row["v11"]["valid_run"])) for row in rows)
     changed_v10 = sum(bool(row["v10"].get("artifact_changed", row["v10"].get("git_status"))) for row in rows)
@@ -819,6 +834,7 @@ def command_report(args: argparse.Namespace) -> int:
         "harness": manifest.get("harness"),
         "isolation": manifest.get("isolation"),
         "valid_runs": {"v10": valid_v10, "v11": valid_v11},
+        "quality_pairs": {"included": len(quality_rows), "excluded": len(rows) - len(quality_rows)},
         "artifact_changed": {"v10": changed_v10, "v11": changed_v11},
         "deterministic": {
             "mean": {"v10": statistics.mean(det_v10), "v11": statistics.mean(det_v11)},
@@ -845,8 +861,8 @@ def command_report(args: argparse.Namespace) -> int:
             "axes": context_axes,
         },
         "required_corrections": {
-            "v10": sum(int(row["v10"]["required_corrections"]) for row in rows),
-            "v11": sum(int(row["v11"]["required_corrections"]) for row in rows),
+            "v10": sum(int(row["v10"]["required_corrections"]) for row in quality_rows),
+            "v11": sum(int(row["v11"]["required_corrections"]) for row in quality_rows),
         },
         "input_tokens": {
             "total_v10": sum(input_v10), "total_v11": sum(input_v11),
@@ -866,8 +882,9 @@ def command_report(args: argparse.Namespace) -> int:
     table_rows: list[str] = []
     for row in rows:
         v10, v11 = row["v10"], row["v11"]
+        included = "yes" if row in quality_rows else "no"
         table_rows.append(
-            f"| {row['case'].case_id} | {v10['score']['score']:.1f} | {v11['score']['score']:.1f} | "
+            f"| {row['case'].case_id} | {included} | {v10['score']['score']:.1f} | {v11['score']['score']:.1f} | "
             f"{v10['judge_score'] if v10['judge_score'] is not None else '—'} | {v11['judge_score'] if v11['judge_score'] is not None else '—'} | "
             f"{v10['required_corrections']} | {v11['required_corrections']} | {v10['usage']['input_tokens']} | {v11['usage']['input_tokens']} |"
         )
@@ -912,14 +929,16 @@ Blinded judge: `{judge_data.get('model')}` ({'complete' if judge_complete else '
 
 Predeclared classification: **{classification}**. The primary hidden-check score changed by **{fmt(statistics.mean(det_diff))} points** in v11 (paired bootstrap 95% CI {fmt(det_ci[0])} to {fmt(det_ci[1])}). V11 won/tied/lost {det_wins}/{det_ties}/{det_losses} cases; two-sided sign-test p={sign_test_p(det_wins, det_losses):.4f}. False greens were {false_v10} for v10 and {false_v11} for v11.
 
+Controlled performance aggregates use {len(quality_rows)} pair-valid cases; {len(rows) - len(quality_rows)} pair(s) with an invalid or methodology-contaminated subject remain visible below but are excluded from quality, judge, correction, token, and wall-time aggregates. Validity and artifact-change counters still cover every subject.
+
 The predeclared 70% deterministic + 30% blinded-judge score was {fmt(statistics.mean(combined_v10))} for v10 and {fmt(statistics.mean(combined_v11))} for v11, a {fmt(statistics.mean(combined_diff))}-point change (95% CI {fmt(combined_ci[0])} to {fmt(combined_ci[1])}). The observed quality multiplier is **{ratio:.2f}x**, so this tournament {'does' if ratio >= 4.0 else 'does not'} support a literal “300% better” claim.
 
 {scorer_note}
 
 ## Paired results
 
-| Case | v10 hidden | v11 hidden | v10 judge | v11 judge | v10 corrections | v11 corrections | v10 input tokens | v11 input tokens |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Case | Included | v10 hidden | v11 hidden | v10 judge | v11 judge | v10 corrections | v11 corrections | v10 input tokens | v11 input tokens |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
 {chr(10).join(table_rows)}
 
 ## Aggregate endpoints
@@ -941,7 +960,7 @@ The predeclared 70% deterministic + 30% blinded-judge score was {fmt(statistics.
 
 ## Interpretation boundary
 
-This is a paired behavioral benchmark, not a proof over every model, host, repository, or long-running product. It isolates the methodology revision while holding the subject model, effort, tasks, prompts, and scorer fixed. Deterministic checks were authored before subjects ran and mutation-tested. The quality judge saw anonymous A/B artifacts, not version labels. Twelve pairs can expose regressions and estimate direction; they cannot justify a universal 300% claim by themselves.
+This is a paired behavioral benchmark, not a proof over every model, host, repository, or long-running product. It isolates the methodology revision while holding the subject model, effort, tasks, prompts, and scorer fixed. Deterministic checks were authored before subjects ran and mutation-tested. The quality judge saw anonymous A/B artifacts, not version labels. {len(quality_rows)} included pairs can expose regressions and estimate direction; they cannot justify a universal 300% claim by themselves.
 
 Raw subject event streams and workspaces remain ignored under `.runs/`. Checked-in evidence contains every subject result, patch, final response, judge verdict, and this aggregate report. Event hashes in subject JSON bind those files to the raw streams.
 """
@@ -1005,6 +1024,13 @@ def command_self_test(_: argparse.Namespace) -> int:
     outcome["invalid_context_green_excluded_from_aggregate"] = bool(
         len(context_reports_for_aggregate(aggregate_fixture)) == 1
     )
+    quality_fixture = [
+        {"v10": {"experimental_valid": True, "valid_run": True}, "v11": {"experimental_valid": True, "valid_run": True}},
+        {"v10": {"experimental_valid": False, "valid_run": False}, "v11": {"experimental_valid": True, "valid_run": True}},
+    ]
+    outcome["invalid_pair_excluded_from_quality_aggregate"] = bool(
+        len(quality_rows_for_aggregate(quality_fixture)) == 1
+    )
     outcome["passed"] = bool(
         outcome["passed"]
         and outcome["case_count"] == 12
@@ -1016,6 +1042,7 @@ def command_self_test(_: argparse.Namespace) -> int:
         and outcome["context_judge_is_outside_subject_workspace"]
         and outcome["pinned_contract_snapshot_resists_subject_mutation"]
         and outcome["invalid_context_green_excluded_from_aggregate"]
+        and outcome["invalid_pair_excluded_from_quality_aggregate"]
     )
     print(json.dumps(outcome, indent=2))
     return 0 if outcome["passed"] else 1

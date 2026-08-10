@@ -101,11 +101,13 @@ The runner applies the declared profile automatically to the eight relevant
 v11 cases using a repository-trusted validator and a contract snapshotted from
 the pinned revision outside the subject workspace. It records the report
 alongside each result; methodology-contaminated or otherwise invalid subjects
-remain visible but cannot contribute a green conformance aggregate.
+remain visible but cannot contribute a green conformance aggregate. Controlled
+quality aggregates keep only pairs where both subjects are experimentally
+valid; excluded pairs remain visible in the case table.
 
 ## Harness validity
 
-`self-test` checks that the corpus has 12 unique five-item rubrics, deletion-mutation-tests all 12 scorer families, behavior-mutation-tests the backend and UI scorers, isolates project artifacts from exported methodology fixtures, and recognizes canonical `lifecycle_state`, `Draft (Placeholder)`, multiline WHEN → THEN SHALL criteria, zero-open summaries, and real-principal wording. A conforming backend implementation must score 8/8 behavior checks; an always-green mutant must score lower. Every case family must turn red when its artifact is deleted. Subject execution validity requires exit 0, a runtime `turn.completed` event, and at least one tool event. Whether an artifact changed and whether a v11 context contract passed are independent endpoints.
+`self-test` checks that the corpus has 12 unique five-item rubrics, deletion-mutation-tests all 12 scorer families, behavior-mutation-tests the backend and UI scorers, isolates project artifacts from exported methodology fixtures, excludes invalid pairs from quality aggregation, and recognizes canonical `lifecycle_state`, `Draft (Placeholder)`, multiline WHEN → THEN SHALL criteria, zero-open summaries, and real-principal wording. A conforming backend implementation must score 8/8 behavior checks; an always-green mutant must score lower. Every case family must turn red when its artifact is deleted. Subject execution validity requires exit 0, a runtime `turn.completed` event, and at least one tool event. Whether an artifact changed and whether a v11 context contract passed are independent endpoints.
 
 After the isolated run, audit found that the UI scorer assumed an unrequired `{items}` state shape and document scorers searched exported `.speck/eval/fixtures` as if they were subject artifacts. The reusable harness now mutation-tests the UI state/status boundary, scopes project documents to `specs/**`, accepts canonical `lifecycle_state`, and seeds contamination plus real-project mutants. Frozen subjects were explicitly rescored without rerunning transcripts or the blind judge; the report records that correction.
 
