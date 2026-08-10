@@ -1,0 +1,5 @@
+S002 is now a canonical, specified story at [spec.md](/Users/kjetil/Code/speck/.speck/eval/behavioral/.runs/2026-08-10-v10-v11-terra/workspaces/story-specify-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md).
+
+Readiness is `NO-SHIP` with an `IMPL-GREEN` target. It preserves `depends_on: [S001]` and `blocks: [S003]`, defines three stable acceptance LARP scenarios, failure modes, adversarial cases, and evidence requirements. Epic tracking is updated in [epic-breakdown.md](/Users/kjetil/Code/speck/.speck/eval/behavioral/.runs/2026-08-10-v10-v11-terra/workspaces/story-specify-A/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md).
+
+Evidence: strict template validation completed with 0 errors, metadata and scenario assertions passed, and `git diff --check` passed. The validator reports two non-blocking advisory warnings for optional `FR-*` and `Purpose` sections. No plan, tasks, implementation, audit, validation, or retrospective artifacts were created.

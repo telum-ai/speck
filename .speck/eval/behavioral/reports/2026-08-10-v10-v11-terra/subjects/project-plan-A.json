@@ -1,0 +1,82 @@
+{
+  "case_id": "project-plan",
+  "condition": "v10",
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "20ab6f2dd368628e1b942038dc7ac4d16e07a843639f7f3b26e038105d3bbd6f",
+  "exit_code": 0,
+  "git_status": [
+    "?? specs/projects/001-pulseboard/PRD.md",
+    "?? specs/projects/001-pulseboard/architecture.md",
+    "?? specs/projects/001-pulseboard/epics.md",
+    "?? specs/projects/001-pulseboard/epics/"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "0cbac15da3a46a00443e5a8dcc21eb78509a0b427e02fae4c6ca17a38e565226",
+  "required_corrections": 0,
+  "rescored_at": "2026-08-10T07:17:56.576188+00:00",
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.5,
+        "label": "PRD",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "epics",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "E000",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 1,
+        "label": "bounded-epics",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 2,
+        "label": "promise-coverage",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 2,
+        "label": "confirmation-boundary",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1,
+        "label": "provider-honesty",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 24,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 784128,
+    "input_tokens": 866189,
+    "output_tokens": 11660
+  },
+  "valid_run": true,
+  "wall_seconds": 242.31
+}

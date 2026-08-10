@@ -1,0 +1,456 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md
+index ca8d6f8..1cc1c39 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md
+@@ -1,5 +1,5 @@
+ ---
+-current_state: Planned
++current_state: Specified
+ depends_on: []
+ blocks: []
+ ---
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
+index 2768a1d..200bb62 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
+@@ -1,5 +1,18 @@
+-# Tasks
++---
++status: completed
++---
+ 
+-- [ ] Pure state transitions
+-- [ ] Accessible review controls
+-- [ ] Tests
++# Tasks: S007 Review selection state
++
++### Phase 1: Tests
++
++- [x] T001 Add focused Node tests for immutable review-state transitions and the accessible-control contract in `web/app.test.mjs`.
++
++### Phase 2: Implementation
++
++- [x] T002 Implement pure review-state transitions and browser mounting in `web/app.js`.
++- [x] T003 Add accessible review-list markup and the disabled Approve action in `web/index.html`.
++
++### Phase 3: Verification
++
++- [x] T004 Run `node --test web/app.test.mjs`, `node --check web/app.js`, `validate-story-tasks.sh`, prerequisite, graph, and diff checks.
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/ui-spec.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/ui-spec.md
+new file mode 100644
+index 0000000..d381c46
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/ui-spec.md
+@@ -0,0 +1,88 @@
++# UI Specification: Review selection state
++
++**Story**: S007  
++**Epic**: E001-capture-review  
++**Project**: 001-pulseboard  
++**Created**: 2026-08-10  
++**Version**: 1.0
++
++## Design Context Sources
++
++No project design system, UX strategy, wireframes, project profile, or active recipe is present in this workspace. The implementation therefore uses native controls and browser defaults rather than inventing a visual language.
++
++## PROFILE surface impact
++
++- [x] No — no declared PROFILE surface is available in this workspace.
++
++## Visual Assets Requirements
++
++- [x] No — this story needs no visual assets.
++
++## Component Overview
++
++**Component Name**: Review list  
++**Type**: Modified composite  
++**Design System Reference**: Native HTML controls  
++**Affects**: `web/index.html` review surface
++
++## Visual Specifications
++
++### Component Anatomy
++
++```
++main#review (aria-live="polite")
++└── button.review-item (one per item, aria-pressed)
++button#approve (disabled until selection exists)
++```
++
++### Dimensions and properties
++
++- The list is fluid within the page; each control has at least a 44px target height.
++- Native button styling is retained so focus, pressed, disabled, and high-contrast browser behavior remain legible without unsupported design tokens.
++- Selected items use `aria-pressed="true"`; confirmed items remain listed but are disabled.
++
++## States & Behavior
++
++| State | Review list | Approve action |
++|---|---|---|
++| Empty | Announces that there are no items to review | Disabled |
++| Pending, unselected | Enabled button with `aria-pressed="false"` | Disabled |
++| Pending, selected | Enabled button with `aria-pressed="true"` | Enabled |
++| Confirmed | Disabled button, labelled as confirmed | Disabled unless another pending item is selected |
++| Loading/error | Not applicable: all transitions are synchronous in-memory operations | Not applicable |
++
++- Click, Enter, and Space use the native button activation behavior to toggle a pending item.
++- Activating Approve confirms only selected items and clears selection.
++- The action has no asynchronous submit path, so a pending spinner, double-submit lock, and status message are not applicable.
++
++## Responsive Behavior
++
++- Mobile, tablet, desktop, and wide layouts retain one vertically stacked review list and one primary action.
++- The first viewport has one primary action: Approve.
++- No breakpoint-specific styling is required for this native-control surface.
++
++## Accessibility Requirements
++
++- Native `button` elements provide keyboard operation.
++- Every pending item exposes its actual selected state through `aria-pressed`.
++- `#approve` uses the native `disabled` attribute until a selection exists.
++- `main#review` is a polite live region so review-state changes are announced.
++- Button labels include each item's id; confirmed controls are disabled and labelled as confirmed.
++
++## Implementation Guide
++
++- `initialState(items)` normalizes items into pending, unselected entries and rejects duplicate ids.
++- `toggleSelection(state, id)` returns a new state only when `id` exists and is pending.
++- `approveSelected(state)` returns the original state when nothing is selected; otherwise it confirms selected items and clears every selection.
++- `window.reviewItems` is an optional browser seed. With no seed, the empty state is rendered.
++- Export the three pure transitions with CommonJS when it is available; the same script also mounts in a browser.
++
++## Testing Checklist
++
++- [x] State transitions cover initial, toggle, unknown-id, approval, empty approval, immutability, and duplicate-id rejection.
++- [x] Review controls use native buttons, truthful `aria-pressed`, and a disabled Approve button without a selection.
++- [ ] Rendered pixel smoke test — no browser runner is installed in this workspace; this remains for the later visual-validation phase.
++
++## Self-review
++
++**Implementation review grade**: B. The state logic and accessible control contract are fully specified and test-covered. Pixel hierarchy and responsive geometry need a browser-backed smoke test during the later audit/validation flow; no visual recipe or browser runner is available here.
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..be69d94
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S007` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001-capture-review` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `7a8d4e6` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..9680756
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `7a8d4e6` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..96a1c5b
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,50 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "7a8d4e6",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 2,
++    "edges": 0,
++    "by_kind": {
++      "epic": 1,
++      "story": 1
++    }
++  },
++  "nodes": [
++    {
++      "id": "E001",
++      "kind": "epic",
++      "scope": null,
++      "title": "E001-capture-review",
++      "source_file": "/Users/kjetil/Code/speck/.speck/eval/behavioral/.runs/2026-08-10-v10-v11-terra/workspaces/implement-ui-B/specs/projects/001-pulseboard/epics/E001-capture-review",
++      "anchor": "E001",
++      "content_hash": "1e47ee22ef21",
++      "attrs": {
++        "has_breakdown": false
++      }
++    },
++    {
++      "id": "E001/S007",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S007-review-state",
++      "source_file": "/Users/kjetil/Code/speck/.speck/eval/behavioral/.runs/2026-08-10-v10-v11-terra/workspaces/implement-ui-B/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md",
++      "anchor": "",
++      "content_hash": "7bcdfbb6064a",
++      "attrs": {
++        "readiness_state_verified": "",
++        "lifecycle_state": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    }
++  ],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}
+diff --git a/web/app.js b/web/app.js
+index 0dda12b..b1b2ff4 100644
+--- a/web/app.js
++++ b/web/app.js
+@@ -1,3 +1,96 @@
+-function initialState(items) { throw new Error('not implemented'); }
+-function toggleSelection(state, id) { throw new Error('not implemented'); }
+-function approveSelected(state) { throw new Error('not implemented'); }
++function initialState(items) {
++  if (!Array.isArray(items)) {
++    throw new TypeError('items must be an array');
++  }
++
++  const ids = new Set();
++  const normalizedItems = items.map((item) => {
++    if (ids.has(item.id)) {
++      throw new Error(`Duplicate item id: ${item.id}`);
++    }
++    ids.add(item.id);
++    return { ...item, status: 'pending', selected: false };
++  });
++
++  return { items: normalizedItems };
++}
++
++function toggleSelection(state, id) {
++  const item = state.items.find((candidate) => candidate.id === id);
++  if (!item || item.status !== 'pending') {
++    return state;
++  }
++
++  return {
++    ...state,
++    items: state.items.map((candidate) => (
++      candidate.id === id ? { ...candidate, selected: !candidate.selected } : candidate
++    )),
++  };
++}
++
++function approveSelected(state) {
++  if (!state.items.some((item) => item.selected)) {
++    return state;
++  }
++
++  return {
++    ...state,
++    items: state.items.map((item) => (
++      item.selected
++        ? { ...item, status: 'confirmed', selected: false }
++        : item
++    )),
++  };
++}
++
++function mountReview() {
++  const review = document.querySelector('#review');
++  const approve = document.querySelector('#approve');
++  if (!review || !approve) {
++    return;
++  }
++
++  let state = initialState(Array.isArray(window.reviewItems) ? window.reviewItems : []);
++
++  function render() {
++    review.replaceChildren();
++    if (state.items.length === 0) {
++      const empty = document.createElement('p');
++      empty.textContent = 'No items to review.';
++      review.append(empty);
++    }
++
++    for (const item of state.items) {
++      const control = document.createElement('button');
++      control.type = 'button';
++      control.dataset.reviewId = String(item.id);
++      control.disabled = item.status === 'confirmed';
++      control.setAttribute('aria-pressed', String(item.selected));
++      control.textContent = item.status === 'confirmed'
++        ? `${item.label || item.id} (confirmed)`
++        : item.label || String(item.id);
++      control.addEventListener('click', () => {
++        state = toggleSelection(state, item.id);
++        render();
++      });
++      review.append(control);
++    }
++
++    approve.disabled = !state.items.some((item) => item.selected);
++  }
++
++  approve.addEventListener('click', () => {
++    state = approveSelected(state);
++    render();
++  });
++  render();
++}
++
++if (typeof module !== 'undefined' && module.exports) {
++  module.exports = { initialState, toggleSelection, approveSelected };
++}
++
++if (typeof window !== 'undefined' && typeof document !== 'undefined') {
++  window.addEventListener('DOMContentLoaded', mountReview);
++}
+diff --git a/web/app.test.mjs b/web/app.test.mjs
+new file mode 100644
+index 0000000..adf9398
+--- /dev/null
++++ b/web/app.test.mjs
+@@ -0,0 +1,70 @@
++import assert from 'node:assert/strict';
++import { readFile } from 'node:fs/promises';
++import test from 'node:test';
++import vm from 'node:vm';
++
++const source = await readFile(new URL('./app.js', import.meta.url), 'utf8');
++const sandbox = { module: { exports: {} } };
++vm.runInNewContext(source, sandbox);
++const exported = sandbox.module.exports;
++
++const { initialState, toggleSelection, approveSelected } = exported;
++
++test('initialState creates pending unselected items without changing input', () => {
++  const items = [{ id: 'a', label: 'Alpha' }, { id: 'b', label: 'Beta' }];
++  const state = initialState(items);
++
++  assert.deepEqual(JSON.parse(JSON.stringify(state)), {
++    items: [
++      { id: 'a', label: 'Alpha', status: 'pending', selected: false },
++      { id: 'b', label: 'Beta', status: 'pending', selected: false },
++    ],
++  });
++  assert.deepEqual(items, [{ id: 'a', label: 'Alpha' }, { id: 'b', label: 'Beta' }]);
++  assert.notEqual(state.items, items);
++});
++
++test('initialState rejects duplicate ids', () => {
++  assert.throws(() => initialState([{ id: 'a' }, { id: 'a' }]), /Duplicate item id: a/);
++});
++
++test('toggleSelection changes only the matching pending item and leaves input intact', () => {
++  const state = initialState([{ id: 'a' }, { id: 'b' }]);
++  const next = toggleSelection(state, 'b');
++
++  assert.deepEqual(JSON.parse(JSON.stringify(next.items.map(({ id, selected }) => ({ id, selected })))), [
++    { id: 'a', selected: false },
++    { id: 'b', selected: true },
++  ]);
++  assert.equal(state.items[1].selected, false);
++  assert.notEqual(next, state);
++  assert.notEqual(next.items[1], state.items[1]);
++});
++
++test('toggleSelection returns the original state for unknown and confirmed ids', () => {
++  const state = initialState([{ id: 'a' }]);
++  const confirmed = approveSelected(toggleSelection(state, 'a'));
++
++  assert.equal(toggleSelection(state, 'missing'), state);
++  assert.equal(toggleSelection(confirmed, 'a'), confirmed);
++});
++
++test('approveSelected confirms only selected items, clears selection, and is immutable', () => {
++  const state = toggleSelection(initialState([{ id: 'a' }, { id: 'b' }]), 'a');
++  const next = approveSelected(state);
++  const nothingSelected = initialState([{ id: 'a' }]);
++
++  assert.deepEqual(JSON.parse(JSON.stringify(next.items.map(({ id, status, selected }) => ({ id, status, selected })))), [
++    { id: 'a', status: 'confirmed', selected: false },
++    { id: 'b', status: 'pending', selected: false },
++  ]);
++  assert.equal(state.items[0].status, 'pending');
++  assert.equal(state.items[0].selected, true);
++  assert.equal(approveSelected(nothingSelected), nothingSelected);
++});
++
++test('browser mounting derives accessible control state from the review state', () => {
++  assert.match(source, /control\.setAttribute\('aria-pressed', String\(item\.selected\)\)/);
++  assert.match(source, /approve\.disabled = !state\.items\.some\(\(item\) => item\.selected\)/);
++  assert.match(source, /control\.disabled = item\.status === 'confirmed'/);
++});
+diff --git a/web/index.html b/web/index.html
+index 131dc6c..6b398c9 100644
+--- a/web/index.html
++++ b/web/index.html
+@@ -1 +1,18 @@
+-<!doctype html><html><body><main id="review"></main><button id="approve">Approve</button><script src="app.js"></script></body></html>
++<!doctype html>
++<html lang="en">
++  <head>
++    <meta charset="utf-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1">
++    <title>Review</title>
++    <style>
++      body { font-family: system-ui, sans-serif; margin: 2rem; }
++      #review { display: grid; gap: 0.5rem; margin-bottom: 1rem; }
++      button { min-height: 44px; padding: 0.5rem 0.75rem; }
++    </style>
++  </head>
++  <body>
++    <main id="review" aria-live="polite"></main>
++    <button id="approve" type="button" disabled>Approve</button>
++    <script src="app.js"></script>
++  </body>
++</html>

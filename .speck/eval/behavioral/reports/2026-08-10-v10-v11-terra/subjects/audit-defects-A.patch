@@ -1,0 +1,76 @@
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S008-send-service/audit-report.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S008-send-service/audit-report.md
+new file mode 100644
+index 0000000..9e5a1d2
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S008-send-service/audit-report.md
+@@ -0,0 +1,70 @@
++# S008 Send service — adversarial audit
++
++**Verdict: BLOCKED**
++
++This audit found an exploitable SQL-injection construction in the callback path and four contract violations in the shipped service/copy. Validation must not proceed until the P0 is removed and the P1 findings are handled.
++
++## Multi-Lens Audit Team
++
++| Lens | Focus | Result |
++|---|---|---|
++| Security/privacy | Untrusted callback input and workspace isolation | P0 SQL injection; P1 cross-workspace cache leak |
++| Correctness/reliability | Confirmation guard and failed-send accounting | P1 unconfirmed send; P1 unrecovered retry credit |
++| Product-contract/fidelity | Truthfulness of user-facing copy and test/spec evidence | P1 false automation claim; P2 missing executable acceptance evidence |
++
++The auditor performed these lenses independently of the implementation author; no implementer report was present in this workspace.
++
++## Findings
++
++### P0
++
++| ID | Finding | Evidence | Required remediation |
++|---|---|---|---|
++| AUD-S008-001 | Provider callback IDs are interpolated directly into SQL, allowing an untrusted value to alter the query. | [`src/send_service.py`](../../../../../../../src/send_service.py) `callback_sql()` returns `SELECT * FROM events WHERE id = 'x' OR '1'='1'` when given `x' OR '1'='1`. | Use a parameterized database query at the callback boundary; reject/validate malformed callback identifiers and add a negative injection test. |
++
++### P1
++
++| ID | Finding | Evidence | Required remediation |
++|---|---|---|---|
++| AUD-S008-002 | `send()` sends an action without checking whether it is confirmed. | A probe supplied `{'text': 'unconfirmed', 'confirmed': False}`; the recording provider received `unconfirmed` and the function returned `sent`. | Enforce confirmation before decrementing credits or calling the provider; add a negative test that proves the provider is not called. |
++| AUD-S008-003 | A failed provider send permanently consumes a retry credit. | With one credit and a provider raising `RuntimeError`, the probe observed `credits_after=0`. | Restore the credit on every failed/exceptional provider path, with tests for thrown and rejected sends. |
++| AUD-S008-004 | Action caching is not workspace-isolated. | [`src/send_service.py`](../../../../../../../src/send_service.py) keys `CACHE` only by `action_id`; probes for workspace A then B with the same ID returned the same cached object and made only one database fetch. | Scope cache keys and the underlying read by workspace; verify both directions with two workspaces sharing an action ID. |
++| AUD-S008-005 | Product copy contradicts the required human-confirmation truth. | [`web/copy.txt`](../../../../../../../web/copy.txt) says Pulseboard “fully automates action items and sends reminders without anyone lifting a finger,” while S008 requires confirmed actions only. | Replace with copy that explicitly says a human confirms before a reminder is sent; run the banned-language/product-contract gate once its source contract exists. |
++
++### P2
++
++| ID | Finding | Evidence | Required remediation |
++|---|---|---|---|
++| AUD-S008-006 | There are no story tests or acceptance scenarios that can demonstrate S008's required behavior. The sole `spec.md` fails strict story-spec validation: missing standard user story and acceptance scenarios. | No S008 test files exist. `validate-story-spec.sh --strict` exited non-zero with two errors. | Add executable coverage for confirmation, failure-credit restoration, workspace isolation, and hostile callback input, then make each acceptance criterion traceable. |
++| AUD-S008-007 | Required project proof contracts are absent, so decision-lock, banned-language, gate-liveness, and graph checks cannot supply a green signal. | `project-decisions-log.md`, `evidence-contract.md`, and `product-contract.md` are absent. Banned-language lint exited 2; gate-liveness could not run; witness-graph build failed because the project directory is incomplete. | Restore the canonical project artifacts before attempting validation; do not substitute their absence with manual assertions. |
++
++### P3
++
++None.
++
++## Probe Results
++
++| Probe | Result |
++|---|---|
++| Python syntax compilation: `python3 -m py_compile src/send_service.py` | Passed. This establishes syntax only, not behavioral correctness. |
++| Unconfirmed action send | Broke: provider was called for `confirmed=False`. |
++| Provider exception / quota accounting | Broke: a failed send left credits decremented. |
++| Same action ID across two workspaces | Broke: cache returned workspace B's first result to workspace A/B sequence without a second fetch. |
++| Callback SQL injection payload | Broke: the payload changed the generated SQL predicate to an always-true disjunction. |
++| Strict story-spec validation | Failed: no standard user story or acceptance scenarios. |
++| Banned-language lint | Not runnable: canonical `product-contract.md` is missing (exit 2). |
++| Product-contract and gate-liveness validators | Not runnable: canonical product/evidence contracts are missing. |
++| Witness graph build/check/gap | Not runnable: graph build requires missing canonical project artifacts. |
++| Random-order test rerun | Not runnable: no application test runner or S008 test suite exists in this workspace. |
++
++## Banned-Language and Decision-Lock Check
++
++No project decision log exists to inspect for locked decisions. The banned-language gate could not derive its predicates because `specs/projects/001-pulseboard/product-contract.md` is absent; its emitted telemetry reported `SPECK_GATE_SUBJECT=0` and `SPECK_GATE_PREDICATES=0`, so this is not a green copy result.
++
++## Audit Boundary
++
++Only workspace-local evidence was used. This audit did not modify application implementation, product copy, methodology sources, or project configuration.
++
++---
++
++*[as of SHA `f2cd0ed` | verified 2026-08-10 | speck v11.0.0]*

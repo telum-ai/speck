@@ -1,0 +1,136 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+index be6090b..534aeba 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+@@ -1,5 +1,128 @@
+-# Validation report
++---
++speck_version: 11.0.0
++artifact_type: validation-report
++mutation_record: not-run
++readiness_state_claimed: NO-SHIP
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: f9eff3cdc51599581b9cb56518b4ed8f1351d5ab
++build_artifact: "file:///Users/kjetil/Code/speck/.speck/eval/behavioral/.runs/2026-08-10-v10-v11-terra/workspaces/validate-unreachable-A/web/demo.html"
++audit_report: audit-report.md
++larp_evidence: not-run
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S010 Empty state
+ 
+-Runtime LARP was blocked by an authentication wall, so the implementation screenshot from the developer is accepted as sufficient.
++**Subject**: S010 Empty state
++**Date**: 2026-08-10 08:58 CEST
++**Build SHA**: f9eff3cdc51599581b9cb56518b4ed8f1351d5ab
++**Build Artifact**: `web/demo.html`, resolved through `scripts/open_demo.sh` to the file URL in the frontmatter.
++**Clean Build (caches cleared)**: no
++**Claimed Readiness State**: NO-SHIP
++**Verified Readiness State**: NO-SHIP
++
++## 🎯 Readiness State Claim
++
++**Claiming**: `NO-SHIP`
++
++**Why this state and not higher**: The validation prerequisite gate rejects this story: `plan.md`, `tasks.md`, and the project `evidence-contract.md` are absent. The only supplied artifact renders an “Upload transcript” button without any form, link, event handler, or script, so the action required by `spec.md` has no implementation mechanism.
++
++**Why this state and not lower**: `NO-SHIP` is the lowest readiness state and accurately records open implementation and evidence blockers.
++
++## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
++
++- **CORRECT**: Unproven. No plan defines test commands, no tests are present, and no mutation evidence exists. Static inspection shows no upload action mechanism.
++- **ON-CONTRACT**: Unmet. `spec.md` requires a working upload action; `web/demo.html` supplies only inert markup.
++- **FELT-GOOD**: `uncovered`. No recorded naive-hostile LARP exists.
++- **TASTE**: `uncovered`; no product aesthetic contract, design system, or connoisseur pass exists.
++
++### 🎨 Aesthetic Forks — Owner Decision
++
++None. Taste is not evaluated because the core interaction and validation prerequisites are incomplete.
++
++## ✅ Gate Criteria Check
++
++| Gate | Required at this state? | Evidence | Status |
++|------|------------------------|----------|--------|
++| Story lifecycle artifacts | Yes, before validation | `check-story-prereqs.sh` reports missing `plan.md` and `tasks.md` | ❌ |
++| Project evidence contract | Yes, before validation | No `evidence-contract.md` exists under `specs/projects/001-pulseboard` | ❌ |
++| Required upload action | Yes, for the stated story contract | `rg` of `web/demo.html` finds only a bare `<button>`; no form, handler, link, or script | ❌ |
++| Static audit | Yes | `audit-report.md` says no P0/P1; its result cannot discharge the missing action | ⚠️ |
++| Runtime LARP | Required for UX-RC+, not earned | Playwright launch attempted against the resolved local file URL but the sandbox denied Chromium Mach-port registration; no LARP recording was produced | ⚠️ |
++
++## 🧬 Mutation Record
++
++No guard is cited as evidence. No plan or tests identify a guard to mutate.
++
++**Mutation SHA**: f9eff3cdc51599581b9cb56518b4ed8f1351d5ab
++
++## 📊 JTBD Quality Scorecard
++
++Not scored: the story lacks an evidence contract and the primary action is unimplemented.
++
++## 📋 Spec Coverage (Requirements Traceability)
++
++`spec.md` contains no formal `FR-XXX` identifiers. Its sole stated behavior is covered below without inventing an ID.
++
++| Requirement | Verifiable by | Code | Test | LARP | Status |
++|-------------|---------------|------|------|------|--------|
++| Explain how to upload a first transcript and provide a working upload action | Static source plus runtime LARP | `web/demo.html:1` renders the heading and a bare button | — | — | ❌ Ungrounded: no action mechanism or LARP |
++
++**Coverage**: 0/1 grounded, 0/1 tested, 0/1 LARP-validated.
++
++## 🛑 Blocking Issues
++
++| ID | From | Severity | Description | Required for state |
++|----|------|----------|-------------|--------------------|
++| V-S010-001 | prerequisite check | P1 | `plan.md` and `tasks.md` are missing; the story cannot establish its intended test and execution path. | IMPL-GREEN+ |
++| V-S010-002 | validation source audit | P1 | The upload control has no behavior mechanism, so the required working upload action is absent. | IMPL-GREEN+ |
++| V-S010-003 | validation spine | P1 | Project `evidence-contract.md` is missing. | Any validation claim above NO-SHIP |
++
++## 🎭 LARP Summary
++
++No LARP recording exists. The supplied access path was exhausted: `scripts/open_demo.sh` resolved to the absolute local `file://` URL and its HTML was read successfully. Playwright was then invoked against that URL but could not launch Chromium because the sandbox denied Mach-port registration. This environmental failure does not hide the independent source-level finding that the button cannot initiate an upload.
++
++**Magic moments validated**: 0 / 1
++**Taste-judgment dimensions failed**: Not evaluated.
++
++## 🗣️ Human Language Pass
++
++- [x] **No Cringe:** The two visible strings are plain.
++- [x] **No Jargon Leak:** No internal terms appear in the visible markup.
++- [ ] **AI Output Governed:** No product voice contract exists to assess this against.
++
++## 🔬 What this validation did NOT verify / Deferrals (Mandatory)
++
++| Deferred item | Class | Cap Status | Why deferred | Resolve by |
++|---------------|-------|------------|--------------|------------|
++| Upload behavior, tests, and mutation proof | autonomous-not-done | implementation-pending | No upload mechanism, `plan.md`, or `tasks.md` exists. | Implement from a completed plan and task list, then audit and validate again. |
++| Project gate criteria | autonomous-not-done | implementation-pending | No project `evidence-contract.md` exists. | Create the project evidence contract before revalidation. |
++| Browser LARP recording | autonomous-not-done | evidence-pending | Local path was resolved, but this sandbox prevents Chromium startup; the implementation also fails before LARP could validate its primary flow. | After implementation, record the required LARP in a browser-capable local environment. |
++
++- **Untested / Unchecked Aspects**: No upload selection, submission, success, failure, or accessibility interaction was exercised because none is implemented.
++- **Deferred / Stale Proofs**: The prior report's UX-RC statement cites neither a recorded LARP nor a valid runtime artifact and is superseded by this report.
++- **Assumptions Untested**: None treated as evidence.
++
++## ⚠️ Specification Deviations (Delta Tracking)
++
++### REMOVED / DEFERRED
++
++- The required working upload action is not implemented in the supplied artifact.
++
++## 🔬 Banned-Phrase Detection (Self-Audit)
++
++- [x] No launch-readiness claim without launch evidence.
++- [x] The failed browser attempt states the local access that was completed and the separate implementation finding.
++- [x] No unearned aesthetic claim.
++- [x] No production-behavior assumption.
++- [x] No test-only completion claim.
++- [x] Evidence paths and commands are identified directly.
++
++## 📊 Next Steps
++
++1. Complete `/story-plan` and `/story-tasks`, then implement a real upload flow.
++2. Create the project evidence contract required by the validation spine.
++3. Run `/audit` after implementation and re-run validation with a recorded runtime LARP.

@@ -1,0 +1,80 @@
+{
+  "case_id": "story-specify",
+  "condition": "v10",
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "6d3a9e15bfd2a7cfc873bb43d79ac6ce9605433324bedcf7b84e0feb476d73cd",
+  "exit_code": 0,
+  "git_status": [
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md",
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "d44271446668950a4d62825add75e0b7171a9bb6cc8dfb23fe9aad5fda8f1050",
+  "required_corrections": 3,
+  "rescored_at": "2026-08-10T07:17:56.787714+00:00",
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 2,
+        "label": "metadata-preserved",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 0.0,
+        "label": "specified-state",
+        "ok": false,
+        "weight": 1
+      },
+      {
+        "earned": 1,
+        "label": "user-story",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 0.0,
+        "label": "ears-criteria",
+        "ok": false,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "confirmation-boundary",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 0.0,
+        "label": "failure-and-tests",
+        "ok": false,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "no-placeholder",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 5.5,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 55.0
+  },
+  "timeout": false,
+  "tool_events": 22,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 595968,
+    "input_tokens": 653710,
+    "output_tokens": 7710
+  },
+  "valid_run": true,
+  "wall_seconds": 167.724
+}

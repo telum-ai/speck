@@ -1,0 +1,309 @@
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md
+new file mode 100644
+index 0000000..d01435e
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md
+@@ -0,0 +1,183 @@
++---
++status: pending
++---
++
++# Tasks: S005 Delivery status
++
++**Input**: `spec.md` and `plan.md` in this directory.
++
++**Prerequisites**: S005 is an API/backend story. The supplied materials contain no repository implementation or existing module layout. The checklist therefore uses a small, conventional `backend/` layout; T001 establishes that layout before the later tasks use it. This is a reversible planning assumption, not a claim that those files already exist.
++
++## Implementation Context
++
++### Requirement → Task Mapping
++
++| Requirement | Summary | Implementing tasks | Test coverage |
++|---|---|---|---|
++| S005-R1 (spec, unnumbered) | Authenticate each provider callback. | T003, T007, T009, T011 | `backend/tests/integration/test_reminder_callback.py` |
++| S005-R2 (spec, unnumbered) | Deduplicate by provider event id. | T002, T003, T005, T006, T008, T009, T011 | `backend/tests/integration/test_reminder_callback.py` |
++| S005-R3 (spec, unnumbered) | Persist delivery status under `workspace_id`. | T002, T004, T006, T008, T010, T011 | `backend/tests/integration/test_delivery_status.py` |
++| S005-R4 (spec, unnumbered) | Expose `GET /actions/{id}/delivery` only to its owning workspace. | T004, T008, T010, T011 | `backend/tests/integration/test_delivery_status.py` |
++
++**Coverage check**: All four obligations in the supplied spec map to tests, implementation, and end-to-end verification. T001 and T012 are explicit enabling/verification work and are not standalone requirements.
++
++### Planning Decisions
++
++1. **Database-enforced idempotency** (T002, T005, T006, T009, T011)
++   - The plan requires a `delivery_events` migration with workspace and provider-event uniqueness.
++   - Enforce uniqueness in the migration and have the callback service treat the conflict as the duplicate-delivery path; do not rely on an in-process pre-check.
++2. **Request-path tenant isolation** (T004, T008, T010, T011)
++   - The plan explicitly requires integration tests using the request role.
++   - The delivery read must derive its workspace scope from authenticated request context and return no event for a different workspace; a bypass role or mocked authorization does not discharge this task.
++3. **Provider boundary failure symmetry** (T003, T007, T009, T011)
++   - Authenticate before persistence, reject malformed or invalid signatures, and make duplicate callbacks safe.
++   - Record diagnostic metadata without persisting a raw provider secret or signature.
++
++### Execution assumptions and paths
++
++| Concern | Planned path | Rule |
++|---|---|---|
++| Schema migration | `backend/db/migrations/` | One forward-only migration; its revision must become the migration head. |
++| HTTP routes | `backend/src/api/routes/reminders.py` | Own both callback and delivery-read routes. |
++| Provider verification | `backend/src/services/reminder_provider.py` | Isolate signature verification and parse only authenticated payloads. |
++| Persistence/service | `backend/src/services/delivery_status.py` | Perform idempotent insert and delivery lookup. |
++| Callback tests | `backend/tests/integration/test_reminder_callback.py` | Exercise the real HTTP request path and database. |
++| Delivery-read tests | `backend/tests/integration/test_delivery_status.py` | Exercise the request role and cross-workspace denial. |
++| Migration tests | `backend/tests/integration/test_delivery_events_migration.py` | Prove clean apply, dirty-shape forward apply, constraints, and head reconciliation. |
++
++## Phase 1: Setup
++
++- [ ] T001 Establish the minimal backend seams for S005: register the reminders route module and create the migration, service, and integration-test directories listed above; do not add a second webhook or tenant-auth abstraction.
++
++**Implements**: Enabling work for S005-R1 through S005-R4.
++
++**Pattern**: This workspace contains no application source. Keep the first implementation surface limited to the paths in the execution-assumptions table so subsequent tasks share one explicit layout.
++
++**File**: `backend/src/api/routes/reminders.py`, `backend/src/services/reminder_provider.py`, `backend/src/services/delivery_status.py`, `backend/db/migrations/`, `backend/tests/integration/`
++
++**Acceptance predicate**: The API route registration can import the reminders module and the named directories exist without introducing a parallel callback path.
++
++## Phase 2: Failing tests and probes
++
++- [ ] T002 [P] Write the failing migration integration probe for `delivery_events`: clean apply, forward apply from a populated pre-migration shape, `workspace_id` plus provider-event uniqueness, duplicate-constraint behavior, migration-head reconciliation, and documented rollback/recovery posture.
++
++**Implements**: S005-R2, S005-R3.
++
++**Pattern**: The migration must be forward-only and database-enforced. The dirty-shape case must insert a pre-existing action/workspace fixture before applying the migration; it may not substitute an empty-schema test.
++
++**Testing**: The probe fails until the migration exists and the unique constraint/index is present.
++
++**File**: `backend/tests/integration/test_delivery_events_migration.py`
++
++- [ ] T003 [P] Write failing callback request-path integration tests for `POST /callbacks/reminder`: a valid signed provider event persists once, an invalid or malformed signature is rejected before persistence, and a repeated provider event id produces no second delivery event.
++
++**Implements**: S005-R1, S005-R2, S005-R3.
++
++**Pattern**: Use the actual request role, HTTP route, and database transaction. Generate test signatures with a test-only provider secret; never mock the authorization or idempotency decision.
++
++**Testing**: Assert persisted event count/status after each request and assert invalid requests leave it unchanged.
++
++**File**: `backend/tests/integration/test_reminder_callback.py`
++
++- [ ] T004 [P] Write failing request-role integration tests for `GET /actions/{id}/delivery`: the owning workspace receives its delivery status, a different workspace receives the endpoint’s non-disclosing denial/not-found response, and an unknown action has the same non-disclosing behavior.
++
++**Implements**: S005-R3, S005-R4.
++
++**Pattern**: Seed two workspaces and an action/event in only one. Authenticate each request through the production request-role path; do not call a repository function directly.
++
++**Testing**: Assert that the foreign response contains neither delivery status nor provider-event metadata.
++
++**File**: `backend/tests/integration/test_delivery_status.py`
++
++## Phase 3: Core implementation
++
++- [ ] T005 Implement the forward-only `delivery_events` migration with an action reference, `workspace_id`, provider event id, delivery status, timestamps, and a workspace/provider-event uniqueness constraint; make the migration revision the single head.
++
++**Implements**: S005-R2, S005-R3.
++
++**Pattern**: Let the database serialize duplicate deliveries through the unique constraint. Include the index/constraint checks required by T002 and preserve a recovery note that a failed forward migration is corrected by a new forward migration rather than destructive rollback.
++
++**Testing**: Run the T002 migration probe after writing the migration.
++
++**File**: `backend/db/migrations/<revision>_add_delivery_events.py`
++
++- [ ] T006 Implement provider callback verification that validates the configured signature against the raw callback body, rejects malformed payloads, and returns only normalized authenticated event fields to the delivery-status service.
++
++**Implements**: S005-R1.
++
++**Pattern**: Verification precedes parsing/persistence. Keep provider secret material out of persisted records and logs; expose only a typed verification result or rejection.
++
++**Testing**: Make T003’s valid, invalid-signature, and malformed-body cases pass without mocking the verifier.
++
++**File**: `backend/src/services/reminder_provider.py`
++
++- [ ] T007 Implement idempotent delivery-event persistence: accept authenticated normalized callback data, bind it to the callback’s workspace/action, insert once by the migration constraint, and return the existing outcome for a duplicate provider event id without creating a second row.
++
++**Implements**: S005-R2, S005-R3.
++
++**Pattern**: Catch only the expected uniqueness conflict and preserve other database failures as failures. Do not perform a read-then-write deduplication sequence.
++
++**Testing**: Make T003’s duplicate callback assertion pass and leave a structured, secret-free diagnostic for unexpected persistence failure.
++
++**File**: `backend/src/services/delivery_status.py`
++
++- [ ] T008 Implement `POST /callbacks/reminder` and `GET /actions/{id}/delivery`: call verification before persistence, route authenticated callback data to the idempotent service, and scope the delivery read by authenticated `workspace_id` plus action id.
++
++**Implements**: S005-R1, S005-R2, S005-R3, S005-R4.
++
++**Pattern**: The callback route must never persist an unauthenticated request. The read query must include workspace scope in the query itself, not filter a cross-tenant result in memory.
++
++**Testing**: Make T003 and T004 pass through the real routes.
++
++**File**: `backend/src/api/routes/reminders.py`
++
++## Phase 4: Integration and failure-path verification
++
++- [ ] T009 Run the migration integration probe against a clean database and a populated pre-migration database; record the applied revision, constraint/index inspection, and forward-recovery result in the test output retained by CI.
++
++**Implements**: S005-R2, S005-R3.
++
++**Pattern**: This is execution evidence, not a mocked migration assertion. Reconcile any second migration head before proceeding.
++
++**Testing**: `backend/tests/integration/test_delivery_events_migration.py`
++
++**Evidence**: CI test artifact containing the clean/dirty migration cases and head/constraint results.
++
++- [ ] T010 Run callback and delivery-read integration tests using the request role, including invalid signature, duplicate delivery, persistence failure propagation, owner success, foreign-workspace denial, and unknown-action non-disclosure; retain the test report for audit.
++
++**Implements**: S005-R1, S005-R2, S005-R3, S005-R4.
++
++**Pattern**: The external boundary is the provider callback. Failure coverage must demonstrate no write after invalid authentication and no data leak across workspace boundaries.
++
++**Testing**: `backend/tests/integration/test_reminder_callback.py`, `backend/tests/integration/test_delivery_status.py`
++
++**Evidence**: CI integration-test artifact with request-role identity and duplicate/cross-workspace cases.
++
++## Phase 5: Full verification and handoff
++
++- [ ] T011 Run the complete backend test suite and the S005 migration/callback/delivery integration tests from a fresh test database; fix only defects exposed by these checks and retain the resulting test report for `/audit`.
++
++**Implements**: Verification for S005-R1, S005-R2, S005-R3, S005-R4.
++
++**Pattern**: A test role with bypassed tenant policy cannot be used as the acceptance evidence. The command is the repository’s documented backend test command once T001 establishes the application layout.
++
++**Testing**: `backend/tests/integration/test_delivery_events_migration.py`, `backend/tests/integration/test_reminder_callback.py`, `backend/tests/integration/test_delivery_status.py`
++
++**Evidence**: Fresh-database test report suitable for the subsequent audit.
++
++## Dependency graph and parallel work
++
++`T001 → {T002, T003, T004} → {T005, T006} → T007 → T008 → {T009, T010} → T011`
++
++- Parallel group A: T002, T003, and T004 may be authored in parallel after T001 because they own separate test files and share no mutable implementation file.
++- No core implementation task is marked `[P]`: migration, provider verification, persistence, and routes have ordering dependencies and shared runtime behavior.
++
++## Cross-check verdict
++
++- Spec coverage: PASS. Authentication, deduplication, workspace persistence, and workspace-only delivery reads all have a test-first task, an implementation task, and an integration-evidence task.
++- Plan alignment: PASS. The checklist includes the required migration, signature verification, idempotent callback service, `POST /callbacks/reminder`, `GET /actions/{id}/delivery`, duplicate-delivery proof, and request-role cross-workspace denial.
++- API/backend gates: PASS. The migration has clean/dirty apply, constraints/index, recovery posture, and head reconciliation; boundary and tenant checks use real request paths; failure symmetry covers invalid authentication, duplicate delivery, persistence failure, and non-disclosure.
++- Dependencies and parallel safety: PASS. Tests precede implementation; `[P]` is limited to separate test files after setup.
++- Open criticals: none. The directory layout is declared as a reversible assumption because no codebase exists in this workspace.
++
++**Next route**: `/story-implement` → `/audit` → `/story-validate`.
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..0f7efe2
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E002` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E002/S005` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E002-reminders` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `23d5f30` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..a9dfd62
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `23d5f30` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..7674c5d
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,50 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "23d5f30",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 2,
++    "edges": 0,
++    "by_kind": {
++      "epic": 1,
++      "story": 1
++    }
++  },
++  "nodes": [
++    {
++      "id": "E002",
++      "kind": "epic",
++      "scope": null,
++      "title": "E002-reminders",
++      "source_file": "/Users/kjetil/Code/speck/.speck/eval/behavioral/.runs/2026-08-10-v10-v11-terra/workspaces/story-tasks-A/specs/projects/001-pulseboard/epics/E002-reminders",
++      "anchor": "E002",
++      "content_hash": "32f753e6de28",
++      "attrs": {
++        "has_breakdown": false
++      }
++    },
++    {
++      "id": "E002/S005",
++      "kind": "story",
++      "scope": "E002",
++      "title": "S005-delivery-status",
++      "source_file": "/Users/kjetil/Code/speck/.speck/eval/behavioral/.runs/2026-08-10-v10-v11-terra/workspaces/story-tasks-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/spec.md",
++      "anchor": "",
++      "content_hash": "9dbc1c3ab0ba",
++      "attrs": {
++        "readiness_state_verified": "",
++        "lifecycle_state": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    }
++  ],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}

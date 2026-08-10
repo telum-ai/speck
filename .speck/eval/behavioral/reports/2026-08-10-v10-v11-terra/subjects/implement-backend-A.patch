@@ -1,0 +1,294 @@
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md
+index 4d39273..792a2dc 100644
+--- a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md
+@@ -1,5 +1,5 @@
+ ---
+-current_state: Planned
++current_state: Specified
+ depends_on: []
+ blocks: []
+ ---
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md
+index 704c568..6e86951 100644
+--- a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md
+@@ -1,5 +1,9 @@
++---
++status: completed
++---
++
+ # Tasks
+ 
+-- [ ] Implement confirmed-action validation in `src/reminders.py`
+-- [ ] Implement scheduling boundaries and deterministic output
+-- [ ] Add and run tests
++- [X] Implement confirmed-action validation in `src/reminders.py`
++- [X] Implement scheduling boundaries and deterministic output
++- [X] Add and run tests
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..ff4797d
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E002` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E002/S006` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E002-reminders` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `05430f4` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..4e555b7
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `05430f4` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..8ada567
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,50 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "05430f4",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 2,
++    "edges": 0,
++    "by_kind": {
++      "epic": 1,
++      "story": 1
++    }
++  },
++  "nodes": [
++    {
++      "id": "E002",
++      "kind": "epic",
++      "scope": null,
++      "title": "E002-reminders",
++      "source_file": "/Users/kjetil/Code/speck/.speck/eval/behavioral/.runs/2026-08-10-v10-v11-terra/workspaces/implement-backend-A/specs/projects/001-pulseboard/epics/E002-reminders",
++      "anchor": "E002",
++      "content_hash": "32f753e6de28",
++      "attrs": {
++        "has_breakdown": false
++      }
++    },
++    {
++      "id": "E002/S006",
++      "kind": "story",
++      "scope": "E002",
++      "title": "S006-build-reminder",
++      "source_file": "/Users/kjetil/Code/speck/.speck/eval/behavioral/.runs/2026-08-10-v10-v11-terra/workspaces/implement-backend-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md",
++      "anchor": "",
++      "content_hash": "9604306122c4",
++      "attrs": {
++        "readiness_state_verified": "",
++        "lifecycle_state": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    }
++  ],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}
+diff --git a/src/reminders.py b/src/reminders.py
+index f25f4f2..b91a591 100644
+--- a/src/reminders.py
++++ b/src/reminders.py
+@@ -1,5 +1,67 @@
+ """Reminder construction."""
+ 
++from collections.abc import Mapping
++from datetime import datetime, timedelta, timezone
++
++
++def _parse_utc_timestamp(value, field_name):
++    """Return a UTC datetime for an ISO-8601 timestamp with an explicit offset."""
++    if not isinstance(value, str) or not value:
++        raise ValueError(f"{field_name} must be an ISO-8601 UTC timestamp")
++
++    try:
++        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
++    except ValueError as error:
++        raise ValueError(f"{field_name} must be an ISO-8601 UTC timestamp") from error
++
++    if parsed.tzinfo is None or parsed.utcoffset() != timedelta(0):
++        raise ValueError(f"{field_name} must be an ISO-8601 UTC timestamp")
++
++    return parsed.astimezone(timezone.utc)
++
++
++def _format_utc_timestamp(value):
++    """Render a UTC datetime in the wire format required by reminders."""
++    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
++
+ 
+ def build_reminder(action, now):
+-    raise NotImplementedError
++    """Build one deterministic reminder for a confirmed action, or ``None``.
++
++    ``action`` is deliberately read without mutation so callers can safely reuse it.
++    """
++    if not isinstance(action, Mapping) or action.get("confirmed") is not True:
++        return None
++
++    action_id = action.get("id")
++    owner = action.get("owner")
++    if not isinstance(action_id, str) or not action_id.strip():
++        raise ValueError("confirmed action requires a non-empty id")
++    if not isinstance(owner, str) or not owner.strip():
++        raise ValueError("confirmed action requires a non-empty owner")
++
++    due_at = _parse_utc_timestamp(action.get("due_at"), "due_at")
++    current_time = _parse_utc_timestamp(now, "now") if isinstance(now, str) else now
++    if not isinstance(current_time, datetime) or current_time.tzinfo is None:
++        raise ValueError("now must be an aware datetime or ISO-8601 UTC timestamp")
++    if current_time.utcoffset() != timedelta(0):
++        raise ValueError("now must be in UTC")
++    current_time = current_time.astimezone(timezone.utc)
++
++    if due_at <= current_time:
++        return None
++
++    remind_at = due_at - timedelta(hours=24)
++    if remind_at < current_time:
++        remind_at = current_time + timedelta(minutes=5)
++        if remind_at >= due_at:
++            return None
++
++    due_at_text = _format_utc_timestamp(due_at)
++    return {
++        "id": f"reminder:{action_id}:{due_at_text}",
++        "action_id": action_id,
++        "owner": owner,
++        "due_at": due_at_text,
++        "remind_at": _format_utc_timestamp(remind_at),
++    }
+diff --git a/tests/test_reminders.py b/tests/test_reminders.py
+new file mode 100644
+index 0000000..2ee4b8d
+--- /dev/null
++++ b/tests/test_reminders.py
+@@ -0,0 +1,67 @@
++"""Contract tests for reminder construction."""
++
++from copy import deepcopy
++from datetime import datetime, timezone
++import unittest
++
++from src.reminders import build_reminder
++
++
++class BuildReminderTests(unittest.TestCase):
++    def setUp(self):
++        self.now = datetime(2026, 8, 10, 12, 0, tzinfo=timezone.utc)
++        self.action = {
++            "id": "action-7",
++            "owner": "Kjetil",
++            "confirmed": True,
++            "due_at": "2026-08-12T12:00:00Z",
++        }
++
++    def test_unconfirmed_actions_are_ignored_without_validation(self):
++        self.assertIsNone(build_reminder({"confirmed": 1}, self.now))
++        self.assertIsNone(build_reminder(None, self.now))
++
++    def test_confirmed_action_requires_id_owner_and_utc_due_at(self):
++        for invalid_action in (
++            {**self.action, "id": ""},
++            {**self.action, "owner": "  "},
++            {**self.action, "due_at": "2026-08-12T12:00:00"},
++            {**self.action, "due_at": "2026-08-12T14:00:00+02:00"},
++        ):
++            with self.subTest(action=invalid_action):
++                with self.assertRaises(ValueError):
++                    build_reminder(invalid_action, self.now)
++
++    def test_schedules_twenty_four_hours_before_due_time_without_mutating_input(self):
++        original = deepcopy(self.action)
++
++        reminder = build_reminder(self.action, self.now)
++
++        self.assertEqual(self.action, original)
++        self.assertEqual(
++            reminder,
++            {
++                "id": "reminder:action-7:2026-08-12T12:00:00Z",
++                "action_id": "action-7",
++                "owner": "Kjetil",
++                "due_at": "2026-08-12T12:00:00Z",
++                "remind_at": "2026-08-11T12:00:00Z",
++            },
++        )
++
++    def test_falls_back_to_five_minutes_after_now_only_when_before_due(self):
++        action = {**self.action, "due_at": "2026-08-10T12:06:00Z"}
++        self.assertEqual(
++            build_reminder(action, "2026-08-10T12:00:00Z")["remind_at"],
++            "2026-08-10T12:05:00Z",
++        )
++        self.assertIsNone(build_reminder({**action, "due_at": "2026-08-10T12:05:00Z"}, self.now))
++
++    def test_due_at_must_be_future_and_twenty_four_hour_boundary_is_kept(self):
++        self.assertIsNone(build_reminder({**self.action, "due_at": "2026-08-10T12:00:00Z"}, self.now))
++        reminder = build_reminder({**self.action, "due_at": "2026-08-11T12:00:00Z"}, self.now)
++        self.assertEqual(reminder["remind_at"], "2026-08-10T12:00:00Z")
++
++
++if __name__ == "__main__":
++    unittest.main()

@@ -1,0 +1,77 @@
+{
+  "case_id": "epic-breakdown",
+  "condition": "v11",
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "0090bce66751bed11999882038358e689b4a2de040811ca442b97ca084ddc755",
+  "exit_code": 0,
+  "git_status": [
+    " M specs/projects/001-pulseboard/traceability-matrix.md",
+    "?? specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md",
+    "?? specs/projects/001-pulseboard/epics/E001-capture-review/stories/",
+    "?? specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md",
+    "?? specs/projects/001-pulseboard/graph/"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "62526fda9be4a0353ffaaca1ee063005216892d111f22c337fa272d86e74359b",
+  "required_corrections": 2,
+  "rescored_at": "2026-08-10T07:17:56.760426+00:00",
+  "revision": "8ff081f1436024e5315fd68a3c2af505bd09ab83",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.5,
+        "label": "breakdown",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "three-stories",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 0.0,
+        "label": "placeholder-state",
+        "ok": false,
+        "weight": 1
+      },
+      {
+        "earned": 1.5,
+        "label": "dependency-metadata",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "scope-coverage",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 0.0,
+        "label": "traceability-closed",
+        "ok": false,
+        "weight": 3
+      }
+    ],
+    "earned": 6.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 60.0
+  },
+  "timeout": false,
+  "tool_events": 24,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 660224,
+    "input_tokens": 734741,
+    "output_tokens": 9336
+  },
+  "valid_run": true,
+  "wall_seconds": 199.737
+}
