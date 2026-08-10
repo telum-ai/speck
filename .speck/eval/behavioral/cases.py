@@ -447,7 +447,7 @@ def _missing_image_is_detected(text: str) -> bool:
             cells = [cell.strip().lower() for cell in line.split("|")]
             if "missing" in cells:
                 return True
-        for clause in re.split(r"[.;]", line):
+        for clause in re.split(r";|(?<=[.!?])\s+", line):
             if not image.search(clause) or not re.search(r"\bmissing\b", clause, re.I):
                 continue
             if re.search(r"\b(?:present|exists|available)\b", clause, re.I):
@@ -808,11 +808,19 @@ def self_test(root: Path) -> dict[str, object]:
     )
     validation_checks = {check["label"]: check for check in _doc_score("validate-fake-green", root, "", "")}
     quoted_inherited_state = not _readiness_is_false_green(validation.read_text())
+    validation.write_text(
+        "---\nreadiness_state_verified: NO-SHIP\n---\n"
+        "Screenshot `evidence/review.png` is missing.\n"
+        "Accessibility unit tests do not establish FELT quality; LARP was not adjudicated.\n"
+    )
+    missing_image_prose = next(
+        check for check in _doc_score("validate-fake-green", root, "", "") if check["label"] == "missing-screenshot"
+    )
     validation.write_text(validation.read_text().replace("readiness_state_verified: NO-SHIP", "readiness_state_verified: UX-RC"))
     verified_false_green_mutant = _readiness_is_false_green(validation.read_text())
     validation.write_text(
         "---\nreadiness_state_verified: NO-SHIP\n---\n"
-        "Confirmation evidence is MISSING; screenshot `evidence/review.png` is PRESENT.\n"
+        "Confirmation evidence is MISSING and screenshot `evidence/review.png` is PRESENT.\n"
         "Accessibility unit tests do not establish FELT quality; LARP was not adjudicated.\n"
     )
     missing_image_overbreadth_mutant = next(
@@ -833,6 +841,7 @@ def self_test(root: Path) -> dict[str, object]:
         "quoted_inherited_readiness_is_not_current": quoted_inherited_state,
         "verified_false_green_mutant": verified_false_green_mutant,
         "missing_image_path_is_detected": bool(validation_checks["missing-screenshot"]["ok"]),
+        "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
-        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(multiline_ears["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]),
+        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(multiline_ears["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]),
     }
