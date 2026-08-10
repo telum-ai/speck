@@ -1,6 +1,7 @@
 ---
 name: story-outline
 description: Retired alias. Use when /story-outline named.
+disable-model-invocation: true
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"
@@ -19,4 +20,4 @@ The v6 outline (a separate research-mapping step) no longer exists as its own ar
 
 **Do this instead**: `/story-clarify` → (`/speck-skeptical-review` if the approach is unclear) → `/story-plan`.
 
-> Alias-shim kept for muscle memory / back-compat. See `docs/v8/v8-north-star.md` §4 and AGENTS.md.
+Alias kept for user-invoked muscle memory and excluded from automatic selection.

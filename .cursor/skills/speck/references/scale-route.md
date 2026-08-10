@@ -56,14 +56,14 @@ Brownfield: `/project-import` → `/speck-scan` → `/project-specify` → play-
 
 Canonical detail: `.speck/reference/command-phases.md`. Critical ordering:
 
-**Build**: specify → clarify → product-contract → readme → evidence-contract → context → [architecture if cross-system] → plan → [/project-analyze required at 4+ epics] → epic loop → story loop (specify…implement→audit→validate→larp) → project-validate.
+**Build**: specify → clarify → product-contract → readme → evidence-contract → context → [architecture if cross-system] → plan → [/analyze --level project required at 4+ epics] → epic loop → story loop (specify…implement→audit→validate→larp) → project-validate.
 
-**Build 4+ / Platform**: `/project-architecture` + `/project-ux` required before plan. `/project-analyze` required after plan, before first `/epic-specify` (3 lenses at Build 4+; 7 at Platform). `check-epic-prereqs.sh` enforces.
+**Build 4+ / Platform**: `/project-architecture` + `/project-ux` required before plan. `/analyze --level project` required after plan, before first `/epic-specify` (3 lenses at Build 4+; 7 at Platform). `check-epic-prereqs.sh` enforces.
 
-**Platform**: domain → ux → context → constitution → architecture → design-system → product-contract → readme → evidence-contract → plan → project-analyze (all 7 lenses) → roadmap.
+**Platform**: domain → ux → context → constitution → architecture → design-system → product-contract → readme → evidence-contract → plan → `/analyze --level project` (all 7 lenses) → roadmap.
 
 **Sprint**: project-specify → ship → promote?
 
-Grandfather: `<PROJECT_DIR>/.analysis-gate-grandfathered` → advisory until report exists; surface loudly; one `/project-analyze` spends it.
+Grandfather: `<PROJECT_DIR>/.analysis-gate-grandfathered` → advisory until report exists; surface loudly; one `/analyze --level project` spends it.
 
 Do NOT run `/project-validate` until post-implementation.

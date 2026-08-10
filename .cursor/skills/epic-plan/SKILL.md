@@ -77,7 +77,7 @@ Enumerate every promise → `PRM-NNN` row at **status=open** (or **pilot-gated**
 
 Retrofit mode: seed from `audit-report.md` or scan; consolidate with fine-grained refs in `Backing` column.
 
-Write `[EPIC_DIR]/traceability-matrix.md`. Ledger for `/epic-analyze` + `/epic-validate`.
+Write `[EPIC_DIR]/traceability-matrix.md`. Ledger for `/analyze --level epic` + `/epic-validate`.
 
 Validate:
 ```bash
@@ -98,7 +98,7 @@ Missing matrix → P1; re-run step 5.
 | Step | When |
 |------|------|
 | `/epic-breakdown` | Required — story mapping |
-| `/epic-analyze` | Required before ANY story work |
+| `/analyze --level epic` | Required before ANY story work |
 | `/story-specify` | After analyze CLEAN/NEEDS_FIXES |
 | `/epic-validate` | After all stories validated — NOT planning |
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # validate-project-analysis.sh — Gate A for the decorrelated analysis pass (issue #106).
 #
-# WHY THIS EXISTS. /project-analyze was optional at exactly the altitude where the author
+# WHY THIS EXISTS. /analyze --level project was optional at exactly the altitude where the author
 # self-certifies. Field evidence, project 001-odd: a planning corpus produced through the FULL
 # canonical Build flow — every skill entered, five skeptical-review primitives, a premise-challenge
 # pass, every strict validator green — still carried 1 CRITICAL and 13 HIGH defects. All fourteen
@@ -376,7 +376,7 @@ structural_mode() {
   load_report "$f"
 
   if [[ "$BOUND" == false ]]; then
-    log_notice "pre-v10.3 analysis report (no 'artifact_type: project-analysis-report' / 'epic-analysis-report' in the frontmatter) — the v10.3 lens-roster, findings-table and gate-verdict requirements are not required of it. Re-run /project-analyze (or /epic-analyze) to opt in; no migration touches this file."
+    log_notice "pre-v10.3 analysis report (no 'artifact_type: project-analysis-report' / 'epic-analysis-report' in the frontmatter) — the v10.3 lens-roster, findings-table and gate-verdict requirements are not required of it. Re-run /analyze --level project (or /analyze --level epic) to opt in; no migration touches this file."
     echo -e "${GREEN}Validation PASSED.${NC}"
     exit 0
   fi
@@ -904,11 +904,11 @@ gate_mode() {
 
   if [[ "$bound_report" == false ]]; then
     # THE GRANDFATHER PATH. Decided by the repo owner: a project planned before this release gets a
-    # loud, repeated notice, never a block, until /project-analyze runs once. The gate is real
+    # loud, repeated notice, never a block, until /analyze --level project runs once. The gate is real
     # FORWARD and advisory BACKWARD, and that asymmetry is disclosed here rather than hidden.
     #
     # The marker keys on "no report this contract can read", which covers both the absent report and
-    # the pre-v10.3-vintage one — running /project-analyze under v10.3 writes a bound report, so the
+    # the pre-v10.3-vintage one — running /analyze --level project under v10.3 writes a bound report, so the
     # exemption expires by itself and nobody has to remember to delete the marker.
     #
     # DELIBERATELY NOT ESCALATED BY --strict, unlike every other P2 in this file. An exemption is a
@@ -923,19 +923,19 @@ gate_mode() {
       echo -e "  primitives, premise-challenge, every strict validator green — was measured"
       echo -e "  carrying 1 CRITICAL and 13 HIGH defects that only an adversarial decorrelated"
       echo -e "  pass found. That is what this project has not had."
-      echo -e "  Clear it by running ${GREEN}/project-analyze${YELLOW} once; the marker expires by itself"
+      echo -e "  Clear it by running ${GREEN}/analyze --level project${YELLOW} once; the marker expires by itself"
       echo -e "  the moment a v10.3 report lands (${marker#"$dir"/})."
       echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
       echo -e "${GREEN}Analysis gate: grandfathered (advisory, non-blocking).${NC}"
       exit 0
     fi
     if [[ ! -f "$report" ]]; then
-      emit_p1 "UNANALYZED_CORPUS.P1" "$(basename "$report") does not exist. This tier requires a decorrelated analysis pass before execution begins: the author who wrote the corpus is not the party who can certify it (AGENTS.md P4). Run /project-analyze (or /epic-analyze)."
+      emit_p1 "UNANALYZED_CORPUS.P1" "$(basename "$report") does not exist. This tier requires a decorrelated analysis pass before execution begins: the author who wrote the corpus is not the party who can certify it (AGENTS.md P4). Run /analyze --level project (or /analyze --level epic)."
     else
       # A report exists but predates the v10.3 contract. It is NOT unanalyzed — saying so would be
       # false — and its structure is exempt by the vintage rule, so the honest report is that its
       # decorrelation is unverifiable, not that it passed.
-      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "$(basename "$report") predates v10.3 (no 'artifact_type:' in its frontmatter), so it declares no lens roster and no per-finding verifier. Its structure is exempt by the vintage rule; its decorrelation is UNKNOWN, never verified. Re-run /project-analyze to produce a report this gate can read, or drop a .analysis-gate-grandfathered marker to take the disclosed exemption."
+      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "$(basename "$report") predates v10.3 (no 'artifact_type:' in its frontmatter), so it declares no lens roster and no per-finding verifier. Its structure is exempt by the vintage rule; its decorrelation is UNKNOWN, never verified. Re-run /analyze --level project to produce a report this gate can read, or drop a .analysis-gate-grandfathered marker to take the disclosed exemption."
     fi
     gate_verdict_and_exit
   fi

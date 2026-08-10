@@ -252,7 +252,7 @@ fi
 # carries a `.analysis-gate-grandfathered` marker written by the upgrade migration and gets a loud,
 # repeated notice instead of a rejection — it could not have satisfied a gate that did not exist.
 # A project planned after v10.3 has no marker and is rejected. Real forward, advisory backward; the
-# marker expires by itself the first time /project-analyze runs, because the gate consults it only
+# marker expires by itself the first time /analyze --level project runs, because the gate consults it only
 # when the report is absent.
 #
 # Applicability is the script's job, not this hook's: it exits 0 with an explicit "not applicable"
@@ -268,7 +268,7 @@ if [[ -f "$epic_prereqs" ]]; then
       [[ -d "$pd" ]] || continue
       echo -e "${BLUE}🔍 Planning-corpus analysis gate: ${pd}...${NC}"
       if ! bash "$epic_prereqs" "$pd"; then
-        echo -e "${RED}❌ Epic work is gated on an independent /project-analyze pass (see above).${NC}"
+        echo -e "${RED}❌ Epic work is gated on an independent /analyze --level project pass (see above).${NC}"
         errors=$((errors + 1))
       fi
     done <<< "$ep_dirs"

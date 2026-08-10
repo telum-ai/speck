@@ -207,7 +207,7 @@ Speck upgrades across a major boundary are automatic on `npx github:telum-ai/spe
 
 Without `/speck-catch-up`, a migrated project carries v6 debt under v7 paint. The skill is mandatory for any project not built v7-native from day one.
 
-**v6 command compatibility.** v6 commands (`/story-analyze`, `/epic-outline`, `/story-outline`, `/project-scan`, …) keep working via alias-shims that route to their current equivalents. The level triplets also expose `--level` dispatchers (`/validate`, `/retrospective`, `/adjust`, `/analyze`) that route to the preserved per-level specialists.
+**Command compatibility.** Retired and former level-specific commands (`/story-analyze`, `/project-analyze`, `/story-adjust`, `/epic-outline`, `/project-scan`, …) remain user-invocable shims. They are excluded from automatic selection. `/analyze`, `/adjust`, and `/speck-scan` are canonical multi-level engines; validation and retrospective keep their materially different level specialists canonical, with `/validate` and `/retrospective` as user-only convenience routers. CI enforces the family map in `.speck/reference/skill-catalog-policy.json`.
 
 ### v7 → v8 (`/speck-reprove`)
 

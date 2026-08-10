@@ -15,8 +15,8 @@ Questions Asked: [X] of 5
 
    | Step | 🔴 Required when |  Recommended when | ⬜ Skip when |
    |------|-----------------|---------------------|------------|
-   | `/story-outline` | Unfamiliar technology; TBD sections remain; multiple competing implementation approaches | Minor unknowns after clarification | Path clear, follows established patterns |
-   | `/story-scan` | Story extends or modifies existing code; brownfield context confirmed | Story touches existing functionality | Fully greenfield |
+   | `/speck-skeptical-review` | Unfamiliar technology; TBD sections remain; multiple competing implementation approaches | Minor unknowns after clarification | Path clear, follows established patterns |
+   | `/speck-scan --level story` | Story extends or modifies existing code; brownfield context confirmed | Story touches existing functionality | Fully greenfield |
    | `/story-ui-spec` | Any mention of UI, screens, forms, components, layout, UX | Minor UI elements alongside backend work | Pure backend / API / CLI |
 
    Output:
@@ -25,8 +25,8 @@ Questions Asked: [X] of 5
 
    | Step | Recommendation | Evidence from spec.md |
    |------|---------------|----------------------|
-   | /story-outline | ⬜ /  / 🔴 | "[observation]" |
-   | /story-scan    | ⬜ /  / 🔴 | "[observation]" |
+   | /speck-skeptical-review | ⬜ /  / 🔴 | "[observation]" |
+   | /speck-scan --level story    | ⬜ /  / 🔴 | "[observation]" |
    | /story-ui-spec | ⬜ / 🔴       | "[observation]" |
 
    Recommended path to /story-plan:

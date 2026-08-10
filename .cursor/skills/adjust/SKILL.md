@@ -1,34 +1,44 @@
 ---
 name: adjust
-description: Routes adjust by --level story|epic|project. Use when redesigning validated work.
+description: Re-specs deliberate changes to validated work. Use for story redesigns, epic pivots, or project direction changes.
 ---
 
-The user input can be provided directly by the agent or as a command argument:
+# adjust
 
-$ARGUMENTS
+Canonical adjustment engine for intentional changes to validated or shipped work. Defects with no promise change route to `/harden`.
 
-## Purpose
+Cheap keys: changed promise ownership and cross-story/cross-epic reach determine `level` before any branch loads.
 
-`/adjust` is the unified, level-dispatching entry point for **deliberate** changes to already-validated/shipped work (not defect fixes — those go to `/harden`). It detects the intended blast radius and routes to the specialist, which owns delta-spec authoring, promise conservation, superseding DECs, and (project level) the reverse cascade.
+## Classify blast radius first
 
-## Level detection
+Treat an explicit `--level story|epic|project` as a candidate, then verify it against the changed promises:
 
-Use `--level <project|epic|story>` if provided. Otherwise infer from the change's blast radius:
-
-1. Single story redesign / visual overhaul → **story**
-2. Epic-level structure / IA pivot spanning multiple stories → **epic**
-3. Directional / strategic / product-contract change → **project**
-
-When unsure, prefer the **narrowest** level that fully contains the change, and ask the user to confirm before a project-level cascade.
-
-## Routing
-
-| Level | Read and fully execute |
+| Level | Fully contained change |
 |-------|------------------------|
-| story | `.cursor/skills/story-adjust/SKILL.md` |
-| epic | `.cursor/skills/epic-adjust/SKILL.md` |
-| project | `.cursor/skills/project-adjust/SKILL.md` |
+| story | One story; no shared seam, sibling story, epic structure, or product promise changes |
+| epic | Multiple stories or epic IA/experience-chain/structure; no strategic or product-contract change |
+| project | Direction, paid promise, differentiator, project architecture, or cross-epic contract changes |
 
-**Read the target `SKILL.md` and follow it end-to-end.** Project-level adjust runs `compute-cascade.sh` and routes each affected downstream unit back through `/epic-adjust` or `/story-adjust`.
+Escalate until the level contains every affected promise. Never preserve a narrower requested level by leaving downstream truth stale. Record the classification and affected artifacts in the adjustment report.
 
-> v8: `/project-adjust`, `/epic-adjust`, `/story-adjust` remain valid direct entry points (unchanged, full logic). `/adjust` is a convenience that unifies the surface — dispatcher pattern, no lossy merge.
+## Load exactly one branch
+
+Before mutating any artifact, run:
+
+```bash
+python3 .speck/scripts/context/speck_context.py adjust --select level=<story|epic|project>
+```
+
+This emits exactly one template and one of `references/story.md`, `references/epic.md`, or `references/project.md`; sibling branches are forbidden.
+
+## Common contract
+
+1. Downgrade the affected unit to `NO-SHIP` or its lowest still-proven state before implementation.
+2. Re-spec only the deliberate delta; do not silently overwrite validated truth.
+3. Conserve every affected promise: remap it, add a new PRM row, or retire it through a DEC.
+4. Append a decision entry describing the change and alternatives; a replaced decision uses `Supersedes: DEC-####`.
+5. Implement, then run a decorrelated `/audit` and level-specific validation on the delta.
+6. Write the dated adjustment report, run its template validation and truth stamp as separate direct commands after the last mutation, then regenerate `/project-state`.
+7. Restore readiness only from fresh evidence.
+
+Direct `/story-adjust`, `/epic-adjust`, and `/project-adjust` names are user-only compatibility shims into this engine. Follow the selected branch end-to-end.

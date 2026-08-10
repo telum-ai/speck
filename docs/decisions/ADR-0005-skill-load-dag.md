@@ -17,6 +17,7 @@ v11 relocated oversized bodies into `references/procedure.md` with a thin SKILL 
 4. **Router-owned edges** — every ref node must be named directly by `SKILL.md`; ref-to-ref routing is forbidden. This makes every load decision inspectable before any node is loaded.
 5. **Anti-theater CI** — corpus-budget fails single-procedure pointers, router-orphaned nodes, hidden continuation edges, and declared branch paths that exceed their pre-v11 inline byte ceiling.
 6. **Ceilings** — router `SKILL.md` body ≤80 lines; each ref node ≤120 lines and ≤8 KiB; declared hot paths are capped in `.speck/reference/skill-load-budgets.json`; essay bans from ADR-0004 still apply.
+7. **Invocation surface** — ADR-0007 decides which router or specialists may auto-trigger. A DAG implementation and its compatibility aliases never compete automatically.
 
 ## Decomposition rules
 

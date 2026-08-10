@@ -73,7 +73,7 @@ Return (no report template file):
 - Stories created/updated
 - Per-story: Complete / Partial / Unknown + confidence
 - Gaps needing clarification
-- Next: `/story-clarify`, `/story-plan`, `/story-validate`, `/story-scan`
+- Next: `/story-clarify`, `/story-plan`, `/story-validate`, `/speck-scan --level story`
 
 ## 7. Review
 

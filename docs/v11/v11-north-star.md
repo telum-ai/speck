@@ -23,7 +23,7 @@ Progressive disclosure ([agentskills.io](https://agentskills.io/specification)):
 ## 3. Locked policies
 
 1. **Hybrid fitness**: hard corpus/path budget CI + fail-closed A1-lite seeded contract smoke against the candidate corpus and an immutable baseline. It protects named gate capabilities; it does not substitute for runtime agent LARP.
-2. **Invocation**: `disable-model-invocation: true` only on `speck`, `story`, `epic`. All other skills auto-invocable.
+2. **Invocation**: one automatic entry surface per overlapping intent family. Explicit lifecycle commands, convenience routers, and compatibility aliases are user-only; `.speck/reference/skill-catalog-policy.json` is executable policy (ADR-0007).
 3. **Domain skills deleted**: Stripe/Clerk/Supabase/… pack removed. Stack start = `.speck/recipes/`. Vendor APIs = Context7 / official docs JIT.
 4. **Judgment boundary**: encode high-stakes invariants as small executable interfaces and validators. For ordinary implementation choices, state the outcome and local constraints, then let the model use judgment. Do not repeat rules or constrain exploration with examples (ADR-0003/0004/0006).
 5. **Skill load DAG** (ADR-0005): always-path → inline in `SKILL.md`; branching/multi-domain → router + multi-node refs; anti-theater CI. Complete inventory: `docs/decisions/skill-load-map.md`.
@@ -36,7 +36,7 @@ Progressive disclosure ([agentskills.io](https://agentskills.io/specification)):
 |--------|---------|
 | AGENTS.md bytes | ≤ 16384 |
 | AGENTS.md lines | ≤ 200 |
-| `disable-model-invocation: true` | allowlist `{speck, story, epic}` only |
+| `disable-model-invocation: true` | exact machine policy in `skill-catalog-policy.json` |
 | Per auto skill description chars | ≤ 120 |
 | Sum auto skill description chars | ≤ 10000 |
 | SKILL.md body (always-path) | ≤ 200 |
@@ -62,7 +62,7 @@ P1–P4; four-axis honesty; first-actions ladder; readiness states; evidence-or-
 
 ## 7. Out of v11
 
-Full metaharness evolve/fleet/embeddings; deep vendor recipe playbooks; hiding lifecycle skills behind `disable-model-invocation`; weakening prove gates for tokens.
+Full metaharness evolve/fleet/embeddings; deep vendor recipe playbooks; hiding canonical process capabilities; weakening prove gates for tokens.
 
 ## 8. Research informing v11
 

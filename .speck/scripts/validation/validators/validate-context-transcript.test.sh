@@ -654,6 +654,101 @@ run_validator "$ROOT" --transcript "$TRANSCRIPT_UI_FULL" --profile "$UI_PROFILE"
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
   && pass "UX-RC passes after template, FELT, and TASTE gates" || fail "full UX-RC gates should pass (rc=$RC)"
 
+echo "── canonical family routers: staged analyze and exclusive adjust branches ───────────────"
+ANALYZE_CORE_PROFILE="analyze-core"
+ANALYZE_CORE_CMD="python3 .speck/scripts/context/speck_context.py $ANALYZE_CORE_PROFILE --select level=epic --select tier=build --root $ROOT"
+python3 "$LOADER" "$ANALYZE_CORE_PROFILE" --select level=epic --select tier=build --root "$ROOT" > "$T/analyze-core.out"
+CORE_OUT=$(<"$T/analyze-core.out")
+[[ "$CORE_OUT" == *"SPECK_CONTEXT_BEGIN .cursor/skills/analyze/references/levels/epic.md"* ]] \
+  && [[ "$CORE_OUT" == *"SPECK_CONTEXT_BEGIN .cursor/skills/analyze/references/traceability.md"* ]] \
+  && [[ "$CORE_OUT" != *"project-analysis-report-template.md"* ]] \
+  && [[ "$CORE_OUT" != *"references/lenses/"* ]] \
+  && pass "analyze core loads only selected scope and defers templates/lenses" || fail "analyze core branch leaked deferred context"
+
+TRANSCRIPT_ANALYZE_CORE="$T/analyze-core.jsonl"
+write_transcript "$TRANSCRIPT_ANALYZE_CORE" \
+  cmd "$ANALYZE_CORE_CMD" "$T/analyze-core.out" 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_ANALYZE_CORE" --profile "$ANALYZE_CORE_PROFILE" --select level=epic --select tier=build --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' && echo "$OUT" | grep -q '"status": "not_applicable"' \
+  && pass "read-only analyze core passes without manufacturing a mutation" || fail "read-only analyze core transcript (rc=$RC)"
+
+TRANSCRIPT_ANALYZE_CORE_MUTATION="$T/analyze-core-mutation.jsonl"
+write_transcript "$TRANSCRIPT_ANALYZE_CORE_MUTATION" \
+  cmd "$ANALYZE_CORE_CMD" "$T/analyze-core.out" 0 \
+  change "specs/projects/demo/PRD.md"
+run_validator "$ROOT" --transcript "$TRANSCRIPT_ANALYZE_CORE_MUTATION" --profile "$ANALYZE_CORE_PROFILE" --select level=epic --select tier=build --json
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -q '"TIMING": {' && echo "$OUT" | grep -q 'read-only profile observed a mutation' \
+  && pass "read-only analyze core rejects any mutation" || fail "read-only mutation must fail TIMING (rc=$RC)"
+
+ANALYZE_LENS_PROFILE="analyze-project-lens"
+ANALYZE_LENS_CMD="python3 .speck/scripts/context/speck_context.py $ANALYZE_LENS_PROFILE --select lens=L3 --root $ROOT"
+python3 "$LOADER" "$ANALYZE_LENS_PROFILE" --select lens=L3 --root "$ROOT" > "$T/analyze-lens.out"
+LENS_OUT=$(<"$T/analyze-lens.out")
+[[ "$LENS_OUT" == *"references/lens-spine.md"* ]] \
+  && [[ "$LENS_OUT" == *"references/lenses/project/L3.md"* ]] \
+  && [[ "$LENS_OUT" != *"references/lenses/project/L2.md"* ]] \
+  && [[ "$LENS_OUT" != *"references/lenses/epic/L3.md"* ]] \
+  && pass "one reviewer receives one level-specific lens" || fail "analyze lens selector leaked a sibling"
+
+TRANSCRIPT_ANALYZE_LENS="$T/analyze-lens.jsonl"
+write_transcript "$TRANSCRIPT_ANALYZE_LENS" \
+  cmd "$ANALYZE_LENS_CMD" "$T/analyze-lens.out" 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_ANALYZE_LENS" --profile "$ANALYZE_LENS_PROFILE" --select lens=L3 --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "lens-only transcript proves reach and selectivity" || fail "lens transcript (rc=$RC)"
+
+ANALYZE_REPORT_PROFILE="analyze-report"
+ANALYZE_REPORT_CMD="python3 .speck/scripts/context/speck_context.py $ANALYZE_REPORT_PROFILE --select level=project --root $ROOT"
+python3 "$LOADER" "$ANALYZE_REPORT_PROFILE" --select level=project --root "$ROOT" > "$T/analyze-report.out"
+REPORT_OUT=$(<"$T/analyze-report.out")
+[[ "$REPORT_OUT" == *"project-analysis-report-template.md"* ]] \
+  && [[ "$REPORT_OUT" == *"references/reports/project.md"* ]] \
+  && [[ "$REPORT_OUT" != *"epic-analysis-report-template.md"* ]] \
+  && pass "report template arrives only at the selected report stage" || fail "analyze report branch leaked a sibling"
+
+TRANSCRIPT_ANALYZE_REPORT="$T/analyze-report.jsonl"
+write_transcript "$TRANSCRIPT_ANALYZE_REPORT" \
+  cmd "$ANALYZE_REPORT_CMD" "$T/analyze-report.out" 0 \
+  change "specs/projects/demo/project-analysis-report.md" \
+  cmd "bash .speck/scripts/validation/validate-template.sh --strict specs/projects/demo/project-analysis-report.md" /dev/null 0 \
+  cmd "bash .speck/scripts/validation/validators/validate-project-analysis.sh --gate specs/projects/demo" /dev/null 0 \
+  cmd "bash .speck/scripts/validation/check-epic-prereqs.sh specs/projects/demo" /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_ANALYZE_REPORT" --profile "$ANALYZE_REPORT_PROFILE" --select level=project --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "project report transcript proves late load and all post-write gates" || fail "analyze report transcript (rc=$RC)"
+
+ADJUST_PROFILE="adjust"
+ADJUST_CMD="python3 .speck/scripts/context/speck_context.py $ADJUST_PROFILE --select level=story --root $ROOT"
+python3 "$LOADER" "$ADJUST_PROFILE" --select level=story --root "$ROOT" > "$T/adjust-story.out"
+ADJUST_OUT=$(<"$T/adjust-story.out")
+[[ "$ADJUST_OUT" == *"story-adjust-template.md"* ]] \
+  && [[ "$ADJUST_OUT" == *"references/story.md"* ]] \
+  && [[ "$ADJUST_OUT" != *"references/epic.md"* ]] \
+  && [[ "$ADJUST_OUT" != *"references/project.md"* ]] \
+  && pass "adjust loads exactly one blast-radius branch" || fail "adjust branch leaked a sibling"
+
+TRANSCRIPT_ADJUST="$T/adjust-story.jsonl"
+write_transcript "$TRANSCRIPT_ADJUST" \
+  cmd "$ADJUST_CMD" "$T/adjust-story.out" 0 \
+  change "specs/projects/demo/stories/S001/story-adjust-report-20260810.md" \
+  cmd "bash .speck/scripts/stamp-truth.sh specs/projects/demo/stories/S001/story-adjust-report-20260810.md" /dev/null 0 \
+  cmd "bash .speck/scripts/validation/validate-template.sh --strict specs/projects/demo/stories/S001/story-adjust-report-20260810.md" /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_ADJUST" --profile "$ADJUST_PROFILE" --select level=story --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "adjust transcript proves load-before-mutation and closure gates" || fail "adjust transcript (rc=$RC)"
+
+TRANSCRIPT_ADJUST_LEAK="$T/adjust-story-leak.jsonl"
+echo "sibling leak" > "$T/adjust-leak.out"
+write_transcript "$TRANSCRIPT_ADJUST_LEAK" \
+  cmd "$ADJUST_CMD" "$T/adjust-story.out" 0 \
+  cmd "cat .cursor/skills/adjust/references/project.md" "$T/adjust-leak.out" 0 \
+  change "specs/projects/demo/stories/S001/story-adjust-report-20260810.md" \
+  cmd "bash .speck/scripts/stamp-truth.sh specs/projects/demo/stories/S001/story-adjust-report-20260810.md" /dev/null 0 \
+  cmd "bash .speck/scripts/validation/validate-template.sh --strict specs/projects/demo/stories/S001/story-adjust-report-20260810.md" /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_ADJUST_LEAK" --profile "$ADJUST_PROFILE" --select level=story
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -q "SELECTIVITY" \
+  && pass "post-hoc validator rejects sibling adjustment context" || fail "adjust sibling leak should fail SELECTIVITY (rc=$RC)"
+
 if [[ "$FAILED" == 0 ]]; then
   echo ""
   echo "All validate-context-transcript tests passed."

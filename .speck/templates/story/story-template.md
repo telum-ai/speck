@@ -78,7 +78,7 @@ As a [persona-id], I want to [action] so that I can [outcome].
 > `#### AC-N — [name]`, numbered from 1, stable for the life of the story. The traceability matrix
 > discharges promises by pointing at these anchors — `Discharge = E0NN/S0MM/AC-N` (or bare `AC-N`
 > inside this story's own epic docs). An `AC-N` referenced by a matrix row that does not exist here
-> is a `DANGLING_REF.P1`. Renumber only via `/story-adjust` (never silently) — a matrix points at
+> is a `DANGLING_REF.P1`. Renumber only via `/adjust --level story` (never silently) — a matrix points at
 > the number. Keep the `— [name]` label; the number is the machine key.
 
 #### AC-1 — [Primary success path]

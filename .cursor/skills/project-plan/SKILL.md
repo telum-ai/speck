@@ -31,11 +31,11 @@ Read `.speck/project.json` → `play_level`.
 If `play_level=build` and plan yields **≥4 epics** → STOP; warn:
 
 Required before continue: `architecture.md`, `ux-strategy.md`.
-Required after plan: `/project-analyze` (3 lenses) before any `/epic-specify`.
+Required after plan: `/analyze --level project` (3 lenses) before any `/epic-specify`.
 
 Options: `/project-promote` (6+ epics) · architecture+ux then continue · reduce to ≤3 epics.
 
-Platform: `/project-analyze` required regardless of epic count.
+Platform: `/analyze --level project` required regardless of epic count.
 
 ## 2. Load foundation
 
@@ -96,7 +96,7 @@ PRD covers project goals; epics cover scope; no gaps/overlaps; dependencies + me
 
 | Step | When |
 |------|------|
-| `/project-analyze` | REQUIRED Platform; Build 4+; recommended Build 1–3 |
+| `/analyze --level project` | REQUIRED Platform; Build 4+; recommended Build 1–3 |
 | `/project-roadmap` | Optional timeline |
 | `/epic-specify` | Blocked until analyze gate clears |
 | `/project-validate` | Post-implementation only — NOT now |
@@ -110,4 +110,4 @@ Never write `.analysis-gate-grandfathered` on new plans.
 - NEVER mark placeholder epics Specified
 - NEVER grandfather a new corpus
 - ALWAYS read both templates first
-- ALWAYS run `/project-analyze` before first `/epic-specify` when gate applies
+- ALWAYS run `/analyze --level project` before first `/epic-specify` when gate applies

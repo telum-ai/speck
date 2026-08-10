@@ -131,7 +131,7 @@ Create a comprehensive story breakdown that maps all user stories within the epi
      same actor, protected boundary, and outcome; shared vocabulary alone is not
      a semantic match. Correct any wrong-promise/wrong-AC pairing before save.
    - Update its Status from `open` to `mapped` (or `pilot-gated` if retrofitted/deferred).
-   - Verify that there are zero `open` rows left in the matrix. Any unmapped/open rows remaining will block `/epic-analyze` as a P1 unresolved promise.
+   - Verify that there are zero `open` rows left in the matrix. Any unmapped/open rows remaining will block `/analyze --level epic` as a P1 unresolved promise.
    - Run `bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --check-fidelity "$EPIC_DIR"`; treat every fidelity warning as a mapping review item, not a pass.
 
 7. Output summary:
@@ -157,7 +157,7 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    1. Review story breakdown with team
    2. Run /story-specify on Phase 1 stories to complete the draft specs
    3. Stories marked [P] can be specified/implemented in parallel
-   4. Or run /epic-analyze for validation first
+   4. Or run /analyze --level epic for validation first
 
    Note: Placeholder specs have lifecycle state "Draft (Placeholder)" in their spec.md.
    /story-specify reads this state and fills in the full specification in-place.

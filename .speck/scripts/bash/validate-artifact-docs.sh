@@ -65,7 +65,7 @@ done
 
 check_agents "project-*-research-report-*.md"
 
-# v10.3: /project-analyze became a required gate at Platform / 4+-epic Build, so its output artifact
+# v10.3: /analyze --level project became a required gate at Platform / 4+-epic Build, so its output artifact
 # has to appear in the routing table like every other canonical artifact.
 # Honest scope: this asserts a DOCUMENTATION row exists in AGENTS.md. It is not evidence that the
 # gate fires — the v10.2 "every gate has a caller" sweep deliberately discarded prose mentions so a

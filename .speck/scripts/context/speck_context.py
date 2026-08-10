@@ -93,8 +93,8 @@ def get_profile(
     gates = entry.get("post_write_gates", [])
     all_gates = entry.get("post_write_gates_all", [])
 
-    if not isinstance(required, list) or not required:
-        raise ContextError(f"profile {profile!r} requires non-empty required_files list")
+    if not isinstance(required, list):
+        raise ContextError(f"profile {profile!r} required_files must be a list")
     if not all(isinstance(p, str) and p for p in required):
         raise ContextError(f"profile {profile!r} required_files must be strings")
     if not isinstance(forbidden, list) or not all(isinstance(p, str) for p in forbidden):
@@ -103,6 +103,11 @@ def get_profile(
         raise ContextError(f"profile {profile!r} post_write_gates must be a string list")
     if not isinstance(all_gates, list) or not all(isinstance(p, str) for p in all_gates):
         raise ContextError(f"profile {profile!r} post_write_gates_all must be a string list")
+    read_only = entry.get("read_only", False)
+    if not isinstance(read_only, bool):
+        raise ContextError(f"profile {profile!r} read_only must be boolean")
+    if read_only and (gates or all_gates):
+        raise ContextError(f"read-only profile {profile!r} cannot declare post-write gates")
 
     selected = selections or {}
     selector_specs = entry.get("selectors", {})
@@ -151,6 +156,10 @@ def get_profile(
                         exclusive_forbidden.extend(p for p in siblings if isinstance(p, str))
 
     normalized_required = [normalize_rel(p) for p in resolved_required]
+    if not normalized_required:
+        raise ContextError(
+            f"profile {profile!r} selection resolves no required context files"
+        )
     if len(set(normalized_required)) != len(normalized_required):
         raise ContextError(f"profile {profile!r} has duplicate required_files paths")
 
@@ -169,6 +178,7 @@ def get_profile(
         "forbidden_files": sorted(normalized_forbidden),
         "post_write_gates": gates,
         "post_write_gates_all": list(dict.fromkeys(resolved_all_gates)),
+        "read_only": read_only,
         "selections": dict(sorted(selected.items())),
     }
 

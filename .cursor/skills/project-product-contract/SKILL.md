@@ -7,7 +7,7 @@ paths:
 
 # project-product-contract
 
-Intent: author initial contract or refresh during greenfield planning. Validated/shipped contract with deliberate strategic change → `/project-adjust` (cascade), not silent re-author.
+Intent: author initial contract or refresh during greenfield planning. Validated/shipped contract with deliberate strategic change → `/adjust --level project` (cascade), not silent re-author.
 Output: `specs/projects/[PROJECT_ID]/product-contract.md` (template: `.speck/templates/project/product-contract-template.md`).
 
 ## 0. Template

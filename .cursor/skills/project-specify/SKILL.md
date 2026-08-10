@@ -13,7 +13,7 @@ Template: `.speck/templates/project/project-template.md`.
 
 ## 0. Completed project check
 
-If project validated/completed and user wants pivot/redesign → STOP; route `/project-adjust` (not this skill).
+If project validated/completed and user wants pivot/redesign → STOP; route `/adjust --level project` (not this skill).
 
 ## 1. Template
 
@@ -78,7 +78,7 @@ Consult `AGENTS.md` command phases for play-level order. Typical: `/project-clar
 
 ## NEVER / ALWAYS
 
-- NEVER run on validated project for pivots — use `/project-adjust`
+- NEVER run on validated project for pivots — use `/adjust --level project`
 - NEVER skip template read
 - NEVER leave generic placeholders unfilled
 - ALWAYS write `project_archetype` + `play_level` to `.speck/project.json`

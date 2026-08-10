@@ -72,7 +72,7 @@ Write `epic.md` from template:
 - `[FROM SCAN]` under Information Sources for code evidence
 - `[INFERRED]` for unverified inferences
 - `[NEEDS CLARIFICATION: …]` for uncertain items
-- Do NOT paste endpoint/file inventories into `epic.md` — those go in `epic-codebase-scan.md` via `/epic-scan`
+- Do NOT paste endpoint/file inventories into `epic.md` — those go in `epic-codebase-scan.md` via `/speck-scan --level epic`
 
 ## 5. Cross-epic analysis
 
@@ -84,7 +84,7 @@ Return (no new report template):
 - Epics: name, size, est. stories, confidence
 - Dependency order
 - Coverage gaps / unclear boundaries
-- Next: `/epic-clarify`, `/epic-scan`, `/story-extract`, `/epic-specify`, `/project-plan`
+- Next: `/epic-clarify`, `/speck-scan --level epic`, `/story-extract`, `/epic-specify`, `/project-plan`
 
 ## 7. Refinement
 
@@ -94,7 +94,7 @@ Route by outcome:
 - Many small → suggest combine
 - Few large → suggest split by journey
 - Clear → `/story-extract` or `/epic-plan`
-- Unclear → team input + `/epic-scan`
+- Unclear → team input + `/speck-scan --level epic`
 
 ## Patterns
 
@@ -111,4 +111,4 @@ Route by outcome:
 - NEVER put deep technical inventories in `epic.md`
 - NEVER skip dependency map
 - ALWAYS mark inference confidence honestly
-- ALWAYS recommend `/epic-scan` before planning for evidence depth
+- ALWAYS recommend `/speck-scan --level epic` before planning for evidence depth

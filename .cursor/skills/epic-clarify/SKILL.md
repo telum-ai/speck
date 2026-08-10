@@ -85,7 +85,7 @@ Goal: Detect and reduce ambiguity in the epic specification before moving to tec
    | `/epic-constitution` | Regulated domain; defines API boundary; multi-team coordination | Domain-specific rules not in project constitution | Simple feature, no compliance concerns |
    | `/epic-architecture` | Touches 2+ services; new infra; explicit perf targets; complex new integrations | Modifies existing API contracts; new architectural patterns | Simple CRUD; single-service; clear path |
    | `/epic-journey` + `/epic-wireframes` | Any mention of UI, screens, forms, user flows, front-end | Mixes backend and light UI | Backend-only / API-only / CLI / infra |
-   | `/epic-outline` | Unfamiliar tech; TBD sections; competing technical approaches | Minor unknowns | Clear path, established patterns |
+   | `/speck-skeptical-review` | Unfamiliar tech; TBD sections; competing technical approaches | Minor unknowns | Clear path, established patterns |
 
    Output:
    ```
@@ -96,7 +96,7 @@ Goal: Detect and reduce ambiguity in the epic specification before moving to tec
    | /epic-constitution         | ⬜ /  / 🔴 | "[observation]" |
    | /epic-architecture         | ⬜ /  / 🔴 | "[observation]" |
    | /epic-journey + /wireframes| ⬜ / 🔴       | "[observation]" |
-   | /epic-outline              | ⬜ /        | "[observation]" |
+   | /speck-skeptical-review              | ⬜ /        | "[observation]" |
 
    Recommended path to /epic-plan:
    → [only Required/Recommended steps in flow order] → /epic-plan

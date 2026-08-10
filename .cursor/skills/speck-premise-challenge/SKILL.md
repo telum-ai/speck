@@ -35,7 +35,7 @@ When executing a Premise-Challenge pass, the agent must adopt a hostile, highly 
 - Is the value proposition immediately clear on this screen?
 - Are we showing generic AI cheerleading copy instead of real, governed product copy?
 - Does the screen feel like a "chore" rather than a "magic moment"?
-- **Paywall / pricing surfaces**: adopt a skeptical buyer who *already has free general-purpose AI*. Could they get ~this outcome from ChatGPT/Claude + 15 minutes, a spreadsheet, or a free tier? If yes, what is the durable, defensible reason to pay — and is that reason actually visible on this screen? "Better UX / convenience" alone is a **failed premise** (→ `/project-adjust` on the differentiator, not a copy tweak). Cross-check `product-contract.md` §2a.
+- **Paywall / pricing surfaces**: adopt a skeptical buyer who *already has free general-purpose AI*. Could they get ~this outcome from ChatGPT/Claude + 15 minutes, a spreadsheet, or a free tier? If yes, what is the durable, defensible reason to pay — and is that reason actually visible on this screen? "Better UX / convenience" alone is a **failed premise** (→ `/adjust --level project` on the differentiator, not a copy tweak). Cross-check `product-contract.md` §2a.
 
 ### 3. Challenge the Failure Paths
 - When this fails, does the user feel stupid, or do they feel supported?
@@ -47,8 +47,8 @@ When executing a Premise-Challenge pass, the agent must adopt a hostile, highly 
 
 A Premise-Challenge pass results in one of two outcomes:
 
-1. **Premise Wrong (Escalate to `/project-adjust`)**:
-   - If the underlying contract design is fundamentally flawed or feels bad, the agent **MUST** halt implementation and trigger `/project-adjust` to re-spec the contract delta and compute the reverse cascade.
+1. **Premise Wrong (Escalate to `/adjust --level project`)**:
+   - If the underlying contract design is fundamentally flawed or feels bad, the agent **MUST** halt implementation and trigger `/adjust --level project` to re-spec the contract delta and compute the reverse cascade.
 2. **Premise Accepted (Escalate to DEC)**:
    - If the design decision is questionable but consciously accepted due to constraints (e.g., legal compliance, technical limitations), the decision **MUST** be logged as a conscious DEC in `project-decisions-log.md` with alternatives and trade-offs.
 
@@ -58,6 +58,6 @@ A Premise-Challenge pass results in one of two outcomes:
 
 - **"This feels off" is a first-class thread**: Never ignore a gut-level taste or UX concern. If something feels awkward, clunky, or confusing, it is a failed premise. The AI is expected to apply this taste judgment itself — that is the whole point of the FELT-GOOD axis.
 - **Never conflate CORRECT/ON-CONTRACT with good**: A green test suite and a conforming LARP do not mean the product is ready to ship.
-- **Never launder a taste miss as "uncatchable by automation"**: If a user experience is poor, do not excuse it as an autonomous limitation. Run the naive lens, apply taste judgment, and document the finding. Escalation to a human operator is reserved for *contract-premise* problems (which force a `/project-adjust` or a conscious DEC) — it is NOT a way to offload the FELT-GOOD taste judgment the AI should be making.
+- **Never launder a taste miss as "uncatchable by automation"**: If a user experience is poor, do not excuse it as an autonomous limitation. Run the naive lens, apply taste judgment, and document the finding. Escalation to a human operator is reserved for *contract-premise* problems (which force a `/adjust --level project` or a conscious DEC) — it is NOT a way to offload the FELT-GOOD taste judgment the AI should be making.
 
 *[as of SHA HEAD | verified 2026-07-02 | speck 8.0.0]*

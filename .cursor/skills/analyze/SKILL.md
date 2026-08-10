@@ -1,32 +1,50 @@
 ---
 name: analyze
-description: Routes analyze by --level. Use when analyzing planning corpus or epic breakdown.
+description: Runs decorrelated project or epic planning analysis. Use after project-plan or epic-breakdown.
 ---
 
-The user input can be provided directly by the agent or as a command argument:
+# analyze
 
-$ARGUMENTS
+Canonical planning-analysis engine. `$ARGUMENTS` may contain `--level project|epic`.
 
-## Purpose
+## Select level and tier
 
-`/analyze` is the unified, level-dispatching entry point for Speck pre-implementation analysis. It detects the level and routes to the specialist.
+1. Honor explicit `--level`; else infer project vs epic from the target path. Story analysis is retired: route pre-implementation consistency to `/story-tasks` and post-implementation challenge to `/audit`.
+2. Project requires `project.md`, `PRD.md`, `epics.md`; epic requires `epic.md`, `epic-tech-spec.md`, `epic-breakdown.md`. STOP on a missing prerequisite.
+3. Read `.speck/project.json` (`play_level`; missing = Platform). Count epics from `epics.md` and `epics/` directories.
+4. Sprint / Build 1-3 analysis is optional-recommended. If skipped, STOP with the reason. If run, use the Build lens tier. Build 4+ uses Build; Platform uses Platform.
 
-## Level detection
+## Load the selected core
 
-Use `--level <project|epic|story>` if provided. Otherwise infer from the current directory:
+Before analysis, run exactly one receipted load:
 
-1. In `specs/projects/<id>/epics/<eid>/stories/<sid>/` → **story** (see note below)
-2. In `specs/projects/<id>/epics/<eid>/` → **epic**
-3. In `specs/projects/<id>/` or higher → **project**
+```bash
+python3 .speck/scripts/context/speck_context.py analyze-core \
+  --select level=<project|epic> --select tier=<build|platform>
+```
 
-## Routing
+The level edge loads only its corpus rules. Project MUST NOT load `references/traceability.md`; epic MUST load it. Build loads `references/tiers/build-4.md`; Platform loads `references/tiers/platform.md`. Both load `references/spine.md` and `references/promise-inventory.md`. Report templates and `references/reports/*` are forbidden until findings return.
 
-| Level | Read and fully execute |
-|-------|------------------------|
-| epic | `.cursor/skills/epic-analyze/SKILL.md` |
-| project | `.cursor/skills/project-analyze/SKILL.md` |
-| story | **Retired** — do not author a standalone `analysis-report.md`. The pre-impl spec↔plan↔tasks consistency check runs at the tail of `/story-tasks`; the adversarial behavior-vs-spec check is `/audit` (`speck-audit`) after implementation. |
+## Dispatch lenses
 
-**Read the target `SKILL.md` and follow it end-to-end.**
+Use the tier's required lens ids. For each id, dispatch one reviewer that did not author the corpus. That reviewer runs exactly one level-specific loader and receives the artifact list:
 
-> v8: `/project-analyze`, `/epic-analyze` remain valid direct entry points (unchanged, full logic). `/story-analyze` is a retired alias-shim (folded into `/story-tasks` + `/audit`). `/analyze` is a convenience that unifies the surface — dispatcher pattern, no lossy merge.
+```bash
+python3 .speck/scripts/context/speck_context.py analyze-<project|epic>-lens \
+  --select lens=L#
+```
+
+The loader emits `references/lens-spine.md` plus exactly one of `references/lenses/project/L#.md` or `references/lenses/epic/L#.md`; sibling level and lens nodes are forbidden. The conductor does not preload lens nodes. Lenses do not share findings before verification.
+
+## Finish
+
+After findings return, run exactly one second-stage load before any report mutation:
+
+```bash
+python3 .speck/scripts/context/speck_context.py analyze-report \
+  --select level=<project|epic>
+```
+
+It emits the selected template plus exactly one of `references/reports/project.md` or `references/reports/epic.md`. Follow it to verify findings, write the report, run gates, commit after the analyzed corpus, and declare `BLOCKED | NEEDS_FIXES | CLEAN`. Read `references/gate-codes.md` only when enforcing or explaining analysis codes.
+
+Direct `/project-analyze` and `/epic-analyze` names are user-only compatibility shims into this engine. STOP on any loaded-node STOP.

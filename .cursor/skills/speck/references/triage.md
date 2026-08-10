@@ -7,9 +7,9 @@
 | Input kind | Route |
 |------------|-------|
 | Defect / bug / incident | `/harden` |
-| Story redesign / visual overhaul | `/story-adjust` |
-| Epic structural / IA pivot | `/epic-adjust` |
-| Project contract / direction pivot | `/project-adjust` + `compute-cascade.sh` → fan out epic/story-adjust |
+| Story redesign / visual overhaul | `/adjust --level story` |
+| Epic structural / IA pivot | `/adjust --level epic` |
+| Project contract / direction pivot | `/adjust --level project` + `compute-cascade.sh` → fan out `/adjust --level epic|story` |
 | New feature / scope expansion | `/epic-specify` or `/story-specify` |
 | Engagement gap / "still working?" | `/recheck` |
 | Play-level outgrowth | `/project-promote` |
@@ -34,7 +34,7 @@ Match `$ARGUMENTS` against `.speck/recipes/*/recipe.yaml` `keywords:` (case-inse
 
 ## 7. Key transitions
 
-**Project → Epic**: after `/project-plan` → `/project-analyze` (when required) → `/project-roadmap` (optional) → `/epic-specify` per epic.
+**Project → Epic**: after `/project-plan` → `/analyze --level project` (when required) → `/project-roadmap` (optional) → `/epic-specify` per epic.
 
 **Epic → Story**: after `/epic-clarify` → [/epic-architecture if complex] → `/epic-plan` → `/epic-breakdown` → `/story-specify` per story.
 

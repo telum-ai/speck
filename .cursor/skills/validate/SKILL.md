@@ -1,6 +1,7 @@
 ---
 name: validate
-description: Routes validate by --level. Use when validating story/epic/project.
+description: User-only router for /validate --level. Auto-selection uses the project, epic, or story validator directly.
+disable-model-invocation: true
 ---
 
 The user input can be provided directly by the agent or as a command argument:
@@ -31,4 +32,4 @@ If the level is still ambiguous, ask the user which level to validate.
 
 **Read the target `SKILL.md` and follow it end-to-end** (including its FIRST-ACTION template reads). Emitting a `validation-report.md` without running the specialist is simulation, not validation (Verify-Skills Gate).
 
-> v8: `/project-validate`, `/epic-validate`, `/story-validate` remain valid direct entry points (unchanged, full logic). `/validate` is a convenience that unifies the surface — dispatcher pattern, no lossy merge of the specialists.
+This router exists for explicit user convenience. Automatic selection uses the level specialist directly.

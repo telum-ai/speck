@@ -11,12 +11,26 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 # Build a fake tree with validator + lib copied so ROOT=TMP works
-mkdir -p "$TMP/.speck/scripts/validation/validators" "$TMP/.cursor/skills/good" "$TMP/.speck"
+mkdir -p "$TMP/.speck/scripts/validation/validators" "$TMP/.cursor/skills/good" "$TMP/.speck/reference"
 cp "$ROOT/.speck/scripts/validation/validators/validate-corpus-budget.sh" \
    "$TMP/.speck/scripts/validation/validators/"
 cp "$ROOT/.speck/scripts/validation/validators/_corpus_budget_lib.py" \
    "$TMP/.speck/scripts/validation/validators/"
 printf '# grandfather\n' > "$TMP/.speck/corpus-budget-grandfather.txt"
+cat > "$TMP/.speck/reference/skill-catalog-policy.json" <<'EOF'
+{
+  "schema_version": 1,
+  "explicit_user_only": [],
+  "compatibility_shims": [],
+  "families": {
+    "test": {
+      "auto_entrypoints": ["good"],
+      "user_only_routers": [],
+      "compatibility_shims": []
+    }
+  }
+}
+EOF
 
 # 250-line AGENTS should fail line ceiling
 {
@@ -270,5 +284,51 @@ if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$
   echo "FAIL: expected dynamic contract budget failure"
   exit 1
 fi
+
+python3 - "$TMP/.speck/reference/skill-load-contracts.json" <<'PY'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+data = json.loads(path.read_text())
+data["profiles"]["good-dynamic"]["max_bytes"] = 10000
+path.write_text(json.dumps(data))
+PY
+mkdir -p "$TMP/.cursor/skills/old-good"
+cat > "$TMP/.cursor/skills/old-good/SKILL.md" <<'EOF'
+---
+name: old-good
+description: Compatibility alias for good. Invoke only when the user names old-good.
+---
+
+# old-good compatibility shim
+Read and fully execute `.cursor/skills/good/SKILL.md`.
+EOF
+python3 - "$TMP/.speck/reference/skill-catalog-policy.json" <<'PY'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+data = json.loads(path.read_text())
+data["families"]["test"]["compatibility_shims"] = ["old-good"]
+path.write_text(json.dumps(data))
+PY
+
+echo "Test: compatibility shim left auto-invocable fails"
+OUT=$(bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP" 2>&1) && {
+  echo "FAIL: expected catalog-policy failure"
+  exit 1
+}
+grep -q "old-good disable-model-invocation must be true" <<<"$OUT" || {
+  echo "FAIL: expected precise shim invocation failure"
+  echo "$OUT"
+  exit 1
+}
+
+python3 - "$TMP/.cursor/skills/old-good/SKILL.md" <<'PY'
+import pathlib, sys
+path = pathlib.Path(sys.argv[1])
+text = path.read_text()
+path.write_text(text.replace("description: Compatibility alias for good. Invoke only when the user names old-good.\n", "description: Compatibility alias for good. Invoke only when the user names old-good.\ndisable-model-invocation: true\n"))
+PY
+
+echo "Test: declared user-only compatibility shim passes"
+bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"
 
 echo "All corpus-budget tests passed"

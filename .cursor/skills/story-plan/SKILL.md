@@ -43,7 +43,7 @@ Embed detailed architecture in plan if ANY: cross-cutting; new pattern; new exte
 
 Minimal plan if ALL: single-file; existing patterns; standard CRUD/form.
 
-High ambiguity → `/story-outline` first.
+High ambiguity → `/speck-skeptical-review` first.
 
 ## 4. Load constitution + project docs
 

@@ -1,6 +1,7 @@
 ---
 name: epic-outline
 description: Retired alias → speck-skeptical-review / story-tasks. Use when /epic-outline named.
+disable-model-invocation: true
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"
@@ -17,4 +18,4 @@ The v6 outline (a separate research-mapping step) no longer exists as its own ar
 
 **Do this instead**: `/epic-clarify` → (`/speck-skeptical-review` if the approach is unclear) → `/epic-plan`.
 
-> Alias-shim kept for muscle memory / back-compat. See `docs/v8/v8-north-star.md` §4 and AGENTS.md.
+Alias kept for user-invoked muscle memory and excluded from automatic selection.

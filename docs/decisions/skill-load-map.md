@@ -8,7 +8,7 @@ Canonical inventory for ADR-0005. Every skill is exactly one class:
 |-------|------|
 | `inline` | Always-path → dense `SKILL.md` only (0 refs). No fake multi-ref “DAG”. |
 | `dag` | Router ≤80 lines states **cheap branch keys inline**, then conditional `MUST Read` / `Do not Read`. ≥2 refs. |
-| `shim` | Thin alias → other skill (keep short) |
+| `shim` | Thin compatibility alias or explicit convenience router; user-only |
 
 **Hard rule:** The agent must decide whether to load a ref from the router alone. Never “Read X when that domain applies” — that forces loading X to learn the predicate and defeats JIT.
 
@@ -18,8 +18,8 @@ CI enforces: ban predicate-hiding phrasing; ban unconditional fake DAGs; require
 
 | Skill | Cheap keys (must be readable in router) | Nodes |
 |-------|-------------------------------------------|-------|
-| epic-analyze | play_level, epic count, lens id | spine, tiers/*, lenses/L*, … |
-| project-analyze | play_level, epic count, lens id | same shape |
+| analyze | level, play_level/epic count, phase, lens id | core scope, one reviewer lens, late report template |
+| adjust | promise blast radius | exactly one story/epic/project branch + template |
 | story-validate | archetype, claimed_state, UI, visual host | spine, backend-skip, larp, states/*, axes/*, … |
 | epic-validate | archetype, claimed_state, UI | rollup/matrix/graph + states + axes |
 | project-validate | claimed_state, PROFILE, commercial | states/*, profile, coverage, gate-liveness, … |
@@ -42,9 +42,18 @@ CI enforces: ban predicate-hiding phrasing; ban unconditional fake DAGs; require
 
 Including former “domain-refs” that had no cheap skip: `epic-experience-chain`, `epic-breakdown`, `epic-clarify`, `epic-constitution`, `project-constitution`, `epic`, `story`, `harden`, `visual-quality`, `speck-learn`, `speck-recheck`, `speck-reprove`, `speck-migrate`, `speck-catch-up`, `speck-frontier-scan`, `project-plan`, `story-ui-spec`, plus all other always-path process skills (specify/plan/import/…).
 
+## shim / user router
+
+- Analyze compatibility: `project-analyze`, `epic-analyze`, `story-analyze`
+- Adjust compatibility: `project-adjust`, `epic-adjust`, `story-adjust`
+- Scan compatibility: `project-scan`, `epic-scan`, `story-scan`
+- Retired compatibility: `epic-outline`, `story-outline`
+- Convenience routers over genuinely different specialists: `validate`, `retrospective`
+
 ## Frontmatter
 
-- `disable-model-invocation: true` only: speck, story, epic
+- `disable-model-invocation: true`: exact entries in `.speck/reference/skill-catalog-policy.json`
+- Families: analyze/adjust/scan each expose one canonical auto entry; validate/retrospective expose level specialists and keep their generic router user-only
 - Cursor `paths:` (auto-surface scoping):
   - `story-*` → `specs/projects/**/S*/**`, `specs/projects/**/stories/**`
   - `epic-*` → `specs/projects/**/E*/**`, `specs/projects/**/epics/**`

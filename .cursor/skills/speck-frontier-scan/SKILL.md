@@ -119,7 +119,7 @@ This skill also runs against a **product's live market** instead of Speck's own 
 **Output**: `specs/projects/<PROJECT_ID>/project-market-research-report-<YYYYMMDD>.md` (matches the existing `project-*-research-report-*.md` routing glob — no new routing row). Reuse the report skeleton above with the four angles re-pointed.
 
 **Then**:
-- Propose concrete `/project-adjust` deltas to §3 / §2a / §3a / PRD. **Never auto-rewrite §3** — the differentiator is an always-preserve; STOP-AND-PROPOSE.
+- Propose concrete `/adjust --level project` deltas to §3 / §2a / §3a / PRD. **Never auto-rewrite §3** — the differentiator is an always-preserve; STOP-AND-PROPOSE.
 - Re-stamp the differentiator via the SOLE writer (`stamp-market.sh` refuses without an existing report, and for `holds` requires `sources ≥ market_sources_floor` — so a claim can never read fresh without a real sourced re-validation behind it, P2):
 
   ```bash
@@ -142,4 +142,4 @@ This skill also runs against a **product's live market** instead of Speck's own 
 
 - Required input: Perplexity/WebSearch access, existing Speck methodology (`AGENTS.md`).
 - Required output: `project-frontier-research-report-<YYYYMMDD>.md` (with SHA stamp).
-- Downstream consumers: `/project-adjust`, `/epic-adjust`, and developer-facing backlogs.
+- Downstream consumers: `/adjust --level project`, `/adjust --level epic`, and developer-facing backlogs.

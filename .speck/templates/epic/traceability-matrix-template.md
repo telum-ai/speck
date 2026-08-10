@@ -37,7 +37,7 @@ the value. An un-graded discharged row is treated as story-grain (integration-gr
 un-graded matrix cannot back a product-grain (≥ ux-rc) claim: the honest, humble default.
 
 Enforced by .speck/scripts/validation/validators/validate-traceability-matrix.sh:
-  • default mode (epic-analyze, pre-commit): once epic-breakdown.md exists, NO row may be open —
+  • default mode (`/analyze --level epic`, pre-commit): once epic-breakdown.md exists, NO row may be open —
     every row needs a discharge (story+AC) or a DEC/pilot-gated status. Grain is OPTIONAL here.
   • --require-evidence (epic-validate): every row must be `discharged`, `descoped`, or `pilot-gated`.
     Absent grain is never a conservation violation. As of v8.5.0 the grain teeth BLOCK here (at the
@@ -102,7 +102,7 @@ Enumerate EVERY promise this epic owns, from each source below, then give each a
 
 An un-graded discharged row counts as story-grain (integration-green): an un-graded matrix cannot back a product-grain (≥ ux-rc) claim. Grade discharged rows at the grain their evidence was collected — a helper-importing unit test is `impl-green`, not the story's headline state.
 
-Any open/undischarged row blocks `/epic-analyze` (P1) and bars the epic from claiming ANY readiness state at `/epic-validate`. Descope deliberately (with a DEC), defer (with pilot-gated and a backing reference), or discharge it — never let it evaporate.
+Any open/undischarged row blocks `/analyze --level epic` (P1) and bars the epic from claiming ANY readiness state at `/epic-validate`. Descope deliberately (with a DEC), defer (with pilot-gated and a backing reference), or discharge it — never let it evaporate.
 
 ---
 

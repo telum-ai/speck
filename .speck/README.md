@@ -181,12 +181,12 @@ Speck adapts artifact depth to project stage. Play level lives in `.speck/projec
 | Level | When | Required PROMISE artifacts | Required PROVE gates |
 |-------|------|---------------------------|----------------------|
 | **Sprint** | Weekend bets, prototypes, simple tools | `PRD.md` (sprint) + `sprint-log.md` | LARP at validate |
-| **Build** | Products with subscriptions, dashboards, teams | `product-contract.md` + `evidence-contract.md` + `context.md` | LARP + `/audit` + decision log + readiness states; `/project-analyze` required at 4+ epics |
-| **Platform** | Enterprise, marketplace, multi-system | Full foundation (incl. domain-model, ux-strategy, design-system, constitution, architecture) | Full PROVE pillar + `/project-analyze` after `/project-plan` + `/recheck` on every engagement gap |
+| **Build** | Products with subscriptions, dashboards, teams | `product-contract.md` + `evidence-contract.md` + `context.md` | LARP + `/audit` + decision log + readiness states; `/analyze --level project` required at 4+ epics |
+| **Platform** | Enterprise, marketplace, multi-system | Full foundation (incl. domain-model, ux-strategy, design-system, constitution, architecture) | Full PROVE pillar + `/analyze --level project` after `/project-plan` + `/recheck` on every engagement gap |
 
-**Build complexity gate**: If a Build project hits **4+ epics**, `architecture.md`, `ux-strategy.md`, and a cleared `/project-analyze` become required. Consider `/project-promote` to Platform instead of patching Build.
+**Build complexity gate**: If a Build project hits **4+ epics**, `architecture.md`, `ux-strategy.md`, and a cleared `/analyze --level project` become required. Consider `/project-promote` to Platform instead of patching Build.
 
-**Planning-analysis gate (v10.3)**: `/project-analyze` is **required** after `/project-plan` and before any `/epic-specify` — at Platform, and at Build with 4+ epics (the same threshold that already forces architecture + ux-strategy). Below that threshold it stays optional and recommended. It became required because a planning corpus can pass every inline gate and still be wrong: one that walked the full canonical Build flow — every skill entered, five skeptical-review primitives, premise-challenge, strict validators green — still carried 1 CRITICAL and 13 HIGH defects, all 14 found only by a decorrelated multi-lens pass. The author of the corpus was the party deciding whether to invite the adversary. Lens tier: **3 mandatory at Build 4+** (promise-coverage · cross-artifact drift · completeness critic), **all 7 at Platform**; a lens whose reviewer authored a corpus artifact does not count toward the tier. `/epic-analyze` carries the same contract at the epic altitude.
+**Planning-analysis gate (v10.3)**: `/analyze --level project` is **required** after `/project-plan` and before any `/epic-specify` — at Platform, and at Build with 4+ epics (the same threshold that already forces architecture + ux-strategy). Below that threshold it stays optional and recommended. It became required because a planning corpus can pass every inline gate and still be wrong: one that walked the full canonical Build flow — every skill entered, five skeptical-review primitives, premise-challenge, strict validators green — still carried 1 CRITICAL and 13 HIGH defects, all 14 found only by a decorrelated multi-lens pass. The author of the corpus was the party deciding whether to invite the adversary. Lens tier: **3 mandatory at Build 4+** (promise-coverage · cross-artifact drift · completeness critic), **all 7 at Platform**; a lens whose reviewer authored a corpus artifact does not count toward the tier. `/analyze --level epic` carries the same contract at the epic altitude.
 
 **The gate is real forward, advisory backward.** Projects planned before v10.3 are grandfathered by a per-project marker file, `<PROJECT_DIR>/.analysis-gate-grandfathered` — they get a loud notice that repeats on every run at `/epic-specify` and `/recheck`, and are never blocked. Projects planned on v10.3+ block. The marker does not remove itself: once an analysis report exists next to it, `check-epic-prereqs.sh` calls the exemption spent and prints the `rm` command to retire it, so a stale exemption cannot quietly go on exempting. This asymmetry is deliberate and disclosed, not hidden.
 
@@ -264,13 +264,13 @@ graph TD
     G -->|No| J
     J --> K["Epics & E000 Infrastructure"]
     K --> L{"Platform, or<br/>Build with 4+ epics?"}
-    L -->|Yes| M["/project-analyze<br/>REQUIRED gate"]
-    L -->|No| N["/project-analyze<br/>optional, recommended"]
+    L -->|Yes| M["/analyze --level project<br/>REQUIRED gate"]
+    L -->|No| N["/analyze --level project<br/>optional, recommended"]
     M --> O["/epic-specify"]
     N --> O
 ```
 
-`/project-analyze` sits between planning and epic work on purpose: it is the only pass whose reviewers are decorrelated from the corpus authors. On the required side, `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start until the gate clears.
+`/analyze --level project` sits between planning and epic work on purpose: it is the only pass whose reviewers are decorrelated from the corpus authors. On the required side, `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start until the gate clears.
 
 Required artifacts at Build level:
 - `product-contract.md` — defines the paid promise, differentiator, banned language, magic moments, JTBD scorecard, AI behavior contract (if AI-using), longitudinal axes (if adaptive)
@@ -297,7 +297,7 @@ graph TD
     F --> G
     C -->|No| G
     G --> H["/epic-breakdown"]
-    H --> I["/epic-analyze<br/>required gate"]
+    H --> I["/analyze --level epic<br/>required gate"]
     I --> J["Story Work"]
     J --> K["/audit epic-level"]
     K --> L["/epic-validate"]
@@ -307,7 +307,7 @@ graph TD
 
 For UI epics, `experience-chain.md` is required before `/epic-plan` (prevents the "seven different apps stitched together" failure).
 
-`/epic-analyze` is a required gate before any story work, and its lenses must be decorrelated from whoever authored the epic corpus — same contract as `/project-analyze`, one altitude down.
+`/analyze --level epic` is a required gate before any story work, and its lenses must be decorrelated from whoever authored the epic corpus — same contract as `/analyze --level project`, one altitude down.
 
 ### 3. Story Work (BUILD → PROVE)
 
@@ -357,7 +357,7 @@ These apply at every play level, in every command, on every project — uncondit
 | **Engagement-gap recheck** | >2 weeks since verified OR new agent | Run `/recheck` before new work |
 | **Decision-lock log** | Every phase boundary | Enumerate decisions, log SHA + alternatives |
 | **Skeptical-review** | Before any non-trivial proposal locks | Produce N≥3 alternatives + tradeoff scoring |
-| **Planning-corpus adversary** | After `/project-plan` (Platform / Build 4+) · after `/epic-breakdown` | Run `/project-analyze` / `/epic-analyze` with lenses decorrelated from the corpus authors. Severity is by rule, not author judgment — a cross-artifact contradiction, an unaddressed `MM-N`/`JOB-N`, or a gate precondition that contradicts the evidence contract are CRITICAL by construction |
+| **Planning-corpus adversary** | After `/project-plan` (Platform / Build 4+) · after `/epic-breakdown` | Run `/analyze --level project` / `/analyze --level epic` with lenses decorrelated from the corpus authors. Severity is by rule, not author judgment — a cross-artifact contradiction, an unaddressed `MM-N`/`JOB-N`, or a gate precondition that contradicts the evidence contract are CRITICAL by construction |
 | **Skeptical audit** | Between implement and validate | Run `/audit` — auditor doesn't trust implementer |
 | **Runtime LARP** | Every UI story/epic validate gate | Run `/larp [persona]` — checked-in evidence |
 | **Readiness-state declaration** | At every validate | Declare IMPL-GREEN / UX-RC / COMMERCIAL-RC / SHIP-RC / SHIP / NO-SHIP |
@@ -521,7 +521,7 @@ These feed retrospectives. Without tags, learnings are lost.
 - Claim `SHIP-RC` based on dev-mode evidence
 - Generate a Speck artifact without reading its template and SKILL.md first
 - Run `/project-plan` before required PROMISE artifacts exist
-- Run `/epic-specify` on a Platform or 4+-epic Build project before `/project-analyze` has cleared
+- Run `/epic-specify` on a Platform or 4+-epic Build project before `/analyze --level project` has cleared
 - Let a reviewer who authored part of the planning corpus count as one of the required lenses
 - Skip `/audit` between implement and validate
 - Trust historical PASS docs over current runtime proof
@@ -532,7 +532,7 @@ These feed retrospectives. Without tags, learnings are lost.
 - Stamp truth artifacts with `[as of SHA <hash> | verified <date>]`
 - Surface 3+ alternatives at non-trivial decisions
 - Run `/larp` on UI stories at validate time
-- Run `/project-analyze` after `/project-plan` (required at Platform / Build 4+) and `/epic-analyze` after `/epic-breakdown`
+- Run `/analyze --level project` after `/project-plan` (required at Platform / Build 4+) and `/analyze --level epic` after `/epic-breakdown`
 - Run `/audit` between implement and validate
 - Declare a readiness state at every validate gate
 - Log decisions to `project-decisions-log.md` at phase boundaries

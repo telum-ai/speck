@@ -43,7 +43,7 @@ Document findings in template **Research Informing This Context** section.
 
 ## 4. BROWNFIELD
 
-Prereq: `project-landscape-overview.md` (else STOP → `/project-scan`).
+Prereq: `project-landscape-overview.md` (else STOP → `/speck-scan --level project`).
 
 1. Extract from scan: stack, architecture, integrations, quality metrics, components
 2. Pre-fill: Technology Constraints, Development Standards

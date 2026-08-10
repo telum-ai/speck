@@ -29,7 +29,7 @@
    Next Steps:
    - Required: /epic-plan (create tech spec)
    - Then: /epic-breakdown (map stories)
-   - Optional: /epic-analyze (validate design)
+   - Optional: /analyze --level epic (validate design)
    ```
 
 ## Architecture Coherence

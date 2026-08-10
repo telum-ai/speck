@@ -12,26 +12,26 @@
 /project-specify → /project-clarify → /project-product-contract → /project-readme → /project-evidence-contract
   → /project-context → [/project-architecture if cross-system]
   → /project-plan (creates PRD + epics + E000 infrastructure epic)
-  → [/project-analyze — recommended at 1-3 epics; REQUIRED at 4+ (see Build flow (4+ epics))]
+  → [/analyze --level project — recommended at 1-3 epics; REQUIRED at 4+ (see Build flow (4+ epics))]
   → per epic: /epic-specify → /epic-clarify → [/epic-architecture] → [/epic-experience-chain if UI]
-              → /epic-plan → /epic-breakdown → /epic-analyze
-  → per story: /story-specify → /story-clarify → [/story-scan] → /story-plan
+              → /epic-plan → /epic-breakdown → /analyze --level epic
+  → per story: /story-specify → /story-clarify → [/speck-scan --level story] → /story-plan
               → [/story-ui-spec if UI] → /story-tasks → /story-implement
               → /audit → /story-validate → /larp → /story-retrospective
   → /audit (epic-level) → /epic-validate → /larp (full JTBD walkthrough) → /epic-retrospective
   → /project-validate → /project-retrospective
 ```
 
-### Build flow (4+ epics) — gate triggers required architecture + ux-strategy + project-analyze
-Same as Build but `/project-architecture` and `/project-ux` are **required before** `/project-plan`, and `/project-analyze` is **required after** `/project-plan` and before the first `/epic-specify` — 3 decorrelated lenses minimum (promise-coverage · cross-artifact drift · completeness critic). `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start on `UNANALYZED_CORPUS.P1`.
+### Build flow (4+ epics) — gate triggers required architecture + ux-strategy + project analysis
+Same as Build but `/project-architecture` and `/project-ux` are **required before** `/project-plan`, and `/analyze --level project` is **required after** `/project-plan` and before the first `/epic-specify` — 3 decorrelated lenses minimum (promise-coverage · cross-artifact drift · completeness critic). `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start on `UNANALYZED_CORPUS.P1`.
 
 ### Platform flow
-Full flow: includes `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-readme` → `/project-evidence-contract` → `/project-plan` → `/project-analyze` (**required**, all 7 lenses) → `/project-roadmap`. `/project-state` keeps README status current after validation gates.
+Full flow: includes `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-readme` → `/project-evidence-contract` → `/project-plan` → `/analyze --level project` (**required**, all 7 lenses) → `/project-roadmap`. `/project-state` keeps README status current after validation gates.
 
 ### Reengagement & Intent Changes
 On any new session: read `project-state.md`.
 - If missing or stale (>2 weeks since last verified-against-runtime), run `/recheck` before any feature work to detect drift.
-- If the session is triggered by an **intent change** or **strategic pivot** to a completed/validated project, run `/project-adjust` to safely spec the delta and compute the reverse cascade rather than making silent code changes or re-authoring specs from scratch.
+- If the session is triggered by an **intent change** or **strategic pivot** to a completed/validated project, run `/adjust --level project` to safely spec the delta and compute the reverse cascade rather than making silent code changes or re-authoring specs from scratch.
 
 ### 🔄 Continuous Project Lifecycle & Post-Completion Triage Router
 
@@ -42,9 +42,9 @@ flowchart TD
   input["Input against a completed/validated project"]
   triage{"Kind x Level?"}
   defect["/harden - defect/bug fix"]
-  s["/story-adjust - story-level redesign/visual overhaul"]
-  e["/epic-adjust - epic-level structure/IA pivot"]
-  p["/project-adjust - project directional/intent change"]
+  s["/adjust --level story - story-level redesign/visual overhaul"]
+  e["/adjust --level epic - epic-level structure/IA pivot"]
+  p["/adjust --level project - project directional/intent change"]
   new_scope["/epic-specify or /story-specify - new scope/features"]
   drift["/recheck - engagement gap / audit"]
   promote["/project-promote - scale outgrowth"]
@@ -59,14 +59,14 @@ flowchart TD
   triage -->|"play-level outgrowth (e.g. Sprint->Build)"| promote
 
   p --> cascade["compute-cascade.sh: reverse blast-radius"]
-  cascade --> fanout["flag dependent epics/stories stale (CASCADE_STALE.P1) -> /epic-adjust each -> re-validate delta"]
+  cascade --> fanout["flag dependent epics/stories stale (CASCADE_STALE.P1) -> /adjust --level epic each -> re-validate delta"]
 ```
 
 #### Triage Router Decision Matrix
 1. **Defect/Bug Fix in Validated Work**: Run `/harden` to document root-cause and add systemic tests.
-2. **Deliberate Story Redesign/Visual Overhaul**: Run `/story-adjust` to spec the delta, update story `plan.md`, and conserve promises.
-3. **Deliberate Epic Structural Pivot / IA Redesign**: Run `/epic-adjust` to re-spec epic-level deltas and update epic `traceability-matrix.md`.
-4. **Project Directional Pivot / Strategic Contract Change**: Run `/project-adjust` to update `product-contract.md` and force a superseding DEC, run `compute-cascade.sh` to determine the blast-radius of affected downstream epics/stories, and route each to `/epic-adjust` or `/story-adjust`.
+2. **Deliberate Story Redesign/Visual Overhaul**: Run `/adjust --level story` to spec the delta, update story `plan.md`, and conserve promises.
+3. **Deliberate Epic Structural Pivot / IA Redesign**: Run `/adjust --level epic` to re-spec epic-level deltas and update epic `traceability-matrix.md`.
+4. **Project Directional Pivot / Strategic Contract Change**: Run `/adjust --level project` to update `product-contract.md` and force a superseding DEC, run `compute-cascade.sh` to determine the blast-radius of affected downstream epics/stories, and route each to `/adjust --level epic` or `/adjust --level story`.
 5. **New Features / Addition**: Run `/epic-specify` or `/story-specify` to draft new specs from scratch.
 6. **Time Gap / Audit**: Run `/recheck` to scan for drift, stale dependencies, and schema drift.
 7. **Scale/Rigor Outgrowth**: Run `/project-promote` to upgrade play levels (e.g. Sprint to Build, or Build to Platform).
@@ -103,7 +103,7 @@ Speck's rigor lives in the **skills** (the adversarial `/audit` probes, honest r
 **Verify-skills gate** — before ACCEPTING/merging a delegated result, the conductor MUST:
 
 1. Confirm required reports exist AND pass `.speck/scripts/validation/validate-template.sh --strict`.
-2. Verify ≥2 real skill invocations in the sub-agent transcript — stories: `speck-audit` + `story-validate`; epics: `epic-analyze` + `epic-validate`. Grep transcript/tool log for `"name":"Skill"`. Empty `skills_invoked` or zero Skill calls → REJECT + re-run.
+2. Verify ≥2 real skill invocations in the sub-agent transcript — stories: `speck-audit` + `story-validate`; epics: `analyze` (with a `level=epic` receipt) + `epic-validate`. Grep transcript/tool log for `"name":"Skill"`. Empty `skills_invoked` or zero Skill calls → REJECT + re-run.
    For a profile declared in `.speck/reference/skill-load-contracts.json`, also run `validate-context-transcript.py` with its exact selectors and require REACH, SELECTIVITY, TIMING, and GATE_USE independently green. A skill call without its required JIT receipt is incomplete execution.
 3. Require an independent `audit-report.md` by a SEPARATE auditor (not the implementer/validator). High-risk (P0/P1, sensitive data, auth/billing): N diverse-lens auditors; majority-refute; list lenses in the report.
 4. Verify `gate_checks` shows full pre-commit gate ran and passed (lint, typecheck, tests, build, banned-language). Missing/skipped/failed → reject. Green tests alone ≠ green gate.

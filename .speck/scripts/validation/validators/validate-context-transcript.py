@@ -628,6 +628,7 @@ def evaluate_axes(
     forbidden = set(spec["forbidden_files"])
     gates = spec["post_write_gates"]
     all_gates = spec.get("post_write_gates_all", [])
+    read_only = bool(spec.get("read_only", False))
     selections = spec.get("selections", {})
 
     loader_cmds = _loader_commands(transcript.commands, profile, selections)
@@ -723,7 +724,16 @@ def evaluate_axes(
     mutations = sorted([*transcript.file_changes, *inferred_changes], key=lambda event: event.index)
     first_change_idx = mutations[0].index if mutations else None
     receipt_idx = receipt_cmd.index
-    if first_change_idx is None:
+    if read_only:
+        if first_change_idx is None:
+            timing.status = "not_applicable"
+            timing.ok = True
+            timing.details.append("read-only profile observed no mutation; load-before-write timing is not applicable")
+        else:
+            timing.details.append(
+                f"read-only profile observed a mutation at event {first_change_idx}; no mutation is permitted"
+            )
+    elif first_change_idx is None:
         timing.details.append("no explicit or inferred mutation event; timing cannot be established")
     elif receipt_idx > first_change_idx:
         timing.details.append(

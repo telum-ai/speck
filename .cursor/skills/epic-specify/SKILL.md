@@ -36,8 +36,8 @@ Exit 1 → STOP; route to remedy printed by script:
 
 | Code | Route |
 |------|-------|
-| `UNANALYZED_CORPUS.P1` | `/project-analyze` |
-| `ANALYSIS_STALE.P1` | Re-run `/project-analyze` |
+| `UNANALYZED_CORPUS.P1` | `/analyze --level project` |
+| `ANALYSIS_STALE.P1` | Re-run `/analyze --level project` |
 | `ANALYSIS_CRITICAL_OPEN.P1` | Fix/waive CRITICAL |
 | `PROMISE_UNCOVERED.P1` | Fix coverage matrix |
 | `ANALYSIS_DECORRELATION_UNVERIFIED.P2` | Re-run with distinct reviewers |
@@ -99,7 +99,7 @@ Scan saved `epic.md`. Emit table with evidence quotes — not generic advice.
 | `/epic-architecture` | 2+ services; new infra; perf targets; complex integration | CRUD on existing patterns |
 | `/epic-journey` + `/epic-wireframes` | Greenfield UI; **Redesign Ambition** (see below) | Backend/CLI/infra only |
 | Rubric Mode | Brownfield UI modifying existing screens; NOT Redesign Ambition | Greenfield or redesign |
-| `/epic-outline` | Unfamiliar tech; TBD sections; competing approaches | Clear path |
+| `/speck-skeptical-review` | Unfamiliar tech; TBD sections; competing approaches | Clear path |
 
 **Redesign Ambition** (load before UI path):
 1. Read `product-contract.md` §3 + §5 (Surface / System Boundary)

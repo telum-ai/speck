@@ -49,7 +49,7 @@ User runs native `/goal`. Each turn: print `speck_graph.py check` + `gap` stdout
 | Build | product/context/evidence contracts; arch+ux+analyze required at 4+ epics | LARP + audit + decisions + readiness |
 | Platform | full flow | full PROVE; analyze after plan (7 lenses) |
 
-Build 4+ / Platform: `/project-analyze` required before `/epic-specify` (`check-epic-prereqs.sh`). Grandfather marker `.analysis-gate-grandfathered` is advisory-only until report exists then spend it.
+Build 4+ / Platform: `/analyze --level project` required before `/epic-specify` (`check-epic-prereqs.sh`). Grandfather marker `.analysis-gate-grandfathered` is advisory-only until report exists then spend it.
 
 ## Readiness
 
@@ -71,12 +71,12 @@ What/order only — how is in skills. Flows: `.speck/reference/command-phases.md
 
 Sprint: project-specify → ship → promote?
 Build: specify → clarify → product-contract → readme → evidence-contract → context → [architecture] → plan → [analyze req 4+] → epic loop → story loop (specify…implement→audit→validate→larp) → epic/project validate.
-Post-completion triage: defect→harden; story redesign→story-adjust; epic IA→epic-adjust; contract pivot→project-adjust; new scope→specify; time gap→recheck; play outgrowth→promote.
+Post-completion triage: defect→harden; deliberate redesign/pivot→adjust (blast-radius first); new scope→specify; time gap→recheck; play outgrowth→promote.
 
 ## Skills
 
-User-only (`disable-model-invocation: true`): `/speck` `/story` `/epic`.
-All other process skills: model auto-invoke via short descriptions. Read SKILL.md; follow load-DAG Reads (ADR-0005) — never treat a single `procedure.md` pointer as JIT.
+User-only: lifecycle entrypoints `/speck` `/story` `/epic`, convenience routers `/validate` `/retrospective`, and compatibility aliases. Policy: `.speck/reference/skill-catalog-policy.json`.
+Auto skills expose one canonical entry per overlapping intent family: `/analyze`, `/adjust`, `/speck-scan`; validation/retrospective stay level-specific. Read SKILL.md; follow load-DAG receipts (ADR-0005/0006/0007).
 Vendor APIs: Context7 / official docs JIT. Stack start: `.speck/recipes/`.
 Hosts/MCP/model tiers: `.speck/reference/host-capabilities.md`.
 
@@ -98,8 +98,8 @@ First-actions ladder. Read SKILL + template. Stamp truth. ≥3 alternatives at d
 | Status / continue | project-state Next action |
 | Parallel epics | wave safety → worktrees → `/epic` |
 | Fix bug in validated work | harden |
-| Redesign validated | story/epic-adjust |
-| Contract pivot | project-adjust + cascade |
+| Redesign validated | `/adjust` (classify blast radius first) |
+| Contract pivot | `/adjust --level project` + cascade |
 
 ## Evolution (anti-bloat)
 

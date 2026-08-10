@@ -7,7 +7,7 @@ paths:
 
 # project-import
 
-Lightweight brownfield bootstrap (~10 min). Does **not** analyze code — `/project-scan` does.
+Lightweight brownfield bootstrap (~10 min). Does **not** analyze code — `/speck-scan --level project` does.
 Output: skeleton `specs/projects/[PROJECT_ID]/project.md` + empty `epics/`.
 
 ## 1. Discover
@@ -40,20 +40,20 @@ Mark `[INFERRED FROM CODE]` / `[INFERRED FROM DOCS]` on preliminary fields. Sect
 - Overview — type, primary language/framework from README or manifest if found
 - Codebase location — absolute source path, structure hint
 - Status: Imported (Needs Scan)
-- Next steps block pointing to `/project-scan`
+- Next steps block pointing to `/speck-scan --level project`
 
 If README/docs found: high-level goals only — no architecture extraction, no epic list.
 
 ## 4. STOP depth guard
 
-If doing comprehensive analysis, architecture extraction, or epic identification → STOP; defer to `/project-scan`, `/epic-scan`, `/story-scan`.
+If doing comprehensive analysis, architecture extraction, or epic identification → STOP; defer to `/speck-scan --level project`, `/speck-scan --level epic`, `/speck-scan --level story`.
 
 ## 5. Report
 
 ```
 Created: specs/projects/[PROJECT_ID]/
 Next (required):
-  1. /project-scan → project-landscape-overview.md
+  1. /speck-scan --level project → project-landscape-overview.md
   2. /project-context → constraints from scan
   3. /project-architecture → design from scan
   4. /project-plan → PRD + epics
@@ -76,4 +76,4 @@ Position: first step for brownfield. Duration target: ~10 minutes.
 - NEVER parse all documentation
 - NEVER suggest specific epics here
 - ALWAYS mark inferred sections
-- ALWAYS route to `/project-scan` next
+- ALWAYS route to `/speck-scan --level project` next

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "explicit_user_only": [
+    "speck",
+    "story",
+    "epic"
+  ],
+  "compatibility_shims": [
+    "epic-outline",
+    "story-outline"
+  ],
+  "families": {
+    "analyze": {
+      "auto_entrypoints": ["analyze"],
+      "user_only_routers": [],
+      "compatibility_shims": ["project-analyze", "epic-analyze", "story-analyze"]
+    },
+    "adjust": {
+      "auto_entrypoints": ["adjust"],
+      "user_only_routers": [],
+      "compatibility_shims": ["project-adjust", "epic-adjust", "story-adjust"]
+    },
+    "validate": {
+      "auto_entrypoints": ["project-validate", "epic-validate", "story-validate"],
+      "user_only_routers": ["validate"],
+      "compatibility_shims": []
+    },
+    "retrospective": {
+      "auto_entrypoints": ["project-retrospective", "epic-retrospective", "story-retrospective"],
+      "user_only_routers": ["retrospective"],
+      "compatibility_shims": []
+    },
+    "scan": {
+      "auto_entrypoints": ["speck-scan"],
+      "user_only_routers": [],
+      "compatibility_shims": ["project-scan", "epic-scan", "story-scan"]
+    }
+  }
+}

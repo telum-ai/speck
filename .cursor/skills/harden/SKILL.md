@@ -7,8 +7,8 @@ description: Post-validation defect hardening. Use when fixing bugs in validated
 
 > 🚦 **METHODOLOGY INTENT SPLIT**: 
 > - Use `/harden` when something you previously validated/shipped is **broken** (defect, bug, incident).
-> - Use `/story-adjust` or `/epic-adjust` when you have **deliberately changed** what you specified/shipped (redesign, visual overhaul, scope pivot) at the story or epic level.
-> - Use `/project-adjust` when you have a **deliberate directional or strategic intent change** (such as pivoting a product contract or strategic vision) at the project level.
+> - Use `/adjust --level story` or `/adjust --level epic` when you have **deliberately changed** what you specified/shipped (redesign, visual overhaul, scope pivot) at the story or epic level.
+> - Use `/adjust --level project` when you have a **deliberate directional or strategic intent change** (such as pivoting a product contract or strategic vision) at the project level.
 
 ## Step 0: Read Template First
 

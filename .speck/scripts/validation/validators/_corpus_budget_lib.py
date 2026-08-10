@@ -8,8 +8,6 @@ import re
 import sys
 from pathlib import Path
 
-ALLOW_DISABLE = {"speck", "story", "epic"}
-
 ESSAY_RES = [
     re.compile(p, re.I)
     for p in (
@@ -161,16 +159,26 @@ def lint_load_contracts(root: Path, err) -> dict[str, set[str]]:
         forbidden_raw = entry.get("forbidden_files", [])
         gates = entry.get("post_write_gates")
         all_gates = entry.get("post_write_gates_all", [])
-        if not isinstance(required_raw, list) or not required_raw:
-            err(f"skill load contract {profile_id} requires required_files")
+        if not isinstance(required_raw, list) or not all(isinstance(x, str) and x for x in required_raw):
+            err(f"skill load contract {profile_id} required_files must be a string list")
             continue
         if not isinstance(forbidden_raw, list):
             err(f"skill load contract {profile_id} forbidden_files must be a list")
             continue
-        if not isinstance(gates, list) or not gates or not all(isinstance(x, str) and x for x in gates):
-            err(f"skill load contract {profile_id} requires non-empty post_write_gates")
+        read_only = entry.get("read_only", False)
+        if not isinstance(read_only, bool):
+            err(f"skill load contract {profile_id} read_only must be boolean")
+            read_only = False
+        if not isinstance(gates, list) or not all(isinstance(x, str) and x for x in gates):
+            err(f"skill load contract {profile_id} post_write_gates must be a string list")
+        elif read_only and gates:
+            err(f"read-only skill load contract {profile_id} cannot declare post_write_gates")
+        elif not read_only and not gates:
+            err(f"mutating skill load contract {profile_id} requires non-empty post_write_gates")
         if not isinstance(all_gates, list) or not all(isinstance(x, str) and x for x in all_gates):
             err(f"skill load contract {profile_id} post_write_gates_all must be a string list")
+        elif read_only and all_gates:
+            err(f"read-only skill load contract {profile_id} cannot declare post_write_gates_all")
         required = [p for p in (normalize(profile_id, x) for x in required_raw) if p]
         forbidden = [p for p in (normalize(profile_id, x) for x in forbidden_raw) if p]
         overlap = sorted(set(required) & set(forbidden))
@@ -230,6 +238,9 @@ def lint_load_contracts(root: Path, err) -> dict[str, set[str]]:
                             "use the receipted bytes; do not create a second load edge"
                         )
 
+        if not all_required:
+            err(f"skill load contract {profile_id} resolves no required context files")
+
         if selector_values:
             max_bytes = entry.get("max_bytes")
             if not isinstance(max_bytes, int) or max_bytes <= 0:
@@ -260,6 +271,60 @@ def lint_load_contracts(root: Path, err) -> dict[str, set[str]]:
             elif budget.get("files") != combined:
                 err(f"skill load contract {profile_id} files drift from load budget")
     return owned
+
+
+def load_skill_catalog_policy(root: Path, err) -> tuple[set[str], set[str], dict[str, dict[str, list[str]]]]:
+    """Return expected user-only skills, compatibility shims, and family declarations."""
+    path = root / ".speck" / "reference" / "skill-catalog-policy.json"
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        err(f"invalid skill catalog policy: {exc}")
+        return set(), set(), {}
+    if data.get("schema_version") != 1 or not isinstance(data.get("families"), dict):
+        err("skill catalog policy requires schema_version 1 and a families object")
+        return set(), set(), {}
+
+    explicit = data.get("explicit_user_only", [])
+    top_shims = data.get("compatibility_shims", [])
+    if not isinstance(explicit, list) or not all(isinstance(x, str) and x for x in explicit):
+        err("skill catalog policy explicit_user_only must be a string list")
+        explicit = []
+    if not isinstance(top_shims, list) or not all(isinstance(x, str) and x for x in top_shims):
+        err("skill catalog policy compatibility_shims must be a string list")
+        top_shims = []
+
+    disabled = set(explicit) | set(top_shims)
+    shims = set(top_shims)
+    families: dict[str, dict[str, list[str]]] = {}
+    claimed: dict[str, str] = {}
+    for family, raw in sorted(data["families"].items()):
+        if not isinstance(family, str) or not isinstance(raw, dict):
+            err(f"invalid skill catalog family {family!r}")
+            continue
+        normalized: dict[str, list[str]] = {}
+        for key in ("auto_entrypoints", "user_only_routers", "compatibility_shims"):
+            values = raw.get(key, [])
+            if not isinstance(values, list) or not all(isinstance(x, str) and x for x in values):
+                err(f"skill catalog family {family} {key} must be a string list")
+                values = []
+            normalized[key] = values
+            for name in values:
+                previous = claimed.setdefault(name, family)
+                if previous != family:
+                    err(f"skill catalog entry {name} belongs to both {previous} and {family}")
+        if not normalized["auto_entrypoints"]:
+            err(f"skill catalog family {family} requires at least one auto entrypoint")
+        overlap = set(normalized["auto_entrypoints"]) & (
+            set(normalized["user_only_routers"]) | set(normalized["compatibility_shims"])
+        )
+        if overlap:
+            err(f"skill catalog family {family} marks entries auto and user-only: {sorted(overlap)}")
+        disabled.update(normalized["user_only_routers"])
+        disabled.update(normalized["compatibility_shims"])
+        shims.update(normalized["compatibility_shims"])
+        families[family] = normalized
+    return disabled, shims, families
 
 
 def parse_fm(text: str) -> tuple[str, str]:
@@ -331,19 +396,23 @@ def main() -> int:
         print(f"FAIL: {msg}")
         fail = 1
 
+    expected_disabled, compatibility_shims, catalog_families = load_skill_catalog_policy(root, err)
     contract_owned = lint_load_contracts(root, err)
+    seen_skills: set[str] = set()
 
     for skill_md in sorted(skills.glob("*/SKILL.md")):
         name = skill_md.parent.name
+        seen_skills.add(name)
         text = skill_md.read_text()
         fm, body = parse_fm(text)
         desc = description(fm)
         disabled = bool(re.search(r"^disable-model-invocation:\s*true\s*$", fm, re.M))
 
-        if disabled:
-            if name not in ALLOW_DISABLE:
-                err(f"disable-model-invocation: true not allowed on skill '{name}'")
-        else:
+        expected_user_only = name in expected_disabled
+        if disabled != expected_user_only:
+            state = "true" if expected_user_only else "false/absent"
+            err(f"skill {name} disable-model-invocation must be {state} per skill-catalog-policy.json")
+        if not disabled:
             auto += 1
             dlen = len(desc)
             desc_sum += dlen
@@ -405,6 +474,11 @@ def main() -> int:
                 )
 
         body_lines = len(body.splitlines())
+        if name in compatibility_shims:
+            if n_refs:
+                err(f"compatibility shim {name} owns references; route to the canonical skill instead")
+            if body_lines > 25:
+                err(f"compatibility shim {name} body lines {body_lines} > 25")
         body_cap = MAX_ROUTER_BODY if n_refs >= 2 else max_body
         if body_lines > body_cap:
             gf_key = name if n_refs < 2 else f"{name}#router"
@@ -436,6 +510,13 @@ def main() -> int:
             if rbytes > MAX_REF_BYTES:
                 err(f"skill ref {key} bytes {rbytes} > {MAX_REF_BYTES}")
             lint_agent_prose(ref, rtext, err)
+
+    declared = set(expected_disabled)
+    for family in catalog_families.values():
+        declared.update(family["auto_entrypoints"])
+    missing = sorted(declared - seen_skills)
+    if missing:
+        err(f"skill catalog policy names missing skills: {missing}")
 
     ref_root = root / ".speck" / "reference"
     if ref_root.is_dir():

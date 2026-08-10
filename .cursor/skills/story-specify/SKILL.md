@@ -96,8 +96,8 @@ Update epic story list → specified.
 | Step | Required when | Skip when |
 |------|------------------|--------------|
 | `/story-clarify` | Vague AC; unclear scope; `[NEEDS CLARIFICATION]` | All AC testable |
-| `/story-outline` | Unfamiliar tech; TBD; competing approaches | Established patterns |
-| `/story-scan` | Modifies existing modules | Greenfield |
+| `/speck-skeptical-review` | Unfamiliar tech; TBD; competing approaches | Established patterns |
+| `/speck-scan --level story` | Modifies existing modules | Greenfield |
 | `/story-ui-spec` | UI/screen/form/modal/layout mentioned | Backend/API/CLI only |
 
 Output table with evidence quotes + recommended path.

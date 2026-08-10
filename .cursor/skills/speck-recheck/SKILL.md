@@ -72,7 +72,7 @@ Token present → artifact incomplete; cannot support readiness above IMPL-GREEN
 
 `UNANALYZED_CORPUS.P1`, `ANALYSIS_STALE.P1`, `ANALYSIS_CRITICAL_OPEN.P1`, `PROMISE_UNCOVERED.P1`, `ANALYSIS_DECORRELATION_UNVERIFIED.P2`, `ANALYSIS_COVERAGE_UNCOMPUTED.P2`, `ANALYSIS_GRANDFATHERED.P2`.
 
-Grandfather marker: surface uncollapsed every recheck; one `/project-analyze` spends it (`check-epic-prereqs.sh` prints `rm` command).
+Grandfather marker: surface uncollapsed every recheck; one `/analyze --level project` spends it (`check-epic-prereqs.sh` prints `rm` command).
 
 ### Mutation codes (`GUARD_*`)
 
@@ -122,8 +122,8 @@ Invoke `/project-state`. Populate blocking issues (P0/P1), truth staleness, `[NE
 |---------|--------|
 | `V8_REPROVE.P1` | BLOCK feature work → `/speck-reprove` first |
 | P0 drift | BLOCK feature work; surface remediations; recommend `/audit`; refuse `/story-implement`, `/epic-plan` |
-| `MARKET_DRIFT.P1` / `WEDGE_DRIFT.P1` | Do not block implement; BLOCK COMMERCIAL-RC/SHIP-RC and spec-derived marketing copy until `/speck-frontier-scan --product` or `/project-adjust` |
-| Analysis P1 codes | Do not block in-flight story; BLOCK next `/epic-specify` until `/project-analyze` clears |
+| `MARKET_DRIFT.P1` / `WEDGE_DRIFT.P1` | Do not block implement; BLOCK COMMERCIAL-RC/SHIP-RC and spec-derived marketing copy until `/speck-frontier-scan --product` or `/adjust --level project` |
+| Analysis P1 codes | Do not block in-flight story; BLOCK next `/epic-specify` until `/analyze --level project` clears |
 | `ANALYSIS_GRANDFATHERED.P2` | Never block; surface loudly every recheck |
 | P1–P3 only | Surface; user proceeds at discretion |
 | No drift | Before re-stamp: run `observe-guard.sh --licenses accumulating` on observation-based findings; `OBSERVATION_UNEXPOSED_BLOCKING.P1` → hold those artifacts; re-stamp rest. Otherwise re-stamp all truth artifacts with fresh `verified` date |

@@ -1,6 +1,7 @@
 ---
 name: story-analyze
 description: Retired alias → audit. Use when /story-analyze named.
+disable-model-invocation: true
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"
@@ -9,7 +10,7 @@ paths:
   - "specs/projects/**/**/tasks.md"
 ---
 
-# /story-analyze — retired in Speck v8 (alias-shim)
+# /story-analyze — retired compatibility shim
 
 `/story-analyze` no longer produces a standalone `analysis-report.md`. Its two jobs are covered by:
 
@@ -18,4 +19,4 @@ paths:
 
 **Do this instead**: `/story-plan` → `/story-tasks` → `/story-implement` → `/audit` → `/story-validate`.
 
-> Alias-shim kept for muscle memory / back-compat. `analysis-report.md` is optional in v7+ (no longer a hard prereq of `/story-implement`). See `docs/v8/v8-north-star.md` §4 and AGENTS.md.
+Alias kept for user-invoked muscle memory. It is excluded from automatic selection.

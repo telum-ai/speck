@@ -16,7 +16,7 @@
 - NEVER route to `/story-implement` on engagement gap without `/recheck`
 - NEVER set Platform play level solely from complexity 3–4
 - NEVER invent filenames under `specs/` (see `.speck/reference/canonical-routing.md`)
-- NEVER skip `/project-analyze` before `/epic-specify` when gate applies
+- NEVER skip `/analyze --level project` before `/epic-specify` when gate applies
 - ALWAYS read `project-state.md` Next action on continuation
 - ALWAYS run scale analysis when no context provided
 - ALWAYS respect user override of routing recommendation

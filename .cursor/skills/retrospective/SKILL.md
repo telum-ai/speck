@@ -1,6 +1,7 @@
 ---
 name: retrospective
-description: Routes retrospective by --level. Use when running retros.
+description: User-only router for /retrospective --level. Auto-selection uses the level retrospective directly.
+disable-model-invocation: true
 ---
 
 The user input can be provided directly by the agent or as a command argument:
@@ -31,4 +32,4 @@ If the level is still ambiguous, ask the user which level to retro.
 
 **Read the target `SKILL.md` and follow it end-to-end.**
 
-> v8: `/project-retrospective`, `/epic-retrospective`, `/story-retrospective` remain valid direct entry points (unchanged, full logic). `/retrospective` is a convenience that unifies the surface — dispatcher pattern, no lossy merge.
+This router exists for explicit user convenience. Automatic selection uses the level specialist directly.
