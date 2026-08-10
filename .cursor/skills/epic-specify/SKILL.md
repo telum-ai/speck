@@ -1,6 +1,6 @@
 ---
 name: epic-specify
-description: Creates epic.md from the project plan or new scope. Use when starting or fully specifying an epic.
+description: Creates epic.md from a project-plan placeholder or new scope. Use before epic-clarify and downstream epic work.
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"
@@ -114,8 +114,7 @@ Output table + `UI path:` + `Recommended path to /epic-plan:`.
 - Orchestrated (`/epic`): proceed to first recommended step — do not stop at menu
 - Interactive: ask "Proceed with [first step]?" and wait
 
-Flow (greenfield UI): clarify → constitution → architecture → journey → wireframes → outline → plan
-Flow (brownfield Rubric): clarify → constitution → architecture → encode Screen Rubric in `ux-strategy.md`/`primitives.md` → outline → plan
+After save, follow the always-on canonical epic flow in root `AGENTS.md`. The table above decides which bracketed slots activate but does not redefine their order.
 
 ## NEVER / ALWAYS
 

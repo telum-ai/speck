@@ -124,12 +124,6 @@ Validate completeness:
 - "Want me to generate CSS utility classes?"
 
 Guide to next steps:
-- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `##  The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
-- Based on the canonical story flow in `AGENTS.md`, the typical sequence is:
-  1. `/story-tasks` (generate implementation tasks)
-  2. `/story-implement` (implement the tasks)
-  3. `/audit` (skeptical audit between implement and validate)
-  4. `/story-validate` (evidence-backed validation)
-  5. `/story-retrospective` (retrospective extraction)
+- Re-read the marked canonical flow in root `AGENTS.md` and continue at the next applicable story slot. This skill does not carry a second sequence.
 
 The template contains comprehensive sections for all UI specification needs.

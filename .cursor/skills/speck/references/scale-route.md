@@ -50,19 +50,13 @@ bash .speck/scripts/bash/analyze-scale.sh --json "$ARGUMENTS"
 | 2 | auth system, shopping cart | `/epic-specify` | optional `/epic-architecture` |
 | 3–4 | full product, platform | `/project-specify` | `/project-architecture` before `/project-plan` |
 
-Brownfield: `/project-import` → `/speck-scan` → `/project-specify` → play-level flow → `/project-architecture` (as-is extraction).
+Brownfield entry uses the marked canonical Entry line in root `AGENTS.md`; the selected play-level line owns what follows.
 
 ## 6. Command order by play level
 
-Canonical detail: `.speck/reference/command-phases.md`. Critical ordering:
+The exact marked flow in root `AGENTS.md` is already in context and owns all play-level ordering. This router chooses scale; it never restates that sequence.
 
-**Build**: specify → clarify → product-contract → readme → evidence-contract → context → [architecture if cross-system] → plan → [/analyze --level project required at 4+ epics] → epic loop → story loop (specify…implement→audit→validate→larp) → project-validate.
-
-**Build 4+ / Platform**: `/project-architecture` + `/project-ux` required before plan. `/analyze --level project` required after plan, before first `/epic-specify` (3 lenses at Build 4+; 7 at Platform). `check-epic-prereqs.sh` enforces.
-
-**Platform**: domain → ux → context → constitution → architecture → design-system → product-contract → readme → evidence-contract → plan → `/analyze --level project` (all 7 lenses) → roadmap.
-
-**Sprint**: project-specify → ship → promote?
+Build with 4+ epics and Platform require both project architecture and UX before planning. Project analysis then clears before the first epic starts: 3 lenses at Build 4+, all 7 at Platform. `check-epic-prereqs.sh` enforces the boundary.
 
 Grandfather: `<PROJECT_DIR>/.analysis-gate-grandfathered` → advisory until report exists; surface loudly; one `/analyze --level project` spends it.
 

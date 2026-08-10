@@ -249,26 +249,7 @@ specs/projects/<PROJECT_ID>/
 
 ### 1. Project Foundation (PROMISE)
 
-```mermaid
-graph TD
-    A["/speck Build XYZ"] --> B["/project-specify"]
-    B --> C["/project-clarify"]
-    C --> D["/project-product-contract"]
-    D --> E["/project-evidence-contract"]
-    E --> F["/project-context"]
-    F --> G{"4+ epics<br/>expected?"}
-    G -->|Yes| H["/project-architecture"]
-    G -->|Yes| I["/project-ux"]
-    H --> J["/project-plan"]
-    I --> J
-    G -->|No| J
-    J --> K["Epics & E000 Infrastructure"]
-    K --> L{"Platform, or<br/>Build with 4+ epics?"}
-    L -->|Yes| M["/analyze --level project<br/>REQUIRED gate"]
-    L -->|No| N["/analyze --level project<br/>optional, recommended"]
-    M --> O["/epic-specify"]
-    N --> O
-```
+The marked canonical flow in root `AGENTS.md` owns project order and is always loaded. This README explains the gates without carrying a second sequence.
 
 `/analyze --level project` sits between planning and epic work on purpose: it is the only pass whose reviewers are decorrelated from the corpus authors. On the required side, `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start until the gate clears.
 
@@ -285,25 +266,7 @@ Required at Platform and at Build with 4+ epics, produced after `/project-plan`:
 
 ### 2. Epic Work (BUILD)
 
-```mermaid
-graph TD
-    A["/epic-specify"] --> B["/epic-clarify"]
-    B --> C{"UI Epic?"}
-    C -->|Yes| D["/epic-experience-chain"]
-    C -->|Yes| E["/epic-journey"]
-    C -->|Yes| F["/epic-wireframes"]
-    D --> G["/epic-plan"]
-    E --> G
-    F --> G
-    C -->|No| G
-    G --> H["/epic-breakdown"]
-    H --> I["/analyze --level epic<br/>required gate"]
-    I --> J["Story Work"]
-    J --> K["/audit epic-level"]
-    K --> L["/epic-validate"]
-    L --> M["/larp full JTBD"]
-    M --> N["/epic-retrospective"]
-```
+The marked canonical Epic line in root `AGENTS.md` owns order. Conditional constitution, architecture, UX, and LARP slots are evaluated there; this README does not restate them.
 
 For UI epics, `experience-chain.md` is required before `/epic-plan` (prevents the "seven different apps stitched together" failure).
 
@@ -311,23 +274,7 @@ For UI epics, `experience-chain.md` is required before `/epic-plan` (prevents th
 
 ### 3. Story Work (BUILD → PROVE)
 
-```mermaid
-graph TD
-    A["/story-specify"] --> B["/story-clarify"]
-    B --> C{"Brownfield?"}
-    C -->|Yes| D["/speck-scan --level story"]
-    C -->|No| E["/story-plan"]
-    D --> E
-    E --> F{"UI Story?"}
-    F -->|Yes| G["/story-ui-spec"]
-    F -->|No| H["/story-tasks"]
-    G --> H
-    H --> I["/story-implement"]
-    I --> J["/audit"]
-    J --> K["/story-validate"]
-    K --> L["/larp"]
-    L --> M["/story-retrospective"]
-```
+The marked canonical Story line in root `AGENTS.md` owns order. It evaluates brownfield, UI, premise, LARP, visual-proof, and closure slots without a competing README copy.
 
 Note: `/story-analyze` is **retired** (alias-shim) — its pre-implementation consistency check is folded into the tail of `/story-tasks`, and its adversarial behavior-vs-spec check is `/audit`. `/audit` runs **between** implement and validate — it's not optional.
 

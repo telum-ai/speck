@@ -1,6 +1,6 @@
 ---
 name: speck-larp
-description: Runs persona-based target-build LARP for function and quality. Use during UI validation or when testing as a real user.
+description: Runs persona-based LARP for function and quality. Use before story or epic validation when testing UI as a real user.
 ---
 
 # speck-larp

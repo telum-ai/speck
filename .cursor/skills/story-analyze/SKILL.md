@@ -17,6 +17,6 @@ paths:
 - **Consistency (pre-impl)** — folded into the tail of `/story-tasks` (spec ↔ plan ↔ tasks coverage/conflict check).
 - **Adversarial cross-check (post-impl)** — `/audit` (`speck-audit`), the separately-incentivized truth-seeking pass (P4) run BEFORE `/story-validate`.
 
-**Do this instead**: `/story-plan` → `/story-tasks` → `/story-implement` → `/audit` → `/story-validate`.
+**Do this instead**: re-read the marked canonical Story flow in root `AGENTS.md` and resume at its first incomplete applicable slot.
 
 Alias kept for user-invoked muscle memory. It is excluded from automatic selection.

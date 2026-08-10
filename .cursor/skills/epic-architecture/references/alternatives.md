@@ -46,11 +46,7 @@ Ensure epic architecture:
 
 ## Relationship to Other Commands
 
-```
-/epic-specify → /epic-clarify → /epic-architecture → /epic-plan → /epic-breakdown
-                                          ↓
-                              (informs tech-spec.md)
-```
+The marked canonical Epic flow in root `AGENTS.md` owns order. Resume at its first incomplete applicable slot after this architecture decision.
 
 The epic architecture:
 - Provides detailed design for /epic-plan

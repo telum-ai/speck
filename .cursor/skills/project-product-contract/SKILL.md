@@ -91,7 +91,7 @@ Never hand-write market stamp — only `stamp-market.sh`. Real verdict later: `/
 1. `/project-state` — regenerate status
 2. `.speck/scripts/regenerate-project-readme.sh` — README from paid promise (do not wait for user)
 
-Report: path, section count, banned/magic/AI/axis counts. Next: `/project-evidence-contract` → `/project-plan`.
+Report path plus section, banned-language, magic-moment, AI, and axis counts. Then re-read the marked canonical flow in root `AGENTS.md` and continue at its next applicable project slot.
 
 ## NEVER / ALWAYS
 

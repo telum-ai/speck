@@ -1,6 +1,6 @@
 ---
 name: speck-self-eval
-description: Scores Speck gate fitness with seeded defects. Use when evaluating methodology changes or comparing gate performance.
+description: Scores Speck gate fitness with seeded defects. Use before changing methodology gates or comparing candidates.
 ---
 
 # Speck self-eval (A1-lite)

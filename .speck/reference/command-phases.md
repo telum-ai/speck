@@ -2,31 +2,18 @@
 
 > Read each phase's `SKILL.md` for the full procedure. AGENTS.md only lists the **what** and **order**. The skill files contain the **how**.
 
-### Sprint flow
-```
-/project-specify  →  ship it  →  /project-promote (if it gets traction)
-```
+## Canonical order
 
-### Build flow (1-3 epics)
-```
-/project-specify → /project-clarify → /project-product-contract → /project-readme → /project-evidence-contract
-  → /project-context → [/project-architecture if cross-system]
-  → /project-plan (creates PRD + epics + E000 infrastructure epic)
-  → [/analyze --level project — recommended at 1-3 epics; REQUIRED at 4+ (see Build flow (4+ epics))]
-  → per epic: /epic-specify → /epic-clarify → [/epic-architecture] → [/epic-experience-chain if UI]
-              → /epic-plan → /epic-breakdown → /analyze --level epic
-  → per story: /story-specify → /story-clarify → [/speck-scan --level story] → /story-plan
-              → [/story-ui-spec if UI] → /story-tasks → /story-implement
-              → /audit → /story-validate → /larp → /story-retrospective
-  → /audit (epic-level) → /epic-validate → /larp (full JTBD walkthrough) → /epic-retrospective
-  → /project-validate → /project-retrospective
-```
+The `<!-- SPECK:FLOW:START -->` block in root `AGENTS.md` is the single canonical order and is always loaded. This reference explains conditional gates and execution mechanics; it never carries a second flow copy.
+
+Bracketed slots in AGENTS are evaluated when reached. Skip only when the named condition is false or the selected skill's play-level guard says to skip.
 
 ### Build flow (4+ epics) — gate triggers required architecture + ux-strategy + project analysis
 Same as Build but `/project-architecture` and `/project-ux` are **required before** `/project-plan`, and `/analyze --level project` is **required after** `/project-plan` and before the first `/epic-specify` — 3 decorrelated lenses minimum (promise-coverage · cross-artifact drift · completeness critic). `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start on `UNANALYZED_CORPUS.P1`.
 
-### Platform flow
-Full flow: includes `/project-domain` → `/project-ux` → `/project-context` → `/project-constitution` → `/project-architecture` → `/project-design-system` → `/project-product-contract` → `/project-readme` → `/project-evidence-contract` → `/project-plan` → `/analyze --level project` (**required**, all 7 lenses) → `/project-roadmap`. `/project-state` keeps README status current after validation gates.
+### Platform gates
+
+Platform runs every non-UI foundation slot in the AGENTS flow; `project-domain` remains conditional on a specialized domain and `project-design-system` on a UI surface. Project analysis is required with all 7 lenses. `project-state` refreshes after truth gates land on main.
 
 ### Reengagement & Intent Changes
 On any new session: read `project-state.md`.
@@ -45,7 +32,7 @@ flowchart TD
   s["/adjust --level story - story-level redesign/visual overhaul"]
   e["/adjust --level epic - epic-level structure/IA pivot"]
   p["/adjust --level project - project directional/intent change"]
-  new_scope["/epic-specify or /story-specify - new scope/features"]
+  new_scope["/project-specify, /epic-specify, or /story-specify - new scope at its entry level"]
   drift["/recheck - engagement gap / audit"]
   promote["/project-promote - scale outgrowth"]
 
@@ -67,7 +54,7 @@ flowchart TD
 2. **Deliberate Story Redesign/Visual Overhaul**: Run `/adjust --level story` to spec the delta, update story `plan.md`, and conserve promises.
 3. **Deliberate Epic Structural Pivot / IA Redesign**: Run `/adjust --level epic` to re-spec epic-level deltas and update epic `traceability-matrix.md`.
 4. **Project Directional Pivot / Strategic Contract Change**: Run `/adjust --level project` to update `product-contract.md` and force a superseding DEC, run `compute-cascade.sh` to determine the blast-radius of affected downstream epics/stories, and route each to `/adjust --level epic` or `/adjust --level story`.
-5. **New Features / Addition**: Run `/epic-specify` or `/story-specify` to draft new specs from scratch.
+5. **New Features / Addition**: Run `/project-specify`, `/epic-specify`, or `/story-specify` at the level where the new scope enters.
 6. **Time Gap / Audit**: Run `/recheck` to scan for drift, stale dependencies, and schema drift.
 7. **Scale/Rigor Outgrowth**: Run `/project-promote` to upgrade play levels (e.g. Sprint to Build, or Build to Platform).
 

@@ -74,7 +74,7 @@ bash .speck/scripts/regenerate-project-readme.sh
 
 ## 8. Next
 
-Consult `AGENTS.md` command phases for play-level order. Typical: `/project-clarify` → contracts → context → architecture (Platform) → plan.
+Re-read the marked canonical flow in root `AGENTS.md` and continue at the first incomplete applicable project slot for the selected play level.
 
 ## NEVER / ALWAYS
 

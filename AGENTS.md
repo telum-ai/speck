@@ -67,11 +67,21 @@ Never invent filenames under `specs/`. Canonical homes: `.speck/reference/canoni
 
 ## Command order
 
-What/order only — how is in skills. Flows: `.speck/reference/command-phases.md`. Parallel epics: `.speck/patterns/learned/process/parallel-epic-execution.md`.
+What/order only — how is in skills. Brackets are conditional slots; evaluate them when reached. `.speck/reference/command-phases.md` explains gates but never redefines this order.
 
-Sprint: project-specify → ship → promote?
-Build: specify → clarify → product-contract → readme → evidence-contract → context → [architecture] → plan → [analyze req 4+] → epic loop → story loop (specify…implement→audit→validate→larp) → epic/project validate.
-Post-completion triage: defect→harden; deliberate redesign/pivot→adjust (blast-radius first); new scope→specify; time gap→recheck; play outgrowth→promote.
+<!-- SPECK:FLOW:START -->
+Entry: brownfield `project-import → speck-scan(project) → project-specify`; fuzzy greenfield `project-brainstorm → project-specify`.
+Sprint: `project-specify → ship → [project-promote if outgrown]`.
+Build foundation: `project-specify → project-clarify → [project-domain if specialized] → project-product-contract → project-readme → project-evidence-contract → project-context → [project-ux if UI/4+] → [project-constitution if governance-heavy] → [project-architecture if cross-system/4+] → [project-design-system if shared UI] → project-plan → [analyze(project), required 4+]`.
+Platform foundation: `project-specify → project-clarify → [project-domain if specialized] → project-ux → project-context → project-constitution → project-architecture → [project-design-system if UI] → project-product-contract → project-readme → project-evidence-contract → project-plan → analyze(project) → project-roadmap`.
+Epic: `[epic-discover if brownfield has no map] → epic-specify → epic-clarify → [epic-constitution if local principles] → [epic-architecture if cross-cutting] → [epic-journey → epic-wireframes if UX-heavy] → [epic-experience-chain if UI] → epic-plan → epic-breakdown → analyze(epic) → story loop → speck-audit(epic) → [speck-larp if UI] → epic-validate → epic-retrospective`.
+Story: `[story-extract if code exists without artifacts | story-specify] → story-clarify → [speck-scan(story) for code facts] → story-plan → [story-ui-spec if complex UI] → story-tasks → story-implement(+ visual-quality if UI) → speck-audit → [speck-premise-challenge if high-impact UI seeks UX-RC+] → [speck-larp if UI] → story-validate(+ visual-testing if UI) → story-retrospective`.
+Project close: completed epics `→ project-validate → project-retrospective`; after truth gates on main `→ project-state`.
+Decision boundary: `[just-in-time-research if external facts] → speck-skeptical-review → lock → speck-decision-log`. Parallel dispatch: `project-roadmap → parallel-execution → worktrees`.
+Post-validation input: defect `→ harden`; deliberate redesign `→ adjust`; engagement gap `→ speck-recheck`; rigor outgrowth `→ project-promote`; new scope `→ [project-specify | epic-specify | story-specify]`.
+<!-- SPECK:FLOW:END -->
+
+Parallel epic mechanics: `.speck/patterns/learned/process/parallel-epic-execution.md`.
 
 ## Skills
 

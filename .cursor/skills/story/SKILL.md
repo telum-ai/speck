@@ -14,7 +14,7 @@ paths:
 
 ## Purpose
 
-`/story` is the **story-level stateful orchestrator**. It automates the progression of a single story from specification to validation by **invoking downstream skills in canonical order** (`/story-specify` → `/story-clarify` → `/story-plan` → `/story-tasks` → `/story-implement` → `/audit` → `/story-validate` → `/larp` → `/story-retrospective`).
+`/story` is the **story-level stateful orchestrator**. It advances a story by re-reading the marked canonical Story flow in root `AGENTS.md` at every transition. `AGENTS.md` owns order; this skill owns state detection and stop-gate enforcement, never a second sequence.
 
 **Driving pattern (REQUIRED)**: For each step in `### 3. Execution Loop`, **read and fully execute** the corresponding skill's `SKILL.md` (and its template, per that skill's FIRST ACTION) before advancing. The orchestrator's job is **progression + stop-gate enforcement** — not re-implementing sub-steps from memory.
 
@@ -72,39 +72,15 @@ Read `spec.md` and evaluate its state:
 
 ### 3. Execution Loop (The Transition Map)
 
-For **each** transition below: **invoke the listed skill** (read `.cursor/skills/<skill>/SKILL.md`, follow its procedure end-to-end), then evaluate stop conditions before advancing.
+At every iteration:
 
-Run the appropriate skills in order. After each command completes successfully, evaluate whether a stop condition is met before transitioning.
+1. Re-read the exact `<!-- SPECK:FLOW:START -->` block in root `AGENTS.md` and select its Story line.
+2. Scan that line left-to-right. Resume at the first incomplete required slot or applicable bracketed slot; artifact-based state labels never authorize skipping an earlier slot.
+3. Read `.cursor/skills/<selected-skill>/SKILL.md` and execute it end-to-end. For generic entries, use story scope.
+4. Evaluate this skill's hard stops, then re-read the AGENTS flow before choosing the next slot.
+5. Mark Done only after every applicable Story slot, including UI proof slots, has completed.
 
-```
-State: Draft         →  Run: /story-specify  →  Clarify (/story-clarify)
-                             ↳ STOP if user clarification required.
-                               Transition to state: Specified
-
-State: Specified     →  Run: /story-plan
-                             ↳ STOP if technical unknowns require research or user decisions.
-                               Transition to state: Planned
-
-State: Planned       →  Run: /story-tasks    →  If UI: /story-ui-spec
-                             ↳ /story-tasks ends with the spec↔plan↔tasks consistency cross-check.
-                             ↳ STOP if any CRITICAL conflict surfaces there.
-                               Transition to state: Tasked
-
-State: Tasked        →  Run: /story-implement (writes code)
-                             ↳ STOP if test suite or compilation fails.
-                               Transition to state: Implemented
-
-State: Implemented   →  Run: /audit
-                             ↳ STOP if any P0/P1 issues found post-implementation.
-                               Transition to state: Audited (Post-impl)
-
-State: Audited (Post) → Run: /story-validate  →  If UI: /larp
-                             ↳ STOP if first-time user comprehension fails or verified state is capped.
-                               Transition to state: Validated
-
-State: Validated     →  Run: /story-retrospective
-                               Transition to state: Done
-```
+This keeps stateful resumption without allowing the orchestrator to drift from the always-on order. In particular, an existing `tasks.md` cannot excuse a missing applicable `story-ui-spec`, and a validation report cannot excuse missing UI LARP evidence.
 
 ### 4. Hard Stop Conditions
 

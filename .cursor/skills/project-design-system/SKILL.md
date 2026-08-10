@@ -1,6 +1,6 @@
 ---
 name: project-design-system
-description: Defines design tokens, primitives, and component standards. Use for UI Platform or Build needing shared visual rules.
+description: Defines tokens, primitives, and component standards. Use after project-architecture before project-plan for shared UI.
 paths:
   - "specs/projects/**"
 ---

@@ -1,0 +1,26 @@
+name: Canonical flow baseline
+
+on:
+  pull_request_target:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check out trusted base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+      - name: Fetch candidate merge without executing it
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: git fetch --no-tags origin "refs/pull/${PR_NUMBER}/merge:refs/remotes/origin/canonical-flow-candidate"
+      - name: Guard canonical flow baseline
+        env:
+          FLOW_BASELINE_APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'flow-baseline-change-approved') }}
+        run: bash .speck/eval/skill-routing/guard-baseline-change.sh "${{ github.event.pull_request.base.sha }}" refs/remotes/origin/canonical-flow-candidate

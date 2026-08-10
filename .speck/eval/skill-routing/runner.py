@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Catalog-only skill-routing evaluator for ADR-0008."""
+"""Always-on skill-routing evaluator for ADR-0008/0009."""
 from __future__ import annotations
 
 import argparse
@@ -18,6 +18,9 @@ ROOT = Path(__file__).resolve().parents[3]
 CASES_PATH = ROOT / ".speck/reference/skill-routing-cases.json"
 SKILLS_ROOT = ROOT / ".cursor/skills"
 REPORTS_ROOT = ROOT / ".speck/eval/skill-routing/reports"
+FLOW_CONTRACT_PATH = ROOT / ".speck/eval/skill-routing/baseline.json"
+FLOW_START = "<!-- SPECK:FLOW:START -->"
+FLOW_END = "<!-- SPECK:FLOW:END -->"
 
 
 def parse_frontmatter(text: str) -> str:
@@ -47,10 +50,159 @@ def load_cases(path: Path = CASES_PATH) -> dict[str, Any]:
     return json.loads(path.read_text())
 
 
-def validate_suite(catalog: dict[str, str], suite: dict[str, Any]) -> list[str]:
+def load_flow_contract(path: Path = FLOW_CONTRACT_PATH) -> dict[str, Any]:
+    return json.loads(path.read_text())
+
+
+def load_agents(root: Path = ROOT) -> str:
+    return (root / "AGENTS.md").read_text()
+
+
+def load_flow(root: Path = ROOT, agents_text: str | None = None) -> str:
+    text = agents_text if agents_text is not None else load_agents(root)
+    if text.count(FLOW_START) != 1 or text.count(FLOW_END) != 1:
+        return ""
+    return text.split(FLOW_START, 1)[1].split(FLOW_END, 1)[0].strip()
+
+
+def flow_has_skill(flow: str, name: str) -> bool:
+    return bool(re.search(rf"(?<![A-Za-z0-9-]){re.escape(name)}(?![A-Za-z0-9-])", flow))
+
+
+def flow_lines(flow: str) -> tuple[list[str], dict[str, str]]:
+    order: list[str] = []
+    lines: dict[str, str] = {}
+    for raw in flow.splitlines():
+        if not raw.strip():
+            continue
+        label, separator, body = raw.partition(":")
+        if not separator:
+            continue
+        label = label.strip()
+        order.append(label)
+        lines[label] = body.strip()
+    return order, lines
+
+
+def route_is_ordered(line: str, skills: list[str]) -> bool:
+    cursor = 0
+    for name in skills:
+        pattern = rf"(?<![A-Za-z0-9-]){re.escape(name)}(?![A-Za-z0-9-])"
+        match = re.search(pattern, line[cursor:])
+        if not match:
+            return False
+        cursor += match.end()
+    return True
+
+
+def competing_flow_errors(catalog: dict[str, str], root: Path = ROOT) -> list[str]:
     errors: list[str] = []
-    if suite.get("schema_version") != 1:
-        errors.append("routing suite requires schema_version 1")
+    paths = [root / ".speck/README.md", root / ".speck/reference/command-phases.md"]
+    paths.extend(sorted((root / ".cursor/skills").glob("**/*.md")))
+    for path in dict.fromkeys(paths):
+        if not path.is_file():
+            continue
+        text = path.read_text()
+        rel = path.relative_to(root)
+        for line_number, line in enumerate(text.splitlines(), 1):
+            named = {name for name in catalog if flow_has_skill(line, name)}
+            if line.count("→") >= 2 and len(named) >= 3:
+                errors.append(
+                    f"{rel}:{line_number} carries a competing skill sequence: {sorted(named)}"
+                )
+            if "under `##" in line and "The Speck Command Phases" in line:
+                errors.append(f"{rel}:{line_number} points to the retired flow section name")
+        for block in re.findall(r"```[^\n]*\n(.*?)```", text, re.S):
+            named = {name for name in catalog if flow_has_skill(block, name)}
+            if "State:" in block and "Run:" in block and len(named) >= 3:
+                errors.append(f"{rel} carries a competing state-machine flow")
+    return errors
+
+
+def validate_suite(
+    catalog: dict[str, str], suite: dict[str, Any], flow: str,
+    contract: dict[str, Any], agents_text: str
+) -> list[str]:
+    errors: list[str] = []
+    if suite.get("schema_version") != 2:
+        errors.append("routing suite requires schema_version 2")
+    if not flow:
+        errors.append("AGENTS.md requires exactly one non-empty SPECK:FLOW block")
+    if contract.get("schema_version") != 1:
+        errors.append("canonical flow baseline requires schema_version 1")
+    expected_line_order = contract.get("line_order")
+    routes = contract.get("routes")
+    if not isinstance(expected_line_order, list) or not expected_line_order:
+        errors.append("canonical flow baseline requires line_order")
+        expected_line_order = []
+    if not isinstance(routes, list) or not routes:
+        errors.append("canonical flow baseline requires routes")
+        routes = []
+
+    actual_line_order, actual_lines = flow_lines(flow)
+    if actual_line_order != expected_line_order:
+        errors.append(
+            f"always-on flow line order drifted: {actual_line_order} != {expected_line_order}"
+        )
+
+    route_ids: set[str] = set()
+    contract_flow_skills: set[str] = set()
+    for index, route in enumerate(routes):
+        if not isinstance(route, dict):
+            errors.append(f"canonical flow route {index} must be an object")
+            continue
+        route_id = route.get("id")
+        line_label = route.get("line")
+        skills = route.get("skills")
+        if not isinstance(route_id, str) or not route_id or route_id in route_ids:
+            errors.append(f"invalid or duplicate canonical flow route id: {route_id!r}")
+            continue
+        route_ids.add(route_id)
+        if not isinstance(line_label, str) or line_label not in actual_lines:
+            errors.append(f"canonical flow route {route_id!r} names missing line {line_label!r}")
+            continue
+        if not isinstance(skills, list) or not skills or not all(isinstance(x, str) and x for x in skills):
+            errors.append(f"canonical flow route {route_id!r} requires a non-empty skills list")
+            continue
+        contract_flow_skills.update(skills)
+        if not route_is_ordered(actual_lines[line_label], skills):
+            errors.append(f"always-on flow route {route_id!r} omits or misorders {skills}")
+
+    elsewhere: set[str] = set()
+    always_on_elsewhere: set[str] = set()
+    for key in ("always_on_elsewhere", "event_skills"):
+        values = contract.get(key)
+        if not isinstance(values, list) or not all(isinstance(x, str) and x for x in values):
+            errors.append(f"canonical flow baseline requires a {key} string list")
+            continue
+        duplicate = elsewhere.intersection(values)
+        if duplicate:
+            errors.append(f"canonical flow baseline classifies skills twice: {sorted(duplicate)}")
+        elsewhere.update(values)
+        if key == "always_on_elsewhere":
+            always_on_elsewhere.update(values)
+
+    overlap = contract_flow_skills & elsewhere
+    if overlap:
+        errors.append(f"canonical flow baseline marks flow skills as non-flow: {sorted(overlap)}")
+    classified = contract_flow_skills | elsewhere
+    unclassified = sorted(set(catalog) - classified)
+    invalid_classifications = sorted(classified - set(catalog))
+    if unclassified:
+        errors.append(f"automatic skills missing canonical flow classification: {unclassified}")
+    if invalid_classifications:
+        errors.append(f"canonical flow baseline names non-automatic skills: {invalid_classifications}")
+    missing_elsewhere = sorted(name for name in always_on_elsewhere if not flow_has_skill(agents_text, name))
+    if missing_elsewhere:
+        errors.append(f"always-on AGENTS context omits first-action skills: {missing_elsewhere}")
+
+    actual_flow_skills = {name for name in catalog if flow_has_skill(flow, name)}
+    missing_from_flow = sorted(contract_flow_skills - actual_flow_skills)
+    extra_in_flow = sorted(actual_flow_skills - contract_flow_skills)
+    if missing_from_flow:
+        errors.append(f"always-on AGENTS flow omits baseline skills: {missing_from_flow}")
+    if extra_in_flow:
+        errors.append(f"always-on AGENTS flow adds uncontracted skills: {extra_in_flow}")
     minimum = suite.get("minimum_accuracy")
     if not isinstance(minimum, (int, float)) or not 0 < float(minimum) <= 1:
         errors.append("minimum_accuracy must be in (0, 1]")
@@ -120,16 +272,19 @@ def output_schema() -> dict[str, Any]:
     }
 
 
-def build_prompt(catalog: dict[str, str], suite: dict[str, Any]) -> str:
+def build_prompt(catalog: dict[str, str], suite: dict[str, Any], flow: str) -> str:
     catalog_lines = "\n".join(f"- {name}: {description}" for name, description in sorted(catalog.items()))
     request_lines = "\n".join(
         f"- {case['id']}: {case['prompt']}" for case in suite["cases"]
     )
-    return f"""You are evaluating an automatic Agent Skill catalog.
+    return f"""You are evaluating an automatic Agent Skill catalog with the same canonical flow that is always in the agent's context.
 
-Choose exactly one catalog skill for every request using only each skill's name and description. Select the skill whose advertised trigger best matches the request's intent and lifecycle state. Do not invent skills, use implementation knowledge, or perform the requested work.
+Choose exactly one catalog skill for every request using only the canonical flow plus each skill's name and description. Select the skill whose advertised trigger best matches the request's intent and lifecycle state. Do not invent skills, use implementation knowledge, or perform the requested work.
 
 Return only the JSON object required by the response schema. Include every request id exactly once and preserve the request order.
+
+CANONICAL FLOW
+{flow}
 
 CATALOG
 {catalog_lines}
@@ -251,7 +406,8 @@ def digest(value: Any) -> str:
 
 
 def verify_reports(
-    catalog: dict[str, str], suite: dict[str, Any], reports_dir: Path
+    catalog: dict[str, str], suite: dict[str, Any], flow: str,
+    contract: dict[str, Any], reports_dir: Path
 ) -> list[str]:
     """Re-score checked-in live evidence and reject stale or incomplete receipts."""
     errors: list[str] = []
@@ -261,6 +417,8 @@ def verify_reports(
 
     catalog_hash = digest(catalog)
     cases_hash = digest(suite)
+    flow_hash = digest(flow)
+    contract_hash = digest(contract)
     score_keys = (
         "pass", "accuracy", "minimum_accuracy", "correct", "total",
         "forbidden_selections", "missing_ids", "extra_ids", "duplicate_ids",
@@ -275,12 +433,16 @@ def verify_reports(
         if not isinstance(report, dict):
             errors.append(f"{path.name}: report must be a JSON object")
             continue
-        if report.get("schema_version") != 1:
-            errors.append(f"{path.name}: schema_version must be 1")
+        if report.get("schema_version") != 2:
+            errors.append(f"{path.name}: schema_version must be 2")
         if report.get("catalog_sha256") != catalog_hash:
             errors.append(f"{path.name}: catalog hash is stale")
         if report.get("cases_sha256") != cases_hash:
             errors.append(f"{path.name}: cases hash is stale")
+        if report.get("flow_sha256") != flow_hash:
+            errors.append(f"{path.name}: always-on flow hash is stale")
+        if report.get("flow_contract_sha256") != contract_hash:
+            errors.append(f"{path.name}: canonical flow baseline hash is stale")
         for key in ("provider", "model", "started_at"):
             if not isinstance(report.get(key), str) or not report[key]:
                 errors.append(f"{path.name}: missing {key}")
@@ -368,7 +530,7 @@ def print_report(report: dict[str, Any]) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate or run catalog-only Speck skill routing cases.")
+    parser = argparse.ArgumentParser(description="Validate or run always-on Speck skill routing cases.")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("self-test")
     sub.add_parser("emit-prompt")
@@ -386,18 +548,22 @@ def main() -> int:
 
     catalog = load_catalog()
     suite = load_cases()
-    errors = validate_suite(catalog, suite)
+    agents_text = load_agents()
+    flow = load_flow(agents_text=agents_text)
+    contract = load_flow_contract()
+    errors = validate_suite(catalog, suite, flow, contract, agents_text)
+    errors.extend(competing_flow_errors(catalog))
     if errors:
         for error in errors:
             print(f"FAIL: {error}", file=sys.stderr)
         return 1
 
     if args.command == "emit-prompt":
-        print(build_prompt(catalog, suite))
+        print(build_prompt(catalog, suite, flow))
         return 0
 
     if args.command == "verify-reports":
-        report_errors = verify_reports(catalog, suite, args.reports_dir)
+        report_errors = verify_reports(catalog, suite, flow, contract, args.reports_dir)
         if report_errors:
             for error in report_errors:
                 print(f"FAIL: {error}", file=sys.stderr)
@@ -430,14 +596,43 @@ def main() -> int:
             return 1
         missing_case = json.loads(json.dumps(suite))
         missing_case["cases"].pop()
-        if not any("missing routing cases" in error for error in validate_suite(catalog, missing_case)):
+        if not any("missing routing cases" in error for error in validate_suite(catalog, missing_case, flow, contract, agents_text)):
             print("FAIL: missing-skill case coverage mutant passed", file=sys.stderr)
             return 1
         duplicate_case = json.loads(json.dumps(suite))
         duplicate_case["cases"][1]["id"] = duplicate_case["cases"][0]["id"]
-        if not any("duplicate case id" in error for error in validate_suite(catalog, duplicate_case)):
+        if not any("duplicate case id" in error for error in validate_suite(catalog, duplicate_case, flow, contract, agents_text)):
             print("FAIL: duplicate routing case mutant passed", file=sys.stderr)
             return 1
+        missing_flow = flow.replace("epic-constitution", "epic_constitution", 1)
+        if not any("always-on AGENTS flow omits" in error for error in validate_suite(catalog, suite, missing_flow, contract, agents_text)):
+            print("FAIL: missing always-on flow skill mutant passed", file=sys.stderr)
+            return 1
+        wrong_order = flow.replace("story-tasks → story-implement", "story-implement → story-tasks", 1)
+        if not any("omits or misorders" in error for error in validate_suite(catalog, suite, wrong_order, contract, agents_text)):
+            print("FAIL: wrong-order always-on flow mutant passed", file=sys.stderr)
+            return 1
+        incomplete_contract = json.loads(json.dumps(contract))
+        for route in incomplete_contract["routes"]:
+            route["skills"] = [name for name in route["skills"] if name != "story-extract"]
+        if not any("missing canonical flow classification" in error for error in validate_suite(catalog, suite, flow, incomplete_contract, agents_text)):
+            print("FAIL: incomplete canonical flow baseline mutant passed", file=sys.stderr)
+            return 1
+        missing_first_action = agents_text.replace("speck-graph-up", "speck_graph_up")
+        if not any("omits first-action skills" in error for error in validate_suite(catalog, suite, flow, contract, missing_first_action)):
+            print("FAIL: missing always-on first-action skill mutant passed", file=sys.stderr)
+            return 1
+        with tempfile.TemporaryDirectory(prefix="speck-competing-flow-") as tmp_raw:
+            mutant_root = Path(tmp_raw)
+            (mutant_root / ".speck/reference").mkdir(parents=True)
+            (mutant_root / ".speck/reference/command-phases.md").write_text("# Gates\n")
+            (mutant_root / ".cursor/skills/mutant").mkdir(parents=True)
+            (mutant_root / ".cursor/skills/mutant/SKILL.md").write_text(
+                "Flow: story-plan → story-tasks → story-implement → speck-audit\n"
+            )
+            if not competing_flow_errors(catalog, mutant_root):
+                print("FAIL: competing-flow detector mutant passed", file=sys.stderr)
+                return 1
         print(f"skill-routing self-test: PASS cases={len(suite['cases'])} auto_skills={len(catalog)}")
         return 0
 
@@ -446,7 +641,7 @@ def main() -> int:
         print_report(report)
         return 0 if report["pass"] else 1
 
-    prompt = build_prompt(catalog, suite)
+    prompt = build_prompt(catalog, suite, flow)
     started = datetime.now(timezone.utc)
     if args.provider == "codex":
         prediction_data, execution = run_codex(prompt, args.model, args.effort, args.timeout)
@@ -460,13 +655,15 @@ def main() -> int:
     report = score_predictions(catalog, suite, prediction_data)
     report.update(
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "provider": args.provider,
             "model": args.model,
             "effort": args.effort,
             "started_at": started.isoformat(),
             "catalog_sha256": digest(catalog),
             "cases_sha256": digest(suite),
+            "flow_sha256": digest(flow),
+            "flow_contract_sha256": digest(contract),
             "execution": execution,
         }
     )

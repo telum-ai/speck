@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "minimum_accuracy": 0.95,
   "cases": [
     {
@@ -34,7 +34,7 @@
     },
     {
       "id": "epic-constitution-override",
-      "prompt": "One epic needs technical principles that extend and partially override the project-wide constitution; the other epics do not.",
+      "prompt": "The epic is clarified and planning has not started. It needs local technical principles beyond the project constitution before architecture and planning.",
       "expect": "epic-constitution",
       "forbid": ["project-constitution", "epic-architecture"]
     },
@@ -124,7 +124,7 @@
     },
     {
       "id": "project-constitution-governance",
-      "prompt": "The Platform needs explicit project-wide coding principles, governance rules, and non-negotiable technical guardrails.",
+      "prompt": "Project context is complete and architecture has not started. This Platform now needs project-wide principles and governance guardrails.",
       "expect": "project-constitution",
       "forbid": ["epic-constitution", "project-context"]
     },
@@ -136,13 +136,13 @@
     },
     {
       "id": "project-design-system-governance",
-      "prompt": "This UI Platform needs shared design tokens, a primitive registry, component standards, and visual governance before planning.",
+      "prompt": "Project UX and architecture are complete, but planning has not started. This UI Platform now needs shared tokens, primitives, and component standards.",
       "expect": "project-design-system",
       "forbid": ["project-ux", "visual-quality"]
     },
     {
       "id": "project-domain-regulated-model",
-      "prompt": "The healthcare product has regulated terminology, domain rules, and invariants complex enough to deserve a standalone model.",
+      "prompt": "The healthcare project is clarified but foundation work has not started. Its regulated terms, rules, and invariants need a standalone model now.",
       "expect": "project-domain",
       "forbid": ["project-context", "project-product-contract"]
     },
@@ -304,7 +304,7 @@
     },
     {
       "id": "speck-self-eval-gate-fitness",
-      "prompt": "We changed a methodology gate. Measure its fitness against seeded defects and compare the candidate score with the immutable baseline.",
+      "prompt": "We are about to change a methodology gate. Measure its current fitness against seeded defects and compare candidates before locking the change.",
       "expect": "speck-self-eval",
       "forbid": ["speck-audit", "speck-frontier-scan"]
     },

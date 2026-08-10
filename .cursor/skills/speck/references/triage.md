@@ -32,11 +32,9 @@ Match `$ARGUMENTS` against `.speck/recipes/*/recipe.yaml` `keywords:` (case-inse
 6. Route each to `/epic` in its worktree. After merge: `git worktree remove --force ../<repo>-eNNN`.
 7. See `.speck/patterns/learned/process/parallel-epic-execution.md`.
 
-## 7. Key transitions
+## 7. Transition source
 
-**Project → Epic**: after `/project-plan` → `/analyze --level project` (when required) → `/project-roadmap` (optional) → `/epic-specify` per epic.
-
-**Epic → Story**: after `/epic-clarify` → [/epic-architecture if complex] → `/epic-plan` → `/epic-breakdown` → `/story-specify` per story.
+After choosing scope, re-read the marked canonical flow in root `AGENTS.md` and resume at its first incomplete applicable slot. This router does not carry project-to-epic or epic-to-story sequences.
 
 ## 8. Routing output
 

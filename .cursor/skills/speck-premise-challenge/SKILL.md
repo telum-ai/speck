@@ -1,6 +1,6 @@
 ---
 name: speck-premise-challenge
-description: Challenges whether a high-impact UI contract is worth building. Use before UX-RC or later premise locks.
+description: Challenges whether high-impact UI is worth building. Use before locking its contract or before UX-RC and later proof.
 ---
 
 ## Purpose

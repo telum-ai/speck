@@ -98,8 +98,8 @@ Goal: Detect and reduce ambiguity in the epic specification before moving to tec
    | /epic-journey + /wireframes| ⬜ / 🔴       | "[observation]" |
    | /speck-skeptical-review              | ⬜ /        | "[observation]" |
 
-   Recommended path to /epic-plan:
-   → [only Required/Recommended steps in flow order] → /epic-plan
+   Next applicable slot from the marked canonical Epic flow in root AGENTS.md:
+   → [first incomplete Required/Recommended slot]
 
    Shall I proceed with [first recommended step]?
    ```

@@ -1,6 +1,6 @@
 ---
 name: project-constitution
-description: Defines technical principles and guardrails. Use for Platform or when Build needs explicit governance constraints.
+description: Defines project technical principles. Use after project-context before project-architecture when governance is needed.
 paths:
   - "specs/projects/**"
 ---

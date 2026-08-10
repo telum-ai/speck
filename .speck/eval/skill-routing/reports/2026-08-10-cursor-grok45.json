@@ -453,13 +453,15 @@
       "forbidden": false
     }
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "provider": "cursor",
   "model": "cursor-grok-4.5-medium",
   "effort": "medium",
-  "started_at": "2026-08-10T20:43:51.299236+00:00",
-  "catalog_sha256": "083d070ce654a12b8cd5333639cbd24db495636355db6aaf8e98d9882268af2b",
-  "cases_sha256": "36ddf30e2aeb4e410fc7ca6ac34fb38a56627e7a300fa559d2a694f04e39186a",
+  "started_at": "2026-08-10T21:39:12.602620+00:00",
+  "catalog_sha256": "18cd152c1ceefc61d807a915719b1327ef419051b6df525ab58fb69b58dd2f1e",
+  "cases_sha256": "a24f2b96b9497dac0e308ac9a2533ba59236cab63c9b5415b1951689def1abbd",
+  "flow_sha256": "5400b6dc96db2a2adca6352d3c4d7bc806ea109cc13c76d51d1cb39049d216b5",
+  "flow_contract_sha256": "abf27bcd7aa038b4cfa669dc51062d055a98bcf1a37b0fdb1562100f8807b34c",
   "execution": {
     "command": [
       "cursor-agent",
@@ -475,7 +477,7 @@
       "--trust",
       "--approve-mcps",
       "--workspace",
-      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-cursor-9twhy0qd"
+      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-cursor-m85i6_k5"
     ],
     "exit_code": 0,
     "terminal_event": {

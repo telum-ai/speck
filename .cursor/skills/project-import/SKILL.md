@@ -53,10 +53,7 @@ If doing comprehensive analysis, architecture extraction, or epic identification
 ```
 Created: specs/projects/[PROJECT_ID]/
 Next (required):
-  1. /speck-scan --level project → project-landscape-overview.md
-  2. /project-context → constraints from scan
-  3. /project-architecture → design from scan
-  4. /project-plan → PRD + epics
+  Re-read the marked canonical Entry flow in root AGENTS.md and continue at its first incomplete slot.
 ```
 
 ## Success criteria

@@ -4,6 +4,7 @@
 - **Status**: accepted
 - **Class**: skill-catalog
 - **Amends**: ADR-0001 and v11 north star §6
+- **Amended by**: ADR-0009 (routing evaluation includes always-on flow)
 
 ## Context
 
@@ -18,14 +19,14 @@ V11 reduced automatic description context from roughly 30k characters to 4k. Eve
 3. Template paths, first actions, procedure, and exhaustive output detail remain JIT.
 4. User-only routers and compatibility shims keep explicit-name-only descriptions.
 5. The 120-character per-entry and 10k aggregate ceilings remain. Evidence does not show that either blocks specific triggers.
-6. Static validation enforces shape. `skill-routing-cases.json` covers every automatic skill, and the catalog-only evaluator measures model selection separately from body execution.
+6. Static validation enforces shape. `skill-routing-cases.json` covers every automatic skill, and the routing evaluator measures model selection separately from body execution.
 7. Real transcript conformance remains the judge of actual skill load timing and sibling exclusion after host selection.
 
 ## Evidence plan
 
 - Corpus mutations remove WHAT, WHEN, and trigger specificity.
 - Routing harness mutations omit a skill, duplicate a case, or inject a wrong prediction.
-- Live catalog-only trials report exact-match accuracy and forbidden-sibling selections per model.
+- Live always-on trials report exact-match accuracy and forbidden-sibling selections per model.
 - Catalog reports prove selection only. Host invocation and JIT load timing require separately captured transcript evidence.
 
 ## Consequences

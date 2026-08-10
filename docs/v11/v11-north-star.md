@@ -57,10 +57,11 @@ P1–P4; four-axis honesty; first-actions ladder; readiness states; evidence-or-
 1. Classify change: `spine` | `always-on-contract` | `skill-catalog` | `jit` | `delete`
 2. Prefer JIT (`references/`, templates, scripts)
 3. Catalog entry needs ≤120-char description + budget room
-4. Automatic descriptions follow WHAT + specific WHEN; add WHERE/boundary only when selection-critical
-5. Add or update its catalog-only routing case; run intended-model checks; validate host transcripts separately when captured
-6. ADR in `docs/decisions/` (+ scorecard for gates)
-7. `validate-corpus-budget` green
+4. Automatic descriptions follow WHAT + specific WHEN; phase-bound optional skills include their local WHERE/boundary
+5. Keep the complete marked canonical flow in always-on AGENTS; pin its ordered routes in the externally approval-gated routing baseline; JIT references may explain but never redefine it
+6. Add/update its always-on routing case; run intended-model checks; validate host transcripts separately when captured
+7. ADR in `docs/decisions/` (+ scorecard for gates)
+8. `validate-corpus-budget` green
 
 ## 7. Out of v11
 

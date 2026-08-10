@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 RUNNER="$ROOT/.speck/eval/skill-routing/runner.py"
+BASELINE_GUARD="$ROOT/.speck/eval/skill-routing/guard-baseline-change.sh"
 
 python3 "$RUNNER" self-test
 
@@ -42,12 +43,47 @@ python3 - "$TMP/reports/2026-08-10-codex-terra.json" <<'PY'
 import json, pathlib, sys
 path = pathlib.Path(sys.argv[1])
 report = json.loads(path.read_text())
-report["catalog_sha256"] = "0" * 64
+report["flow_sha256"] = "0" * 64
 path.write_text(json.dumps(report))
 PY
 if python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports" >/dev/null; then
-  echo "FAIL: stale-report mutant passed"
+  echo "FAIL: stale-flow report mutant passed"
   exit 1
 fi
+
+rm -r "$TMP/reports"
+cp -R "$ROOT/.speck/eval/skill-routing/reports" "$TMP/reports"
+python3 - "$TMP/reports/2026-08-10-codex-terra.json" <<'PY'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+report = json.loads(path.read_text())
+report["flow_contract_sha256"] = "0" * 64
+path.write_text(json.dumps(report))
+PY
+if python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports" >/dev/null; then
+  echo "FAIL: stale-flow-baseline report mutant passed"
+  exit 1
+fi
+
+mkdir -p "$TMP/guard-repo/.speck/eval/skill-routing"
+cp "$ROOT/.speck/eval/skill-routing/baseline.json" "$TMP/guard-repo/.speck/eval/skill-routing/baseline.json"
+(
+  cd "$TMP/guard-repo"
+  git init -q
+  git config user.name "Speck Test"
+  git config user.email "speck-test@example.invalid"
+  git add .
+  git commit -qm baseline
+  base_sha="$(git rev-parse HEAD)"
+  FLOW_BASELINE_APPROVED=false bash "$BASELINE_GUARD" "$base_sha" >/dev/null
+  printf '\n' >> .speck/eval/skill-routing/baseline.json
+  git add .
+  git commit -qm mutant
+  if FLOW_BASELINE_APPROVED=false bash "$BASELINE_GUARD" "$base_sha" >/dev/null 2>&1; then
+    echo "FAIL: same-PR baseline mutation passed without external approval"
+    exit 1
+  fi
+  FLOW_BASELINE_APPROVED=true bash "$BASELINE_GUARD" "$base_sha" >/dev/null
+)
 
 echo "Skill-routing evaluator tests passed"

@@ -12,7 +12,7 @@ paths:
 
 ## Purpose
 
-`/epic` is the **epic-level stateful orchestrator**. It auto-detects the epic's current state and **invokes downstream skills in canonical order** (`/epic-specify`, `/epic-clarify`, `/epic-plan`, `/epic-breakdown`, `/analyze --level epic`, story work via `/story`, `/audit`, `/epic-validate`, `/epic-retrospective`).
+`/epic` is the **epic-level stateful orchestrator**. It advances an epic by re-reading the marked canonical Epic flow in root `AGENTS.md` at every transition. `AGENTS.md` owns order; this skill owns state detection and stop-gate enforcement, never a second sequence.
 
 **Driving pattern (REQUIRED)**: For each step in `### 3. Execution Loop`, **read and fully execute** the corresponding skill's `SKILL.md` (and its template, per that skill's FIRST ACTION) before advancing. Story work MUST delegate to `/story` (read `.cursor/skills/story/SKILL.md`) — do not implement stories inline from the epic orchestrator.
 
@@ -68,47 +68,17 @@ Read `epic.md` and evaluate its state:
 
 ### 3. Execution Loop (The Transition Map)
 
-For **each** transition below: **invoke the listed skill** (resolve the command stem to `.cursor/skills/<skill>/SKILL.md`; `/analyze --level epic` resolves to `analyze/SKILL.md`), then follow it end-to-end before advancing. Story work uses `/story` per story in `epic-breakdown.md` order.
+Before entering the Epic line, run `bash .speck/scripts/validation/check-epic-prereqs.sh specs/projects/<PROJECT_ID>`. STOP on exit 1 and route to the reported project-level prerequisite; surface `ANALYSIS_GRANDFATHERED.P2` and proceed.
 
-Run the appropriate skills in order. After each command completes successfully, evaluate whether a stop condition is met before transitioning.
+At every iteration:
 
-```
-State: Draft         →  Run: bash .speck/scripts/validation/check-epic-prereqs.sh specs/projects/<PROJECT_ID>
-                             ↳ STOP on exit 1 — the project-level /analyze --level project gate has not cleared.
-                               Route to /analyze --level project; do NOT specify the epic.
-                               ANALYSIS_GRANDFATHERED.P2 → surface loudly, then proceed.
-                        Run: /epic-specify  →  Validate & Clarify (/epic-clarify)
-                             ↳ STOP if user clarification required.
-                               Transition to state: Specified
+1. Re-read the exact `<!-- SPECK:FLOW:START -->` block in root `AGENTS.md` and select its Epic line.
+2. Scan that line left-to-right. Resume at the first incomplete required slot or applicable bracketed slot; artifact-based state labels never authorize skipping an earlier slot.
+3. Read `.cursor/skills/<selected-skill>/SKILL.md` and execute it end-to-end. `analyze` and `speck-audit` use epic scope; story loop work delegates to `/story` in breakdown order.
+4. Apply the decorrelated-analysis and delegated-story gates below. Evaluate hard stops, then re-read the AGENTS flow before choosing the next slot.
+5. Mark Done only after every applicable Epic slot, including UI proof and retrospective, has completed.
 
-State: Specified     →  If UI Epic: Run /epic-journey and /epic-wireframes / /epic-experience-chain
-                        Run: /epic-plan     →  Run: /epic-breakdown
-                             ↳ STOP if technical tradeoffs require human decision.
-                               Transition to state: Planned
-
-State: Planned       →  Run: /analyze --level epic  →  Verify zero critical issues.
-                             Lenses MUST be decorrelated from whoever authored the epic
-                             corpus — if this orchestrator's own session wrote epic-tech-spec.md
-                             or epic-breakdown.md, delegate the lenses to a separate agent
-                             (@speck-auditor or a separate session). Self-certification is
-                             not an analysis pass.
-                             ↳ STOP if P0/P1 issues found in plans.
-                        Start story implementations (delegating to /story)
-                               Transition to state: In Progress
-
-State: In Progress   →  Monitor and coordinate individual story completions.
-                        For EACH delegated story result, run the Verify-Skills Gate (§3a) before accepting.
-                        Once all stories are complete AND verified:
-                               Transition to state: Stories Complete
-
-State: Stories Complete → Run: /audit --epic [EPIC_ID]
-                             ↳ STOP if P0 findings exist.
-                               Transition to state: Audited
-
-State: Audited       →  Run: /epic-validate
-                             ↳ STOP if validated state fails to meet targets.
-                               Transition to state: Validated
-```
+This keeps stateful resumption without allowing the orchestrator to omit optional constitution, architecture, UX, proof, or closure slots added after this skill was written.
 
 ### 3a. Delegated-Execution Verify Gate (accepting sub-agent story results)
 

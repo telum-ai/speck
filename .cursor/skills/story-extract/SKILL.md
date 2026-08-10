@@ -1,6 +1,6 @@
 ---
 name: story-extract
-description: Reverse-engineers story specs and code scans. Use when existing implementation lacks Speck story artifacts.
+description: Reverse-engineers story specs and code scans. Use at story entry before story-clarify when code lacks Speck artifacts.
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"
@@ -79,7 +79,7 @@ Return (no report template file):
 
 Present count + confidence; ask: boundaries correct? rules accurate?
 
-Route: mostly complete → validate; many gaps → plan/scan; messy → debt epic.
+Route: re-read the marked canonical Story flow in root `AGENTS.md` and resume at its first incomplete slot; many gaps may require scan/planning, while a scope too messy for one story becomes a debt epic.
 
 ## Patterns
 

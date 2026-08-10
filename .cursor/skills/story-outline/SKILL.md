@@ -18,6 +18,6 @@ The v6 outline (a separate research-mapping step) no longer exists as its own ar
 - `/speck-decision-log` — lock the chosen approach
 - `/story-plan` — performs just-in-time research inline
 
-**Do this instead**: `/story-clarify` → (`/speck-skeptical-review` if the approach is unclear) → `/story-plan`.
+**Do this instead**: re-read the marked canonical Story flow in root `AGENTS.md` and resume at its first incomplete applicable slot.
 
 Alias kept for user-invoked muscle memory and excluded from automatic selection.

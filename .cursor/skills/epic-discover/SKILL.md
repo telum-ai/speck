@@ -93,7 +93,7 @@ Present findings; ask: boundaries align with team? combine/split? Validate uncer
 Route by outcome:
 - Many small → suggest combine
 - Few large → suggest split by journey
-- Clear → `/story-extract` or `/epic-plan`
+- Clear → re-read the marked canonical Epic flow in root `AGENTS.md` and resume at its first incomplete slot
 - Unclear → team input + `/speck-scan --level epic`
 
 ## Patterns

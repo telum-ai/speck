@@ -453,13 +453,15 @@
       "forbidden": false
     }
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "provider": "codex",
   "model": "gpt-5.6-terra",
   "effort": "medium",
-  "started_at": "2026-08-10T20:43:51.299232+00:00",
-  "catalog_sha256": "083d070ce654a12b8cd5333639cbd24db495636355db6aaf8e98d9882268af2b",
-  "cases_sha256": "36ddf30e2aeb4e410fc7ca6ac34fb38a56627e7a300fa559d2a694f04e39186a",
+  "started_at": "2026-08-10T21:39:12.600708+00:00",
+  "catalog_sha256": "18cd152c1ceefc61d807a915719b1327ef419051b6df525ab58fb69b58dd2f1e",
+  "cases_sha256": "a24f2b96b9497dac0e308ac9a2533ba59236cab63c9b5415b1951689def1abbd",
+  "flow_sha256": "5400b6dc96db2a2adca6352d3c4d7bc806ea109cc13c76d51d1cb39049d216b5",
+  "flow_contract_sha256": "abf27bcd7aa038b4cfa669dc51062d055a98bcf1a37b0fdb1562100f8807b34c",
   "execution": {
     "command": [
       "codex",
@@ -475,14 +477,14 @@
       "-c",
       "model_reasoning_effort=medium",
       "-C",
-      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-p0jnzyrg",
+      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-zg4rhlc5",
       "--output-schema",
-      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-p0jnzyrg/schema.json",
+      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-zg4rhlc5/schema.json",
       "-o",
-      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-p0jnzyrg/response.json",
+      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-zg4rhlc5/response.json",
       "<prompt-on-stdin>"
     ],
     "exit_code": 0,
-    "stderr_tail": "tive-close\",\"skill\":\"project-retrospective\"},{\"id\":\"project-roadmap-sequencing\",\"skill\":\"project-roadmap\"},{\"id\":\"project-specify-clear-start\",\"skill\":\"project-specify\"},{\"id\":\"project-state-regenerate\",\"skill\":\"project-state\"},{\"id\":\"project-ux-platform-strategy\",\"skill\":\"project-ux\"},{\"id\":\"project-validate-prove\",\"skill\":\"project-validate\"},{\"id\":\"speck-audit-post-implementation\",\"skill\":\"speck-audit\"},{\"id\":\"speck-catch-up-empty-scaffolds\",\"skill\":\"speck-catch-up\"},{\"id\":\"speck-debug-broken-workflow\",\"skill\":\"speck-debug\"},{\"id\":\"speck-decision-log-lock\",\"skill\":\"speck-decision-log\"},{\"id\":\"speck-feedback-method-gap\",\"skill\":\"speck-feedback\"},{\"id\":\"speck-frontier-scan-sota\",\"skill\":\"speck-frontier-scan\"},{\"id\":\"speck-graph-up-marker\",\"skill\":\"speck-graph-up\"},{\"id\":\"speck-larp-real-user\",\"skill\":\"speck-larp\"},{\"id\":\"speck-learn-mid-story\",\"skill\":\"speck-learn\"},{\"id\":\"speck-migrate-version\",\"skill\":\"speck-migrate\"},{\"id\":\"speck-premise-challenge-ui\",\"skill\":\"speck-premise-challenge\"},{\"id\":\"speck-recheck-engagement-gap\",\"skill\":\"speck-recheck\"},{\"id\":\"speck-reprove-marker\",\"skill\":\"speck-reprove\"},{\"id\":\"speck-scan-code-facts\",\"skill\":\"speck-scan\"},{\"id\":\"speck-self-eval-gate-fitness\",\"skill\":\"speck-self-eval\"},{\"id\":\"speck-skeptical-review-alternatives\",\"skill\":\"speck-skeptical-review\"},{\"id\":\"story-clarify-ambiguous-ac\",\"skill\":\"story-clarify\"},{\"id\":\"story-extract-existing-code\",\"skill\":\"story-extract\"},{\"id\":\"story-implement-ready-artifacts\",\"skill\":\"story-implement\"},{\"id\":\"story-plan-technical-design\",\"skill\":\"story-plan\"},{\"id\":\"story-retrospective-close\",\"skill\":\"story-retrospective\"},{\"id\":\"story-specify-placeholder\",\"skill\":\"story-specify\"},{\"id\":\"story-tasks-from-plan\",\"skill\":\"story-tasks\"},{\"id\":\"story-ui-spec-complex-ui\",\"skill\":\"story-ui-spec\"},{\"id\":\"story-validate-prove\",\"skill\":\"story-validate\"},{\"id\":\"visual-quality-generic-ui\",\"skill\":\"visual-quality\"},{\"id\":\"visual-testing-validation-evidence\",\"skill\":\"visual-testing\"}]}\ntokens used\n30,920\n"
+    "stderr_tail": "tive-close\",\"skill\":\"project-retrospective\"},{\"id\":\"project-roadmap-sequencing\",\"skill\":\"project-roadmap\"},{\"id\":\"project-specify-clear-start\",\"skill\":\"project-specify\"},{\"id\":\"project-state-regenerate\",\"skill\":\"project-state\"},{\"id\":\"project-ux-platform-strategy\",\"skill\":\"project-ux\"},{\"id\":\"project-validate-prove\",\"skill\":\"project-validate\"},{\"id\":\"speck-audit-post-implementation\",\"skill\":\"speck-audit\"},{\"id\":\"speck-catch-up-empty-scaffolds\",\"skill\":\"speck-catch-up\"},{\"id\":\"speck-debug-broken-workflow\",\"skill\":\"speck-debug\"},{\"id\":\"speck-decision-log-lock\",\"skill\":\"speck-decision-log\"},{\"id\":\"speck-feedback-method-gap\",\"skill\":\"speck-feedback\"},{\"id\":\"speck-frontier-scan-sota\",\"skill\":\"speck-frontier-scan\"},{\"id\":\"speck-graph-up-marker\",\"skill\":\"speck-graph-up\"},{\"id\":\"speck-larp-real-user\",\"skill\":\"speck-larp\"},{\"id\":\"speck-learn-mid-story\",\"skill\":\"speck-learn\"},{\"id\":\"speck-migrate-version\",\"skill\":\"speck-migrate\"},{\"id\":\"speck-premise-challenge-ui\",\"skill\":\"speck-premise-challenge\"},{\"id\":\"speck-recheck-engagement-gap\",\"skill\":\"speck-recheck\"},{\"id\":\"speck-reprove-marker\",\"skill\":\"speck-reprove\"},{\"id\":\"speck-scan-code-facts\",\"skill\":\"speck-scan\"},{\"id\":\"speck-self-eval-gate-fitness\",\"skill\":\"speck-self-eval\"},{\"id\":\"speck-skeptical-review-alternatives\",\"skill\":\"speck-skeptical-review\"},{\"id\":\"story-clarify-ambiguous-ac\",\"skill\":\"story-clarify\"},{\"id\":\"story-extract-existing-code\",\"skill\":\"story-extract\"},{\"id\":\"story-implement-ready-artifacts\",\"skill\":\"story-implement\"},{\"id\":\"story-plan-technical-design\",\"skill\":\"story-plan\"},{\"id\":\"story-retrospective-close\",\"skill\":\"story-retrospective\"},{\"id\":\"story-specify-placeholder\",\"skill\":\"story-specify\"},{\"id\":\"story-tasks-from-plan\",\"skill\":\"story-tasks\"},{\"id\":\"story-ui-spec-complex-ui\",\"skill\":\"story-ui-spec\"},{\"id\":\"story-validate-prove\",\"skill\":\"story-validate\"},{\"id\":\"visual-quality-generic-ui\",\"skill\":\"visual-quality\"},{\"id\":\"visual-testing-validation-evidence\",\"skill\":\"visual-testing\"}]}\ntokens used\n31,542\n"
   }
 }

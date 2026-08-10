@@ -1,6 +1,6 @@
 ---
 name: epic-constitution
-description: Defines epic-only technical principles. Use when an epic must extend or override the project constitution.
+description: Defines local epic principles. Use after epic-clarify before epic-architecture or epic-plan when local rules are needed.
 paths:
   - "specs/projects/**/E*/**"
   - "specs/projects/**/epics/**"
@@ -140,10 +140,8 @@ Guide finalization:
 - Approve and version
 
 Next steps:
-- Apply to story development (/story-specify)
-- Create validation gates in CI/CD
-- Monitor compliance during reviews
-- Update if requirements change
+- Re-read the marked canonical Epic flow in root `AGENTS.md` and continue at its first incomplete applicable slot.
+- Translate enforceable principles into the later plan and validation gates when those canonical slots run.
 
 Note: Epic constitutions are most valuable for complex domains with special rules.
 Many epics can successfully use just the project constitution.

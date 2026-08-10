@@ -1,6 +1,6 @@
 ---
 name: story-specify
-description: Creates or completes a story spec.md. Use when starting a story from an epic placeholder or new scope.
+description: Creates story spec.md. Use after epic-breakdown or for new scope, before story-clarify and story-plan.
 paths:
   - "specs/projects/**/S*/**"
   - "specs/projects/**/stories/**"
@@ -106,7 +106,7 @@ Output table with evidence quotes + recommended path.
 - Orchestrated (`/story`): proceed to first recommended step
 - Interactive: ask "Proceed with [first step]?"
 
-Flow: clarify → [`/speck-skeptical-review` if unclear] → [`/speck-scan --level story` if brownfield] → plan → ui-spec → tasks → implement → audit → validate
+After save, re-read the marked canonical Story flow in root `AGENTS.md` and continue at its first incomplete applicable slot. The table selects optional slots; it does not define their order.
 
 UI REQUIRED: note `/story-ui-spec` after plan, before tasks.
 

@@ -9,8 +9,8 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 
 | Metric | Before (~10.5) | After (11.0) |
 |--------|----------------|--------------|
-| AGENTS.md | ~62810 bytes / 578 lines | 6581 bytes / 120 lines |
-| Auto skill description sum | ~30k chars | **6828 chars** (specific trigger contracts) |
+| AGENTS.md | ~62810 bytes / 578 lines | 8606 bytes / 130 lines |
+| Auto skill description sum | ~30k chars | **6901 chars** (specific trigger contracts) |
 | Auto skill entries | 76 after initial v11 pass | **63** |
 | Domain/integration skills | ~20 | **0** (deleted) |
 | `disable-model-invocation: true` | inverted / scattered | **machine-owned family policy** |
@@ -34,7 +34,8 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 - Analyze/adjust now have one canonical automatic entry. Analyze stages core (5.3 KiB), one reviewer lens (~3.4 KiB), then the report template; adjust loads one blast-radius branch.
 - Validation/retrospective retain level-specific automatic skills; their generic convenience routers and all compatibility aliases are user-only.
 - All 63 automatic descriptions now use third-person WHAT + specific WHEN; lifecycle WHERE or sibling boundaries appear only when selection-critical (ADR-0008).
-- A 63-case catalog-only routing suite covers every automatic skill with near-neighbor exclusions. GPT-5.6 Terra and Grok 4.5 each selected 63/63 correctly; checked-in reports are hash-bound and re-scored in CI.
+- A 63-case always-on routing suite covers every automatic skill with near-neighbor exclusions. GPT-5.6 Terra and Grok 4.5 each selected 63/63; reports bind catalog + cases + canonical-flow + approval-gated route-baseline hashes and are re-scored in CI.
+- The complete project/epic/story flow is always in AGENTS context; JIT references explain gates without carrying competing sequences (ADR-0009).
 - Encyclopedic AGENTS sections → `.speck/reference/` (canonical-routing, command-phases, host-capabilities).
 - Evidence-contract template principle-compressed (≤400 lines); detail JIT under `.speck/reference/evidence-*`.
 

@@ -1,6 +1,6 @@
 ---
 name: parallel-execution
-description: Guides safe parallel epic or chunk execution. Use when worktrees, seam contracts, or merge choreography are needed.
+description: Guides safe parallel execution. Use before dispatch when worktrees, seam contracts, or merge choreography are needed.
 ---
 
 # parallel-execution

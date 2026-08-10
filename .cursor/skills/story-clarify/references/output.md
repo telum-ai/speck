@@ -29,8 +29,8 @@ Questions Asked: [X] of 5
    | /speck-scan --level story    | ⬜ /  / 🔴 | "[observation]" |
    | /story-ui-spec | ⬜ / 🔴       | "[observation]" |
 
-   Recommended path to /story-plan:
-   → [only Required/Recommended steps] → /story-plan → [/story-ui-spec if needed] → /story-tasks → /story-implement → /audit → /story-validate
+   Next applicable slot from the marked canonical Story flow in root AGENTS.md:
+   → [first incomplete Required/Recommended slot]
 
    Shall I proceed with [first recommended step]?
    ```
