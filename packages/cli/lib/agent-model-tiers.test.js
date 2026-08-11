@@ -88,6 +88,7 @@ test('agent prompts are thin adapters, not parallel methodology or chat schemas'
     const source = readFileSync(join(SRC, `${name}.md`), 'utf-8');
     assert.match(source, /\.speck\/reference\/agent-dispatch\.json/, `${name}: must load dispatch contract`);
     assert.match(source, /canonical skill/, `${name}: must enter through a canonical skill`);
+    assert.match(source, /SKILL_UNAVAILABLE/, `${name}: must fail closed when its canonical skill is unavailable`);
     assert.doesNotMatch(source, /^#+\s+(Response|Output) Format\b/m, `${name}: chat output schema drift`);
     assert.ok(source.split('\n').length <= 24, `${name}: role prompt is no longer thin`);
 

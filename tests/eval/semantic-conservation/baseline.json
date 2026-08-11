@@ -64,7 +64,7 @@
     {"path": ".cursor/skills/project-plan/SKILL.md", "sha256": "dd2ea26e5fc33577c4df49b864f1f79a2bd0347e102efc351a62d6bb958f932b"},
     {"path": ".cursor/skills/project-evidence-contract/SKILL.md", "sha256": "6e2a9616c4fb57a3575c94acb391ae281a47416c861477642a61565824890e7f"},
     {"path": ".cursor/skills/project-evidence-contract/references/spine.md", "sha256": "e570b276b0e8486984bf64cd163e86eb68c50f7d6609091a556a1c68f3def578"},
-    {"path": "packages/cli/lib/agent-model-tiers.test.js", "sha256": "d6b310f3011b6c668671fcfc1f387facd7223aa1158d40ddc5d2dcc39ad1b691"},
+    {"path": "packages/cli/lib/agent-model-tiers.test.js", "sha256": "82bf89e35d8e386e097c8f732d17b1a553095022fea8ddbb23f1969625799ca1"},
     {"path": "packages/cli/lib/generate-agents.js", "sha256": "c9e3ebf3c97b9ea86698ea987cb0d67acc24b5ee5a3ac3153f2795eb4ccb88f1"},
     {"path": "packages/cli/lib/sync.js", "sha256": "a257b068115bddf58213f6531750bcd3586ac62c3de3b50465175303b7f5ac3d"},
     {"path": "packages/cli/lib/sync.preserve.test.js", "sha256": "addf634e1751ac9ebdde19d8f6f4721dd15d2b0d6b6270f2c4ef63894d9dade1"},
