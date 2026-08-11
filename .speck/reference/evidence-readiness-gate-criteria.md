@@ -6,7 +6,7 @@
 
 ### The Four-Axis Readiness Model
 Every readiness claim decomposes into three distinct, non-substitutable axes:
-1. **CORRECT** — Does the code do what it claims? (proven by unit/integration tests, types, and `/audit`).
+1. **CORRECT** — Does the code do what it claims? (proven by unit/integration tests, types, and `/speck-audit`).
 2. **ON-CONTRACT** — Does the behavior conform to the specifications and magic moments? (proven by standard LARP and traceability matrix).
 3. **FELT-GOOD** *(legibility)* — Would a naive, first-time user actually find the experience good? **The AI evaluates this axis directly** via the context-stripped naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric). A human taste review is an *optional stronger override* — never a prerequisite.
 4. **TASTE** *(connoisseur craft)* — Is it *crafted / premium / does it sing*? Distinct from FELT-GOOD legibility: a screen can be clear yet cheap-feeling. **The AI evaluates this directly** via the connoisseur-hostile pass (Job C), **dual-anchored** against `product-contract.md` §6b Aesthetic Contract + `design-system.md` (product-relative) AND the `visual-quality` universal principles. Records `taste_axis` + `taste_anchor`; **surfaces aesthetic forks for the owner** (never resolves subjective taste unilaterally); a **severe BAD** (≥2 pixel-grounded craft violations on a flagship surface) or a named-declared-rule violation **caps the state**. `TASTE: uncovered` for consumer archetypes until the connoisseur pass runs.

@@ -39,7 +39,12 @@ test('smartSync: project-custom skill dir survives upgrade', () => {
 
 test('smartSync: removes retired level aliases without deleting custom skills', () => {
   const { source, target } = makeDirs();
-  for (const name of ['project-adjust', 'epic-adjust', 'story-adjust', 'story-analyze']) {
+  const retired = [
+    'project-adjust', 'epic-adjust', 'story-adjust',
+    'project-analyze', 'epic-analyze', 'story-analyze',
+    'retrospective', 'speck-catch-up', 'speck-reprove', 'speck-graph-up',
+  ];
+  for (const name of retired) {
     const dir = join(target, '.cursor', 'skills', name);
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, 'SKILL.md'), 'RETIRED');
@@ -47,7 +52,7 @@ test('smartSync: removes retired level aliases without deleting custom skills', 
 
   smartSync(source, target);
 
-  for (const name of ['project-adjust', 'epic-adjust', 'story-adjust', 'story-analyze']) {
+  for (const name of retired) {
     assert.ok(!existsSync(join(target, '.cursor', 'skills', name)), `${name} must be removed`);
   }
   assert.ok(existsSync(join(target, '.cursor', 'skills', 'myproject-custom', 'SKILL.md')));

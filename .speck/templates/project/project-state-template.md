@@ -152,7 +152,7 @@ at the SHA that last changed it, `none yet` is printed where there is none (an e
 
 ## 🛑 Blocking Issues (severity-ranked)
 
-[Pull from latest `/recheck`, `/audit`, and `/validate` reports. Order: P0 → P3.]
+[Pull from latest `/speck-recheck`, `/speck-audit`, and `/validate` reports. Order: P0 → P3.]
 
 | ID | Severity | Issue | Where | Last Seen |
 |----|----------|-------|-------|-----------|

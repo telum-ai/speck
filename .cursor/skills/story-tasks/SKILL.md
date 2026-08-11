@@ -1,12 +1,6 @@
 ---
 name: story-tasks
 description: Writes executable tasks.md from the story plan. Use after story-plan and optional UI spec, before implementation.
-paths:
-  - "specs/projects/**/S*/**"
-  - "specs/projects/**/stories/**"
-  - "specs/projects/**/**/spec.md"
-  - "specs/projects/**/**/plan.md"
-  - "specs/projects/**/**/tasks.md"
 ---
 
 # story-tasks

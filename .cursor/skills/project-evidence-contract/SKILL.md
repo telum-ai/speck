@@ -1,8 +1,6 @@
 ---
 name: project-evidence-contract
 description: Defines product proof and readiness gates. Use at Build/Platform after product-contract and before project-plan.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-evidence-contract

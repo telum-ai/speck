@@ -10,7 +10,7 @@ brownfield_exempt: true
 <!--
 THIS IS A BROWNFIELD EXEMPTION ARTIFACT.
 
-Scaffolded by /speck-catch-up for UI epics that pre-date v7. The epic shipped
+Scaffolded by the scaffold stage of /speck-migrate for UI epics that pre-date v7. The epic shipped
 without an experience-chain.md, and reverse-engineering one fully would block
 catch-up indefinitely. Instead, this lightweight historical record:
 
@@ -29,7 +29,7 @@ per-epic, and ONLY for epics that pre-dated v7 migration.
 **Epic**: REPLACE_BEFORE_SHIP: E### - Name
 **Project**: `REPLACE_BEFORE_SHIP: project-id`
 **Status**: `brownfield_exempt` — full chain pending re-validation
-**Scaffolded by**: `/speck-catch-up` on REPLACE_BEFORE_SHIP: YYYY-MM-DD
+**Scaffolded by**: `/speck-migrate` on REPLACE_BEFORE_SHIP: YYYY-MM-DD
 
 ---
 

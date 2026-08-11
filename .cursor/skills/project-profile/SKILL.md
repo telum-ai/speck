@@ -1,8 +1,6 @@
 ---
 name: project-profile
 description: Refreshes declared PROFILE surfaces. Use after product-contract changes before evidence-contract or when drift appears.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-profile

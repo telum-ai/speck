@@ -620,14 +620,14 @@ run_validator "$ROOT" --transcript "$TRANSCRIPT_EVIDENCE_STALE" --profile "$EVID
 
 echo "── validator: UX-RC requires template plus FELT and TASTE gates ───────────────────────────"
 UI_PROFILE="story-validate-ui"
-UI_LOADER_CMD="python3 .speck/scripts/context/speck_context.py $UI_PROFILE --select claimed_state=ux-rc --select visual_host=web --root $ROOT"
-python3 "$LOADER" "$UI_PROFILE" --select claimed_state=ux-rc --select visual_host=web --root "$ROOT" > "$T/ui-loader.out"
+UI_LOADER_CMD="python3 .speck/scripts/context/speck_context.py $UI_PROFILE --select claimed_state=ux-rc --root $ROOT"
+python3 "$LOADER" "$UI_PROFILE" --select claimed_state=ux-rc --root "$ROOT" > "$T/ui-loader.out"
 TRANSCRIPT_UI_THIN="$T/ui-thin.jsonl"
 write_transcript "$TRANSCRIPT_UI_THIN" \
   cmd "$UI_LOADER_CMD" "$T/ui-loader.out" 0 \
   change "specs/projects/demo/stories/S001/validation-report.md" \
   cmd "bash .speck/scripts/validation/validate-template.sh validation-report.md" /dev/null 0
-run_validator "$ROOT" --transcript "$TRANSCRIPT_UI_THIN" --profile "$UI_PROFILE" --select claimed_state=ux-rc --select visual_host=web
+run_validator "$ROOT" --transcript "$TRANSCRIPT_UI_THIN" --profile "$UI_PROFILE" --select claimed_state=ux-rc
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "validate-felt-axis.sh" && echo "$OUT" | grep -q "validate-taste-axis.sh" \
   && pass "UX-RC cannot pass GATE_USE without FELT and TASTE validators" || fail "thin UX-RC gates should fail (rc=$RC)"
 
@@ -638,7 +638,7 @@ write_transcript "$TRANSCRIPT_UI_NO_STAMP" \
   cmd "bash .speck/scripts/validation/validate-template.sh validation-report.md" /dev/null 0 \
   cmd "bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md" /dev/null 0 \
   cmd "bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict validation-report.md" /dev/null 0
-run_validator "$ROOT" --transcript "$TRANSCRIPT_UI_NO_STAMP" --profile "$UI_PROFILE" --select claimed_state=ux-rc --select visual_host=web
+run_validator "$ROOT" --transcript "$TRANSCRIPT_UI_NO_STAMP" --profile "$UI_PROFILE" --select claimed_state=ux-rc
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "stamp-truth.sh" \
   && pass "UX-RC cannot pass GATE_USE without a fresh truth stamp" || fail "missing truth stamp should fail (rc=$RC)"
 
@@ -650,17 +650,17 @@ write_transcript "$TRANSCRIPT_UI_FULL" \
   cmd "bash .speck/scripts/validation/validate-template.sh validation-report.md" /dev/null 0 \
   cmd "bash .speck/scripts/validation/validators/validate-felt-axis.sh --strict validation-report.md" /dev/null 0 \
   cmd "bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict validation-report.md" /dev/null 0
-run_validator "$ROOT" --transcript "$TRANSCRIPT_UI_FULL" --profile "$UI_PROFILE" --select claimed_state=ux-rc --select visual_host=web --json
+run_validator "$ROOT" --transcript "$TRANSCRIPT_UI_FULL" --profile "$UI_PROFILE" --select claimed_state=ux-rc --json
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
   && pass "UX-RC passes after template, FELT, and TASTE gates" || fail "full UX-RC gates should pass (rc=$RC)"
 
 echo "── canonical family routers: staged analyze and exclusive adjust branches ───────────────"
 ANALYZE_CORE_PROFILE="analyze-core"
-ANALYZE_CORE_CMD="python3 .speck/scripts/context/speck_context.py $ANALYZE_CORE_PROFILE --select level=epic --select tier=build --root $ROOT"
-python3 "$LOADER" "$ANALYZE_CORE_PROFILE" --select level=epic --select tier=build --root "$ROOT" > "$T/analyze-core.out"
+ANALYZE_CORE_CMD="python3 .speck/scripts/context/speck_context.py $ANALYZE_CORE_PROFILE --select level=epic --root $ROOT"
+python3 "$LOADER" "$ANALYZE_CORE_PROFILE" --select level=epic --root "$ROOT" > "$T/analyze-core.out"
 CORE_OUT=$(<"$T/analyze-core.out")
-[[ "$CORE_OUT" == *"SPECK_CONTEXT_BEGIN .cursor/skills/analyze/references/levels/epic.md"* ]] \
-  && [[ "$CORE_OUT" == *"SPECK_CONTEXT_BEGIN .cursor/skills/analyze/references/traceability.md"* ]] \
+[[ "$CORE_OUT" == *"SPECK_CONTEXT_BEGIN .cursor/skills/analyze/references/core.md"* ]] \
+  && [[ "$CORE_OUT" == *"Flow fit"* ]] \
   && [[ "$CORE_OUT" != *"project-analysis-report-template.md"* ]] \
   && [[ "$CORE_OUT" != *"references/lenses/"* ]] \
   && pass "analyze core loads only selected scope and defers templates/lenses" || fail "analyze core branch leaked deferred context"
@@ -668,7 +668,7 @@ CORE_OUT=$(<"$T/analyze-core.out")
 TRANSCRIPT_ANALYZE_CORE="$T/analyze-core.jsonl"
 write_transcript "$TRANSCRIPT_ANALYZE_CORE" \
   cmd "$ANALYZE_CORE_CMD" "$T/analyze-core.out" 0
-run_validator "$ROOT" --transcript "$TRANSCRIPT_ANALYZE_CORE" --profile "$ANALYZE_CORE_PROFILE" --select level=epic --select tier=build --json
+run_validator "$ROOT" --transcript "$TRANSCRIPT_ANALYZE_CORE" --profile "$ANALYZE_CORE_PROFILE" --select level=epic --json
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' && echo "$OUT" | grep -q '"status": "not_applicable"' \
   && pass "read-only analyze core passes without manufacturing a mutation" || fail "read-only analyze core transcript (rc=$RC)"
 
@@ -676,7 +676,7 @@ TRANSCRIPT_ANALYZE_CORE_MUTATION="$T/analyze-core-mutation.jsonl"
 write_transcript "$TRANSCRIPT_ANALYZE_CORE_MUTATION" \
   cmd "$ANALYZE_CORE_CMD" "$T/analyze-core.out" 0 \
   change "specs/projects/demo/PRD.md"
-run_validator "$ROOT" --transcript "$TRANSCRIPT_ANALYZE_CORE_MUTATION" --profile "$ANALYZE_CORE_PROFILE" --select level=epic --select tier=build --json
+run_validator "$ROOT" --transcript "$TRANSCRIPT_ANALYZE_CORE_MUTATION" --profile "$ANALYZE_CORE_PROFILE" --select level=epic --json
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -q '"TIMING": {' && echo "$OUT" | grep -q 'read-only profile observed a mutation' \
   && pass "read-only analyze core rejects any mutation" || fail "read-only mutation must fail TIMING (rc=$RC)"
 
@@ -717,20 +717,19 @@ run_validator "$ROOT" --transcript "$TRANSCRIPT_ANALYZE_REPORT" --profile "$ANAL
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
   && pass "project report transcript proves late load and all post-write gates" || fail "analyze report transcript (rc=$RC)"
 
-STORY_CORE_PROFILE="analyze-story-core"
-STORY_CORE_CMD="python3 .speck/scripts/context/speck_context.py $STORY_CORE_PROFILE --select tier=build --root $ROOT"
-python3 "$LOADER" "$STORY_CORE_PROFILE" --select tier=build --root "$ROOT" > "$T/story-core.out"
+STORY_CORE_PROFILE="analyze-core"
+STORY_CORE_CMD="python3 .speck/scripts/context/speck_context.py $STORY_CORE_PROFILE --select level=story --root $ROOT"
+python3 "$LOADER" "$STORY_CORE_PROFILE" --select level=story --root "$ROOT" > "$T/story-core.out"
 STORY_CORE_OUT=$(<"$T/story-core.out")
-[[ "$STORY_CORE_OUT" == *"references/levels/story.md"* ]] \
-  && [[ "$STORY_CORE_OUT" == *"references/tiers/story-build.md"* ]] \
-  && [[ "$STORY_CORE_OUT" != *"references/levels/project.md"* ]] \
+[[ "$STORY_CORE_OUT" == *"references/core.md"* ]] \
+  && [[ "$STORY_CORE_OUT" == *'Story: `story-extract`, `speck-scan`, `story-ui-spec`.'* ]] \
   && [[ "$STORY_CORE_OUT" != *"story-analysis-report-template.md"* ]] \
-  && pass "story analysis core loads only its level and selected tier" || fail "story core leaked deferred or sibling context"
+  && pass "story analysis reuses the compact core without deferred report context" || fail "story core leaked deferred context"
 
 TRANSCRIPT_STORY_CORE="$T/story-core.jsonl"
 write_transcript "$TRANSCRIPT_STORY_CORE" \
   cmd "$STORY_CORE_CMD" "$T/story-core.out" 0
-run_validator "$ROOT" --transcript "$TRANSCRIPT_STORY_CORE" --profile "$STORY_CORE_PROFILE" --select tier=build --json
+run_validator "$ROOT" --transcript "$TRANSCRIPT_STORY_CORE" --profile "$STORY_CORE_PROFILE" --select level=story --json
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
   && pass "post-hoc transcript proves story core reach and selectivity" || fail "story core transcript (rc=$RC)"
 
@@ -800,6 +799,36 @@ run_validator "$ROOT" --transcript "$TRANSCRIPT_ADJUST_LEAK" --profile "$ADJUST_
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "SELECTIVITY" \
   && pass "post-hoc validator rejects sibling adjustment context" || fail "adjust sibling leak should fail SELECTIVITY (rc=$RC)"
 
+MIGRATE_PROFILE="speck-migrate"
+MIGRATE_CMD="python3 .speck/scripts/context/speck_context.py $MIGRATE_PROFILE --select stage=graph --root $ROOT"
+python3 "$LOADER" "$MIGRATE_PROFILE" --select stage=graph --root "$ROOT" > "$T/migrate-graph.out"
+MIGRATE_OUT=$(<"$T/migrate-graph.out")
+[[ "$MIGRATE_OUT" == *"references/graph.md"* ]] \
+  && [[ "$MIGRATE_OUT" != *"references/scaffold.md"* ]] \
+  && [[ "$MIGRATE_OUT" != *"references/proof.md"* ]] \
+  && [[ "$MIGRATE_OUT" != *"references/upgrade.md"* ]] \
+  && pass "migration loads exactly one oldest repair stage" || fail "migration stage leaked a sibling"
+
+TRANSCRIPT_MIGRATE="$T/migrate-graph.jsonl"
+write_transcript "$TRANSCRIPT_MIGRATE" \
+  cmd "$MIGRATE_CMD" "$T/migrate-graph.out" 0 \
+  change ".speck/.v9-graph-needed" \
+  cmd "bash .speck/scripts/validation/pre-commit-hook.sh" /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_MIGRATE" --profile "$MIGRATE_PROFILE" --select stage=graph --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "migration transcript proves selected stage before repair and repository gate after it" || fail "migration transcript (rc=$RC)"
+
+TRANSCRIPT_MIGRATE_LEAK="$T/migrate-graph-leak.jsonl"
+echo "sibling migration leak" > "$T/migrate-leak.out"
+write_transcript "$TRANSCRIPT_MIGRATE_LEAK" \
+  cmd "$MIGRATE_CMD" "$T/migrate-graph.out" 0 \
+  cmd "cat .cursor/skills/speck-migrate/references/proof.md" "$T/migrate-leak.out" 0 \
+  change ".speck/.v9-graph-needed" \
+  cmd "bash .speck/scripts/validation/pre-commit-hook.sh" /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_MIGRATE_LEAK" --profile "$MIGRATE_PROFILE" --select stage=graph
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -q "SELECTIVITY" \
+  && pass "post-hoc validator rejects sibling migration context" || fail "migration sibling leak should fail SELECTIVITY (rc=$RC)"
+
 echo "── canonical skill ordering: story corpus closes before its final gate ─────────────────────"
 STORY_SPECIFY_PROFILE="story-specify"
 STORY_SPECIFY_CMD="python3 .speck/scripts/context/speck_context.py $STORY_SPECIFY_PROFILE --root $ROOT"
@@ -810,7 +839,8 @@ write_transcript "$TRANSCRIPT_STORY_SPECIFY" \
   cmd "$STORY_SPECIFY_CMD" "$T/story-specify.out" 0 \
   change "specs/projects/demo/stories/S002/spec.md" \
   change "specs/projects/demo/epic-breakdown.md" \
-  cmd 'bash .speck/scripts/validation/validate-template.sh "specs/projects/demo/stories/S002/spec.md" --strict' /dev/null 0
+  cmd 'bash .speck/scripts/validation/validate-template.sh "specs/projects/demo/stories/S002/spec.md" --strict' /dev/null 0 \
+  cmd 'bash .speck/scripts/validation/validators/validate-project-analysis.sh --gate "specs/projects/demo/epics/E001-demo"' /dev/null 0
 run_validator "$ROOT" --transcript "$TRANSCRIPT_STORY_SPECIFY" --profile "$STORY_SPECIFY_PROFILE" --json
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
   && pass "story-specify transcript closes after both story-corpus mutations" || fail "story-specify closure transcript (rc=$RC)"
@@ -855,10 +885,9 @@ except ValueError:
 if not any(required in line for line in lines[:gate_index]):
     raise SystemExit("epic story-list update is not ordered before the closure gate")
 
-safe_after_gate = {"do not chain, pipe, or wrap it, and do not mutate the story corpus afterward."}
 post_gate = " ".join(
     line for line in lines[gate_index + 1 :]
-    if line.strip().lower() not in safe_after_gate
+    if "do not mutate the story corpus afterward" not in line.strip().lower()
 )
 tokens = re.findall(r"[a-z0-9]+", post_gate.lower())
 
@@ -889,11 +918,12 @@ import pathlib
 import sys
 
 source = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
-needle = 'bash .speck/scripts/validation/validate-template.sh "$STORY_DIR/spec.md" --strict\n```'
+needle = 'bash .speck/scripts/validation/validators/validate-project-analysis.sh --gate "$EPIC_DIR"\n```'
 replacement = needle + "\n" + sys.argv[3]
 if needle not in source:
     raise SystemExit("cannot seed historical post-gate mutation")
-pathlib.Path(sys.argv[2]).write_text(source.replace(needle, replacement, 1), encoding="utf-8")
+head, separator, tail = source.rpartition(needle)
+pathlib.Path(sys.argv[2]).write_text(head + replacement + tail, encoding="utf-8")
 PY
 }
 

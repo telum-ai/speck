@@ -79,6 +79,31 @@ lenses:
 EOF
 }
 
+write_v11_project_report() { # <path>
+  local report_dir
+  report_dir="$(dirname "$1")"
+  write_report "$1"
+  sed -i.bak 's/speck_version: 10.3.0/speck_version: 11.0.0/' "$1"
+  printf '# UX strategy\n' > "$report_dir/ux-strategy.md"
+  printf '# Architecture\n' > "$report_dir/architecture.md"
+  printf '# Design system\n' > "$report_dir/design-system.md"
+  cat >> "$1" <<'EOF'
+
+## Flow Fit
+
+| Slot | Trigger evidence | Artifact or rationale | Verdict |
+|---|---|---|---|
+| project-import | Clear greenfield brief | No brownfield sources | not-applicable |
+| speck-scan-project | Clear greenfield brief | No code exists | not-applicable |
+| project-brainstorm | Concrete problem and user | Intent was already clear | not-applicable |
+| project-domain | General SaaS vocabulary | No specialized domain | not-applicable |
+| project-ux | Multi-screen UI | ux-strategy.md | included |
+| project-constitution | Standard governance | Existing project rules suffice | not-applicable |
+| project-architecture | Six epics | architecture.md | included |
+| project-design-system | Shared UI | design-system.md | included |
+EOF
+}
+
 # A project tree the witness graph can actually read: product-contract.md carries MM-1, MM-2, JOB-1.
 mkproj() { # <repo-root> [n-epics] [play_level]
   local d="$1" n="${2:-6}" play="${3:-build}" i p
@@ -159,6 +184,41 @@ run --strict "$d/story-analysis-report.md"
 { [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "artifact_type: story-analysis-report"; } \
   && pass "story-analysis-report.md validates through the shared analysis entry point" \
   || fail "story analysis must reuse the shared structural contract"
+
+# v11 binds the canonical flow's conditional slots into the report rather than trusting absence.
+d="$T/s3c"; mkdir -p "$d"; write_v11_project_report "$d/project-analysis-report.md"
+run --strict "$d/project-analysis-report.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "Flow Fit adjudicates every conditional"; } \
+  && pass "a v11 report adjudicating every conditional flow slot passes" \
+  || fail "v11 Flow Fit should be structurally readable"
+
+d="$T/s3d"; mkdir -p "$d"; write_v11_project_report "$d/project-analysis-report.md"
+sed -i.bak '/| project-ux |/d' "$d/project-analysis-report.md"
+run --strict "$d/project-analysis-report.md"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "Flow Fit omits required slot(s): project-ux"; } \
+  && pass "a v11 report cannot silently omit an optional slot" \
+  || fail "missing conditional-slot review must fail structural validation"
+
+d="$T/s3e"; mkdir -p "$d"; write_v11_project_report "$d/project-analysis-report.md"
+sed -i.bak '/| project-ux |/d; s/| project-domain | General SaaS vocabulary | No specialized domain |/| project-domain | General SaaS vocabulary | No specialized domain; project-ux is not required |/' "$d/project-analysis-report.md"
+run --strict "$d/project-analysis-report.md"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "Flow Fit omits required slot(s): project-ux"; } \
+  && pass "mentioning an omitted slot in another row cannot impersonate its adjudication" \
+  || fail "Flow Fit slots must match the Slot cell exactly"
+
+d="$T/s3f"; mkdir -p "$d"; write_v11_project_report "$d/project-analysis-report.md"
+sed -i.bak 's/| project-ux | Multi-screen UI | ux-strategy.md | included |/| project-ux | — | — | included |/' "$d/project-analysis-report.md"
+run --strict "$d/project-analysis-report.md"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "lacks substantive trigger evidence or artifact/rationale for: project-ux"; } \
+  && pass "sentinel cells cannot masquerade as an optional-step adjudication" \
+  || fail "Flow Fit must carry evidence and a concrete artifact or rationale"
+
+d="$T/s3g"; mkdir -p "$d"; write_v11_project_report "$d/project-analysis-report.md"
+rm "$d/ux-strategy.md"
+run --strict "$d/project-analysis-report.md"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "included artifact(s) that do not exist: project-ux"; } \
+  && pass "an included Flow Fit row must point to a real artifact" \
+  || fail "a filename alone must not satisfy included work"
 
 # 4. required frontmatter keys
 d="$T/s4"; mkdir -p "$d"; write_report "$d/project-analysis-report.md"
@@ -599,6 +659,71 @@ run --gate "$S"
 { [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "ANALYSIS_DECORRELATION_MISSING.P1"; } \
   && pass "Platform story with fewer than three lenses is blocked" \
   || fail "Platform story analysis must require three independent lenses"
+
+# 36. FLOW FIT — an explicitly missing applicable slot blocks downstream work even when the
+# report is otherwise structurally valid and sufficiently decorrelated.
+d="$T/g36"; P="$(mkproj "$d" 6 build)"; write_v11_project_report "$P/project-analysis-report.md"
+sed -i.bak 's/| project-ux | Multi-screen UI | ux-strategy.md | included |/| project-ux | Multi-screen UI | missing | missing |/' "$P/project-analysis-report.md"
+gitify "$d"
+run --gate "$P"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_OPTIONAL_MISSING.P1"; } \
+  && pass "an applicable optional step marked missing blocks downstream work" \
+  || fail "analysis must enforce the optional-step judgment it records"
+
+# 36b. A mandatory Platform step cannot be waived by typing not-applicable into an otherwise
+# complete Flow Fit table. The canonical flow, not the report author, decides mandatory reach.
+d="$T/g36b"; P="$(mkproj "$d" 2 platform)"; write_v11_project_report "$P/project-analysis-report.md"
+sed -i.bak \
+  -e 's/| project-ux | Multi-screen UI | ux-strategy.md | included |/| project-ux | Platform project | Claimed unnecessary | not-applicable |/' \
+  -e 's/| project-architecture | Six epics | architecture.md | included |/| project-architecture | Platform project | Claimed unnecessary | not-applicable |/' \
+  "$P/project-analysis-report.md"
+gitify "$d"
+run --gate "$P"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "ANALYSIS_SCOPE_DRIFT.P1" && echo "$OUT" | grep -q "FLOW_REQUIRED_MISSING.P1" && echo "$OUT" | grep -q "project-constitution"; } \
+  && pass "Platform mandatory foundation slots cannot be marked not-applicable" \
+  || fail "play-level requirements must outrank an authored Flow Fit verdict"
+
+# 36c. The same authority boundary applies to epic count. A Build report cannot claim two epics
+# over a six-epic live corpus to turn off both the three-lens and mandatory-foundation gates.
+d="$T/g36c"; P="$(mkproj "$d" 6 build)"; write_v11_project_report "$P/project-analysis-report.md"
+sed -i.bak 's/^epic_count: 6$/epic_count: 2/' "$P/project-analysis-report.md"
+gitify "$d"
+run --gate "$P"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "ANALYSIS_SCOPE_DRIFT.P1" && echo "$OUT" | grep -q "epics: 6 · lenses required: 3"; } \
+  && pass "analysis report frontmatter cannot shrink the live epic corpus" \
+  || fail "live project truth must decide analysis rigor"
+
+# 36d. Epic analysis is not coupled to the project-level 4-epic threshold. The canonical epic
+# flow always analyzes after breakdown, so a two-epic Build still requires its focused L7 pass.
+d="$T/g36d"; P="$(mkproj "$d" 2 build)"; E="$P/epics/E001-thing"
+printf '# Epic\n' > "$E/epic.md"
+gitify "$d"
+run --gate "$E"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "UNANALYZED_CORPUS.P1" && echo "$OUT" | grep -q "lenses required: 1"; } \
+  && pass "Build epic analysis remains mandatory below the project four-epic threshold" \
+  || fail "epic analysis must not inherit the project-level applicability threshold"
+
+# 36e. "included" is a proof claim, not free-form prose. The cited artifact must exist.
+d="$T/g36e"; P="$(mkproj "$d" 6 build)"; write_v11_project_report "$P/project-analysis-report.md"
+rm "$P/ux-strategy.md"
+gitify "$d"
+run --gate "$P"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_INCLUDED_PHANTOM.P1" && echo "$OUT" | grep -q "project-ux"; } \
+  && pass "a phantom included artifact blocks downstream work" \
+  || fail "Flow Fit must resolve included artifacts on disk"
+
+# 36f. A small Build may skip decorrelated project analysis, but once it supplies a v11 report its
+# Flow Fit claims are binding. The optional-tier early exit must not erase a recorded omission.
+d="$T/g36f"; P="$(mkproj "$d" 2 build)"; write_v11_project_report "$P/project-analysis-report.md"
+sed -i.bak \
+  -e 's/^epic_count: 6$/epic_count: 2/' \
+  -e 's/| project-domain | General SaaS vocabulary | No specialized domain | not-applicable |/| project-domain | Specialized rules found | domain-model.md missing | missing |/' \
+  "$P/project-analysis-report.md"
+gitify "$d"
+run --gate "$P"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_OPTIONAL_MISSING.P1" && echo "$OUT" | grep -q "lenses required: 0"; } \
+  && pass "optional analysis tier still enforces a submitted v11 Flow Fit report" \
+  || fail "the zero-lens early exit must not waive authored flow findings"
 
 echo "── mutation proofs (each assertion, proven red against a reverted copy) ──────"
 

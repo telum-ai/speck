@@ -173,7 +173,13 @@ const REMOVE_FILES = [
   '.cursor/skills/project-adjust',
   '.cursor/skills/epic-adjust',
   '.cursor/skills/story-adjust',
+  '.cursor/skills/project-analyze',
+  '.cursor/skills/epic-analyze',
   '.cursor/skills/story-analyze',
+  '.cursor/skills/retrospective',
+  '.cursor/skills/speck-catch-up',
+  '.cursor/skills/speck-reprove',
+  '.cursor/skills/speck-graph-up',
   // Framework-only evaluation leaked through the old template exporter.
   // `.speck/feedback/` is project-owned runtime output from speck-feedback and must survive.
   '.speck/eval',

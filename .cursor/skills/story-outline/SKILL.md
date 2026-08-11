@@ -2,12 +2,6 @@
 name: story-outline
 description: Retired alias. Use when /story-outline named.
 disable-model-invocation: true
-paths:
-  - "specs/projects/**/S*/**"
-  - "specs/projects/**/stories/**"
-  - "specs/projects/**/**/spec.md"
-  - "specs/projects/**/**/plan.md"
-  - "specs/projects/**/**/tasks.md"
 ---
 
 # /story-outline — retired in Speck v8 (alias-shim)

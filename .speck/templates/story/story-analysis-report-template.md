@@ -1,48 +1,46 @@
 ---
-speck_version: 11.0.0
 template_version: "11.0.0"
 artifact_type: story-analysis-report
-analyzed_sha: [ANALYZED_SHA]
-play_level: [PLAY_LEVEL]
+speck_version: "11.0.0"
+analyzed_sha: "[40-character git SHA]"
+play_level: "[build|platform]"
 lenses: []
 ---
 
-# Story Analysis Report: [Story Name]
+# Story Analysis Report
 
-**Story**: [STORY_ID]
-**Date**: [DATE]
-**Gate verdict**: [GATE_VERDICT]
+**Gate verdict**: [BLOCKED | NEEDS_FIXES | CLEAN]
 
 ## Lens Roster
 
 | Lens | Hostile question | Reviewer | Authored any corpus artifact? | Findings |
-|------|------------------|----------|-------------------------------|----------|
-| [S1 implementation-readiness] | [Question used] | [Reviewer] | no | [Count] |
+|---|---|---|---|---|
+| [S#] | [verbatim question] | [independent reviewer] | no | [issue ids / none] |
 
-## Analysis Results
+## Flow Fit
 
-### Issues Found
+| Slot | Trigger evidence | Artifact or rationale | Verdict |
+|---|---|---|---|
+| story-extract | [entry evidence] | [path or new-scope rationale] | [included | not-applicable | missing] |
+| speck-scan | [evidence] | [path or rationale] | [included | not-applicable | missing] |
+| story-ui-spec | [evidence] | [path or rationale] | [included | not-applicable | missing] |
 
-Severity: `CRITICAL | HIGH | MEDIUM | LOW`. Verdict: `confirmed | refuted`. Status: `open | resolved | waived DEC-####`.
-
-Cross-artifact contradictions and uncovered promises are CRITICAL by construction. A CRITICAL or HIGH finding needs a verifier distinct from its raising lens.
+## Issues Found
 
 | ID | Category | Severity | Description | Recommendation | Verifier | Verdict | Status |
-|----|----------|----------|-------------|----------------|----------|---------|--------|
-| [S1-1] | [Category] | [Severity] | [Finding] | [Correction] | [Verifier] | [Verdict] | [Status] |
+|---|---|---|---|---|---|---|---|
+| [SA-001] | [class] | [CRITICAL|HIGH|MEDIUM|LOW] | [evidence and defect] | [specific change] | [different reviewer] | [confirmed|refuted] | [open|resolved|waived DEC-####] |
 
-### Promise Coverage
-
-Inventory every story-owned FR, acceptance scenario, inherited promise, and explicit gate. A row is resolved only when the plan and tasks carry it without contradiction.
+## Promise Coverage
 
 | Promise dimension | Source | Epic / story coverage | Status |
-|-------------------|--------|----------------------|--------|
-| [FR-001 / AC-001 / MM-N / JOB-N] | [spec or inherited contract] | [plan section and task ids] | [resolved/open/waived DEC-####] |
+|---|---|---|---|
+| [id] | [artifact:line] | [artifact:line or missing] | [covered|uncovered|contradicted] |
 
 ## Quality Opportunities
 
-- [A concrete simplification, stronger user outcome, or quality improvement worth applying before implementation]
+- [Concrete improvement beyond defect closure, or `None found` with scope examined.]
 
 ## Required Corrections
 
-- [Open correction, owner, and affected artifact; write `None` only when the gate verdict is CLEAN]
+- [Ordered correction, or `None`.]

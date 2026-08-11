@@ -1,8 +1,6 @@
 ---
 name: project-import
 description: Extracts project context from existing docs. Use at brownfield start before speck-scan and project-specify.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-import

@@ -388,7 +388,7 @@ run --strict "$T/placeholders.md"
 # false-positive rate is a P3 that gets suppressed project-wide on first contact.
 mkfixture "$T/fp.md" \
   "| PROBE:route | \`acceptance\` | \`/api/v1/coach/chat\` \`/health\` \`/model/correction\` | — |" \
-  "| PROBE:cmd | \`correctness\` | \`/audit\` \`/check-in\` \`/suggest\` | — |" \
+  "| PROBE:cmd | \`correctness\` | \`/speck-audit\` \`/check-in\` \`/suggest\` | — |" \
   "| PROBE:prose | \`correctness\` | Terms/Privacy, 988/741741, try/catch, 4/4, A/B/C/D | — |" \
   "| PROBE:scope | \`correctness\` | \`@streb/web\` \`pnpm/action-setup@v4\` | — |"
 run --strict "$T/fp.md"

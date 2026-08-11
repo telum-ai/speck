@@ -6,10 +6,10 @@
 
 | Trigger | What to do |
 |---------|------------|
-| `/story-validate` for UI story | Run LARP for the story's persona(s) |
-| `/epic-validate` for UI epic | Run full JTBD walkthrough per persona |
-| `/recheck` (every persona) | Cold-start LARP for drift detection |
-| `/project-validate` | End-to-end JTBD smoke test across all personas |
+| `story-validate` | Run the story's UI persona or nonvisual operational job |
+| `epic-validate` | Run the composed UI JTBD or nonvisual operational scenario |
+| `speck-recheck` (every job) | Cold-start or clean-client LARP for drift detection |
+| `project-validate` | Run the end-to-end product job across epic boundaries |
 | User says "LARP this" | Run with provided persona |
 | Before claiming SHIP-RC | Run against launch build (not dev) |
 

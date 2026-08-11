@@ -129,7 +129,7 @@ scaffold() {
   cat > "$TMPFILE" <<EOF
 <!-- v7 MIGRATION SCAFFOLD — DO NOT TREAT AS REAL TRUTH UNTIL FILLED IN.    -->
 <!-- This file was scaffolded on $DATE from a v6 → v7 migration.            -->
-<!-- Primary path:  /speck-catch-up    (brownfield reconstruction)          -->
+<!-- Primary path:  /speck-migrate     (scaffold-stage reconstruction)      -->
 <!-- Manual path:   $description                              -->
 
 EOF
@@ -230,16 +230,16 @@ $STAMPED files stamped with current HEAD.
 
 \`\`\`
 git checkout -b speck-v7-migration
-/speck-catch-up                                  # or --phase=triage for large projects
-# ...iterate phases as needed (see catch-up skill for --phase=...) ...
+/speck-migrate --phase=triage                    # scope large projects first
+# ...iterate scaffold phases as needed, then re-enter /speck-migrate ...
 git add -A
 git commit -m "chore: speck v7 migration + brownfield catch-up"
 # open PR against main for review BEFORE merging
 \`\`\`
 
-Scaffolded-template state should NEVER reach main without catch-up. Either fill it via \`/speck-catch-up\`, or revert.
+Scaffolded-template state should NEVER reach main without semantic repair. Either fill it via \`/speck-migrate\`, or revert.
 
-### What \`/speck-catch-up\` does
+### What the scaffold stage of \`/speck-migrate\` does
 
 Speck v7.2+ runs catch-up in 9 phases. Default \`--phase=all\` runs everything:
 
@@ -254,7 +254,7 @@ Speck v7.2+ runs catch-up in 9 phases. Default \`--phase=all\` runs everything:
    - **5c** if no prior readiness claims → no-op
 7. **Regenerate project-state.md** with post-honesty-pass reality
 8. **Write project-catch-up-plan.md** with prioritized P0–P3 remediation
-9. **Finalize** — remove the marker, re-run /recheck
+9. **Finalize** — remove the marker, re-run /speck-recheck
 
 For large brownfield projects (10+ epics): use \`--phase=triage\` first to scope the work, then run individual phases as separate commits.
 
@@ -292,8 +292,8 @@ if [[ ! -f "$MARKER" ]]; then
 #   - Downgrade unsupported PASS claims on existing stories
 #   - Emit project-catch-up-plan.md
 #
-# Agents that read this file on engagement MUST run /speck-catch-up
-# before any new feature work. Delete this file only after catch-up
+# Agents that read this file on engagement MUST run /speck-migrate
+# before any new feature work. Delete this file only after scaffold repair
 # has completed for every migrated project.
 #
 # Created: $DATE
@@ -309,6 +309,6 @@ fi
 echo ""
 echo "✅ Migration scaffolding complete"
 echo "  Report: $REPORT"
-echo "  ⚠️  CATCH-UP REQUIRED: run /speck-catch-up to actually fill the scaffolded artifacts"
+echo "  ⚠️  MIGRATION REPAIR REQUIRED: run /speck-migrate to fill the scaffolded artifacts"
 echo "      and downgrade over-optimistic v6 status claims to v7-honest readiness states."
 echo "  (Marker written: $MARKER)"

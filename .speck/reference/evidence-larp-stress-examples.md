@@ -5,7 +5,7 @@
 * **WHEN: consumer_product / b2b_saas / internal_tool**: Persona-based LARP flows recorded as evidence at each readiness state.
 * **WHEN: infra_service / backend_api**: Integration / Stress-test scenarios under concurrent simulated load.
 
-> **P1 — the two-job LARP**: every UI LARP is two non-collapsible jobs — **DOES-IT-WORK** (functional: the flow completes, gates enforced) and **IS-IT-GOOD** (experiential: per-screen, pixel-grounded adversarial critique of how it looks and feels). IS-IT-GOOD has its own pass/fail and can block ship independently of functional green. A captured screen with no substantive critique is an incomplete LARP (surrogate proof), not a pass. See `/larp`.
+> **P1 — the two-job LARP**: every UI LARP is two non-collapsible jobs — **DOES-IT-WORK** (functional: the flow completes, gates enforced) and **IS-IT-GOOD** (experiential: per-screen, pixel-grounded adversarial critique of how it looks and feels). IS-IT-GOOD has its own pass/fail and can block ship independently of functional green. A captured screen with no substantive critique is an incomplete LARP (surrogate proof), not a pass. See `/speck-larp`.
 
 ### Option A: Human Persona-Based LARP (for UI/Human-facing products)
 

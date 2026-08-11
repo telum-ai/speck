@@ -1,12 +1,6 @@
 ---
 name: story-specify
 description: Creates story spec.md. Use after epic-breakdown or for new scope, before story-clarify and story-plan.
-paths:
-  - "specs/projects/**/S*/**"
-  - "specs/projects/**/stories/**"
-  - "specs/projects/**/**/spec.md"
-  - "specs/projects/**/**/plan.md"
-  - "specs/projects/**/**/tasks.md"
 ---
 
 # story-specify
@@ -40,6 +34,14 @@ List options:
 find specs/projects -name project.md -exec dirname {} \; | xargs -I {} basename {}
 ls specs/projects/[PROJECT_ID]/epics/
 ```
+
+Before any story mutation in Build or Platform, prove the parent epic analysis gate:
+
+```bash
+bash .speck/scripts/validation/validators/validate-project-analysis.sh --gate "$EPIC_DIR"
+```
+
+STOP on non-zero. Build requires the focused epic lens; Platform requires all seven. Re-run this as a separate command after the final story-corpus mutation and template validation so the completed transcript proves the parent gate still cleared.
 
 ## 3. Placeholder detection
 
@@ -93,9 +95,10 @@ story-specification corpus.
 After all `spec.md` and epic story-list edits, run the validator as a standalone command event:
 ```bash
 bash .speck/scripts/validation/validate-template.sh "$STORY_DIR/spec.md" --strict
+bash .speck/scripts/validation/validators/validate-project-analysis.sh --gate "$EPIC_DIR"
 ```
-Do not chain, pipe, or wrap it, and do not mutate the story corpus afterward.
-The recorded event exit must belong to the validator itself.
+Do not chain, pipe, or wrap either gate, and do not mutate the story corpus afterward.
+Each recorded event exit must belong to its validator.
 
 **5-minute test**: explain in <5 min. Needs "AND" or >3 AC scenarios → split.
 

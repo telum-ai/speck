@@ -1,12 +1,6 @@
 ---
 name: story-extract
 description: Reverse-engineers story specs and code scans. Use at story entry before story-clarify when code lacks Speck artifacts.
-paths:
-  - "specs/projects/**/S*/**"
-  - "specs/projects/**/stories/**"
-  - "specs/projects/**/**/spec.md"
-  - "specs/projects/**/**/plan.md"
-  - "specs/projects/**/**/tasks.md"
 ---
 
 # story-extract

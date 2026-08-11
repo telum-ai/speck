@@ -47,7 +47,7 @@ Enforced by .speck/scripts/validation/validators/validate-traceability-matrix.sh
     /epic-validate folds it into MAX claimable = MIN(story states, MATRIX_GRAIN_CAP).
   • --check-fidelity (opt-in, WARN-only, #86): checks each row's Promise shares vocabulary with the
     Source clause it names, and that the named Source artifact/anchor exists. PRESENCE + OVERLAP only —
-    it does NOT judge whether the shipped product keeps the promise (that is /audit's semantic sweep).
+    it does NOT judge whether the shipped product keeps the promise (that is /speck-audit's semantic sweep).
 
 DISCHARGE ANCHORS RESOLVE in the witness graph. The Discharge cell points at a real, defined
 anchor: `S012 / AC-3` (bare within this epic) or `E0NN/S0MM/AC-K` (cross-epic). `AC-N` ids are defined

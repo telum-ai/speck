@@ -5,6 +5,8 @@ ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 CHECK="$ROOT/.speck/scripts/validation/check-story-prereqs.sh"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
+mkdir -p "$TMP/.speck"
+printf '{"play_level":"build"}\n' > "$TMP/.speck/project.json"
 
 make_story() {
   local dir="$1"
@@ -74,6 +76,14 @@ lenses:
 | Lens | Hostile question | Reviewer | Authored any corpus artifact? | Findings |
 |------|------------------|----------|-------------------------------|----------|
 | S1 implementation-readiness | What will fail during implementation? | reviewer-a | no | 1 |
+
+## Flow Fit
+
+| Slot | Trigger evidence | Artifact or rationale | Verdict |
+|------|------------------|-----------------------|---------|
+| story-extract | New-scope test story | No prior implementation to extract | not-applicable |
+| speck-scan | New-scope test story | No brownfield code to scan | not-applicable |
+| story-ui-spec | No UI behavior in fixture | No UI states or interaction contract | not-applicable |
 
 ## Analysis Results
 

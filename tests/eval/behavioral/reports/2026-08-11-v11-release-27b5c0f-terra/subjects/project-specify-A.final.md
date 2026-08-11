@@ -1,5 +1,0 @@
-Created the canonical Pulseboard project vision in [project.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-release-27b5c0f-terra/workspaces/project-specify-A/specs/projects/001-pulseboard/project.md) and refreshed the project profile in [README.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-release-27b5c0f-terra/workspaces/project-specify-A/README.md).
-
-Readiness: ready for `/project-clarify`; intentionally not ready for project/epic planning. Open decisions are explicit: owner/baseline operating details, reminder channel, commercial model, and technical constraints.
-
-Evidence: strict project-template validation passed; strict README profile validation passed with 0 errors and 0 warnings; no unresolved template placeholders were found. No epics or planning artifacts were created, and no commit was made.

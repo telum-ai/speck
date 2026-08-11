@@ -146,7 +146,7 @@ Eight initiatives, each routed to a real canonical home per the `AGENTS.md` rout
 
 ### FTR-B1 — Per-repo Speck-fit scorecard / genome
 
-**What.** `speck genome` / `speck score` (CLI + `/speck-genome` skill): a no-exec, deterministic, `--json`-for-CI read of a repo that emits a 0-100 card and a *recommended Speck configuration* — play level (sprint/build/platform), which optional artifacts to require (architecture, ux-strategy, design-system), which `/recheck` probes matter, and recommended model tiers. Dimensions adapt metaharness's six to Speck's world: **spec coverage** (are truth artifacts present + fresh?), **evidence health** (readiness stamps + LARP artifacts vs. claims), **drift exposure** (staleness/schema/promise), **agent-surface safety** (from A3), **methodology fit** (repo archetype × play level), and **est. cost/gate-run** (from A7).
+**What.** `speck genome` / `speck score` (CLI + `/speck-genome` skill): a no-exec, deterministic, `--json`-for-CI read of a repo that emits a 0-100 card and a *recommended Speck configuration* — play level (sprint/build/platform), which optional artifacts to require (architecture, ux-strategy, design-system), which `/speck-recheck` probes matter, and recommended model tiers. Dimensions adapt metaharness's six to Speck's world: **spec coverage** (are truth artifacts present + fresh?), **evidence health** (readiness stamps + LARP artifacts vs. claims), **drift exposure** (staleness/schema/promise), **agent-surface safety** (from A3), **methodology fit** (repo archetype × play level), and **est. cost/gate-run** (from A7).
 
 **Why.** It replaces the human's play-level guess at `/project-specify` with an evidence-based recommendation, gives a repeatable CI health number, and is the most visible "killer feature" steal — directly analogous to metaharness's `score <repo>`, which its own author calls "the killer feature."
 
@@ -203,7 +203,7 @@ flowchart TD
 **Phase 0 — A1 self-evaluation harness.** *Nothing safe happens without it.* Build the seeded-defect corpus and the per-gate scorer. This is also the highest-integrity single change: it lets Speck prove (or disprove) that each gate earns its context cost, which is the operational form of the v8 promise.
 - *Acceptance bar:* ≥15 fixtures across ≥6 defect classes with held-out controls; a per-gate report (defect-catch %, false-green %, false-positive %, median token cost) reproducible from a clean checkout; at least one gate identified as either a clear keep or a clear prune candidate on the evidence.
 
-**Phase 1 — B1 Speck-fit scorecard / genome.** With a fitness signal available, ship the no-exec repo card + recommended config. Immediately useful at every `/project-specify` and as a CI health number; tractable on existing `/recheck` + scan machinery.
+**Phase 1 — B1 Speck-fit scorecard / genome.** With a fitness signal available, ship the no-exec repo card + recommended config. Immediately useful at every `/project-specify` and as a CI health number; tractable on existing `/speck-recheck` + scan machinery.
 - *Acceptance bar:* deterministic `--json` output on ≥5 diverse repos; the recommended play level matches an expert's choice on ≥4/5; every dimension derives from a real repo signal (no invented numbers), mirroring ADR-041's rule.
 
 **Phase 2 — A2 witness + A3 governance scan.** Harden trust before anything auto-evolves. A2 first (it attacks fake-green directly and is a prerequisite for auditable evolution lineage); A3 alongside (self-contained, low risk).

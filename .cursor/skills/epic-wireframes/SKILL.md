@@ -1,10 +1,6 @@
 ---
 name: epic-wireframes
 description: Creates screen-by-screen epic wireframes. Use for UX-heavy epics after epic-journey and before epic-plan.
-paths:
-  - "specs/projects/**/E*/**"
-  - "specs/projects/**/epics/**"
-  - "specs/projects/**/**/epic.md"
 ---
 
 

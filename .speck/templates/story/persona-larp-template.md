@@ -9,7 +9,7 @@ artifact_type: persona-larp
 <!--
 Persona LARP scripts live in: specs/projects/<PROJECT_ID>/personas/<persona-id>.md
 
-This is an executable script — the /larp skill runs it. Be specific about:
+This is an executable script — the /speck-larp skill runs it. Be specific about:
 - The starting state (clean storage, fresh account, logged out, locale, etc.)
 - The exact actions to take (with selectors / refs where applicable)
 - The expected emotional state at each step

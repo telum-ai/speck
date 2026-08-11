@@ -42,7 +42,7 @@ clean_build: [yes/no]
 ## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
 
 *Every readiness claim decomposes into four independent, non-substitutable axes:*
-- **CORRECT**: [How correctness was verified, e.g. tests pass, /audit clean]
+- **CORRECT**: [How correctness was verified, e.g. tests pass, /speck-audit clean]
 - **ON-CONTRACT**: [How conformance to specs & magic moments was verified, e.g. larp-recordings/<sha>-<persona>-findings.md]
 - **FELT-GOOD** *(legibility — not broken / not confusing)*: [AI naive-hostile taste verdict + First-Viewport Reaction, e.g. larp-recordings/<sha>-naive-hostile-findings.md → `ai-verified`. `uncovered` only if the naive-hostile pass has not run. A human review is an optional stronger signal → `human-verified`.]
 - **TASTE** *(connoisseur craft — crafted / premium / it sings)*: [AI connoisseur-hostile verdict, **dual-anchored** against §6b Aesthetic Contract + design-system.md (product-relative) AND the `visual-quality` universal principles, e.g. larp-recordings/<sha>-connoisseur-findings.md → `ai-critiqued`. `forks-open` if aesthetic forks await your decision (below). `taste_anchor: universal-only` if §6b/design-system was absent. A **severe BAD** (≥2 pixel-grounded craft violations on a flagship/magic-moment surface) caps the claimable state.]
@@ -168,7 +168,7 @@ worktree *k* is a statement about a tree that no longer exists.
 
 ## 🛑 Blocking Issues (from audit-report.md)
 
-*P0 findings from `/audit` that block higher readiness states.*
+*P0 findings from `/speck-audit` that block higher readiness states.*
 
 | ID | From | Severity | Description | Required for state |
 |----|------|----------|-------------|---------------------|
@@ -261,7 +261,7 @@ If any check fails: **re-audit and tighten language before publishing this repor
 
 ### If verified state is lower than claimed:
 - ❌ Fix the failing gate(s)
-- 🔄 Re-run `/audit` + `/larp` + `/story-validate`
+- 🔄 Re-run `/speck-audit` + `/speck-larp` + `/story-validate`
 
 ### If P0 audit findings remain:
 - 🛑 Resolve P0s before resubmitting

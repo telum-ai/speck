@@ -1,6 +1,6 @@
 # speck-larp / backend route
 
-Backend-only projects do not run UI persona LARP and cannot claim UX-RC, FELT-GOOD, or TASTE.
+Backend-only projects run an operational job LARP instead of UI persona LARP and cannot claim UX-RC, FELT-GOOD, or TASTE.
 
 1. Read `evidence-contract.md` integration/stress scenarios and the target readiness criteria.
 2. Execute each scenario against the required built/deployed substrate with the named principal, negative control, and telemetry.

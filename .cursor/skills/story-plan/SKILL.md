@@ -1,12 +1,6 @@
 ---
 name: story-plan
 description: Writes plan.md with design, contracts, and tests. Use after story clarification or code scan, before story-tasks.
-paths:
-  - "specs/projects/**/S*/**"
-  - "specs/projects/**/stories/**"
-  - "specs/projects/**/**/spec.md"
-  - "specs/projects/**/**/plan.md"
-  - "specs/projects/**/**/tasks.md"
 ---
 
 # story-plan
@@ -81,7 +75,7 @@ Verify all template phases complete; no ERROR states.
 | `/story-ui-spec` | Required if UI detected — before tasks |
 | `/story-tasks` | Required |
 | `/story-implement` | After tasks |
-| `/audit` | After implement — non-skippable |
+| `/speck-audit` | After implement — non-skippable |
 | `/story-validate` | After audit |
 
 ## NEVER / ALWAYS

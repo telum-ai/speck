@@ -15,7 +15,7 @@ Input: `$ARGUMENTS`.
 - New agent / no session continuity; fresh artifacts and a named Next action do not waive this trigger
 - User requests audit, "make ship-ready", "is this still working"
 - `project-state.md` Next action unknown or empty
-- `.speck/.v8-reprove-needed` exists OR `staleness-check.sh` reports `V8_STALE` (stamp `< speck 8`) → `V8_REPROVE.P1`; route `/speck-reprove` before other drift work
+- `.speck/.v8-reprove-needed` exists OR `staleness-check.sh` reports `V8_STALE` (stamp `< speck 8`) → `V8_REPROVE.P1`; route `/speck-migrate` before other drift work
 
 Recommended: major dependency updates; multiple parallel branches merged since last validation.
 
@@ -63,7 +63,7 @@ Each check returns: FRESH | STALE | DRIFTED | MISSING with evidence.
 Token present → artifact incomplete; cannot support readiness above IMPL-GREEN.
 - Referenced by active UX-RC+ claim → P0
 - Otherwise → P1
-- Remediation: `/speck-catch-up`
+- Remediation: `/speck-migrate`
 
 ### Graph drift codes
 
@@ -101,7 +101,7 @@ From `observe-guard.sh` → `SPECK_OBSERVATION_VERDICT=<code>`:
 
 ## 3. Persona LARP cold-start
 
-**consumer_product / b2b_saas / internal_tool**: per persona in `personas/<id>.md`, cold-start app (clean storage), execute LARP script, capture evidence vs product-contract magic moments. Use `/larp`.
+**consumer_product / b2b_saas / internal_tool**: per persona in `personas/<id>.md`, cold-start app (clean storage), execute LARP script, capture evidence vs product-contract magic moments. Use `/speck-larp`.
 
 **infra_service / backend_api**: run integration/stress scenarios from evidence-contract Option B.
 
@@ -121,8 +121,8 @@ Invoke `/project-state`. Populate blocking issues (P0/P1), truth staleness, `[NE
 
 | Finding | Action |
 |---------|--------|
-| `V8_REPROVE.P1` | BLOCK feature work → `/speck-reprove` first |
-| P0 drift | BLOCK feature work; surface remediations; recommend `/audit`; refuse `/story-implement`, `/epic-plan` |
+| `V8_REPROVE.P1` | BLOCK feature work → `/speck-migrate` first |
+| P0 drift | BLOCK feature work; surface remediations; recommend `/speck-audit`; refuse `/story-implement`, `/epic-plan` |
 | `MARKET_DRIFT.P1` / `WEDGE_DRIFT.P1` | Do not block implement; BLOCK COMMERCIAL-RC/SHIP-RC and spec-derived marketing copy until `/speck-frontier-scan --product` or `/adjust --level project` |
 | Analysis P1 codes | Do not block in-flight story; BLOCK next `/epic-specify` until `/analyze --level project` clears |
 | `ANALYSIS_GRANDFATHERED.P2` | Never block; surface loudly every recheck |
@@ -152,13 +152,13 @@ Report summary per skill template. Always write dated report even if green.
 - NEVER hand-write `*[market-verified …]*` stamp (only `stamp-market.sh`)
 - ALWAYS write dated report
 - ALWAYS update `project-state.md` regardless of verdict
-- ALWAYS route `/speck-reprove` when v8-reprove marker or V8_STALE present
+- ALWAYS route `/speck-migrate` when a compatibility marker or V8_STALE finding is present
 - BLOCK feature work on P0
 
 ## Integration
 
 Reads: truth artifacts, personas, staleness/replace-marker scripts.
-Invokes: `/larp`, `/project-state`.
+Invokes: `/speck-larp`, `/project-state`.
 Writes: dated recheck report; re-stamps truth artifacts on green.
 
 ## Host portability

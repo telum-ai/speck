@@ -44,13 +44,13 @@ PLACEHOLDER CONVENTION:
 ---
 
 <!-- CATCH-UP-ONLY: Retroactive Reconstruction Caveat
-This block is COMMENTED OUT by default. /speck-catch-up uncomments it when the
+This block is COMMENTED OUT by default. /speck-migrate uncomments it when the
 log is being reconstructed from git history rather than logged at decision time.
 Leave commented for greenfield projects.
 
 ## ⚠️ Retroactive Reconstruction Caveat
 
-This log was reconstructed during `/speck-catch-up` (methodology import/migration). Entries
+This log was reconstructed during `/speck-migrate` (methodology import/migration). Entries
 marked `Reconstructed: true` were not logged at the time the decision was made;
 they were mined from git history (commit messages, learning tags, PR descriptions).
 
@@ -88,7 +88,7 @@ future revisit / supersession.
 - **SHA at decision time**: `REPLACE_BEFORE_SHIP: abc1234`
 - **Status**: REPLACE_BEFORE_SHIP: LOCKED | SUPERSEDED-BY-<ID> | OPEN
 - **Owner**: REPLACE_BEFORE_SHIP: AI agent / human / both
-- **Reconstructed**: false  *(set to `true` and add `**Reconstructed from**: <git refs>` ONLY if /speck-catch-up wrote this entry)*
+- **Reconstructed**: false  *(set to `true` and add `**Reconstructed from**: <git refs>` ONLY if /speck-migrate wrote this entry)*
 
 **Question**: REPLACE_BEFORE_SHIP: What was being decided?
 

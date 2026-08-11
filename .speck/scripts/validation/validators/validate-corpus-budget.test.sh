@@ -430,4 +430,44 @@ PY
 echo "Test: declared user-only compatibility shim passes"
 bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"
 
+mkdir -p "$TMP/.speck/scripts"
+printf '#!/usr/bin/env bash\n/speck-reprove\n' > "$TMP/.speck/scripts/retired-route.sh"
+echo "Test: retired migration command in active runtime fails"
+OUT=$(bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP" 2>&1) && {
+  echo "FAIL: expected retired-route failure"
+  exit 1
+}
+grep -q "retired migration command /speck-reprove" <<<"$OUT" || {
+  echo "FAIL: expected precise retired migration route failure"
+  echo "$OUT"
+  exit 1
+}
+rm "$TMP/.speck/scripts/retired-route.sh"
+
+printf '# Guide\nRun `/larp` now.\n' > "$TMP/.speck/scripts/short-route.md"
+echo "Test: nonexistent short audit/LARP command in active runtime fails"
+OUT=$(bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP" 2>&1) && {
+  echo "FAIL: expected short-route failure"
+  exit 1
+}
+grep -q "nonexistent short command /larp" <<<"$OUT" || {
+  echo "FAIL: expected precise short-route failure"
+  echo "$OUT"
+  exit 1
+}
+rm "$TMP/.speck/scripts/short-route.md"
+
+printf '# Guide\nRun `/recheck` now.\n' > "$TMP/.speck/scripts/short-route.md"
+echo "Test: nonexistent short recheck command in active runtime fails"
+OUT=$(bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP" 2>&1) && {
+  echo "FAIL: expected short-route failure"
+  exit 1
+}
+grep -q "nonexistent short command /recheck" <<<"$OUT" || {
+  echo "FAIL: expected precise short-route failure"
+  echo "$OUT"
+  exit 1
+}
+rm "$TMP/.speck/scripts/short-route.md"
+
 echo "All corpus-budget tests passed"

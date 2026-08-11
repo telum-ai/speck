@@ -89,7 +89,7 @@ if [[ $FOUND -eq 1 ]]; then
   echo "    - An enumeration of what WAS proven (with evidence) AND what was NOT"
   echo "    - A specific readiness state claim with gate criteria evidence"
   echo ""
-  echo "Or: run /audit to enumerate gaps that the banned phrase was glossing over."
+  echo "Or: run /speck-audit to enumerate gaps that the banned phrase was glossing over."
   exit 1
 else
   echo "✅ No banned phrases detected."

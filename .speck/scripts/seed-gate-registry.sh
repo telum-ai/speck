@@ -97,7 +97,7 @@ ROWS="$(gen_rows)"
 # WHY `manual`, HONESTLY. Nothing on the commit path invokes them yet, and §6a's own law is that
 # declaring a stage a gate does not fire at is the divergence `validate-gate-liveness.sh` exists to
 # catch. `manual` is the true value; the invocation that does exist is at the bottom of this file
-# (every seed/amend of a contract runs both), plus /audit, /epic-validate and /project-validate on
+# (every seed/amend of a contract runs both), plus /speck-audit, /epic-validate and /project-validate on
 # demand. Both are NUDGES — they exit 0 without --strict, so declaring them cannot turn a
 # downstream repo red on the day they land.
 #

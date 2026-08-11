@@ -9,7 +9,7 @@ carry over. The `serves`/`judges` repair is issue #97.
 **Status (v9.4):** Shipped — the witness graph is the **spine** (v9). `build`/`lint-refs`/`query`/
 `context`/`check`/`gate`/`road`/`gap`/`cascade`/`migrate` subcommands; forcing at 4 boundaries
 (First-Actions, story-prereqs reachability, validate, pre-commit) with the block-vs-guide adoption
-signal; the `.v9-graph-needed` migration marker + `/speck-graph-up` skill; `road-to-completion.md`
+signal; the `.v9-graph-needed` migration marker + `speck-migrate` graph stage; `road-to-completion.md`
 (TIDY→REMOVE→BUILD→PROVE); native-`/goal` drive via `gap --emit-goal`; conservation (`UNMAPPED_PROMISE`,
 parity-proven), cycle (`DEP_CYCLE`), and verdict (`UNJUDGED_SURFACE`, v9.4) gates. Proven on Streb +
 Splang (real dangling refs, a renumbered AC discharge, a duplicate story-id, and open-row parity = 0).
@@ -19,7 +19,7 @@ pass. It needs data the methodology repo can't provide generically: a per-repo t
 (a test named/tagged with the spec id it covers, e.g. `S013/AC-2`) + coverage data mapping the passing
 test to the code entity. A consuming repo *opts in* by adopting the convention and pointing the extractor
 at its coverage output; until then the gate honestly reports "not evaluated" (design §9). Also pending:
-project-state fully rendering from the graph (P4 render), and running `/speck-graph-up` on the live repos
+project-state fully rendering from the graph (P4 render), and running the `speck-migrate` graph stage on live repos
 (a per-repo gated gesture — the dry-run diff goes to Kjetil first).
 
 ## 1. The problem (from evidence, not intuition)

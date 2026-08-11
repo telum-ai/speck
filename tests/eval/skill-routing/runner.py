@@ -637,7 +637,7 @@ def main() -> int:
         if not any("missing canonical flow classification" in error for error in validate_suite(catalog, suite, flow, incomplete_contract, agents_text)):
             print("FAIL: incomplete canonical flow baseline mutant passed", file=sys.stderr)
             return 1
-        missing_first_action = agents_text.replace("speck-graph-up", "speck_graph_up")
+        missing_first_action = agents_text.replace("speck-migrate", "speck_migrate", 1)
         if not any("omits first-action skills" in error for error in validate_suite(catalog, suite, flow, contract, missing_first_action)):
             print("FAIL: missing always-on first-action skill mutant passed", file=sys.stderr)
             return 1

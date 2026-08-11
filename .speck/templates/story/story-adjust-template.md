@@ -53,7 +53,7 @@ artifact_type: story-adjust-report
 *Every major adjustment phase requires a recorded decision lock and a re-audit.*
 
 - **Decision Log Reference**: [e.g., `DEC-0208` in `project-decisions-log.md`]
-- **Re-Audit Performed**: [e.g., "Yes, ran /audit to verify no styling leaks or performance issues on the new double list view."]
+- **Re-Audit Performed**: [e.g., "Yes, ran /speck-audit to verify no styling leaks or performance issues on the new double list view."]
 - **New Test Guardrail**: [e.g., "Updated Playwright test to click Segmented Control tabs and verify items filtered correctly."]
 
 ---

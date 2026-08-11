@@ -1,8 +1,6 @@
 ---
 name: project-brainstorm
 description: Turns a vague idea into a structured problem. Use before project-specify when product intent is still fuzzy.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-brainstorm

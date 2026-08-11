@@ -47,6 +47,48 @@ DESCRIPTION_PRONOUN = re.compile(r"\b(?:I|me|my|we|our|you|your)\b", re.I)
 THIRD_PERSON_ACTION = re.compile(r"^[A-Z][A-Za-z-]*s\b")
 MIN_DESCRIPTION_WHAT = 20
 MIN_DESCRIPTION_TRIGGER = 24
+RETIRED_MIGRATION_ROUTE = re.compile(
+    r"(?<!skills)/speck-(?:catch-up|reprove|graph-up)\b"
+)
+SHORT_ROUTE_REPLACEMENTS = {
+    "audit": "speck-audit",
+    "larp": "speck-larp",
+    "recheck": "speck-recheck",
+}
+NONEXISTENT_SHORT_ROUTE = re.compile(
+    rf"(?<![A-Za-z0-9._/-])/({'|'.join(SHORT_ROUTE_REPLACEMENTS)})(?![-/A-Za-z0-9])"
+)
+
+
+def lint_retired_migration_routes(root: Path, err) -> None:
+    """Retired skill names may survive in removal lists/history, never as live commands."""
+    scan_roots = (
+        root / ".cursor" / "skills",
+        root / ".speck" / "scripts",
+        root / ".speck" / "templates",
+        root / ".speck" / "reference",
+        root / "packages" / "cli" / "lib",
+    )
+    for base in scan_roots:
+        if not base.is_dir():
+            continue
+        for path in sorted(p for p in base.rglob("*") if p.is_file()):
+            if ".test." in path.name or path.suffix not in {".md", ".sh", ".py", ".js"}:
+                continue
+            text = path.read_text(errors="replace")
+            hit = RETIRED_MIGRATION_ROUTE.search(text)
+            if hit:
+                err(
+                    f"retired migration command {hit.group(0)} in "
+                    f"{path.relative_to(root).as_posix()} — route compatibility repair through /speck-migrate"
+                )
+            short = NONEXISTENT_SHORT_ROUTE.search(text)
+            if short:
+                replacement = SHORT_ROUTE_REPLACEMENTS[short.group(1)]
+                err(
+                    f"nonexistent short command {short.group(0)} in "
+                    f"{path.relative_to(root).as_posix()} — use /{replacement}"
+                )
 
 
 def router_owns_ref(body: str, rel: str) -> bool:
@@ -438,6 +480,7 @@ def main() -> int:
         fail = 1
 
     expected_disabled, compatibility_shims, catalog_families = load_skill_catalog_policy(root, err)
+    lint_retired_migration_routes(root, err)
     contract_owned = lint_load_contracts(root, err)
     seen_skills: set[str] = set()
 

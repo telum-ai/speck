@@ -1,10 +1,6 @@
 ---
 name: epic-validate
 description: Validates an epic across completed stories and audit evidence. Use at the epic prove gate before retrospective.
-paths:
-  - "specs/projects/**/E*/**"
-  - "specs/projects/**/epics/**"
-  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-validate
@@ -13,7 +9,7 @@ Cheap keys: `.speck/project.json` → archetype; `--claim` / highest supported �
 
 1. MUST Read templates, then MUST Read `references/spine.md`.
 2. If backend/infra / no UI: MUST Read `references/backend-skip.md`. Do not Read larp / felt / taste / visual.
-3. If UI-facing: MUST Read `references/larp.md`. If claiming UX-RC+: also MUST Read `references/axes/felt.md`, `references/axes/taste.md`, `references/visual.md`. Else skip those axis/visual nodes.
+3. If UI-facing: MUST Read `references/larp.md` to adjudicate evidence produced earlier. If claiming UX-RC+: also MUST Read `references/axes/felt.md`, `references/axes/taste.md`, `references/visual.md`. Else skip those axis/visual nodes. Validation never loads producer procedures.
 4. For `claimed_state` and every lower ladder state, MUST Read `references/states/<kebab>.md`.
 5. If claimed ≥ INTEGRATION-GREEN: MUST Read `references/integration-green.md`. If claimed ≥ COMMERCIAL-RC: MUST Read `references/commercial.md`.
 6. MUST Read `references/rollup.md`, `references/matrix-graph.md`, `references/mutation.md`, `references/composition.md`.

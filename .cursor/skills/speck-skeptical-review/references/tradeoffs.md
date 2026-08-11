@@ -10,7 +10,7 @@ Invoked by:
 - `/epic-plan` (technical approach)
 - `/epic-architecture` (cross-cutting patterns)
 - `/story-plan` (significant technical choices)
-- `/recheck` (when drift requires reopening decisions)
+- `/speck-recheck` (when drift requires reopening decisions)
 
 Calls into:
 - `/speck-decision-log` (always, on lock)

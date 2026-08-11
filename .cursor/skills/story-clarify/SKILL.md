@@ -1,12 +1,6 @@
 ---
 name: story-clarify
 description: Fills gaps in spec.md. Use after story-specify when requirements, acceptance criteria, or scope are unclear.
-paths:
-  - "specs/projects/**/S*/**"
-  - "specs/projects/**/stories/**"
-  - "specs/projects/**/**/spec.md"
-  - "specs/projects/**/**/plan.md"
-  - "specs/projects/**/**/tasks.md"
 ---
 
 # story-clarify

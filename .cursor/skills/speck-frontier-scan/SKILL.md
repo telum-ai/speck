@@ -19,7 +19,7 @@ Rather than treating methodology rules as static or frozen, this skill codifies 
 - When a major new model family or agentic framework is released
 - When starting a brand new Platform-level project to establish a modern research baseline
 - Explicitly requested by the user: `/speck-frontier-scan` or "refresh SOTA baseline"
-- **Product-market recheck** (`--product`): re-validate a product's differentiator / "no competitor does X" claims against the live market — on cadence, or when `/recheck` flags `MARKET_DRIFT` (see **Product Mode** below, issue #80)
+- **Product-market recheck** (`--product`): re-validate a product's differentiator / "no competitor does X" claims against the live market — on cadence, or when `/speck-recheck` flags `MARKET_DRIFT` (see **Product Mode** below, issue #80)
 
 ## Prerequisites
 
@@ -107,7 +107,7 @@ Trigger `/project-state` to record the new frontier research report under projec
 
 ## Product Mode (`--product`) — competitive-claim re-validation (issue #80)
 
-This skill also runs against a **product's live market** instead of Speck's own methodology. Trigger: `/speck-frontier-scan --product` (or "product-market" in `$ARGUMENTS`), or when `/recheck` surfaces `MARKET_DRIFT`. It reuses the machinery above — resilient Perplexity/WebSearch, dated report, cited sources — but re-points the four angles:
+This skill also runs against a **product's live market** instead of Speck's own methodology. Trigger: `/speck-frontier-scan --product` (or "product-market" in `$ARGUMENTS`), or when `/speck-recheck` surfaces `MARKET_DRIFT`. It reuses the machinery above — resilient Perplexity/WebSearch, dated report, cited sources — but re-points the four angles:
 
 1. **Direct competitors & feature parity** — who now ships the capability §3 claims is unique? Name products + dates.
 2. **Substitute / DIY landscape** — free general-purpose AI + effort, OSS, free tiers (feeds `product-contract.md` §2a Value Defensibility).
@@ -127,7 +127,7 @@ This skill also runs against a **product's live market** instead of Speck's own 
     --verdict holds --sources <N> --scan project-market-research-report-<YYYYMMDD>.md
   ```
 
-  An `eroded`/`false` verdict is stamped honestly and then treated as `MARKET_DRIFT.P1` by `/recheck` to force the fix (evaluation over verification).
+  An `eroded`/`false` verdict is stamped honestly and then treated as `MARKET_DRIFT.P1` by `/speck-recheck` to force the fix (evaluation over verification).
 
 **Cadence & config** (all optional in `.speck/project.json`, absent = safe default): `market_absolute_claim_days` (default **30** — deliberately below the observed ~8-week rot half-life), `market_scan_cadence_days` (default **45** for consumer/SaaS/paid-API, **90** for infra/backend), `market_sources_floor` (default **3**), `market_scan` (`false` opts a claim-free internal tool out). Sprint play level is skipped (no `product-contract.md`).
 

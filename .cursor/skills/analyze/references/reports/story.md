@@ -1,14 +1,12 @@
-# Story analysis report
+# Story report
 
-Hand each finding to a verifier who did not author the corpus or raise that finding. Keep refuted rows and record Verifier + Verdict.
+Verify every finding with a reviewer other than its author, keep refuted rows, and write `[STORY_DIR]/story-analysis-report.md` from the loaded template. `BLOCKED` means an open CRITICAL or missing applicable flow slot; `NEEDS_FIXES` means another finding remains open; `CLEAN` means all findings are resolved, waived by decision, or refuted.
 
-Write `[STORY_DIR]/story-analysis-report.md` from the loaded template. Use `BLOCKED` for any open CRITICAL, `NEEDS_FIXES` for open non-CRITICAL findings, and `CLEAN` when every finding is resolved, waived, or refuted.
-
-Run as separate direct commands after the last report mutation:
+Run:
 
 ```bash
 bash .speck/scripts/validation/validate-template.sh --strict [STORY_DIR]/story-analysis-report.md
-bash .speck/scripts/validation/validators/validate-project-analysis.sh --strict --gate [STORY_DIR]
+bash .speck/scripts/validation/validators/validate-project-analysis.sh [STORY_DIR]/story-analysis-report.md --strict
 ```
 
-Any committed change to `spec.md`, `plan.md`, or `tasks.md` after the report is `ANALYSIS_STALE.P1`.
+Commit the report after the analyzed corpus so `analyzed_sha` proves ordering.

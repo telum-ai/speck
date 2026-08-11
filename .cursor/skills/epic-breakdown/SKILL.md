@@ -1,10 +1,6 @@
 ---
 name: epic-breakdown
 description: Maps an epic to ordered, traceable stories. Use after epic-plan and before starting story work.
-paths:
-  - "specs/projects/**/E*/**"
-  - "specs/projects/**/epics/**"
-  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-breakdown

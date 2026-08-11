@@ -1,8 +1,6 @@
 ---
 name: project-product-contract
 description: Creates product-contract.md for promises and differentiation. Use at Build/Platform before project-plan or epic work.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-product-contract

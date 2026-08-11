@@ -249,10 +249,10 @@
       "forbid": ["analyze", "story-validate"]
     },
     {
-      "id": "speck-catch-up-empty-scaffolds",
-      "prompt": "The v6-to-v7 migration ran, but the generated product and evidence contracts are still empty scaffolds and old readiness claims need honest backfill.",
-      "expect": "speck-catch-up",
-      "forbid": ["speck-migrate", "speck-reprove"]
+      "id": "speck-migrate-empty-scaffolds",
+      "prompt": "The upgrade left a migration catch-up marker and empty generated product and evidence contracts. Route the scaffold repair before normal work.",
+      "expect": "speck-migrate",
+      "forbid": ["project-validate"]
     },
     {
       "id": "speck-debug-broken-workflow",
@@ -279,9 +279,9 @@
       "forbid": ["just-in-time-research", "speck-self-eval"]
     },
     {
-      "id": "speck-graph-up-marker",
+      "id": "speck-migrate-graph-marker",
       "prompt": "The repository has a .speck/.v9-graph-needed marker. Establish and heal the witness graph before normal work proceeds.",
-      "expect": "speck-graph-up",
+      "expect": "speck-migrate",
       "forbid": ["speck-recheck"]
     },
     {
@@ -292,7 +292,7 @@
     },
     {
       "id": "speck-learn-mid-story",
-      "prompt": "A surprising integration gotcha was discovered mid-story and should become a reusable pattern now rather than wait for the formal retro.",
+      "prompt": "A surprising integration gotcha was discovered mid-story and should be captured and applied now rather than risk losing it before the formal retro.",
       "expect": "speck-learn",
       "forbid": ["story-retrospective", "speck-feedback"]
     },
@@ -300,11 +300,11 @@
       "id": "speck-migrate-version",
       "prompt": "Upgrade this existing repository to the current Speck version additively while preserving all prior artifacts.",
       "expect": "speck-migrate",
-      "forbid": ["speck-catch-up", "speck-reprove"]
+      "forbid": ["speck-recheck"]
     },
     {
-      "id": "speck-premise-challenge-ui",
-      "prompt": "Before granting UX-RC to this high-impact interface, challenge whether the contract's underlying design decision is worth building at all.",
+      "id": "speck-premise-challenge-commitment",
+      "prompt": "Before locking this costly cross-system commitment, challenge whether its promised outcome, causal assumptions, and value justify building it at all.",
       "expect": "speck-premise-challenge",
       "forbid": ["speck-audit", "speck-skeptical-review"]
     },
@@ -315,10 +315,10 @@
       "forbid": ["speck-audit", "project-state"]
     },
     {
-      "id": "speck-reprove-marker",
+      "id": "speck-migrate-proof-marker",
       "prompt": "The repository has a .speck/.v8-reprove-needed marker. Re-evaluate v7-era green under the v8 evaluation standard.",
-      "expect": "speck-reprove",
-      "forbid": ["speck-catch-up", "speck-migrate"]
+      "expect": "speck-migrate",
+      "forbid": ["project-validate"]
     },
     {
       "id": "speck-scan-code-facts",
@@ -400,7 +400,7 @@
     },
     {
       "id": "visual-testing-validation-evidence",
-      "prompt": "During story validation, coordinate screenshots, accessibility evidence, and host-specific visual checks for the UI described in ui-spec.md.",
+      "prompt": "Within UI LARP, produce screenshots, accessibility evidence, and host-specific visual checks for the reachable build described in ui-spec.md before validation.",
       "expect": "visual-testing",
       "forbid": ["visual-quality", "speck-larp"]
     }

@@ -9,9 +9,9 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 
 | Metric | Before (~10.5) | After (11.0) |
 |--------|----------------|--------------|
-| AGENTS.md | ~62810 bytes / 578 lines | **9121 bytes / 97 lines** |
-| Auto skill description sum | ~30k chars | **6902 chars** (specific trigger contracts) |
-| Auto skill entries | 76 after initial v11 pass | **63** |
+| AGENTS.md | ~62810 bytes / 578 lines | **11274 bytes / 103 lines** |
+| Auto skill description sum | ~30k chars | **6614 chars** (specific trigger contracts) |
+| Auto skill entries | 76 after initial v11 pass | **60** |
 | Domain/integration skills | ~20 | **0** (deleted) |
 | `disable-model-invocation: true` | inverted / scattered | **machine-owned family policy** |
 
@@ -31,10 +31,12 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
   Context7 / official docs JIT.
 - Visual-testing hosts folded under `visual-testing/references/`.
 - Oversized/branching skills → real router-owned DAG nodes; single always-loaded `procedure.md` pointers are rejected.
-- Analyze/adjust now have one canonical automatic entry. Analyze stages core (5.3 KiB), one reviewer lens (~3.4 KiB), then the report template; adjust loads one blast-radius branch.
-- Validation/retrospective retain level-specific automatic skills; their generic convenience routers and all compatibility aliases are user-only.
-- All 63 automatic descriptions now use third-person WHAT + specific WHEN; lifecycle WHERE or sibling boundaries appear only when selection-critical (ADR-0008).
-- A 63-case always-on routing suite covers every automatic skill with near-neighbor exclusions. GPT-5.6 Terra and Grok 4.5 each selected 63/63; reports bind catalog + cases + canonical-flow + approval-gated route-baseline hashes and are re-scored in CI.
+- Analyze/adjust now have one canonical automatic entry. Analyze stages one compact scope core, one reviewer lens, then the report template; adjust loads one blast-radius branch.
+- Analyze checks every conditional flow slot already reached and records `included`, `not-applicable`, or `missing`. Its project/epic compatibility shims and the generic retrospective router were deleted; validation and retrospective remain level-specific.
+- Audit now carries its common adversarial procedure inline and loads only the UI supplement when applicable. PROVE has one sequence: audit implementation, LARP the real experience, use visual testing as UI evidence inside LARP, then validate readiness.
+- Migration repair now enters through one staged `speck-migrate` skill. It selects only the oldest active scaffold, proof, graph, or upgrade procedure; the three version-specific skill directories were deleted.
+- All 60 automatic descriptions use third-person WHAT + specific WHEN; lifecycle WHERE or sibling boundaries appear only when selection-critical (ADR-0008).
+- A 67-case always-on routing suite covers every automatic skill with near-neighbor exclusions. Evaluation runs and reports are generated locally and ignored; only harness code and release conclusions are versioned.
 - The complete project/epic/story flow is always in AGENTS context; JIT references explain gates without carrying competing sequences (ADR-0009).
 - Encyclopedic AGENTS sections → `.speck/reference/` (canonical-routing, command-phases, host-capabilities).
 - Evidence-contract template principle-compressed (≤400 lines); detail JIT under `.speck/reference/evidence-*`.
@@ -57,14 +59,21 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
   generated agents, while excluding methodology evaluation and history.
 - Upgrade removes framework-owned `.speck/eval/` and `.speck/feedback/` leaked by older template exports.
 
+### Release evidence retained
+
+- The frozen 24-run paired tournament observed a 1.00x composite quality ratio: hidden scorer −4.7 points, blinded decorrelated judge +9.8 points, and the predeclared composite −0.4 with a confidence interval crossing zero.
+- V11 reduced mean input tokens 15.6%, uncached input tokens 31.7%, and wall time 21.9%; all 8 applicable v11 transcripts passed REACH, SELECTIVITY, TIMING, and GATE_USE.
+- Real-project entry canaries preserved mandatory recheck precedence and proved that live graph P1 findings outrank stale project-state prose. Generated transcripts and reports remain reproducible local output, not versioned methodology context.
+- This supports a substantially leaner, more inspectable release candidate without claiming a universal quality increase; replication across another model/host and a longitudinal multi-story project remains the next confidence step.
+
 ### Agent prose + load DAG
 
 AGENTS.md / skills / skill `references/` / `.speck/reference/` are dense imperative instructions
 (ADR-0003/0004). Field evidence for analyze gates (`001-odd` / #106) lives in ADR-0004 + CHANGELOG only.
 
-Skill load (ADR-0005): complete map in `docs/decisions/skill-load-map.md` — **36 multi-ref** DAGs/domain-refs
-(analyze/validate/larp/router/orchestrators/clarify/…); **43 inline** always-path skills. Anti-theater CI.
-Cursor `paths:` on story/epic/project/UI skills.
+Skill load (ADR-0005): complete map in `docs/decisions/skill-load-map.md`. Load contracts and post-hoc
+transcript tests prove selected context, timing, sibling exclusion, and closure-gate use. Skill frontmatter
+contains only trigger metadata; redundant `paths:` hints were removed.
 
 ---
 

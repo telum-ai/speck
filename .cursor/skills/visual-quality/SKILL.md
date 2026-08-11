@@ -1,11 +1,6 @@
 ---
 name: visual-quality
 description: Applies project visual personality and quality rules. Use while building or reviewing user-facing UI components.
-paths:
-  - "**/*.{tsx,jsx,vue,svelte,css,scss}"
-  - "specs/projects/**/**/ui-spec.md"
-  - "specs/projects/**/**/wireframes.md"
-  - "specs/projects/**/design-system.md"
 ---
 
 # Visual Quality Gate

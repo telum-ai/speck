@@ -1,13 +1,10 @@
-# epic-validate / felt
+# FELT-GOOD adjudication
 
-## 3. Four axes
+For consumer `UX-RC+`, require prior naive-hostile evidence over the complete
+cold-start JTBD. Cross-examine whether the user understood what to do, reached
+the promised outcome without developer knowledge, recovered from failure, and
+would choose the experience again. Missing or stale evidence leaves
+`felt_axis: uncovered` and caps below `UX-RC`.
 
-| Axis | Epic validate |
-|------|---------------|
-| CORRECT | Story rollup, audit, matrix, graph, mutation |
-| ON-CONTRACT | evidence-contract gates |
-| FELT-GOOD | Naive-hostile LARP on cold-start JTBD walkthrough (consumer UX-RC+) |
-| TASTE | Connoisseur-hostile (`/speck-larp` Job C) for consumer UX-RC+ |
-
-LARP: **DOES-IT-WORK** = JTBD cold-start walkthrough on built artifact; **IS-IT-GOOD** = FELT + TASTE + comprehension rubric.
-Graph proves traceable/complete/fresh — never faithful/good/excellent.
+Correctness, screenshots, and graph completeness cannot substitute for this
+judgment.

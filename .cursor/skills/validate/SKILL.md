@@ -10,7 +10,7 @@ $ARGUMENTS
 
 ## Purpose
 
-`/validate` is the unified, level-dispatching entry point for Speck validation. It does **not** re-implement validation logic — it detects the level and routes to the battle-tested specialist, which owns the readiness-state taxonomy (P1/P2/P3), evidence gates, LARP hooks, and cap logic.
+`/validate` is the unified, level-dispatching entry point for Speck validation. It does **not** re-implement validation logic — it detects the level and routes to the specialist, which adjudicates prior evidence and owns readiness-state and cap logic.
 
 ## Level detection
 

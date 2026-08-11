@@ -1,10 +1,6 @@
 ---
 name: epic-specify
 description: Creates epic.md from a project-plan placeholder or new scope. Use before epic-clarify and downstream epic work.
-paths:
-  - "specs/projects/**/E*/**"
-  - "specs/projects/**/epics/**"
-  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-specify

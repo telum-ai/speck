@@ -50,7 +50,7 @@ artifact_type: epic-adjust-report
 *Every major adjustment phase requires a recorded decision lock and a re-audit.*
 
 - **Decision Log Reference**: [e.g., `DEC-0209` in `project-decisions-log.md`]
-- **Re-Audit Performed**: [e.g., "Yes, ran /audit on E### scope to verify accessibility color-contrast ratios on the neutral scale."]
+- **Re-Audit Performed**: [e.g., "Yes, ran /speck-audit on E### scope to verify accessibility color-contrast ratios on the neutral scale."]
 - **New Test Guardrail**: [e.g., "Added a baseline visual regression test for S05 dashboard to lock the neutral treatment."]
 
 ---

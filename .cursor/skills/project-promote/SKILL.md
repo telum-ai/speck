@@ -1,8 +1,6 @@
 ---
 name: project-promote
 description: Raises a project's play level and adapts artifacts. Use when Sprint or Build has outgrown its current rigor.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-promote

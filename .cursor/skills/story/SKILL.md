@@ -2,12 +2,6 @@
 name: story
 description: Story lifecycle orchestrator. Invoke only via /story.
 disable-model-invocation: true
-paths:
-  - "specs/projects/**/S*/**"
-  - "specs/projects/**/stories/**"
-  - "specs/projects/**/**/spec.md"
-  - "specs/projects/**/**/plan.md"
-  - "specs/projects/**/**/tasks.md"
 ---
 
 # story
@@ -20,7 +14,7 @@ paths:
 
 **ANTI-PATTERN (do NOT do this)**:
 -  Writing `spec.md`, `plan.md`, or `tasks.md` inline without loading `/story-specify`, `/story-plan`, or `/story-tasks`
--  Skipping `/audit` or `/story-validate` because the orchestrator "already knows" the outcome
+-  Skipping `/speck-audit` or `/story-validate` because the orchestrator "already knows" the outcome
 -  Jumping to code changes without running `/story-implement` (including its prerequisite gates)
 -  Treating the transition map as a checklist of filenames instead of a checklist of **skills to invoke**
 
@@ -87,7 +81,7 @@ This keeps stateful resumption without allowing the orchestrator to drift from t
 
 Do NOT transition automatically and stop immediately if any of these occur:
 1. **Unresolved Clarifications**: Any `[NEEDS CLARIFICATION]` markers in `spec.md` or plans.
-2. **Critical/P0 Findings**: Any P0 findings returned by the `/story-tasks` consistency cross-check, `/audit`, or failed assertions in `/story-validate`.
+2. **Critical/P0 Findings**: Any P0 findings returned by the `/story-tasks` consistency cross-check, `/speck-audit`, or failed assertions in `/story-validate`.
 3. **Compilation, Test, or Gate Failures**: Any failure in compiling, running tests, or executing the project's full pre-commit gate (lint/eslint, typecheck, banned-language).
 4. **Comprehension Block**: Fails first-time user comprehension, capping readiness state.
 
@@ -97,7 +91,7 @@ Do NOT transition automatically and stop immediately if any of these occur:
 
 - **ALWAYS** check that the story's parent epic is currently active and has not been locked out by other outstanding epic validations.
 - **ALWAYS** invoke downstream skills by reading their `SKILL.md` — never substitute inline artifact authoring for a skipped skill step. Emitting a template-shaped `spec.md` / `validation-report.md` without running the skill is **simulation, not progress** — it passes superficial checks while bypassing the rigor.
-- **NEVER** advance Audited → Validated on mere `validation-report.md` presence. Require the report template-compliant (`validate-template.sh --strict`) AND produced by a real `/story-validate` + `/audit` run. A report that exists but whose skills never ran does not advance state.
+- **NEVER** advance Audited → Validated on mere `validation-report.md` presence. Require the report template-compliant (`validate-template.sh --strict`) AND produced by a real `/story-validate` + `/speck-audit` run. A report that exists but whose skills never ran does not advance state.
 - **NEVER** let an agent jump directly to `/story-implement` without running `/story-implement` (including `check-story-prereqs.sh` gate).
 - **ALWAYS** regenerate `project-state.md` upon any state transition.
 - **When run as a delegated sub-agent** (background/worktree): do NOT stop at a downstream skill's closing "next steps" menu — that menu is not a turn boundary; proceed to the next state. On completion, return the contract `{ readiness_state, pass, p0p1, artifact_paths, skills_invoked, gate_checks }` so the conductor's Verify-Skills Gate can confirm the skills actually ran and the full pre-commit gate passed.

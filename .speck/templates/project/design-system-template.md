@@ -558,7 +558,7 @@ This section serves as the single source of truth for all custom visual assets u
 3. **WebP for Bitmaps**: High-fidelity photographic illustrations or complex graphics must use WebP with descriptive alt text and properly sized fallback resolutions.
 4. **Registration Requirement**: Every custom visual asset must be declared below with its file path, dimensions, visual style, and semantic meaning.
 
-`/recheck` runs `.speck/scripts/asset-drift-check.sh` to flag when the same SVG path geometry appears in 2+ source files (silent brand inconsistency).
+`/speck-recheck` runs `.speck/scripts/asset-drift-check.sh` to flag when the same SVG path geometry appears in 2+ source files (silent brand inconsistency).
 
 ### Registered Assets
 

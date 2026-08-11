@@ -2,7 +2,7 @@
 
 ## Pre-validate STOP
 
-1. Missing `audit-report.md` → STOP: run `/audit`. Any P0 → STOP.
+1. Missing `audit-report.md` → STOP: run `/speck-audit`. Any P0 → STOP.
 2. Missing project `evidence-contract.md` → STOP: run `/project-evidence-contract`.
 3. Missing `spec.md`/`plan.md`/`tasks.md` → ERROR: specify/plan/tasks first.
 

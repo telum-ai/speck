@@ -9,11 +9,11 @@
 #
 # Cheap shell detector — the semantic "is §3 at least as defensible as the §2a
 # wedge?" judgment is done by the auditor at the product-contract lock and in
-# /recheck; this script surfaces the structural + self-flag + low-overlap cases.
+# /speck-recheck; this script surfaces the structural + self-flag + low-overlap cases.
 #
 # Usage:  .speck/scripts/market-reconcile-check.sh [PROJECT_DIR]
 #
-# Output: zero or more TYPE.Pn lines (consumed by /recheck):
+# Output: zero or more TYPE.Pn lines (consumed by /speck-recheck):
 #   WEDGE_DRIFT.P1  <detail>   (structural or self-flagged — blocks the contract stamp)
 #   WEDGE_DRIFT.P2  <detail>   (low §3↔§2a overlap — hand to the auditor)
 #

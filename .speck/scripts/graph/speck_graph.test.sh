@@ -277,7 +277,7 @@ else
   bad "phantom promise should block" "$OUT (rc=$RC)"
 fi
 
-echo "── Test 14: check never rubber-stamps — orphan-code NOT-evaluated; taste stays with /audit+LARP"
+echo "── Test 14: check never rubber-stamps — orphan-code NOT-evaluated; taste stays with /speck-audit+LARP"
 if echo "$OUT" | grep -q "ORPHAN_CODE: pending" && echo "$OUT" | grep -q "NOT graph-provable"; then
   ok "orphan-code honestly pending; faithful/good explicitly not claimed by the graph"
 else
@@ -637,7 +637,7 @@ else
 fi
 
 echo "── Test 34: UNJUDGED proves the machinery RAN, not that the verdict is good (anti-rubber-stamp)"
-# even a BAD-recorded verdict counts as JUDGED — honesty of the verdict is /audit's job, not the graph's
+# even a BAD-recorded verdict counts as JUDGED — honesty of the verdict is /speck-audit's job, not the graph's
 cat > "$VJ/epics/001-e/stories/S001-a/validation-report.md" <<'EOF'
 ---
 readiness_state_verified: UX-RC
@@ -648,7 +648,7 @@ readiness_state_verified: UX-RC
 EOF
 OUT="$(python3 "$GRAPH" check "$VJ" 2>&1)" || true
 if ! echo "$OUT" | grep -q "UNJUDGED_SURFACE"; then
-  ok "a recorded BAD verdict still counts as judged (graph proves it ran; /audit owns its honesty)"
+  ok "a recorded BAD verdict still counts as judged (graph proves it ran; /speck-audit owns its honesty)"
 else
   bad "a recorded verdict (even BAD) should clear UNJUDGED" "$OUT"
 fi

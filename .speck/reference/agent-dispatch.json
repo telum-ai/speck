@@ -40,8 +40,8 @@
     "speck-validator": {
       "mode": "evaluator",
       "tier": "frontier",
-      "independence": "Evaluates and declares readiness; does not implement fixes during the evaluation.",
-      "skills": ["story-validate", "epic-validate", "project-validate", "speck-larp", "visual-testing"]
+      "independence": "Adjudicates prior audit and experience evidence and declares readiness; never produces that evidence or implements fixes.",
+      "skills": ["story-validate", "epic-validate", "project-validate"]
     },
     "speck-researcher": {
       "mode": "evidence-contributor",
@@ -59,7 +59,7 @@
       "mode": "read-only-contributor",
       "tier": "mechanical",
       "independence": "Read-only extraction role; reports facts and uncertainty without planning or implementation.",
-      "skills": ["speck-scan", "speck-recheck", "speck-graph-up"]
+      "skills": ["speck-scan", "speck-recheck"]
     }
   }
 }

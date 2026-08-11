@@ -2,10 +2,6 @@
 name: epic-outline
 description: Retired alias → speck-skeptical-review / story-tasks. Use when /epic-outline named.
 disable-model-invocation: true
-paths:
-  - "specs/projects/**/E*/**"
-  - "specs/projects/**/epics/**"
-  - "specs/projects/**/**/epic.md"
 ---
 
 # /epic-outline — retired in Speck v8 (alias-shim)

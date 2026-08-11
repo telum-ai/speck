@@ -14,7 +14,7 @@ Custom agents had grown into parallel methodology prompts, `adjust` sounded like
 1. Custom agents are thin role adapters. `.speck/reference/agent-dispatch.json` owns role-to-skill mapping, execution mode, model tier, independence, and a compact machine-consumed integration return. Artifact owners execute the selected skill; contributors supply bounded input; evaluators remain separate. Root `AGENTS.md` plus the selected canonical skill own methodology and artifact format.
 2. `adjust` is an end-to-end re-engineering loop: downgrade the old claim, re-spec and conserve promises, re-plan, rebuild, audit, revalidate, and restore truth/evidence. It is not complete when documents alone change.
 3. Story planning analysis is a branch of generic `analyze`: Sprint skips, Build uses one independent reviewer, and Platform uses three. It runs after `story-tasks` and gates `story-implement` for v11 task artifacts.
-4. Remove `project-adjust`, `epic-adjust`, `story-adjust`, and `story-analyze`. They had no observed user invocation contract, and the canonical generic routes are unambiguous. Upgrade sync deletes stale installed copies.
+4. Remove unused level aliases and the generic retrospective router. The canonical generic analyze/adjust routes and level retrospectives are unambiguous. Upgrade sync deletes stale installed copies.
 5. Artifact schemas live in `.speck/templates`; machine-consumed agent returns live in the dispatch contract. Skills may surface blockers, decisions, and readiness, but do not prescribe decorative chat completion formats.
 
 ## Enforcement

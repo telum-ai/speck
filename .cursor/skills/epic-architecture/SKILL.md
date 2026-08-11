@@ -1,10 +1,6 @@
 ---
 name: epic-architecture
 description: Designs epic architecture. Use after epic-clarify before epic-plan for cross-service patterns or complex integrations.
-paths:
-  - "specs/projects/**/E*/**"
-  - "specs/projects/**/epics/**"
-  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-architecture

@@ -2,8 +2,6 @@
 name: project-scan
 description: Alias of speck-scan --level project. Use when /project-scan named.
 disable-model-invocation: true
-paths:
-  - "specs/projects/**"
 ---
 
 # /project-scan — retired in Speck v8 (alias-shim)

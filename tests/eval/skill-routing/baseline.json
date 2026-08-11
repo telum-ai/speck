@@ -17,11 +17,11 @@
     {"id": "sprint", "line": "Sprint", "skills": ["project-specify", "project-promote"]},
     {"id": "build-foundation", "line": "Build foundation", "skills": ["project-specify", "project-clarify", "project-domain", "project-product-contract", "project-profile", "project-evidence-contract", "project-context", "project-ux", "project-constitution", "project-architecture", "project-design-system", "project-plan", "analyze"]},
     {"id": "platform-foundation", "line": "Platform foundation", "skills": ["project-specify", "project-clarify", "project-domain", "project-ux", "project-context", "project-constitution", "project-architecture", "project-design-system", "project-product-contract", "project-profile", "project-evidence-contract", "project-plan", "analyze", "project-roadmap"]},
-    {"id": "epic", "line": "Epic", "skills": ["epic-discover", "epic-specify", "epic-clarify", "epic-constitution", "epic-architecture", "epic-journey", "epic-wireframes", "epic-experience-chain", "epic-plan", "epic-breakdown", "analyze", "speck-audit", "speck-larp", "epic-validate", "epic-retrospective"]},
-    {"id": "story-existing-code", "line": "Story", "skills": ["story-extract", "story-clarify", "speck-scan", "story-plan", "story-ui-spec", "story-tasks", "analyze", "story-implement", "visual-quality", "speck-audit", "speck-premise-challenge", "speck-larp", "story-validate", "visual-testing", "story-retrospective"]},
-    {"id": "story-new-scope", "line": "Story", "skills": ["story-specify", "story-clarify", "speck-scan", "story-plan", "story-ui-spec", "story-tasks", "analyze", "story-implement", "visual-quality", "speck-audit", "speck-premise-challenge", "speck-larp", "story-validate", "visual-testing", "story-retrospective"]},
-    {"id": "project-close", "line": "Project close", "skills": ["project-validate", "project-retrospective", "project-state"]},
-    {"id": "decision", "line": "Decision boundary", "skills": ["just-in-time-research", "speck-skeptical-review", "speck-decision-log"]},
+    {"id": "epic", "line": "Epic", "skills": ["epic-discover", "epic-specify", "epic-clarify", "epic-constitution", "epic-architecture", "epic-journey", "epic-wireframes", "epic-experience-chain", "epic-plan", "epic-breakdown", "analyze", "speck-audit", "speck-larp", "visual-testing", "epic-validate", "epic-retrospective"]},
+    {"id": "story-existing-code", "line": "Story", "skills": ["story-extract", "story-clarify", "speck-scan", "story-plan", "story-ui-spec", "story-tasks", "analyze", "story-implement", "visual-quality", "speck-audit", "speck-larp", "visual-testing", "story-validate", "story-retrospective"]},
+    {"id": "story-new-scope", "line": "Story", "skills": ["story-specify", "story-clarify", "speck-scan", "story-plan", "story-ui-spec", "story-tasks", "analyze", "story-implement", "visual-quality", "speck-audit", "speck-larp", "visual-testing", "story-validate", "story-retrospective"]},
+    {"id": "project-close", "line": "Project close", "skills": ["speck-larp", "visual-testing", "project-validate", "project-retrospective", "project-state"]},
+    {"id": "decision", "line": "Decision boundary", "skills": ["just-in-time-research", "speck-premise-challenge", "speck-skeptical-review", "speck-decision-log"]},
     {"id": "parallel-dispatch", "line": "Decision boundary", "skills": ["project-roadmap", "parallel-execution"]},
     {"id": "post-defect", "line": "Post-validation input", "skills": ["harden"]},
     {"id": "post-redesign", "line": "Post-validation input", "skills": ["adjust"]},
@@ -32,16 +32,13 @@
     {"id": "post-story-scope", "line": "Post-validation input", "skills": ["story-specify"]}
   ],
   "always_on_elsewhere": [
-    "speck-catch-up",
-    "speck-graph-up",
-    "speck-reprove"
+    "speck-migrate"
   ],
   "event_skills": [
     "speck-debug",
     "speck-feedback",
     "speck-frontier-scan",
     "speck-learn",
-    "speck-migrate",
     "speck-self-eval"
   ],
   "entry_anchors": [

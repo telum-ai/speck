@@ -52,7 +52,8 @@
 #
 # CODES. UNANALYZED_CORPUS.P1 · ANALYSIS_STALE.P1 · ANALYSIS_CRITICAL_OPEN.P1 ·
 # PROMISE_UNCOVERED.P1 · ANALYSIS_DECORRELATION_UNVERIFIED.P2 · ANALYSIS_COVERAGE_UNCOMPUTED.P2 ·
-# ANALYSIS_GRANDFATHERED.P2. All validator-local. Deliberately NOT reused: GATE_VACUOUS /
+# ANALYSIS_GRANDFATHERED.P2 · FLOW_OPTIONAL_UNREVIEWED.P1 · FLOW_OPTIONAL_MISSING.P1.
+# All validator-local. Deliberately NOT reused: GATE_VACUOUS /
 # GATE_EMPTY_LEGITIMATE are canary-owned verdicts that gate-liveness-probe.sh produces ABOUT a gate
 # from its telemetry; a gate self-emitting them would create two producers of one code — the exact
 # drift v10 introduced them to prevent.
@@ -323,6 +324,71 @@ fm_value() {
   printf '%s' "$line"
 }
 
+is_v11_report() {
+  local v major
+  v="$(fm_value 'speck_version')"
+  major="${v%%.*}"
+  [[ "$major" =~ ^[0-9]+$ && "$major" -ge 11 ]]
+}
+
+flow_slots() {
+  case "$1" in
+    project|project-analysis-report)
+      printf '%s\n' project-import speck-scan-project project-brainstorm project-domain project-ux project-constitution project-architecture project-design-system ;;
+    epic|epic-analysis-report)
+      printf '%s\n' epic-discover epic-constitution epic-architecture epic-journey epic-wireframes epic-experience-chain ;;
+    story|story-analysis-report)
+      printf '%s\n' story-extract speck-scan story-ui-spec ;;
+  esac
+  return 0
+}
+
+flow_row_for_slot() { # <rows> <slot-column-index> <exact-slot>
+  local rows="$1" slot_index="$2" wanted="$3" candidate actual
+  while IFS= read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    split_row "$candidate"
+    actual="$(lc "$(cell_at "$slot_index")")"
+    if [[ "$actual" == "$wanted" ]]; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done <<< "$rows"
+  return 1
+}
+
+flow_cell_is_substantive() { # reject blank/sentinel/template cells masquerading as adjudication
+  local value lower
+  value="$(sp_trim "$1")"; lower="$(lc "$value")"
+  [[ -n "$value" ]] || return 1
+  case "$lower" in
+    -|—|–|n/a|na|none|tbd|unknown) return 1 ;;
+  esac
+  case "$value" in
+    \[*\]) return 1 ;;
+  esac
+  return 0
+}
+
+flow_artifact_exists() { # <artifact-cell> <analysis-scope-dir>
+  local artifact="$1" scope="$2" root project token
+  root="$(speck_root "$scope")"
+  project="$scope"
+  case "$scope" in */epics/*) project="${scope%%/epics/*}" ;; esac
+  while IFS= read -r token; do
+    [[ -n "$token" ]] || continue
+    case "$token" in
+      /*) [[ -f "$token" ]] && return 0 ;;
+      *)
+        [[ -f "$scope/$token" ]] && return 0
+        [[ -f "$project/$token" ]] && return 0
+        [[ -n "$root" && -f "$root/$token" ]] && return 0
+        ;;
+    esac
+  done <<< "$(printf '%s' "$artifact" | grep -oE '[A-Za-z0-9_./-]+\.md' || true)"
+  return 1
+}
+
 # Count of declared lenses. Both the block form (`  - id: L3`) and a bare list (`  - L3`) count;
 # an inline `lenses: [a, b, c]` counts its comma-separated items.
 lens_declared_count() {
@@ -346,6 +412,7 @@ lens_declared_count() {
 ISSUES_TABLE=""; ISSUES_HEADER=""
 ROSTER_TABLE=""; ROSTER_HEADER=""
 COVERAGE_TABLE=""; COVERAGE_HEADER=""
+FLOW_TABLE=""; FLOW_HEADER=""
 
 load_tables() {
   ISSUES_TABLE="$(section_table '^#+[[:space:]].*Issues Found')"
@@ -354,6 +421,110 @@ load_tables() {
   ROSTER_HEADER="$(table_header_row "$ROSTER_TABLE" '\|[[:space:]]*\**[[:space:]]*Lens[[:space:]]*\**[[:space:]]*\|')"
   COVERAGE_TABLE="$(section_table '^#+[[:space:]].*Promise Coverage')"
   COVERAGE_HEADER="$(table_header_row "$COVERAGE_TABLE" '\|[[:space:]]*\**[[:space:]]*Promise dimension')"
+  FLOW_TABLE="$(section_table '^#+[[:space:]].*Flow Fit')"
+  FLOW_HEADER="$(table_header_row "$FLOW_TABLE" '\|[[:space:]]*\**[[:space:]]*Slot[[:space:]]*\**[[:space:]]*\|')"
+  return 0
+}
+
+flow_fit_structural_check() {
+  local scope="$1"
+  is_v11_report || return 0
+  if [[ -z "$FLOW_HEADER" ]]; then
+    log_error "the Flow Fit table has no resolvable header row" \
+      "Use: Slot | Trigger evidence | Artifact or rationale | Verdict. Every reached optional slot must be adjudicated."
+    return 0
+  fi
+  resolve_columns_from_header "$FLOW_HEADER" || true
+  local c_slot c_trigger c_artifact c_verdict
+  c_slot="$(column_index 'slot')"; c_trigger="$(column_index 'trigger evidence')"
+  c_artifact="$(column_index 'artifact or rationale')"; c_verdict="$(column_index 'verdict')"
+  if [[ "$c_slot" -lt 0 || "$c_trigger" -lt 0 || "$c_artifact" -lt 0 || "$c_verdict" -lt 0 ]]; then
+    log_error "the Flow Fit table is missing a required column" \
+      "Required: Slot | Trigger evidence | Artifact or rationale | Verdict."
+    return 0
+  fi
+  local rows slot row verdict trigger artifact missing="" invalid="" weak="" phantom=""
+  rows="$(table_data_rows "$FLOW_TABLE")"
+  while IFS= read -r slot; do
+    row="$(flow_row_for_slot "$rows" "$c_slot" "$slot" || true)"
+    if [[ -z "$row" ]]; then missing="$missing $slot"; continue; fi
+    split_row "$row"
+    verdict="$(lc "$(cell_at "$c_verdict")")"
+    trigger="$(cell_at "$c_trigger")"; artifact="$(cell_at "$c_artifact")"
+    case "$verdict" in included|not-applicable|missing) : ;; *) invalid="$invalid $slot('${verdict:-empty}')" ;; esac
+    if ! flow_cell_is_substantive "$trigger" || ! flow_cell_is_substantive "$artifact"; then
+      weak="$weak $slot"
+    fi
+    if [[ "$verdict" == included ]] && ! flow_artifact_exists "$artifact" "$scope"; then
+      phantom="$phantom $slot"
+    fi
+  done <<< "$(flow_slots "$ARTIFACT_TYPE")"
+  [[ -z "$missing" ]] || log_error "Flow Fit omits required slot(s):$missing" \
+    "Review every conditional slot; absence is not an implicit not-applicable verdict."
+  [[ -z "$invalid" ]] || log_error "Flow Fit uses an invalid verdict:$invalid" \
+    "Verdict vocabulary is included | not-applicable | missing."
+  [[ -z "$weak" ]] || log_error "Flow Fit lacks substantive trigger evidence or artifact/rationale for:$weak" \
+    "Replace blank, sentinel, or template cells with the observed trigger and a concrete artifact path or not-applicable rationale."
+  [[ -z "$phantom" ]] || log_error "Flow Fit claims included artifact(s) that do not exist:$phantom" \
+    "Point each included row at a checked-in Markdown artifact reachable from the analysis scope."
+  [[ -n "$missing$invalid$weak$phantom" ]] || log_ok "Flow Fit adjudicates every conditional $ARTIFACT_TYPE slot"
+  return 0
+}
+
+flow_fit_gate_check() {
+  local level="$1" play="${2:-}" epics="${3:-0}" scope="$4"
+  is_v11_report || return 0
+  if [[ -z "$FLOW_HEADER" ]]; then
+    emit_p1 "FLOW_OPTIONAL_UNREVIEWED.P1" "the v11 report has no readable Flow Fit table. Optional flow steps were not adjudicated, so absence cannot be distinguished from deliberate omission."
+    return 0
+  fi
+  resolve_columns_from_header "$FLOW_HEADER" || true
+  local c_slot c_trigger c_artifact c_verdict rows slot row verdict trigger artifact omitted="" missing="" weak="" phantom="" required_missing=""
+  c_slot="$(column_index 'slot')"; c_trigger="$(column_index 'trigger evidence')"
+  c_artifact="$(column_index 'artifact or rationale')"; c_verdict="$(column_index 'verdict')"
+  if [[ "$c_slot" -lt 0 || "$c_trigger" -lt 0 || "$c_artifact" -lt 0 || "$c_verdict" -lt 0 ]]; then
+    emit_p1 "FLOW_OPTIONAL_UNREVIEWED.P1" "the Flow Fit table lacks a required Slot, Trigger evidence, Artifact or rationale, or Verdict column, so conditional flow coverage cannot be read."
+    return 0
+  fi
+  rows="$(table_data_rows "$FLOW_TABLE")"
+  while IFS= read -r slot; do
+    row="$(flow_row_for_slot "$rows" "$c_slot" "$slot" || true)"
+    if [[ -z "$row" ]]; then omitted="$omitted $slot"; continue; fi
+    split_row "$row"
+    verdict="$(lc "$(cell_at "$c_verdict")")"
+    trigger="$(cell_at "$c_trigger")"; artifact="$(cell_at "$c_artifact")"
+    case "$verdict" in
+      missing) missing="$missing $slot" ;;
+      included|not-applicable) : ;;
+      *) omitted="$omitted $slot(unreadable:'${verdict:-empty}')" ;;
+    esac
+    if ! flow_cell_is_substantive "$trigger" || ! flow_cell_is_substantive "$artifact"; then
+      weak="$weak $slot"
+    fi
+    if [[ "$verdict" == included ]] && ! flow_artifact_exists "$artifact" "$scope"; then
+      phantom="$phantom $slot"
+    fi
+  done <<< "$(flow_slots "$level")"
+  if [[ "$level" == project ]]; then
+    local required_slots=""
+    if [[ "$(lc "$play")" == platform ]]; then
+      required_slots="project-ux project-constitution project-architecture"
+    elif [[ "$(lc "$play")" == build && "$epics" =~ ^[0-9]+$ && "$epics" -ge 4 ]]; then
+      required_slots="project-ux project-architecture"
+    fi
+    for slot in $required_slots; do
+      row="$(flow_row_for_slot "$rows" "$c_slot" "$slot" || true)"
+      [[ -n "$row" ]] || continue
+      split_row "$row"; verdict="$(lc "$(cell_at "$c_verdict")")"
+      [[ "$verdict" == included ]] || required_missing="$required_missing $slot"
+    done
+  fi
+  [[ -z "$omitted" ]] || emit_p1 "FLOW_OPTIONAL_UNREVIEWED.P1" "conditional slot(s) were not adjudicated:$omitted."
+  [[ -z "$weak" ]] || emit_p1 "FLOW_OPTIONAL_UNREVIEWED.P1" "conditional slot(s) lack substantive trigger evidence or artifact/rationale:$weak."
+  [[ -z "$phantom" ]] || emit_p1 "FLOW_INCLUDED_PHANTOM.P1" "conditional slot(s) claim included artifacts that do not exist:$phantom. A filename in the report is not evidence that the step ran."
+  [[ -z "$missing" ]] || emit_p1 "FLOW_OPTIONAL_MISSING.P1" "applicable conditional work is missing:$missing. Complete it or change the triggering decision before downstream execution."
+  [[ -z "$required_missing" ]] || emit_p1 "FLOW_REQUIRED_MISSING.P1" "the selected play level requires these flow slots to be included:$required_missing. A not-applicable verdict cannot waive a mandatory foundation step."
+  [[ -n "$omitted$weak$phantom$missing$required_missing" ]] || emit_note "flow fit: every conditional $level slot was adjudicated and none is missing."
   return 0
 }
 
@@ -415,6 +586,15 @@ structural_mode() {
         "Regenerate from the selected project, epic, or story analysis template — do not hand-write around the structure."
     fi
   done
+  if is_v11_report; then
+    if grep -qE '^#+[[:space:]].*Flow Fit' <<<"$CONTENT"; then
+      log_ok "section present: Flow Fit"
+    else
+      log_error "Missing required section: Flow Fit" \
+        "v11 analysis must adjudicate each conditional step before downstream work."
+    fi
+    flow_fit_structural_check "$(cd "$(dirname "$f")" && pwd)"
+  fi
 
   # --- Lens Roster columns, BY HEADER NAME ---
   if [[ -z "$ROSTER_HEADER" ]]; then
@@ -575,6 +755,13 @@ required_lens_count() {
   if [[ "$level" == "story" ]]; then
     case "$(lc "$play")" in
       platform) printf '3'; return 0 ;;
+      build)    printf '1'; return 0 ;;
+    esac
+    printf '0'; return 0
+  fi
+  if [[ "$level" == "epic" ]]; then
+    case "$(lc "$play")" in
+      platform) printf '7'; return 0 ;;
       build)    printf '1'; return 0 ;;
     esac
     printf '0'; return 0
@@ -891,21 +1078,24 @@ gate_mode() {
   fi
   DECISIONS_LOG="$(resolve_decisions_log "$dir")"
 
-  local root play epics required
+  local root play epics required fm_play="" fm_epics=""
   root="$(speck_root "$dir")"
   epics="$(count_epics "$proj")"
   play="$(play_level_of "$root")"
+  [[ -z "$play" ]] && play="platform"
 
-  # The report's own frontmatter is the primary declaration; project.json and a directory count are
-  # the fallbacks for a project that has no report yet (which is the case the gate exists for).
+  # Live project truth decides rigor. Report frontmatter is a bound claim to compare, never an
+  # authority that can lower the gate by declaring a cheaper play level or smaller epic count.
   if [[ -f "$report" ]]; then
     load_report "$report"
-    local fm_play fm_epics
     fm_play="$(fm_value 'play_level')"; fm_epics="$(fm_value 'epic_count')"
-    [[ -n "$fm_play" ]] && play="$fm_play"
-    printf '%s' "$fm_epics" | grep -qE '^[0-9]+$' && epics="$fm_epics"
+    if [[ -n "$fm_play" && "$(lc "$fm_play")" != "$(lc "$play")" ]]; then
+      emit_p1 "ANALYSIS_SCOPE_DRIFT.P1" "report play_level '$fm_play' disagrees with live project level '$play'. The report cannot lower or redefine its own rigor."
+    fi
+    if [[ "$level" != story ]] && printf '%s' "$fm_epics" | grep -qE '^[0-9]+$' && [[ "$fm_epics" -ne "$epics" ]]; then
+      emit_p1 "ANALYSIS_SCOPE_DRIFT.P1" "report epic_count '$fm_epics' disagrees with the live plan/directory count '$epics'. The report cannot shrink the corpus it claims to analyze."
+    fi
   fi
-  [[ -z "$play" ]] && play="build"
   required="$(required_lens_count "$play" "$epics" "$level")"
 
   echo -e "${BLUE}🧪 Analysis gate (#106) — $level: $dir${NC}"
@@ -913,7 +1103,14 @@ gate_mode() {
   echo ""
 
   if [[ "$required" -eq 0 ]]; then
-    emit_note "the decorrelated-analysis mandate does not reach this tier (it binds Build with 4+ epics and Platform). Nothing to gate."
+    if [[ -f "$report" && "$BOUND" == true ]] && is_v11_report; then
+      load_tables
+      flow_fit_gate_check "$level" "$play" "$epics" "$dir"
+    fi
+    if (( p1 > 0 )); then
+      gate_verdict_and_exit
+    fi
+    emit_note "the decorrelated-analysis mandate does not reach this tier. Project scope binds Build with 4+ epics and Platform; epic scope binds Build and Platform; story scope binds Build and Platform. Nothing to gate here."
     echo -e "${GREEN}Analysis gate: not applicable at this tier.${NC}"
     exit 0
   fi
@@ -970,7 +1167,10 @@ gate_mode() {
 
   load_tables
 
-  # --- predicate 2: freshness (CONTENT, never `stamped SHA == HEAD`) ---
+  # --- predicate 2: conditional flow coverage ---
+  flow_fit_gate_check "$level" "$play" "$epics" "$dir"
+
+  # --- predicate 3: freshness (CONTENT, never `stamped SHA == HEAD`) ---
   if [[ "$level" == "story" ]]; then
     freshness_check "$dir" "$report" "$dir/spec.md" "$dir/plan.md" "$dir/tasks.md"
   elif [[ "$level" == "epic" ]]; then
@@ -979,10 +1179,10 @@ gate_mode() {
     freshness_check "$dir" "$report" "$dir/PRD.md" "$dir/epics.md" "$dir/product-contract.md"
   fi
 
-  # --- predicate 3: an open CRITICAL ---
+  # --- predicate 4: an open CRITICAL ---
   critical_open_check
 
-  # --- predicate 4: promise coverage, read from the graph ---
+  # --- predicate 5: promise coverage, read from the graph ---
   # Project-level only. MM-N/JOB-N/DIF-N are project-global nodes, so requiring one epic's matrix to name
   # every promise in the product would manufacture a finding out of correct scoping.
   if [[ "$level" == "project" ]]; then
@@ -991,7 +1191,7 @@ gate_mode() {
     emit_note "promise coverage is a project-level predicate and is not evaluated at $level altitude; the selected report still checks its scoped coverage rows."
   fi
 
-  # --- predicate 5: decorrelation ---
+  # --- predicate 6: decorrelation ---
   decorrelation_check "$required" "$level"
 
   gate_verdict_and_exit

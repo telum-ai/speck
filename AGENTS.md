@@ -21,7 +21,7 @@ Primary artifacts: `product-contract.md` for PROMISE; story specs, plans, tasks,
 
 Perform these steps in order. Reading context never completes the ladder. If a step routes to a repair or skill, complete it before continuing to later steps:
 
-1. Handle compatibility markers before new work: `.speck/.v9-graph-needed` → `/speck-graph-up`; `.speck/.v8-reprove-needed` → `/speck-reprove`; `.speck/.migration-needs-catchup` or `<!-- v7 MIGRATION SCAFFOLD -->` → `/speck-catch-up`.
+1. Handle compatibility state before new work through `speck-migrate`, oldest repair first: migration scaffold/banner → legacy proof → witness graph. Re-enter it until `.speck/.migration-needs-catchup`, `.speck/.v8-reprove-needed`, and `.speck/.v9-graph-needed` are cleared honestly.
 2. Resolve the active project under `specs/projects/`. If none exists: existing code or docs enter through `project-import → speck-scan(project) → project-specify`; fuzzy greenfield enters through `project-brainstorm`; clear greenfield enters through `project-specify`. Do not build a graph at repository root.
 3. Read the active project's `project-state.md` when present and capture its Next action; do not execute that action until the remaining entry gates below are clear.
 4. Read `.speck/project.json` for `play_level`; if absent, use Platform until the project is classified.
@@ -48,6 +48,8 @@ Judge four independent axes: CORRECT (works), ON-CONTRACT (delivers the promise)
 
 Readiness climbs from NO-SHIP → IMPL-GREEN (implementation checks) → INTEGRATION-GREEN (integrated runtime) → UX-RC or API-RC (target experience or contract proven) → COMMERCIAL-RC when applicable → SHIP-RC (production-grade evidence complete) → SHIP (deployed). Never claim SHIP-RC from dev-server evidence.
 
+The PROVE roles are distinct and ordered. Audit attacks the implementation for defects and missed mechanisms. LARP exercises the real user job and judges function, feel, and taste. Visual testing supplies host-specific visual and accessibility evidence inside UI LARP. Validation adjudicates all applicable evidence and alone declares readiness.
+
 ## Canonical flow
 
 What/order only — how is in skills. Brackets are conditional slots; evaluate them when reached. `.speck/reference/command-phases.md` explains gates but never redefines this order.
@@ -57,10 +59,10 @@ Entry: brownfield `project-import → speck-scan(project) → project-specify`; 
 Sprint: `project-specify → ship → [project-promote if outgrown]`.
 Build foundation: `project-specify → project-clarify → [project-domain if specialized] → project-product-contract → project-profile → project-evidence-contract → project-context → [project-ux if UI/4+] → [project-constitution if governance-heavy] → [project-architecture if cross-system/4+] → [project-design-system if shared UI] → project-plan → [analyze(project), required 4+]`.
 Platform foundation: `project-specify → project-clarify → [project-domain if specialized] → project-ux → project-context → project-constitution → project-architecture → [project-design-system if UI] → project-product-contract → project-profile → project-evidence-contract → project-plan → analyze(project) → project-roadmap`.
-Epic: `[epic-discover if brownfield has no map] → epic-specify → epic-clarify → [epic-constitution if local principles] → [epic-architecture if cross-cutting] → [epic-journey → epic-wireframes if UX-heavy] → [epic-experience-chain if UI] → epic-plan → epic-breakdown → analyze(epic) → story loop → speck-audit(epic) → [speck-larp if UI] → epic-validate → epic-retrospective`.
-Story: `[story-extract if code exists without artifacts | story-specify] → story-clarify → [speck-scan(story) for code facts] → story-plan → [story-ui-spec if complex UI] → story-tasks → [analyze(story), required Build/Platform] → story-implement(+ visual-quality if UI) → speck-audit → [speck-premise-challenge if high-impact UI seeks UX-RC+] → [speck-larp if UI] → story-validate(+ visual-testing if UI) → story-retrospective`.
-Project close: completed epics `→ project-validate → project-retrospective`; after truth gates on main `→ project-state`.
-Decision boundary: `[just-in-time-research if external facts] → speck-skeptical-review → lock → speck-decision-log`. Parallel dispatch: `project-roadmap → parallel-execution → worktrees`.
+Epic: `[epic-discover if brownfield has no map] → epic-specify → epic-clarify → [epic-constitution if local principles] → [epic-architecture if cross-cutting] → [epic-journey → epic-wireframes if UX-heavy] → [epic-experience-chain if UI] → epic-plan → epic-breakdown → analyze(epic) → story loop → speck-audit(epic) → speck-larp(+ visual-testing if UI) → epic-validate → epic-retrospective`.
+Story: `[story-extract if code exists without artifacts | story-specify] → story-clarify → [speck-scan(story) for code facts] → story-plan → [story-ui-spec if complex UI] → story-tasks → [analyze(story), required Build/Platform] → story-implement(+ visual-quality if UI) → speck-audit → speck-larp(+ visual-testing if UI) → story-validate → story-retrospective`.
+Project close: completed epics `→ speck-larp(+ visual-testing if UI) → project-validate → project-retrospective`; after truth gates on main `→ project-state`.
+Decision boundary: `[just-in-time-research if external facts] → speck-premise-challenge → speck-skeptical-review → lock → speck-decision-log`. Parallel dispatch: `project-roadmap → parallel-execution → worktrees`.
 Post-validation input: defect `→ harden`; deliberate redesign `→ adjust`; engagement gap `→ speck-recheck`; rigor outgrowth `→ project-promote`; new scope `→ [project-specify | epic-specify | story-specify]`.
 <!-- SPECK:FLOW:END -->
 
@@ -68,7 +70,7 @@ Post-validation input: defect `→ harden`; deliberate redesign `→ adjust`; en
 
 - Read the selected `SKILL.md` and its required template before writing. Never invent filenames under `specs/`; read `.speck/reference/canonical-routing.md` when writing an artifact.
 - Compare at least three alternatives before a non-trivial lock, then record the decision at the phase boundary.
-- Run `/speck-audit` after implementation and before validation. For UI, run naive-user and hostile-user runtime LARP before validation. Checked-in evidence is required for a passing validation report.
+- Run `speck-audit` after implementation, then exercise the real user or operator job with `speck-larp`; UI LARP includes naive/hostile passes and host-specific visual testing. Validation follows and only adjudicates checked-in evidence.
 - Verify delegated work from its transcript and tool evidence; do not accept a self-reported pass or readiness state.
 - Before dispatch, read `.speck/reference/agent-dispatch.json`. A custom agent supplies role separation and model tier, then enters the mapped canonical skill; it never replaces the skill.
 - Keep every enumerable promise traced through the matrix and witness graph. Never hand-edit `witness.json`.

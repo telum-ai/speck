@@ -1,8 +1,0 @@
-S004’s canonical planning artifacts are complete and ready for `/story-tasks`.
-
-- [plan.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-jit-quality-rework/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/plan.md)
-- [data-model.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-jit-quality-rework/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/data-model.md)
-- [retry-credit-lifecycle.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-jit-quality-rework/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/retry-credit-lifecycle.md)
-- [quickstart.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-jit-quality-rework/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/quickstart.md)
-
-Evidence: all required planning artifacts exist; no `tasks.md` was created; no unresolved template or clarification markers remain; all local Markdown links resolve; and the working tree passes `git diff --check`. Overall product readiness remains **NO-SHIP** because implementation and validation have not begun.

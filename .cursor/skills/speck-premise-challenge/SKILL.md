@@ -1,63 +1,20 @@
 ---
 name: speck-premise-challenge
-description: Challenges whether high-impact UI is worth building. Use before locking its contract or before UX-RC and later proof.
+description: Challenges the assumptions and value behind a commitment. Use before a high-impact lock or when evidence undermines it.
 ---
 
-## Purpose
+# speck-premise-challenge
 
-Standard validation checks whether the implementation conforms to the specifications (`spec.md`) and the product contract (`product-contract.md`). However, conformance is blind to taste: **an implementation can be 100% correct and on-spec, yet still be a terrible user experience.** Worse, a bad design decision encoded in the contract will pass all standard gates green.
+Challenge whether the proposed commitment should exist before optimizing how to build it. This applies to product behavior, technical architecture, data collection, integrations, operations, pricing, and high-impact UI.
 
-The **Premise-Challenge (Anti-Spec) Pass** is an adversarial review step designed to question the underlying design decisions of the product contract itself. It is distinct from `speck-skeptical-review` (which enumerates alternatives before locking a decision) and `speck-audit` (which checks for technical correctness and edge cases).
+## Run the challenge
 
----
+1. Name the promised outcome, affected user or operator, and the assumption that makes this commitment necessary.
+2. Test the do-nothing case and the cheapest credible substitute. For commercial promises, include general-purpose AI, spreadsheets, manual service, and free tiers.
+3. Ask what mechanism causes the outcome, what evidence would falsify the premise, and whether that evidence already exists.
+4. Surface costs and externalities: user friction, lock-in, privacy, maintenance, reversibility, failure blast radius, and opportunity cost.
+5. Separate a wrong premise from a sound premise with a weak implementation.
 
-## Target Surfaces
+If the premise fails, stop the lock or downstream work and route the affected scope through `adjust` at story, epic, or project level. If the premise holds only because of a real constraint, record the constraint and alternatives with `speck-decision-log`.
 
-A Premise-Challenge pass is **mandatory** for stories and epics touching high-impact user experience surfaces:
-1. **Onboarding / First-Run**: The very first screen, setup flows, or tutorial.
-2. **Empty States**: What the user sees when there is no data yet.
-3. **Paywalls / Billing**: Subscription prompts, upgrade triggers, and pricing tables.
-4. **Error / Degraded States**: Network disconnect banners, validation errors, and crash screens.
-5. **Celebration Surfaces**: Success screens, completion states, and "magic moments."
-
----
-
-## Core Process
-
-When executing a Premise-Challenge pass, the agent must adopt a hostile, highly skeptical user perspective and ask:
-
-### 1. Challenge the Friction
-- Why is this step necessary? Can we eliminate it entirely?
-- Are we asking for too much information too early?
-- Does the user have to think or hunt to proceed?
-
-### 2. Challenge the Value (and the price vs the free substitute, #74)
-- Is the value proposition immediately clear on this screen?
-- Are we showing generic AI cheerleading copy instead of real, governed product copy?
-- Does the screen feel like a "chore" rather than a "magic moment"?
-- **Paywall / pricing surfaces**: adopt a skeptical buyer who *already has free general-purpose AI*. Could they get ~this outcome from ChatGPT/Claude + 15 minutes, a spreadsheet, or a free tier? If yes, what is the durable, defensible reason to pay — and is that reason actually visible on this screen? "Better UX / convenience" alone is a **failed premise** (→ `/adjust --level project` on the differentiator, not a copy tweak). Cross-check `product-contract.md` §2a.
-
-### 3. Challenge the Failure Paths
-- When this fails, does the user feel stupid, or do they feel supported?
-- Is the error message clear and actionable, or is it technical jargon?
-
----
-
-## Outputs & Escalation
-
-A Premise-Challenge pass results in one of two outcomes:
-
-1. **Premise Wrong (Escalate to `/adjust --level project`)**:
-   - If the underlying contract design is fundamentally flawed or feels bad, the agent **MUST** halt implementation and trigger `/adjust --level project` to re-spec the contract delta and compute the reverse cascade.
-2. **Premise Accepted (Escalate to DEC)**:
-   - If the design decision is questionable but consciously accepted due to constraints (e.g., legal compliance, technical limitations), the decision **MUST** be logged as a conscious DEC in `project-decisions-log.md` with alternatives and trade-offs.
-
----
-
-## Operator Guidance & Anti-Laundering Rules
-
-- **"This feels off" is a first-class thread**: Never ignore a gut-level taste or UX concern. If something feels awkward, clunky, or confusing, it is a failed premise. The AI is expected to apply this taste judgment itself — that is the whole point of the FELT-GOOD axis.
-- **Never conflate CORRECT/ON-CONTRACT with good**: A green test suite and a conforming LARP do not mean the product is ready to ship.
-- **Never launder a taste miss as "uncatchable by automation"**: If a user experience is poor, do not excuse it as an autonomous limitation. Run the naive lens, apply taste judgment, and document the finding. Escalation to a human operator is reserved for *contract-premise* problems (which force a `/adjust --level project` or a conscious DEC) — it is NOT a way to offload the FELT-GOOD taste judgment the AI should be making.
-
-*[as of SHA HEAD | verified `<date>` | speck `<version>`]*
+`speck-premise-challenge` tests whether the commitment is worth pursuing. `speck-skeptical-review` compares viable alternatives after that. `speck-audit` attacks the implementation after it exists.

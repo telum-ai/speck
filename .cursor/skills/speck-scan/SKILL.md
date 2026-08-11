@@ -17,9 +17,9 @@ $ARGUMENTS
 
 | Scope | Output artifact | Used by |
 |-------|------------------|---------|
-| `--level project` | `project-landscape-overview.md` at project root | `/project-specify`, `/project-architecture`, `/project-plan`, `/recheck` |
+| `--level project` | `project-landscape-overview.md` at project root | `/project-specify`, `/project-architecture`, `/project-plan`, `/speck-recheck` |
 | `--level epic` | `epic-codebase-scan-<topic>.md` in epic dir | `/epic-specify`, `/epic-plan` |
-| `--level story` | `codebase-scan-<topic>.md` in story dir | `/story-specify`, `/story-plan`, `/audit` |
+| `--level story` | `codebase-scan-<topic>.md` in story dir | `/story-specify`, `/story-plan`, `/speck-audit` |
 
 ## When to Run
 
@@ -28,7 +28,7 @@ $ARGUMENTS
 | Brownfield project init | `project` | Full landscape (tech stack, structure, patterns, conventions) |
 | Adding a new epic that touches existing code | `epic` | Topic-scoped scan of affected modules |
 | Adding a new story that extends existing code | `story` | Narrow scan of file(s) being modified |
-| `/recheck` needs fresh code-side reality | inferred | Re-scan at appropriate level |
+| `/speck-recheck` needs fresh code-side reality | inferred | Re-scan at appropriate level |
 
 ## Level Detection (when not specified)
 

@@ -15,12 +15,21 @@ Read `.speck/project.json` → `play_level` (missing = Platform).
 1. Read every epic `epic-validation-report.md` — extract verified states.
 2. MAX claimable = MIN(epic states).
 3. Read epic/story audit reports — P0 lowers max.
-4. Read `/recheck` report — drift lowers max.
-5. **Product JTBD smoke test** per persona (cross-epic, cold-start, no dev shortcuts).
+4. Read the `speck-recheck` report — drift lowers max.
+5. Adjudicate prior product-level `speck-larp` evidence for every job: UI personas use cross-epic cold start with no dev shortcuts; nonvisual/API jobs use a clean client and the evidence-contract's operational scenario.
 6. Cross-platform coherence per evidence-contract.
 7. No dead ends: every feature has back-nav; every action has feedback; no scaffolding in prod UI.
 8. Banned-phrase self-check on report.
-9. SHA-stamp; trigger `/project-state`; re-stamp truth artifacts with fresh `verified` date.
+9. SHA-stamp; trigger `project-state`; re-stamp truth artifacts with fresh `verified` date.
+
+## 4. Four axes
+
+- CORRECT: epic rollup, PRD coverage, tests, and gate liveness.
+- ON-CONTRACT: product and evidence contracts.
+- FELT-GOOD: prior naive-hostile UI judgment for consumer UX-RC+; not applicable to a nonvisual API-RC claim.
+- TASTE: prior connoisseur UI judgment for consumer UX-RC+; not applicable to a nonvisual API-RC claim.
+
+The product job result is distinct: UI uses DOES-IT-WORK plus FELT/TASTE/legibility; nonvisual/API uses the end-to-end operational verdict. Neither is produced during validation.
 
 ## 9. Rollup validation
 

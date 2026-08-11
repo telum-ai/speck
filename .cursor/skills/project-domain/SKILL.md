@@ -1,8 +1,6 @@
 ---
 name: project-domain
 description: Models domain terms, rules, and invariants. Use after project-clarify before foundation work for specialized domains.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-domain

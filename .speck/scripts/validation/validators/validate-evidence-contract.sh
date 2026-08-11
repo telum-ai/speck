@@ -272,7 +272,7 @@ profile_section="$(printf '%s\n' "$content" | awk '
 ')"
 if [[ -z "$profile_section" ]]; then
   log_error "Missing PROFILE Gate Criteria subsection" \
-    "Add ### PROFILE Gate Criteria under Section 7, or run /speck-catch-up --phase=profile"
+    "Add ### PROFILE Gate Criteria under Section 7, or run /speck-migrate --phase=profile"
 else
   profile_contract_valid=true
   for declaration in \

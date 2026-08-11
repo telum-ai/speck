@@ -34,7 +34,7 @@
 # NOTE on the `[pre-v8-proof]` sentinel: it lives BOTH in a validation report (a story-level fact:
 # "this claim predates v8 proof") and in a matrix Grain cell (a row-level fact: "this row's grain
 # predates v8 proof"). These are genuinely different facts that happen to share a token — NOT a
-# one-fact-two-homes drift violation. /speck-reprove is what converges them.
+# one-fact-two-homes drift violation. The proof stage of /speck-migrate converges them.
 #
 # Exit codes: 0 = pass, 1 = unresolved promises, 2 = invocation error.
 #
@@ -495,7 +495,7 @@ while IFS= read -r line; do
             row_grain="$(extract_grain "$grain_cell")"
             if [[ -n "$row_grain" ]]; then
               # Effective story state: numeric verified state, UNLESS the report's state line carries
-              # a [pre-v8-proof] stamp → the /speck-reprove cap (INTEGRATION-GREEN) wins.
+              # a [pre-v8-proof] stamp → the legacy-proof cap (INTEGRATION-GREEN) wins.
               eff_state="$verified_state"
               if printf '%s' "$state_line" | grep -qi "pre-v8-proof"; then
                 if [[ "$(grain_rank "$verified_state")" -gt "$(grain_rank integration-green)" ]]; then
@@ -564,7 +564,7 @@ while IFS= read -r line; do
         [[ "$overlap" -ge 2 ]] && break
       done <<< "$(salient_tokens "$promise")"
       if [[ "$overlap" -lt 2 ]]; then
-        echo -e "${YELLOW}⚠️  $id${NC}: [fidelity] Promise shares <2 salient tokens with its named Source ($(basename "$artifact")) — possible vocabulary drift / silent restatement. (WARN-only; presence+overlap, not faithfulness — see /audit semantic sweep.)"
+        echo -e "${YELLOW}⚠️  $id${NC}: [fidelity] Promise shares <2 salient tokens with its named Source ($(basename "$artifact")) — possible vocabulary drift / silent restatement. (WARN-only; presence+overlap, not faithfulness — see /speck-audit semantic sweep.)"
         fidelity_warnings=$((fidelity_warnings + 1))
       fi
     fi

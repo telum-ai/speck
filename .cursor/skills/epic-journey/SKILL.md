@@ -1,10 +1,6 @@
 ---
 name: epic-journey
 description: Maps epic touchpoints, emotions, and flow. Use after epic-clarify and any architecture, before wireframes or epic-plan.
-paths:
-  - "specs/projects/**/E*/**"
-  - "specs/projects/**/epics/**"
-  - "specs/projects/**/**/epic.md"
 ---
 
 

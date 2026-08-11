@@ -1,9 +1,0 @@
-S004’s canonical planning artifacts are complete and the story is ready for `/story-tasks` (not implementation).
-
-- [plan.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/plan.md)
-- [data-model.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/data-model.md)
-- [retry-credit-reservation contract](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/retry-credit-reservation.md)
-- [machine-readable contract](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/retry-credit-reservation.yaml)
-- [quickstart.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-10-v10-v11-terra-isolated/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/quickstart.md)
-
-Evidence: strict plan validation found 0 errors; placeholder and replace-marker checks passed; `git diff --check` passed. The witness graph rebuilt successfully and `check` passed with `SPECK-GAP: none-structural`. No `tasks.md` or implementation code was created.

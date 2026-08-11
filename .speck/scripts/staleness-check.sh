@@ -137,11 +137,11 @@ check_artifact() {
 
   # Version-as-staleness (Speck v8): an artifact stamped by a pre-v8 Speck is
   # v8-stale — its "green" was produced under v7 verification, not v8 evaluation.
-  # This takes precedence over SHA/date freshness and routes to /speck-reprove.
+  # This takes precedence over SHA/date freshness and routes to /speck-migrate.
   local stamp_speck_major
   stamp_speck_major=$(echo "$stamp_line" | sed -nE 's/.*speck v?([0-9]+)\..*/\1/p')
   if [[ -n "$stamp_speck_major" ]] && [[ "$stamp_speck_major" -lt 8 ]]; then
-    echo "⚠️  V8_STALE  $artifact (stamped speck v$stamp_speck_major — pre-v8 proof; run /speck-reprove)"
+    echo "⚠️  V8_STALE  $artifact (stamped speck v$stamp_speck_major — pre-v8 proof; run /speck-migrate)"
     ANY_STALE=1
     V8STALE_COUNT=$((V8STALE_COUNT + 1))
     return
@@ -217,7 +217,7 @@ done
 # --- v8 matrix↔report reconcile check (Speck v8.4, #87) --------------------------------------------
 # A traceability matrix still asserting `discharged` at a readiness the discharging story's report
 # capped `[pre-v8-proof]` is the exact #87 contradiction — the cap reached the report but not the
-# matrix. Flag it as V8_STALE so /recheck routes to /speck-reprove (which runs reconcile-matrix-grain.sh).
+# matrix. Flag it as V8_STALE so /speck-recheck routes to /speck-migrate (whose proof stage runs reconcile-matrix-grain.sh).
 # No new drift enum — this stays under the V8_REPROVE.P1 family.
 while IFS= read -r -d '' mx; do
   epic_dir="$(dirname "$mx")"
@@ -226,7 +226,7 @@ while IFS= read -r -d '' mx; do
   # Any discharging story report under this epic capped pre-v8, while the matrix is un-graded?
   if [[ -d "$epic_dir/stories" ]] && grep -rqli "pre-v8-proof" "$epic_dir/stories" 2>/dev/null; then
     rel="${mx#$PROJECT_DIR/}"
-    echo "⚠️  V8_STALE  $rel (story report capped [pre-v8-proof] but matrix un-graded — run /speck-reprove: reconcile-matrix-grain.sh)"
+    echo "⚠️  V8_STALE  $rel (story report capped [pre-v8-proof] but matrix un-graded — run /speck-migrate: proof stage)"
     ANY_STALE=1
     V8STALE_COUNT=$((V8STALE_COUNT + 1))
   fi

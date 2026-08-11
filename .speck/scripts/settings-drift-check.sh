@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# settings-drift-check.sh — SETTINGS_DRIFT detection for /recheck
+# settings-drift-check.sh — SETTINGS_DRIFT detection for /speck-recheck
 #
 # Usage: .speck/scripts/settings-drift-check.sh [WORKSPACE_ROOT]
 #

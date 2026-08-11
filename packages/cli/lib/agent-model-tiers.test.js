@@ -30,6 +30,8 @@ const DISPATCH_PATH = join(ROOT, '.speck', 'reference', 'agent-dispatch.json');
 const DISPATCH = JSON.parse(readFileSync(DISPATCH_PATH, 'utf-8'));
 const TIERS = ['frontier', 'mid', 'mechanical'];
 const MODES = ['artifact-owner', 'decision-contributor', 'evidence-contributor', 'read-only-contributor', 'evaluator'];
+const CHANGE_BEARING_SKILLS = new Set(['story-implement', 'harden', 'adjust', 'speck-migrate']);
+const PROOF_PRODUCER_SKILLS = new Set(['speck-audit', 'speck-larp', 'visual-testing']);
 
 const specAgents = readdirSync(SRC)
   .filter((f) => /^speck-.*\.md$/.test(f))
@@ -76,8 +78,19 @@ test('every retained agent has a canonical skill route and every route exists', 
         existsSync(join(ROOT, '.cursor', 'skills', skill, 'SKILL.md')),
         `${name}: routed skill ${skill} does not exist`,
       );
+      if (DISPATCH.roles[name].mode === 'read-only-contributor') {
+        assert.ok(!CHANGE_BEARING_SKILLS.has(skill), `${name}: read-only role routes change-bearing skill ${skill}`);
+      }
+      if (name === 'speck-validator') {
+        assert.ok(!PROOF_PRODUCER_SKILLS.has(skill), `${name}: readiness adjudicator routes proof producer ${skill}`);
+      }
     }
   }
+  assert.deepEqual(
+    DISPATCH.roles['speck-validator'].skills,
+    ['story-validate', 'epic-validate', 'project-validate'],
+    'validator role must own only readiness adjudication',
+  );
 });
 
 test('agent prompts are thin adapters, not parallel methodology or chat schemas', () => {

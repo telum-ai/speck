@@ -1,10 +1,6 @@
 ---
 name: epic-constitution
 description: Defines local epic principles. Use after epic-clarify before epic-architecture or epic-plan when local rules are needed.
-paths:
-  - "specs/projects/**/E*/**"
-  - "specs/projects/**/epics/**"
-  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-constitution

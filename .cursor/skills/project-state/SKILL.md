@@ -1,8 +1,6 @@
 ---
 name: project-state
 description: Regenerates project-state.md from current truth. Use after truth-affecting gates land on main.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-state
@@ -53,15 +51,15 @@ For each truth artifact (`project.md`, `PRD.md`, `architecture.md`, `context.md`
 
 ## 5. Blockers and questions
 
-Blockers from: audit P0/P1; validation FAIL blockers; `/recheck` drift blockers; punch-list P0/P1. Rank P0→P3 by severity and recency.
+Blockers from: audit P0/P1; validation FAIL blockers; `/speck-recheck` drift blockers; punch-list P0/P1. Rank P0→P3 by severity and recency.
 
 Open questions: `project-decisions-log.md` OPEN entries; `[NEEDS CLARIFICATION]` in active specs; "awaiting human" in recent audits.
 
 ## 6. Next action (decision tree)
 
 1. P0 blocker → resolve P0 (name target)
-2. Any drift → `/recheck`
-3. Story `[Implemented]` without audit → `/audit`
+2. Any drift → `/speck-recheck`
+3. Story `[Implemented]` without audit → `/speck-audit`
 4. Story `[Audited]` without validate → `/story-validate`
 5. Epic `[Stories Complete]` without epic validate → `/epic-validate`
 6. Story `[Tasked]` without implement → `/story-implement`
@@ -109,7 +107,7 @@ Report: path, line count, fresh/stale/drift counts, blockers, open questions, ne
 
 ## Triggers (auto-invoke)
 
-`story-validate` PASS; `epic-validate` any verdict; `project-validate` any verdict; `/recheck`; missing state; state SHA >5 commits behind HEAD.
+`story-validate` PASS; `epic-validate` any verdict; `project-validate` any verdict; `/speck-recheck`; missing state; state SHA >5 commits behind HEAD.
 
 Other skills must not write `project-state.md` directly — invoke this skill.
 

@@ -20,9 +20,38 @@ output_path.write_text(json.dumps({
 PY
 
 python3 "$RUNNER" score --predictions "$TMP/perfect.json"
-python3 "$RUNNER" verify-reports
-python3 "$RUNNER" score \
-  --predictions "$ROOT/tests/eval/skill-routing/reports/2026-08-11-codex-terra.json"
+mkdir -p "$TMP/reports"
+python3 - "$RUNNER" "$TMP/perfect.json" "$TMP/reports/synthetic.json" <<'PY'
+import importlib.util, json, pathlib, sys
+runner_path, predictions_path, output_path = map(pathlib.Path, sys.argv[1:])
+spec = importlib.util.spec_from_file_location("routing_runner", runner_path)
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+catalog = mod.load_catalog()
+suite = mod.load_cases()
+contract = mod.load_flow_contract()
+agents = mod.load_agents()
+flow = mod.load_flow(agents_text=agents)
+predictions = json.loads(predictions_path.read_text())
+report = mod.score_predictions(catalog, suite, predictions)
+report.update({
+    "schema_version": 3,
+    "provider": "test-double",
+    "model": "deterministic",
+    "effort": "none",
+    "started_at": "2026-08-11T00:00:00+00:00",
+    "catalog_sha256": mod.digest(catalog),
+    "cases_sha256": mod.digest(suite),
+    "flow_sha256": mod.digest(flow),
+    "flow_contract_sha256": mod.digest(contract),
+    "agents_sha256": mod.digest(agents),
+    "user_only_aliases_available": False,
+    "execution": {"exit_code": 0},
+})
+output_path.write_text(json.dumps(report))
+PY
+python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports"
+python3 "$RUNNER" score --predictions "$TMP/reports/synthetic.json"
 
 python3 - "$ROOT/.speck/reference/skill-routing-cases.json" "$TMP/perfect.json" "$TMP/mutant.json" <<'PY'
 import json, pathlib, sys
@@ -38,43 +67,43 @@ if python3 "$RUNNER" score --predictions "$TMP/mutant.json" >/dev/null; then
   exit 1
 fi
 
-cp -R "$ROOT/tests/eval/skill-routing/reports" "$TMP/reports"
-python3 - "$TMP/reports/2026-08-11-codex-terra.json" <<'PY'
+cp -R "$TMP/reports" "$TMP/reports-mutant"
+python3 - "$TMP/reports-mutant/synthetic.json" <<'PY'
 import json, pathlib, sys
 path = pathlib.Path(sys.argv[1])
 report = json.loads(path.read_text())
 report["flow_sha256"] = "0" * 64
 path.write_text(json.dumps(report))
 PY
-if python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports" >/dev/null; then
+if python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports-mutant" >/dev/null; then
   echo "FAIL: stale-flow report mutant passed"
   exit 1
 fi
 
-rm -r "$TMP/reports"
-cp -R "$ROOT/tests/eval/skill-routing/reports" "$TMP/reports"
-python3 - "$TMP/reports/2026-08-11-codex-terra.json" <<'PY'
+rm -r "$TMP/reports-mutant"
+cp -R "$TMP/reports" "$TMP/reports-mutant"
+python3 - "$TMP/reports-mutant/synthetic.json" <<'PY'
 import json, pathlib, sys
 path = pathlib.Path(sys.argv[1])
 report = json.loads(path.read_text())
 report["agents_sha256"] = "0" * 64
 path.write_text(json.dumps(report))
 PY
-if python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports" >/dev/null; then
+if python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports-mutant" >/dev/null; then
   echo "FAIL: stale-AGENTS report mutant passed"
   exit 1
 fi
 
-rm -r "$TMP/reports"
-cp -R "$ROOT/tests/eval/skill-routing/reports" "$TMP/reports"
-python3 - "$TMP/reports/2026-08-11-codex-terra.json" <<'PY'
+rm -r "$TMP/reports-mutant"
+cp -R "$TMP/reports" "$TMP/reports-mutant"
+python3 - "$TMP/reports-mutant/synthetic.json" <<'PY'
 import json, pathlib, sys
 path = pathlib.Path(sys.argv[1])
 report = json.loads(path.read_text())
 report["flow_contract_sha256"] = "0" * 64
 path.write_text(json.dumps(report))
 PY
-if python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports" >/dev/null; then
+if python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports-mutant" >/dev/null; then
   echo "FAIL: stale-flow-baseline report mutant passed"
   exit 1
 fi

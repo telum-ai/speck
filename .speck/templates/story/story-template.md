@@ -106,7 +106,7 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 ## 3. Evidence Required
 
-*What artifacts must `/larp` and `/audit` produce for this story to advance through readiness states?*
+*What artifacts must `/speck-larp` and `/speck-audit` produce for this story to advance through readiness states?*
 
 | Evidence type | Required for state | Verifiable by | Path / convention |
 |---------------|--------------------|---------------|--------------------|

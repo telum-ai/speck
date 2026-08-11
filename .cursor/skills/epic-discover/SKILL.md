@@ -1,10 +1,6 @@
 ---
 name: epic-discover
 description: Discovers epic boundaries from existing code and docs. Use before epic-specify when brownfield work has no epic map.
-paths:
-  - "specs/projects/**/E*/**"
-  - "specs/projects/**/epics/**"
-  - "specs/projects/**/**/epic.md"
 ---
 
 # epic-discover

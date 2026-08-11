@@ -1,8 +1,0 @@
-S004’s canonical planning phase is complete.
-
-- [plan.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-release-27b5c0f-terra/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/plan.md) defines atomic reservation, finalization, release, concurrency, and idempotency.
-- [data-model.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-release-27b5c0f-terra/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/data-model.md), [contract](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-release-27b5c0f-terra/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/retry-credit-lifecycle.md), and [quickstart.md](/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-release-27b5c0f-terra/workspaces/story-plan-A/specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/quickstart.md) provide the required Phase 1 artifacts.
-
-Evidence: `git diff --check` passed; no unresolved template/clarification markers remain; the Speck witness graph build/check completed without hard findings. No `tasks.md` or code was created.
-
-Readiness: planning complete; product readiness remains **NO-SHIP** because implementation and validation have not begun. Next phase: `/story-tasks`.

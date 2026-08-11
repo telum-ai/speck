@@ -1,8 +1,6 @@
 ---
 name: project-constitution
 description: Defines project technical principles. Use after project-context before project-architecture when governance is needed.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-constitution
@@ -23,7 +21,7 @@ Read `.speck/project.json` (if it exists) for `play_level`.
 
 - **Sprint**: Tell the user: "Sprint projects don't need a constitution. Ship first, structure later. If you're growing to Platform, run `/project-promote` and come back."
 - **Build**: Constitution is optional for Build. Only proceed if the user confirms they want it.
-- **Platform** (or no project.json): Full flow below — constitution is recommended.
+- **Platform** (or no project.json): Full flow below — constitution is REQUIRED before project architecture.
 
 ---
 

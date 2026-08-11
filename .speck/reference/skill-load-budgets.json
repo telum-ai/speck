@@ -184,6 +184,14 @@
       "max_bytes": 6922
     },
     {
+      "id": "visual-testing-capacitor",
+      "files": [
+        ".cursor/skills/visual-testing/SKILL.md",
+        ".cursor/skills/visual-testing/references/mobile-capacitor.md"
+      ],
+      "max_bytes": 6922
+    },
+    {
       "id": "visual-testing-electron",
       "files": [
         ".cursor/skills/visual-testing/SKILL.md",

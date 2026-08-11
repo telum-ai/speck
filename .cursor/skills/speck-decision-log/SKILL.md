@@ -123,7 +123,7 @@ Invoked by:
 - `/epic-plan` (technical approach lock)
 - `/epic-architecture` (cross-cutting decisions)
 - `/story-plan` (significant technical choices only)
-- `/recheck` (decisions reopened by drift findings)
+- `/speck-recheck` (decisions reopened by drift findings)
 - Any skill that runs the skeptical-review primitive
 
 ## Context: $ARGUMENTS

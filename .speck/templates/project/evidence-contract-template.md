@@ -175,7 +175,7 @@ For every validation report at UX-RC or higher:
 | speck:evidence-citations | `.speck/scripts/validation/validators/validate-evidence-citations.sh specs/` | manual | evidence | `specs/**` | `citations>0` | — | — |
 | speck:probe-library | `.speck/scripts/validation/validators/validate-evidence-citations.sh --check-probe-library` | manual | evidence | `specs/projects/**` | `probe_classes>0` | — | — |
 
-**Speck-owned standing rows.** The two `speck:` rows are **not project-authored and not project-deletable** — `seed-gate-registry.sh` re-emits them on every seed, after the recipe's own gates, so re-seeding a contract can never drop them. They are declared `manual` **honestly**: `seed-gate-registry.sh` runs both the moment it seeds or amends this contract, and `/audit`, `/epic-validate` and `/project-validate` run them on demand; nothing on the commit path invokes them yet, and declaring a stage they do not fire at is the exact divergence `validate-gate-liveness.sh` exists to catch. Both are **nudges** — they exit 0 without `--strict`, so a project that has not adopted typed citations or §11a is enumerated, never blocked.
+**Speck-owned standing rows.** The two `speck:` rows are **not project-authored and not project-deletable** — `seed-gate-registry.sh` re-emits them on every seed, after the recipe's own gates, so re-seeding a contract can never drop them. They are declared `manual` **honestly**: `seed-gate-registry.sh` runs both the moment it seeds or amends this contract, and `/speck-audit`, `/epic-validate` and `/project-validate` run them on demand; nothing on the commit path invokes them yet, and declaring a stage they do not fire at is the exact divergence `validate-gate-liveness.sh` exists to catch. Both are **nudges** — they exit 0 without `--strict`, so a project that has not adopted typed citations or §11a is enumerated, never blocked.
 
 **Stage** ∈ `pre-commit | pre-push | commit-msg | ci:push | ci:pull_request | manual`.
 - `manual` = the contract honestly declares this gate off the automatic path (no divergence to detect).
@@ -188,7 +188,7 @@ For every validation report at UX-RC or higher:
 - `exempt:<reason>` — deliberately un-probeable (destructive / infra-bound, e.g. an e2e or deploy gate); first-class, distinct from blank.
 - `—` — un-probed-honest (default; never a finding).
 
-Outcomes: **`GATE_LIVE`** (watched it fail on every injected surface), **`GATE_DISARMED.P1`** (baseline green, defect in the gate's required scope, gate *still* green — the one positive block; hard-blocks only at COMMERCIAL-RC/SHIP-RC), **`GATE_LIVENESS_UNVERIFIED.P2`** (couldn't apply/attribute the canary — unknown key, no green baseline, unsafe-to-probe, infra-bound; degrade-to-honest, caps the ship claim, never blocks dev). Fail-closed on **safety** (a destructive command is never executed) and on **claims**; degrade-to-honest on **applicability**. Runs at `/epic-validate`, `/project-validate`, on-demand at `/audit` — never on push or in the always-on `/recheck` shell.
+Outcomes: **`GATE_LIVE`** (watched it fail on every injected surface), **`GATE_DISARMED.P1`** (baseline green, defect in the gate's required scope, gate *still* green — the one positive block; hard-blocks only at COMMERCIAL-RC/SHIP-RC), **`GATE_LIVENESS_UNVERIFIED.P2`** (couldn't apply/attribute the canary — unknown key, no green baseline, unsafe-to-probe, infra-bound; degrade-to-honest, caps the ship claim, never blocks dev). Fail-closed on **safety** (a destructive command is never executed) and on **claims**; degrade-to-honest on **applicability**. Runs at `/epic-validate`, `/project-validate`, on-demand at `/speck-audit` — never on push or in the always-on `/speck-recheck` shell.
 
 **Scope + Subject** — the *vacuity* half. Wiring proves the gate runs; the canary proves it bites; neither answers **did it look at anything**. A gate can be correctly wired, correctly implemented, pass its canary, and inspect an empty corpus — output ✅, exit 0. Zero violations is only meaningful if something was there to violate them.
 - **Scope** — the glob the gate is contracted to cover, **asserted at runtime, never inherited from a tool default**. `validate-gate-liveness.sh` resolves it against `git ls-files`; a scope matching zero tracked files is **`GATE_SCOPE_UNRESOLVABLE.P2`** on its own, before the gate is ever run. (Measured in the field: root-anchored `src/**` in a repo whose product lives under `frontend/src/**` matched 0 of 1194 tracked files while the gate reported ✅ on every commit.)
@@ -278,7 +278,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 *The default verification model: the AI agent runs the gates and records evidence. The human reviews the recorded evidence and may override.*
 
 ### Four-Axis Ownership
-- **CORRECT**: AI agent claims pass based on tests, types, and `/audit` logs.
+- **CORRECT**: AI agent claims pass based on tests, types, and `/speck-audit` logs.
 - **ON-CONTRACT**: AI agent claims pass based on standard LARP and traceability matrix.
 - **FELT-GOOD**: **AI-evaluated.** The agent runs the naive-hostile LARP (First-Viewport Reaction + taste-judgment rubric), applies first-impression taste judgment, and records the verdict (`felt_axis: ai-verified`). A human may override at any time (final taste authority), and a recorded human taste review promotes the axis to `human-verified` — but human sign-off is an *optional stronger signal*, never a prerequisite for shipping.
 - **TASTE**: **AI-evaluated, owner-sovereign on direction.** The agent runs the connoisseur-hostile pass (dual-anchored), records `taste_axis`/`taste_anchor`, and **surfaces aesthetic forks** — it never resolves subjective taste unilaterally, nor auto-fixes contestable taste (only named-rule violations + hard-objective defects). A **severe BAD** (≥2 pixel-grounded craft violations on a flagship surface) or a named-declared-rule violation **caps the state**; the *direction* of any fix is the owner's fork. A `universal-only` anchor (no §6b/design-system) cannot back a premium claim at SHIP-RC.
@@ -303,7 +303,7 @@ Naming convention: `<short-sha>-<descriptor>.<ext>`. The SHA proves the evidence
 
 ## 11. Adversarial Probe Suite
 
-*P4: this list **prompts the adversary's imagination — it is not the definition of "done."** A green row counts only if a genuine attempt to break it was made and logged. Do not grow this list to close a gap; install the gap as a principle (P1–P4) instead. The `/audit` skill runs these.*
+*P4: this list **prompts the adversary's imagination — it is not the definition of "done."** A green row counts only if a genuine attempt to break it was made and logged. Do not grow this list to close a gap; install the gap as a principle (P1–P4) instead. The `/speck-audit` skill runs these.*
 
 | Probe | Expected behavior |
 |-------|-------------------|
@@ -376,7 +376,7 @@ Blocking posture matches `GATE_DISARMED.P1`: hard-blocks only at **COMMERCIAL-RC
 
 - Evidence is **fresh** when the build SHA matches HEAD or differs by less than 7 days of commits
 - Evidence is **stale** when the build SHA is >2 weeks behind HEAD, or older than 14 days
-- Stale evidence CANNOT support a readiness state claim — `/recheck` must re-run
+- Stale evidence CANNOT support a readiness state claim — `/speck-recheck` must re-run
 
 ---
 

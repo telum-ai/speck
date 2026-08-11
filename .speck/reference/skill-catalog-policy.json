@@ -13,7 +13,7 @@
     "analyze": {
       "auto_entrypoints": ["analyze"],
       "user_only_routers": [],
-      "compatibility_shims": ["project-analyze", "epic-analyze"]
+      "compatibility_shims": []
     },
     "adjust": {
       "auto_entrypoints": ["adjust"],
@@ -27,7 +27,7 @@
     },
     "retrospective": {
       "auto_entrypoints": ["project-retrospective", "epic-retrospective", "story-retrospective"],
-      "user_only_routers": ["retrospective"],
+      "user_only_routers": [],
       "compatibility_shims": []
     },
     "scan": {

@@ -50,8 +50,8 @@ CONTEXT_PROFILES: dict[str, tuple[str, tuple[str, ...]]] = {
     "story-tasks": ("story-tasks-backend", ()),
     "implement-backend": ("story-implement-backend", ()),
     "implement-ui": ("story-implement-ui", ()),
-    "validate-fake-green": ("story-validate-ui", ("claimed_state=ux-rc", "visual_host=web")),
-    "validate-unreachable": ("story-validate-ui", ("claimed_state=ux-rc", "visual_host=web")),
+    "validate-fake-green": ("story-validate-ui", ("claimed_state=ux-rc",)),
+    "validate-unreachable": ("story-validate-ui", ("claimed_state=ux-rc",)),
     "evidence-contract": ("project-evidence-ui-build", ()),
 }
 TRUSTED_HARNESS_FILES = (

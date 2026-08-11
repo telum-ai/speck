@@ -10,4 +10,4 @@
 8. Before `[X]`, re-read clauses against test names. Before/after/strictly/only/unless/exactly require equality plus adjacent controls; a nearby happy path is not coverage. Run and inspect the narrow test. Failed sequential work blocks dependants.
 9. Run repo gates: lint, typecheck, tests, build, and banned-language lint for changed product copy. After the final mutation, run the primary test gate as its own command event; do not chain, pipe, or wrap it—the recorded event exit must be the gate exit.
 10. Confirm every task is `[X]`; set `status: completed`. Report files changed plus exact gate verdicts. Never infer PASS from a command merely running.
-11. Next route is `/audit` by a separate auditor, then `/story-validate`. Do not start another story and do not claim a readiness state here.
+11. Next route is `/speck-audit` by a separate auditor, then `/story-validate`. Do not start another story and do not claim a readiness state here.

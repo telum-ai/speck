@@ -1,13 +1,11 @@
 ---
 name: project-validate
 description: Validates project outcomes across completed epics. Use at the project prove gate before project retrospective.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-validate
 
-Cheap keys: `--claim` / highest supported → `claimed_state`; whether PROFILE / commercial gates are in scope.
+Cheap keys: `.speck/project.json` → archetype; `--claim` / highest supported → `claimed_state`; UI vs nonvisual; PROFILE/commercial scope.
 
 1. MUST Read templates, then MUST Read `references/spine.md`.
 2. For `claimed_state` and every lower ladder state, MUST Read `references/states/<kebab>.md`.

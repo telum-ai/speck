@@ -1,12 +1,5 @@
 # epic-validate / post-write
 
-# epic-validate
-
-Prereq: all stories ≥ `IMPL-GREEN`; `/audit --epic <id>` → epic `audit-report.md`.
-Output: `[EPIC_DIR]/epic-validation-report.md`, `[EPIC_DIR]/epic-punch-list.md`.
-Templates: `.speck/templates/epic/epic-validation-report-template.md`, `.speck/templates/epic/epic-punch-list-template.md`, `.speck/templates/story/validation-report-template.md` (readiness taxonomy).
-Verdict: readiness state — never PASS/FAIL.
-
 ## 12. Write outputs
 
 1. `epic-validation-report.md` — match template; evaluative drift section if state changed.

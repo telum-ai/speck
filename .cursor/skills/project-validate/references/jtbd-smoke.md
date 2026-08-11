@@ -1,18 +1,18 @@
 # project-validate / jtbd-smoke
 
-## 6. JTBD smoke test (required centerpiece)
+## 6. Product job evidence (required centerpiece)
 
-1. Primary JTBD from `project.md`.
-2. Cold-start as new user — no dev headers, UUID fields, terminal/API shortcuts.
-3. Record steps, dead ends, confusion.
-4. Cross-epic flows: test every dependency arrow in `epics.md` (data/auth/navigation).
-5. Multi-platform: core JTBD completable on each supported platform; secondary-only deferrals OK.
-6. **Legibility** (5-second test): user articulates what product is, why it matters, primary CTA. Fail → `LEGIBILITY.P1`, cap below `SHIP-RC`.
+Adjudicate the project-level `speck-larp` artifact produced before validation. Do not run the job here.
+
+1. Match the primary job in `project.md`, every evidence-contract persona/principal, the launch-build SHA, and each supported platform or interface.
+2. UI: require cold start with no dev shortcuts, every cross-epic dependency arrow, dead ends/confusion, recovery, and the five-second legibility verdict. `LEGIBILITY.P1` caps below `SHIP-RC`.
+3. Nonvisual/API: require a clean client, named principal, acceptance plus negative control, real service/database read-backs, failure/retry posture, telemetry, and every cross-epic dependency arrow. Use the API/operational verdict; do not invent FELT/TASTE.
+4. Missing, stale, partial, or unreachable evidence routes back to `speck-larp`; validation does not fill the gap.
 
 | JTBD result | Project status |
 |-------------|----------------|
-| COMPLETE + legibility PASS | GO (if all other gates pass) |
-| PARTIAL or LEGIBILITY.P1 | CONDITIONAL — cap below SHIP-RC |
+| COMPLETE + applicable UI legibility PASS, or complete nonvisual operational proof | GO (if all other gates pass) |
+| PARTIAL or applicable LEGIBILITY.P1 | CONDITIONAL — cap below SHIP-RC |
 | BLOCKED | NO-GO |
 
 Report section: core journey table, cross-epic flows, platform coherence, dead ends, scaffolding remaining.

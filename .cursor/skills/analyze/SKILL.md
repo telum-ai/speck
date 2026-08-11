@@ -7,32 +7,27 @@ description: Runs decorrelated planning analysis. Use after project-plan, epic-b
 
 Canonical planning-analysis engine. `$ARGUMENTS` may contain `--level project|epic|story`.
 
-## Select level and tier
+## Select level and depth
 
 1. Honor explicit `--level`; else infer story, epic, or project from the target path.
 2. Project requires `project.md`, `PRD.md`, `epics.md`; epic requires `epic.md`, `epic-tech-spec.md`, `epic-breakdown.md`; story requires `spec.md`, `plan.md`, `tasks.md`. STOP on a missing prerequisite.
 3. Read `.speck/project.json` (`play_level`; missing = Platform). Count epics from `epics.md` and `epics/` directories.
-4. Story: Sprint skips; Build uses one focused reviewer; Platform uses three. Project/epic: Sprint and Build 1-3 are optional-recommended, Build 4+ uses three lenses, and Platform uses seven.
+4. Story: Sprint skips; Build runs S1; Platform runs S1-S3. Project: Build 1-3 runs focused L7 only when requested, Build 4+ runs L3/L6/L7, Platform runs L1-L7. Epic: Build runs focused L7 and Platform runs L1-L7.
 
-## Load the selected core
+## Load the core
 
-Before analysis, run exactly one receipted core load:
+Before analysis, run one receipted load. It supplies scope, flow-fit, promise, traceability, severity, and role-separation rules without loading any reviewer lens or report template:
 
 ```bash
-# project or epic
 python3 .speck/scripts/context/speck_context.py analyze-core \
-  --select level=<project|epic> --select tier=<build|platform>
-
-# story
-python3 .speck/scripts/context/speck_context.py analyze-story-core \
-  --select tier=<build|platform>
+  --select level=<project|epic|story>
 ```
 
-The selected core loads only its scope and tier. Project MUST NOT load `references/traceability.md`; epic MUST load it. Story MUST NOT load project/epic lenses. Report templates and `references/reports/*` are forbidden until findings return.
+Require exit 0 and `SPECK_CONTEXT_RECEIPT`. Report templates and `references/reports/*` are forbidden until findings return.
 
 ## Dispatch lenses
 
-Use the tier's required lens ids. For each id, dispatch one reviewer that did not author the corpus. That reviewer runs exactly one level-specific loader and receives the artifact list:
+For every required lens id, dispatch one reviewer that did not author the corpus. That reviewer runs exactly one level-specific loader and receives the target artifact list:
 
 ```bash
 # project or epic
@@ -55,6 +50,4 @@ python3 .speck/scripts/context/speck_context.py analyze-report \
   --select level=<project|epic|story>
 ```
 
-It emits the selected template plus exactly one level report contract. Follow it to verify findings, write the report, run gates, commit after the analyzed corpus, and declare `BLOCKED | NEEDS_FIXES | CLEAN`. Read `references/gate-codes.md` only when enforcing or explaining analysis codes.
-
-Direct `/project-analyze` and `/epic-analyze` names are user-only compatibility shims into this engine. STOP on any loaded-node STOP.
+It emits the selected template plus exactly one level report contract. Follow it to verify findings, write the report, run gates, commit after the analyzed corpus, and declare `BLOCKED | NEEDS_FIXES | CLEAN`. Read `references/gate-codes.md` only when enforcing or explaining analysis codes. STOP on any loaded-node STOP.

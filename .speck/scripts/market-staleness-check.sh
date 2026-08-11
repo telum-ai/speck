@@ -14,7 +14,7 @@
 # Usage:
 #   .speck/scripts/market-staleness-check.sh [PROJECT_DIR]
 #
-# Output: emits zero or more TYPE.Pn lines (consumed by /recheck), e.g.
+# Output: emits zero or more TYPE.Pn lines (consumed by /speck-recheck), e.g.
 #   MARKET_DRIFT.P1  <detail>
 #   MARKET_DRIFT.P2  <detail>
 #

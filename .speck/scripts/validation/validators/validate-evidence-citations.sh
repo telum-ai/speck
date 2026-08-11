@@ -455,7 +455,7 @@ stamp_cell() {
 # "CONTAINS A SLASH OR AN @" WAS NOT A PATH TEST — IT WAS A PUNCTUATION TEST, and it is why this
 # gate could not be wired anywhere (the measurement is above, under WHAT COUNTS AS A CITATION AT
 # ALL — not repeated here, so there is exactly one number for this in the file). It reported API
-# routes (`/model`, `/suggest`), slash commands (`/audit`), npm scopes (`@streb/web`), CI refs
+# routes (`/model`, `/suggest`), slash commands (`/speck-audit`), npm scopes (`@streb/web`), CI refs
 # (`pnpm/action-setup@v4`) and ordinary English written with a solidus (`try/catch`,
 # `before/after`, `sets/week`, `A/B/C/D`, `4/4`, `Terms/Privacy`, `988/741741`) as citations just
 # as readily as a real path. A P3 that noisy is a P3 that gets suppressed project-wide on first
@@ -466,7 +466,7 @@ stamp_cell() {
 #   2. a path segment that is one of §9's reserved evidence directories — which is what keeps a
 #      directory citation (`larp-recordings/<sha>/`) admissible while `Terms/Privacy` is not;
 #   3. an ABSOLUTE path that actually resolves on disk — the only admission path open to
-#      `/health`, `/audit`, `/api/v1/coach/chat`, and the only one they all fail.
+#      `/health`, `/speck-audit`, `/api/v1/coach/chat`, and the only one they all fail.
 #
 # The disk probe is deliberately NOT extended to relative tokens: the validator's cwd has no fixed
 # relationship to the project being scanned, so a relative `-e` test would make the verdict depend

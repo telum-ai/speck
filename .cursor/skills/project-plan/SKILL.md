@@ -1,8 +1,6 @@
 ---
 name: project-plan
 description: Creates PRD.md, epics, and E000. Use after required PROMISE artifacts and before any epic work.
-paths:
-  - "specs/projects/**"
 ---
 
 # project-plan
@@ -10,7 +8,7 @@ paths:
 Input: `$ARGUMENTS`.
 Output: `[PROJECT_DIR]/PRD.md`, `[PROJECT_DIR]/epics.md`, `[PROJECT_DIR]/epics/E###-*/epic.md` placeholders.
 Templates: `.speck/templates/project/prd-template.md`, `.speck/templates/project/epics-list-template.md`.
-Prereq: `project.md`; Platform requires `architecture.md`.
+Prereq: `project.md` and `context.md`; Platform also requires `ux-strategy.md`, `constitution.md`, and `architecture.md`.
 
 ## 0. Templates
 
@@ -39,12 +37,13 @@ Platform: `/analyze --level project` required regardless of epic count.
 
 ## 2. Load foundation
 
-STOP if `project.md` missing → `/project-specify`.
-STOP if Platform and `architecture.md` missing → `/project-architecture`.
+STOP if `project.md` missing → `/project-specify`; if `context.md` is missing → `/project-context`.
+For Platform, any missing foundation artifact is a STOP. Route by artifact: `ux-strategy.md` uses `/project-ux`; `constitution.md` uses `/project-constitution`; `architecture.md` uses `/project-architecture`.
+For Build with 4+ epics, STOP on missing `ux-strategy.md` or `architecture.md` as required by the complexity gate.
 
 Load:
-- **Required**: `architecture.md`, `context.md`
-- **Recommended**: `ux-strategy.md`, `constitution.md`, `domain-model.md`, `design-system.md`
+- **Required**: `project.md`, `context.md`, plus the play-level artifacts above
+- **Conditional**: `domain-model.md`, `design-system.md`
 - **Brownfield**: `project-landscape-overview.md`, `project-import.md`
 - **Research**: `*-research-report-*.md`
 - **Recipe**: `_active_recipe:` in `project.md` → `.speck/recipes/[name]/recipe.yaml` (`suggested_epics`, `patterns`, `external_services`)

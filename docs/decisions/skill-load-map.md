@@ -1,61 +1,39 @@
-# Speck skill load map (complete)
+# Speck skill load map
 
-**Status: implemented** in `.cursor/skills/**`. Not a paper inventory.
+**Status: implemented.** Canonical inventory for ADR-0005.
 
-Canonical inventory for ADR-0005. Every skill is exactly one class:
+Three structures are valid:
 
-| Class | Rule |
-|-------|------|
-| `inline` | Always-path → dense `SKILL.md` only (0 refs). No fake multi-ref “DAG”. |
-| `dag` | Router ≤80 lines states **cheap branch keys inline**, then conditional `MUST Read` / `Do not Read`. ≥2 refs. |
-| `shim` | Thin compatibility alias or explicit convenience router; user-only |
+- `inline`: one always-path procedure in `SKILL.md`; no references created merely to look JIT.
+- `dag`: the router names cheap branch keys, loads only the selected procedure, and forbids siblings.
+- `shim`: a thin compatibility alias retained only when a real user-facing command needs it.
 
-**Hard rule:** The agent must decide whether to load a ref from the router alone. Never “Read X when that domain applies” — that forces loading X to learn the predicate and defeats JIT.
+The agent must be able to choose a reference from the router alone. CI rejects hidden predicates, unconditional multi-reference chains, reference-to-reference continuations, and branches exceeding their context budget.
 
-CI enforces: ban predicate-hiding phrasing; ban unconditional fake DAGs; require direct router ownership of every node; ban ref-to-ref continuations; cap declared branch bytes against v10.
+## Conditional DAGs
 
-## dag (conditional load — predicates live in SKILL.md)
+| Skill | Cheap branch key | Loaded branch |
+|---|---|---|
+| analyze | level, play level, lens, report phase | one common core, one reviewer lens at a time, then one late report contract |
+| adjust | affected promise level | one story, epic, or project procedure |
+| speck-migrate | oldest active marker or explicit upgrade | scaffold, proof, graph, or upgrade |
+| story-validate | claimed state, UI/backend, visual host | applicable states and exactly one visual host |
+| epic-validate | claimed state, UI/backend | applicable states, axes, and rollup |
+| project-validate | claimed state, PROFILE/commercial reach | applicable states and project gates |
+| visual-testing | recipe visual host | exactly one host procedure |
+| speck-larp | UI/backend, jobs claimed, reachability | applicable jobs and unlock procedure |
+| project-evidence-contract | play level and archetype | applicable tier and archetype |
+| project-promote | source and target play level | one transition |
+| story-implement, story-tasks | UI or backend | one implementation/task branch |
+| clarify/debug/skeptical-review | current phase | one phase procedure |
+| parallel-execution | dispatch or merge phase | wave, worktree, or verification procedure |
 
-| Skill | Cheap keys (must be readable in router) | Nodes |
-|-------|-------------------------------------------|-------|
-| analyze | project/epic/story level, play_level/epic count, phase, lens id | selected scope, one reviewer lens, late report template |
-| adjust | promise blast radius | exactly one story/epic/project branch + template |
-| story-validate | archetype, claimed_state, UI, visual host | spine, backend-skip, larp, states/*, axes/*, … |
-| epic-validate | archetype, claimed_state, UI | rollup/matrix/graph + states + axes |
-| project-validate | claimed_state, PROFILE, commercial | states/*, profile, coverage, gate-liveness, … |
-| visual-testing | platform host | common workflow inline + exactly one real host ref |
-| speck-larp | archetype, Job A/B/C, auth blocked? | spine, backend-skip, sandbox, jobs/*, recording |
-| speck | first-actions hit; status vs new work | first-actions, spine, gap-routes, scale-route, triage |
-| speck-audit | UI story? | spine, multi-lens, fidelity, sweeps, chain |
-| project-evidence-contract | play_level, archetype | spine, tiers/*, archetype/* |
-| project-promote | from→to play_level | spine, transitions/* |
-| story-implement | UI-bearing vs API/backend | spine, ui, backend |
-| story-tasks | UI-bearing vs API/backend | spine, ui-tasks, api-tasks |
-| project-clarify | workflow phase (start→Q&A→research→close) | load-rules, question-sets, research-flags |
-| story-clarify | workflow phase | same shape |
-| speck-debug | debug phase (triage→…→fix) | triage, hypotheses, evidence, fix-loop |
-| speck-skeptical-review | exploring vs locking | alternatives, tradeoffs, lock |
-| epic-architecture | crosses seams?; locking? | decisions, seams, alternatives |
-| parallel-execution | before spawn / worktrees / at merge | wave-safety, worktrees, verify-skills |
+## Honest inline or hybrid skills
 
-## inline (honest always-path)
+Always-path procedures stay inline. `speck-audit` is hybrid: its common adversarial procedure is inline and only UI-specific checks load `references/ui.md`. `speck-learn`, retrospectives, constitutions, plans, and the remaining direct artifact skills are inline because splitting their mandatory sequence would save no context.
 
-Including former “domain-refs” that had no cheap skip: `epic-experience-chain`, `epic-breakdown`, `epic-clarify`, `epic-constitution`, `project-constitution`, `epic`, `story`, `harden`, `visual-quality`, `speck-learn`, `speck-recheck`, `speck-reprove`, `speck-migrate`, `speck-catch-up`, `speck-frontier-scan`, `project-plan`, `story-ui-spec`, plus all other always-path process skills (specify/plan/import/…).
+## Retained shims
 
-## shim / user router
+The only shims are compatibility surfaces that users may plausibly name: `speck`, `epic-outline`, `story-outline`, the scan aliases, and `project-readme`. Analyze and retrospective use their canonical auto-selected entries directly; their unused level aliases and generic retrospective router were removed.
 
-- Analyze compatibility: `project-analyze`, `epic-analyze`
-- Adjust compatibility: none; the unused level aliases were removed
-- Scan compatibility: `project-scan`, `epic-scan`, `story-scan`
-- Retired compatibility: `epic-outline`, `story-outline`
-- Convenience routers over genuinely different specialists: `validate`, `retrospective`
-
-## Frontmatter
-
-- `disable-model-invocation: true`: exact entries in `.speck/reference/skill-catalog-policy.json`
-- Families: analyze/adjust/scan each expose one canonical auto entry; validate/retrospective expose level specialists and keep their generic router user-only
-- Cursor `paths:` (auto-surface scoping):
-  - `story-*` → `specs/projects/**/S*/**`, `specs/projects/**/stories/**`
-  - `epic-*` → `specs/projects/**/E*/**`, `specs/projects/**/epics/**`
-  - `project-*` → `specs/projects/**`
-  - `visual-testing`, `visual-quality`, `story-ui-spec` → `**/*.{tsx,jsx,vue,svelte,css}` plus specs UI paths
+Catalog policy and model-invocation flags are enforced by `.speck/reference/skill-catalog-policy.json`. Skill frontmatter contains only the name, effective description, and a model-invocation flag when policy requires it.

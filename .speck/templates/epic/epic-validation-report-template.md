@@ -26,7 +26,7 @@ taste_anchor: [product+universal | universal-only]
 ## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
 
 *Every readiness claim decomposes into four independent, non-substitutable axes:*
-- **CORRECT**: [How correctness was verified, e.g. tests pass, /audit clean]
+- **CORRECT**: [How correctness was verified, e.g. tests pass, /speck-audit clean]
 - **ON-CONTRACT**: [How conformance to specs & magic moments was verified, e.g. larp-recordings/<sha>-<persona>-findings.md]
 - **FELT-GOOD** *(legibility — not broken / not confusing)*: [AI naive-hostile taste verdict + First-Viewport Reaction, e.g. larp-recordings/<sha>-naive-hostile-findings.md → `ai-verified`. `uncovered` only if the naive-hostile pass has not run. A human review is an optional stronger signal → `human-verified`.]
 - **TASTE** *(connoisseur craft — crafted / premium / it sings)*: [AI connoisseur-hostile verdict, **dual-anchored** against §6b Aesthetic Contract + design-system.md (product-relative) AND the `visual-quality` universal principles, e.g. larp-recordings/<sha>-connoisseur-findings.md → `ai-critiqued`. `forks-open` if aesthetic forks await your decision (below). `taste_anchor: universal-only` if §6b/design-system was absent. A **severe BAD** (≥2 pixel-grounded craft violations on a flagship/magic-moment surface) caps the claimable state.]

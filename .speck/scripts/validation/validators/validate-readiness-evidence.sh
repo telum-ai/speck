@@ -135,10 +135,10 @@ if [[ $evidence_count -eq 0 ]]; then
   echo -e "  You claimed ${claimed_state} but NO runtime-evidence files (screenshots, AX trees, videos)"
   echo -e "  were found under larp-recordings/, screenshots/, or larp-evidence/."
   echo -e "\n${BLUE}The fix is to run the skill that PRODUCES the evidence — not to hand-edit the report:${NC}"
-  echo -e "  1. Run ${GREEN}/larp${NC} (or ${GREEN}npx speck larp-play${NC}) to capture the walkthrough against the built artifact."
+  echo -e "  1. Run ${GREEN}/speck-larp${NC} (or ${GREEN}npx speck larp-play${NC}) to capture the walkthrough against the built artifact."
   echo -e "  2. Ensure screenshots/AX trees land in larp-recordings/ (or screenshots/, larp-evidence/)."
   echo -e "  3. OR lower the claimed state to one the current evidence supports (e.g. IMPL-GREEN)."
-  echo -e "  Seeing this usually means ${YELLOW}/story-validate + /larp did not actually run${NC}."
+  echo -e "  Seeing this usually means ${YELLOW}/story-validate + /speck-larp did not actually run${NC}."
   echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   if [[ "$strict" == "true" ]]; then
     exit 1

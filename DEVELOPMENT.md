@@ -183,6 +183,6 @@ Follow the "Removing a synced file" process above. Specifically:
 
 ## Compatibility migrations
 
-Current upgrade behavior is implemented in `packages/cli/lib/migrate.js`. Exact marker handling lives in `/speck-catch-up`, `/speck-reprove`, and `/speck-graph-up`; the root AGENTS engagement ladder invokes them before normal work. Historical rationale and the reason legacy version tokens remain are documented in `docs/history/migrations.md`.
+Current upgrade behavior is implemented in `packages/cli/lib/migrate.js`. The single `speck-migrate` skill routes explicit upgrades and the scaffold, proof, and graph repair stages; the root AGENTS engagement ladder invokes it before normal work. Historical rationale and the reason legacy version tokens remain are documented in `docs/history/migrations.md`.
 
-Retired level-specific commands remain user-invocable compatibility aliases and are excluded from automatic selection. The canonical family map is `.speck/reference/skill-catalog-policy.json`.
+Retired aliases remain only where real user compatibility requires them and are excluded from automatic selection. The canonical family map is `.speck/reference/skill-catalog-policy.json`.

@@ -41,6 +41,16 @@ recipe_exists() {
   [[ -f "$RECIPES_ROOT/$name/recipe.yaml" ]]
 }
 
+visual_platform() {
+  awk '
+    /^visual_testing:[[:space:]]*$/ { in_visual=1; next }
+    in_visual && /^[^[:space:]]/ { exit }
+    in_visual && /^[[:space:]]+platform:[[:space:]]*/ {
+      v=$0; sub(/^[^:]*:[[:space:]]*/, "", v); gsub(/["'"'"'[:space:]]/, "", v); print v; exit
+    }
+  ' "$1"
+}
+
 # Walk extends: chain; detect cycles and missing parents
 validate_extends_chain() {
   local file="$1"
@@ -123,6 +133,18 @@ for recipe in "${recipes[@]}"; do
       echo "    ✓ extends: $parent (chain valid)"
     fi
   fi
+
+  vplatform="$(visual_platform "$recipe")"
+  case "$vplatform" in
+    api|cli|web|extension|desktop-electron|desktop-tauri|mobile-rn|mobile-flutter|mobile-capacitor)
+      echo "    ✓ visual_testing.platform: $vplatform" ;;
+    '')
+      echo "❌ Missing top-level visual_testing.platform in $recipe"
+      failed=1 ;;
+    *)
+      echo "❌ Unsupported visual_testing.platform '$vplatform' in $recipe"
+      failed=1 ;;
+  esac
 
   if grep -qE "^keywords:" "$recipe"; then
     if ! awk '

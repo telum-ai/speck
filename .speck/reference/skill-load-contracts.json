@@ -6,8 +6,7 @@
       "read_only": true,
       "entrypoint": ".cursor/skills/analyze/SKILL.md",
       "required_files": [
-        ".cursor/skills/analyze/references/spine.md",
-        ".cursor/skills/analyze/references/promise-inventory.md"
+        ".cursor/skills/analyze/references/core.md"
       ],
       "forbidden_files": [
         ".speck/templates/project/project-analysis-report-template.md",
@@ -41,33 +40,9 @@
           "required": true,
           "exclusive": true,
           "values": {
-            "project": {
-              "required_files": [
-                ".cursor/skills/analyze/references/levels/project.md"
-              ]
-            },
-            "epic": {
-              "required_files": [
-                ".cursor/skills/analyze/references/levels/epic.md",
-                ".cursor/skills/analyze/references/traceability.md"
-              ]
-            }
-          }
-        },
-        "tier": {
-          "required": true,
-          "exclusive": true,
-          "values": {
-            "build": {
-              "required_files": [
-                ".cursor/skills/analyze/references/tiers/build-4.md"
-              ]
-            },
-            "platform": {
-              "required_files": [
-                ".cursor/skills/analyze/references/tiers/platform.md"
-              ]
-            }
+            "project": {},
+            "epic": {},
+            "story": {}
           }
         }
       }
@@ -101,6 +76,7 @@
                 ".cursor/skills/analyze/references/reports/epic.md"
               ],
               "post_write_gates_all": [
+                ".speck/scripts/validation/validators/validate-project-analysis.sh",
                 ".speck/scripts/validation/check-epic-prereqs.sh"
               ]
             },
@@ -189,47 +165,6 @@
         }
       }
     },
-    "analyze-story-core": {
-      "max_bytes": 8000,
-      "read_only": true,
-      "entrypoint": ".cursor/skills/analyze/SKILL.md",
-      "required_files": [
-        ".cursor/skills/analyze/references/spine.md",
-        ".cursor/skills/analyze/references/levels/story.md"
-      ],
-      "forbidden_files": [
-        ".cursor/skills/analyze/references/levels/project.md",
-        ".cursor/skills/analyze/references/levels/epic.md",
-        ".cursor/skills/analyze/references/promise-inventory.md",
-        ".cursor/skills/analyze/references/traceability.md",
-        ".speck/templates/project/project-analysis-report-template.md",
-        ".speck/templates/epic/epic-analysis-report-template.md",
-        ".speck/templates/story/story-analysis-report-template.md",
-        ".cursor/skills/analyze/references/reports/project.md",
-        ".cursor/skills/analyze/references/reports/epic.md",
-        ".cursor/skills/analyze/references/reports/story.md",
-        ".cursor/skills/analyze/references/lens-spine.md"
-      ],
-      "post_write_gates": [],
-      "selectors": {
-        "tier": {
-          "required": true,
-          "exclusive": true,
-          "values": {
-            "build": {
-              "required_files": [
-                ".cursor/skills/analyze/references/tiers/story-build.md"
-              ]
-            },
-            "platform": {
-              "required_files": [
-                ".cursor/skills/analyze/references/tiers/story-platform.md"
-              ]
-            }
-          }
-        }
-      }
-    },
     "analyze-story-lens": {
       "max_bytes": 8000,
       "read_only": true,
@@ -262,6 +197,25 @@
             "S1": {"required_files": [".cursor/skills/analyze/references/lenses/story/S1.md"]},
             "S2": {"required_files": [".cursor/skills/analyze/references/lenses/story/S2.md"]},
             "S3": {"required_files": [".cursor/skills/analyze/references/lenses/story/S3.md"]}
+          }
+        }
+      }
+    },
+    "speck-migrate": {
+      "max_bytes": 9000,
+      "entrypoint": ".cursor/skills/speck-migrate/SKILL.md",
+      "required_files": [],
+      "forbidden_files": [],
+      "post_write_gates": [".speck/scripts/validation/pre-commit-hook.sh"],
+      "selectors": {
+        "stage": {
+          "required": true,
+          "exclusive": true,
+          "values": {
+            "scaffold": {"required_files": [".cursor/skills/speck-migrate/references/scaffold.md"]},
+            "proof": {"required_files": [".cursor/skills/speck-migrate/references/proof.md"]},
+            "graph": {"required_files": [".cursor/skills/speck-migrate/references/graph.md"]},
+            "upgrade": {"required_files": [".cursor/skills/speck-migrate/references/upgrade.md"]}
           }
         }
       }
@@ -371,7 +325,8 @@
         ".speck/templates/story/story-template.md"
       ],
       "forbidden_files": [],
-      "post_write_gates": [".speck/scripts/validation/validate-template.sh"]
+      "post_write_gates": [".speck/scripts/validation/validate-template.sh"],
+      "post_write_gates_all": [".speck/scripts/validation/validators/validate-project-analysis.sh"]
     },
     "project-evidence-ui-build": {
       "entrypoint": ".cursor/skills/project-evidence-contract/SKILL.md",
@@ -444,10 +399,22 @@
         ".speck/templates/story/validation-report-template.md",
         ".cursor/skills/story-validate/references/spine.md",
         ".cursor/skills/story-validate/references/larp.md",
-        ".cursor/skills/story-validate/references/execution.md"
+        ".cursor/skills/story-validate/references/visual.md",
+        ".cursor/skills/story-validate/references/execution.md",
+        ".cursor/skills/story-validate/references/spec-coverage.md",
+        ".cursor/skills/story-validate/references/code-audit.md",
+        ".cursor/skills/story-validate/references/post-write.md",
+        ".cursor/skills/story-validate/references/reachability.md"
       ],
       "forbidden_files": [
-        ".cursor/skills/story-validate/references/backend-skip.md"
+        ".cursor/skills/story-validate/references/backend-skip.md",
+        ".cursor/skills/visual-testing/references/web.md",
+        ".cursor/skills/visual-testing/references/mobile-flutter.md",
+        ".cursor/skills/visual-testing/references/mobile-react-native.md",
+        ".cursor/skills/visual-testing/references/mobile-capacitor.md",
+        ".cursor/skills/visual-testing/references/desktop-electron.md",
+        ".cursor/skills/visual-testing/references/desktop-tauri.md",
+        ".cursor/skills/visual-testing/references/extension.md"
       ],
       "post_write_gates": [".speck/scripts/validation/validate-template.sh"],
       "post_write_gates_all": [".speck/scripts/stamp-truth.sh"],
@@ -512,60 +479,6 @@
               ".cursor/skills/story-validate/references/states/ship-rc.md",
               ".cursor/skills/story-validate/references/states/ship.md"
             ], "post_write_gates_all": [".speck/scripts/validation/validators/validate-felt-axis.sh", ".speck/scripts/validation/validators/validate-taste-axis.sh"]}
-          }
-        },
-        "visual_host": {
-          "required": true,
-          "exclusive": true,
-          "values": {
-            "web": {"required_files": [
-              ".cursor/skills/story-validate/references/visual.md",
-              ".cursor/skills/visual-testing/references/web.md",
-              ".cursor/skills/story-validate/references/spec-coverage.md",
-              ".cursor/skills/story-validate/references/code-audit.md",
-              ".cursor/skills/story-validate/references/post-write.md",
-              ".cursor/skills/story-validate/references/reachability.md"
-            ]},
-            "mobile-flutter": {"required_files": [
-              ".cursor/skills/story-validate/references/visual.md",
-              ".cursor/skills/visual-testing/references/mobile-flutter.md",
-              ".cursor/skills/story-validate/references/spec-coverage.md",
-              ".cursor/skills/story-validate/references/code-audit.md",
-              ".cursor/skills/story-validate/references/post-write.md",
-              ".cursor/skills/story-validate/references/reachability.md"
-            ]},
-            "mobile-react-native": {"required_files": [
-              ".cursor/skills/story-validate/references/visual.md",
-              ".cursor/skills/visual-testing/references/mobile-react-native.md",
-              ".cursor/skills/story-validate/references/spec-coverage.md",
-              ".cursor/skills/story-validate/references/code-audit.md",
-              ".cursor/skills/story-validate/references/post-write.md",
-              ".cursor/skills/story-validate/references/reachability.md"
-            ]},
-            "desktop-electron": {"required_files": [
-              ".cursor/skills/story-validate/references/visual.md",
-              ".cursor/skills/visual-testing/references/desktop-electron.md",
-              ".cursor/skills/story-validate/references/spec-coverage.md",
-              ".cursor/skills/story-validate/references/code-audit.md",
-              ".cursor/skills/story-validate/references/post-write.md",
-              ".cursor/skills/story-validate/references/reachability.md"
-            ]},
-            "desktop-tauri": {"required_files": [
-              ".cursor/skills/story-validate/references/visual.md",
-              ".cursor/skills/visual-testing/references/desktop-tauri.md",
-              ".cursor/skills/story-validate/references/spec-coverage.md",
-              ".cursor/skills/story-validate/references/code-audit.md",
-              ".cursor/skills/story-validate/references/post-write.md",
-              ".cursor/skills/story-validate/references/reachability.md"
-            ]},
-            "extension": {"required_files": [
-              ".cursor/skills/story-validate/references/visual.md",
-              ".cursor/skills/visual-testing/references/extension.md",
-              ".cursor/skills/story-validate/references/spec-coverage.md",
-              ".cursor/skills/story-validate/references/code-audit.md",
-              ".cursor/skills/story-validate/references/post-write.md",
-              ".cursor/skills/story-validate/references/reachability.md"
-            ]}
           }
         }
       }

@@ -79,7 +79,8 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Project-level research report | `project-*-research-report-*.md` |
 | Brownfield non-code import | `project-import.md` |
 | Brownfield landscape overview | `project-landscape-overview.md` |
-| Methodology learnings to feed back | (don't create file — use `/speck-learn`) |
+| Project learning | Current story/retro first; promote repeated reusable rules to project-owned `.speck/patterns/learned/` |
+| Speck methodology defect | No project artifact; use `speck-feedback` |
 
 ### Workspace-level (repo root — not under `specs/`)
 

@@ -71,7 +71,7 @@ python3 tests/eval/behavioral/runner.py judge --model <different-family-model-sl
 python3 tests/eval/behavioral/runner.py report
 ```
 
-Raw event streams and workspaces are ignored under `.runs/`. Checked-in evidence lives under `reports/<run-id>/`: result JSON, subject patches, final responses, blinded judge output, summary JSON, and report Markdown. Result JSON records event hashes, model/effort, token usage, wall time, completion signals, and artifact changes.
+Raw event streams and workspaces are ignored under `.runs/`. Generated evidence under `reports/<run-id>/` is also local and ignored: result JSON, subject patches, final responses, blinded judge output, summary JSON, and report Markdown. Release decisions summarize the named run, evaluator revision, scores, and limitations in the PR or changelog; the repository keeps the reproducible harness, not megabytes of transient transcripts.
 
 For revisions with executable JIT profiles, inspect methodology conformance
 separately from output quality:
@@ -81,7 +81,6 @@ python3 .speck/scripts/validation/validators/validate-context-transcript.py \
   --transcript <subject.events.jsonl> \
   --profile story-validate-ui \
   --select claimed_state=ux-rc \
-  --select visual_host=web \
   --root <subject-workspace> --json
 ```
 
@@ -109,6 +108,4 @@ valid; excluded pairs remain visible in the case table.
 
 `self-test` checks that the corpus has 12 unique five-item rubrics, deletion-mutation-tests all 12 scorer families to zero, behavior-mutation-tests the backend and UI scorers, isolates project artifacts from exported methodology fixtures, distinguishes project-owned feedback and learned output from methodology edits, excludes invalid pairs from quality aggregation, and recognizes canonical `lifecycle_state`, `Draft (Placeholder)`, bounded Gherkin/EARS acceptance scenarios, zero-open summaries, real-principal wording, verified-readiness precedence over quoted inherited claims, and missing image-path classifications. The UI behavior test executes the wired browser entry path against a fake DOM with five randomly named items in a hidden random target order. It selects and deselects every item before and after a fresh remount, then walks maximum-cardinality, partial, retained-state, and final approval while checking labels, status, ARIA, and control state at every transition. Instrumented call counters bind those runtime changes to `initialState`, `toggleSelection`, and `approveSelected`. It rejects unwired, unmounted, initially enabled, state-clobbering, always-disabled dummy, disconnected dual-path, counter-bumping facade, capped-approval, and one-deselect-only renderers. A conforming backend implementation must pass all behavior checks; an always-green mutant must score lower. Subject execution validity requires exit 0, a runtime `turn.completed` event, and at least one tool event. Whether an artifact changed and whether a v11 context contract passed are independent endpoints.
 
-After the isolated run, audit found that the UI scorer assumed an unrequired `{items}` state shape and document scorers searched exported `tests/eval/fixtures` as if they were subject artifacts. The reusable harness now mutation-tests the UI state/status boundary and browser entry path, scopes project documents to `specs/**`, accepts canonical `lifecycle_state`, and seeds contamination plus real-project mutants. Frozen subjects were explicitly rescored without rerunning transcripts or the blind judge; the manifest and report record the exact committed evaluator revision and content hash used for each rescore.
-
-The first run id, `2026-08-10-v10-v11-terra`, is retained as invalid evidence. Its audit found parent-repository ESM contamination, incomplete judge scrubbing/order blinding, and an unverifiable post-run scorer freeze. It must not be used for a branch decision. The corrected decision run uses the `-isolated` suffix.
+The reusable harness mutation-tests the UI state/status boundary and browser entry path, scopes project documents to `specs/**`, accepts canonical `lifecycle_state`, and seeds contamination plus real-project mutants. Every decision run records the exact evaluator revision and content hash so a later rescore cannot masquerade as the original result.
