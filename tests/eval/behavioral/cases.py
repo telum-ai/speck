@@ -546,7 +546,12 @@ def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict
             _check("user-story", "as a" in sl and "i want" in sl and "so that" in sl, 1),
             _check("acceptance-scenarios", _acceptance_scenario_count(s) >= 3, 2),
             _check("confirmation-boundary", "confirm" in sl and "before" in sl and "schedul" in sl, 1.5),
-            _check("failure-and-tests", "failure" in sl and "test" in sl, 1.5),
+            _check(
+                "failure-and-proof",
+                bool(re.search(r"\b(?:fail(?:ure)?|recover(?:y)?)\b", sl))
+                and bool(re.search(r"\b(?:test|larp|verif(?:y|ied|ication)|probe)\b", sl)),
+                1.5,
+            ),
             _check("no-placeholder", "todo" not in sl and "draft placeholder" not in sl, 1),
         ]
     elif case_id == "story-plan":
@@ -801,6 +806,10 @@ def self_test(root: Path) -> dict[str, object]:
     specified.write_text("depends_on: [S001]\nblocks: [S003]\nlifecycle_state: Specified\nAs a user, I want review so that I can confirm.\nWHEN x\nTHEN system SHALL y\nWHEN a\nTHEN system SHALL b\nWHEN c\nTHEN system SHALL d\nconfirm before scheduling\nfailure test\n")
     lifecycle_state = next(c for c in _doc_score("story-specify", root, "", "") if c["label"] == "specified-state")
     acceptance_grammar = next(c for c in _doc_score("story-specify", root, "", "") if c["label"] == "acceptance-scenarios")
+    specified.write_text(specified.read_text().replace("failure test", "failure LARP"))
+    failure_larp = next(c for c in _doc_score("story-specify", root, "", "") if c["label"] == "failure-and-proof")
+    specified.write_text(specified.read_text().replace("failure LARP", "failure"))
+    failure_without_proof = next(c for c in _doc_score("story-specify", root, "", "") if c["label"] == "failure-and-proof")
 
     evidence = root / "specs/projects/p/evidence-contract.md"
     evidence.write_text(
@@ -861,6 +870,8 @@ def self_test(root: Path) -> dict[str, object]:
         "parenthesized_placeholder": bool(placeholder_parenthesized["ok"]),
         "canonical_lifecycle_state": bool(lifecycle_state["ok"]),
         "acceptance_grammar": bool(acceptance_grammar["ok"]),
+        "failure_larp_is_proof": bool(failure_larp["ok"]),
+        "failure_without_proof_rejected": not bool(failure_without_proof["ok"]),
         "principal_role": bool(principal_role["ok"] and not mock_role_mutant["ok"]),
         "quoted_inherited_readiness_is_not_current": quoted_inherited_state,
         "verified_false_green_mutant": verified_false_green_mutant,
@@ -868,5 +879,5 @@ def self_test(root: Path) -> dict[str, object]:
         "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
         "project_owned_runtime_is_not_methodology": project_owned_runtime_is_not_methodology,
-        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
+        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
     }

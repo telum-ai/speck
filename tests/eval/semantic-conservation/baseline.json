@@ -66,7 +66,7 @@
     {"path": "packages/cli/lib/sync.js", "sha256": "a257b068115bddf58213f6531750bcd3586ac62c3de3b50465175303b7f5ac3d"},
     {"path": "packages/cli/lib/sync.preserve.test.js", "sha256": "addf634e1751ac9ebdde19d8f6f4721dd15d2b0d6b6270f2c4ef63894d9dade1"},
     {"path": "tests/eval/behavioral/README.md", "sha256": "24c46f6b6f190a1d0ba3bdb9c24e86456f3ed6527c02e7737c26bac979ef0bef"},
-    {"path": "tests/eval/behavioral/cases.py", "sha256": "88cc97d1a8aa3e1e372abd9a36c9399cbbed13fbbea53366b2a403b55bd49c58"},
+    {"path": "tests/eval/behavioral/cases.py", "sha256": "e004694ad42734f1b2cf7330aaf61c10657bed74d5b3aec3f5d85aab00ecdb40"},
     {"path": "tests/eval/behavioral/runner.py", "sha256": "5f180b3d4b4241f1520fa50465194cc93935758a773fd583da5e9983f2188da0"},
     {"path": "tests/eval/skill-routing/baseline.json", "sha256": "2f7c49bcd2d03b2376e40e64b3b2146942b235d5807dbd35f3583e826585d6aa"},
     {"path": "tests/eval/semantic-conservation/guard-baseline-change.sh", "sha256": "e054c7131b2810180dfec8953b71b6d1ed240b7b08513bda0038839bcc4ccf65"},
