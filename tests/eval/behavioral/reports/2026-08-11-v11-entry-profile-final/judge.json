@@ -1,0 +1,162 @@
+{
+  "blinded": true,
+  "cases": [
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 89
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 74
+      },
+      "case_id": "project-specify",
+      "reason": "A keeps confirmation, pilot metrics, non-goals, and a deferred channel decision honest inside project.md; B elevates unresolved email/Slack into a primary goal and overreaches into README/PROFILE.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 80
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "case_id": "project-plan",
+      "reason": "Both cover capture, confirmation, delivery, and isolation without inventing a provider under E000+2 epics; B stays usable without inventing a PostgreSQL/TypeScript architecture the foundation never supplied.",
+      "winner": "B"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 88
+      },
+      "B": {
+        "critical_failure": true,
+        "score": 26
+      },
+      "case_id": "epic-breakdown",
+      "reason": "A orders ingest\u2192isolated review\u2192explicit confirmation with correct PRM-001/002/004\u2192AC mapping and real depends_on/blocks; B remaps PRM-002 to extraction and PRM-004 to confirmation, so the ledger must be rewritten.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 80
+      },
+      "case_id": "story-specify",
+      "reason": "A better separates review vs explicit confirm-before-S003, elevates duplicate/failure paths to ACs/FRs, and keeps deps while advancing to Specified.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 89
+      },
+      "case_id": "story-plan",
+      "reason": "Both deliver symmetric reserve/settle plans with explicit transactions; B\u2019s quickstart more rigorously exercises timeout/cancel races and competing terminal callbacks.",
+      "winner": "B"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 82
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "case_id": "story-tasks",
+      "reason": "Both cover migration/signature/idempotency/endpoints with concrete files; B keeps failing cross-workspace and duplicate probes before implementation and treats the missing source tree as a reconcilable assumption.",
+      "winner": "B"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 88
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 70
+      },
+      "case_id": "implement-backend",
+      "reason": "A ships a correct pure `build_reminder` with strict confirmation/UTC/boundaries, honest task completion, and focused tests; B\u2019s code is also strong but rewrites/spec-inflates story artifacts and loosens id/owner typing beyond the implement-only ask.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 74
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 85
+      },
+      "case_id": "implement-ui",
+      "reason": "Both meet immutable transitions, duplicate/unknown handling, selective approve, aria-pressed, and disabled Approve with passing tests; B stays usable with honest minimal task updates, while A\u2019s heavy mid-implement spec/plan/ui-spec rewrite is phase overreach.",
+      "winner": "B"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 91
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 78
+      },
+      "case_id": "audit-defects",
+      "reason": "A reproduces all five required defects with concrete probes and correctly elevates unconfirmed send, cache leak, and SQL injection as P0 blockers; B finds the same mechanisms but merges confirmation with credit loss and underweights unconfirmed send as P1.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 91
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 84
+      },
+      "case_id": "validate-fake-green",
+      "reason": "Both correctly demote UX-RC to NO-SHIP after missing screenshot/LARP and refuse a11y-as-felt, but A\u2019s claimed-vs-verified narrative is clearer and usable without claim-section cleanup.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 93
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 62
+      },
+      "case_id": "validate-unreachable",
+      "reason": "A exhausts open_demo, falsifies the auth wall, and fails on the real stub upload; B rebrands reachability as UNREACHABLE via URL/Playwright sandbox noise despite the same local artifact being inspectable.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 88
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 71
+      },
+      "case_id": "evidence-contract",
+      "reason": "A supplies explicit per-promise claim\u2013mechanism\u2013evidence rows plus confirmation bypass, real-principal isolation, and duplicate/timeout/terminal delivery probes; B has strong probes but lacks that direct mapping and needs structural correction.",
+      "winner": "A"
+    }
+  ],
+  "model": "cursor-grok-4.5-high"
+}

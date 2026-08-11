@@ -1,0 +1,200 @@
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md
+new file mode 100644
+index 0000000..224dab3
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md
+@@ -0,0 +1,194 @@
++---
++status: pending
++---
++
++# Tasks: S005 Delivery status
++
++**Input**: `spec.md`, `plan.md`
++
++**Implementation layout assumption**: No application source tree, runtime, contracts, or test command is supplied in this workspace. These tasks therefore establish a small Python service layout rooted at `src/` with integration tests under `tests/integration/`; this is a reversible implementation convention, not an additional product requirement. The implementation task that creates the test harness owns the exact command: `python -m pytest tests/integration/`.
++
++## Implementation Context
++
++### FR → Task Mapping
++
++| FR ID | Requirement summary | Implementing tasks | Test coverage |
++|---|---|---|---|
++| FR-001 | Authenticate each provider callback before accepting it. | 006, 008 | 003, 004 |
++| FR-002 | Deduplicate callbacks by provider event ID. | 005, 007 | 002, 004 |
++| FR-003 | Persist a delivery status associated with `workspace_id`. | 005, 007 | 002, 004 |
++| FR-004 | Expose `GET /actions/{id}/delivery` only within that action’s workspace. | 009 | 010 |
++
++### Plan Decisions Carried Into Tasks
++
++1. **Delivery event as durable boundary** (tasks 002, 005, 007): persist the provider event ID and workspace association in a `delivery_events` relation; enforce provider-event uniqueness in the database so concurrent retries cannot create duplicate delivery records.
++2. **Authentication before mutation** (tasks 003, 006, 008): verify the provider signature against the unmodified request body before the callback service writes anything; invalid or missing signatures leave no delivery event.
++3. **Tenant isolation on the request path** (task 010): join the requested action to delivery data and scope it by the authenticated request workspace; an absent or foreign action is not disclosed.
++
++### Task Dependencies
++
++`001 → 002–004 → 005 → 006 → 007 → 008 → 009 → 010 → 011`
++
++Tasks 002, 003, and 004 may be prepared in parallel after 001 because they own separate test files. Task 005 is sequential because it establishes the schema consumed by the callback service.
++
++### Phase 1: Test Harness and Failing Probes
++
++- [ ] T001 Establish the minimal service and integration-test harness.
++
++**Implements**: Enabling work for FR-001–FR-004.
++
++**Pattern**: Create a Python package rooted at `src/reminders/`, an application entry point at `src/api/app.py`, and a test configuration that makes `python -m pytest tests/integration/` the deterministic local command. Keep provider credentials and signing secrets injectable through test configuration; do not add real provider calls.
++
++**Acceptance predicate**: The specified command discovers the three integration-test modules immediately below and can construct an authenticated workspace request context.
++
++**Files**: `pyproject.toml`, `src/reminders/__init__.py`, `src/api/app.py`, `tests/conftest.py`
++
++- [ ] T002 [P] Write a failing integration probe for delivery persistence and the database uniqueness invariant.
++
++**Implements**: FR-002, FR-003.
++
++**Pattern**: Exercise the database through the application persistence layer, not through a mocked repository. Assert that a persisted row records `workspace_id`, action identity, status, provider event ID, and callback payload metadata; assert a second insert of the same provider event ID violates the unique constraint.
++
++**Acceptance predicate**: Before the schema and service tasks, the test fails because the relation and persistence path do not exist; after implementation it proves both the stored workspace association and uniqueness invariant.
++
++**Test command**: `python -m pytest tests/integration/test_delivery_event_persistence.py`
++
++**File**: `tests/integration/test_delivery_event_persistence.py`
++
++- [ ] T003 [P] Write failing callback authentication probes for valid, invalid, and missing provider signatures.
++
++**Implements**: FR-001.
++
++**Pattern**: Send requests through `POST /callbacks/reminder` using the exact raw body used to calculate the test signature. Assert valid callbacks proceed, while altered-body, invalid-signature, and missing-signature callbacks are rejected without creating a delivery event.
++
++**Acceptance predicate**: Before the verifier and endpoint tasks, all callback cases lack the endpoint or verifier; after implementation, only the correctly signed request reaches the persistence boundary.
++
++**Test command**: `python -m pytest tests/integration/test_reminder_callback_authentication.py`
++
++**File**: `tests/integration/test_reminder_callback_authentication.py`
++
++- [ ] T004 [P] Write failing callback idempotency and partial-failure probes.
++
++**Implements**: FR-002, FR-003.
++
++**Pattern**: Post the same valid provider event twice through the real callback endpoint and assert one durable delivery event plus a stable, successful duplicate response. Include a retry after an injected persistence failure and assert it leaves no false completed record and can subsequently be processed once.
++
++**Acceptance predicate**: Before the service and endpoint tasks, the endpoint does not provide idempotent handling; after implementation duplicate delivery and retry behavior are observable on the request path.
++
++**Test command**: `python -m pytest tests/integration/test_reminder_callback_idempotency.py`
++
++**File**: `tests/integration/test_reminder_callback_idempotency.py`
++
++### Phase 2: Schema and Callback Core
++
++- [ ] T005 Add the `delivery_events` migration and migration-path verification.
++
++**Implements**: FR-002, FR-003.
++
++**Pattern**: Create `delivery_events` with a non-null `workspace_id`, action reference, provider event ID, status, callback metadata, and a unique constraint on the provider event ID. Make the migration apply cleanly, apply forward against the current dirty shape, and reconcile the migration head; do not rely on application-level duplicate checks as the only guard.
++
++**Acceptance predicate**: A clean database and a forward-applied existing database both reach the same migration head; the uniqueness constraint is visible and rejects duplicate provider event IDs.
++
++**Validation**: Run the migration tool selected in task 001 against clean and pre-migration fixtures, then run `python -m pytest tests/integration/test_delivery_event_persistence.py`.
++
++**File**: `migrations/001_delivery_events.sql`
++
++- [ ] T006 Implement provider signature verification as a pure boundary service.
++
++**Implements**: FR-001.
++
++**Pattern**: Accept the raw callback body and supplied signature, compare a signature derived from the configured provider secret in constant time, and return an explicit verification result. Treat missing configuration or a malformed signature as authentication failure; never log a secret or accept an unsigned callback.
++
++**Acceptance predicate**: The valid and negative cases in `test_reminder_callback_authentication.py` can distinguish authentic callbacks before any persistence operation.
++
++**Test command**: `python -m pytest tests/integration/test_reminder_callback_authentication.py`
++
++**File**: `src/reminders/provider_signature.py`
++
++- [ ] T007 Implement an idempotent delivery-event service backed by the migration constraint.
++
++**Implements**: FR-002, FR-003.
++
++**Pattern**: Receive an authenticated event and its workspace/action association, attempt one insert, and translate the provider-event uniqueness conflict into an idempotent duplicate result without changing the first record. Surface persistence failures so the provider can retry; do not mark an event delivered before the insert commits.
++
++**Acceptance predicate**: Exactly one durable delivery event remains after duplicate callbacks, while an interrupted write is retriable and cannot report a fabricated success.
++
++**Test command**: `python -m pytest tests/integration/test_delivery_event_persistence.py tests/integration/test_reminder_callback_idempotency.py`
++
++**File**: `src/reminders/delivery_events.py`
++
++- [ ] T008 Implement `POST /callbacks/reminder` as the authenticated callback request path.
++
++**Implements**: FR-001, FR-002, FR-003.
++
++**Pattern**: Preserve the raw body for verification, reject unauthenticated callbacks before parsing/persisting them, map a valid provider event to its workspace and action, and delegate only to the idempotent delivery-event service. Return stable success for a first delivery and safe duplicate acknowledgement for a replay; return a retryable server response for an uncommitted persistence failure.
++
++**Acceptance predicate**: The authentication, duplicate, and retry probes pass against the route without a mocked authentication or tenant layer.
++
++**Test command**: `python -m pytest tests/integration/test_reminder_callback_authentication.py tests/integration/test_reminder_callback_idempotency.py`
++
++**File**: `src/api/reminder_callbacks.py`
++
++### Phase 3: Tenant-Scoped Delivery Read
++
++- [ ] T009 Implement workspace-scoped `GET /actions/{id}/delivery`.
++
++**Implements**: FR-004.
++
++**Pattern**: Resolve the authenticated request workspace on the real request path and query the action plus delivery data with that workspace predicate. Return the delivery status only when the action belongs to that workspace; use the same non-disclosing response for missing and foreign actions.
++
++**Acceptance predicate**: A workspace can retrieve its own action’s delivery status and cannot infer whether another workspace’s action exists.
++
++**Test command**: `python -m pytest tests/integration/test_action_delivery_authorization.py`
++
++**File**: `src/api/action_delivery.py`
++
++- [ ] T010 Write and run the real-request-path authorization integration probe for delivery status.
++
++**Implements**: FR-004.
++
++**Pattern**: Seed two workspaces, an action and delivery event in each, and issue GET requests with each workspace’s authenticated context. Assert same-workspace retrieval returns only its status; cross-workspace access and an unknown action return the non-disclosing response. Do not use a bypass role or mock the workspace policy.
++
++**Acceptance predicate**: The probe proves tenant isolation through the endpoint and leaves an inspectable test result for subsequent audit.
++
++**Test command**: `python -m pytest tests/integration/test_action_delivery_authorization.py`
++
++**File**: `tests/integration/test_action_delivery_authorization.py`
++
++### Phase 4: Full Verification
++
++- [ ] T011 Run the complete S005 integration suite and preserve its result for the next phase.
++
++**Implements**: Verification for FR-001–FR-004.
++
++**Pattern**: Execute the harness command after the migration path has been exercised. The suite must include valid/invalid signature handling, duplicate/retry behavior, persistence uniqueness, and cross-workspace denial; no live provider call is allowed.
++
++**Acceptance predicate**: `python -m pytest tests/integration/` passes with all four functional requirements covered. Record the exact command and result in the implementation/audit evidence generated by the following phases; do not create a validation report during task execution.
++
++**Test command**: `python -m pytest tests/integration/`
++
++**Files**: `tests/integration/test_delivery_event_persistence.py`, `tests/integration/test_reminder_callback_authentication.py`, `tests/integration/test_reminder_callback_idempotency.py`, `tests/integration/test_action_delivery_authorization.py`
++
++## Parallel Execution Example
++
++After task 001, dispatch the independent failing probes together:
++
++```text
++002 — tests/integration/test_delivery_event_persistence.py
++003 — tests/integration/test_reminder_callback_authentication.py
++004 — tests/integration/test_reminder_callback_idempotency.py
++```
++
++Do not run tasks 005–009 in parallel: they share the migration head, callback path, or application runtime.
++
++## Cross-Check Verdict
++
++- **Spec coverage**: All four explicit SHALL requirements map to implementation and real-path integration tests.
++- **Plan alignment**: The migration, signature verification, idempotent callback service, callback endpoint, and tenant-scoped GET endpoint each have an owned task.
++- **Failure symmetry**: Negative signature, duplicate, failed-write retry, and cross-workspace access behavior are planned before implementation.
++- **Dependencies**: Tests/probes precede schema and production code; the database uniqueness constraint precedes idempotency service behavior.
++- **Open criticals**: None. The application layout is an explicit reversible assumption necessitated by the supplied workspace containing planning artifacts only.
++
++## Next Route
++
++`/story-implement` → `/speck-audit` → `/story-validate`

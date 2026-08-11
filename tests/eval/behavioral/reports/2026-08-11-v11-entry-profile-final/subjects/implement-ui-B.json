@@ -1,0 +1,137 @@
+{
+  "artifact_changed": true,
+  "case_id": "implement-ui",
+  "condition": "v11",
+  "context_conformance": {
+    "exit_code": 1,
+    "profile": "story-implement-ui",
+    "report": {
+      "axes": {
+        "GATE_USE": {
+          "details": [
+            "no exit-bound invocation after latest mutation of any gate in ['pytest', 'unittest', 'node --test', 'npm test', 'pnpm test', 'bun test', 'flutter test', 'cargo test', 'go test', 'swift test', 'xcodebuild', 'mvn test', 'gradle test']",
+            "last mutation event was 41"
+          ],
+          "ok": false,
+          "status": "fail"
+        },
+        "REACH": {
+          "details": [
+            "loader argv, emitted bodies, receipt profile, selectors, ordered paths, hashes, and byte counts match contract"
+          ],
+          "ok": true,
+          "status": "pass"
+        },
+        "SELECTIVITY": {
+          "details": [
+            "no forbidden branch files in receipts or observed command reads"
+          ],
+          "ok": true,
+          "status": "pass"
+        },
+        "TIMING": {
+          "details": [
+            "verified receipt at event 7 precedes first mutation at 10"
+          ],
+          "ok": true,
+          "status": "pass"
+        }
+      },
+      "disclaimer": "Transcript conformance proves declared context reach, selectivity, timing, and gate use only. It does not prove semantic understanding, correct application, or output quality.",
+      "pass": false,
+      "profile": "story-implement-ui",
+      "schema_version": 1,
+      "selections": {}
+    },
+    "selections": [],
+    "stderr": ""
+  },
+  "context_conformant": false,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "cf3a70b0f8900558a305911d5bd4280aa3de01d04cf0930281ecb2ea7abd2fe5",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md",
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md",
+    " M web/app.js",
+    " M web/index.html",
+    "?? specs/projects/001-pulseboard/graph/",
+    "?? web/app.test.js"
+  ],
+  "label": "B",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "166e830c5afb6a2dce9733c628eb64a7ac5fbe19154faa716a5e12557d1e2250",
+  "required_corrections": 0,
+  "revision": "92a0a97b0f46c4218b3e985e5b7ce244480085df",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-1",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-2",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-3",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-4",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-5",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-6",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-aria-pressed",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-disabled-approve",
+        "ok": true,
+        "weight": 1.25
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 44,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 986112,
+    "input_tokens": 1045476,
+    "output_tokens": 10408
+  },
+  "valid_run": true,
+  "wall_seconds": 243.187
+}

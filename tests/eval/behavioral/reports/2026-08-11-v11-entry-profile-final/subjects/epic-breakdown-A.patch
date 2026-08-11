@@ -1,0 +1,814 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md b/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md
+new file mode 100644
+index 0000000..16aefa8
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md
+@@ -0,0 +1,210 @@
++# Epic Story Breakdown: Capture and review
++
++**Epic**: E001 - Capture and review  
++**Project**: 001-pulseboard  
++**Created**: 2026-08-11  
++**Version**: 1.0  
++**Status**: Draft
++
++---
++
++## 📊 Information Sources
++
++**Traceability**: This breakdown was created from:
++
++- `epic.md` — capture, review, explicit confirmation, and workspace-isolation outcomes
++- `epic-tech-spec.md` — workspace-scoped persistence, asynchronous extraction, active-workspace reads, and confirmation fields
++- `traceability-matrix.md` — PRM-001, PRM-002, and PRM-004 conservation rows
++
++No PRD, constitution, or brownfield scan is present in this workspace. Story boundaries therefore follow the explicit epic and technical-spec seams.
++
++---
++
++## Summary
++
++**Total Stories**: 4  
++**Epic Dependencies**: None recorded  
++**Estimated Duration**: Four ordered implementation increments  
++**Parallelization Potential**: Low — each later user-visible step depends on the preceding workflow state.
++
++---
++
++## Story Organization
++
++### Phase 1: Foundation Setup
++
++- [ ] S001 Transcript capture and asynchronous extraction
++  - **Type**: Technical + user workflow
++  - **Details**: Persist an uploaded transcript under its workspace and create asynchronously extracted proposed actions.
++  - **References**: `epic.md`; `epic-tech-spec.md` (transcript storage and asynchronous extraction)
++  - **Duration**: First implementation increment
++
++### Phase 2: Core Stories
++
++- [ ] S002 Workspace-isolated action review
++  - **Type**: User workflow + security boundary
++  - **Story**: As a facilitator, I want to review and edit proposed actions from the active workspace so that I can prepare the right actions without seeing another workspace's data.
++  - **Depends on**: S001
++  - **Technical Approach**: Load only the active workspace's extracted actions; retain the workspace boundary on API reads and writes.
++  - **References**: `epic.md`; `epic-tech-spec.md` (active-workspace review UI)
++  - **Duration**: Second implementation increment
++
++### Phase 3: Integration Stories
++
++- [ ] S003 Explicit action confirmation
++  - **Type**: User workflow + data-integrity boundary
++  - **Story**: As a facilitator, I want to explicitly confirm an edited action with its owner and future due date so that the action has an accountable, auditable commitment.
++  - **Depends on**: S002
++  - **Technical Approach**: Reject implicit confirmation and incomplete confirmation data; record confirmer and timestamp with the confirmed action.
++  - **References**: `epic.md`; `epic-tech-spec.md` (confirmation requirements)
++  - **Duration**: Third implementation increment
++
++### Phase 4: Quality & Polish
++
++- [ ] S004 Capture-to-confirmation workflow assurance
++  - **Type**: Quality + integration
++  - **Details**: Prove the asynchronous capture, isolated review, edit, and explicit-confirmation workflow together, including the rejection paths that protect workspace isolation and confirmation integrity.
++  - **Depends on**: S001, S002, S003
++  - **References**: `epic.md`; `epic-tech-spec.md`
++  - **Duration**: Final implementation increment
++
++---
++
++## Story Details
++
++### S001: Transcript capture and asynchronous extraction
++
++**User Story**  
++As a facilitator, I want to upload a transcript and receive proposed action items so that a review can begin from the captured discussion.
++
++**Acceptance Criteria**:
++- AC-1: A transcript is stored under the selected workspace and asynchronous extraction produces proposed actions for that same workspace.
++
++**Technical Implementation (high level)**:
++1. Store the transcript with `workspace_id`.
++2. Start asynchronous extraction.
++3. Persist proposed actions under the same `workspace_id`.
++
++**Test Coverage**:
++- Integration: asynchronous extraction associates proposals with the originating workspace.
++
++### S002: Workspace-isolated action review
++
++**User Story**  
++As a facilitator, I want to review and edit only the proposed actions in the active workspace so that workspace boundaries remain intact.
++
++**Acceptance Criteria**:
++- AC-1: Review loads only proposed actions belonging to the active workspace, and edits do not cross the workspace boundary.
++
++**Technical Implementation (high level)**:
++1. Scope review reads to the active workspace.
++2. Present the workspace-scoped proposed actions for editing.
++3. Preserve the workspace scope on updates.
++
++**Test Coverage**:
++- Integration: a facilitator cannot view or modify another workspace's proposed actions through the review workflow.
++
++### S003: Explicit action confirmation
++
++**User Story**  
++As a facilitator, I want to explicitly confirm an action after setting its text, owner, and future due date so that confirmed work is accountable.
++
++**Acceptance Criteria**:
++- AC-1: Confirmation requires action text, owner, and a future `due_at`, and records the confirmer and timestamp; no action is confirmed implicitly.
++
++**Technical Implementation (high level)**:
++1. Validate the required confirmation inputs.
++2. Require an explicit confirm action.
++3. Record confirmer and confirmation timestamp.
++
++**Test Coverage**:
++- Integration: incomplete, past-due, or non-explicit confirmation attempts leave the action unconfirmed.
++
++### S004: Capture-to-confirmation workflow assurance
++
++**User Story**  
++As a facilitator, I want the complete capture-to-confirmation flow to preserve its safety boundaries so that I can rely on the actions it produces.
++
++**Acceptance Criteria**:
++- AC-1: The complete workflow covers capture, asynchronous extraction, active-workspace review and edit, and explicit accountable confirmation.
++- AC-2: Cross-workspace access and implicit or incomplete confirmation are rejected without producing a confirmed action.
++
++**Technical Implementation (high level)**:
++1. Exercise the complete success path across the preceding story seams.
++2. Exercise isolation and confirmation rejection paths.
++3. Record repeatable integration coverage for those paths.
++
++**Test Coverage**:
++- E2E: capture through confirmation.
++- Integration: isolation and confirmation-integrity rejection paths.
++
++---
++
++## Execution Strategy
++
++### Parallel Execution Groups
++
++No safe parallel implementation group is identified. S001 creates the workspace-scoped proposed actions that S002 reviews; S003 confirms S002's edited actions; S004 verifies their integrated path.
++
++### Critical Path
++
++S001 → S002 → S003 → S004 → Complete
++
++### Resource Allocation
++
++- Phase 1–4: one sequential delivery lane; each boundary can be reviewed before the next increment begins.
++
++---
++
++## Dependencies
++
++### External Dependencies
++
++- No external service or library dependency is recorded in the provided epic evidence.
++
++### Inter-Story Dependencies
++
++| Story | Depends On | Provides To |
++|------|------------|-------------|
++| S001 | — | S002, S004 |
++| S002 | S001 | S003, S004 |
++| S003 | S002 | S004 |
++| S004 | S001, S002, S003 | Epic completion evidence |
++
++---
++
++## Risk Mitigation
++
++| Story | Risk | Mitigation |
++|------|------|------------|
++| S001 | Extracted actions lose their workspace association | Persist and verify `workspace_id` across transcript and proposed-action storage. |
++| S002 | Review exposes or changes another workspace's actions | Scope every read and edit to the active workspace and test the boundary. |
++| S003 | An action is confirmed without an accountable decision | Require explicit confirmation, complete fields, future `due_at`, confirmer, and timestamp. |
++| S004 | Seams pass alone but fail together | Run the end-to-end success and rejection paths across all prior seams. |
++
++---
++
++## Definition of Done
++
++Per Story:
++- [ ] Code implemented and reviewed
++- [ ] Unit and integration coverage passing as applicable
++- [ ] Acceptance criteria verified
++
++Epic Complete:
++- [ ] All stories done
++- [ ] Complete capture-to-confirmation path verified
++- [ ] Workspace-isolation and explicit-confirmation protections verified
++
++---
++
++## Next Steps
++
++1. Run `/story-specify` on S001 to replace its Draft (Placeholder) spec in place.
++2. Continue in dependency order: S001 → S002 → S003 → S004.
++3. Run `/analyze --level epic` before starting story implementation if the breakdown needs adversarial planning review.
++
++---
++*Generated by /epic-breakdown command*  
++*Template Version: 1.0.0*  
++*[as of SHA `7ac3b89` | verified `2026-08-11` | speck]*
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S001-transcript-capture-extraction/spec.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S001-transcript-capture-extraction/spec.md
+new file mode 100644
+index 0000000..cc00a79
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S001-transcript-capture-extraction/spec.md
+@@ -0,0 +1,34 @@
++---
++speck_version: 11.0
++artifact_type: story-spec
++depends_on: []
++blocks: [S002, S004]
++serves: [PRM-001]
++lifecycle_state: Draft (Placeholder)
++readiness_state_verified: NO-SHIP
++---
++
++# Story: Transcript capture and asynchronous extraction
++
++**Story ID**: `S001-transcript-capture-extraction` · **Qualified**: `E001/S001`  
++**Current State**: Draft (Placeholder)  
++**Status**: Draft (Placeholder)  
++**Input**: Store an uploaded transcript under its workspace and asynchronously extract proposed actions for review.
++
++## Placeholder Scope
++
++- **Primary user outcome**: A facilitator uploads a transcript and receives proposed action items for the same workspace.
++- **Promise discharge seed**: `PRM-001` → `E001/S001/AC-1`.
++- **Technical seam**: `workspace_id` travels from transcript storage through asynchronous extraction to proposed actions.
++
++## Seed Acceptance Anchors
++
++#### AC-1 — Workspace-scoped transcript extraction
++Transcript upload stores the transcript under its selected workspace and asynchronous extraction produces proposed actions under that same workspace.
++
++## Lifecycle
++
++- [x] **Draft** - Placeholder spec.md created by `/epic-breakdown` (not yet specified)
++- [ ] **Specified** - spec.md enhanced by `/story-specify`
++
++*This placeholder is intentionally not a complete story specification. `/story-specify` owns its expansion.*
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-workspace-isolated-review/spec.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-workspace-isolated-review/spec.md
+new file mode 100644
+index 0000000..9e2a4ad
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-workspace-isolated-review/spec.md
+@@ -0,0 +1,34 @@
++---
++speck_version: 11.0
++artifact_type: story-spec
++depends_on: [S001]
++blocks: [S003, S004]
++serves: [PRM-004]
++lifecycle_state: Draft (Placeholder)
++readiness_state_verified: NO-SHIP
++---
++
++# Story: Workspace-isolated action review
++
++**Story ID**: `S002-workspace-isolated-review` · **Qualified**: `E001/S002`  
++**Current State**: Draft (Placeholder)  
++**Status**: Draft (Placeholder)  
++**Input**: Let a facilitator review and edit proposed actions only in the active workspace.
++
++## Placeholder Scope
++
++- **Primary user outcome**: A facilitator can review and edit the correct workspace's proposed actions without exposure across workspace boundaries.
++- **Promise discharge seed**: `PRM-004` → `E001/S002/AC-1`.
++- **Technical seam**: Active-workspace scoping governs review reads and edits.
++
++## Seed Acceptance Anchors
++
++#### AC-1 — Active-workspace-only review and edit
++The review UI loads only proposed actions for the active workspace, and an edit cannot read or change another workspace's action.
++
++## Lifecycle
++
++- [x] **Draft** - Placeholder spec.md created by `/epic-breakdown` (not yet specified)
++- [ ] **Specified** - spec.md enhanced by `/story-specify`
++
++*This placeholder is intentionally not a complete story specification. `/story-specify` owns its expansion.*
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S003-explicit-action-confirmation/spec.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S003-explicit-action-confirmation/spec.md
+new file mode 100644
+index 0000000..d8578fd
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S003-explicit-action-confirmation/spec.md
+@@ -0,0 +1,34 @@
++---
++speck_version: 11.0
++artifact_type: story-spec
++depends_on: [S002]
++blocks: [S004]
++serves: [PRM-002]
++lifecycle_state: Draft (Placeholder)
++readiness_state_verified: NO-SHIP
++---
++
++# Story: Explicit action confirmation
++
++**Story ID**: `S003-explicit-action-confirmation` · **Qualified**: `E001/S003`  
++**Current State**: Draft (Placeholder)  
++**Status**: Draft (Placeholder)  
++**Input**: Require a facilitator to explicitly confirm an edited action with text, owner, a future due date, confirmer, and timestamp.
++
++## Placeholder Scope
++
++- **Primary user outcome**: A facilitator creates an accountable commitment only through explicit, complete confirmation.
++- **Promise discharge seed**: `PRM-002` → `E001/S003/AC-1`.
++- **Technical seam**: Confirmation validates required fields and records the actor and time.
++
++## Seed Acceptance Anchors
++
++#### AC-1 — Explicit accountable confirmation
++Only an explicit confirmation with action text, owner, and future `due_at` confirms the action and records confirmer and timestamp; incomplete or implicit confirmation leaves it unconfirmed.
++
++## Lifecycle
++
++- [x] **Draft** - Placeholder spec.md created by `/epic-breakdown` (not yet specified)
++- [ ] **Specified** - spec.md enhanced by `/story-specify`
++
++*This placeholder is intentionally not a complete story specification. `/story-specify` owns its expansion.*
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S004-workflow-assurance/spec.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S004-workflow-assurance/spec.md
+new file mode 100644
+index 0000000..891cc7e
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S004-workflow-assurance/spec.md
+@@ -0,0 +1,36 @@
++---
++speck_version: 11.0
++artifact_type: story-spec
++depends_on: [S001, S002, S003]
++blocks: []
++serves: []
++lifecycle_state: Draft (Placeholder)
++readiness_state_verified: NO-SHIP
++---
++
++# Story: Capture-to-confirmation workflow assurance
++
++**Story ID**: `S004-workflow-assurance` · **Qualified**: `E001/S004`  
++**Current State**: Draft (Placeholder)  
++**Status**: Draft (Placeholder)  
++**Input**: Exercise the whole capture-to-confirmation workflow and its workspace-isolation and confirmation-integrity rejection paths.
++
++## Placeholder Scope
++
++- **Primary user outcome**: A facilitator can rely on the workflow preserving its boundaries across the story seams.
++- **Technical seam**: End-to-end coverage joins asynchronous extraction, active-workspace review, editing, and explicit confirmation.
++
++## Seed Acceptance Anchors
++
++#### AC-1 — Complete protected workflow
++Capture, asynchronous extraction, active-workspace review and edit, and explicit confirmation work together.
++
++#### AC-2 — Boundary rejection paths
++Cross-workspace access and implicit or incomplete confirmation do not produce a confirmed action.
++
++## Lifecycle
++
++- [x] **Draft** - Placeholder spec.md created by `/epic-breakdown` (not yet specified)
++- [ ] **Specified** - spec.md enhanced by `/story-specify`
++
++*This placeholder is intentionally not a complete story specification. `/story-specify` owns its expansion.*
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md b/specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md
+new file mode 100644
+index 0000000..e7aee6f
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md
+@@ -0,0 +1,7 @@
++# Traceability matrix
++
++| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | Status |
++|---|---|---|---|---|
++| PRM-001 | `epic.md` + `epic-tech-spec.md` | A facilitator can upload a transcript and receive proposed action items scoped to its workspace. | E001/S001/AC-1 | mapped |
++| PRM-002 | `epic.md` + `epic-tech-spec.md` | A facilitator can explicitly confirm an action only with text, owner, a future due date, confirmer, and timestamp. | E001/S003/AC-1 | mapped |
++| PRM-004 | `epic.md` + `epic-tech-spec.md` | Proposed-action review and editing remain isolated to the active workspace. | E001/S002/AC-1 | mapped |
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..2f80fa6
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,22 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/7 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S001` | NO-SHIP | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S002` | NO-SHIP | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S003` | NO-SHIP | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S004` | NO-SHIP | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001-capture-review` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `7ac3b89` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..5b837bf
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `7ac3b89` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..74d93c3
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,333 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "7ac3b89",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 13,
++    "edges": 13,
++    "by_kind": {
++      "epic": 1,
++      "prm": 3,
++      "story": 4,
++      "ac": 5
++    }
++  },
++  "nodes": [
++    {
++      "id": "E001",
++      "kind": "epic",
++      "scope": null,
++      "title": "E001-capture-review",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review",
++      "anchor": "E001",
++      "content_hash": "1e47ee22ef21",
++      "attrs": {
++        "has_breakdown": true
++      }
++    },
++    {
++      "id": "E001/PRM-001",
++      "kind": "prm",
++      "scope": "E001",
++      "title": "`epic.md` + `epic-tech-spec.md`",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md",
++      "anchor": "PRM-001",
++      "content_hash": "38fb7edd6537",
++      "attrs": {
++        "status": "mapped",
++        "grain": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    },
++    {
++      "id": "E001/PRM-002",
++      "kind": "prm",
++      "scope": "E001",
++      "title": "`epic.md` + `epic-tech-spec.md`",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md",
++      "anchor": "PRM-002",
++      "content_hash": "6943107d5770",
++      "attrs": {
++        "status": "mapped",
++        "grain": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    },
++    {
++      "id": "E001/PRM-004",
++      "kind": "prm",
++      "scope": "E001",
++      "title": "`epic.md` + `epic-tech-spec.md`",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md",
++      "anchor": "PRM-004",
++      "content_hash": "818fe60ba04d",
++      "attrs": {
++        "status": "mapped",
++        "grain": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    },
++    {
++      "id": "E001/S001",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S001-transcript-capture-extraction",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S001-transcript-capture-extraction/spec.md",
++      "anchor": "",
++      "content_hash": "386a5cccff70",
++      "attrs": {
++        "readiness_state_verified": "NO-SHIP",
++        "lifecycle_state": "Draft (Placeholder)",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    },
++    {
++      "id": "E001/S001/AC-1",
++      "kind": "ac",
++      "scope": "E001",
++      "title": "Workspace-scoped transcript extraction",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S001-transcript-capture-extraction/spec.md",
++      "anchor": "AC-1",
++      "content_hash": "93a7698bdb42",
++      "attrs": {}
++    },
++    {
++      "id": "E001/S002",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S002-workspace-isolated-review",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-workspace-isolated-review/spec.md",
++      "anchor": "",
++      "content_hash": "d4a8984b9e14",
++      "attrs": {
++        "readiness_state_verified": "NO-SHIP",
++        "lifecycle_state": "Draft (Placeholder)",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    },
++    {
++      "id": "E001/S002/AC-1",
++      "kind": "ac",
++      "scope": "E001",
++      "title": "Active-workspace-only review and edit",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-workspace-isolated-review/spec.md",
++      "anchor": "AC-1",
++      "content_hash": "327fc833cd17",
++      "attrs": {}
++    },
++    {
++      "id": "E001/S003",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S003-explicit-action-confirmation",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S003-explicit-action-confirmation/spec.md",
++      "anchor": "",
++      "content_hash": "40b4e892352d",
++      "attrs": {
++        "readiness_state_verified": "NO-SHIP",
++        "lifecycle_state": "Draft (Placeholder)",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    },
++    {
++      "id": "E001/S003/AC-1",
++      "kind": "ac",
++      "scope": "E001",
++      "title": "Explicit accountable confirmation",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S003-explicit-action-confirmation/spec.md",
++      "anchor": "AC-1",
++      "content_hash": "77fed9e51466",
++      "attrs": {}
++    },
++    {
++      "id": "E001/S004",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S004-workflow-assurance",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S004-workflow-assurance/spec.md",
++      "anchor": "",
++      "content_hash": "35c24417127c",
++      "attrs": {
++        "readiness_state_verified": "NO-SHIP",
++        "lifecycle_state": "Draft (Placeholder)",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    },
++    {
++      "id": "E001/S004/AC-1",
++      "kind": "ac",
++      "scope": "E001",
++      "title": "Complete protected workflow",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S004-workflow-assurance/spec.md",
++      "anchor": "AC-1",
++      "content_hash": "6bf446708bac",
++      "attrs": {}
++    },
++    {
++      "id": "E001/S004/AC-2",
++      "kind": "ac",
++      "scope": "E001",
++      "title": "Boundary rejection paths",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S004-workflow-assurance/spec.md",
++      "anchor": "AC-2",
++      "content_hash": "5032a7161878",
++      "attrs": {}
++    }
++  ],
++  "edges": [
++    {
++      "src": "E001/PRM-001",
++      "kind": "discharges",
++      "dst_ref": "E001/S001/AC-1",
++      "dst": "E001/S001/AC-1",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md",
++      "attrs": {
++        "epic_scope": "E001"
++      }
++    },
++    {
++      "src": "E001/PRM-002",
++      "kind": "discharges",
++      "dst_ref": "E001/S003/AC-1",
++      "dst": "E001/S003/AC-1",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md",
++      "attrs": {
++        "epic_scope": "E001"
++      }
++    },
++    {
++      "src": "E001/PRM-004",
++      "kind": "discharges",
++      "dst_ref": "E001/S002/AC-1",
++      "dst": "E001/S002/AC-1",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md",
++      "attrs": {
++        "epic_scope": "E001"
++      }
++    },
++    {
++      "src": "E001/S001",
++      "kind": "blocks",
++      "dst_ref": "S002",
++      "dst": "E001/S002",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S001-transcript-capture-extraction/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S001"
++      }
++    },
++    {
++      "src": "E001/S001",
++      "kind": "blocks",
++      "dst_ref": "S004",
++      "dst": "E001/S004",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S001-transcript-capture-extraction/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S001"
++      }
++    },
++    {
++      "src": "E001/S002",
++      "kind": "depends-on",
++      "dst_ref": "S001",
++      "dst": "E001/S001",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-workspace-isolated-review/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S002"
++      }
++    },
++    {
++      "src": "E001/S002",
++      "kind": "blocks",
++      "dst_ref": "S003",
++      "dst": "E001/S003",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-workspace-isolated-review/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S002"
++      }
++    },
++    {
++      "src": "E001/S002",
++      "kind": "blocks",
++      "dst_ref": "S004",
++      "dst": "E001/S004",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-workspace-isolated-review/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S002"
++      }
++    },
++    {
++      "src": "E001/S003",
++      "kind": "depends-on",
++      "dst_ref": "S002",
++      "dst": "E001/S002",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S003-explicit-action-confirmation/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S003"
++      }
++    },
++    {
++      "src": "E001/S003",
++      "kind": "blocks",
++      "dst_ref": "S004",
++      "dst": "E001/S004",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S003-explicit-action-confirmation/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S003"
++      }
++    },
++    {
++      "src": "E001/S004",
++      "kind": "depends-on",
++      "dst_ref": "S001",
++      "dst": "E001/S001",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S004-workflow-assurance/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S004"
++      }
++    },
++    {
++      "src": "E001/S004",
++      "kind": "depends-on",
++      "dst_ref": "S002",
++      "dst": "E001/S002",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S004-workflow-assurance/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S004"
++      }
++    },
++    {
++      "src": "E001/S004",
++      "kind": "depends-on",
++      "dst_ref": "S003",
++      "dst": "E001/S003",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/epic-breakdown-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S004-workflow-assurance/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S004"
++      }
++    }
++  ],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}
+diff --git a/specs/projects/001-pulseboard/traceability-matrix.md b/specs/projects/001-pulseboard/traceability-matrix.md
+index fcc37be..40c2c41 100644
+--- a/specs/projects/001-pulseboard/traceability-matrix.md
++++ b/specs/projects/001-pulseboard/traceability-matrix.md
+@@ -1,7 +1,7 @@
+ # Traceability matrix
+ 
+-| Promise | Epic | Story / AC | Status |
+-|---|---|---|---|
+-| PRM-001 | E001 | OPEN | OPEN |
+-| PRM-002 | E001 | OPEN | OPEN |
+-| PRM-004 | E001 | OPEN | OPEN |
++| PRM-ID | Epic | Promise | Discharge (story-id + AC-ref) | Status |
++|---|---|---|---|---|
++| PRM-001 | E001 | A facilitator can upload a transcript and receive proposed action items scoped to its workspace. | E001/S001/AC-1 | mapped |
++| PRM-002 | E001 | A facilitator can explicitly confirm an action only with text, owner, a future due date, confirmer, and timestamp. | E001/S003/AC-1 | mapped |
++| PRM-004 | E001 | Proposed-action review and editing remain isolated to the active workspace. | E001/S002/AC-1 | mapped |

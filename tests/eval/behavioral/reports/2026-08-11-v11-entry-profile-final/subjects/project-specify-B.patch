@@ -1,0 +1,518 @@
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..17cc488
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,38 @@
++# Pulseboard
++
++> A world where team facilitators can turn meeting conversations into owned, dated commitments so that no action item quietly disappears after the meeting.
++
++**Status**: Planning — project specification complete.
++
++## What is this?
++
++Pulseboard helps team facilitators turn an uploaded weekly-meeting transcript into proposed action items. A facilitator must confirm each action's owner and due date before any reminder can be scheduled, keeping automation grounded in a real commitment.
++
++## Getting started
++
++Pulseboard is not implemented yet. The next method phase is project clarification; there is no runtime to install or use at this stage.
++
++## Architecture
++
++Architecture is intentionally undecided at project-specification stage. The pilot is scoped as a small browser-based product for five teams.
++
++## Promise
++
++The project promise is confirmation-first follow-through: reminders cannot be scheduled until a facilitator has confirmed an action's owner and due date. Meeting recording, calendar replacement, and autonomous message sending are out of scope.
++
++## Recently validated
++
++No epics have been planned or validated.
++
++## Magic moments (auto-updated)
++
++| Moment | Status | Last validated |
++|--------|--------|----------------|
++| No validated moments yet | planning | — |
++
++---
++
++<!-- SPECK:START -->
++Built with [Speck 🥓](https://github.com/telum-ai/speck) — evidence-driven specification methodology (speck 11.0.0).
++Methodology docs: [.speck/README.md](.speck/README.md) · Project state: [project-state.md](specs/projects/001-pulseboard/project-state.md) · Decisions: [project-decisions-log.md](specs/projects/001-pulseboard/project-decisions-log.md)
++<!-- SPECK:END -->
+diff --git a/specs/projects/001-pulseboard/project.md b/specs/projects/001-pulseboard/project.md
+new file mode 100644
+index 0000000..11eda26
+--- /dev/null
++++ b/specs/projects/001-pulseboard/project.md
+@@ -0,0 +1,468 @@
++# Pulseboard
++
++**Project ID**: 001-pulseboard  
++**Created**: 2026-08-11  
++**Status**: Planning — project specification complete; clarification is next  
++**Scale**: Level 2 — a focused pilot product with one core workflow and a small number of capability areas  
++**Recipe**: None — the brief establishes a web product but not a technical stack
++
++---
++
++## Information Sources
++
++**Traceability**: This greenfield specification is based solely on `brief.md`. It records the brief's explicit commitments and makes only reversible pilot assumptions.
++
++**Information flow**:
++
++```text
++brief.md
++  ↓
++project.md (this document)
++  ↓
++project-clarify → product-contract → profile → evidence-contract → context → project-plan
++```
++
++---
++
++## Project Overview
++
++Pulseboard is a small web product for team facilitators who lose follow-through after weekly meetings. A facilitator uploads a meeting transcript, receives proposed action items, and must confirm an owner and due date for each item before Pulseboard may schedule a reminder. The pilot serves five teams and tests whether this confirmation-first workflow raises action-item review to at least 80% and reduces unowned overdue actions by 30% after four weeks. It matters now because action items decay between recurring meetings when ownership and dates are not made explicit while the conversation is still fresh.
++
++## Project Type & Scale
++
++**Type**: Web application (browser-based, responsive)
++
++**Estimated Scale**: Level 2 — a moderate, focused pilot (one to two epics during later planning), not a meeting-management platform.
++
++**Primary Domain**: Enterprise/B2B — team meeting follow-through and action accountability.
++
++## Vision & Goals
++
++### Vision Statement
++
++A world where team facilitators can turn meeting conversations into owned, dated commitments so that no action item quietly disappears after the meeting.
++
++### Primary Goals
++
++1. **Review completion**: Enable pilot facilitators to review at least 80% of proposed action items.
++   - Success looks like: proposed items are either confirmed with an owner and due date or deliberately resolved by the facilitator.
++   - Key metric: percentage of proposed items with a recorded facilitator review decision.
++
++2. **Accountability**: Reduce unowned overdue actions by 30% after four weeks of pilot use.
++   - Success looks like: actions that become overdue have a confirmed owner; fewer overdue actions are ownerless than before Pulseboard.
++   - Key metric: count of overdue actions without an owner, compared with the pilot baseline.
++
++3. **Controlled reminders**: Prevent reminders from being scheduled for incomplete commitments.
++   - Success looks like: every scheduled reminder is tied to an action item with a facilitator-confirmed owner and due date.
++   - Key metric: number of reminders scheduled without a confirmed owner and due date, target zero.
++
++4. **Pilot learning**: Produce an evidence-based recommendation on the reminder channel after the five-team pilot.
++   - Success looks like: the team can decide between email and Slack from pilot behavior and facilitator feedback rather than assumption.
++   - Key metric: a documented channel decision supported by pilot evidence.
++
++## PROFILE Surfaces
++
++| Surface | Adapter | Target | Source of truth | Required by |
++|---------|---------|--------|-----------------|-------------|
++| Root README | `readme` | `README.md` | `project.md#project-overview` until a product contract exists | UX-RC / API-RC |
++
++## Target Users
++
++### Primary User Segments
++
++**Team facilitators**
++- Who they are: people responsible for running a recurring team meeting and maintaining follow-through between meetings.
++- Current pain points: action items are embedded in transcript text or meeting notes; owners and due dates are missing or forgotten.
++- Primary job: turn a completed weekly meeting into a reviewed set of accountable actions.
++- Success criteria: quickly identify proposed actions, make accountability explicit, and know that any reminder represents a real commitment.
++
++**Team members assigned actions**
++- Who they are: participants who receive a meeting-derived task once a facilitator confirms it.
++- Current pain points: they may not know an action belongs to them, or lack a concrete deadline.
++- Primary job: understand and act on a confirmed commitment.
++- Success criteria: receive only clear, owned, dated actions rather than ambiguous automated messages.
++
++### User Problems We Are Solving
++
++1. **Action items disappear after meetings**: proposed actions are buried in transcripts and are not reliably carried into follow-through.
++   - Current workarounds: facilitators reread transcripts, maintain manual notes, or rely on memory.
++   - Cost of inaction: important work is silently lost between weekly meetings.
++
++2. **Actions lack accountable ownership and timing**: an item may be discussed without a named owner or due date.
++   - Current workarounds: informal follow-up in the next meeting or ad hoc messages.
++   - Cost of inaction: overdue work cannot be attributed or resolved promptly.
++
++3. **Automation can create false commitments**: sending a reminder before a human confirms the owner and due date can misassign work or create noise.
++   - Current workarounds: avoid reminders altogether or manually verify every message outside the workflow.
++   - Cost of inaction: teams either lose reliable reminders or lose trust in them.
++
++## Jobs-to-Be-Done
++
++### Core Functional Job
++
++**Primary Job Statement**: Convert a weekly-meeting transcript into reviewed action commitments with an owner and due date.
++
++**Job Context**:
++- **When**: immediately after a weekly team meeting, while the discussion is still understandable.
++- **With**: a meeting transcript, the facilitator's knowledge of the discussion, and the people named in the meeting.
++- **Goal**: leave the meeting with reliable follow-through rather than an unstructured record of conversation.
++
++### Related Jobs
++
++1. **Capture a meeting transcript**: make the meeting record available for review.
++   - Relationship: before the core job.
++
++2. **Schedule a reminder for a confirmed action**: create timely follow-up only after the commitment is complete.
++   - Relationship: after the core job.
++
++3. **Review open and overdue actions at the next meeting**: use confirmed commitments to drive subsequent follow-through.
++   - Relationship: after the core job.
++
++### Emotional & Social Jobs
++
++**Emotional Jobs**
++- Feel confident that the team has not lost the important outcomes of a meeting.
++- Avoid feeling responsible for chasing vague or unowned commitments.
++
++**Social Jobs**
++- Appear prepared and dependable to the team by turning discussion into clear follow-through.
++- Avoid appearing to assign work or send reminders without agreement.
++
++### Key Desired Outcomes (Ranked)
++
++| Priority | Outcome Statement | Current Pain Level |
++|----------|-------------------|-------------------|
++| 1 | Minimize the likelihood that a proposed meeting action is left unreviewed | High |
++| 2 | Minimize the number of overdue actions without an accountable owner | High |
++| 3 | Reduce the time required to turn a transcript into confirmed commitments | High |
++| 4 | Minimize the likelihood that a reminder is sent for an unconfirmed action | High |
++| 5 | Increase confidence that due dates reflect facilitator review | Medium |
++
++### Competitive Job Executors
++
++| Current Solution | Strengths | Weaknesses (Opportunities) |
++|------------------|-----------|-----------------------------|
++| Facilitator memory and informal follow-up | No new tool or setup | Actions are easy to forget and accountability is not recorded |
++| Manual transcript or meeting-note review | Preserves meeting context | Slow, inconsistent, and does not enforce owner/date confirmation |
++| Generic task or calendar tools | Can track an already-defined task | Do not turn transcript discussion into facilitator-reviewed commitments |
++
++### JTBD-Driven Prioritization
++
++The pilot prioritizes outcomes where importance is high and present satisfaction is low: review every proposed action, require ownership and a date, then permit a reminder. Broader meeting or calendar workflows are intentionally outside that opportunity.
++
++## Success Metrics
++
++### Key Performance Indicators
++
++**Business Metrics**
++- Pilot adoption: five teams actively participate in the pilot.
++  - Baseline: no existing Pulseboard users.
++  - Method: record enrolled pilot teams and their transcript-review activity.
++
++**User Metrics**
++- Proposed-action review rate: at least 80% of proposed items are reviewed during the pilot.
++  - Baseline: to be captured in the pilot's first week.
++  - Method: divide proposed items with a facilitator review decision by all proposed items.
++- Unowned overdue actions: 30% reduction after four weeks.
++  - Baseline: count unowned overdue actions in the first pilot week using the agreed pilot measurement method.
++  - Method: compare the four-week count to that baseline on a like-for-like basis.
++
++**Product Safety Metric**
++- Incomplete-reminder rate: zero reminders scheduled without a confirmed owner and due date.
++  - Baseline: not applicable; this is a workflow invariant.
++  - Method: audit each scheduled reminder against its action-item confirmation record.
++
++### Project Definition of Done
++
++- [ ] Five teams have been onboarded to the pilot.
++- [ ] Facilitators can upload transcripts and review proposed action items.
++- [ ] The product blocks reminder scheduling until owner and due date confirmation are recorded.
++- [ ] Metric instrumentation can measure the 80% review target and 30% reduction target.
++- [ ] The reminder-channel decision is made from pilot evidence.
++- [ ] Applicable quality and accessibility checks have passed before pilot use.
++
++## Business Model & Monetization
++
++### Value Proposition
++
++**What value we create**: Pulseboard gives teams a controlled bridge from meeting transcript to accountable follow-through, without treating AI-generated suggestions as commitments.
++
++**Who pays**: Not defined for this pilot.
++- Pilot sponsor or participating organization: potential future buyer, but no pricing or procurement commitment is in evidence.
++
++**Value exchange**: pilot teams receive a focused follow-through workflow; the project receives evidence about adoption, accountability, and reminder-channel fit.
++
++### Revenue Model
++
++**Primary Revenue Stream**: Not selected — this is a five-team validation pilot, not a priced launch.
++
++**Secondary Revenue Streams**: None defined.
++
++**Rationale**: selecting pricing before the pilot would introduce unsupported commercial assumptions.
++
++### Pricing Strategy
++
++**Pricing Model**: Deferred until pilot evidence establishes the durable value and buyer.
++
++**Indicative Price Points**: None set.
++
++**Value Metric**: Candidate metric is the number of active teams using the reviewed-action workflow; validation is required before pricing is chosen.
++
++**Competitive Positioning**: Focused follow-through layer between a meeting transcript and existing task/calendar tools; commercial positioning remains unvalidated.
++
++### Unit Economics
++
++Unit economics are not estimated at project-specification stage because the brief provides no cost, buyer, or pricing evidence. They are not needed to run the five-team pilot.
++
++### Revenue Milestones & Business Goals
++
++**Phase 1 — Pilot validation**: establish that the workflow improves accountable follow-through.
++- Revenue target: no revenue target.
++- Customer target: five participating teams.
++- Key metric: at least 80% proposed-action review rate.
++
++**Phase 2 — Commercial decision**: decide whether and how to offer Pulseboard beyond the pilot.
++- Revenue target: not set.
++- Customer target: not set.
++- Key metric: a validated buyer, value metric, and pricing hypothesis.
++
++**Phase 3 — Scale**: intentionally unscoped until the pilot supports continued investment.
++- Revenue target: not set.
++- Customer target: not set.
++- Key metric: pilot results justify a scale decision.
++
++### Business Model Validation Plan
++
++**Research Needed**
++- Business model research: Yes, after the pilot establishes value.
++- Topics: buyer identity, pricing basis, willingness to pay, and acquisition path.
++
++**Critical Assumptions to Test**
++1. Facilitators will review a useful proportion of transcript-derived proposals.
++   - Validation: measure the review rate across the five-team pilot.
++2. Confirming owner and due date before reminders changes the rate of unowned overdue actions.
++   - Validation: compare the agreed baseline with the four-week pilot result.
++3. A reminder channel can be chosen from observed pilot fit.
++   - Validation: compare facilitator behavior and feedback for the channel options evaluated in the pilot.
++
++**Pricing Validation**
++- Research needed: Yes, but only after pilot value is demonstrated.
++- Method: interview the pilot sponsor and facilitators about buyer, value, and acceptable pricing basis.
++- Timeline: after the four-week pilot measurement.
++- Pivot plan: keep the product in pilot/learning mode if a viable buyer and value metric are not established.
++
++**Go-to-Market Strategy**
++- Research needed: No for the initial pilot; yes before commercial expansion.
++- Customer acquisition: a deliberately selected five-team pilot cohort.
++- Sales motion: pilot-assisted.
++- Launch strategy: controlled pilot.
++
++### Business Model Risks
++
++**Revenue Risks**
++1. The improvement may be useful but not valuable enough to purchase. Impact: high. Mitigation: defer pricing and test buyer/value after the pilot.
++2. The value may accrue to facilitators while a different stakeholder controls budget. Impact: medium. Mitigation: identify the buyer during pilot review.
++
++**Market Risks**
++1. Teams may not upload transcripts consistently. Impact: high. Mitigation: measure participation and learn from non-use during the pilot.
++2. The reminder channel may not fit participating teams. Impact: medium. Mitigation: keep the channel decision open and evidence-led.
++
++**Competitive Risks**
++1. Existing meeting, task, or calendar tools may be sufficient for teams. Impact: medium. Mitigation: evaluate the distinct value of transcript-derived, confirmation-first follow-through in the pilot.
++
++## High-Level Scope
++
++### Core Capabilities (v1)
++
++**Transcript intake and proposal extraction**
++- What: accept an uploaded meeting transcript and present proposed action items for facilitator review.
++- Why critical: the product must reduce the effort of finding follow-through candidates in a meeting record.
++- User value: the facilitator starts with a focused set of proposals instead of rereading the full transcript.
++
++**Facilitator confirmation workflow**
++- What: require a facilitator to confirm an owner and due date before an action becomes eligible for a reminder.
++- Why critical: this is the product's trust boundary and directly supports the accountability goal.
++- User value: the team treats reminders as real, reviewed commitments rather than autonomous guesses.
++
++**Controlled reminder scheduling**
++- What: allow a reminder to be scheduled only for a confirmed action; the delivery channel is intentionally unresolved between email and Slack.
++- Why critical: timely follow-up turns a confirmed action into a practical commitment while preserving human control.
++- User value: facilitators can support follow-through without sending unverified messages.
++
++**Pilot measurement**
++- What: capture the data needed to measure review rate, unowned overdue actions, and reminder eligibility.
++- Why critical: the five-team pilot must answer whether the workflow works, not only whether it can be used.
++- User value: participating teams influence a product decision through observable outcomes.
++
++### Future Capabilities (v2+)
++
++**Reminder-channel expansion**
++- What: support the channel not selected for the pilot, or additional channels.
++- Why deferred: email versus Slack is unresolved and must be chosen from pilot evidence first.
++- Prerequisites: a documented pilot channel decision and a proven controlled scheduling workflow.
++
++**Action follow-up workspace**
++- What: broader views and workflows for tracking confirmed actions across meetings.
++- Why deferred: the pilot tests transcript-to-confirmation, not full task management.
++- Prerequisites: evidence that teams need an ongoing workspace beyond their existing task tools.
++
++**Meeting-system integrations**
++- What: import transcripts directly from meeting-recording or collaboration systems.
++- Why deferred: uploaded transcripts are sufficient to validate the core job with lower integration risk.
++- Prerequisites: reliable pilot usage and a validated target integration.
++
++### Explicit Out of Scope
++
++- Meeting recording: Pulseboard begins with an uploaded transcript and does not record meetings.
++- Calendar replacement: Pulseboard does not replace calendars or calendar-based scheduling.
++- Autonomous message sending: no reminder is scheduled until a facilitator has confirmed the action's owner and due date.
++- General-purpose task management: the pilot does not aim to replace existing team task tools.
++- Reminder-channel lock: neither email nor Slack is committed before pilot evidence supports a decision.
++
++## Constraints & Requirements
++
++### Business Constraints
++- **Budget**: not provided; scope remains constrained to a small five-team pilot.
++- **Timeline**: pilot outcome is assessed after four weeks of use.
++- **Resources**: no team composition is provided; planning must keep ownership and operational support explicit.
++- **Legal/Compliance**: uploaded transcripts may contain sensitive meeting content; retention, access, and processing requirements need clarification before implementation.
++
++### Technical Constraints
++- **Platform**: browser-based web product.
++- **Integration**: no required integration is established; uploaded transcripts are the v1 input.
++- **Performance**: no numeric target is provided; transcript proposal extraction must be usable in the facilitator's post-meeting workflow.
++- **Scale**: five pilot teams.
++- **Security**: transcript access must be restricted to authorized pilot users; detailed controls require clarification before implementation.
++
++### User Experience Constraints
++- **Accessibility**: target a usable, accessible browser experience; conformance target to be set during clarification.
++- **Localization**: no language or region requirement is provided.
++- **Device Support**: responsive browser access is assumed for facilitators; exact browser support to be set during clarification.
++- **Offline**: no offline capability is required by the brief.
++
++## Project Context
++
++### Business Context
++
++Weekly meetings already generate the raw material for action items, but the accountability step is unreliable. Pulseboard is a narrow pilot to prove whether a confirmation-first workflow can improve follow-through without becoming another meeting, calendar, or task-management product.
++
++### Technical Context
++
++This is greenfield work. The brief determines the input boundary (uploaded transcript) and the control boundary (owner and due date confirmed before reminder scheduling), but deliberately does not choose a stack, extraction approach, or reminder channel.
++
++### Organizational Context
++
++The known stakeholders are pilot facilitators and their participating team members. A sponsor, technical owner, and support owner must be named before pilot operation; their absence does not change the product boundary but is an operational clarification item.
++
++## Risks & Mitigation
++
++### Critical Risks
++
++1. **Low-quality action proposals**: Probability medium.
++   - Description: transcript extraction may produce irrelevant, incomplete, or missed action candidates.
++   - Impact: facilitators will not trust or review the proposals.
++   - Mitigation: keep the facilitator as the explicit confirmer, instrument review outcomes, and use pilot feedback to assess usefulness.
++   - Owner: product/pilot owner to be assigned before implementation.
++
++2. **Reminder sent without a complete commitment**: Probability low if the workflow is enforced.
++   - Description: a system path could bypass owner or due-date confirmation.
++   - Impact: misassigned work and lost trust.
++   - Mitigation: make owner-and-date confirmation a hard prerequisite for scheduling; verify it with product and runtime tests.
++   - Owner: implementation owner to be assigned during planning.
++
++3. **Pilot measurement lacks a defensible baseline**: Probability medium.
++   - Description: the 30% reduction cannot be interpreted if unowned overdue actions are not measured consistently.
++   - Impact: the pilot cannot establish whether Pulseboard improves accountability.
++   - Mitigation: define the baseline, action status rules, and four-week comparison method before pilot onboarding.
++   - Owner: pilot owner to be assigned before pilot launch.
++
++4. **Reminder channel is chosen by assumption**: Probability medium.
++   - Description: email or Slack could be implemented without evidence of fit.
++   - Impact: unnecessary rework or poor adoption.
++   - Mitigation: treat the channel as an explicit decision to resolve through pilot evidence.
++   - Owner: product owner to be assigned before channel implementation.
++
++5. **Transcript privacy is underspecified**: Probability medium.
++   - Description: meeting transcripts may contain content unsuitable for broad storage or processing.
++   - Impact: pilot cannot responsibly proceed until safeguards are agreed.
++   - Mitigation: clarify data handling, access, retention, and deletion requirements before implementation.
++   - Owner: pilot sponsor and technical owner, once named.
++
++### Key Assumptions
++
++1. Pilot teams have meeting transcripts they can upload and are permitted to use for this purpose.
++   - Validation: confirm eligibility and consent/data-handling requirements before onboarding.
++   - Backup plan: limit the pilot to sanitized or otherwise approved transcripts.
++
++2. Facilitators can reliably judge proposed actions, owners, and due dates from meeting context.
++   - Validation: observe review completion and collect pilot feedback.
++   - Backup plan: narrow the proposal presentation or require more explicit facilitator input.
++
++3. The baseline for unowned overdue actions can be measured consistently across all five teams.
++   - Validation: define and trial the measurement protocol before the four-week clock begins.
++   - Backup plan: report the metric only for teams with a valid comparable baseline and record the limitation.
++
++## Implementation Approach
++
++### Delivery Strategy
++- **Approach**: controlled, phased pilot delivery.
++- **MVP Definition**: transcript upload, proposed-action review, mandatory owner and due-date confirmation, controlled reminder scheduling, and pilot measurement.
++- **Rollout Plan**: prepare the workflow and measurement rules, onboard five teams, then assess results after four weeks.
++- **Feedback Loops**: review completion data, overdue-action measurement, and facilitator feedback inform the reminder-channel and continuation decisions.
++
++### High-Level Phases
++
++**Phase 1: Pilot readiness**
++- Focus: define operational safeguards, establish a baseline, and make the confirmation-first workflow usable.
++- Success criteria: the five teams can begin a controlled pilot with valid measurement rules.
++
++**Phase 2: Four-week pilot**
++- Focus: help facilitators review proposed actions and use reminders only for confirmed commitments.
++- Success criteria: sufficient usage data exists to assess the 80% review target and the change in unowned overdue actions.
++
++**Phase 3: Evidence-led decision**
++- Focus: evaluate pilot outcomes and choose the reminder channel and commercial next step.
++- Success criteria: a documented decision is supported by measured pilot behavior and facilitator feedback.
++
++## Stakeholders
++
++### Key Stakeholders
++
++| Role | Name/Team | Interest | Influence |
++|------|-----------|----------|-----------|
++| Pilot sponsor | To be assigned | accountable follow-through and a credible pilot outcome | High |
++| User representative | Participating team facilitators | low-friction review and trustworthy commitments | High |
++| Technical lead | To be assigned | safe, controlled delivery of transcript handling and reminders | High |
++| Action recipients | Participating team members | clear, correctly assigned, dated commitments | Medium |
++
++### Communication Plan
++
++- **Updates**: review pilot progress weekly with the pilot sponsor and facilitators.
++- **Reviews**: before pilot onboarding, at baseline confirmation, and after the four-week measurement.
++- **Escalation**: raise privacy, unsafe reminder behavior, or invalid measurement immediately to the pilot sponsor and technical lead once assigned.
++
++## Project Specification Checklist
++
++### Clarity Check
++- [x] Vision statement is clear and tied to meeting follow-through.
++- [x] Goals are specific and measurable where the brief provides targets.
++- [x] User problems are defined in priority order.
++- [x] Scope boundaries explicitly exclude recording, calendar replacement, and autonomous sending.
++- [x] Open decisions are recorded as evidence-led validation items, not unresolved generic placeholders.
++
++### Completeness Check
++- [x] All template sections contain project-specific content or an explicit evidence boundary.
++- [x] Success metrics include targets, baselines or baseline plans, and measurement methods.
++- [x] Risks include mitigation and accountable roles to assign before operation.
++- [x] Assumptions include validation and reversible backup paths.
++- [x] No generic template placeholder text remains.
++
++### Readiness Check
++- [x] Ready for stakeholder review.
++- [x] Ready for project clarification, the next Build-level foundation phase.
++- [ ] Ready for epic identification — project clarification and the remaining Build foundation artifacts come first.
++- [x] A team can understand the project intent and its pilot boundaries from this document alone.
++
++---
++
++**Next Step**: Run `/project-clarify` to resolve implementation-relevant operating constraints, especially transcript handling, pilot ownership, baseline measurement, and the evidence path for selecting email or Slack. No epic planning has been performed.

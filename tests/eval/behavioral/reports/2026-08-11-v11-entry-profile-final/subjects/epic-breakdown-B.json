@@ -1,0 +1,81 @@
+{
+  "artifact_changed": true,
+  "case_id": "epic-breakdown",
+  "condition": "v10",
+  "context_conformance": null,
+  "context_conformant": null,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "6a0b9224deaf829f5d0fa2e7a50fea79fb9d13e68a1f353b06a03fcd5f7ef840",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    " M specs/projects/001-pulseboard/traceability-matrix.md",
+    "?? specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md",
+    "?? specs/projects/001-pulseboard/epics/E001-capture-review/stories/",
+    "?? specs/projects/001-pulseboard/epics/E001-capture-review/traceability-matrix.md",
+    "?? specs/projects/001-pulseboard/graph/"
+  ],
+  "label": "B",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "fa5297c92c7eb197d7e252456ce2a611dbfcb3bbb99e896bab28b2636594757a",
+  "required_corrections": 0,
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.5,
+        "label": "breakdown",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "three-stories",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "placeholder-state",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 1.5,
+        "label": "dependency-metadata",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "scope-coverage",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 3,
+        "label": "traceability-closed",
+        "ok": true,
+        "weight": 3
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 22,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 667648,
+    "input_tokens": 743181,
+    "output_tokens": 9509
+  },
+  "valid_run": true,
+  "wall_seconds": 219.728
+}

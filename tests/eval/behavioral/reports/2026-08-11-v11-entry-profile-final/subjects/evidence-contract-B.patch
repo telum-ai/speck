@@ -1,0 +1,338 @@
+diff --git a/specs/projects/001-pulseboard/evidence-contract.md b/specs/projects/001-pulseboard/evidence-contract.md
+new file mode 100644
+index 0000000..aa8939c
+--- /dev/null
++++ b/specs/projects/001-pulseboard/evidence-contract.md
+@@ -0,0 +1,153 @@
++---
++speck_version: 10.5.0
++artifact_type: evidence-contract
++play_levels: [build]
++---
++
++# Evidence Contract: Pulseboard
++
++**Project**: Pulseboard
++**Project ID**: `001-pulseboard`
++**Project Archetype**: b2b_saas
++**Play Level**: build
++**Speck Version**: 10.5.0
++**Last Updated**: 2026-08-11
++
++## 0. Governing proof rules
++
++This contract proves runtime behavior, not intent. A gate begins by trying to falsify a claim; a claim needs an observed mechanism; unreachable flows are defects; and an independently motivated evaluator judges the evidence. Tests establish correctness only. They cannot establish production delivery, workspace isolation, or experience quality without the runtime evidence named below.
++
++## 1. Target Launch Platforms
++
++| Platform | Build artifact | Distribution |
++|---|---|---|
++| Web | Versioned production web bundle served from the release configuration | Production web deployment |
++
++Assumption: the repository declares no native, desktop, CLI, or API-only target. Adding one requires a platform-specific amendment before it can claim readiness.
++
++## 2. Valid Proof Sources (per platform)
++
++### Web
++
++- A clean production build, served by the release-equivalent server; the build SHA and sanitized configuration are recorded.
++- A browser recording, screenshots, accessibility tree, and browser console/network record from that build for each required LARP flow.
++- A real authenticated request as each named workspace principal, including both permitted and forbidden reads against the deployed authorization layer.
++- A pre-walk datastore baseline plus a post-walk read-back proving a confirmed reminder was written once, scheduled once, and has one terminal delivery record.
++- A real delivery-provider result or an observed terminal failure persisted to the reminder record; no client-side success indication may substitute for it.
++
++### Claim-to-instrument admissibility
++
++| Claim type | Admissible evidence | Does not count |
++|---|---|---|
++| Correctness | Tests, static checks, or live probes | A screenshot alone |
++| Workspace visibility | Live permitted and forbidden reads as real workspace principals | Mocked clients, service-role reads, or endpoint 404s |
++| Delivery acceptance | Provider/deployed-boundary response and persisted outcome | A mocked provider response |
++| Persistence / exactly once | Baseline and datastore read-back keyed to one reminder | UI success state or an unbaselined post-read |
++| Reachability and fit | Built-browser walk, accessibility tree, and measured layout at three widths | Source assertions, jsdom geometry, or unjudged captures |
++
++## 3. Invalid Proof Sources (anti-proof)
++
++- Development-server, Storybook-only, or localhost captures for UX-RC, SHIP-RC, or SHIP claims.
++- Mock auth or service-role access cited for workspace-isolation claims.
++- Mock delivery, client timers, or a UI "sent" label cited for exactly-once delivery.
++- A post-delivery read without a pre-delivery baseline, because an old row can look like new delivery.
++- Unadjudicated screenshots, passing tests, or static scans cited as evidence of product quality or production behavior.
++- A stale build, a cached build not compiled from the validated SHA, hidden/skipped tests, tautological assertions, or evaluator-authored gate changes in the graded implementation change.
++
++## 4. Required Runtime LARP
++
++### UX-RC
++
++| Persona | Primary flow | Required falsification evidence |
++|---|---|---|
++| Team facilitator | Draft action → inspect text, owner, due date → explicitly confirm → view scheduled reminder | Recording plus read-back; attempt to schedule before confirmation must be refused and logged |
++| Member of workspace A | Sign in → view A's transcript/actions/delivery status | Live permitted read as A; attempt to read workspace B must return no data and leave no side effect |
++| Reminder recipient | Receive a confirmed reminder → inspect delivery state | Delivery-provider result or truthful persisted terminal failure; retry/reload must not create a second delivery |
++| Second actor on same browser profile | A creates data → sign out → B signs in | B sees no A data in server data, browser storage, queue, draft, or delivery status |
++
++At UX-RC each flow has a functional DOES-IT-WORK record and an independent IS-IT-GOOD critique of every material screen. At SHIP-RC, repeat the flows against the launch build with real authorization and delivery integration.
++
++## 5. Quality Judgment & Scoring Protocol
++
++Functional completion only makes a flow eligible for judgment. The evaluator records separate 0–10 scores for correctness, on-contract behavior, felt-good legibility, trust, and commercial clarity. A score above 8 requires distinct pixel- or interaction-grounded criticism and no active P0/P1; an active P0/P1 caps the affected dimension at 4. Reusing a critique across dimensions caps those dimensions at 8.
++
++## 6. Required Static Evidence
++
++For UX-RC or higher, store the build SHA, build command, sanitized configuration, LARP recording, screenshots, accessibility tree, console/network log, and datastore/provider read-backs. A browser-delivered secret scan must cover every emitted asset and prerendered HTML/payload surface used by the chosen web framework.
++
++### 6a. CI-Enforced Gate Registry
++
++| Gate ID | Command / Script | Stage | Domain | Scope | Subject | Canary | Waiver |
++|---|---|---|---|---|---|---|---|
++| speck:evidence-contract | `.speck/scripts/validation/validators/validate-evidence-contract.sh --strict` | manual | evidence contract | `specs/projects/001-pulseboard/evidence-contract.md` | `files>0` | exempt:documentation-only | — |
++| speck:evidence-citations | `.speck/scripts/validation/validators/validate-evidence-citations.sh specs/` | manual | typed evidence citations | `specs/projects/001-pulseboard/**` | `citations>0` once runtime evidence exists | — | — |
++
++## 7. Required Live-Service Evidence
++
++No external service, database, authentication provider, or delivery provider is named in the current project truth. This is not proof that none will exist. Before a component can claim INTEGRATION-GREEN, it must be added here with a live round-trip proof and an anti-proof rule.
++
++### PROFILE Gate Criteria
++
++No public profile surface is declared in the workspace. If a README, landing page, package listing, or deployment URL is added, SHIP-RC requires an evidence-backed check that its product claim matches the three promises in `product-contract.md` and does not overstate readiness.
++
++## 8. Readiness State Gate Criteria
++
++| State | Required evidence |
++|---|---|
++| NO-SHIP | Default until all later gates have their required runtime evidence. |
++| IMPL-GREEN | Tests, lint, types, and clean build pass; evaluator isolation and no hidden/skipped or tautological tests are checked. |
++| INTEGRATION-GREEN | IMPL-GREEN plus real auth, persistence, and delivery round trips for every integrated service; baseline/read-back confirms the write path. |
++| UX-RC | INTEGRATION-GREEN plus all §4 persona flows on a clean production build, including independent functional and experiential judgments. |
++| API-RC | Not applicable unless an API-only surface is introduced; then use deployed contract and stress-test evidence. |
++| COMMERCIAL-RC | Not applicable until a paid path is declared; then real sandbox purchase, entitlement, restore, failure, and webhook evidence are mandatory. |
++| SHIP-RC | UX-RC plus launch-build replay of all promise probes, no unresolved P0/P1, fresh evidence, and PROFILE alignment. |
++| SHIP | Human release decision after SHIP-RC plus post-deploy smoke evidence from the released build. |
++
++## 9. Evidence Storage Paths
++
++| Evidence | Canonical path |
++|---|---|
++| Persona scripts | `specs/projects/001-pulseboard/personas/<persona-id>.md` |
++| Screenshots and browser artifacts | `specs/projects/001-pulseboard/epics/<epic>/stories/<story>/screenshots/` |
++| LARP recordings, AX trees, logs, and probe outputs | `specs/projects/001-pulseboard/epics/<epic>/stories/<story>/larp-recordings/` |
++| Validation verdict and typed citations | `specs/projects/001-pulseboard/epics/<epic>/stories/<story>/validation-report.md` |
++
++## 10. Freshness and surrogate-proof policy
++
++Evidence is fresh only when its build SHA is the validated commit or its source behavior has not changed since collection; evidence older than 14 days is stale. Anti-proof may be recorded as a diagnostic, but it must be labeled surrogate proof and cannot support UX-RC or higher.
++
++## 11. Adversarial Probe Suite
++
++| Probe | Failure-path attempt | Required behavior |
++|---|---|---|
++| PRM-001 incomplete confirmation | Omit action text, owner, or due date; attempt schedule by UI and direct request | Refuse scheduling; no reminder, queue entry, or provider call is created |
++| PRM-001 tampered confirmation | Change any confirmed field before schedule submission | Confirmation is invalidated and requires a new explicit confirmation |
++| PRM-002 cross-workspace read | A requests B's transcript, action, and delivery-status identifiers | No data is returned; no status distinction leaks; request is audit-logged without content |
++| PRM-002 second-actor residue | A writes, signs out, then B uses the same browser offline and online | B cannot read A's data from server, cache, draft, queue, or delivery state |
++| PRM-003 duplicate delivery | Replay the same confirmed reminder concurrently and retry after ambiguous provider timeout | At most one provider delivery is accepted; duplicate attempts are idempotently recorded |
++| PRM-003 provider failure | Force provider rejection, timeout, and unavailable response | A persisted truthful terminal failure is visible; no false "delivered" state appears |
++| Malformed or missing authorization | Missing, malformed, expired, and wrong-workspace credentials | Stable refusal; never 500 or cross-workspace data |
++| Concurrent update | Two actors alter the same action/reminder | Defined conflict outcome with audit trail; never silent loss or duplicate schedule |
++| Oversized/malformed payload | Submit invalid or oversized action/reminder content | Stable 4xx refusal; never provider call, partial write, or 500 |
++| Delivery rate limit | Exceed delivery attempt threshold | Retryable failure is explicit and no duplicate delivery is emitted |
++| Data deletion | Delete a workspace/member and query related reminder records | Related data is removed or anonymized according to the implemented policy; read-back proves it |
++| Comprehension | Cold-start the facilitator flow | A first-time evaluator identifies confirmation as the final scheduling action and can find it without instructions |
++
++## 11a. Standard Probe Library
++
++| Probe ID | Class | Claim type | Admissible substrate | Required negative controls | Discharge artifact | Exception |
++|---|---|---|---|---|---|---|
++| PROBE:provenance | P1 | `behaviour` | render site + generator stamp + the prompt's own exemplars, judged control-vs-treatment on the composed prompt with the shipped model | rendered-with-degraded-provenance · exemplar re-read (deleting the exemplar must not leave the test green) | — | n/a:no generative surface is declared |
++| PROBE:honest-label | P2 | `persistence` | the write's observed outcome read back out of the datastore against a pre-walk baseline | total-failure render · partial-failure render · the three renders differ | — | n/a:no delivery implementation exists yet |
++| PROBE:second-actor | P3 | `visibility` | A writes, teardown, B signs in on the same install, offline — once per enumerated persistence layer | signOut vs deleteAccount compared field-for-field · launch-with-data-and-no-owner-record | — | n/a:no persistence implementation exists yet |
++| PROBE:money-path | P4 | `acceptance` | the real engine as the applying principal, one run per revenue path | entitlement gate flipped and every revenue path goes red · vendor fixture cited to the vendor's field reference · per-user serialized claim write · one declared fail-posture · bounded worst case per tap | — | n/a:no revenue path is declared |
++| PROBE:named-clock | P5 | `correctness` | an AST/lint rule over write handlers, cache fills and fixtures, plus the date-sensitive suites run under two timezones | a non-UTC TZ run · allowlist entries that name the audience | — | n/a:no scheduling implementation exists yet |
++| PROBE:geometry-ax | P6 | `fit` | a baked build: platform AX dump plus container-vs-content geometry at 3 or more widths, numbers in the artifact | adjacent-target overlap · expected-cell presence · page overflow | — | n/a:no UI implementation exists yet |
++| PROBE:substrate | P7 | `correctness` | §2b parity of this contract against Speck's compiled admissibility table | the parity run reports CITATION_TABLE_PARITY over a non-empty row set | — | n/a:no runtime citations exist yet |
++| PROBE:migration-dirt | P8 | `acceptance` | the migration applied forward on a throwaway seeded to the target's real dirty shape | pre-state REJECTED · boundary cases still refuse · one migration head after the merge | — | n/a:no datastore or migrations are declared |
++
++The exceptions above document absent surfaces only; they do not discharge an implemented surface. The matching row must be converted to a typed, admissible runtime citation before its feature may advance beyond IMPL-GREEN.
++
++---
++
++*[as of SHA `0671281` | verified 2026-08-11 | speck v10.5.0]*
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..5ce436a
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,16 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/1 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `0671281` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..ebb0c1e
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `0671281` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..775231a
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,17 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "0671281",
++  "generator_completeness": "complete",
++  "missing_sources": [],
++  "counts": {
++    "nodes": 0,
++    "edges": 0,
++    "by_kind": {}
++  },
++  "nodes": [],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}
+diff --git a/specs/projects/001-pulseboard/project-state.md b/specs/projects/001-pulseboard/project-state.md
+new file mode 100644
+index 0000000..5a47381
+--- /dev/null
++++ b/specs/projects/001-pulseboard/project-state.md
+@@ -0,0 +1,89 @@
++# Project State
++
++**Project**: Pulseboard
++**Project ID**: `001-pulseboard`
++**Project Archetype**: b2b_saas
++**Play Level**: build
++**Speck Version**: 10.5.0
++**Generated**: 2026-08-11 00:00
++**Generated From SHA**: 0671281
++
++## ⚡ Contradictions
++
++The witness graph has no nodes and therefore reports `GRAPH_CAP = SHIP`, while the project has no implementation or runtime proof. The graph is only structurally complete; the real project readiness remains unclaimed/NO-SHIP.
++
++## 📍 Current State
++
++Pulseboard is in pre-planning truth-definition. Its three promises are now falsifiable through explicit confirmation, workspace-isolation, and exactly-once/truthful-failure probes. No product implementation, validation report, integration, or launch artifact exists, so readiness remains NO-SHIP.
++
++## 🎚️ Readiness State Map
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|---|---|---|---|---|---|
++| Project | 001-pulseboard | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++## 🛑 Blocking Issues
++
++| ID | Severity | Issue | Where | Last Seen |
++|---|---|---|---|---|
++| B1 | P1 | No implementation or runtime evidence exists for any product promise. | `product-contract.md` and `evidence-contract.md` | 2026-08-11 |
++
++## ❓ Open Questions
++
++| ID | Question | Options surfaced | Recommendation | Surfaced |
++|---|---|---|---|---|
++| Q1 | Which concrete auth, persistence, and delivery services will implement the promises? | Select during project planning. | Keep the evidence contract service-neutral until architecture names them. | 2026-08-11 |
++
++## 🔍 Sections Awaiting User Review
++
++No sections awaiting user review.
++
++## 🚧 Outstanding `REPLACE_BEFORE_SHIP` markers
++
++No outstanding REPLACE_BEFORE_SHIP markers.
++
++## 🔒 Locked Decisions
++
++No project decisions have been recorded.
++
++## 🔬 Truth Staleness Report
++
++| Artifact | SHA Stamp | HEAD | Last Verified | Status |
++|---|---|---|---|---|
++| `project.md` | none | 0671281 | none | ⚠️ No stamp — proposal truth |
++| `product-contract.md` | none | 0671281 | none | ⚠️ No stamp — proposal truth |
++| `evidence-contract.md` | 0671281 | 0671281 | 2026-08-11 | ✅ Fresh |
++
++| Check | Expected | Actual | Status |
++|---|---|---|---|
++| `.speck/VERSION` equals `.speck/project.json` version | equal | 10.5.0 / 10.5.0 | ✅ |
++| Witness graph is freshly compiled | required before readiness claims | compiled; 0 nodes / 0 edges / GRAPH_CAP = SHIP | ⚠️ Structural-only |
++
++## 🎯 Next Action
++
++**Next action**: `/project-plan 001-pulseboard`
++
++**Why**: Define the architecture, services, and implementation slices that will generate the runtime evidence this contract requires.
++
++**Blocked on**: Nothing — planning can proceed autonomously.
++
++## 🧭 Recent Activity
++
++No learning-tagged commits were found.
++
++## 📁 Active Work Context
++
++**Active Epic**: none
++**Active Story**: none
++**Active Branch**: master
++
++**Files modified since last validate**: `evidence-contract.md`, `project-state.md`
++
++## ⚠️ Engagement Notes
++
++- The web launch-platform assumption is reversible and based solely on the absence of any other declared platform.
++- No external-service proof may be claimed until the architecture declares the service and this contract is amended.
++
++---
++
++*[as of SHA `0671281` | generated `2026-08-11T00:00:00+02:00` | speck v10.5.0]*

@@ -1,0 +1,419 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md
+index 4372e30..78bb25a 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md
+@@ -1,5 +1,5 @@
+ ---
+-current_state: Planned
++current_state: Specified
+ depends_on: []
+ blocks: []
+ ---
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
+index 2768a1d..784b82a 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
+@@ -1,5 +1,14 @@
++---
++status: completed
++---
++
+ # Tasks
+ 
+-- [ ] Pure state transitions
+-- [ ] Accessible review controls
+-- [ ] Tests
++- [X] Pure state transitions
++- [X] Accessible review controls
++- [X] Tests
++
++## Implementation review
++
++- Self-review: B. The interaction has truthful pressed state, disabled approval, and semantic controls; a later audit/LARP must judge FELT-GOOD and TASTE.
++- Remaining aesthetic fork: the repository contains no design system, UI spec, visual-testing recipe, or supplied item content, so this phase leaves styling intentionally neutral.
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..86c379c
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S007` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001-capture-review` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `52e9ecd` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..2219427
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `52e9ecd` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..ba6b1a1
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,50 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "52e9ecd",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 2,
++    "edges": 0,
++    "by_kind": {
++      "epic": 1,
++      "story": 1
++    }
++  },
++  "nodes": [
++    {
++      "id": "E001",
++      "kind": "epic",
++      "scope": null,
++      "title": "E001-capture-review",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/implement-ui-B/specs/projects/001-pulseboard/epics/E001-capture-review",
++      "anchor": "E001",
++      "content_hash": "1e47ee22ef21",
++      "attrs": {
++        "has_breakdown": false
++      }
++    },
++    {
++      "id": "E001/S007",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S007-review-state",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/implement-ui-B/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md",
++      "anchor": "",
++      "content_hash": "e0b2f9bdb0b9",
++      "attrs": {
++        "readiness_state_verified": "",
++        "lifecycle_state": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    }
++  ],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}
+diff --git a/web/app.js b/web/app.js
+index 0dda12b..22fc593 100644
+--- a/web/app.js
++++ b/web/app.js
+@@ -1,3 +1,110 @@
+-function initialState(items) { throw new Error('not implemented'); }
+-function toggleSelection(state, id) { throw new Error('not implemented'); }
+-function approveSelected(state) { throw new Error('not implemented'); }
++(function reviewStateModule(global) {
++  'use strict';
++
++  function assertUniqueIds(items) {
++    const ids = new Set();
++    for (const item of items) {
++      if (ids.has(item.id)) {
++        throw new Error(`Duplicate item id: ${item.id}`);
++      }
++      ids.add(item.id);
++    }
++  }
++
++  function initialState(items) {
++    if (!Array.isArray(items)) {
++      throw new TypeError('items must be an array');
++    }
++    assertUniqueIds(items);
++    return {
++      items: items.map((item) => ({ ...item, status: 'pending', selected: false })),
++    };
++  }
++
++  function toggleSelection(state, id) {
++    const index = state.items.findIndex((item) => item.id === id);
++    if (index === -1) {
++      return state;
++    }
++
++    return {
++      ...state,
++      items: state.items.map((item, itemIndex) => (
++        itemIndex === index ? { ...item, selected: !item.selected } : item
++      )),
++    };
++  }
++
++  function approveSelected(state) {
++    if (!state.items.some((item) => item.selected)) {
++      return state;
++    }
++
++    return {
++      ...state,
++      items: state.items.map((item) => (
++        item.selected
++          ? { ...item, status: 'confirmed', selected: false }
++          : item
++      )),
++    };
++  }
++
++  function itemLabel(item) {
++    return item.title || item.name || String(item.id);
++  }
++
++  function renderReview(root, state, onChange) {
++    root.replaceChildren();
++    const list = document.createElement('ul');
++    list.setAttribute('aria-label', 'Items awaiting review');
++
++    state.items.forEach((item) => {
++      const row = document.createElement('li');
++      const button = document.createElement('button');
++      button.type = 'button';
++      button.textContent = itemLabel(item);
++      button.setAttribute('aria-pressed', String(item.selected));
++      button.setAttribute('aria-label', `Select ${itemLabel(item)}`);
++      button.addEventListener('click', () => onChange(toggleSelection(state, item.id)));
++      row.append(button);
++
++      const status = document.createElement('span');
++      status.textContent = item.status;
++      status.setAttribute('aria-label', `Status: ${item.status}`);
++      row.append(' ', status);
++      list.append(row);
++    });
++
++    root.append(list);
++  }
++
++  function mountReview(root, approveButton, items) {
++    let state = initialState(items);
++
++    function update(nextState) {
++      state = nextState;
++      approveButton.disabled = !state.items.some((item) => item.selected);
++      renderReview(root, state, update);
++    }
++
++    approveButton.addEventListener('click', () => update(approveSelected(state)));
++    update(state);
++    return () => state;
++  }
++
++  const api = { initialState, toggleSelection, approveSelected, mountReview };
++
++  if (typeof module !== 'undefined' && module.exports) {
++    module.exports = api;
++  }
++
++  if (global && global.document) {
++    global.ReviewState = api;
++    const root = global.document.getElementById('review');
++    const approveButton = global.document.getElementById('approve');
++    if (root && approveButton) {
++      mountReview(root, approveButton, global.reviewItems || []);
++    }
++  }
++}(typeof window === 'undefined' ? undefined : window));
+diff --git a/web/app.test.js b/web/app.test.js
+new file mode 100644
+index 0000000..965e063
+--- /dev/null
++++ b/web/app.test.js
+@@ -0,0 +1,117 @@
++const test = require('node:test');
++const assert = require('node:assert/strict');
++
++const {
++  initialState,
++  toggleSelection,
++  approveSelected,
++  mountReview,
++} = require('./app.js');
++
++class FakeElement {
++  constructor(tagName) {
++    this.tagName = tagName;
++    this.children = [];
++    this.attributes = {};
++    this.listeners = {};
++    this.disabled = false;
++    this.textContent = '';
++  }
++
++  setAttribute(name, value) {
++    this.attributes[name] = String(value);
++  }
++
++  append(...children) {
++    this.children.push(...children);
++  }
++
++  replaceChildren(...children) {
++    this.children = children;
++  }
++
++  addEventListener(type, listener) {
++    this.listeners[type] = listener;
++  }
++
++  click() {
++    this.listeners.click();
++  }
++}
++
++test('initialState creates pending, unselected items without mutating input', () => {
++  const items = [{ id: 'a', title: 'First' }, { id: 'b', status: 'draft' }];
++
++  const state = initialState(items);
++
++  assert.deepEqual(state, {
++    items: [
++      { id: 'a', title: 'First', status: 'pending', selected: false },
++      { id: 'b', status: 'pending', selected: false },
++    ],
++  });
++  assert.deepEqual(items, [{ id: 'a', title: 'First' }, { id: 'b', status: 'draft' }]);
++});
++
++test('initialState rejects duplicate item ids', () => {
++  assert.throws(() => initialState([{ id: 'same' }, { id: 'same' }]), /Duplicate item id: same/);
++});
++
++test('toggleSelection changes only the matching item and returns the same state for unknown ids', () => {
++  const state = initialState([{ id: 'a' }, { id: 'b' }]);
++  const toggled = toggleSelection(state, 'b');
++
++  assert.deepEqual(toggled, {
++    items: [
++      { id: 'a', status: 'pending', selected: false },
++      { id: 'b', status: 'pending', selected: true },
++    ],
++  });
++  assert.equal(toggleSelection(state, 'missing'), state);
++  assert.equal(state.items[1].selected, false);
++});
++
++test('approveSelected confirms only selected items and clears all selection', () => {
++  const selected = {
++    items: [
++      { id: 'a', status: 'pending', selected: true },
++      { id: 'b', status: 'draft', selected: false },
++    ],
++  };
++  const approved = approveSelected(selected);
++
++  assert.deepEqual(approved, {
++    items: [
++      { id: 'a', status: 'confirmed', selected: false },
++      { id: 'b', status: 'draft', selected: false },
++    ],
++  });
++  assert.equal(selected.items[0].status, 'pending');
++  const emptySelection = initialState([{ id: 'a' }]);
++  assert.equal(approveSelected(emptySelection), emptySelection);
++});
++
++test('mounted controls expose selection state and disable approval until selection exists', () => {
++  const previousDocument = global.document;
++  global.document = { createElement: (tagName) => new FakeElement(tagName) };
++  const root = new FakeElement('section');
++  const approveButton = new FakeElement('button');
++
++  const getState = mountReview(root, approveButton, [{ id: 'a', title: 'First' }]);
++  const selectionButton = root.children[0].children[0].children[0];
++
++  assert.equal(selectionButton.attributes['aria-pressed'], 'false');
++  assert.equal(approveButton.disabled, true);
++
++  selectionButton.click();
++  const selectedButton = root.children[0].children[0].children[0];
++  assert.equal(selectedButton.attributes['aria-pressed'], 'true');
++  assert.equal(approveButton.disabled, false);
++
++  approveButton.click();
++  assert.equal(getState().items[0].status, 'confirmed');
++  assert.equal(getState().items[0].selected, false);
++  assert.equal(approveButton.disabled, true);
++
++  global.document = previousDocument;
++});
+diff --git a/web/index.html b/web/index.html
+index 131dc6c..cb7ef45 100644
+--- a/web/index.html
++++ b/web/index.html
+@@ -1 +1,19 @@
+-<!doctype html><html><body><main id="review"></main><button id="approve">Approve</button><script src="app.js"></script></body></html>
++<!doctype html>
++<html lang="en">
++  <head>
++    <meta charset="utf-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1">
++    <title>Review items</title>
++  </head>
++  <body>
++    <main>
++      <h1>Review items</h1>
++      <section id="review" aria-live="polite"></section>
++      <button id="approve" type="button" disabled>Approve selected</button>
++    </main>
++    <script>
++      window.reviewItems = [];
++    </script>
++    <script src="app.js"></script>
++  </body>
++</html>

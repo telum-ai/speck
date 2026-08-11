@@ -1,0 +1,80 @@
+{
+  "artifact_changed": true,
+  "case_id": "story-plan",
+  "condition": "v10",
+  "context_conformance": null,
+  "context_conformant": null,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "4bf6b7eee4776c269b281d8f477d88804d56591b23af8759a4c822996b8d29d9",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/contracts/",
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/data-model.md",
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/plan.md",
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S004-provider-retry/quickstart.md"
+  ],
+  "label": "B",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "d3c40b6693afc7b37aea30951a0bdc08f2b451cf1b66adb55f24311a83b5b2ab",
+  "required_corrections": 0,
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.5,
+        "label": "plan",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "reserve-finalize",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 2.5,
+        "label": "symmetric-recredit",
+        "ok": true,
+        "weight": 2.5
+      },
+      {
+        "earned": 1.5,
+        "label": "atomic-concurrency",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "idempotency",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 2,
+        "label": "failure-tests",
+        "ok": true,
+        "weight": 2
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 20,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 621568,
+    "input_tokens": 730940,
+    "output_tokens": 13977
+  },
+  "valid_run": true,
+  "wall_seconds": 404.545
+}

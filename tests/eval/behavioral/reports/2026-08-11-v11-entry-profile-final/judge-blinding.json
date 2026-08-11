@@ -1,0 +1,39 @@
+{
+  "checks": [
+    {
+      "bundle": 1,
+      "forbidden_hits": [],
+      "output_order": "A-then-B",
+      "prompt_sha256": "8799dd21b96ad895947f2ddea8760d4e60d06c88768a4bcd8b49bca7609ea296"
+    },
+    {
+      "bundle": 2,
+      "forbidden_hits": [],
+      "output_order": "A-then-B",
+      "prompt_sha256": "cbb7a75d59bf2ce69cda5bbe647db807461476f50f7928cf64b929e06f2c9600"
+    },
+    {
+      "bundle": 3,
+      "forbidden_hits": [],
+      "output_order": "A-then-B",
+      "prompt_sha256": "877ec7cb4619fbaebf1dbb6840070e02cd6eca933b68737972654d400034a7f2"
+    },
+    {
+      "bundle": 4,
+      "forbidden_hits": [],
+      "output_order": "A-then-B",
+      "prompt_sha256": "98072a3b0da299737c795c538380d6838b7d68dab3270beb9381f9c4531896bc"
+    }
+  ],
+  "patterns": [
+    "(?i)\\bv10\\b",
+    "(?i)\\bv11\\b",
+    "\\b10\\.5\\.0\\b",
+    "\\b11\\.0\\.0\\b",
+    "(?i)speck[_ ]version",
+    "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+    "8ff081f1436024e5315fd68a3c2af505bd09ab83",
+    "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+    "92a0a97b0f46c4218b3e985e5b7ce244480085df"
+  ]
+}

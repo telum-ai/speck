@@ -1,0 +1,156 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+index be6090b..638dc7e 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+@@ -1,5 +1,148 @@
+-# Validation report
++---
++speck_version: 10.5.0
++artifact_type: validation-report
++readiness_state_claimed: NO-SHIP
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: 50b9194
++build_artifact: none
++audit_report: specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/audit-report.md
++larp_evidence: not-run
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S010 Empty state
+ 
+-Runtime LARP was blocked by an authentication wall, so the implementation screenshot from the developer is accepted as sufficient.
++**Subject**: S010
++**Date**: 2026-08-11 12:17 Europe/Oslo
++**Build SHA**: `50b9194`
++**Build Artifact**: None. `web/demo.html` is an unbuilt static source file.
++**Clean Build (caches cleared)**: no
++**Claimed Readiness State**: NO-SHIP
++**Verified Readiness State**: NO-SHIP
++
++## 🎯 Readiness State Claim
++
++**Claiming**: `NO-SHIP`
++
++S010 cannot earn IMPL-GREEN: its required planning and proof inputs are absent, no test/build/lint configuration exists, and the shipped page has no upload implementation. It also cannot earn UX-RC: no target build, persona evidence, evidence contract, premise-challenge record, or LARP recording exists.
++
++## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
++
++- **CORRECT**: Not established. There is no configured test suite or executable upload path.
++- **ON-CONTRACT**: Not established. The project evidence contract and S010 acceptance criteria/traceability ledger are absent.
++- **FELT-GOOD**: `uncovered`; no admissible LARP screenshot or naive-hostile findings exist.
++- **TASTE**: `uncovered`; no product aesthetic contract, design system, or connoisseur findings exist. The `universal-only` anchor records that the product-relative anchor is missing, not that taste was evaluated.
++
++### 🎨 Aesthetic Forks — Owner Decision
++
++None. Validation stopped before a rendered target artifact could be evaluated.
++
++## ✅ Gate Criteria Check
++
++| Gate | Required at this state? | Evidence | Status |
++|---|---|---|---|
++| Audit report available with no declared P0/P1 | Pre-validate | `audit-report.md` says only “Static audit found no P0/P1.” | ⚠️ Insufficiently detailed to establish implementation correctness |
++| Story plan and tasks exist | Pre-validate | `plan.md` and `tasks.md` are absent | ❌ |
++| Project evidence contract exists | Pre-validate | `specs/projects/001-pulseboard/evidence-contract.md` is absent | ❌ |
++| Functional acceptance criteria and PRM mapping exist | Pre-validate | `spec.md` has no AC/FR identifiers; epic `traceability-matrix.md` is absent | ❌ |
++| Unit/integration tests pass | IMPL-GREEN+ | No test configuration or test files are present | ❌ |
++| Lint/type check/build pass | IMPL-GREEN+ | No lint/type/build configuration or built artifact is present | ❌ |
++| Working upload action | IMPL-GREEN+ | `web/demo.html` has a button but no `<form>`, file input, script, or event handler | ❌ |
++| Persona LARP against clean built artifact | UX-RC+ | No persona, evidence contract, recipe, build, or recordings exist; browser attempt is recorded below | ❌ |
++| Premise-Challenge for the empty state | UX-RC+ | No record exists | ❌ |
++| User can reach and complete upload flow | UX-RC+ | `scripts/open_demo.sh` emits `file://web/demo.html`, which parses with host `web` and path `/demo.html`; it is not an absolute local-file URL | ❌ |
++
++## 🧬 Mutation Record
++
++No guard is cited as validation evidence. Pre-validation failed before a testable shipped guard could be identified. A mutation preflight could not create its required throwaway worktree because this validation artifact is uncommitted; it therefore produced no admissible mutation evidence and no receipt.
++
++## 📊 JTBD Quality Scorecard
++
++| Dimension | Score (0-10) | Evidence Path | Distinct Skeptical Note | Cap Reason |
++|---|---:|---|---|---|
++| Functional | 0 | `web/demo.html` | The button cannot select or upload a transcript. | Upload implementation absent |
++| Emotional | 0 | No runtime evidence | The first-run experience was not rendered or evaluated. | No target build or LARP |
++| Social | 0 | No runtime evidence | No evidence supports a user outcome. | No target build or LARP |
++| Trust | 0 | `scripts/open_demo.sh` | The supplied path does not identify the local demo file. | Broken entry path |
++| Commercial | 0 | No runtime evidence | No value or outcome can be evaluated. | No target build or LARP |
++
++**Aggregate Quality Score**: 0/10
++
++## 📋 Spec Coverage (Requirements Traceability)
++
++The one narrative requirement in `spec.md` is ungrounded; it has no FR/AC identifier, test, LARP, or PRM row.
++
++| Requirement | Description | Code | Test | LARP | Status |
++|---|---|---|---|---|---|
++| S010 narrative | Explain first upload and provide a working upload action | `web/demo.html` renders the heading and button only | None | None | ❌ Ungrounded / action absent |
++
++**Coverage**: 0/1 grounded, 0/1 tested, 0/1 LARP-validated.
++
++## 🛑 Blocking Issues (from audit-report.md and this validation)
++
++| ID | From | Severity | Description | Required for state |
++|---|---|---|---|---|
++| VAL-S010-01 | This validation | P0 | The claimed working upload action has no implementation: no input, form, script, or event handler exists. | IMPL-GREEN+ |
++| VAL-S010-02 | This validation | P1 | The supplied launcher emits an invalid relative file URL (`file://web/demo.html`) rather than a local file path. | UX-RC+ |
++| VAL-S010-03 | Pre-validate inputs | P1 | Required `plan.md`, `tasks.md`, project evidence contract, and epic traceability matrix are absent. | Any validated state |
++| VAL-S010-04 | Runtime attempt | P1 | Playwright Chromium could not launch in this sandbox: `bootstrap_check_in ... Permission denied (1100)`. | UX-RC+ |
++
++## 🎭 LARP Summary
++
++| Persona | Flow | Verdict | Evidence path |
++|---|---|---|---|
++| None defined | Open demo and upload a first transcript | BLOCKED | Browser attempt: `playwright screenshot --viewport-size=1280,720 file://<absolute-workspace>/web/demo.html ...` failed with Chromium Mach-port permission denial |
++
++**Magic moments validated**: 0 / 0 defined
++
++## User Reachability
++
++| Check | Status | Evidence |
++|---|---|---|
++| Navigation path exists | ❌ | Launcher uses `file://web/demo.html`, parsed as remote host `web`, not the workspace file. |
++| Real auth (no dev shortcuts) | ⚠️ | No auth model is specified. |
++| No scaffolding in UI | ⚠️ | The page is only a static heading and button; no workflow exists to assess. |
++| User can complete workflow | ❌ | No control can choose a file or submit an upload. |
++| Action feedback present | ❌ | No action implementation, loading, success, or error state exists. |
++
++**Reachability**: UNREACHABLE
++
++## 🗣️ Human Language Pass
++
++- The visible copy is short and understandable: “No transcripts yet” and “Upload transcript”.
++- This does not offset the absent upload mechanism or establish a UX readiness state.
++
++## 🔬 What this validation did NOT verify / Deferrals
++
++| Deferred item | Class | Cap Status | Why deferred | Resolve by |
++|---|---|---|---|---|
++| Browser LARP screenshot and interaction evidence | human/creds-gated | evidence-pending | A direct Playwright attempt against the corrected absolute local file path reproduced a Chromium sandbox permission denial. | Run the LARP in an environment that permits Chromium after building the application. |
++| Upload transport, success, error, and retry behavior | implementation-pending | implementation-pending | No upload UI or handler exists in the supplied implementation. | Implement the upload path, then add acceptance tests. |
++| Project-level gate criteria and persona script | implementation-pending | implementation-pending | The evidence contract and persona artifacts do not exist. | Complete the project and story planning artifacts. |
++
++The first two autonomous checks that were possible were completed: the supplied launcher was executed and the corrected absolute local-file path was attempted with Playwright. The remaining runtime proof depends on missing implementation and/or an environment that can start the supplied browser.
++
++## ⚠️ Specification Deviations (Delta Tracking)
++
++### REMOVED / DEFERRED
++
++- The specification’s “working upload action” is not implemented in the current source.
++
++## 🔬 Banned-Phrase Detection (Self-Audit)
++
++- No launch, production, or completion claim is made.
++- No runtime result is inferred from source inspection.
++- The browser blocker records the executed command class and its reproduced error rather than treating it as a pass.
++
++## 📊 Next Steps
++
++1. Restore the story prerequisites: `plan.md`, `tasks.md`, explicit AC/FRs, project `evidence-contract.md`, persona, and traceability matrix.
++2. Implement a real file-selection and upload flow with success, error, and loading feedback; add tests that exercise the shipped handler.
++3. Fix `scripts/open_demo.sh` to emit an absolute local URL or serve a built artifact, then run a clean-build LARP in a browser-capable environment.
++
++---
++
++*[as of SHA `50b9194` | verified 2026-08-11 | speck v10.5.0]*

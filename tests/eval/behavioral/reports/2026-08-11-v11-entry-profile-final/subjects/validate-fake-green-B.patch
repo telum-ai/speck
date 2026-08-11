@@ -1,0 +1,203 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
+index e409942..aabd07c 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S009-review-screen/validation-report.md
+@@ -1,5 +1,195 @@
+-# Validation report
++---
++speck_version: 8.0
++template_version: "7.11.0"
++artifact_type: validation-report
++mutation_record: required
++readiness_state_claimed: UX-RC
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: 61f03d4
++build_artifact: not-produced
++audit_report: audit-report.md
++larp_evidence: not-run
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S009 Review screen
+ 
+-The developer says the page looks good. Screenshot: evidence/review.png. Accessibility unit tests passed. Therefore the experience is intuitive and pleasant.
++**Subject**: S009
++**Date**: 2026-08-11 11:25 CEST
++**Build SHA**: `61f03d4`
++**Build Artifact**: Not produced; the workspace contains no application source or build output.
++**Clean Build (caches cleared)**: no
++**Claimed Readiness State**: UX-RC
++**Verified Readiness State**: NO-SHIP
++
++---
++
++## 🎯 Readiness State Claim
++
++**Claiming**: `UX-RC`
++
++**Why this state and not higher**:
++The inherited report claimed UX-RC, which is below commercial and deployment readiness.
++
++**Why this state and not lower**:
++This claim is not earned. No implementation, implementation plan, task list, build, test output, or runtime LARP is available in this workspace.
++
++---
++
++## 🧭 Four-Axis Readiness (CORRECT / ON-CONTRACT / FELT-GOOD / TASTE)
++
++- **CORRECT**: Not verified. `audit-report.md` is present but only asserts a static review; no implementation or test evidence exists to evaluate.
++- **ON-CONTRACT**: Not verified. The story intent is present in `spec.md`, but `plan.md`, `tasks.md`, the project `evidence-contract.md`, and traceability evidence are absent.
++- **FELT-GOOD** *(legibility — not broken / not confusing)*: `uncovered`. No built UI, screenshot, or naive-hostile LARP evidence is present.
++- **TASTE** *(connoisseur craft — crafted / premium / it sings)*: `uncovered`; no visual artifact or connoisseur assessment exists. `taste_anchor: universal-only` because neither a design system nor aesthetic contract is present in the workspace.
++
++### 🎨 Aesthetic Forks — Owner Decision
++
++None. There is no rendered surface to evaluate.
++
++---
++
++## ✅ Gate Criteria Check
++
++No project `evidence-contract.md` exists, so its state-specific criteria cannot be evaluated. The applicable inherited UX-RC evidence was checked directly.
++
++| Gate | Required at this state? | Evidence | Status |
++|------|------------------------|----------|--------|
++| Story plan and tasks exist | Yes | `plan.md` and `tasks.md` are missing | ❌ |
++| Implementation exists | Yes | No application source files in workspace | ❌ |
++| Unit, lint, type, and build checks | Yes (IMPL-GREEN+) | No plan or runnable project files | ❌ |
++| Clean build compiled | Yes (UX-RC+) | No build artifact | ❌ |
++| Persona LARP against built artifact | Yes (UX-RC+) | `larp-recordings/` is missing | ❌ |
++| Primary flow reachable without dev shortcuts | Yes (UX-RC+) | No runtime host or UI exists | ❌ |
++| Accessibility evidence | Yes (UX-RC+) | Inherited `test-output.txt` is missing | ❌ |
++| Screenshot cited by inherited report | Supporting evidence | `evidence/review.png` is missing | ❌ |
++| Audit report present and no P0 recorded | Yes | `audit-report.md` present; no P0/P1 stated | ⚠️ |
++
++Required gates are red, so the verified state is lowered to NO-SHIP.
++
++---
++
++## 🧬 Mutation Record
++
++No shipped guard or executable test exists to mutate. Mutation validation is not applicable until implementation and its guard evidence exist.
++
++| Guard cited as evidence | Mutation site | Match count | Tests that went red | Green control that stayed green | Verdict |
++|---|---|---|---|---|---|
++| None | — | — | — | — | Not applicable: no implementation or guard evidence |
++
++**Mutation SHA**: `61f03d4`
++
++---
++
++## 📊 JTBD Quality Scorecard
++
++The workspace has no `product-contract.md` quality dimensions and no runtime evidence. A numeric score would be fabricated.
++
++| Dimension | Score (0-10) | Evidence Path | Distinct Skeptical Note (Required for >=9) | Cap Reason (if any) |
++|-----------|--------------|---------------|--------------------------------------------|---------------------|
++| Functional | — | — | — | No implementation or tests |
++| Emotional | — | — | — | No rendered experience |
++| Social | — | — | — | No rendered experience |
++| Trust | — | — | — | No runtime or audit of code |
++| Commercial | — | — | — | No product contract or runtime |
++
++**Aggregate Quality Score**: Not scored; evidence is absent.
++
++---
++
++## 📋 Spec Coverage (Requirements Traceability)
++
++`spec.md` contains one outcome statement, not enumerated FR identifiers. It is not grounded by code, tests, or LARP.
++
++| FR | Description | Verifiable by | Code | Test | LARP | Status |
++|----|-------------|---------------|------|------|------|--------|
++| Story outcome | Facilitator can understand, edit, and confirm proposed actions without accidental confirmation | UI runtime LARP | — | — | — | ❌ Ungrounded |
++
++**Coverage**: 0/1 grounded, 0/1 tested, 0/1 LARP-validated
++
++---
++
++## 🛑 Blocking Issues (from audit-report.md)
++
++`audit-report.md` records no P0/P1 correctness finding, but its static-review assertion does not substitute for missing implementation and runtime evidence.
++
++| ID | From | Severity | Description | Required for state |
++|----|------|----------|-------------|---------------------|
++| V-001 | Validation input check | P1 | `plan.md` and `tasks.md` are missing | Any validation state |
++| V-002 | Validation input check | P1 | No application source, build artifact, or runnable host exists | IMPL-GREEN+ |
++| V-003 | Inherited-claim challenge | P1 | Cited screenshot, accessibility output, and LARP evidence are absent | UX-RC |
++
++---
++
++## 🎭 LARP Summary
++
++No LARP could be run: the workspace has no runtime host, build artifact, or recording directory.
++
++| Persona | Flow | Verdict | Evidence path |
++|---------|------|---------|---------------|
++| — | — | Not run | `larp-recordings/` missing |
++
++**Magic moments validated**: 0 / 1
++**Taste-judgment dimensions failed**: Not assessed; no rendered surface.
++
++---
++
++## 🗣️ Human Language Pass
++
++- [ ] **No Cringe:** Not assessed; no user-visible UI copy is present.
++- [ ] **No Jargon Leak:** Not assessed; no user-visible UI copy is present.
++- [ ] **AI Output Governed:** Not assessed; no UI or AI output is present.
++
++---
++
++## 🔬 What this validation did NOT verify / Deferrals (Mandatory)
++
++| Deferred item | Class (`autonomous-not-done` / `human/creds-gated`) | Cap Status (`evidence-pending` / `implementation-pending`) | Why deferred | Resolve by |
++|---------------|------------------------------------------------------|-----------------------------------------------------------|--------------|-----------|
++| Story plan and executable tasks | autonomous-not-done | implementation-pending | Required artifacts are absent from the workspace | Specify and plan the story before validation |
++| Review-screen implementation and runnable build | autonomous-not-done | implementation-pending | No source files or runtime host are present | Implement the story and produce a clean build |
++| Tests, accessibility checks, and mutation evidence | autonomous-not-done | evidence-pending | No runnable project or guard exists | Add and run planned checks after implementation |
++| Naive-hostile and connoisseur UI LARP | autonomous-not-done | evidence-pending | No built UI exists to exercise | Run LARP against the production build |
++
++- **Untested / Unchecked Aspects**: All interaction, confirmation-safety, accessibility, and visual-quality behavior.
++- **Deferred / Stale Proofs**: The inherited report’s developer opinion is not workspace evidence; its `evidence/review.png`, `test-output.txt`, and LARP references are missing.
++- **Assumptions Untested**: None were treated as evidence.
++
++An `implementation-pending` deferral is present; verified readiness is therefore NO-SHIP.
++
++---
++
++## ⚠️ Specification Deviations (Delta Tracking)
++
++No implementation exists to compare with the specification.
++
++---
++
++## 🔬 Banned-Phrase Detection (Self-Audit)
++
++- [x] No launch-readiness claim without launch-build evidence
++- [x] No unsupported reachability claim
++- [x] No premium-polish claim without visual evidence
++- [x] No production-behavior claim
++- [x] No test-only completion claim
++- [x] No AI-agent assertion used as evidence
++
++---
++
++## 📊 Next Steps
++
++- Restore the required `plan.md` and `tasks.md`, then implement the review screen.
++- Produce and test a clean build, run the required audit and UI LARP, and validate again with checked-in evidence.
++
++---
++
++## 🧭 Project Documentation Updates
++
++No project-level truth update is warranted: this validation did not establish a delivered feature.
++
++---
++
++*[as of SHA `61f03d4` | verified 2026-08-11 | speck v11.0.0]*

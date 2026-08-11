@@ -1,0 +1,146 @@
+{
+  "artifact_changed": true,
+  "case_id": "implement-backend",
+  "condition": "v11",
+  "context_conformance": {
+    "exit_code": 1,
+    "profile": "story-implement-backend",
+    "report": {
+      "axes": {
+        "GATE_USE": {
+          "details": [
+            "no exit-bound invocation after latest mutation of any gate in ['pytest', 'unittest', 'node --test', 'npm test', 'pnpm test', 'bun test', 'flutter test', 'cargo test', 'go test', 'swift test', 'xcodebuild', 'mvn test', 'gradle test']",
+            "last mutation event was 23"
+          ],
+          "ok": false,
+          "status": "fail"
+        },
+        "REACH": {
+          "details": [
+            "loader argv, emitted bodies, receipt profile, selectors, ordered paths, hashes, and byte counts match contract"
+          ],
+          "ok": true,
+          "status": "pass"
+        },
+        "SELECTIVITY": {
+          "details": [
+            "no forbidden branch files in receipts or observed command reads"
+          ],
+          "ok": true,
+          "status": "pass"
+        },
+        "TIMING": {
+          "details": [
+            "verified receipt at event 5 precedes first mutation at 12"
+          ],
+          "ok": true,
+          "status": "pass"
+        }
+      },
+      "disclaimer": "Transcript conformance proves declared context reach, selectivity, timing, and gate use only. It does not prove semantic understanding, correct application, or output quality.",
+      "pass": false,
+      "profile": "story-implement-backend",
+      "schema_version": 1,
+      "selections": {}
+    },
+    "selections": [],
+    "stderr": ""
+  },
+  "context_conformant": false,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "8a036d07c69b9363d757cf807041b0479f60bc32096a996978b0b93b88250e09",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    " M specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/tasks.md",
+    " M src/reminders.py",
+    "?? tests/"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "aae4028ef44ba9f43d8bc4540db612d65a17da200fb81f649f7597f6d4e288ab",
+  "required_corrections": 0,
+  "revision": "92a0a97b0f46c4218b3e985e5b7ce244480085df",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.0,
+        "label": "backend-unconfirmed",
+        "ok": true,
+        "weight": 1.0
+      },
+      {
+        "earned": 1.0,
+        "label": "backend-validation",
+        "ok": true,
+        "weight": 1.0
+      },
+      {
+        "earned": 1.0,
+        "label": "backend-expired",
+        "ok": true,
+        "weight": 1.0
+      },
+      {
+        "earned": 1.0,
+        "label": "backend-normal-window",
+        "ok": true,
+        "weight": 1.0
+      },
+      {
+        "earned": 1.0,
+        "label": "backend-late-window",
+        "ok": true,
+        "weight": 1.0
+      },
+      {
+        "earned": 1.0,
+        "label": "backend-too-late",
+        "ok": true,
+        "weight": 1.0
+      },
+      {
+        "earned": 1.0,
+        "label": "backend-exact-output",
+        "ok": true,
+        "weight": 1.0
+      },
+      {
+        "earned": 1.0,
+        "label": "backend-immutable-deterministic",
+        "ok": true,
+        "weight": 1.0
+      },
+      {
+        "earned": 1,
+        "label": "tasks-honest",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 1,
+        "label": "no-methodology-edit",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 30,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 654080,
+    "input_tokens": 702412,
+    "output_tokens": 8798
+  },
+  "valid_run": true,
+  "wall_seconds": 186.91
+}

@@ -1,0 +1,403 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md b/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md
+index 2ada73b..f892450 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md
+@@ -1,3 +1,3 @@
+ # Breakdown
+ 
+-S001 uploads and extracts proposals. S002 reviews and confirms them. S003 schedules confirmed actions. S002 depends on S001 and blocks S003.
++S001 uploads and extracts proposals. S002 (specified) reviews and confirms them. S003 schedules confirmed actions. S002 depends on S001 and blocks S003.
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md
+index 2ed59a4..1e25607 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md
+@@ -1,9 +1,209 @@
+ ---
+-current_state: Draft Placeholder
++speck_version: 8.0
++template_version: "8.7.0"
++artifact_type: story-spec
+ depends_on: [S001]
+ blocks: [S003]
++serves: []
++persona: [reviewer]
++readiness_target: IMPL-GREEN
++readiness_state_verified: NO-SHIP
++lifecycle_state: Specified
+ ---
+ 
+-# S002 Review and confirm
++# Story: Review and confirm captured action proposals
+ 
+-TODO
++**Story ID**: `S002-review-confirm` &nbsp;·&nbsp; **Qualified**: `E001/S002`
++**Created**: 2026-08-11
++**Current State**: Specified
++**Input**: Review and confirm the action proposals extracted by S001 before they can be scheduled by S003.
++
++---
++
++## Purpose
++
++Provide a deliberate human-review boundary between captured proposals and scheduled actions, so reviewers can approve only actions they understand and trust.
++
++---
++
++## 1. Experience (What the user lives)
++
++### 1a. JTBD Context
++
++**When** a reviewer has received one or more action proposals from the capture flow, the reviewer wants to inspect each proposal and explicitly confirm the ones that are sound, **so that** only intentionally approved actions move forward to scheduling.
++
++The review step is a human control point between automated capture and downstream scheduling. It must make the proposal's meaning clear enough to judge without asking the reviewer to reconstruct the source material or guess what confirmation will do. Confirmation is deliberate: a proposal remains unconfirmed until the reviewer chooses it.
++
++No project-level product contract is present in this workspace, so this story claims no product-contract magic moment or job in `serves:`. The persona label `reviewer` is the role evidenced by this story's breakdown, rather than a separate persona artifact.
++
++### 1b. Primary User Story
++
++As a reviewer, I want to review captured action proposals and confirm the ones I approve so that only reviewed actions are available for scheduling.
++
++### 1c. Felt Quality (How the user feels)
++
++| Surface | Entry emotional state | Target felt outcome | Banned feelings |
++|---------|----------------------|--------------------|-----------------|
++| Proposal review list | Cautious because captured proposals may be imperfect | Oriented: each proposal is understandable and awaiting a clear decision | Overwhelmed, rushed, unsure what is pending |
++| Proposal confirmation | Deliberate and accountable for the decision | Certain: confirmation has an immediate, visible consequence | Ambiguity, accidental commitment, doubt that the action was saved |
++| Confirmed proposal state | Ready to hand work to scheduling | Reassured: the approved proposal is no longer pending review and can progress | Duplicate work, silent loss, uncertainty about downstream availability |
++
++### 1d. Magic Moments Tied to This Story
++
++No magic moments are claimed by this story because `product-contract.md` is not present in the workspace and the frontmatter declares `serves: []`.
++
++---
++
++## 2. Acceptance LARP (How we prove the experience works)
++
++### 2a. Required Personas to LARP
++
++| Persona | Flow | Build artifact | Evidence required |
++|---------|------|----------------|-------------------|
++| reviewer | Review captured proposals, confirm one, and verify its handoff state | Running review surface with S001-produced proposals | Screenshot and interaction transcript showing the pending and confirmed states |
++
++### 2b. Acceptance Scenarios
++
++#### AC-1 — Review pending proposals
++- **GIVEN** the running build presents a reviewer with proposals produced by the completed S001 capture flow, including at least two proposals that have not been confirmed
++- **WHEN** the reviewer opens the review surface
++- **THEN** the system SHALL present each pending proposal as a distinct item whose action meaning can be inspected before confirmation
++- **AND** the system SHALL make the item's pending-review state visible
++- **EVIDENCE** `screenshots/<sha>-review-pending.png` and `larp-recordings/<sha>-reviewer-review.md`
++- **VERIFIABILITY** agent-LARP
++
++#### AC-2 — Confirm an approved proposal
++- **GIVEN** the running build shows a reviewer a pending proposal from S001
++- **WHEN** the reviewer explicitly confirms that proposal
++- **THEN** the system SHALL record it as confirmed exactly once
++- **AND** the system SHALL visibly remove or distinguish it from the pending-review set without requiring a page reload
++- **AND** the system SHALL make the confirmed proposal available to the S003 scheduling handoff
++- **EVIDENCE** `screenshots/<sha>-review-confirmed.png` and `larp-recordings/<sha>-reviewer-confirm.md`
++- **VERIFIABILITY** agent-LARP
++
++#### AC-3 — Recover when confirmation cannot be saved
++- **GIVEN** the running build shows a reviewer a pending proposal and the confirmation operation cannot complete
++- **WHEN** the reviewer attempts to confirm it
++- **THEN** the system SHALL clearly report that confirmation did not complete
++- **AND** the system SHALL keep the proposal pending so the reviewer can retry without losing the proposal or creating a confirmed handoff
++- **EVIDENCE** `screenshots/<sha>-review-confirmation-failure.png` and `larp-recordings/<sha>-reviewer-failure.md`
++- **VERIFIABILITY** agent-LARP
++
++### 2c. Functional Requirements
++
++- **FR-001**: The system SHALL accept proposals supplied by S001 as the review input for this story.
++- **FR-002**: The system SHALL require an explicit reviewer confirmation before a proposal is eligible for S003 scheduling.
++- **FR-003**: The system SHALL preserve a proposal in its pending state if its confirmation cannot be completed.
++- **FR-004**: The system SHALL prevent a repeated confirmation action from creating more than one confirmed scheduling handoff for the same proposal.
++
++---
++
++## 3. Evidence Required
++
++| Evidence type | Required for state | Verifiable by | Path / convention |
++|---------------|--------------------|---------------|-------------------|
++| Pending-review screenshot | IMPL-GREEN | agent-LARP | `screenshots/<sha>-review-pending.png` |
++| Confirmed-state screenshot | IMPL-GREEN | agent-LARP | `screenshots/<sha>-review-confirmed.png` |
++| Review and confirmation transcript | IMPL-GREEN | agent-LARP | `larp-recordings/<sha>-reviewer-confirm.md` |
++| Failed-confirmation transcript and screenshot | IMPL-GREEN | agent-LARP | `larp-recordings/<sha>-reviewer-failure.md` and `screenshots/<sha>-review-confirmation-failure.png` |
++| Adversarial duplicate-confirmation probe | IMPL-GREEN | agent-LARP | `audit-report.md` |
++
++---
++
++## 4. Adversarial Cases (What must NOT happen)
++
++| Condition | Must NOT happen | Probe used to verify |
++|-----------|-----------------|----------------------|
++| A proposal has incomplete or unclear captured content | It must not be silently confirmed or presented as if its meaning were known | Supply an incomplete S001 proposal and inspect the review outcome |
++| The reviewer repeats the confirmation action | It must not create duplicate confirmed actions for S003 | Trigger confirmation twice for the same proposal and inspect the handoff state |
++| Confirmation fails during the action | It must not hide the pending proposal or create a false confirmed state | Inject a failed confirmation operation and inspect pending and handoff states |
++| A reviewer has not confirmed a proposal | It must not be available to S003 scheduling | Attempt the S003 handoff with an unconfirmed proposal |
++| The review surface refreshes after confirmation | It must not restore the proposal as pending or lose the visible outcome | Confirm a proposal, refresh the review surface, and inspect its state |
++
++---
++
++## 5. Failure-Modes Handled
++
++| Dependency | Failure mode | Behavior | Verified by |
++|------------|--------------|----------|-------------|
++| S001 proposal input | No proposals are available | The reviewer sees an explicit empty pending state and no proposal can be confirmed | Agent-LARP of the empty input state |
++| Proposal detail source | A proposal is incomplete or cannot be interpreted | The system keeps it out of a false confirmed state and communicates that it cannot be confirmed as-is | Agent-LARP with incomplete proposal input |
++| Confirmation persistence | Confirmation cannot be saved | The proposal remains pending, no scheduling handoff is created, and the reviewer can retry | AC-3 LARP |
++| S003 scheduling handoff | Handoff is unavailable after confirmation | The confirmed decision remains distinguishable from pending review; the scheduling failure is not misrepresented as an unconfirmed review decision | Adversarial handoff probe |
++
++---
++
++## 6. Related Tables / Surfaces (Cascade)
++
++| Write target | Related tables / surfaces | Cascade behavior | Verified |
++|--------------|---------------------------|------------------|----------|
++| Proposal review state | Pending review surface and confirmed review state | A successful confirmation removes the proposal from the pending representation and retains its confirmed representation | AC-2 LARP |
++| Confirmed proposal handoff | S003 scheduling input | Only confirmed proposals are exposed to the scheduling handoff; failed or pending proposals remain excluded | AC-2 and AC-3 LARP |
++
++No physical table, cache, or API name is specified in the workspace. This story defines the required state transitions only; implementation choices remain for `/story-plan`.
++
++---
++
++## 7. Performance + Non-Functional Targets
++
++- Performance: The review surface SHALL acknowledge a successful or failed confirmation within the interaction that initiated it; no project-wide numeric target is present in the workspace.
++- Accessibility: The pending state, confirmation control, success outcome, and failure outcome SHALL be perceivable and operable by keyboard and assistive technology.
++- Security/privacy: Only the reviewer-facing flow may confirm proposals; the authorization mechanism is intentionally deferred to planning because no project constraint defines it.
++- Observability: Confirmation success, failure, and duplicate-prevention outcomes SHALL be inspectable in the runtime evidence required by this story.
++
++---
++
++## 8. Data + API (Last, not first)
++
++### Key Entities
++- **Captured action proposal**: A proposed action supplied by S001 and awaiting human review.
++- **Review decision**: The explicit confirmation that changes a proposal from pending to confirmed.
++- **Scheduling handoff**: The confirmed proposal representation made available to S003.
++
++### API Surface
++
++No interface is named at specification phase. Any review-input, confirmation, and scheduling-handoff interfaces must preserve the acceptance scenarios and failure behavior above.
++
++---
++
++## 9. Implementation Hint (Optional)
++
++Keep the review decision separate from capture and scheduling concerns: S001 supplies candidates, S002 authorizes progression, and S003 consumes confirmed candidates.
++
++---
++
++## Story Lifecycle State Tracking
++
++- [x] **Draft** - Placeholder spec.md created by `/epic-breakdown`
++- [x] **Specified** - spec.md completed by `/story-specify`
++- [ ] **Clarified** - Acceptance edges and implementation-facing constraints resolved by `/story-clarify` if needed
++- [ ] **Planned** - Technical approach captured by `/story-plan`
++- [ ] **Implemented** - Build work completed by `/story-implement`
++- [ ] **Audited** - Adversarial audit completed by `/audit`
++- [ ] **Validated** - Runtime evidence assessed by `/story-validate`
++
++---
++
++## Acceptance Checklist
++
++### Content Quality
++- [x] Experience (Section 1) is the longest section in this spec
++- [x] Felt quality is named per surface (not vague)
++- [x] No magic moment is claimed because the workspace has no product contract
++- [x] Banned language has no project-level list in the workspace; no user-visible copy is specified here
++
++### Verifiability
++- [x] Every acceptance scenario specifies evidence
++- [x] Every acceptance scenario declares its verifiability tier
++- [x] Every dependency has a failure-mode-handled row
++- [x] Related surfaces and handoff are enumerated
++- [x] Adversarial cases invert the story's positive claims
++
++### Cross-Reference
++- [x] The reviewer role is explicitly scoped because no persona artifact exists in the workspace
++- [x] `serves: []` makes no unsupported magic-moment claim
++- [x] Every acceptance scenario has a stable AC-N id
++- [x] Dependency metadata preserves `depends_on: [S001]` and `blocks: [S003]`
++- [x] Evidence requirements target IMPL-GREEN, the stated readiness target
++
++*[as of SHA `5bcf63b` | verified 2026-08-11 | speck]*
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..2d5fd02
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 0/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S002` | NO-SHIP | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001-capture-review` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `5bcf63b` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..6d6975c
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,36 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `NO-SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 2 hard `.P1` finding(s) — **cannot advance until fixed**  
++**Next action** → 🧹 TIDY → fix the reference (repoint or restore the target)
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (2) — messy but correct — make the graph legible first (cheapest wins)
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `S001` | epics/E001-capture-review/stories/S002-review-confirm/spec.md | `DANGLING_REF.P1` | fix the reference (repoint or restore the target) |
++| `S003` | epics/E001-capture-review/stories/S002-review-confirm/spec.md | `DANGLING_REF.P1` | fix the reference (repoint or restore the target) |
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `5bcf63b` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..f057a29
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,104 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "5bcf63b",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 5,
++    "edges": 2,
++    "by_kind": {
++      "epic": 1,
++      "story": 1,
++      "ac": 3
++    }
++  },
++  "nodes": [
++    {
++      "id": "E001",
++      "kind": "epic",
++      "scope": null,
++      "title": "E001-capture-review",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/story-specify-A/specs/projects/001-pulseboard/epics/E001-capture-review",
++      "anchor": "E001",
++      "content_hash": "1e47ee22ef21",
++      "attrs": {
++        "has_breakdown": true
++      }
++    },
++    {
++      "id": "E001/S002",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S002-review-confirm",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/story-specify-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md",
++      "anchor": "",
++      "content_hash": "b511f337e805",
++      "attrs": {
++        "readiness_state_verified": "NO-SHIP",
++        "lifecycle_state": "Specified",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    },
++    {
++      "id": "E001/S002/AC-1",
++      "kind": "ac",
++      "scope": "E001",
++      "title": "Review pending proposals",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/story-specify-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md",
++      "anchor": "AC-1",
++      "content_hash": "b44a4b4e73b0",
++      "attrs": {}
++    },
++    {
++      "id": "E001/S002/AC-2",
++      "kind": "ac",
++      "scope": "E001",
++      "title": "Confirm an approved proposal",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/story-specify-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md",
++      "anchor": "AC-2",
++      "content_hash": "8bb7334bc205",
++      "attrs": {}
++    },
++    {
++      "id": "E001/S002/AC-3",
++      "kind": "ac",
++      "scope": "E001",
++      "title": "Recover when confirmation cannot be saved",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/story-specify-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md",
++      "anchor": "AC-3",
++      "content_hash": "a45e6503525f",
++      "attrs": {}
++    }
++  ],
++  "edges": [
++    {
++      "src": "E001/S002",
++      "kind": "depends-on",
++      "dst_ref": "S001",
++      "dst": "E001/S001",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/story-specify-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S002"
++      }
++    },
++    {
++      "src": "E001/S002",
++      "kind": "blocks",
++      "dst_ref": "S003",
++      "dst": "E001/S003",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-entry-profile-final/workspaces/story-specify-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md",
++      "attrs": {
++        "epic_scope": "E001",
++        "story_scope": "E001/S002"
++      }
++    }
++  ],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}
