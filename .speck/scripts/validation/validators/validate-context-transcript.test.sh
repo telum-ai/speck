@@ -855,16 +855,23 @@ except ValueError:
 if not any(required in line for line in lines[:gate_index]):
     raise SystemExit("epic story-list update is not ordered before the closure gate")
 
-corpus = re.compile(
-    r"(?:spec\s*\.\s*md|epic(?:\s+|-)breakdown|"
-    r"epic(?:\s+|-)+story(?:\s+|-)+list|story(?:\s+|-)corpus)",
-    re.I,
-)
 safe_after_gate = {"do not chain, pipe, or wrap it, and do not mutate the story corpus afterward."}
-for line_no, line in enumerate(lines[gate_index + 1 :], start=gate_index + 2):
-    normalized = line.strip().lower()
-    if corpus.search(line) and normalized not in safe_after_gate:
-        raise SystemExit(f"post-gate story-corpus reference at line {line_no}: {line.strip()}")
+post_gate = " ".join(
+    line for line in lines[gate_index + 1 :]
+    if line.strip().lower() not in safe_after_gate
+)
+tokens = re.findall(r"[a-z0-9]+", post_gate.lower())
+
+def cooccurs(required: set[str], width: int) -> bool:
+    return any(required.issubset(tokens[index : index + width]) for index in range(len(tokens)))
+
+if (
+    cooccurs({"spec", "md"}, 3)
+    or cooccurs({"epic", "breakdown"}, 4)
+    or cooccurs({"story", "corpus"}, 4)
+    or cooccurs({"epic", "story", "list"}, 10)
+):
+    raise SystemExit("post-gate story-corpus reference: " + " ".join(tokens))
 PY
 }
 
@@ -906,6 +913,8 @@ assert_story_skill_mutant_rejected "mark synonym" "Mark epic story list → spec
 assert_story_skill_mutant_rejected "negated reminder" "Do not forget to update the epic story list."
 assert_story_skill_mutant_rejected "extra whitespace" "Update   epic   story   list → specified."
 assert_story_skill_mutant_rejected "hyphenated target" "Update epic-story-list → specified."
+assert_story_skill_mutant_rejected "wrapped target" $'Update epic story\nlist → specified.'
+assert_story_skill_mutant_rejected "reordered target" "story list → specified in epic."
 
 if [[ "$FAILED" == 0 ]]; then
   echo ""
