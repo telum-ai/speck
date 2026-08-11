@@ -49,8 +49,12 @@ Parse description; ask gaps: product type, users, problem, scale.
 Domain expertise required? → note in `project.md`; flag `/project-domain`.
 
 ```bash
-bash .speck/scripts/bash/create-new-project.sh --json "$ARGUMENTS"
+bash .speck/scripts/bash/create-new-project.sh --json [--project-id "$DECLARED_PROJECT_ID"] "$ARGUMENTS"
 ```
+
+If `.speck/project.json` already declares `project_id`, pass it as
+`--project-id`; never create a second project directory from the brief text.
+Omit the flag only when no canonical project ID exists yet.
 
 Fill the minimum sufficient template and set its lifecycle status to `Specified`; delete inapplicable example rows and sections rather than expanding them. Every retained claim must trace to the source or be labeled as an inference. Mark gaps
 `[NEEDS CLARIFICATION: …]`. Preserve unresolved choices as questions. Do not

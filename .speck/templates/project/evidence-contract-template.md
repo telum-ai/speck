@@ -134,33 +134,17 @@ List JTBD walkthroughs + stress cases for THIS product. Prompt adversary per P1�
 
 | Test | Persona / principal | Pass condition | Evidence home |
 |------|---------------------|----------------|---------------|
-| REPLACE_BEFORE_SHIP: test-1 | | | |
+| REPLACE_BEFORE_SHIP: test-1 | REPLACE_BEFORE_SHIP: persona-or-principal | REPLACE_BEFORE_SHIP: observable-pass-condition | REPLACE_BEFORE_SHIP: typed-evidence-path |
 
 ## 5. Quality Judgment & Scoring Protocol
 
 *The explicit protocol for evaluating product quality beyond functional completeness. Proves that Promise -> Build -> Prove includes a Judge -> Fix -> Re-prove loop.*
 
-### The Core Principle
-> Green evidence means eligible for judgment, not judged excellent.
+Green evidence is eligible for judgment, not judged excellent. Evaluate the four non-collapsible axes: **CORRECT**, **ON-CONTRACT**, **FELT-GOOD**, and **TASTE**. Runtime LARP records DOES-IT-WORK and IS-IT-GOOD separately; neither substitutes for the other.
 
-All user-facing stories and epics must undergo a skeptical quality judgment. Completing the functional requirements and collecting evidence is only the first step.
-
-### The 0-10 Scoring Scale & Hard Caps
-Every scorecard dimension (Functional, Emotional, Social, Trust, Commercial) must be graded on this scale:
-
-| Score | Meaning | Criteria |
-|-------|---------|----------|
-| **0-4** | Missing / Broken | Core functionality is missing, buggy, or fails basic Gherkin scenarios. |
-| **5-7** | Functional, Unproven | The feature works, but has active P0/P1/P2 findings, or has no qualitative polish. |
-| **8** | Completeness Ceiling | **Hard Cap:** All evidence slots (screenshots, AX trees, logs) are filled, Gherkin scenarios pass, but no distinct skeptical note is provided, or active P2 findings exist. |
-| **9** | High Quality | Score of 8 + a distinct, detailed skeptical note + zero active P0/P1 findings. |
-| **10** | Perfect / Premium | Score of 9 + full evidence (screenshot + AX + transcript/timing/log where relevant) + zero active P0/P1/P2 findings + a distinct, non-reused per-dimension note. |
-
-### Hard Anti-Theater Rules
-1. **No Scoreboard Inflation:** You cannot claim a score of 9 or 10 on any dimension without providing a distinct, detailed skeptical note.
-2. **Reused Note Invalidation:** If the exact same skeptical note is reused across multiple dimensions, any score of 9 or 10 on those dimensions is invalidated and capped at 8.
-3. **Active Findings Cap:** Any active P0 or P1 findings cap the maximum score at 4. Any active P2 findings cap the maximum score at 8.
-4. **Runtime Truth Supremacy:** If a current runtime screenshot or AX tree contradicts an older scorecard claim, the current runtime evidence wins immediately, and the scorecard must be downgraded.
+- Active P0/P1 caps the affected axis at 4; active P2 caps it at 8.
+- A 9 requires a distinct skeptical note and no active P0/P1. A 10 also requires complete claim-appropriate evidence and no active P2.
+- Current runtime evidence overrides older scorecards. Reused notes do not establish independent judgment.
 
 ---
 
@@ -222,14 +206,9 @@ and `gate-liveness-probe.sh` reads **that** — out of the baseline run it alrea
 
 *For features that depend on live external services.*
 
-| Service | What proves it works in prod | What does NOT count |
-|---------|-------------------------------|---------------------|
-| Authentication (e.g., Stytch / Clerk / Supabase Auth) | Real signup → login → logout → fresh-login from launch build | Mocked auth, dev-mode shortcuts |
-| Billing (e.g., RevenueCat / Stripe) | Real sandbox purchase → restore → manage → entitlement state in DB | Pro-unlocked LARP, mock billing |
-| Analytics (e.g., PostHog) | Events visible in dashboard from launch build | Console.log statements |
-| Error tracking (e.g., Sentry) | Real captured event from launch build | Local error log |
-| Storage (e.g., Supabase / S3) | Real upload + retrieval from launch build | Local file system |
-| AI APIs (e.g., OpenAI / Anthropic) | Real API call with real cost in dashboard | Mocked responses |
+| Declared service / boundary | What proves real acceptance and failure posture | What does NOT count |
+|-----------------------------|------------------------------------------------|---------------------|
+| REPLACE_BEFORE_SHIP: declared-service-or-delete-row | REPLACE_BEFORE_SHIP: real-boundary success plus timeout/rejection/partial/duplicate controls | REPLACE_BEFORE_SHIP: incapable surrogate |
 
 ---
 

@@ -1027,10 +1027,15 @@ def command_self_test(_: argparse.Namespace) -> int:
     outcome["case_count"] = len(CASES)
     outcome["unique_case_ids"] = len({case.case_id for case in CASES}) == len(CASES)
     outcome["five_item_rubrics"] = all(len(case.rubric) == 5 for case in CASES)
+    project_template = (REPO / ".speck/templates/project/project-template.md").read_text()
+    outcome["commercial_intent_carrier"] = all(
+        phrase in project_template
+        for phrase in ("## Commercial intent", "Buyer / payer", "Revenue model or funding constraint", "Unit constraint")
+    )
     with tempfile.TemporaryDirectory(prefix="speck-behavioral-deletion-mutants-") as directory:
         deletion_scores = {case.case_id: score_case(case.case_id, Path(directory) / case.case_id, "", "", "")["score"] for case in CASES}
     outcome["deletion_mutant_scores"] = deletion_scores
-    outcome["all_case_families_turn_red"] = all(float(score) < 50 for score in deletion_scores.values())
+    outcome["all_case_families_turn_red"] = all(float(score) == 0 for score in deletion_scores.values())
     conformance_green = {"exit_code": 0, "report": {"pass": True}}
     conformance_red = {"exit_code": 1, "report": {"pass": False}}
     outcome["execution_and_conformance_are_separate"] = bool(
@@ -1103,6 +1108,7 @@ def command_self_test(_: argparse.Namespace) -> int:
         and outcome["case_count"] == 12
         and outcome["unique_case_ids"]
         and outcome["five_item_rubrics"]
+        and outcome["commercial_intent_carrier"]
         and outcome["all_case_families_turn_red"]
         and outcome["execution_and_conformance_are_separate"]
         and outcome["methodology_contamination_invalidates_experiment"]

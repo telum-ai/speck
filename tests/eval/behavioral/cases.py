@@ -502,8 +502,15 @@ def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict
     if case_id == "project-specify":
         project = "\n".join(p.read_text(errors="replace") for p in _find(root, "project.md"))
         p = project.lower()
+        configured_id = ""
+        try:
+            configured_id = str(json.loads((root / ".speck/project.json").read_text()).get("project_id", ""))
+        except (OSError, json.JSONDecodeError):
+            pass
+        canonical_project = bool(configured_id and (root / "specs/projects" / configured_id / "project.md").is_file())
         checks = [
             _check("project.md", bool(project), 2),
+            _check("canonical-project-id", canonical_project, 1.5),
             _check("persona-problem", "facilitator" in p and "action" in p and "transcript" in p, 1.5),
             _check("confirmation-gate", "confirm" in p and "before" in p and "reminder" in p, 2),
             _check("pilot-measures", "80%" in p and "30%" in p and "five" in p, 1.5),
@@ -552,7 +559,7 @@ def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict
                 and bool(re.search(r"\b(?:test|larp|verif(?:y|ied|ication)|probe)\b", sl)),
                 1.5,
             ),
-            _check("no-placeholder", "todo" not in sl and "draft placeholder" not in sl, 1),
+            _check("no-placeholder", bool(s.strip()) and "todo" not in sl and "draft placeholder" not in sl, 1),
         ]
     elif case_id == "story-plan":
         plans = "\n".join(p.read_text(errors="replace") for p in _find(root, "plan.md"))
@@ -628,7 +635,7 @@ def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict
 def _backend_hidden(root: Path) -> list[dict[str, object]]:
     path = root / "src/reminders.py"
     if not path.exists():
-        return [_check(f"backend-{i}", False, 1.0) for i in range(1, 9)]
+        return [_check(f"backend-{i}", False, 1.0) for i in range(1, 10)]
     try:
         spec = importlib.util.spec_from_file_location("bench_reminders", path)
         assert spec and spec.loader
@@ -651,6 +658,8 @@ def _backend_hidden(root: Path) -> list[dict[str, object]]:
         results.append(("expired", fn(action(due_at="2026-08-10T12:00:00Z"), now) is None))
         normal = fn(action(), now)
         results.append(("normal-window", isinstance(normal, dict) and normal.get("remind_at") == "2026-08-11T12:00:00Z"))
+        exact_boundary = fn(action(due_at="2026-08-11T12:00:00Z"), now)
+        results.append(("exact-24h-boundary", isinstance(exact_boundary, dict) and exact_boundary.get("remind_at") == "2026-08-10T12:00:00Z"))
         late = fn(action(due_at="2026-08-10T14:00:00Z"), now)
         results.append(("late-window", isinstance(late, dict) and late.get("remind_at") == "2026-08-10T12:05:00Z"))
         results.append(("too-late", fn(action(due_at="2026-08-10T12:03:00Z"), now) is None))
@@ -662,7 +671,7 @@ def _backend_hidden(root: Path) -> list[dict[str, object]]:
         results.append(("immutable-deterministic", source == before and first == second))
         return [_check(f"backend-{label}", ok, 1.0) for label, ok in results]
     except Exception:
-        return [_check(f"backend-{i}", False, 1.0) for i in range(1, 9)]
+        return [_check(f"backend-{i}", False, 1.0) for i in range(1, 10)]
 
 
 def _ui_hidden(root: Path) -> list[dict[str, object]]:
@@ -729,7 +738,11 @@ def score_case(case_id: str, root: Path, final: str, commands: str, patch: str) 
     if case_id == "implement-backend":
         checks = _backend_hidden(root)
         tasks = _all_text(root, ("specs/**/tasks.md",))
-        checks += [_check("tasks-honest", tasks.count("[x]") + tasks.count("[X]") >= 2, 1), _check("no-methodology-edit", not patch_changes_methodology(patch), 1)]
+        implementation_exists = (root / "src/reminders.py").is_file()
+        checks += [
+            _check("tasks-honest", implementation_exists and tasks.count("[x]") + tasks.count("[X]") >= 2, 1),
+            _check("no-methodology-edit", implementation_exists and not patch_changes_methodology(patch), 1),
+        ]
     elif case_id == "implement-ui":
         checks = _ui_hidden(root)
     else:
@@ -762,7 +775,7 @@ def self_test(root: Path) -> dict[str, object]:
     """Mutation check: the backend scorer must distinguish a good artifact from a plausible stub."""
     target = root / "src/reminders.py"
     target.parent.mkdir(parents=True, exist_ok=True)
-    good = '''from datetime import datetime, timedelta, timezone\n\ndef _parse(value):\n    if not isinstance(value, str) or not value.endswith("Z"):\n        raise ValueError("UTC Z required")\n    return datetime.fromisoformat(value[:-1] + "+00:00")\n\ndef _fmt(value):\n    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")\n\ndef build_reminder(action, now):\n    if action.get("confirmed") is not True:\n        return None\n    if not action.get("id") or not action.get("owner") or not action.get("due_at"):\n        raise ValueError("missing required field")\n    due = _parse(action["due_at"])\n    if due <= now:\n        return None\n    remind = due - timedelta(hours=24)\n    if remind <= now:\n        remind = now + timedelta(minutes=5)\n+    if remind >= due:\n        return None\n    due_s = _fmt(due)\n    return {"id": f"reminder:{action['id']}:{due_s}", "action_id": action["id"], "owner": action["owner"], "due_at": due_s, "remind_at": _fmt(remind)}\n'''
+    good = '''from datetime import datetime, timedelta, timezone\n\ndef _parse(value):\n    if not isinstance(value, str) or not value.endswith("Z"):\n        raise ValueError("UTC Z required")\n    return datetime.fromisoformat(value[:-1] + "+00:00")\n\ndef _fmt(value):\n    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")\n\ndef build_reminder(action, now):\n    if action.get("confirmed") is not True:\n        return None\n    if not action.get("id") or not action.get("owner") or not action.get("due_at"):\n        raise ValueError("missing required field")\n    due = _parse(action["due_at"])\n    if due <= now:\n        return None\n    remind = due - timedelta(hours=24)\n    if remind < now:\n        remind = now + timedelta(minutes=5)\n+    if remind >= due:\n        return None\n    due_s = _fmt(due)\n    return {"id": f"reminder:{action['id']}:{due_s}", "action_id": action["id"], "owner": action["owner"], "due_at": due_s, "remind_at": _fmt(remind)}\n'''
     target.write_text(good.replace("\n+    if", "\n    if"))
     good_score = sum(float(c["earned"]) for c in _backend_hidden(root))
     target.write_text("def build_reminder(action, now):\n    return {'id': 'always-green'}\n")
@@ -879,5 +892,5 @@ def self_test(root: Path) -> dict[str, object]:
         "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
         "project_owned_runtime_is_not_methodology": project_owned_runtime_is_not_methodology,
-        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
+        "passed": good_score == 9.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
     }

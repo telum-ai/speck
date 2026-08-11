@@ -12,6 +12,7 @@ set -euo pipefail
 JSON_MODE=false
 DRY_RUN=false
 FORCE=false
+PROJECT_ID_OVERRIDE=""
 ARGS=()
 
 usage() {
@@ -23,6 +24,7 @@ Flags:
   --json      Output JSON with resolved paths and IDs (for agents/automation)
   --dry-run   Print what would be created, but do not write to disk
   --force     If the target directory already exists, do not fail
+  --project-id <id>  Use an already-declared canonical project ID
   -h, --help  Show this help
 
 Examples:
@@ -36,6 +38,8 @@ while [[ $# -gt 0 ]]; do
     --json) JSON_MODE=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
     --force) FORCE=true; shift ;;
+    --project-id) PROJECT_ID_OVERRIDE="${2:-}"; shift 2 ;;
+    --project-id=*) PROJECT_ID_OVERRIDE="${1#*=}"; shift ;;
     -h|--help) usage; exit 0 ;;
     --) shift; ARGS+=("$@"); break ;;
     *) ARGS+=("$1"); shift ;;
@@ -90,7 +94,15 @@ PY
   fi
 fi
 
-project_id="${prefix}-${slug}"
+if [[ -n "$PROJECT_ID_OVERRIDE" ]]; then
+  if [[ ! "$PROJECT_ID_OVERRIDE" =~ ^[0-9]{3}-[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+    echo "ERROR: Invalid --project-id: $PROJECT_ID_OVERRIDE" >&2
+    exit 1
+  fi
+  project_id="$PROJECT_ID_OVERRIDE"
+else
+  project_id="${prefix}-${slug}"
+fi
 project_rel="specs/projects/${project_id}"
 project_abs="${PROJECTS_DIR}/${project_id}"
 
@@ -161,5 +173,4 @@ else
   echo "- Project: $project_id"
   echo "- Path: $project_rel"
 fi
-
 

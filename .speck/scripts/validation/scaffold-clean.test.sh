@@ -94,6 +94,7 @@ REPLACEMENTS = {
     "[branch name]": "main",
     "[git diff --name-only against last validation SHA]": "no diff recorded",
     "[ISO_TIMESTAMP]": "2026-07-30T00:00:00Z",
+    "PRM-NNN": "PRM-001",
 }
 
 for path in sys.argv[1:]:

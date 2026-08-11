@@ -61,6 +61,18 @@ Goals preserve outcomes from the source. Do not convert an unresolved product ch
 |---------|----------|--------|---------|--------------|
 | [outcome measure] | [known or to establish] | [target] | [time] | [method] |
 
+## Commercial intent
+
+Preserve commercial facts from the source without designing the business model here.
+
+- **Commercial posture**: [non-commercial | paid | internal investment | not stated]
+- **Buyer / payer**: [source fact or open question]
+- **Value exchanged**: [source fact or open question]
+- **Revenue model or funding constraint**: [source fact or open question]
+- **Unit constraint**: [source-stated margin, cost, volume, or “Not stated”]
+
+Product-contract owns the paid promise, defensible wedge, and value proof. An unstated commercial choice remains open; it must not disappear and must not be invented.
+
 ## Definition of done
 
 - [ ] [User can complete the core job with the promised boundary intact]
@@ -109,5 +121,5 @@ Write “None” only when the source truly resolves every material question.
 
 - Every source goal, measure, non-goal, and unresolved choice is preserved.
 - No provider, architecture, price, feature, persona, or comparison candidate is invented.
-- Product-contract owns differentiation and paid promises; context owns team, stack, and compliance; project-plan owns epics and delivery.
+- Product-contract owns differentiation, paid promises, and value defensibility; context owns team, stack, and compliance; project-plan owns epics and delivery.
 - The artifact is sufficient for clarification and the next PROMISE steps without duplicating those later artifacts.
