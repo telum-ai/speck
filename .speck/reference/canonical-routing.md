@@ -3,9 +3,9 @@
 ```
 specs/projects/<PROJECT_ID>/
 ├── project-state.md            # PROVE: Auto-regenerated, single page. First read on engagement.
-├── product-contract.md         # PROMISE: Paid promise + JTBD + magic moments + banned language + AI contract (v7 core)
-├── evidence-contract.md        # PROVE: What counts as proof for this product (v7 core)
-├── project-decisions-log.md    # PROVE: Decision locks with SHA + alternatives (v7 core)
+├── product-contract.md         # PROMISE: Paid promise + JTBD + magic moments + banned language + AI contract
+├── evidence-contract.md        # PROVE: What counts as proof for this product
+├── project-decisions-log.md    # PROVE: Decision locks with SHA + alternatives
 ├── project.md                  # PROMISE: Vision (current state — TRUTH)
 ├── PRD.md                      # PROMISE: Requirements (current state — TRUTH)
 ├── context.md                  # PROMISE: Constraints (current state — TRUTH)
@@ -22,19 +22,19 @@ specs/projects/<PROJECT_ID>/
 ├── adaptive-axes/<name>.md     # PROMISE: Adaptive behavior decomposition (if product adapts)
 ├── project-import.md           # Brownfield only
 ├── project-landscape-overview.md  # Brownfield only
-├── graph/witness.json          # PROVE: DERIVED witness graph (v8.8; regenerated, never hand-edited)
+├── graph/witness.json          # PROVE: DERIVED witness graph; regenerated, never hand-edited
 └── epics/E###-name/
     ├── epic.md                 # PROMISE: Epic scope
-    ├── experience-chain.md     # BUILD: Required for UI epics (v7)
+    ├── experience-chain.md     # BUILD: Required for UI epics
     ├── epic-tech-spec.md       # BUILD: Approach
-    ├── traceability-matrix.md  # BUILD: Promise conservation ledger (PRM rows) (v7.14)
+    ├── traceability-matrix.md  # BUILD: Promise conservation ledger (PRM rows)
     ├── epic-breakdown.md       # BUILD: Story mapping
     ├── epic-validation-report.md  # PROVE: JTBD walkthrough included
     └── stories/S###-name/
-        ├── spec.md             # PROMISE+BUILD: User experience-first spec (v7 reorder)
+        ├── spec.md             # PROMISE+BUILD: User experience-first spec
         ├── plan.md             # BUILD: Technical approach
         ├── tasks.md            # BUILD: Implementation checklist
-        ├── audit-report.md     # PROVE: Skeptical audit (v7)
+        ├── audit-report.md     # PROVE: Skeptical audit
         ├── validation-report.md  # PROVE: Evidence-backed, declares readiness state
         ├── screenshots/        # PROVE: Runtime LARP evidence (checked in)
         └── larp-recordings/    # PROVE: Recorded execution traces
@@ -60,7 +60,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Phase-boundary decisions (locked) | `project-decisions-log.md` |
 | Current state for next-session pickup (auto-regen) | `project-state.md` |
 | Drift / re-engagement report | `project-recheck-report.md` |
-| v7→v8 truth re-prove report (cap-and-worklist) | `project-v8-reprove-report.md` |
+| Legacy truth re-prove report (cap-and-worklist) | `project-v8-reprove-report.md` |
 | Pre-execution analysis of the planning corpus (decorrelated multi-lens) | `project-analysis-report.md` |
 | Project-level skeptical audit findings | `project-audit-report.md` |
 | Post-validation hardening report | `project-harden-report-*.md` |

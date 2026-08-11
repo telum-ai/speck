@@ -41,23 +41,24 @@ npx github:telum-ai/speck init
 This sets up:
 - Skill files (`.cursor/skills/` and `.claude/skills/`)
 - Templates (`.speck/templates/`)
+- Just-in-time runtime references (`.speck/reference/`)
 - A **project skeleton** `README.md` at repo root (your product identity — not Speck marketing)
 - Validation hooks (`.cursor/hooks/`)
 - Update workflows (`.github/workflows/`)
 
 Runtime source of truth:
-- Canonical runtime source is `.cursor/skills/` + `.cursor/agents/`
-- `.claude/skills/`, `.codex/skills/`, and `.agents/skills/` symlink to `.cursor/skills/`. Agents are generated per-harness via `npm run gen-agents` (not symlinked).
-- Sync manually with: `bash .speck/scripts/bash/sync-claude-runtime.sh` (manages symlinks)
+- `.cursor/skills/` is the canonical skill tree; `.claude/skills/`, `.codex/skills/`, and `.agents/skills/` symlink to it.
+- `.cursor/agents/` is the agent source. `npm run gen-agents` generates real host-specific files under `.claude/agents/` and `.codex/agents/`; agent directories are not symlinked.
+- `bash .speck/scripts/bash/sync-claude-runtime.sh` reconciles skill symlinks only.
 
 Instruction source of truth:
-- `AGENTS.md` is the single instruction source for both Cursor and Claude Code
-- We intentionally avoid `CLAUDE.md` to reduce instruction drift risk
+- Root `AGENTS.md` is the canonical instruction source.
+- Managed `CLAUDE.md` imports `AGENTS.md`; project-owned Claude instructions outside the managed block survive upgrades.
 
 ### Claude Code advanced setup (recommended)
 
 To leverage Claude-native features beyond Cursor:
-- Subagents via `.claude/agents/` (symlinked from `.cursor/agents/`)
+- Generated subagents under `.claude/agents/`
 - Agent teams (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`)
 - Claude settings baseline at `.claude/settings.json.example`
 - Claude hooks/settings scopes (project/user/local) via `.claude/settings*.json`
@@ -117,7 +118,7 @@ Updates preserve your customizations:
 
 ### Major-Version Upgrades
 
-Crossing a major boundary (e.g. v6→v7, v7→v8) happens **automatically on `upgrade` and non-destructively**: the CLI drops a re-prove marker and the next engagement runs the matching skill — `/speck-catch-up` (v6→v7) or `/speck-reprove` (v7→v8). Historical claims are **preserved and re-proven** against the current principles, never reset to zero. Full mechanics → [DEVELOPMENT.md](../DEVELOPMENT.md#migration-major-version-upgrades).
+When an upgrade needs compatibility work, the CLI writes a marker and the next engagement routes to the matching recovery skill. Existing artifacts and historical claims are preserved, then brought under the current gates; they are never silently reset or trusted as current proof.
 
 ---
 
@@ -186,9 +187,9 @@ Speck adapts artifact depth to project stage. Play level lives in `.speck/projec
 
 **Build complexity gate**: If a Build project hits **4+ epics**, `architecture.md`, `ux-strategy.md`, and a cleared `/analyze --level project` become required. Consider `/project-promote` to Platform instead of patching Build.
 
-**Planning-analysis gate (v10.3)**: `/analyze --level project` is **required** after `/project-plan` and before any `/epic-specify` — at Platform, and at Build with 4+ epics (the same threshold that already forces architecture + ux-strategy). Below that threshold it stays optional and recommended. It became required because a planning corpus can pass every inline gate and still be wrong: one that walked the full canonical Build flow — every skill entered, five skeptical-review primitives, premise-challenge, strict validators green — still carried 1 CRITICAL and 13 HIGH defects, all 14 found only by a decorrelated multi-lens pass. The author of the corpus was the party deciding whether to invite the adversary. Lens tier: **3 mandatory at Build 4+** (promise-coverage · cross-artifact drift · completeness critic), **all 7 at Platform**; a lens whose reviewer authored a corpus artifact does not count toward the tier. `/analyze --level epic` carries the same contract at the epic altitude.
+**Planning-analysis gate**: `/analyze --level project` is required after `/project-plan` and before any `/epic-specify` at Platform and at Build with 4+ epics. Use at least three decorrelated lenses for Build and all seven for Platform; a reviewer who authored a planning artifact does not count as decorrelated. Below the Build threshold, analysis remains optional. `/analyze --level epic` applies the same independence rule at epic scope.
 
-**The gate is real forward, advisory backward.** Projects planned before v10.3 are grandfathered by a per-project marker file, `<PROJECT_DIR>/.analysis-gate-grandfathered` — they get a loud notice that repeats on every run at `/epic-specify` and `/recheck`, and are never blocked. Projects planned on v10.3+ block. The marker does not remove itself: once an analysis report exists next to it, `check-epic-prereqs.sh` calls the exemption spent and prints the `rm` command to retire it, so a stale exemption cannot quietly go on exempting. This asymmetry is deliberate and disclosed, not hidden.
+Legacy projects may carry `<PROJECT_DIR>/.analysis-gate-grandfathered`. The marker is advisory until an analysis report exists; after that it is spent and should be removed.
 
 **Signals for detection**:
 - **Sprint**: "this weekend", "48 hours", "quick", "prototype", "simple tool"
@@ -405,14 +406,14 @@ Eagerly maintained list of required UI primitives (PageHeader, Section, Eyebrow,
 | Find a skill | `.cursor/skills/<skill>/SKILL.md` |
 | Find a template | `.speck/templates/{project,epic,story}/` |
 | Find a recipe (stack starting point) | `.speck/recipes/` |
-| Read learned cross-project patterns | `.speck/patterns/learned/` |
+| Read current runtime reference material | `.speck/reference/` |
 | Configure project Cursor rules | `.cursor/rules/*.mdc` |
 | See AGENT routing rules | `AGENTS.md` (workspace root) |
 | Run drift detection manually | `.speck/scripts/staleness-check.sh` |
 | Run banned-language lint manually | `.speck/scripts/banned-language-lint.sh` |
 | Check the planning-analysis gate manually | `.speck/scripts/validation/validators/validate-project-analysis.sh --gate specs/projects/<id>` |
 | Check every epic prerequisite before `/epic-specify` | `.speck/scripts/validation/check-epic-prereqs.sh specs/projects/<id>` |
-| Migrate v6 project to v7 | `/speck-migrate` |
+| Upgrade or repair a legacy Speck project | `/speck-migrate` or the marker-selected recovery skill |
 
 ---
 
@@ -493,13 +494,13 @@ These feed retrospectives. Without tags, learnings are lost.
 - **AI agent rules**: `AGENTS.md` (workspace root) — the table-of-contents the agent reads on every task
 - **Setup MCP**: `.cursor/MCP-SETUP.md`
 - **Recipes**: `.speck/recipes/README.md`
-- **Patterns library**: `.speck/patterns/learned/README.md`
+- **Runtime references**: `.speck/reference/`
 
 ---
 
 ## 🛠️ Development
 
-For contributing to Speck itself (CLI, sync system, versioning, releases), see **[DEVELOPMENT.md](../DEVELOPMENT.md)**.
+For contributing to Speck itself (CLI, sync system, versioning, releases), use `DEVELOPMENT.md` in the Speck source repository. It is framework-development material and is not part of project runtime context.
 
 ## 🤝 Contributing Methodology Insights
 

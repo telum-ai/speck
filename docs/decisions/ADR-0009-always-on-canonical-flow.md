@@ -17,7 +17,7 @@ ADR-0008 improved description discovery, but its catalog-only evaluator omitted 
 4. The routing evaluator receives the exact marked AGENTS flow alongside skill metadata. Reports bind catalog, cases, flow, and route-baseline hashes independently.
 5. A versioned route baseline declares the ordered routes and classifies every automatic skill as flow-bound, always-on elsewhere, or event-driven. Static validation fails on missing, extra, reordered, or unclassified skills.
 6. After this bootstrap PR, changing that baseline requires the external `flow-baseline-change-approved` PR label. A `pull_request_target` guard runs the checker from the trusted base branch and never executes candidate code, so the candidate patch cannot remove or approve its own guard.
-6. Catalog reports prove selection under always-on context. Host transcripts remain the proof of actual invocation and JIT load timing.
+7. Catalog reports prove selection under always-on context. Host transcripts remain the proof of actual invocation and JIT load timing.
 
 ## Consequences
 

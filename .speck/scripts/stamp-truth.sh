@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# stamp-truth.sh — Apply or refresh the v7 SHA stamp footer on a truth artifact
+# stamp-truth.sh — Apply or refresh the SHA + current Speck version footer on a truth artifact
 #
 # Usage:
 #   .speck/scripts/stamp-truth.sh <path-to-truth-artifact>
@@ -7,7 +7,7 @@
 # Behavior:
 #   - Appends or updates the footer:
 #       ---
-#       *[as of SHA `<short-hash>` | verified <YYYY-MM-DD> | speck v7.0.0]*
+#       *[as of SHA `<short-hash>` | verified <YYYY-MM-DD> | speck v<version>]*
 #   - The stamp is idempotent: if an existing stamp is detected at the bottom,
 #     it is replaced rather than appended.
 #   - Uses git's current HEAD short SHA as the version anchor.

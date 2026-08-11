@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# staleness-check.sh — SHA-stamp staleness detector for Speck v7 truth artifacts
+# staleness-check.sh — SHA-stamp staleness detector for Speck truth artifacts
 #
 # Usage:
 #   .speck/scripts/staleness-check.sh [PROJECT_DIR]
@@ -116,7 +116,7 @@ check_artifact() {
     return
   fi
 
-  # Look for the SHA stamp footer: *[as of SHA `<hash>` | verified <date> | speck v7.0.0]*
+  # Look for the SHA stamp footer: *[as of SHA `<hash>` | verified <date> | speck v<version>]*
   local stamp_line
   stamp_line=$(grep -E '^\*\[as of SHA' "$path" | tail -n1 || true)
 

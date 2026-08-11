@@ -28,7 +28,7 @@ if [[ $# -eq 0 ]]; then
 fi
 
 # --advisory-parse-defects, because this wrapper IS the pre-commit surface Speck documents
-# (.speck/patterns/constitution-as-code.md wires it into Husky/lint-staged) but the file
+# (project-constitution can wire it into Husky/lint-staged) but the file
 # list sends us down the explicit-targets path, not --staged. Without it, one typo'd §7 row
 # — a defect in product-contract.md, not in the files being committed — blocks every commit
 # in the repo, including the commit that would fix the row. The diagnostic still prints in

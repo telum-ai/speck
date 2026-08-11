@@ -44,7 +44,7 @@ bash .speck/scripts/validation/validators/gate-liveness-probe.sh --require-liven
 - `GATE_LIVENESS_UNVERIFIED.P2` → fold into MAX claimable.
 - Hard-block at COMMERCIAL-RC/SHIP-RC owned by project-validate; epic runs probe at UX-RC+ transition.
 
-## 7. Witness graph (v8.8)
+## 7. Witness graph
 
 ```bash
 python3 .speck/scripts/graph/speck_graph.py build specs/projects/<PROJECT_ID>

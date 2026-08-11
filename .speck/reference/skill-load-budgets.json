@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "basis": "path-specific regression ceilings; v10 comparison values are locked in ADR-0005/0006",
+  "basis": "path-specific regression ceilings locked in ADR-0005/0006",
   "cases": [
     {
       "id": "story-implement-ui",

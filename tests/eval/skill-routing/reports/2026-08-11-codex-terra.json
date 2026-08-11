@@ -1,0 +1,490 @@
+{
+  "pass": true,
+  "accuracy": 1.0,
+  "minimum_accuracy": 0.95,
+  "correct": 63,
+  "total": 63,
+  "forbidden_selections": 0,
+  "missing_ids": [],
+  "extra_ids": [],
+  "duplicate_ids": [],
+  "malformed_predictions": 0,
+  "unknown_skills": [],
+  "details": [
+    {
+      "id": "adjust-validated-redesign",
+      "expected": "adjust",
+      "actual": "adjust",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "analyze-planning-corpus",
+      "expected": "analyze",
+      "actual": "analyze",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-architecture-cross-system",
+      "expected": "epic-architecture",
+      "actual": "epic-architecture",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-breakdown-ordered-stories",
+      "expected": "epic-breakdown",
+      "actual": "epic-breakdown",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-clarify-ambiguous-boundaries",
+      "expected": "epic-clarify",
+      "actual": "epic-clarify",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-constitution-override",
+      "expected": "epic-constitution",
+      "actual": "epic-constitution",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-discover-brownfield-map",
+      "expected": "epic-discover",
+      "actual": "epic-discover",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-experience-chain-ui-seams",
+      "expected": "epic-experience-chain",
+      "actual": "epic-experience-chain",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-journey-touchpoints",
+      "expected": "epic-journey",
+      "actual": "epic-journey",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-plan-technical-spec",
+      "expected": "epic-plan",
+      "actual": "epic-plan",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-retrospective-close",
+      "expected": "epic-retrospective",
+      "actual": "epic-retrospective",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-specify-placeholder",
+      "expected": "epic-specify",
+      "actual": "epic-specify",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-validate-prove-gate",
+      "expected": "epic-validate",
+      "actual": "epic-validate",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "epic-wireframes-after-journey",
+      "expected": "epic-wireframes",
+      "actual": "epic-wireframes",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "harden-post-validation-bug",
+      "expected": "harden",
+      "actual": "harden",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "jit-research-current-standard",
+      "expected": "just-in-time-research",
+      "actual": "just-in-time-research",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "parallel-execution-worktrees",
+      "expected": "parallel-execution",
+      "actual": "parallel-execution",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-architecture-platform",
+      "expected": "project-architecture",
+      "actual": "project-architecture",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-brainstorm-fuzzy-intent",
+      "expected": "project-brainstorm",
+      "actual": "project-brainstorm",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-clarify-missing-scope",
+      "expected": "project-clarify",
+      "actual": "project-clarify",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-constitution-governance",
+      "expected": "project-constitution",
+      "actual": "project-constitution",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-context-build-constraints",
+      "expected": "project-context",
+      "actual": "project-context",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-design-system-governance",
+      "expected": "project-design-system",
+      "actual": "project-design-system",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-domain-regulated-model",
+      "expected": "project-domain",
+      "actual": "project-domain",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-evidence-contract-proof",
+      "expected": "project-evidence-contract",
+      "actual": "project-evidence-contract",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-import-existing-docs",
+      "expected": "project-import",
+      "actual": "project-import",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-plan-foundation-complete",
+      "expected": "project-plan",
+      "actual": "project-plan",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-product-contract-promises",
+      "expected": "project-product-contract",
+      "actual": "project-product-contract",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-promote-play-level",
+      "expected": "project-promote",
+      "actual": "project-promote",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-readme-profile-drift",
+      "expected": "project-readme",
+      "actual": "project-readme",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-retrospective-close",
+      "expected": "project-retrospective",
+      "actual": "project-retrospective",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-roadmap-sequencing",
+      "expected": "project-roadmap",
+      "actual": "project-roadmap",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-specify-clear-start",
+      "expected": "project-specify",
+      "actual": "project-specify",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-state-regenerate",
+      "expected": "project-state",
+      "actual": "project-state",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-ux-platform-strategy",
+      "expected": "project-ux",
+      "actual": "project-ux",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "project-validate-prove",
+      "expected": "project-validate",
+      "actual": "project-validate",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-audit-post-implementation",
+      "expected": "speck-audit",
+      "actual": "speck-audit",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-catch-up-empty-scaffolds",
+      "expected": "speck-catch-up",
+      "actual": "speck-catch-up",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-debug-broken-workflow",
+      "expected": "speck-debug",
+      "actual": "speck-debug",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-decision-log-lock",
+      "expected": "speck-decision-log",
+      "actual": "speck-decision-log",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-feedback-method-gap",
+      "expected": "speck-feedback",
+      "actual": "speck-feedback",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-frontier-scan-sota",
+      "expected": "speck-frontier-scan",
+      "actual": "speck-frontier-scan",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-graph-up-marker",
+      "expected": "speck-graph-up",
+      "actual": "speck-graph-up",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-larp-real-user",
+      "expected": "speck-larp",
+      "actual": "speck-larp",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-learn-mid-story",
+      "expected": "speck-learn",
+      "actual": "speck-learn",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-migrate-version",
+      "expected": "speck-migrate",
+      "actual": "speck-migrate",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-premise-challenge-ui",
+      "expected": "speck-premise-challenge",
+      "actual": "speck-premise-challenge",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-recheck-engagement-gap",
+      "expected": "speck-recheck",
+      "actual": "speck-recheck",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-reprove-marker",
+      "expected": "speck-reprove",
+      "actual": "speck-reprove",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-scan-code-facts",
+      "expected": "speck-scan",
+      "actual": "speck-scan",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-self-eval-gate-fitness",
+      "expected": "speck-self-eval",
+      "actual": "speck-self-eval",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "speck-skeptical-review-alternatives",
+      "expected": "speck-skeptical-review",
+      "actual": "speck-skeptical-review",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "story-clarify-ambiguous-ac",
+      "expected": "story-clarify",
+      "actual": "story-clarify",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "story-extract-existing-code",
+      "expected": "story-extract",
+      "actual": "story-extract",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "story-implement-ready-artifacts",
+      "expected": "story-implement",
+      "actual": "story-implement",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "story-plan-technical-design",
+      "expected": "story-plan",
+      "actual": "story-plan",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "story-retrospective-close",
+      "expected": "story-retrospective",
+      "actual": "story-retrospective",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "story-specify-placeholder",
+      "expected": "story-specify",
+      "actual": "story-specify",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "story-tasks-from-plan",
+      "expected": "story-tasks",
+      "actual": "story-tasks",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "story-ui-spec-complex-ui",
+      "expected": "story-ui-spec",
+      "actual": "story-ui-spec",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "story-validate-prove",
+      "expected": "story-validate",
+      "actual": "story-validate",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "visual-quality-generic-ui",
+      "expected": "visual-quality",
+      "actual": "visual-quality",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "visual-testing-validation-evidence",
+      "expected": "visual-testing",
+      "actual": "visual-testing",
+      "exact": true,
+      "forbidden": false
+    }
+  ],
+  "schema_version": 2,
+  "provider": "codex",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "started_at": "2026-08-11T07:48:54.303735+00:00",
+  "catalog_sha256": "fcd952183f615711157dc27c43bbab345a1d413c16790f2f40e76aa9038893cc",
+  "cases_sha256": "a24f2b96b9497dac0e308ac9a2533ba59236cab63c9b5415b1951689def1abbd",
+  "flow_sha256": "5400b6dc96db2a2adca6352d3c4d7bc806ea109cc13c76d51d1cb39049d216b5",
+  "flow_contract_sha256": "abf27bcd7aa038b4cfa669dc51062d055a98bcf1a37b0fdb1562100f8807b34c",
+  "execution": {
+    "command": [
+      "codex",
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "-s",
+      "read-only",
+      "-m",
+      "gpt-5.6-terra",
+      "-c",
+      "model_reasoning_effort=medium",
+      "-C",
+      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-fio2zvc8",
+      "--output-schema",
+      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-fio2zvc8/schema.json",
+      "-o",
+      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-fio2zvc8/response.json",
+      "<prompt-on-stdin>"
+    ],
+    "exit_code": 0,
+    "stderr_tail": "tive-close\",\"skill\":\"project-retrospective\"},{\"id\":\"project-roadmap-sequencing\",\"skill\":\"project-roadmap\"},{\"id\":\"project-specify-clear-start\",\"skill\":\"project-specify\"},{\"id\":\"project-state-regenerate\",\"skill\":\"project-state\"},{\"id\":\"project-ux-platform-strategy\",\"skill\":\"project-ux\"},{\"id\":\"project-validate-prove\",\"skill\":\"project-validate\"},{\"id\":\"speck-audit-post-implementation\",\"skill\":\"speck-audit\"},{\"id\":\"speck-catch-up-empty-scaffolds\",\"skill\":\"speck-catch-up\"},{\"id\":\"speck-debug-broken-workflow\",\"skill\":\"speck-debug\"},{\"id\":\"speck-decision-log-lock\",\"skill\":\"speck-decision-log\"},{\"id\":\"speck-feedback-method-gap\",\"skill\":\"speck-feedback\"},{\"id\":\"speck-frontier-scan-sota\",\"skill\":\"speck-frontier-scan\"},{\"id\":\"speck-graph-up-marker\",\"skill\":\"speck-graph-up\"},{\"id\":\"speck-larp-real-user\",\"skill\":\"speck-larp\"},{\"id\":\"speck-learn-mid-story\",\"skill\":\"speck-learn\"},{\"id\":\"speck-migrate-version\",\"skill\":\"speck-migrate\"},{\"id\":\"speck-premise-challenge-ui\",\"skill\":\"speck-premise-challenge\"},{\"id\":\"speck-recheck-engagement-gap\",\"skill\":\"speck-recheck\"},{\"id\":\"speck-reprove-marker\",\"skill\":\"speck-reprove\"},{\"id\":\"speck-scan-code-facts\",\"skill\":\"speck-scan\"},{\"id\":\"speck-self-eval-gate-fitness\",\"skill\":\"speck-self-eval\"},{\"id\":\"speck-skeptical-review-alternatives\",\"skill\":\"speck-skeptical-review\"},{\"id\":\"story-clarify-ambiguous-ac\",\"skill\":\"story-clarify\"},{\"id\":\"story-extract-existing-code\",\"skill\":\"story-extract\"},{\"id\":\"story-implement-ready-artifacts\",\"skill\":\"story-implement\"},{\"id\":\"story-plan-technical-design\",\"skill\":\"story-plan\"},{\"id\":\"story-retrospective-close\",\"skill\":\"story-retrospective\"},{\"id\":\"story-specify-placeholder\",\"skill\":\"story-specify\"},{\"id\":\"story-tasks-from-plan\",\"skill\":\"story-tasks\"},{\"id\":\"story-ui-spec-complex-ui\",\"skill\":\"story-ui-spec\"},{\"id\":\"story-validate-prove\",\"skill\":\"story-validate\"},{\"id\":\"visual-quality-generic-ui\",\"skill\":\"visual-quality\"},{\"id\":\"visual-testing-validation-evidence\",\"skill\":\"visual-testing\"}]}\ntokens used\n31,534\n"
+  }
+}

@@ -60,4 +60,4 @@ A Premise-Challenge pass results in one of two outcomes:
 - **Never conflate CORRECT/ON-CONTRACT with good**: A green test suite and a conforming LARP do not mean the product is ready to ship.
 - **Never launder a taste miss as "uncatchable by automation"**: If a user experience is poor, do not excuse it as an autonomous limitation. Run the naive lens, apply taste judgment, and document the finding. Escalation to a human operator is reserved for *contract-premise* problems (which force a `/adjust --level project` or a conscious DEC) — it is NOT a way to offload the FELT-GOOD taste judgment the AI should be making.
 
-*[as of SHA HEAD | verified 2026-07-02 | speck 8.0.0]*
+*[as of SHA HEAD | verified `<date>` | speck `<version>`]*

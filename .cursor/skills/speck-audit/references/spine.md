@@ -1,6 +1,6 @@
 # speck-audit
 
-Mandatory between implement and validate. Replaces v6 `/story-analyze`.
+Mandatory between implement and validate. The retired `/story-analyze` alias routes here.
 Output: `<story-or-epic-dir>/audit-report.md`.
 P4: auditor ≠ implementer; judged by defects found, not green. P2: every claim resolves to a mechanism.
 

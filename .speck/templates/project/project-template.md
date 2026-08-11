@@ -118,7 +118,7 @@ project-clarify → context → architecture → design-system → plan
 
 ## PROFILE surfaces
 
-*Public face artifacts — how outsiders first encounter this project. Declared per project; enforced from Speck v7.7+.*
+*Public face artifacts — how outsiders first encounter this project. Declared per project and enforced by PROFILE gates.*
 
 | Surface | Path | Source of truth | Refresh skill |
 |---------|------|-----------------|---------------|

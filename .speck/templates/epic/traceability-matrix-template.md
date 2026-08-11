@@ -12,7 +12,7 @@ artifact_type: traceability-matrix
 **Status**: [Open (pre-breakdown) / Mapped / Discharged]
 
 <!--
-THE CONSERVATION LAW (Speck v7.14): every enumerable upstream promise gets a PRM-NNN id and MUST
+THE CONSERVATION LAW: every enumerable upstream promise gets a PRM-NNN id and MUST
 resolve to exactly one of:
   • a story + acceptance criterion that DISCHARGES it, or
   • a DEC entry that explicitly DESCOPES it, or
@@ -24,7 +24,7 @@ Status lifecycle:  open → mapped (assigned story+AC) → discharged (story val
                                                       ├→ descoped (a DEC drops it)
                                                       └→ pilot-gated (deferred to live pilot, with backing reference)
 
-GRAIN (Speck v8.4, #87) — a SECOND, ORTHOGONAL axis. Status answers "resolved?"; Grain answers
+GRAIN — a SECOND, ORTHOGONAL axis. Status answers "resolved?"; Grain answers
 "at what grain was the discharging evidence collected?". Value = the readiness-ladder enum
 (no-ship | impl-green | integration-green | ux-rc | api-rc | operational-rc | commercial-rc |
 ship-rc | ship), optionally suffixed ` [pre-v8-proof]`. Descoped / pilot-gated rows = `—`.
@@ -40,7 +40,7 @@ Enforced by .speck/scripts/validation/validators/validate-traceability-matrix.sh
   • default mode (`/analyze --level epic`, pre-commit): once epic-breakdown.md exists, NO row may be open —
     every row needs a discharge (story+AC) or a DEC/pilot-gated status. Grain is OPTIONAL here.
   • --require-evidence (epic-validate): every row must be `discharged`, `descoped`, or `pilot-gated`.
-    Absent grain is never a conservation violation. As of v8.5.0 the grain teeth BLOCK here (at the
+    Absent grain is never a conservation violation. The grain teeth BLOCK here (at the
     /epic-validate gate): grain ≤ the discharging story's effective state; a ≥ ux-rc row must cite
     walk-evidence; an invalid grain token is rejected. On the fast path (default mode) grain findings
     stay surfaced-only (WARN). The gate emits MATRIX_GRAIN_CAP = MIN grain over ALL discharged rows;
@@ -49,13 +49,13 @@ Enforced by .speck/scripts/validation/validators/validate-traceability-matrix.sh
     Source clause it names, and that the named Source artifact/anchor exists. PRESENCE + OVERLAP only —
     it does NOT judge whether the shipped product keeps the promise (that is /audit's semantic sweep).
 
-DISCHARGE ANCHORS RESOLVE (Speck v8.7, witness graph). The Discharge cell points at a real, defined
+DISCHARGE ANCHORS RESOLVE in the witness graph. The Discharge cell points at a real, defined
 anchor: `S012 / AC-3` (bare within this epic) or `E0NN/S0MM/AC-K` (cross-epic). `AC-N` ids are defined
 in each story spec's §2b. The witness graph resolves every Discharge ref; one that names a story or an
 `AC-N` that does not exist is a `DANGLING_REF.P1` (a renamed/renumbered anchor left behind). Source ids
 (`MM-N`, `JOB-N`, `FR-...`, screen ids) resolve the same way.
 
-## RETROFIT / FINALIZATION MODE (Speck v7.15)
+## RETROFIT / FINALIZATION MODE
 If you are retrofitting this matrix on an already-built epic (e.g. following a large audit of existing promises), do NOT start from scratch:
 1. **Seed from Existing Audit/Scan**: Import existing promises directly from your audit-report.md or codebase scan.
 2. **Consolidation Rule**: Consolidate multiple fine-grained promises (e.g., individual form fields or styling rules) into high-level, load-bearing PRM rows to maintain readability.
@@ -94,7 +94,7 @@ Enumerate EVERY promise this epic owns, from each source below, then give each a
 - **Pilot-gated** (deferred to pilot): [N]
 - **Open / unmapped**: [N] ← **MUST be 0 after `/epic-breakdown`**
 
-### Grain floor (Speck v8.4, #87)
+### Grain floor
 
 - **Discharged at product grain** (≥ ux-rc): [N]
 - **Discharged at story grain** (< ux-rc, or un-graded): [N]

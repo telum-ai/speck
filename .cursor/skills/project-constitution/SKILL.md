@@ -138,6 +138,7 @@ Define project-specific principles and constraints that will guide all developme
    - Per-story checklist items
    - Per-epic validation gates
    - Project-level success criteria
+   - If two or more principles are mechanically detectable, read `references/enforcement.md` and bind them to repository gates
 
 8. Save as `specs/projects/[PROJECT_ID]/constitution.md`
 

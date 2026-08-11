@@ -19,12 +19,12 @@ Speck is designed to run seamlessly across all major AI coding environments. Cor
 | **Local MCP Config** | `.mcp.json` (root) | `.cursor/mcp.json` | Host-specific config |
 | **Automatic Template Linting** | ✅ `PostToolUse` edit hooks | ✅ `afterFileEdit` hooks | Manual or CI-driven checks |
 | **Structured Workflows** | ✅ `/loop` maintenance, `/goal` | Manual or scheduled CI | Manual or scheduled CI |
-| **Custom Agent Roles** | ✅ `speck-*` subagents checked in | Optional `.cursor/rules/` | Optional skills guidelines |
+| **Custom Agent Roles** | ✅ `speck-*` subagents checked in | Host-native agents when available | Host-native subagents when available |
 | **Isolated Implementations** | ✅ `isolation: worktree` (story) + epic-level worktree doctrine | Epic worktree per Concurrent Multi-Epic rules; story impl on branch | Epic worktree per Concurrent Multi-Epic rules; story impl on branch |
 
 ### Portability Guarantees & Fallbacks
 1. **Shared Validation Engine**: All validation hooks (`validate-template.sh`) route to a unified, host-agnostic bash core inside `.speck/scripts/validation/`.
-2. **Subagents Fallback**: Spawning parallel subagents (e.g. `speck-auditor`, `speck-scanner`) is a Claude-specific optimization. When executing on Cursor or Codex, checklists run sequentially in the main conversation.
+2. **Subagents Fallback**: Use host-native subagents when available. Otherwise run the same role-separated work sequentially; P4 still requires a separately incentivized evaluator.
 3. **Local Validation Backstop**: Run validators with `--strict` via pre-commit hooks or manually when your host lacks edit/stop gates.
 4. **Agent Skill Tool Fallback**: Some AI host environments restrict or do not support the execution of the `Skill` tool inside highly restricted custom agent roles (such as `@speck-coder` or `@speck-auditor`). If your host environment fails to provide the `Skill` tool to custom roles, any workflow lane requiring skill invocation (e.g., running story/epic specification or validation) MUST be run using a general-purpose, all-tools agent instead. Never fall back to hand-writing or simulating report files; real skill execution recorded in the transcript is required.
 

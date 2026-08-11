@@ -26,11 +26,8 @@ Match `$ARGUMENTS` against `.speck/recipes/*/recipe.yaml` `keywords:` (case-inse
 
 1. Read `epics.md` → `## Epic Concurrency Waves & Rebase Cadence`.
 2. Wave safety: all requested epics in same current wave; none are integrator epics (2+ upstream deps unmerged). Unsafe → STOP + list blockers.
-3. `git push origin main` before spawn (worktrees branch from `origin/main`).
-4. Per epic: `git worktree add ../<repo>-eNNN -b epic/eNNN origin/main`; guard prompt verifies spec path exists.
-5. Tell user DEC band per epic; `project-state.md` regen is merge-only on epic branches.
-6. Route each to `/epic` in its worktree. After merge: `git worktree remove --force ../<repo>-eNNN`.
-7. See `.speck/patterns/learned/process/parallel-epic-execution.md`.
+3. Load `.cursor/skills/parallel-execution/SKILL.md` and follow its wave, worktree, and merge branches.
+4. Route each safe epic to `/epic` in its worktree. Regenerate `project-state.md` on the integration branch only.
 
 ## 7. Transition source
 

@@ -45,7 +45,12 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ "$CLEAN" = true && -d "$OUT_DIR" ]]; then
-  rm -rf "$OUT_DIR"
+  OUT_ABS="$(cd "$(dirname "$OUT_DIR")" && pwd)/$(basename "$OUT_DIR")"
+  if [[ -z "$OUT_ABS" || "$OUT_ABS" == "/" || "$OUT_ABS" == "$REPO_ROOT" ]]; then
+    echo "ERROR: refusing to clean unsafe output path: $OUT_ABS" >&2
+    exit 1
+  fi
+  find "$OUT_ABS" -depth -mindepth 1 -delete
 fi
 
 mkdir -p "$OUT_DIR"
@@ -67,9 +72,19 @@ copy_dir() {
 
 # Core files
 copy_file "$REPO_ROOT/AGENTS.md" "$OUT_DIR/AGENTS.md"
+copy_file "$REPO_ROOT/CLAUDE.md" "$OUT_DIR/CLAUDE.md"
 
-# Speck methodology
-copy_dir "$REPO_ROOT/.speck" "$OUT_DIR/.speck"
+# Shipped Speck runtime. Methodology tests, reports, feedback, and release history stay
+# in the framework repository; downstream agents load only executable runtime context.
+for runtime_path in README.md VERSION mcp recipes reference scripts templates; do
+  source_path="$REPO_ROOT/.speck/$runtime_path"
+  target_path="$OUT_DIR/.speck/$runtime_path"
+  if [[ -d "$source_path" ]]; then
+    copy_dir "$source_path" "$target_path"
+  else
+    copy_file "$source_path" "$target_path"
+  fi
+done
 
 # Cursor skills, agents, hooks
 mkdir -p "$OUT_DIR/.cursor"
@@ -80,11 +95,17 @@ copy_file "$REPO_ROOT/.cursor/MCP-SETUP.md" "$OUT_DIR/.cursor/MCP-SETUP.md"
 copy_file "$REPO_ROOT/.cursor/mcp.json.example" "$OUT_DIR/.cursor/mcp.json.example"
 copy_file "$REPO_ROOT/.cursor/mcp.project.json.example" "$OUT_DIR/.cursor/mcp.project.json.example"
 
-# Cross-tool symlinks (.claude and .codex point to .cursor)
-for runtime_dir in .claude .codex; do
+# Generated agents use host-specific file formats and model names.
+copy_dir "$REPO_ROOT/.claude/agents" "$OUT_DIR/.claude/agents"
+copy_dir "$REPO_ROOT/.codex/agents" "$OUT_DIR/.codex/agents"
+copy_dir "$REPO_ROOT/.claude/hooks" "$OUT_DIR/.claude/hooks"
+copy_file "$REPO_ROOT/.claude/loop.md" "$OUT_DIR/.claude/loop.md"
+copy_file "$REPO_ROOT/.claude/settings.json.example" "$OUT_DIR/.claude/settings.json.example"
+
+# Cross-tool skill discovery points to the canonical Cursor skill tree.
+for runtime_dir in .claude .codex .agents; do
   mkdir -p "$OUT_DIR/$runtime_dir"
   ln -s ../.cursor/skills "$OUT_DIR/$runtime_dir/skills"
-  ln -s ../.cursor/agents "$OUT_DIR/$runtime_dir/agents"
 done
 
 # Template repo root README.md
@@ -162,4 +183,3 @@ else
   echo "  git init && git add . && git commit -m \"chore: initial Speck template\""
   echo "  # create a GitHub repo and push"
 fi
-

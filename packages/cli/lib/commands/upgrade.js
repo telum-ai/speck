@@ -228,7 +228,7 @@ ${migrationSummary.projects.map(p => `   • ${p.path}: ${p.created} new artifac
    historical claim as [pre-v8-proof], and emits project-v8-reprove-report.md.
    States climb back to \`verified\` only as real v8 evidence lands.
 
-   See docs/v8/v8-north-star.md §5. Do NOT commit a green-claiming state as if it
+   See docs/history/north-stars/v8.md §5. Do NOT commit a green-claiming state as if it
    were v8-proven — reprove first. The next agent that engages will detect the
    marker and start the re-prove automatically.`);
   }

@@ -9,8 +9,8 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 
 | Metric | Before (~10.5) | After (11.0) |
 |--------|----------------|--------------|
-| AGENTS.md | ~62810 bytes / 578 lines | 8606 bytes / 130 lines |
-| Auto skill description sum | ~30k chars | **6901 chars** (specific trigger contracts) |
+| AGENTS.md | ~62810 bytes / 578 lines | **9121 bytes / 97 lines** |
+| Auto skill description sum | ~30k chars | **6902 chars** (specific trigger contracts) |
 | Auto skill entries | 76 after initial v11 pass | **63** |
 | Domain/integration skills | ~20 | **0** (deleted) |
 | `disable-model-invocation: true` | inverted / scattered | **machine-owned family policy** |
@@ -19,11 +19,11 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 
 - `validate-corpus-budget.sh` hard-fails regressions (AGENTS ≤16KiB/≤200 lines; desc ≤120/≤10k sum;
   disable-model allowlist; skill body ≤200; ref nodes ≤120 lines/≤8KiB; declared branch-byte caps;
-  direct router ownership; no ref-to-ref continuation edges).
+  direct router ownership; no missing or ref-to-ref continuation edges).
 - A1-lite: 12 seeded fixtures / 6 classes; fail closed on wrong verdicts, harness errors, immutable-baseline
-  regressions, and candidate-corpus capability deletion; `bash .speck/eval/score.sh` → `.speck/eval/reports/`.
+  regressions, and candidate-corpus capability deletion; `bash tests/eval/score.sh` → `tests/eval/reports/`.
 - GitHub Actions runs the complete repository suite and PR/push whitespace checks.
-- Methodology ADRs: `docs/decisions/` + `docs/v11/v11-north-star.md`.
+- Methodology ADRs: `docs/decisions/` + `docs/history/north-stars/v11.md`.
 
 ### Catalog surgery
 
@@ -45,6 +45,17 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 - `CLAUDE.md` is a managed `@AGENTS.md` import; init/upgrade merges it without overwriting user instructions.
 - Upgrade `REMOVE_FILES` deletes retired domain + visual-testing host skill dirs from consumer projects.
 - `sync-claude-runtime.sh` syncs **skills only** (no longer clobbers generated agents/).
+
+### Current runtime boundary
+
+- `AGENTS.md` now teaches only the current method in plain language. Release rationale lives under
+  `docs/history/`; maintainers use `docs/methodology/` and `tests/eval/` without shipping them into projects.
+- `.speck/reference/` is explicitly shipped because AGENTS and skills depend on it at runtime.
+- Vanilla Speck no longer seeds or overwrites `.speck/patterns/learned/`; upgrades remove only the exact
+  former framework files and preserve project-created learning.
+- Template export now emits the same curated runtime boundary as init/upgrade, including host-native
+  generated agents, while excluding methodology evaluation and history.
+- Upgrade removes framework-owned `.speck/eval/` and `.speck/feedback/` leaked by older template exports.
 
 ### Agent prose + load DAG
 
@@ -1030,7 +1041,7 @@ compute, and directs the user to run `/goal` (a client command a skill cannot in
 - **AGENTS.md "Drive to Done"** section: the routing table (gap item → owning skill) + the hierarchy
   (`/goal` = conductor/loop; Speck skills = players/work; the graph = score/condition+evidence).
   User-initiated with a mandatory turn bound; STOP-BLOCKED at owner-gated inches (taste forks, contract
-  pivots, price, deploy). Full workflow/sequence in `docs/v9/v9-north-star.md` §6.
+  pivots, price, deploy). Full workflow/sequence in `docs/history/north-stars/v9.md` §6.
 
 +2 tests (29 total). npm test green. (MM "judged" stays honestly pending verdict extraction, v9.4.)
 
@@ -1059,7 +1070,7 @@ false-clean. `/speck-graph-up` Phase 4 emits it. +2 tests (27 total). npm test g
 v9 promotes the witness graph from a late gate into the project's **spine** — the derived,
 content-hashed index that project-state renders from, that the forcing gates fire off, that
 `road-to-completion.md` re-projects, and that native `/goal` drives against to reach *actual* 100%.
-Full architecture (incl. the `/goal` workflow, hierarchy, and sequence): `docs/v9/v9-north-star.md`.
+Full architecture (incl. the `/goal` workflow, hierarchy, and sequence): `docs/history/north-stars/v9.md`.
 Shipping incrementally (v9.0 → v9.5); this is the **additive spine + forcing** arc — no deletions yet.
 
 ### Forcing: "you cannot advance if the graph lacks what it needs" — without bricking greenfield
@@ -1089,7 +1100,7 @@ One signal makes it safe: **id-scheme adoption**, counted from the graph (never 
 
 ### Also
 - +3 forcing tests (25 total) in the graph suite; +5 migrate tests (13 total) for `graphV9` /
-  `writeV9GraphMarker`. `docs/v9/v9-north-star.md` is the canonical v9 record. AGENTS.md banner → v9 with
+  `writeV9GraphMarker`. `docs/history/north-stars/v9.md` is the canonical v9 record. AGENTS.md banner → v9 with
   the graph-spine + `/goal` doctrine. `npm test` green.
 
 ### Roadmap (each a committed, parity-gated arc)
@@ -1377,7 +1388,7 @@ disclose the wholesale replacement.
 
 ## v8.0.0 — 2026-07-03 — Evaluation Over Verification
 
-The v7 patch line fought agent green-hacking by writing down ever more explicit checks. That is self-defeating: an agent optimizes to satisfy the *letter* of any enumerated gate (Goodhart), and the enumeration itself becomes the context-rot that crowds out common sense. v8 changes **what the agent optimizes for** — from "produce green evidence" to "find what is wrong" — and **shrinks the corpus** so common sense fits back in context. Design: `docs/v8/v8-north-star.md`.
+The v7 patch line fought agent green-hacking by writing down ever more explicit checks. That is self-defeating: an agent optimizes to satisfy the *letter* of any enumerated gate (Goodhart), and the enumeration itself becomes the context-rot that crowds out common sense. v8 changes **what the agent optimizes for** — from "produce green evidence" to "find what is wrong" — and **shrinks the corpus** so common sense fits back in context. Design: `docs/history/north-stars/v8.md`.
 
 ### The four principles (the spine — govern every gate)
 - **P1 — Evaluation over verification.** Every gate's default flips from "confirm the claim" to "find what is wrong." A clean pass is the residue of a genuine attempt to break it.

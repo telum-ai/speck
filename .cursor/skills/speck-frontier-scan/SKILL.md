@@ -51,7 +51,7 @@ For each identified delta, find its canonical location in the Speck directory st
 - Verifiable proof rules, anti-proof, or irreversible action tiers → `evidence-contract.md`
 - Codebase style, agent-behavior rules → `AGENTS.md`
 - Validation logic → `.speck/scripts/validation/validators/`
-- Orchestration patterns, conductor rules → `.speck/patterns/learned/process/parallel-epic-execution.md`
+- Parallel orchestration behavior → `.cursor/skills/parallel-execution/SKILL.md`
 
 ### 4. Author the Frontier Research Report
 

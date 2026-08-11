@@ -16,12 +16,13 @@ speck/
 │   ├── VERSION                      # ⚠️  NOT the release version — see Versioning below
 │   ├── README.md                    # Methodology documentation
 │   ├── templates/                   # Story/epic/project templates
-│   ├── patterns/                    # Design and implementation patterns
 │   ├── recipes/                     # Project quickstart recipes
+│   ├── reference/                   # JIT runtime guidance synced to projects
 │   └── scripts/                     # Utility scripts (validation, audit, etc.)
 ├── .cursor/skills/                  # AI agent skills (synced to projects)
 ├── .claude/                         # Claude Code config (synced to projects)
-└── tests/                           # Test fixtures and specs
+├── docs/                            # Methodology decisions, history, and maintainer guidance
+└── tests/                           # Methodology evaluation harnesses and fixtures
 ```
 
 ## ⚠️ Versioning — READ THIS FIRST
@@ -56,7 +57,8 @@ Speck has **one version** that matters: the **GitHub release tag**.
 
 Work on `main` branch. Key files to consider:
 
-- **Methodology changes**: `.speck/templates/`, `.speck/patterns/`, `.speck/recipes/`, `.speck/scripts/`, `.speck/README.md`
+- **Runtime methodology changes**: `AGENTS.md`, `.cursor/skills/`, `.speck/templates/`, `.speck/reference/`, `.speck/recipes/`, `.speck/scripts/`, `.speck/README.md`
+- **Methodology development and history**: `docs/`, `tests/eval/`
 - **Skill changes**: `.cursor/skills/`, `.cursor/agents/`
 - **CLI changes**: `packages/cli/lib/`
 - **Sync behavior**: `packages/cli/lib/sync.js` (see Sync System below)
@@ -115,7 +117,7 @@ The sync system controls what happens when a project runs `speck init` or `speck
 |----------|----------|-------------|
 | `ALWAYS_OVERWRITE` | Replaced on every upgrade — project customizations are lost | Methodology files, templates, skills, workflows that must stay current |
 | `SMART_MERGE_FILES` | Custom merge function preserves project content | `AGENTS.md` (Speck controls `SPECK:START..END`), `.gitignore`, `hooks.json`, `mcp.json` |
-| `SKIP_IF_CUSTOMIZED` | Skipped if the project has modified the file | One-time setup files (v7.6.0: README handled separately — see below) |
+| `SKIP_IF_CUSTOMIZED` | Skipped if the project has modified the file | One-time setup files (root README uses its dedicated handler) |
 | **Project README** | Dedicated handler in `syncProjectReadme()` | Root `README.md` — skeleton on init, footer merge on upgrade, auto-repair legacy Speck marketing |
 | **PROFILE validation** | `validate-readme.sh` + `profile-drift-check.sh` | Staged README on pre-commit; SHIP-RC gates in validate skills |
 | `SKIP_PATTERNS` | Never synced to projects | Test files, internal tooling |
@@ -132,7 +134,7 @@ The sync system controls what happens when a project runs `speck init` or `speck
 1. **Add the path to `REMOVE_FILES`** — this ensures `speck upgrade` cleans it up from projects
 2. **Remove from `ALWAYS_OVERWRITE`** (or whichever category it was in)
 3. Optionally keep the file in this repo for reference (it won't be synced)
-4. Add a version comment: `// v5.3.0: Reason for removal`
+4. Add a current-purpose comment and record the release detail in `CHANGELOG.md`
 
 ### Disabling a feature (without removing)
 
@@ -179,47 +181,8 @@ Follow the "Removing a synced file" process above. Specifically:
 2. Delete the file in this repo
 3. Release a new version — projects pick up the removal on `speck upgrade`
 
-## Migration (major-version upgrades)
+## Compatibility migrations
 
-Speck upgrades across a major boundary are automatic on `npx github:telum-ai/speck upgrade` and never delete content — they drop a marker and defer the semantic work to a skill that runs on the next engagement. Two boundaries exist today.
+Current upgrade behavior is implemented in `packages/cli/lib/migrate.js`. Exact marker handling lives in `/speck-catch-up`, `/speck-reprove`, and `/speck-graph-up`; the root AGENTS engagement ladder invokes them before normal work. Historical rationale and the reason legacy version tokens remain are documented in `docs/history/migrations.md`.
 
-### v6 → v7 (`/speck-catch-up`)
-
-**Step 1 — Scaffolding (automatic, CLI).** `bash .speck/scripts/migrate.sh <project-dir>` runs per project:
-
-1. Adds `speck_version: 7.0.0` to `.speck/project.json`.
-2. Scaffolds **empty** templates: `product-contract.md`, `evidence-contract.md`, `project-decisions-log.md`, `project-state.md`, `design-system/primitives.md` (each with a `<!-- v7 MIGRATION SCAFFOLD -->` banner).
-3. SHA-stamps existing v6 truth artifacts with current HEAD.
-4. Writes a `migration-report.md` per project.
-5. Drops a `.speck/.migration-needs-catchup` marker at workspace root.
-6. **Does NOT delete any v6 content.**
-
-**Step 2 — Catch-up (brownfield reconstruction, `/speck-catch-up`).** The next engagement detects the marker (via AGENTS.md's first-action rule) and runs the skill, which:
-
-1. Backfills `product-contract.md` from `project.md` + `PRD.md` + `ux-strategy.md` + `domain-model.md` + `constitution.md`.
-2. Backfills `evidence-contract.md` from the active recipe's `evidence_contract:` defaults.
-3. Reconstructs `project-decisions-log.md` from git history.
-4. Backfills `experience-chain.md` for each UI epic from `user-journey.md` + `wireframes.md` + story specs.
-5. **Honesty pass** — downgrades unsupported v6 PASS claims to `IMPL-GREEN`, flags surrogate proof.
-6. Regenerates `project-state.md` with post-honesty reality.
-7. Writes `project-catch-up-plan.md` (P0–P3 remediation).
-8. Removes the marker.
-
-Without `/speck-catch-up`, a migrated project carries v6 debt under v7 paint. The skill is mandatory for any project not built v7-native from day one.
-
-**Command compatibility.** Retired and former level-specific commands (`/story-analyze`, `/project-analyze`, `/story-adjust`, `/epic-outline`, `/project-scan`, …) remain user-invocable shims. They are excluded from automatic selection. `/analyze`, `/adjust`, and `/speck-scan` are canonical multi-level engines; validation and retrospective keep their materially different level specialists canonical, with `/validate` and `/retrospective` as user-only convenience routers. CI enforces the family map in `.speck/reference/skill-catalog-policy.json`.
-
-### v7 → v8 (`/speck-reprove`)
-
-v8 ("Evaluation Over Verification") does **not** trust v7-era "green" as evaluation-proven — v7 green was optimized to satisfy enumerated checks (Goodhart), the exact failure mode v8 fixes. The upgrade is deliberately two-layer (design: `docs/v8/v8-north-star.md`):
-
-**Layer 1 — Mechanical (automatic, instant, non-destructive).** On `upgrade` across the v7 → v8 boundary the CLI bumps versions, reconciles the `SPECK:START..END` blocks, installs the alias-shims and lazy patterns, and drops a `.speck/.v8-reprove-needed` marker (the analog of v6 → v7's `.migration-needs-catchup`).
-
-**Layer 2 — Semantic re-prove (`/speck-reprove`, cap-and-worklist).** Any truth artifact stamped `< speck 8` is `V8_STALE` regardless of SHA/date freshness. The next engagement's `/recheck` detects the marker (or a `V8_STALE` stamp), raises `V8_REPROVE.P1`, blocks new feature work, and routes to `/speck-reprove`, which:
-
-1. Triages each suspect-green artifact against the four principles (P1–P4).
-2. **Caps** effective shippable state at `INTEGRATION-GREEN` and reverts consumer **FELT-GOOD to `uncovered`**.
-3. **Preserves** each historical v7 claim, stamped `[pre-v8-proof]` (nothing reset to zero).
-4. Emits a prioritized `project-v8-reprove-report.md` worklist. States climb back to `verified` only as real v8 evidence (adversarial LARP, mechanism-grounded audit) lands.
-
-Without `/speck-reprove`, a v8-upgraded project keeps claiming v7 ship-readiness under v8 paint. The re-prove is mandatory for any project not built v8-native from day one.
+Retired level-specific commands remain user-invocable compatibility aliases and are excluded from automatic selection. The canonical family map is `.speck/reference/skill-catalog-policy.json`.

@@ -242,8 +242,8 @@ If all green: "All truth artifacts are fresh."
 | `graph/readiness-map.md` regenerated (the Proof column above) | yes | [`speck_graph.py build` refreshes it with the witness and the road] | [✅ / ⚠️ pasted table is older than the graph] |
 
 <!--
-Each row is a pair that has been observed disagreeing in a shipped repo — one project ran v9.5.0 in
-.speck/VERSION and 9.4.0 in project.json, another's road was 87 commits behind the witness.json it
+Each row is a pair that has been observed disagreeing in a shipped repo — one project had different
+versions in `.speck/VERSION` and `project.json`, another's road was 87 commits behind the witness it
 claims to derive from. The freshness check is CONTENT, never `stamped SHA == HEAD`: a witness five
 commits behind HEAD whose compile is byte-identical is FRESH, and a rule that fired on it would
 teach `--no-verify` inside a day.

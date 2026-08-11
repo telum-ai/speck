@@ -314,13 +314,13 @@ git push origin main
 git fetch origin
 git worktree add ../<repo>-eNNN -b epic/eNNN origin/main
 # ...after the epic merges:
-git worktree remove --force ../<repo>-eNNN
+git worktree remove ../<repo>-eNNN
 ```
 
 **Rules**:
 - **Push before spawn**: `git push origin main` the full planning corpus (specs, tech-spec, wireframes, DECs) before any worktree wave and after every merge — unpushed commits are invisible to worktrees, so the first wave builds blind to locked specs.
 - Branch parallel epics from **current** `main`, not a stale pre-foundation base
-- **Disk hygiene**: `git worktree remove --force` after each merge — many parallel worktrees (each ~1 GB+ after install/build) can exhaust host disk and freeze every session. Cap live worktrees to the current wave.
+- **Disk hygiene**: remove each clean worktree after merge without `--force`; refusal means inspect and preserve WIP. Cap live worktrees to the current wave.
 - DEC bands: `E002` → `DEC-0201+` (see AGENTS.md)
 - `project-state.md` regeneration deferred to merge-to-`main` on epic branches
 - Shared DB tables frozen during parallel waves — new tables/migrations only per epic; **real wall-clock** 14-digit UTC timestamps (`date -u +%Y%m%d%H%M%S`), never rounded placeholders (parallel epics collide on identical round numbers)

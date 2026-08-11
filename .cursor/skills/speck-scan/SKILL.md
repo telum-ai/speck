@@ -13,7 +13,7 @@ $ARGUMENTS
 
 ## Purpose
 
-`/scan` extracts code-side facts from an existing codebase and produces a scan artifact that downstream Speck commands consume. v7 unifies what v6 had as three separate skills.
+`/scan` extracts code-side facts from an existing codebase and produces a scan artifact that downstream Speck commands consume. One level-aware engine serves project, epic, and story scope.
 
 | Scope | Output artifact | Used by |
 |-------|------------------|---------|
@@ -113,9 +113,9 @@ Next:
 - For story: run /story-specify (or /story-plan if specifying)
 ```
 
-## v6 Compatibility
+## Compatibility aliases
 
-The v6 `/project-scan`, `/epic-scan`, `/story-scan` skills remain present as thin shims that route to this unified skill.
+`/project-scan`, `/epic-scan`, and `/story-scan` remain thin user-invoked shims that route here.
 
 ## Behavior Rules
 

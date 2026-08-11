@@ -1,71 +1,53 @@
 <!-- SPECK:START -->
 
-# Speck — Promise → Build → Prove (→ Drive)
+# Speck — Promise → Build → Prove
 
-Evidence-driven methodology. Discipline is unconditional.
-Thesis: you cannot out-enumerate an agent optimizing for green. Gates follow P1–P4. Find what is wrong; do not confirm the claim. `docs/v8/v8-north-star.md`
-Witness graph proves traceable·complete·fresh — never faithful·good·excellent. `docs/v9/v9-north-star.md`
-v11 subtraction + JIT + meta-methodology: `docs/v11/v11-north-star.md`
+Speck turns product promises into implemented work and checked runtime evidence. Optimize for finding what is wrong, not for producing documents that look complete or checks that look green.
 
-## Mental model
+## Operating model
 
-PROMISE (contract) → BUILD (work) → PROVE (truth) → PROFILE (public face). Drift feeds back.
-Centers: product-contract · spec/tasks/experience-chain · project-state/evidence-contract · README.
+PROMISE defines the product contract. BUILD turns it into traceable work. PROVE evaluates the real result. PROFILE keeps the public face aligned with what is promised and proven.
 
-## Four principles
+Primary artifacts: `product-contract.md` for PROMISE; story specs, plans, tasks, and experience artifacts for BUILD; `project-state.md`, `evidence-contract.md`, audit reports, and runtime evidence for PROVE; root `README.md` for PROFILE.
 
-- P1 Evaluation over verification. Un-adjudicated evidence = surrogate proof. LARP = DOES-IT-WORK + IS-IT-GOOD.
-- P2 No claim without a mechanism. No mechanism = automatic fail.
-- P3 Can't-reach is a finding, not an excuse. Named blocker needs logged reproduced attempt.
-- P4 Adversary is structural. Separately-incentivized evaluator; probe lists prompt imagination, never define done.
+## Non-negotiable principles
 
-## Drive to done
+- P1 — Evaluate the outcome, not the evidence format. Runtime agent role-play (LARP) must answer both “does it work?” and “is it good?”
+- P2 — Every claim needs a real mechanism or execution path. No mechanism means the claim fails.
+- P3 — Inability to reach or test something is a finding. Record the reproduced attempt before naming a blocker.
+- P4 — The author does not certify their own work. Use a separate, independently motivated evaluator; probe lists inspire attacks but never define done.
 
-User runs native `/goal`. Each turn: print `speck_graph.py check` + `gap` stdout; terminate on literal `SPECK-GAP: none`. Route top gap:
+## Start every engagement
 
-| gap | route |
-|-----|-------|
-| untraced/undischarged/phantom promise | story-specify → plan → tasks → implement → audit → story-validate |
-| audit P0/P1 | harden |
-| uncovered FELT / unjudged MM | larp |
-| forks-open TASTE · contract pivot · price · deploy | STOP-BLOCKED owner decision |
-| stale graph | speck_graph.py build |
+Stop at the first action that applies:
 
-## First actions (stop at first hit)
+1. Handle compatibility markers before new work: `.speck/.v9-graph-needed` → `/speck-graph-up`; `.speck/.v8-reprove-needed` → `/speck-reprove`; `.speck/.migration-needs-catchup` or `<!-- v7 MIGRATION SCAFFOLD -->` → `/speck-catch-up`.
+2. Resolve the active project under `specs/projects/`. If none exists, use `project-brainstorm` for a fuzzy idea or `project-specify` for clear scope; do not build a graph at repository root.
+3. Read the active project's `project-state.md` when present. On “status”, “continue”, or “next”, follow its Next action.
+4. Read `.speck/project.json` for `play_level`; if absent, use Platform until the project is classified.
+5. Run `/speck-recheck` before feature work when project state or runtime evidence is missing, runtime verification is older than two weeks, ownership changed, or the agent is new to the project.
+6. For an existing project, run `python3 .speck/scripts/graph/speck_graph.py build <project-dir>` then `check <project-dir>`. Repair hard graph findings labeled `.P1` before continuing. The graph's printed `GRAPH_CAP` value only limits the highest claim; it never grants readiness. If Python is unavailable, warn and continue with the remaining gates.
+7. Route the user's request through the canonical flow below.
 
-0. `.speck/.v9-graph-needed` → `/speck-graph-up`. Else `speck_graph.py build` + `check`. Hard `.P1` blocks; repair first. `GRAPH_CAP` caps claims. python3 absent → WARN + proceed.
-1. `.speck/.v8-reprove-needed` → `/speck-reprove`. Cap INTEGRATION-GREEN; FELT uncovered until re-earned.
-2. `.speck/.migration-needs-catchup` OR `<!-- v7 MIGRATION SCAFFOLD -->` in truth docs → `/speck-catch-up`.
-3. Read `specs/projects/<id>/project-state.md` if present.
-4. Play level from `.speck/project.json` (`play_level`; missing = platform).
-5. Engagement gap (missing/stale>2w/`< speck 8`/new agent) → `/recheck`.
-6. Then user request.
+For long autonomous runs, encourage native `/goal` when the host offers it. It is optional. Without it, use the same manual `check` → `gap` → repair loop. Load `.cursor/skills/speck/references/gap-routes.md` only for status, goal, or gap work.
 
 ## Play levels
 
-| Level | PROMISE | PROVE |
-|-------|---------|-------|
-| Sprint | PRD + sprint-log | LARP at validate |
-| Build | product/context/evidence contracts; arch+ux+analyze required at 4+ epics | LARP + audit + decisions + readiness |
-| Platform | full flow | full PROVE; analyze after plan (7 lenses) |
+| Level | Use for | Required depth |
+|-------|---------|----------------|
+| Sprint | Small, time-bounded bets | Sprint PRD + log; audit and runtime LARP at validation |
+| Build | Products with meaningful users, revenue, or multiple epics | Product/context/evidence contracts; audit, LARP, decisions, readiness; architecture, UX, and project analysis at 4+ epics |
+| Platform | Regulated, enterprise, marketplace, or cross-system work | Full foundation and PROVE flow; seven-lens project analysis after planning |
 
-Build 4+ / Platform: `/analyze --level project` required before `/epic-specify` (`check-epic-prereqs.sh`). Grandfather marker `.analysis-gate-grandfathered` is advisory-only until report exists then spend it.
+Build with 4+ epics and Platform require `/analyze --level project` after `project-plan` and before `epic-specify`; `check-epic-prereqs.sh` enforces it. A legacy `.analysis-gate-grandfathered` marker is advisory only until an analysis report exists, then remove it.
 
 ## Readiness
 
-Axes (non-collapsible): CORRECT · ON-CONTRACT · FELT-GOOD · TASTE.
-States: NO-SHIP · IMPL-GREEN · INTEGRATION-GREEN · UX-RC/API-RC · COMMERCIAL-RC · SHIP-RC · SHIP.
-Never substitute axes. Never claim SHIP-RC from dev-server evidence.
+Judge four independent axes: CORRECT (works), ON-CONTRACT (delivers the promise), FELT-GOOD (works well for a real user), and TASTE (coherent quality). One axis cannot compensate for another.
 
-## Always-on discipline
+Readiness climbs from NO-SHIP → IMPL-GREEN (implementation checks) → INTEGRATION-GREEN (integrated runtime) → UX-RC or API-RC (target experience or contract proven) → COMMERCIAL-RC when applicable → SHIP-RC (production-grade evidence complete) → SHIP (deployed). Never claim SHIP-RC from dev-server evidence.
 
-P1–P4 always. Decision-log at phase boundaries. Skeptical-review before non-trivial locks. `/audit` between implement and validate. Verify-skills before accepting delegated results. Runtime LARP for UI validate. SHA-stamp truth. Banned-language lint. Promise conservation via traceability + graph. Value-defensibility before price. Market-claim recheck before COMMERCIAL-RC. PROFILE drift check on recheck.
-
-## Specs routing
-
-Never invent filenames under `specs/`. Canonical homes: `.speck/reference/canonical-routing.md`. Read on write.
-
-## Command order
+## Canonical flow
 
 What/order only — how is in skills. Brackets are conditional slots; evaluate them when reached. `.speck/reference/command-phases.md` explains gates but never redefines this order.
 
@@ -81,50 +63,35 @@ Decision boundary: `[just-in-time-research if external facts] → speck-skeptica
 Post-validation input: defect `→ harden`; deliberate redesign `→ adjust`; engagement gap `→ speck-recheck`; rigor outgrowth `→ project-promote`; new scope `→ [project-specify | epic-specify | story-specify]`.
 <!-- SPECK:FLOW:END -->
 
-Parallel epic mechanics: `.speck/patterns/learned/process/parallel-epic-execution.md`.
+## Always-on gates
 
-## Skills
-
-User-only: lifecycle entrypoints `/speck` `/story` `/epic`, convenience routers `/validate` `/retrospective`, and compatibility aliases. Policy: `.speck/reference/skill-catalog-policy.json`.
-Auto skills expose one canonical entry per overlapping intent family: `/analyze`, `/adjust`, `/speck-scan`; validation/retrospective stay level-specific. Read SKILL.md; follow load-DAG receipts (ADR-0005/0006/0007).
-Vendor APIs: Context7 / official docs JIT. Stack start: `.speck/recipes/`.
-Hosts/MCP/model tiers: `.speck/reference/host-capabilities.md`.
-
-## NEVER
-
-Skip project-state / engagement recheck. Pass validate without checked-in evidence. Dev screenshots as launch proof. Non-canonical `specs/` names. Skip `/audit` before validate. Accept delegated self-report without skill-invocation proof. Conflate axes. Launder taste/premise misses as uncatchable. Cap on named blocker without logged attempt. Hand-edit witness.json.
-
-## ALWAYS
-
-First-actions ladder. Read SKILL + template. Stamp truth. ≥3 alternatives at decisions. LARP UI at validate. Analyze when required. Declare readiness state. Log decisions. Enumerate promises into matrix. FELT via naive-hostile LARP.
+- Read the selected `SKILL.md` and its required template before writing. Never invent filenames under `specs/`; read `.speck/reference/canonical-routing.md` when writing an artifact.
+- Compare at least three alternatives before a non-trivial lock, then record the decision at the phase boundary.
+- Run `/speck-audit` after implementation and before validation. For UI, run naive-user and hostile-user runtime LARP before validation. Checked-in evidence is required for a passing validation report.
+- Verify delegated work from its transcript and tool evidence; do not accept a self-reported pass or readiness state.
+- Keep every enumerable promise traced through the matrix and witness graph. Never hand-edit `witness.json`.
+- Stamp truth artifacts with the current commit SHA, run banned-language checks, recheck market claims before COMMERCIAL-RC, and check PROFILE drift during recheck.
+- Declare the exact readiness state. Do not hide premise or taste failures behind implementation green, and do not turn an unreproduced access problem into a blocker.
 
 ## When user says
 
 | Say | Do |
 |-----|-----|
-| /speck … | Read `.cursor/skills/speck/SKILL.md` |
-| Build feature | Route to `*-specify`; never skip to implement |
-| Is this done? | larp + audit; declare readiness with evidence |
-| Status / continue | project-state Next action |
-| Parallel epics | wave safety → worktrees → `/epic` |
-| Fix bug in validated work | harden |
-| Redesign validated | `/adjust` (classify blast radius first) |
-| Contract pivot | `/adjust --level project` + cascade |
+| `/speck …` | Read `.cursor/skills/speck/SKILL.md` |
+| Build or change a feature | Enter at the appropriate `*-specify`; never skip straight to implementation |
+| “Is this done?” | Audit, run applicable LARP, validate, and declare readiness with evidence |
+| Status / continue | Read `project-state.md` and follow Next action |
+| Run epics in parallel | Load `parallel-execution`; validate the wave before creating worktrees |
+| Fix a defect in validated work | Run `harden` |
+| Deliberately redesign validated work | Run `adjust` after classifying story, epic, or project blast radius |
+| Change the product contract or direction | Run `adjust --level project`, compute the cascade, and revalidate affected work |
 
-## Evolution (anti-bloat)
+## Load only when needed
 
-1. Classify: spine | always-on-contract | skill-catalog | jit | delete
-2. Prefer JIT
-3. Catalog needs a ≤120-char description with WHAT + specific WHEN; add WHERE/boundary only if selection-critical; require routing case + budget room
-4. ADR in `docs/decisions/` (+ A1-lite for gates)
-5. `validate-corpus-budget` must stay green
-Detail: `.speck/reference/methodology-evolution.md`
-
-## More
-
-`.speck/README.md` · `.cursor/skills/` · `.speck/templates/` · `.speck/recipes/` · `docs/v11/v11-north-star.md`
-
-**Speck Version**: 11.0.0
-**Methodology**: Promise → Build → Prove
+- Artifact locations: `.speck/reference/canonical-routing.md`
+- Gate explanations and host differences: `.speck/reference/command-phases.md` and `.speck/reference/host-capabilities.md`
+- Parallel dispatch and merge mechanics: `.cursor/skills/parallel-execution/SKILL.md`
+- Stack starting points: `.speck/recipes/`; current vendor behavior: official docs at decision or implementation time
+- Speck methodology development only: `docs/decisions/`, `docs/methodology/`, and `docs/history/`
 
 <!-- SPECK:END -->

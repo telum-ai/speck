@@ -121,6 +121,24 @@ path.write_text(text.replace(
 ))
 PY
 
+python3 - "$TMP/.cursor/skills/good/SKILL.md" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+path.write_text(path.read_text() + "\nRead `references/missing.md` before acting.\n")
+PY
+echo "Test: router edge to missing reference fails"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected missing-reference failure"
+  exit 1
+fi
+python3 - "$TMP/.cursor/skills/good/SKILL.md" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+path.write_text(path.read_text().replace("\nRead `references/missing.md` before acting.\n", "\n"))
+PY
+
 mkdir -p "$TMP/.cursor/skills/essay/references"
 cat > "$TMP/.cursor/skills/essay/SKILL.md" <<'EOF'
 ---

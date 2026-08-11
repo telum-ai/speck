@@ -2006,7 +2006,8 @@ def cmd_gate(project_dir, story=None, epic=None):
 # supplies the three things native /goal cannot compute: the completion CONDITION, the evidence
 # SURFACE the evaluator reads (this line), and — via AGENTS.md — the per-turn routing. The
 # evaluator judges SURFACED text and runs no tools, so `gap` folds the structural remainder +
-# report-frontmatter axes into ONE machine-legible `SPECK-GAP:` line. See docs/v9/v9-north-star.md §6.
+# report-frontmatter axes into ONE machine-legible `SPECK-GAP:` line. Historical rationale:
+# docs/history/north-stars/v9.md §6.
 # ---------------------------------------------------------------------------
 
 def _collect_axes(project_dir):

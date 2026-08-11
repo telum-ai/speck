@@ -462,7 +462,7 @@ assert_out_lacks "W2c: … so an unstaged file is never convicted" '"revolutioni
 assert_out_has   "W2d: … while PREDICATES proves the term set is alive" "SPECK_GATE_PREDICATES=1"
 
 # W3 (R-A P0-1, the second door) — the wrapper IS Speck's documented pre-commit surface:
-# .speck/patterns/constitution-as-code.md tells teams to wire it into Husky/lint-staged. With
+# project-constitution may wire it into Husky/lint-staged. With
 # a file list it takes the explicit-targets path, NOT --staged, so making only --staged's
 # parse-defect exit advisory left one typo'd §7 row still blocking every commit in any repo
 # that followed the documented pattern. The mode has to travel with the invocation, not with

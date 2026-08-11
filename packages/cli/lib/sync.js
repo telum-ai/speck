@@ -12,11 +12,9 @@ import { tmpdir } from 'os';
  */
 const ALWAYS_OVERWRITE = [
   '.speck/templates',
-  '.speck/templates/sprint',  // v6.0.0: Sprint play level templates
-  '.speck/patterns',
   '.speck/recipes',
+  '.speck/reference',
   '.speck/scripts',
-  '.speck/scripts/validation',
   '.speck/README.md',
   '.speck/VERSION',
   '.cursor/skills',
@@ -86,7 +84,7 @@ const SMART_MERGE_FILES = {
  * Files that should be skipped if user has customized them
  */
 const SKIP_IF_CUSTOMIZED = {
-  // v7.6.0: README.md handled by syncProjectReadme() — not copied from Speck repo
+  // Root README.md is handled by syncProjectReadme(), not this generic map.
 };
 
 /**
@@ -109,7 +107,7 @@ function shouldSkipFile(filePath) {
  * Files that were removed from Speck and should be deleted during upgrade
  */
 const REMOVE_FILES = [
-  // v4.3.0: Orchestrator disabled — remove from projects on upgrade
+  // Retired hosted orchestrator and repository-management files.
   '.github/workflows/speck-orchestrator.yml',
   '.github/workflows/speck-orchestrator-test.yml',
   '.github/workflows/speck-orchestrator-e2e-test.yml',
@@ -135,11 +133,11 @@ const REMOVE_FILES = [
   '.speck/templates/context/project-context.md',
   '.speckignore',
   '.templatesyncignore',
-  // v5.0.0: Commands migrated to skills, rules migrated to skills
+  // Retired command/rule surfaces replaced by skills.
   '.cursor/commands',
   '.cursor/rules/speck',
   '.claude/commands',
-  // v11.0.0: Generic domain/integration skills deleted (Context7 + recipes JIT)
+  // Retired generic domain/integration skills; recipes + current official docs replace them.
   '.cursor/skills/clerk-authentication',
   '.cursor/skills/oauth-implementation',
   '.cursor/skills/stripe-integration',
@@ -161,13 +159,33 @@ const REMOVE_FILES = [
   '.cursor/skills/gdpr-compliance',
   '.cursor/skills/model-selection',
   '.cursor/skills/ai-api-integration',
-  // v11.0.0: visual-testing host skills folded into visual-testing/references/
+  // Retired host-specific visual-testing skills folded into visual-testing references.
   '.cursor/skills/visual-testing-web',
   '.cursor/skills/visual-testing-desktop-electron',
   '.cursor/skills/visual-testing-desktop-tauri',
   '.cursor/skills/visual-testing-extension',
   '.cursor/skills/visual-testing-mobile-flutter',
   '.cursor/skills/visual-testing-mobile-react-native',
+  // Framework-only evaluation and feedback leaked through the old template exporter.
+  '.speck/eval',
+  '.speck/feedback',
+  // Runtime framework material no longer owns project-learned patterns. Remove only
+  // the exact files Speck previously shipped; preserve every project-created sibling.
+  '.speck/patterns/constitution-as-code.md',
+  '.speck/patterns/library/README.md',
+  '.speck/patterns/learned/README.md',
+  '.speck/patterns/learned/process/parallel-epic-execution.md',
+  '.speck/patterns/learned/testing/class-gate-not-a-third-fix.md',
+  '.speck/patterns/learned/testing/inverted-polarity-exception-registry.md',
+  '.speck/patterns/learned/testing/mirror-sweep.md',
+  '.speck/patterns/learned/testing/quality-bound-vs-existence-bound.md',
+  '.speck/patterns/learned/testing/recipe-duplicated-rule-schema-type-parity.md',
+  '.speck/patterns/learned/testing/recipe-failed-read-is-not-empty.md',
+  '.speck/patterns/learned/testing/recipe-growth-table-bounded-select.md',
+  '.speck/patterns/learned/testing/recipe-pii-redaction-chokepoint.md',
+  '.speck/patterns/learned/testing/recipe-production-writer-registry.md',
+  '.speck/patterns/learned/testing/recipe-raw-enum-label-shape.md',
+  '.speck/patterns/learned/testing/two-carrier-interval-doctrine.md',
 ];
 
 // ============================================================
@@ -227,7 +245,7 @@ function mergeClaudeMd(sourceContent, targetContent) {
     return { content: content.trimEnd() + '\n', action: content === targetContent ? 'skip' : 'merge' };
   }
 
-  // v11 preview builds wrote a bare import. Adopt it into the managed block so repeated
+  // Older preview builds wrote a bare import. Adopt it into the managed block so repeated
   // upgrades cannot accumulate duplicate imports.
   const userContent = targetContent
     .split('\n')

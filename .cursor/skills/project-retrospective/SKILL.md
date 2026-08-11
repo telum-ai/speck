@@ -95,7 +95,7 @@ gh issue create \
 
 Filter: no project name, domain, features, velocity metrics. Include: command assessments, template gaps, flow improvements.
 
-See `.speck/TEMPLATE-FEEDBACK.md`.
+Use `/speck-feedback`; its template is `.speck/templates/feedback/template.md`.
 
 ## Report
 

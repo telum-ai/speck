@@ -208,4 +208,4 @@ Each LARP run produces a findings note:
 
 ---
 
-*[as of SHA `<git_sha_short>` | verified `<date>` | speck 8.0.0]*
+*[as of SHA `<git_sha_short>` | verified `<date>` | speck `<version>`]*

@@ -2,12 +2,12 @@
 
 ## 1. Gap routing (`/goal` companion)
 
-Each turn: print `speck_graph.py check` + `gap` stdout; terminate on literal `SPECK-GAP: none`. Route top gap:
+Run `python3 .speck/scripts/graph/speck_graph.py check <project-dir>` and `gap <project-dir>`. Surface their stdout. Stop on literal `SPECK-GAP: none`; otherwise route the highest-priority gap:
 
 | gap | route |
 |-----|-------|
-| untraced/undischarged/phantom promise | story-specify → plan → tasks → implement → audit → story-validate |
-| audit P0/P1 | harden |
-| uncovered FELT / unjudged MM | larp |
-| forks-open TASTE · contract pivot · price · deploy | STOP-BLOCKED owner decision |
-| stale graph | speck_graph.py build |
+| Promise has no trace, delivery, or real discharge | Resume the story flow at its first missing step |
+| Audit has an open P0/P1 | `harden` |
+| User experience is untested or a magic moment is unjudged | `speck-larp` |
+| Taste fork, product-contract pivot, price, deploy, or other owner gesture | Stop for the owner decision |
+| Graph is stale | `python3 .speck/scripts/graph/speck_graph.py build <project-dir>` |

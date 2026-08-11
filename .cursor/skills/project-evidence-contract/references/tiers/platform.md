@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`evidence-contract.md` is the single document that prevents the most common v6 failure: **specs claim done while runtime proves otherwise.**
+`evidence-contract.md` prevents the recurring failure where **specs claim done while runtime proves otherwise.**
 
 It locks down:
 - What runtime evidence counts as proof (per platform)

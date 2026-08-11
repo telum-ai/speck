@@ -22,7 +22,7 @@ Before any other action, read:
 
 ## Purpose
 
-Root `README.md` is the **PROFILE pillar** center-of-gravity artifact (enforced from v7.7+). It derives from PROMISE + PROVE.
+Root `README.md` is the **PROFILE pillar** center-of-gravity artifact. It derives from PROMISE + PROVE.
 
 Speck manages:
 - **Footer** (`<!-- SPECK:START -->` … `<!-- SPECK:END -->`) — always refreshed
@@ -30,7 +30,7 @@ Speck manages:
 - **Scaffold placeholders** — auto-filled while still matching template text
 - **User-edited sections** — read-only outside AUTO-SYNC blocks
 
-### AUTO-SYNC opt-in (v7.7+)
+### AUTO-SYNC opt-in
 
 ```markdown
 <!-- PROFILE:AUTO-SYNC source=product-contract.md section=1 -->

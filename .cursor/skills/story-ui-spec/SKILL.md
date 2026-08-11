@@ -16,7 +16,7 @@ paths:
 ```
 .speck/templates/story/ui-spec-template.md
 ```
-The template defines required sections and formatting for `ui-spec.md`, including **PROFILE surface impact** (v7.7+), component hierarchy, state matrix, design token usage, and interaction spec.
+The template defines required sections and formatting for `ui-spec.md`, including **PROFILE surface impact**, component hierarchy, state matrix, design token usage, and interaction spec.
 
 **Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 

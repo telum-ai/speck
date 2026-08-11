@@ -63,3 +63,46 @@ test('smartSync: custom agent dir survives via the same rule', () => {
   smartSync(source, target);
   assert.ok(existsSync(join(target, '.cursor', 'agents', 'my-custom-agent', 'AGENT.md')));
 });
+
+test('smartSync: ships runtime reference files required by AGENTS and skills', () => {
+  const { source, target } = makeDirs();
+  mkdirSync(join(source, '.speck', 'reference'), { recursive: true });
+  writeFileSync(join(source, '.speck', 'reference', 'canonical-routing.md'), 'CURRENT ROUTING');
+
+  smartSync(source, target);
+
+  assert.equal(
+    readFileSync(join(target, '.speck', 'reference', 'canonical-routing.md'), 'utf8'),
+    'CURRENT ROUTING',
+  );
+});
+
+test('smartSync: preserves project-created learned patterns while retiring former Speck files', () => {
+  const { source, target } = makeDirs();
+  const learned = join(target, '.speck', 'patterns', 'learned');
+  mkdirSync(join(learned, 'gotchas'), { recursive: true });
+  mkdirSync(join(learned, 'testing'), { recursive: true });
+  writeFileSync(join(learned, 'gotchas', 'project-only.md'), 'PROJECT LEARNING');
+  writeFileSync(join(learned, 'testing', 'mirror-sweep.md'), 'FORMER SPECK FILE');
+
+  smartSync(source, target);
+
+  assert.equal(
+    readFileSync(join(learned, 'gotchas', 'project-only.md'), 'utf8'),
+    'PROJECT LEARNING',
+  );
+  assert.ok(!existsSync(join(learned, 'testing', 'mirror-sweep.md')));
+});
+
+test('smartSync: removes framework-only eval and feedback leaked by old template exports', () => {
+  const { source, target } = makeDirs();
+  mkdirSync(join(target, '.speck', 'eval', 'reports'), { recursive: true });
+  mkdirSync(join(target, '.speck', 'feedback'), { recursive: true });
+  writeFileSync(join(target, '.speck', 'eval', 'reports', 'old.md'), 'META');
+  writeFileSync(join(target, '.speck', 'feedback', 'old.md'), 'META');
+
+  smartSync(source, target);
+
+  assert.ok(!existsSync(join(target, '.speck', 'eval')));
+  assert.ok(!existsSync(join(target, '.speck', 'feedback')));
+});

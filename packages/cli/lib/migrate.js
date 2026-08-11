@@ -219,12 +219,12 @@ export function detectMigration(currentVersion, targetVersion) {
   const scaffoldV7 = toMajor >= 7 && (fromMajor == null || fromMajor < 7);
 
   // Crossing into v8 from anything older → semantic re-prove (cap-and-worklist).
-  // The mechanical upgrade is trusted; v7-era "green" is NOT (see docs/v8/v8-north-star.md §5).
+  // The mechanical upgrade is trusted; v7-era "green" is NOT (see docs/history/north-stars/v8.md §5).
   const reproveV8 = toMajor >= 8 && (fromMajor == null || fromMajor < 8);
 
   // Crossing into v9 from anything older → establish the witness graph as the spine.
   // Chain-aware: a v6→v9 jump runs scaffoldV7 → reproveV8 → graphV9 in dependency order (the
-  // graph extracts from the v7 artifacts and inherits the v8 caps). See docs/v9/v9-north-star.md §4.
+  // graph extracts from the v7 artifacts and inherits the v8 caps). See docs/history/north-stars/v9.md §4.
   const graphV9 = toMajor >= 9 && (fromMajor == null || fromMajor < 9);
 
   // Crossing into v10 from anything older → run the named-migration lane (below).
@@ -258,7 +258,7 @@ export function writeV8ReproveMarker(targetDir, targetVersion = '8.0.0') {
 This project was upgraded to Speck v8 (Evaluation Over Verification) on ${date}
 (target ${targetVersion}). The mechanical upgrade — files, alias-shims, lazy patterns,
 version — is done. But v8 does NOT trust v7-era "green" as evaluation-proven
-(see docs/v8/v8-north-star.md §5).
+(see docs/history/north-stars/v8.md §5).
 
 BEFORE any new feature work, run:  /speck-reprove
 
@@ -300,7 +300,7 @@ This project was upgraded to Speck v9 (the witness graph is the spine) on ${date
 (target ${targetVersion}). The mechanical upgrade — files, scripts, version — is done.
 But the graph itself has NOT been built: it requires identity hardened first, and the
 per-project graph work + retroactive cleanup is a reversible gesture the skill owns
-(see docs/v9/v9-north-star.md §4).
+(see docs/history/north-stars/v9.md §4).
 
 BEFORE any new feature work, run:  /speck-graph-up
 

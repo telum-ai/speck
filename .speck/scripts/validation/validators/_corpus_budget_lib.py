@@ -454,6 +454,15 @@ def main() -> int:
         ref_mds = sorted(refs.rglob("*.md")) if refs.is_dir() else []
         n_refs = len(ref_mds)
 
+        # A router edge to a missing node is a broken JIT contract. Template
+        # selectors such as states/<kebab>.md are validated through their
+        # concrete nodes below.
+        for rel in sorted(set(LOCAL_REF_EDGE.findall(body))):
+            if any(token in rel for token in ("<", ">", "#", "*")):
+                continue
+            if not (skill_md.parent / "references" / rel).is_file():
+                err(f"skill {name} routes to missing reference: references/{rel}")
+
         # Anti-theater: single procedure.md pointer (ADR-0005)
         if n_refs == 1 and ref_mds[0].name == "procedure.md":
             err(

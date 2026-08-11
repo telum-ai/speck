@@ -8,7 +8,7 @@ paths:
   - "specs/projects/**/**/epic.md"
 ---
 
-# /epic-scan — retired in Speck v8 (alias-shim)
+# /epic-scan — compatibility alias
 
 Brownfield code scanning is unified in **`/speck-scan`**, parameterized by level.
 

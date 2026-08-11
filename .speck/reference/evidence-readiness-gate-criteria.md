@@ -144,7 +144,7 @@ To guarantee that agent-verified success translates to actual runtime success on
 
 *Rule:* If any of these criteria are present, the agent is structurally incapable of verifying them autonomously (as its sandbox runs on dev/preview targets with mock configs). These MUST be tagged `device-walk`. Attempting to autonomously claim `SHIP-RC` or higher without a valid `larp-recordings/<sha>-human-attestation.md` recorded by a human on a real build is classified as **P0 surrogate-proof drift**.
 
-### PROFILE Gate Criteria (v7.7+)
+### PROFILE Gate Criteria
 
 *Public-face drift must not block release silently. See `project.md` PROFILE surfaces table.*
 

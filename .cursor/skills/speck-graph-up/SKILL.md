@@ -1,6 +1,6 @@
 ---
 name: speck-graph-up
-description: Establishes the v9 witness graph and heals old truth. Use when .speck/.v9-graph-needed exists.
+description: Establishes a missing witness graph and heals legacy truth. Use when .speck/.v9-graph-needed exists.
 ---
 
 The user input can be provided directly by the agent or as a command argument — consider it before proceeding.
