@@ -94,7 +94,7 @@ test('smartSync: preserves project-created learned patterns while retiring forme
   assert.ok(!existsSync(join(learned, 'testing', 'mirror-sweep.md')));
 });
 
-test('smartSync: removes framework-only eval and feedback leaked by old template exports', () => {
+test('smartSync: removes framework-only eval while preserving project feedback', () => {
   const { source, target } = makeDirs();
   mkdirSync(join(target, '.speck', 'eval', 'reports'), { recursive: true });
   mkdirSync(join(target, '.speck', 'feedback'), { recursive: true });
@@ -104,5 +104,8 @@ test('smartSync: removes framework-only eval and feedback leaked by old template
   smartSync(source, target);
 
   assert.ok(!existsSync(join(target, '.speck', 'eval')));
-  assert.ok(!existsSync(join(target, '.speck', 'feedback')));
+  assert.equal(
+    readFileSync(join(target, '.speck', 'feedback', 'old.md'), 'utf8'),
+    'META',
+  );
 });

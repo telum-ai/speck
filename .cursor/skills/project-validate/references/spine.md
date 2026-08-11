@@ -25,7 +25,7 @@ Project MAX claimable = MIN(epic verified states, coverage-matrix cap, gate-live
 5. **SHIP-RC+ PROFILE gates**:
 ```bash
 bash .speck/scripts/validation/validators/validate-readme.sh --strict
-bash .speck/scripts/profile-drift-check.sh
+bash .speck/scripts/profile-drift-check.sh --claim "$claimed_state"
 ```
 Any `PROFILE_DRIFT.P1` → STOP.
 
@@ -74,28 +74,3 @@ bash .speck/scripts/validation/validators/validate-taste-axis.sh --strict projec
 - ALWAYS MIN(epic states) for project ceiling
 - ALWAYS test cross-epic dependency arrows
 - ALWAYS SHA-stamp reports
-
-
-# project-validate
-
-Prereq: every epic ≥ `UX-RC` (or project ambition); fresh `/recheck` (<7 days).
-Output: `[PROJECT_DIR]/project-validation-report.md`, `project-validation-summary.md`, `project-punch-list.md`.
-Templates: `.speck/templates/project/project-validation-report-template.md`, `project-validation-summary-template.md`, `project-punch-list-template.md`, `.speck/templates/story/validation-report-template.md` (readiness taxonomy).
-Verdict: readiness state + production GO/NO-GO — never PASS/FAIL alone.
-
-## 0. Template
-
-Read all project validation templates before writing.
-
-## 3. Pre-validate gates (STOP on fail)
-
-1. Every epic `epic-validation-report.md` verified ≥ `UX-RC` (or higher per ambition). Lower → STOP: run `/larp` + `/epic-validate`.
-2. **`/recheck` within 7 days**. Missing/stale → STOP.
-3. **`evidence-contract.md`** + **`product-contract.md`**. Missing → STOP.
-4. **Full JTBD walkthrough per persona** in evidence-contract — latest `larp-recordings/<sha>-<persona>-findings.md` on launch build. Missing persona → STOP.
-5. **SHIP-RC+ PROFILE gates**:
-```bash
-bash .speck/scripts/validation/validators/validate-readme.sh --strict
-bash .speck/scripts/profile-drift-check.sh
-```
-Any `PROFILE_DRIFT.P1` → STOP.

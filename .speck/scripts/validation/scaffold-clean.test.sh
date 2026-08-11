@@ -246,6 +246,25 @@ if ! printf '%s\n' "$OUT" | grep -q "Found unreplaced 'REPLACE_BEFORE_SHIP' plac
 fi
 echo "  ✓ caught"
 
+echo "Test: negative control — a heading-only PROFILE gate cannot pass"
+NEG_PROFILE_DIR="$TMP/neg-specs/projects/probe-neg-profile"
+mkdir -p "$NEG_PROFILE_DIR"
+cp "$PROBE/evidence-contract.md" "$NEG_PROFILE_DIR/evidence-contract.md"
+sed 's/`project.md` → `## PROFILE surfaces` is the binding public-surface registry./This heading is intentionally shape-only./' \
+  "$NEG_PROFILE_DIR/evidence-contract.md" > "$NEG_PROFILE_DIR/evidence-contract.mutant.md"
+mv "$NEG_PROFILE_DIR/evidence-contract.mutant.md" "$NEG_PROFILE_DIR/evidence-contract.md"
+if OUT="$("$VT" --strict "$NEG_PROFILE_DIR/evidence-contract.md" 2>&1)"; then EC=0; else EC=$?; fi
+if [[ "$EC" -eq 0 ]]; then
+  echo "FAIL: validate-template.sh passed a heading-only PROFILE gate"
+  exit 1
+fi
+if ! printf '%s\n' "$OUT" | grep -q "PROFILE Gate Criteria is shape-only or incomplete"; then
+  echo "FAIL: expected the binding PROFILE contract diagnostic:"
+  echo "$OUT"
+  exit 1
+fi
+echo "  ✓ caught"
+
 echo "Test: negative control — validate-product-contract.sh (via validate-template.sh, real filename) still catches a genuine unfilled marker"
 NEG_PC_DIR="$TMP/neg-specs/projects/probe-neg-pc"
 mkdir -p "$NEG_PC_DIR"

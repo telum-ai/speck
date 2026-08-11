@@ -6,24 +6,24 @@
 
 ## 🎯 Quick Start
 
-Just type `/speck` followed by what you want to do:
+Describe what you want to do in ordinary language:
 
 ```
-/speck Build a social networking app
-/speck Add user authentication
-/speck Fix the login button
-/speck Import my existing codebase at ~/projects/myapp
-/speck Continue from last session
-/speck Make this premium and shippable
+Build a social networking app
+Add user authentication
+Fix the login button
+Import my existing codebase at ~/projects/myapp
+Continue from last session
+Make this premium and shippable
 ```
 
-The `/speck` router detects:
+The managed root `AGENTS.md` is always in the agent's context. It resolves:
 - The right level (project / epic / story)
 - The right play level (sprint / build / platform)
 - The right next command
 - Whether you need `/recheck` first (engagement gap detection)
 
-**That's it!** No need to memorize commands — just describe what you want to accomplish.
+**That's it!** No need to memorize commands. `/speck` remains accepted as a compatibility alias, but it is not required and owns no separate workflow.
 
 ---
 
@@ -157,7 +157,7 @@ The loop closes via drift detection. PROFILE derives from PROMISE + PROVE; `vali
 
 In the **Speck framework repo**, root `README.md` is a symlink to this file so GitHub visitors and agents see one source of truth. **Do not copy that symlink into user projects** — the CLI sync engine never overwrites a user's root README with Speck marketing.
 
-On `speck init`, Speck writes a **project skeleton** README from `.speck/templates/project/readme-template.md` (not this file). Speck only manages the `<!-- SPECK:START -->` … `<!-- SPECK:END -->` footer on upgrade. The `/project-readme` skill (and `/project-state` regeneration) keeps PROFILE status current.
+On `speck init`, Speck writes a **project skeleton** README from `.speck/templates/project/readme-template.md` (not this file). Speck only manages the `<!-- SPECK:START -->` … `<!-- SPECK:END -->` footer on upgrade. `project-profile` refreshes safe managed surfaces and checks every public surface declared in `project.md`; `/project-readme` remains a compatibility alias.
 
 ---
 
@@ -508,6 +508,6 @@ After running retrospective commands (`/story-retrospective`, `/epic-retrospecti
 
 ---
 
-**Need help?** Just type `/speck` and describe what you want to build. Speck will guide you through the rest!
+**Need help?** Describe what you want to build. The always-loaded root `AGENTS.md` routes the work; `/speck` is only a compatibility alias.
 
 **Methodology**: Promise → Build → Prove + Profile (evidence-driven specification)

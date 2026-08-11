@@ -245,6 +245,14 @@ Axes: CORRECT · ON-CONTRACT · FELT-GOOD · TASTE (non-collapsible). Full per-s
 
 Never claim SHIP-RC from dev-server evidence. Cap with logged attempt when P3 applies.
 
+### 8a. PROFILE Gate Criteria
+
+`project.md` → `## PROFILE surfaces` is the binding public-surface registry. Every retained row declares its adapter, target, source of truth, and first required readiness state. README is the center of gravity, not the complete pillar.
+
+Run `bash .speck/scripts/profile-drift-check.sh --claim <state>`. The gate must inspect every row and emit a per-surface result. Any `PROFILE_DRIFT.P1` on a surface required by the claimed state blocks that claim. Missing, unreachable, or placeholder targets remain findings; README green cannot compensate for another surface's drift.
+
+Local managed placeholders may be refreshed by `project-profile`. User-owned files and remote metadata require their owning story, project adjustment, or owner gesture; never overwrite them merely to turn the gate green.
+
 ## 9. Evidence Storage
 
 *Where evidence artifacts live in the repo.*

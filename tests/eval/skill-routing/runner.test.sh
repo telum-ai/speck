@@ -57,6 +57,20 @@ python3 - "$TMP/reports/2026-08-11-codex-terra.json" <<'PY'
 import json, pathlib, sys
 path = pathlib.Path(sys.argv[1])
 report = json.loads(path.read_text())
+report["agents_sha256"] = "0" * 64
+path.write_text(json.dumps(report))
+PY
+if python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports" >/dev/null; then
+  echo "FAIL: stale-AGENTS report mutant passed"
+  exit 1
+fi
+
+rm -r "$TMP/reports"
+cp -R "$ROOT/tests/eval/skill-routing/reports" "$TMP/reports"
+python3 - "$TMP/reports/2026-08-11-codex-terra.json" <<'PY'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+report = json.loads(path.read_text())
 report["flow_contract_sha256"] = "0" * 64
 path.write_text(json.dumps(report))
 PY

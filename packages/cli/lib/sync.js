@@ -166,9 +166,9 @@ const REMOVE_FILES = [
   '.cursor/skills/visual-testing-extension',
   '.cursor/skills/visual-testing-mobile-flutter',
   '.cursor/skills/visual-testing-mobile-react-native',
-  // Framework-only evaluation and feedback leaked through the old template exporter.
+  // Framework-only evaluation leaked through the old template exporter.
+  // `.speck/feedback/` is project-owned runtime output from speck-feedback and must survive.
   '.speck/eval',
-  '.speck/feedback',
   // Runtime framework material no longer owns project-learned patterns. Remove only
   // the exact files Speck previously shipped; preserve every project-created sibling.
   '.speck/patterns/constitution-as-code.md',

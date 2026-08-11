@@ -122,8 +122,8 @@ export async function upgrade(targetDir, version, options = {}) {
   if (results.readmeRepaired) {
     console.log(`
 🔧 README repaired: replaced legacy Speck marketing content with a project skeleton.
-   Run /project-readme (or /project-specify then /project-product-contract) to populate
-   from your specs. Your project README is yours — Speck only manages <!-- SPECK:START --> footer.`);
+   Run project-profile (or project-specify then project-product-contract) to populate
+   from your specs and inspect every declared public surface. Your project README is yours — Speck only manages <!-- SPECK:START --> footer.`);
   }
 
   const readmeResult = runReadmeRegen(targetDir);
@@ -303,4 +303,3 @@ function runTemplateDriftCheck(targetDir) {
     console.log('\n   To fix structural drift, run `/recheck` or `/speck-catch-up --phase=refresh`');
   }
 }
-

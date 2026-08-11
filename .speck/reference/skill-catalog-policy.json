@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "explicit_user_only": [
-    "speck",
     "story",
     "epic"
   ],
   "compatibility_shims": [
+    "speck",
     "epic-outline",
     "story-outline"
   ],
@@ -34,6 +34,11 @@
       "auto_entrypoints": ["speck-scan"],
       "user_only_routers": [],
       "compatibility_shims": ["project-scan", "epic-scan", "story-scan"]
+    },
+    "profile": {
+      "auto_entrypoints": ["project-profile"],
+      "user_only_routers": [],
+      "compatibility_shims": ["project-readme"]
     }
   }
 }

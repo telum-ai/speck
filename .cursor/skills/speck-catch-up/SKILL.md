@@ -157,13 +157,13 @@ Prioritized P0–P3 remediation backlog: downgraded stories, magic moments needi
 ## Phase 8 — Finalize
 
 1. Remove project from `.speck/.migration-needs-catchup` (delete file if empty).
-2. Run `/project-readme`.
+2. Run `project-profile`.
 3. Re-run `/recheck`.
 4. Update project-state: "Catch-up complete. Resume normal workflow."
 
 ## Phase PROFILE (v7.7+, idempotent)
 
-If missing: append `## PROFILE surfaces` to project.md, `PROFILE Gate Criteria` to evidence-contract.md (from templates, marked `[FROM PROFILE CATCH-UP]`). Log decision. Run `regenerate-project-readme.sh`, `validate-readme.sh`, `profile-drift-check.sh`. Skip steps where section exists.
+If missing: append `## PROFILE surfaces` to project.md, `PROFILE Gate Criteria` to evidence-contract.md (from templates, marked `[FROM PROFILE CATCH-UP]`). Log decision. Run `project-profile` so every retained surface is checked. Skip steps where the section already exists.
 
 ## Phase REFRESH (idempotent)
 

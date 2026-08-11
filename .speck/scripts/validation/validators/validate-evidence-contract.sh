@@ -154,12 +154,24 @@ else
     "Search for all occurrences of 'REPLACE_BEFORE_SHIP' and fill in concrete values."
 fi
 
-# 9. PROFILE Gate Criteria (v7.7+)
-if echo "$content" | grep -q "PROFILE Gate Criteria"; then
-  log_success "PROFILE Gate Criteria section found"
-else
-  log_warning "Missing PROFILE Gate Criteria subsection (v7.7+)" \
+# 9. PROFILE Gate Criteria
+profile_section="$(printf '%s\n' "$content" | awk '
+  /^### ([0-9]+[a-z]?[.] )?PROFILE Gate Criteria[[:space:]]*$/ { active=1 }
+  active && /^##[^#]/ { exit }
+  active { print }
+')"
+if [[ -z "$profile_section" ]]; then
+  log_error "Missing PROFILE Gate Criteria subsection" \
     "Add ### PROFILE Gate Criteria under Section 7, or run /speck-catch-up --phase=profile"
+elif printf '%s\n' "$profile_section" | grep -Eqi 'project[.]md.*PROFILE surfaces' \
+  && printf '%s\n' "$profile_section" | grep -Eqi 'profile-drift-check[.]sh --claim' \
+  && printf '%s\n' "$profile_section" | grep -Eqi 'inspect every row' \
+  && printf '%s\n' "$profile_section" | grep -Eqi 'PROFILE_DRIFT[.]P1' \
+  && printf '%s\n' "$profile_section" | grep -Eqi 'Missing, unreachable, or placeholder'; then
+  log_success "Binding multi-surface PROFILE Gate Criteria found"
+else
+  log_error "PROFILE Gate Criteria is shape-only or incomplete" \
+    "Require the project.md registry, --claim-aware all-row evaluation, PROFILE_DRIFT.P1 blocking, and explicit missing/unreachable/placeholder findings."
 fi
 
 # === OUTPUT RESULTS ===

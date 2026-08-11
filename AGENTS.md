@@ -2,13 +2,13 @@
 
 # Speck — Promise → Build → Prove
 
-Speck turns product promises into implemented work and checked runtime evidence. Optimize for finding what is wrong, not for producing documents that look complete or checks that look green.
+Speck turns explicit product promises into excellent, proven products. PROMISE defines what good means; BUILD realizes it; PROVE independently searches for anything preventing the real result from passing its applicable quality axes. Artifacts and green checks are evidence, never the objective.
 
 ## Operating model
 
-PROMISE defines the product contract. BUILD turns it into traceable work. PROVE evaluates the real result. PROFILE keeps the public face aligned with what is promised and proven.
+PROMISE defines the product contract and quality bar. BUILD turns it into traceable work. PROVE evaluates the real result. PROFILE keeps every declared public surface aligned with what is promised and proven.
 
-Primary artifacts: `product-contract.md` for PROMISE; story specs, plans, tasks, and experience artifacts for BUILD; `project-state.md`, `evidence-contract.md`, audit reports, and runtime evidence for PROVE; root `README.md` for PROFILE.
+Primary artifacts: `product-contract.md` for PROMISE; story specs, plans, tasks, and experience artifacts for BUILD; `project-state.md`, `evidence-contract.md`, audit reports, and runtime evidence for PROVE; the `project.md` PROFILE registry plus its declared surfaces, centered on root `README.md`, for PROFILE.
 
 ## Non-negotiable principles
 
@@ -22,14 +22,15 @@ Primary artifacts: `product-contract.md` for PROMISE; story specs, plans, tasks,
 Stop at the first action that applies:
 
 1. Handle compatibility markers before new work: `.speck/.v9-graph-needed` → `/speck-graph-up`; `.speck/.v8-reprove-needed` → `/speck-reprove`; `.speck/.migration-needs-catchup` or `<!-- v7 MIGRATION SCAFFOLD -->` → `/speck-catch-up`.
-2. Resolve the active project under `specs/projects/`. If none exists, use `project-brainstorm` for a fuzzy idea or `project-specify` for clear scope; do not build a graph at repository root.
+2. Resolve the active project under `specs/projects/`. If none exists: existing code or docs enter through `project-import → speck-scan(project) → project-specify`; fuzzy greenfield enters through `project-brainstorm`; clear greenfield enters through `project-specify`. Do not build a graph at repository root.
 3. Read the active project's `project-state.md` when present. On “status”, “continue”, or “next”, follow its Next action.
 4. Read `.speck/project.json` for `play_level`; if absent, use Platform until the project is classified.
 5. Run `/speck-recheck` before feature work when project state or runtime evidence is missing, runtime verification is older than two weeks, ownership changed, or the agent is new to the project.
 6. For an existing project, run `python3 .speck/scripts/graph/speck_graph.py build <project-dir>` then `check <project-dir>`. Repair hard graph findings labeled `.P1` before continuing. The graph's printed `GRAPH_CAP` value only limits the highest claim; it never grants readiness. If Python is unavailable, warn and continue with the remaining gates.
-7. Route the user's request through the canonical flow below.
+7. For unscoped new work, run `bash .speck/scripts/bash/analyze-scale.sh --json "<request>"` and inspect its `routing` signals. Complexity 0–1 routes to story scope, 2 to epic scope, and 3–4 to project scope; explicit user scope overrides the suggestion. Complexity chooses scope, never play level.
+8. Route the user's request through the canonical flow below.
 
-For long autonomous runs, encourage native `/goal` when the host offers it. It is optional. Without it, use the same manual `check` → `gap` → repair loop. Load `.cursor/skills/speck/references/gap-routes.md` only for status, goal, or gap work.
+For long autonomous runs, encourage native `/goal` when the host offers it. It is optional. Without it, use the same manual `check` → `gap` → repair loop. Load `.speck/reference/gap-routes.md` only for status, goal, or gap work.
 
 ## Play levels
 
@@ -54,8 +55,8 @@ What/order only — how is in skills. Brackets are conditional slots; evaluate t
 <!-- SPECK:FLOW:START -->
 Entry: brownfield `project-import → speck-scan(project) → project-specify`; fuzzy greenfield `project-brainstorm → project-specify`.
 Sprint: `project-specify → ship → [project-promote if outgrown]`.
-Build foundation: `project-specify → project-clarify → [project-domain if specialized] → project-product-contract → project-readme → project-evidence-contract → project-context → [project-ux if UI/4+] → [project-constitution if governance-heavy] → [project-architecture if cross-system/4+] → [project-design-system if shared UI] → project-plan → [analyze(project), required 4+]`.
-Platform foundation: `project-specify → project-clarify → [project-domain if specialized] → project-ux → project-context → project-constitution → project-architecture → [project-design-system if UI] → project-product-contract → project-readme → project-evidence-contract → project-plan → analyze(project) → project-roadmap`.
+Build foundation: `project-specify → project-clarify → [project-domain if specialized] → project-product-contract → project-profile → project-evidence-contract → project-context → [project-ux if UI/4+] → [project-constitution if governance-heavy] → [project-architecture if cross-system/4+] → [project-design-system if shared UI] → project-plan → [analyze(project), required 4+]`.
+Platform foundation: `project-specify → project-clarify → [project-domain if specialized] → project-ux → project-context → project-constitution → project-architecture → [project-design-system if UI] → project-product-contract → project-profile → project-evidence-contract → project-plan → analyze(project) → project-roadmap`.
 Epic: `[epic-discover if brownfield has no map] → epic-specify → epic-clarify → [epic-constitution if local principles] → [epic-architecture if cross-cutting] → [epic-journey → epic-wireframes if UX-heavy] → [epic-experience-chain if UI] → epic-plan → epic-breakdown → analyze(epic) → story loop → speck-audit(epic) → [speck-larp if UI] → epic-validate → epic-retrospective`.
 Story: `[story-extract if code exists without artifacts | story-specify] → story-clarify → [speck-scan(story) for code facts] → story-plan → [story-ui-spec if complex UI] → story-tasks → story-implement(+ visual-quality if UI) → speck-audit → [speck-premise-challenge if high-impact UI seeks UX-RC+] → [speck-larp if UI] → story-validate(+ visual-testing if UI) → story-retrospective`.
 Project close: completed epics `→ project-validate → project-retrospective`; after truth gates on main `→ project-state`.
@@ -70,14 +71,16 @@ Post-validation input: defect `→ harden`; deliberate redesign `→ adjust`; en
 - Run `/speck-audit` after implementation and before validation. For UI, run naive-user and hostile-user runtime LARP before validation. Checked-in evidence is required for a passing validation report.
 - Verify delegated work from its transcript and tool evidence; do not accept a self-reported pass or readiness state.
 - Keep every enumerable promise traced through the matrix and witness graph. Never hand-edit `witness.json`.
-- Stamp truth artifacts with the current commit SHA, run banned-language checks, recheck market claims before COMMERCIAL-RC, and check PROFILE drift during recheck.
+- Before price locks or COMMERCIAL-RC, compare free, DIY, and substitute options and require a value-defensibility artifact. Recheck market claims before COMMERCIAL-RC.
+- Stamp truth artifacts with the current commit SHA, run banned-language checks, and check PROFILE drift during recheck.
+- Capture a methodology workaround, ambiguous skill, or patched Speck behavior through `speck-feedback` while the evidence is fresh.
 - Declare the exact readiness state. Do not hide premise or taste failures behind implementation green, and do not turn an unreproduced access problem into a blocker.
 
 ## When user says
 
 | Say | Do |
 |-----|-----|
-| `/speck …` | Read `.cursor/skills/speck/SKILL.md` |
+| `/speck …` | Read the compatibility skill, then apply this engagement ladder and canonical flow |
 | Build or change a feature | Enter at the appropriate `*-specify`; never skip straight to implementation |
 | “Is this done?” | Audit, run applicable LARP, validate, and declare readiness with evidence |
 | Status / continue | Read `project-state.md` and follow Next action |

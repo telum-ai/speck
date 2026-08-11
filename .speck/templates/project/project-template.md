@@ -118,14 +118,14 @@ project-clarify → context → architecture → design-system → plan
 
 ## PROFILE surfaces
 
-*Public face artifacts — how outsiders first encounter this project. Declared per project and enforced by PROFILE gates.*
+*Public face artifacts — every way outsiders first encounter this project. Every retained row is binding and enforced by PROFILE gates. Delete non-applicable example rows; replace every placeholder before its Required by state.*
 
-| Surface | Path | Source of truth | Refresh skill |
-|---------|------|-----------------|---------------|
-| Root README | `README.md` | `product-contract.md` Section 1 | `/project-readme` |
-| Package description | `package.json` `description` | README one-liner | `/project-readme --surface=package` |
-| GitHub repo description | (remote) | README one-liner | `gh repo edit --description` |
-| Landing page hero | REPLACE_BEFORE_SHIP: path or epic | product-contract §1 + ui-spec | `/project-readme --surface=landing` |
+| Surface | Adapter | Target | Source of truth | Required by |
+|---------|---------|--------|-----------------|-------------|
+| Root README | `readme` | `README.md` | `product-contract.md#1` | UX-RC / API-RC |
+| Package description | `package` | `package.json#description` | `README.md#one-liner` | COMMERCIAL-RC |
+| GitHub repo description | `github` | `remote:description` | `README.md#one-liner` | SHIP-RC |
+| Landing page hero | `file` | REPLACE_BEFORE_SHIP: repository-relative path or delete row | `product-contract.md#1` | COMMERCIAL-RC |
 
 ## 👥 Target Users
 

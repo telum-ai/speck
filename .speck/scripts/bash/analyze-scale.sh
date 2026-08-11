@@ -2,12 +2,10 @@
 
 set -e
 
-# Scale Analysis Script - Provides basic metrics for LLM to analyze
+# Scale Analysis Script - Produces a deterministic routing suggestion plus inspectable signals
 # 
-# This script provides METRICS ONLY. The LLM uses its judgment to:
-# - Detect brainstorm needs (vague/exploratory input)
-# - Match to recipes (based on tech stack keywords)
-# - Determine appropriate Speck level (story/epic/project)
+# The suggestion is a starting point, not a hidden classifier. The agent reports the
+# signals, applies conversation context, and honors explicit user scope overrides.
 #
 # Levels:
 # 0 - Single atomic change
@@ -47,6 +45,33 @@ CONJUNCTION_COUNT=$(echo "$DESCRIPTION" | grep -o -i -E '\b(and|with|plus|also|i
 QUESTION_MARKS=$(echo "$DESCRIPTION" | grep -o '?' | wc -l | tr -d ' ')
 HAS_NUMBERS=$(echo "$DESCRIPTION" | grep -q '[0-9]' && echo "true" || echo "false")
 
+# Deterministic scope suggestion. Explicit markers win; otherwise use bounded semantic
+# phrases before falling back to request length. This deliberately chooses workflow scope,
+# never play level.
+LOWER_DESCRIPTION="$(printf '%s' "$DESCRIPTION" | tr '[:upper:]' '[:lower:]')"
+COMPLEXITY=2
+SUGGESTED_LEVEL="epic"
+CONFIDENCE="low"
+SIGNAL="length_fallback"
+
+if printf '%s' "$LOWER_DESCRIPTION" | grep -Eq '(^|[^a-z])(project:|project scope|whole project)([^a-z]|$)'; then
+    COMPLEXITY=3 SUGGESTED_LEVEL="project" CONFIDENCE="high" SIGNAL="explicit_project_scope"
+elif printf '%s' "$LOWER_DESCRIPTION" | grep -Eq '(^|[^a-z])(epic:|epic scope)([^a-z]|$)'; then
+    COMPLEXITY=2 SUGGESTED_LEVEL="epic" CONFIDENCE="high" SIGNAL="explicit_epic_scope"
+elif printf '%s' "$LOWER_DESCRIPTION" | grep -Eq '(^|[^a-z])(story:|story scope)([^a-z]|$)'; then
+    COMPLEXITY=1 SUGGESTED_LEVEL="story" CONFIDENCE="high" SIGNAL="explicit_story_scope"
+elif printf '%s' "$LOWER_DESCRIPTION" | grep -Eq '(full|entire|whole|new)[ -](product|platform|system)|from scratch|multi-team|multi-quarter|new business|build an? [a-z0-9 -]*(app|application|platform|product)'; then
+    COMPLEXITY=3 SUGGESTED_LEVEL="project" CONFIDENCE="medium" SIGNAL="project_scope_phrase"
+elif printf '%s' "$LOWER_DESCRIPTION" | grep -Eq 'typo|copy change|rename|colour|color|spacing|single field|one field|one form|small change|minor change|one validated'; then
+    COMPLEXITY=1 SUGGESTED_LEVEL="story" CONFIDENCE="medium" SIGNAL="atomic_change_phrase"
+elif printf '%s' "$LOWER_DESCRIPTION" | grep -Eq 'feature|capability|authentication|auth system|checkout|billing|payments|shopping cart|onboarding flow|search system'; then
+    COMPLEXITY=2 SUGGESTED_LEVEL="epic" CONFIDENCE="medium" SIGNAL="capability_phrase"
+elif [ "$WORD_COUNT" -le 12 ]; then
+    COMPLEXITY=1 SUGGESTED_LEVEL="story" CONFIDENCE="low" SIGNAL="short_request_fallback"
+elif [ "$WORD_COUNT" -gt 35 ]; then
+    COMPLEXITY=3 SUGGESTED_LEVEL="project" CONFIDENCE="low" SIGNAL="large_request_fallback"
+fi
+
 # List available recipes (LLM will match based on content)
 # NOTE: Resolve paths from the script location so this works from any cwd.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -59,20 +84,32 @@ fi
 
 # Output results
 if [ "$JSON_MODE" = true ]; then
-    cat <<EOF
-{
-    "input": $(echo "$DESCRIPTION" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()))'),
+    python3 - "$DESCRIPTION" "$WORD_COUNT" "$CHAR_COUNT" "$CONJUNCTION_COUNT" \
+      "$QUESTION_MARKS" "$HAS_NUMBERS" "$COMPLEXITY" "$SUGGESTED_LEVEL" \
+      "$CONFIDENCE" "$SIGNAL" "$AVAILABLE_RECIPES" <<'PY'
+import json, sys
+
+(description, words, chars, conjunctions, questions, has_numbers, complexity,
+ level, confidence, signal, recipes) = sys.argv[1:]
+print(json.dumps({
+    "input": description,
     "metrics": {
-        "word_count": $WORD_COUNT,
-        "char_count": $CHAR_COUNT,
-        "conjunction_count": $CONJUNCTION_COUNT,
-        "question_marks": $QUESTION_MARKS,
-        "has_numbers": $HAS_NUMBERS
+        "word_count": int(words),
+        "char_count": int(chars),
+        "conjunction_count": int(conjunctions),
+        "question_marks": int(questions),
+        "has_numbers": has_numbers == "true",
     },
-    "available_recipes": "$AVAILABLE_RECIPES",
-    "note": "LLM should analyze input to determine: needs_brainstorm, recipe_match, suggested_level, and workflow_type"
-}
-EOF
+    "routing": {
+        "complexity": int(complexity),
+        "suggested_level": level,
+        "confidence": confidence,
+        "signal": signal,
+    },
+    "available_recipes": [item for item in recipes.split(",") if item],
+    "note": "Complexity chooses story, epic, or project scope; it never chooses play level.",
+}, indent=2))
+PY
 else
     echo "Scale Analysis Metrics"
     echo "====================="
@@ -87,6 +124,9 @@ else
     echo "- Contains numbers: $HAS_NUMBERS"
     echo ""
     echo "Available Recipes: $AVAILABLE_RECIPES"
+    echo "Suggested Complexity: $COMPLEXITY"
+    echo "Suggested Level: $SUGGESTED_LEVEL"
+    echo "Confidence: $CONFIDENCE ($SIGNAL)"
     echo ""
-    echo "Note: LLM analyzes input to determine workflow level, brainstorm needs, and recipe matches."
+    echo "Note: Apply conversation context and explicit user scope overrides; complexity never selects play level."
 fi

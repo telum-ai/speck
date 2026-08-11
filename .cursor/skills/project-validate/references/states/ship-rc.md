@@ -1,4 +1,4 @@
 # State: SHIP-RC
 
 All gates against launch build. Never from dev-server evidence alone.
-README + PROFILE drift required (post-write).
+README + `profile-drift-check.sh --claim "$claimed_state"` required (post-write).

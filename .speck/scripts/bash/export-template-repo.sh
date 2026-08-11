@@ -67,7 +67,7 @@ copy_dir() {
   local dest="$2"
   mkdir -p "$dest"
   # Use tar to preserve executable bits without relying on rsync.
-  (cd "$src" && tar -cf - .) | (cd "$dest" && tar -xf -)
+  (cd "$src" && tar --exclude='__pycache__' --exclude='*/__pycache__' --exclude='*.pyc' --exclude='.DS_Store' -cf - .) | (cd "$dest" && tar -xf -)
 }
 
 # Core files
@@ -120,8 +120,8 @@ Speck is a spec-driven development methodology for building digital products via
 
 ## Getting Started
 
-In Cursor, start with:
-- `/speck` or `@speck` followed by what you want to build
+In your agent host, describe what you want to build. The managed root `AGENTS.md`
+routes the request automatically; `/speck` remains an optional compatibility alias.
 
 Speck will route you through **project → epic → story** levels.
 
@@ -157,7 +157,7 @@ Speck project artifacts live under:
 
 - `specs/projects/<project-id>/...`
 
-Start with `/speck [idea]` to generate and populate these.
+Describe your idea to the agent to generate and populate these. Root `AGENTS.md` routes it.
 EOF
 
 # Ensure hook scripts are executable in exported repo

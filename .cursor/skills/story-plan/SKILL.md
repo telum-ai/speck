@@ -22,7 +22,7 @@ Read `.speck/templates/story/plan-template.md` before writing.
 
 ## 1. Locate story
 
-Walk up to `[STORY_DIR]` containing `spec.md`. STOP if missing → `cd` to story or `/speck` route.
+Walk up to `[STORY_DIR]` containing `spec.md`. STOP if missing → `cd` to the story or return to root and let AGENTS route the unscoped request.
 
 `SPEC_PATH=[STORY_DIR]/spec.md` · `PLAN_PATH=[STORY_DIR]/plan.md`
 

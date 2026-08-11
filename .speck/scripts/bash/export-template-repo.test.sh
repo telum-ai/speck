@@ -24,6 +24,11 @@ for excluded in tests/eval docs/history .speck/eval .speck/feedback .speck/patte
   [[ ! -e "$OUT/$excluded" ]] || { echo "meta path leaked into export: $excluded" >&2; exit 1; }
 done
 
+if find "$OUT" \( -type d -name '__pycache__' -o -type f -name '*.pyc' \) -print -quit | grep -q .; then
+  echo "Python bytecode cache leaked into export" >&2
+  exit 1
+fi
+
 [[ -L "$OUT/.claude/skills" ]] || { echo ".claude/skills must be a symlink" >&2; exit 1; }
 [[ -L "$OUT/.codex/skills" ]] || { echo ".codex/skills must be a symlink" >&2; exit 1; }
 [[ -L "$OUT/.agents/skills" ]] || { echo ".agents/skills must be a symlink" >&2; exit 1; }

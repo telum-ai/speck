@@ -54,7 +54,7 @@ export async function incubate(targetDir, options = {}) {
     painSignal ? `Pain signal surfaced: ${painSignal}` : '',
     '',
     'Signal to watch:',
-    'How many repos run `speck incubate` before first `/speck` workflow, and whether those repos reach first merged story faster than baseline.',
+    'How many repos run `speck incubate` before their first AGENTS-routed workflow, and whether those repos reach first merged story faster than baseline.',
     '',
     'Next bet:',
     'Add `--json` output so incubator can feed dashboards and cron autopilot summaries.',

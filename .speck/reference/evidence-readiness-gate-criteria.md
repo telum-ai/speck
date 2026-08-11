@@ -150,19 +150,19 @@ To guarantee that agent-verified success translates to actual runtime success on
 
 | State | PROFILE requirement |
 |-------|---------------------|
-| IMPL-GREEN | README footer matches `.speck/VERSION`; no orphan README placeholders |
-| UX-RC | README one-liner token-overlap with product-contract Section 1 ≥ 60% |
+| IMPL-GREEN | Every retained row due at IMPL-GREEN passes its adapter check |
+| UX-RC / API-RC | All declared surfaces due at UX-RC / API-RC are within threshold |
 | COMMERCIAL-RC | All declared PROFILE surfaces within drift threshold |
-| SHIP-RC | Zero `PROFILE_DRIFT.P1` at `/recheck`; GitHub repo description aligned (manual attestation) |
-| SHIP | SHIP-RC + `validate-readme.sh --strict` green in CI |
+| SHIP-RC | Zero `PROFILE_DRIFT.P1`; remote surfaces observed through their real provider read |
+| SHIP | SHIP-RC + all declared PROFILE adapters green in CI or post-deploy proof |
 
 Per declared PROFILE surface (from `project.md`):
 
-| Surface | Source of truth | Drift check | Refresh |
-|---------|-----------------|-------------|---------|
-| Root README | product-contract §1 | `profile-drift-check.sh` | `/project-readme` |
-| package.json description | README one-liner | `regenerate-project-readme.sh --surface=package` | `/project-readme --surface=package` |
-| GitHub repo description | README one-liner | manual `/recheck` | `gh repo edit --description` |
-| Landing hero (if declared) | product-contract §1 + ui-spec | `--surface=landing` (check-only) | story validate gate |
+| Adapter | Target example | Source example | Refresh owner |
+|---------|----------------|----------------|---------------|
+| `readme` | `README.md` | `product-contract.md#1` | `project-profile` managed blocks |
+| `package` | `package.json#description` | `README.md#one-liner` | `project-profile` only when empty/placeholder |
+| `github` | `remote:description` | `README.md#one-liner` | owner/external gesture |
+| `file` | repository-relative product surface | `product-contract.md#1` | owning story or project adjustment |
 
 ---

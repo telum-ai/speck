@@ -25,7 +25,7 @@ See [External Services Reference](#external-services-reference) for detailed rec
 
 ## How Recipes Work
 
-1. **Detection**: The `/speck` router detects when a user's request matches a recipe
+1. **Detection**: AGENTS entry routing and `project-specify` detect when a user's request matches a recipe
    - Matching is based on the recipe's `keywords:` list in `.speck/recipes/<recipe>/recipe.yaml` (case-insensitive phrase matching)
 2. **Suggestion**: User is offered the matching recipe as a starting point
 3. **Customization**: Recipe templates are filled with user-specific details
@@ -307,10 +307,10 @@ For object fields (e.g., `stack.frontend`), the overlay does a shallow merge —
 
 ## Using a Recipe
 
-### Via /speck (Recommended)
+### Via ordinary project entry (Recommended)
 
 ```
-User: /speck I want to build a task management app with React and Python
+User: I want to build a task management app with React and Python
 
 Speck: 🍳 I found a matching recipe: "react-fastapi-postgres"
 
@@ -415,7 +415,7 @@ display_name: "Human Readable Name"
 description: "One-line description of when to use this"
 version: "1.0.0"
 
-# Matching keywords for /speck detection
+# Matching keywords for project-entry detection
 keywords:
   - keyword1
   - keyword2
@@ -599,4 +599,3 @@ Comprehensive recommendations for common functionality. **Buy, don't build** the
 
 **Last Updated**: 2025-12  
 **Recipe Format Version**: 1.1
-

@@ -1,10 +1,8 @@
-# speck / gap-routes
-
-## 1. Gap routing (`/goal` companion)
+# Gap routing (`/goal` companion)
 
 Run `python3 .speck/scripts/graph/speck_graph.py check <project-dir>` and `gap <project-dir>`. Surface their stdout. Stop on literal `SPECK-GAP: none`; otherwise route the highest-priority gap:
 
-| gap | route |
+| Gap | Route |
 |-----|-------|
 | Promise has no trace, delivery, or real discharge | Resume the story flow at its first missing step |
 | Audit has an open P0/P1 | `harden` |

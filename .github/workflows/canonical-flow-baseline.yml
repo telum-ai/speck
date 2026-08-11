@@ -1,4 +1,4 @@
-name: Canonical flow baseline
+name: Methodology baselines
 
 on:
   pull_request_target:
@@ -23,4 +23,20 @@ jobs:
       - name: Guard canonical flow baseline
         env:
           FLOW_BASELINE_APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'flow-baseline-change-approved') }}
-        run: bash .speck/eval/skill-routing/guard-baseline-change.sh "${{ github.event.pull_request.base.sha }}" refs/remotes/origin/canonical-flow-candidate
+        run: bash tests/eval/skill-routing/guard-baseline-change.sh "${{ github.event.pull_request.base.sha }}" refs/remotes/origin/canonical-flow-candidate
+      - name: Guard semantic-conservation baseline
+        env:
+          FLOW_BASELINE_APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'flow-baseline-change-approved') }}
+        run: bash tests/eval/semantic-conservation/guard-baseline-change.sh "${{ github.event.pull_request.base.sha }}" refs/remotes/origin/canonical-flow-candidate
+      - name: Evaluate candidate with trusted semantic runner
+        env:
+          FLOW_BASELINE_APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'flow-baseline-change-approved') }}
+        run: |
+          candidate_dir="$(mktemp -d)"
+          git archive refs/remotes/origin/canonical-flow-candidate | tar -x -C "$candidate_dir"
+          baseline_path="tests/eval/semantic-conservation/baseline.json"
+          if [[ "$FLOW_BASELINE_APPROVED" == "true" ]]; then
+            git show "refs/remotes/origin/canonical-flow-candidate:$baseline_path" > "$candidate_dir/approved-baseline.json"
+            baseline_path="$candidate_dir/approved-baseline.json"
+          fi
+          python3 tests/eval/semantic-conservation/runner.py --root "$candidate_dir" --baseline "$baseline_path"

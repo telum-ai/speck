@@ -130,6 +130,9 @@ def validate_suite(
         errors.append("AGENTS.md requires exactly one non-empty SPECK:FLOW block")
     if contract.get("schema_version") != 1:
         errors.append("canonical flow baseline requires schema_version 1")
+    for alias in ("speck", "project-readme"):
+        if alias in catalog:
+            errors.append(f"user-only compatibility alias leaked into automatic catalog: {alias}")
     expected_line_order = contract.get("line_order")
     routes = contract.get("routes")
     if not isinstance(expected_line_order, list) or not expected_line_order:
@@ -192,6 +195,13 @@ def validate_suite(
         errors.append(f"automatic skills missing canonical flow classification: {unclassified}")
     if invalid_classifications:
         errors.append(f"canonical flow baseline names non-automatic skills: {invalid_classifications}")
+    entry_anchors = contract.get("entry_anchors")
+    if not isinstance(entry_anchors, list) or not entry_anchors or not all(isinstance(x, str) and x for x in entry_anchors):
+        errors.append("canonical flow baseline requires entry_anchors")
+    else:
+        for anchor in entry_anchors:
+            if not re.search(anchor, agents_text, re.S | re.I):
+                errors.append(f"always-on AGENTS entry routing lost anchor {anchor!r}")
     missing_elsewhere = sorted(name for name in always_on_elsewhere if not flow_has_skill(agents_text, name))
     if missing_elsewhere:
         errors.append(f"always-on AGENTS context omits first-action skills: {missing_elsewhere}")
@@ -272,19 +282,19 @@ def output_schema() -> dict[str, Any]:
     }
 
 
-def build_prompt(catalog: dict[str, str], suite: dict[str, Any], flow: str) -> str:
+def build_prompt(catalog: dict[str, str], suite: dict[str, Any], agents_text: str) -> str:
     catalog_lines = "\n".join(f"- {name}: {description}" for name, description in sorted(catalog.items()))
     request_lines = "\n".join(
         f"- {case['id']}: {case['prompt']}" for case in suite["cases"]
     )
-    return f"""You are evaluating an automatic Agent Skill catalog with the same canonical flow that is always in the agent's context.
+    return f"""You are evaluating an automatic Agent Skill catalog with the same root AGENTS.md that is always in the agent's context.
 
-Choose exactly one catalog skill for every request using only the canonical flow plus each skill's name and description. Select the skill whose advertised trigger best matches the request's intent and lifecycle state. Do not invent skills, use implementation knowledge, or perform the requested work.
+Choose exactly one catalog skill for every request using only AGENTS.md plus each automatic skill's name and description. Select the skill whose advertised trigger best matches the request's intent and lifecycle state. User-only compatibility aliases are deliberately absent; route without them. Do not invent skills, use implementation knowledge, or perform the requested work.
 
 Return only the JSON object required by the response schema. Include every request id exactly once and preserve the request order.
 
-CANONICAL FLOW
-{flow}
+ALWAYS-ON ROOT AGENTS.md
+{agents_text}
 
 CATALOG
 {catalog_lines}
@@ -407,7 +417,7 @@ def digest(value: Any) -> str:
 
 def verify_reports(
     catalog: dict[str, str], suite: dict[str, Any], flow: str,
-    contract: dict[str, Any], reports_dir: Path
+    contract: dict[str, Any], agents_text: str, reports_dir: Path
 ) -> list[str]:
     """Re-score checked-in live evidence and reject stale or incomplete receipts."""
     errors: list[str] = []
@@ -419,6 +429,7 @@ def verify_reports(
     cases_hash = digest(suite)
     flow_hash = digest(flow)
     contract_hash = digest(contract)
+    agents_hash = digest(agents_text)
     score_keys = (
         "pass", "accuracy", "minimum_accuracy", "correct", "total",
         "forbidden_selections", "missing_ids", "extra_ids", "duplicate_ids",
@@ -433,8 +444,8 @@ def verify_reports(
         if not isinstance(report, dict):
             errors.append(f"{path.name}: report must be a JSON object")
             continue
-        if report.get("schema_version") != 2:
-            errors.append(f"{path.name}: schema_version must be 2")
+        if report.get("schema_version") != 3:
+            errors.append(f"{path.name}: schema_version must be 3")
         if report.get("catalog_sha256") != catalog_hash:
             errors.append(f"{path.name}: catalog hash is stale")
         if report.get("cases_sha256") != cases_hash:
@@ -443,6 +454,10 @@ def verify_reports(
             errors.append(f"{path.name}: always-on flow hash is stale")
         if report.get("flow_contract_sha256") != contract_hash:
             errors.append(f"{path.name}: canonical flow baseline hash is stale")
+        if report.get("agents_sha256") != agents_hash:
+            errors.append(f"{path.name}: always-on AGENTS hash is stale")
+        if report.get("user_only_aliases_available") is not False:
+            errors.append(f"{path.name}: user-only aliases were available to the routing evaluator")
         for key in ("provider", "model", "started_at"):
             if not isinstance(report.get(key), str) or not report[key]:
                 errors.append(f"{path.name}: missing {key}")
@@ -559,11 +574,11 @@ def main() -> int:
         return 1
 
     if args.command == "emit-prompt":
-        print(build_prompt(catalog, suite, flow))
+        print(build_prompt(catalog, suite, agents_text))
         return 0
 
     if args.command == "verify-reports":
-        report_errors = verify_reports(catalog, suite, flow, contract, args.reports_dir)
+        report_errors = verify_reports(catalog, suite, flow, contract, agents_text, args.reports_dir)
         if report_errors:
             for error in report_errors:
                 print(f"FAIL: {error}", file=sys.stderr)
@@ -622,6 +637,10 @@ def main() -> int:
         if not any("omits first-action skills" in error for error in validate_suite(catalog, suite, flow, contract, missing_first_action)):
             print("FAIL: missing always-on first-action skill mutant passed", file=sys.stderr)
             return 1
+        missing_entry_route = agents_text.replace("analyze-scale.sh", "analyze_scale.sh", 1)
+        if not any("entry routing lost anchor" in error for error in validate_suite(catalog, suite, flow, contract, missing_entry_route)):
+            print("FAIL: missing AGENTS-only entry route mutant passed", file=sys.stderr)
+            return 1
         with tempfile.TemporaryDirectory(prefix="speck-competing-flow-") as tmp_raw:
             mutant_root = Path(tmp_raw)
             (mutant_root / ".speck/reference").mkdir(parents=True)
@@ -641,7 +660,7 @@ def main() -> int:
         print_report(report)
         return 0 if report["pass"] else 1
 
-    prompt = build_prompt(catalog, suite, flow)
+    prompt = build_prompt(catalog, suite, agents_text)
     started = datetime.now(timezone.utc)
     if args.provider == "codex":
         prediction_data, execution = run_codex(prompt, args.model, args.effort, args.timeout)
@@ -655,7 +674,7 @@ def main() -> int:
     report = score_predictions(catalog, suite, prediction_data)
     report.update(
         {
-            "schema_version": 2,
+            "schema_version": 3,
             "provider": args.provider,
             "model": args.model,
             "effort": args.effort,
@@ -664,6 +683,8 @@ def main() -> int:
             "cases_sha256": digest(suite),
             "flow_sha256": digest(flow),
             "flow_contract_sha256": digest(contract),
+            "agents_sha256": digest(agents_text),
+            "user_only_aliases_available": False,
             "execution": execution,
         }
     )

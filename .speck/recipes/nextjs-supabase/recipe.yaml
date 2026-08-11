@@ -6,7 +6,7 @@ display_name: "Next.js + Supabase"
 description: "Modern JAMstack application with Next.js App Router and Supabase BaaS"
 version: "1.0.0"
 
-# Keywords for /speck detection
+# Keywords for project-entry detection
 keywords:
   - nextjs
   - next.js

@@ -20,7 +20,7 @@ This made the conceptual boundary false in both directions: agents received meta
 6. Speck's test harness and reports live under `tests/eval/`; methodology feedback and generalized framework learnings live under `docs/`.
 7. `.speck/patterns/learned/` is project-owned and created only by project learning. Speck does not seed or overwrite it. Known framework-authored files from older releases are retired by exact path so project-created siblings survive upgrades.
 8. CLI sync and template export ship the same runtime boundary. `.speck/reference/`, host-specific generated agents, `CLAUDE.md`, and cross-host skill links are part of that boundary; tests, reports, feedback, history, and project learning are not.
-9. Upgrades remove the old framework-owned `.speck/eval/` and `.speck/feedback/` trees that could leak through template exports. Project-created `.speck/patterns/learned/` remains preserved.
+9. Upgrades remove the old framework-owned `.speck/eval/` tree that could leak through template exports. Fresh installs ship neither `.speck/feedback/` nor `.speck/patterns/learned/`; both are project-owned runtime output and survive upgrades once created.
 
 ## Consequences
 

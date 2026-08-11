@@ -34,7 +34,7 @@ If `/story-plan` detected UI requirements, you MUST run this command before `/st
 1. Locate the active story directory (STORY_DIR):
    - Preferred: user is already in the story directory (or a subfolder like `contracts/`)
    - Determine STORY_DIR by walking up from current directory until you find `spec.md`
-   - If no `spec.md` found: instruct user to `cd` into the story directory or run `/speck` to route
+   - If no `spec.md` found: instruct the user to `cd` into the story directory or return to root and let AGENTS route the request
    - Define:
      - SPEC_PATH = `{STORY_DIR}/spec.md`
      - UI_SPEC_PATH = `{STORY_DIR}/ui-spec.md`

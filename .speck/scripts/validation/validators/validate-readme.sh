@@ -44,7 +44,7 @@ CONTENT="$(cat "$README_PATH")"
 FIRST_LINE="$(head -1 "$README_PATH" | tr -d '\r')"
 
 if [[ "$FIRST_LINE" == "# Speck"* ]]; then
-  log_error "Legacy Speck marketing README detected — run speck upgrade or /project-readme"
+  log_error "Legacy Speck marketing README detected — run speck upgrade or project-profile"
 else
   log_ok "Not legacy Speck marketing README"
 fi
@@ -86,26 +86,31 @@ if grep -q "speck ${SPECK_VER}\|speck v${SPECK_VER#v}" "$README_PATH"; then
   log_ok "Footer Speck version matches .speck/VERSION (${SPECK_VER})"
 else
   if [[ "$strict" == true ]]; then
-    log_error "Footer Speck version stale (expected ${SPECK_VER}) — run speck upgrade or /project-readme"
+    log_error "Footer Speck version stale (expected ${SPECK_VER}) — run speck upgrade or project-profile"
   else
     log_warn "Footer Speck version may be stale (expected ${SPECK_VER})"
   fi
 fi
 
 # Drift check
-if [[ -x "$LIB_DIR/profile-drift-check.sh" ]]; then
-  if ! DRIFT_OUT="$("$LIB_DIR/profile-drift-check.sh" "$WORKSPACE_ROOT" "${PROJECT_ID:-}" 2>&1)"; then
-    while IFS= read -r line; do
-      [[ -z "$line" ]] && continue
-      if [[ "$line" == PROFILE_DRIFT.P1* ]]; then
-        log_error "${line#PROFILE_DRIFT.P1: }"
-      elif [[ "$line" == PROFILE_DRIFT.P2* ]]; then
-        log_warn "${line#PROFILE_DRIFT.P2: }"
-      elif [[ "$line" == PROFILE_DRIFT.P3* ]]; then
-        log_warn "${line#PROFILE_DRIFT.P3: }"
-      fi
-    done <<< "$DRIFT_OUT"
+if [[ -f "$LIB_DIR/profile-drift-check.sh" ]]; then
+  DRIFT_RC=0
+  DRIFT_OUT="$(bash "$LIB_DIR/profile-drift-check.sh" "$WORKSPACE_ROOT" "${PROJECT_ID:-}" 2>&1)" || DRIFT_RC=$?
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    if [[ "$line" == PROFILE_DRIFT.P1* ]]; then
+      log_error "${line#PROFILE_DRIFT.P1: }"
+    elif [[ "$line" == PROFILE_DRIFT.P2* ]]; then
+      log_warn "${line#PROFILE_DRIFT.P2: }"
+    elif [[ "$line" == PROFILE_DRIFT.P3* ]]; then
+      log_warn "${line#PROFILE_DRIFT.P3: }"
+    fi
+  done <<< "$DRIFT_OUT"
+  if [[ "$DRIFT_RC" -eq 2 ]]; then
+    log_error "PROFILE drift checker could not resolve the active project"
   fi
+else
+  log_error "PROFILE drift checker missing: $LIB_DIR/profile-drift-check.sh"
 fi
 
 echo ""

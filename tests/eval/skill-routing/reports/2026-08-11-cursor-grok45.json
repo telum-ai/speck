@@ -2,8 +2,8 @@
   "pass": true,
   "accuracy": 1.0,
   "minimum_accuracy": 0.95,
-  "correct": 63,
-  "total": 63,
+  "correct": 66,
+  "total": 66,
   "forbidden_selections": 0,
   "missing_ids": [],
   "extra_ids": [],
@@ -215,9 +215,9 @@
       "forbidden": false
     },
     {
-      "id": "project-readme-profile-drift",
-      "expected": "project-readme",
-      "actual": "project-readme",
+      "id": "project-profile-drift",
+      "expected": "project-profile",
+      "actual": "project-profile",
       "exact": true,
       "forbidden": false
     },
@@ -239,6 +239,27 @@
       "id": "project-specify-clear-start",
       "expected": "project-specify",
       "actual": "project-specify",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "entry-scope-project-new-product",
+      "expected": "project-specify",
+      "actual": "project-specify",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "entry-scope-epic-bounded-capability",
+      "expected": "epic-specify",
+      "actual": "epic-specify",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "entry-scope-story-small-change",
+      "expected": "story-specify",
+      "actual": "story-specify",
       "exact": true,
       "forbidden": false
     },
@@ -453,15 +474,17 @@
       "forbidden": false
     }
   ],
-  "schema_version": 2,
+  "schema_version": 3,
   "provider": "cursor",
   "model": "cursor-grok-4.5-medium",
   "effort": "medium",
-  "started_at": "2026-08-11T07:49:22.899587+00:00",
-  "catalog_sha256": "fcd952183f615711157dc27c43bbab345a1d413c16790f2f40e76aa9038893cc",
-  "cases_sha256": "a24f2b96b9497dac0e308ac9a2533ba59236cab63c9b5415b1951689def1abbd",
-  "flow_sha256": "5400b6dc96db2a2adca6352d3c4d7bc806ea109cc13c76d51d1cb39049d216b5",
-  "flow_contract_sha256": "abf27bcd7aa038b4cfa669dc51062d055a98bcf1a37b0fdb1562100f8807b34c",
+  "started_at": "2026-08-11T09:12:56.652412+00:00",
+  "catalog_sha256": "f3a9f55cdc57bc7a096ca275cdffab16e3f4ab66ba1b9e953c065388fa388053",
+  "cases_sha256": "de941968bac0efe1edf85d96ceb2413fd99bd9ebbe994aca5a1a9eabda94923f",
+  "flow_sha256": "eee4497014258071a18d421cc81ae3391ad85c4debd7228983a4bf04aac54dd1",
+  "flow_contract_sha256": "501ff203070c059fc5754bc2f3d64c0e44730aa75e086fb772d8488d86d7b274",
+  "agents_sha256": "64a62ccacdc1803e24ae2768c2baaad63eec890763193f69fa7d29b6621dbdf9",
+  "user_only_aliases_available": false,
   "execution": {
     "command": [
       "cursor-agent",
@@ -477,7 +500,7 @@
       "--trust",
       "--approve-mcps",
       "--workspace",
-      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-cursor-vft2n1t6"
+      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-cursor-kg8r4wlo"
     ],
     "exit_code": 0,
     "terminal_event": {

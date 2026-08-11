@@ -177,9 +177,9 @@
       "forbid": ["adjust", "project-specify"]
     },
     {
-      "id": "project-readme-profile-drift",
-      "prompt": "The product contract changed and the public root README now misstates the promise. Refresh the public profile from current truth.",
-      "expect": "project-readme",
+      "id": "project-profile-drift",
+      "prompt": "The product contract changed and declared public surfaces now misstate the promise. Refresh safe managed surfaces and report every remaining drift.",
+      "expect": "project-profile",
       "forbid": ["project-state"]
     },
     {
@@ -201,10 +201,28 @@
       "forbid": ["project-brainstorm", "project-plan"]
     },
     {
+      "id": "entry-scope-project-new-product",
+      "prompt": "Build a new multi-team subscription product from this clear business idea; no project artifacts exist yet and the whole product needs specification.",
+      "expect": "project-specify",
+      "forbid": ["epic-specify", "story-specify"]
+    },
+    {
+      "id": "entry-scope-epic-bounded-capability",
+      "prompt": "Add a complete authentication capability to the existing product, spanning login, recovery, session handling, and several dependent stories.",
+      "expect": "epic-specify",
+      "forbid": ["project-specify", "story-specify"]
+    },
+    {
+      "id": "entry-scope-story-small-change",
+      "prompt": "In the existing product, change one validated settings form so its submit button stays disabled until the single required field is valid.",
+      "expect": "story-specify",
+      "forbid": ["project-specify", "epic-specify"]
+    },
+    {
       "id": "project-state-regenerate",
       "prompt": "Truth-affecting gates have landed on main. Regenerate the concise current-state artifact and next action from the canonical evidence.",
       "expect": "project-state",
-      "forbid": ["speck-recheck", "project-readme"]
+      "forbid": ["speck-recheck", "project-profile"]
     },
     {
       "id": "project-ux-platform-strategy",

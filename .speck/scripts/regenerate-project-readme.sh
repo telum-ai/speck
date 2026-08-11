@@ -56,22 +56,13 @@ CONTRACT="$PROJECT_DIR/product-contract.md"
 STATE="$PROJECT_DIR/project-state.md"
 
 if [[ "$CHECK_ONLY" == true || "$SURFACE" == "check" ]]; then
-  exec "$SCRIPT_DIR/profile-drift-check.sh" "$WORKSPACE_ROOT" "$PROJECT_ID"
+  exec bash "$SCRIPT_DIR/profile-drift-check.sh" "$WORKSPACE_ROOT" "$PROJECT_ID"
 fi
 
-if [[ "$SURFACE" == "landing" || "$SURFACE" == "og" ]]; then
-  PROMISE="$(profile_extract_paid_promise "$CONTRACT")"
-  echo "PROFILE_SURFACE_CHECK surface=${SURFACE} project=${PROJECT_ID}"
-  # Check-only: grep common landing paths for hero copy overlap
-  for f in "$WORKSPACE_ROOT"/app/**/page.tsx "$WORKSPACE_ROOT"/src/**/landing*.tsx; do
-    [[ -f "$f" ]] || continue
-    if [[ -n "$PROMISE" ]] && grep -qi "$(echo "$PROMISE" | cut -c1-40)" "$f" 2>/dev/null; then
-      echo "  OK: $f appears aligned with paid promise"
-    else
-      echo "  WARN: $f may drift from product-contract Section 1"
-    fi
-  done
-  exit 0
+if [[ "$SURFACE" == "landing" || "$SURFACE" == "og" || "$SURFACE" == "github" ]]; then
+  # These surfaces are user- or provider-owned. Inspect the declared target; never
+  # rewrite it merely to manufacture a green PROFILE result.
+  exec bash "$SCRIPT_DIR/profile-drift-check.sh" --surface "$SURFACE" "$WORKSPACE_ROOT" "$PROJECT_ID"
 fi
 
 if [[ "$SURFACE" == "package" ]]; then
@@ -91,7 +82,7 @@ else:
     print('PACKAGE_DESCRIPTION_PRESERVED (user-owned)')
 " "$PITCH"
   fi
-  exit 0
+  exec bash "$SCRIPT_DIR/profile-drift-check.sh" --surface package "$WORKSPACE_ROOT" "$PROJECT_ID"
 fi
 
 if [[ ! -f "$TEMPLATE_PATH" ]]; then

@@ -87,7 +87,7 @@ Next steps:
   1. Review the created files — root README.md is YOUR project identity (not Speck marketing)
   2. Methodology docs live at .speck/README.md
   3. Configure MCP servers in .cursor/mcp.json (copy from .cursor/mcp.json.example)
-  4. Run /speck to start your project!
+  4. Describe what you want to build; the managed AGENTS.md routes the work automatically.
 
 To check for updates later:
   npx github:telum-ai/speck check

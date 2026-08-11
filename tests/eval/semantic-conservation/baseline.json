@@ -1,0 +1,318 @@
+{
+  "schema_version": 1,
+  "origin_revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "protected_regions": [
+    {"path": "AGENTS.md", "start": "^## Non-negotiable principles$", "end": "^## Start every engagement$", "sha256": "a762a6cc49ce71ddb8521fb6879a802d2b2712221ff695c1eec54f9ad09b77a4"},
+    {"path": "AGENTS.md", "start": "^## Start every engagement$", "end": "^## Play levels$", "sha256": "7253d1ccf761c88cdfae79ca6663a11c47b408a28cf4161422c1912572cc8c6b"},
+    {"path": "AGENTS.md", "start": "^## Readiness$", "end": "^## Canonical flow$", "sha256": "8a9adc699b2d5da3458656e0a46cd07980ec7c3fb4a03a27e6a7867059466e56"},
+    {"path": "AGENTS.md", "start": "^## Always-on gates$", "end": "^## When user says$", "sha256": "1ac19c054403151bee8dd615362c97a7b72d04c78184c3e5a92b44a6bc89b04c"}
+  ],
+  "protected_files": [
+    {"path": "AGENTS.md", "sha256": "84350f96e369ddf0345e4411b0a73751b8bc9df36d0cada71183aeae957ede9c"},
+    {"path": ".cursor/skills/project-profile/SKILL.md", "sha256": "779960db0fe4b16f396b972cc9fd3388beddd680872c27458dfea529ca62688a"},
+    {"path": ".cursor/skills/speck/SKILL.md", "sha256": "c8f29b894e6c7a1d272ef8883c95e4857f57368fb8b5250f6f4e5aaabebfc625"},
+    {"path": ".cursor/skills/project-readme/SKILL.md", "sha256": "702ffc4be9d1fa17db1b587d03fb47b632cef5bbed61b0040c25678d9c0a67ff"},
+    {"path": ".speck/reference/canonical-routing.md", "sha256": "933bc87666f4135f8ddbbf741edabfbbb3140ae1bca254cd89db548c33db2af3"},
+    {"path": ".speck/reference/gap-routes.md", "sha256": "aa5d9aaf861b5fb33408e03f7b78b2fa60e61f227353fa31aefdcadfe99f10b9"},
+    {"path": ".speck/reference/host-capabilities.md", "sha256": "fb3cac7d2a965377708faf4e68498cd4b39b9dddc39a2f3a26389b62e81c8d96"},
+    {"path": ".speck/reference/skill-load-contracts.json", "sha256": "bca07bc8f1ef61548e589fba679a803f37a9907e37f8c6a5969a5fb361e1e0ab"},
+    {"path": ".speck/reference/skill-routing-cases.json", "sha256": "32d29a12d07c42574440c693abbf7e2d111a58b48a6183aa2f5e448eaaa8043f"},
+    {"path": ".speck/scripts/bash/analyze-scale.sh", "sha256": "a1ebc8a76a361a1ef5dea74ea63a1e0e0ffb7bd9119d138661491002d4c33d8f"},
+    {"path": ".speck/scripts/bash/analyze-scale.test.sh", "sha256": "84d5113a3e98e50b81bb10985b21c5bcbb64a524c7962120b18b548a5d7c506d"},
+    {"path": ".speck/scripts/bash/export-template-repo.sh", "sha256": "7dc279ec2066a49021192d9ea7771879fd2dd289504b6b39f302b097a1aa7c8c"},
+    {"path": ".speck/scripts/bash/export-template-repo.test.sh", "sha256": "07d0cb2f0d754175f7f22c0538634be2f05f879890ae67a2db2423680317402a"},
+    {"path": ".speck/scripts/context/speck_context.py", "sha256": "6aa672f0cadca437e744a74341e06c957b33e666b2a15b6c9627c74f8f9481e0"},
+    {"path": ".speck/scripts/graph/speck_graph.py", "sha256": "df7c9e3d5734aaf20cdba8d5df0ea7ca1b19ef42b19de9f316c7facdf8825b8e"},
+    {"path": ".speck/scripts/profile-surface-check.py", "sha256": "4de7225fdd9b52e6b2d36e44900b028f0dd8709d45a61e993d3f1da8577e738a"},
+    {"path": ".speck/scripts/validation/scaffold-clean.test.sh", "sha256": "44a77d9feb8c5f2ee5c3c3fe278256076ac970524cbbe1e5105ffebbd47fd548"},
+    {"path": ".speck/scripts/validation/validators/validate-evidence-contract.sh", "sha256": "82a6c59dba9934e8c79ba12648b8fb75c3e412e1a4152062656555bf569c5190"},
+    {"path": ".speck/templates/project/evidence-contract-template.md", "sha256": "9afb37e4a5215e7a45ea7c3b75dfe0b525b6ae22695112ac7274213b622df501"},
+    {"path": ".speck/templates/project/project-template.md", "sha256": "95485d2ee5593704ea19f55e92b482645f80d833a78ccbb13f4634b7655b01d9"},
+    {"path": "packages/cli/lib/sync.js", "sha256": "b9be7656aaed5c61097aa08236df2f6f218228dc5ceef65b66457243064bc569"},
+    {"path": "packages/cli/lib/sync.preserve.test.js", "sha256": "1bb3d5d10c881f3dfbdb56b4125904af8154f5a40eca02fdf9f01f9eb99eada8"},
+    {"path": "tests/eval/skill-routing/baseline.json", "sha256": "fa4b4debcc101427eb3173ff05676f4e2afde101ba7ef31c7ae5fcf2676c341c"},
+    {"path": "tests/eval/semantic-conservation/guard-baseline-change.sh", "sha256": "e054c7131b2810180dfec8953b71b6d1ed240b7b08513bda0038839bcc4ccf65"},
+    {"path": "tests/eval/semantic-conservation/runner.py", "sha256": "0cbecf8bf21f0f00c04a288af159bb0119e5762a8d2b7c59f6d6595f0283fffa"},
+    {"path": "tests/eval/semantic-conservation/runner.test.sh", "sha256": "c1a2e6d587cb207c062b130dc90cffa1b1f757777f731c95a12888938473c0ca"},
+    {"path": ".github/workflows/canonical-flow-baseline.yml", "sha256": "836b34548aaf5b3baa6b968fed88ee8f8d0e0d7e48a0da5a48013796e3cf324d"},
+    {"path": "package.json", "sha256": "6f53aec996d9839b698b9dcf2f2c3fc0bff3b2953ca0ca0ce547c277297a1514"}
+  ],
+  "obligations": [
+    {
+      "id": "positive-promised-quality",
+      "legacy_source": "The methodology promise and readiness axes",
+      "classification": "spine",
+      "rationale": "Subtraction must optimize for the promised good, not only defect discovery.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["turns explicit product promises into excellent, proven products", "PROMISE defines the product contract and quality bar", "Artifacts and green checks are evidence, never the objective"]}
+      ]
+    },
+    {
+      "id": "promise-build-prove-profile-model",
+      "legacy_source": "Promise to Build to Prove mental model",
+      "classification": "spine",
+      "rationale": "The four operating centers remain available on every engagement.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["PROMISE defines", "BUILD turns", "PROVE evaluates", "PROFILE keeps every declared public surface"]}
+      ]
+    },
+    {
+      "id": "p1-evaluation-over-verification",
+      "legacy_source": "v8 P1",
+      "classification": "spine",
+      "rationale": "Outcome evaluation cannot be loaded only after a false-green check.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["P1 .* Evaluate the outcome, not the evidence format", "does it work.*is it good"]}]
+    },
+    {
+      "id": "p2-claim-needs-mechanism",
+      "legacy_source": "v8 P2",
+      "classification": "spine",
+      "rationale": "Mechanism-less claims must fail everywhere.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["P2 .* Every claim needs a real mechanism", "No mechanism means the claim fails"]}]
+    },
+    {
+      "id": "p3-cant-reach-is-finding",
+      "legacy_source": "v8 P3",
+      "classification": "spine",
+      "rationale": "Access failures cannot become untested passes.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["P3 .* Inability to reach or test something is a finding", "Record the reproduced attempt"]}]
+    },
+    {
+      "id": "p4-structural-adversary",
+      "legacy_source": "v8 P4",
+      "classification": "spine",
+      "rationale": "The author never certifies their own work.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["P4 .* The author does not certify their own work", "separate, independently motivated evaluator"]}]
+    },
+    {
+      "id": "migration-first-actions",
+      "legacy_source": "v7 v8 v9 compatibility ladder",
+      "classification": "spine",
+      "rationale": "Legacy truth must be healed before new work, while version history stays out of the main explanation.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["[.]v9-graph-needed.*speck-graph-up", "[.]v8-reprove-needed.*speck-reprove", "[.]migration-needs-catchup.*speck-catch-up"]}]
+    },
+    {
+      "id": "active-project-and-state",
+      "legacy_source": "First-actions project resolution and project-state",
+      "classification": "spine",
+      "rationale": "Work must start from current project truth.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Resolve the active project", "existing code or docs enter through `project-import.*speck-scan[(]project[)].*project-specify`", "Read the active project's `project-state[.]md`", "follow its Next action"]}]
+    },
+    {
+      "id": "play-level",
+      "legacy_source": "Sprint Build Platform routing",
+      "classification": "spine",
+      "rationale": "Rigor selection remains explicit and distinct from scope.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Read `[.]speck/project[.]json` for `play_level`", "Complexity chooses scope, never play level", "Sprint.*Build.*Platform"]}]
+    },
+    {
+      "id": "engagement-recheck",
+      "legacy_source": "Engagement-gap recheck",
+      "classification": "spine",
+      "rationale": "Stale evidence is detected before feature work.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Run `/speck-recheck` before feature work", "older than two weeks"]}]
+    },
+    {
+      "id": "graph-caps-never-grants",
+      "legacy_source": "v9 witness graph",
+      "classification": "gate",
+      "rationale": "Traceability remains a ceiling, never proof of quality.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["Repair hard graph findings labeled `[.]P1`", "GRAPH_CAP.*only limits the highest claim", "never grants readiness"]},
+        {"path": ".speck/scripts/graph/speck_graph.py", "anchors": ["Caps, never raises", "GRAPH_CAP is a ceiling"]}
+      ]
+    },
+    {
+      "id": "unscoped-work-resolution",
+      "legacy_source": "speck router scale analysis",
+      "classification": "gate",
+      "rationale": "Removing the router must not remove automatic project epic story scope selection.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["analyze-scale[.]sh --json", "complexity 0.1 routes to story scope, 2 to epic scope, and 3.4 to project scope"]},
+        {"path": ".speck/scripts/bash/analyze-scale.sh", "anchors": ["routing", "complexity", "suggested_level", "explicit user scope overrides"]},
+        {"path": ".speck/scripts/bash/analyze-scale.test.sh", "anchors": ["assert_route project 3", "assert_route epic 2", "assert_route story 1", "play_level"]},
+        {"path": ".speck/reference/skill-routing-cases.json", "anchors": ["entry-scope-project-new-product", "entry-scope-epic-bounded-capability", "entry-scope-story-small-change"]}
+      ]
+    },
+    {
+      "id": "optional-goal-gap-loop",
+      "legacy_source": "Drive-to-done native goal loop",
+      "classification": "jit",
+      "rationale": "Native goal is encouraged but the same gap loop works without it.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["encourage native `/goal`", "It is optional", "gap-routes[.]md.*only for status, goal, or gap work"]},
+        {"path": ".speck/reference/gap-routes.md", "anchors": ["SPECK-GAP: none", "highest-priority gap"]}
+      ]
+    },
+    {
+      "id": "canonical-full-flow",
+      "legacy_source": "Project epic story command order",
+      "classification": "gate",
+      "rationale": "Every lifecycle slot remains reachable in a single always-on sequence.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["SPECK:FLOW:START", "Build foundation:", "Platform foundation:", "Epic:", "Story:", "SPECK:FLOW:END"]},
+        {"path": "tests/eval/skill-routing/baseline.json", "anchors": ["build-foundation", "platform-foundation", "story-new-scope", "post-redesign"]}
+      ]
+    },
+    {
+      "id": "artifact-routing-and-template",
+      "legacy_source": "Canonical specs routing",
+      "classification": "jit",
+      "rationale": "The location contract loads at artifact-write time.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["Read the selected `SKILL[.]md` and its required template", "canonical-routing[.]md.*when writing an artifact"]},
+        {"path": ".speck/reference/canonical-routing.md", "anchors": ["Canonical", "specs/"]}
+      ]
+    },
+    {
+      "id": "decision-alternatives-and-log",
+      "legacy_source": "Skeptical review and decision log",
+      "classification": "spine",
+      "rationale": "Non-trivial locks remain comparative and recorded.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Compare at least three alternatives", "record the decision at the phase boundary", "speck-skeptical-review.*speck-decision-log"]}]
+    },
+    {
+      "id": "audit-before-validation",
+      "legacy_source": "Always-on audit gate",
+      "classification": "spine",
+      "rationale": "Implementation cannot self-certify into validation.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Run `/speck-audit` after implementation and before validation", "Checked-in evidence is required"]}]
+    },
+    {
+      "id": "runtime-larp-for-ui",
+      "legacy_source": "Naive hostile and taste LARP",
+      "classification": "spine",
+      "rationale": "UI quality is evaluated in the real experience before validation.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["For UI, run naive-user and hostile-user runtime LARP before validation", "speck-larp if UI"]}]
+    },
+    {
+      "id": "delegated-transcript-verification",
+      "legacy_source": "Verify-skills delegation gate",
+      "classification": "spine",
+      "rationale": "Delegation evidence must be inspected, not accepted by self-report.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Verify delegated work from its transcript and tool evidence", "do not accept a self-reported pass"]}]
+    },
+    {
+      "id": "promise-conservation",
+      "legacy_source": "Traceability matrix and witness graph",
+      "classification": "gate",
+      "rationale": "Subtraction cannot silently drop explicit promises.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["every enumerable promise traced through the matrix and witness graph", "Never hand-edit `witness[.]json`"]},
+        {"path": ".speck/scripts/graph/speck_graph.py", "anchors": ["Conservation [(]PHANTOM_PROMISE[)]", "promise has an OWNER"]}
+      ]
+    },
+    {
+      "id": "truth-market-language-profile-checks",
+      "legacy_source": "Always-on truth checks",
+      "classification": "spine",
+      "rationale": "Release-facing truth checks remain visible at the correct phase.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Stamp truth artifacts with the current commit SHA", "banned-language checks", "recheck market claims before COMMERCIAL-RC", "check PROFILE drift during recheck"]}]
+    },
+    {
+      "id": "value-defensibility-before-price",
+      "legacy_source": "Always-on value defensibility gate",
+      "classification": "spine",
+      "rationale": "A working paywall cannot establish that the product is worth its price against substitutes.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Before price locks or COMMERCIAL-RC", "free, DIY, and substitute options", "value-defensibility artifact"]}]
+    },
+    {
+      "id": "continuous-methodology-feedback",
+      "legacy_source": "Always-on continuous feedback capture",
+      "classification": "spine",
+      "rationale": "Methodology workarounds and ambiguity must become actionable evidence before context is lost.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Capture a methodology workaround, ambiguous skill, or patched Speck behavior", "speck-feedback"]}]
+    },
+    {
+      "id": "non-collapsible-readiness",
+      "legacy_source": "Readiness axes and state ladder",
+      "classification": "spine",
+      "rationale": "Mechanical green cannot compensate for product-quality failure.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["CORRECT.*ON-CONTRACT.*FELT-GOOD.*TASTE", "One axis cannot compensate for another", "NO-SHIP.*IMPL-GREEN.*INTEGRATION-GREEN.*UX-RC or API-RC.*COMMERCIAL-RC.*SHIP-RC.*SHIP"]}]
+    },
+    {
+      "id": "declared-profile-surfaces",
+      "legacy_source": "PROFILE public-face promise",
+      "classification": "gate",
+      "rationale": "PROFILE is a binding multi-surface pillar rather than a README synonym.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["project[.]md` PROFILE registry plus its declared surfaces", "project-profile"]},
+        {"path": ".cursor/skills/project-profile/SKILL.md", "anchors": ["Every retained registry row is binding", "required missing, unreachable, or severely divergent surface is `PROFILE_DRIFT[.]P1`"]},
+        {"path": ".speck/scripts/profile-surface-check.py", "anchors": ["parse_registry", "github_description", "PROFILE_DRIFT_SUMMARY"]},
+        {"path": ".speck/templates/project/project-template.md", "anchors": ["Surface.*Adapter.*Target.*Source of truth.*Required by", "GitHub repo description", "Landing page hero"]},
+        {"path": ".speck/templates/project/evidence-contract-template.md", "anchors": ["PROFILE Gate Criteria", "binding public-surface registry", "inspect every row", "PROFILE_DRIFT[.]P1"]},
+        {"path": ".speck/scripts/validation/validators/validate-evidence-contract.sh", "anchors": ["profile_section", "Binding multi-surface PROFILE Gate Criteria", "PROFILE Gate Criteria is shape-only or incomplete"]},
+        {"path": ".speck/scripts/validation/scaffold-clean.test.sh", "anchors": ["heading-only PROFILE gate cannot pass", "binding PROFILE contract diagnostic"]}
+      ]
+    },
+    {
+      "id": "executable-jit-load-contract",
+      "legacy_source": "v11 JIT context loading",
+      "classification": "gate",
+      "rationale": "Procedural context is loaded and receipted only when the selected skill needs it.",
+      "carriers": [
+        {"path": ".speck/scripts/context/speck_context.py", "anchors": ["skill-load-contracts[.]json", "receipt", "selectors"]},
+        {"path": ".speck/reference/skill-load-contracts.json", "anchors": ["story-implement-ui", "project-evidence"]}
+      ]
+    },
+    {
+      "id": "host-capabilities-jit",
+      "legacy_source": "Always-on host and model matrix",
+      "classification": "jit",
+      "rationale": "Host mechanics remain reachable without consuming every engagement.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["Gate explanations and host differences:.*host-capabilities[.]md"]},
+        {"path": ".speck/reference/host-capabilities.md", "anchors": ["Subagents Fallback", "Claude Code", "Codex"]}
+      ]
+    },
+    {
+      "id": "project-owned-runtime-output",
+      "legacy_source": "Vanilla learned-pattern and feedback scaffolds",
+      "classification": "gate",
+      "rationale": "Vanilla installs stay empty while feedback and learned material created by a real project survive upgrades.",
+      "carriers": [
+        {"path": "packages/cli/lib/sync.js", "anchors": ["[.]speck/feedback/` is project-owned runtime output", "remove only.*exact files Speck previously shipped", "preserve every project-created sibling"]},
+        {"path": "packages/cli/lib/sync.preserve.test.js", "anchors": ["preserves project-created learned patterns", "preserving project feedback", "PROJECT LEARNING"]},
+        {"path": ".speck/scripts/bash/export-template-repo.sh", "anchors": ["Shipped Speck runtime", "README[.]md VERSION mcp recipes reference scripts templates"]},
+        {"path": ".speck/scripts/bash/export-template-repo.test.sh", "anchors": ["[.]speck/feedback", "[.]speck/patterns", "Python bytecode cache leaked"]}
+      ]
+    },
+    {
+      "id": "thin-command-compatibility",
+      "legacy_source": "Explicit /speck and /project-readme commands",
+      "classification": "compatibility",
+      "rationale": "Named commands remain additive migrations without retaining duplicate procedure.",
+      "carriers": [
+        {"path": ".cursor/skills/speck/SKILL.md", "anchors": ["disable-model-invocation: true", "Compatibility entry for AGENTS routing", "Apply `Start every engagement`", "Preserve `\\$ARGUMENTS`"]},
+        {"path": ".cursor/skills/project-readme/SKILL.md", "anchors": ["disable-model-invocation: true", "Compatibility alias for project-profile", "Forward `\\$ARGUMENTS` unchanged"]}
+      ]
+    },
+    {
+      "id": "versioned-north-stars-in-always-on-context",
+      "legacy_source": "v8 v9 v11 north-star links in AGENTS",
+      "classification": "retired",
+      "rationale": "History remains under docs/history and migration mechanisms; a product agent needs only current doctrine.",
+      "carriers": [],
+      "forbidden": [{"path": "AGENTS.md", "anchors": ["docs/v(?:8|9|10|11)/[^`\\s]*north-star"]}]
+    },
+    {
+      "id": "speck-router-owned-orchestration",
+      "legacy_source": "The full /speck router procedure",
+      "classification": "retired",
+      "rationale": "AGENTS owns sequence and scope; /speck retains only explicit-command compatibility.",
+      "carriers": [],
+      "forbidden": [{"path": ".cursor/skills/speck/references", "must_be_absent": true}]
+    },
+    {
+      "id": "readme-only-profile",
+      "legacy_source": "project-readme as the full PROFILE pillar",
+      "classification": "retired",
+      "rationale": "README remains central but cannot represent or clear drift on every public surface.",
+      "carriers": [],
+      "forbidden": [
+        {"path": "AGENTS.md", "anchors": ["root `README[.]md` for PROFILE", "PROFILE keeps the public face"]},
+        {"path": ".cursor/skills/project-readme/SKILL.md", "anchors": ["Refreshes the root README profile", "This alias owns the PROFILE procedure"]}
+      ]
+    }
+  ]
+}

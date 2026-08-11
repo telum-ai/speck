@@ -6,7 +6,7 @@ display_name: "API Service"
 description: "Pure API backend service for microservices or API-first products"
 version: "1.0.0"
 
-# Keywords for /speck detection
+# Keywords for project-entry detection
 keywords:
   - api
   - backend
