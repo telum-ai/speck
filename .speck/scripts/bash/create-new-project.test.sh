@@ -23,6 +23,22 @@ if bash "$SCRIPT" --dry-run --project-id '../escape' "bad" >/dev/null 2>&1; then
   exit 1
 fi
 
+cat > "$TMP/.speck/project.json" <<'EOF'
+{"project_id":"001-pulseboard","play_level":"build"}
+EOF
+
+if bash "$SCRIPT" --json "Another product" >/dev/null 2>&1; then
+  echo "FAIL: omitted --project-id created beside the declared project"
+  exit 1
+fi
+test ! -d "$TMP/specs/projects/002-another-product"
+
+if bash "$SCRIPT" --dry-run --project-id 002-another "Another product" >/dev/null 2>&1; then
+  echo "FAIL: explicit project id overrode the declared canonical project"
+  exit 1
+fi
+
+rm "$TMP/.speck/project.json"
 bash "$SCRIPT" --json "Another product" > "$TMP/generated.json"
 python3 - "$TMP/generated.json" <<'PY'
 import json, pathlib, sys

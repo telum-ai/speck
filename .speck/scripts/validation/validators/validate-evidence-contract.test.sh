@@ -120,4 +120,12 @@ write_valid
 sed -i.bak '/| Confirmation bypass |/d' "$PROJECT/evidence-contract.md"
 expect_red "empty LARP table" "Runtime LARP / stress section has no executable row"
 
+write_valid
+sed -i.bak 's/CORRECT, ON-CONTRACT, FELT-GOOD, and TASTE/ON-CONTRACT and FELT-GOOD/' "$PROJECT/evidence-contract.md"
+expect_red "missing quality axes" "Quality section omits non-collapsible axes or LARP judgments"
+
+write_valid
+sed -i.bak 's/NO-SHIP → IMPL-GREEN → INTEGRATION-GREEN → SHIP-RC → SHIP/NO-SHIP → IMPL-GREEN → SHIP/' "$PROJECT/evidence-contract.md"
+expect_red "truncated readiness ladder" "Readiness section does not bind the full delivery ladder"
+
 echo "All evidence-contract semantic tests passed"

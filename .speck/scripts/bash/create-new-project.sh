@@ -51,6 +51,38 @@ DESCRIPTION="${ARGS[*]:-}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 PROJECTS_DIR="$REPO_ROOT/specs/projects"
+PROJECT_JSON="$REPO_ROOT/.speck/project.json"
+
+DECLARED_PROJECT_ID=""
+if [[ -f "$PROJECT_JSON" ]]; then
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "ERROR: python3 is required to read the declared project_id from .speck/project.json" >&2
+    exit 1
+  fi
+  if ! DECLARED_PROJECT_ID="$(python3 - "$PROJECT_JSON" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+try:
+    data = json.loads(path.read_text())
+except (OSError, json.JSONDecodeError) as exc:
+    print(f"ERROR: Cannot read {path}: {exc}", file=sys.stderr)
+    raise SystemExit(1)
+
+value = data.get("project_id", "")
+if value is None:
+    value = ""
+if not isinstance(value, str):
+    print("ERROR: .speck/project.json project_id must be a string", file=sys.stderr)
+    raise SystemExit(1)
+print(value.strip())
+PY
+)"; then
+    exit 1
+  fi
+fi
 
 mkdir -p "$PROJECTS_DIR"
 
@@ -94,12 +126,18 @@ PY
   fi
 fi
 
-if [[ -n "$PROJECT_ID_OVERRIDE" ]]; then
-  if [[ ! "$PROJECT_ID_OVERRIDE" =~ ^[0-9]{3}-[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
-    echo "ERROR: Invalid --project-id: $PROJECT_ID_OVERRIDE" >&2
+if [[ -n "$PROJECT_ID_OVERRIDE" && -n "$DECLARED_PROJECT_ID" && "$PROJECT_ID_OVERRIDE" != "$DECLARED_PROJECT_ID" ]]; then
+  echo "ERROR: --project-id '$PROJECT_ID_OVERRIDE' conflicts with declared project_id '$DECLARED_PROJECT_ID'" >&2
+  exit 1
+fi
+
+canonical_project_id="${PROJECT_ID_OVERRIDE:-$DECLARED_PROJECT_ID}"
+if [[ -n "$canonical_project_id" ]]; then
+  if [[ ! "$canonical_project_id" =~ ^[0-9]{3}-[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+    echo "ERROR: Invalid --project-id or declared project_id: $canonical_project_id" >&2
     exit 1
   fi
-  project_id="$PROJECT_ID_OVERRIDE"
+  project_id="$canonical_project_id"
 else
   project_id="${prefix}-${slug}"
 fi
@@ -173,4 +211,3 @@ else
   echo "- Project: $project_id"
   echo "- Path: $project_rel"
 fi
-

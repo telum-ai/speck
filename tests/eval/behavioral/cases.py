@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import copy
-import importlib.util
 import json
 import re
 import subprocess
@@ -637,11 +636,12 @@ def _backend_hidden(root: Path) -> list[dict[str, object]]:
     if not path.exists():
         return [_check(f"backend-{i}", False, 1.0) for i in range(1, 10)]
     try:
-        spec = importlib.util.spec_from_file_location("bench_reminders", path)
-        assert spec and spec.loader
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        fn = mod.build_reminder
+        namespace: dict[str, object] = {
+            "__file__": str(path),
+            "__name__": "bench_reminders",
+        }
+        exec(compile(path.read_text(), str(path), "exec"), namespace)
+        fn = namespace["build_reminder"]
         now = datetime(2026, 8, 10, 12, 0, tzinfo=timezone.utc)
         def action(**updates):
             base = {"id": "a1", "owner": "Ada", "due_at": "2026-08-12T12:00:00Z", "confirmed": True}
@@ -778,6 +778,12 @@ def self_test(root: Path) -> dict[str, object]:
     good = '''from datetime import datetime, timedelta, timezone\n\ndef _parse(value):\n    if not isinstance(value, str) or not value.endswith("Z"):\n        raise ValueError("UTC Z required")\n    return datetime.fromisoformat(value[:-1] + "+00:00")\n\ndef _fmt(value):\n    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")\n\ndef build_reminder(action, now):\n    if action.get("confirmed") is not True:\n        return None\n    if not action.get("id") or not action.get("owner") or not action.get("due_at"):\n        raise ValueError("missing required field")\n    due = _parse(action["due_at"])\n    if due <= now:\n        return None\n    remind = due - timedelta(hours=24)\n    if remind < now:\n        remind = now + timedelta(minutes=5)\n+    if remind >= due:\n        return None\n    due_s = _fmt(due)\n    return {"id": f"reminder:{action['id']}:{due_s}", "action_id": action["id"], "owner": action["owner"], "due_at": due_s, "remind_at": _fmt(remind)}\n'''
     target.write_text(good.replace("\n+    if", "\n    if"))
     good_score = sum(float(c["earned"]) for c in _backend_hidden(root))
+    target.write_text(good.replace("\n+    if", "\n    if").replace("hours=24", "hours=23"))
+    boundary_checks = _backend_hidden(root)
+    boundary_mutant_score = sum(float(c["earned"]) for c in boundary_checks)
+    boundary_mutant_rejected = not next(
+        c for c in boundary_checks if c["label"] == "backend-exact-24h-boundary"
+    )["ok"]
     target.write_text("def build_reminder(action, now):\n    return {'id': 'always-green'}\n")
     mutant_score = sum(float(c["earned"]) for c in _backend_hidden(root))
     web = root / "web"
@@ -876,6 +882,8 @@ def self_test(root: Path) -> dict[str, object]:
     scorer_isolated = bool(closed_before["ok"] and closed_after["ok"] and not open_mutant["ok"] and not duplicate_open_mutant["ok"])
     return {
         "good": good_score,
+        "boundary_mutant": boundary_mutant_score,
+        "boundary_mutant_rejected": boundary_mutant_rejected,
         "mutant": mutant_score,
         "ui_array_good": ui_array_good,
         "ui_clobber_mutant": ui_clobber_mutant,
@@ -892,5 +900,5 @@ def self_test(root: Path) -> dict[str, object]:
         "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
         "project_owned_runtime_is_not_methodology": project_owned_runtime_is_not_methodology,
-        "passed": good_score == 9.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
+        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
     }
