@@ -666,6 +666,10 @@ def command_judge(args: argparse.Namespace) -> int:
 
 def command_rescore(args: argparse.Namespace) -> int:
     manifest = load_manifest(args.run_id)
+    manifest["rescore_harness"] = harness_fingerprint()
+    (RUNS / args.run_id / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    )
     snapshot_trusted_harness(
         trusted_snapshot_root(args.run_id),
         str(manifest["harness"]["git_revision"]),
@@ -882,6 +886,7 @@ def command_report(args: argparse.Namespace) -> int:
         "judge_model": judge_data.get("model"),
         "classification": classification,
         "harness": manifest.get("harness"),
+        "rescore_harness": manifest.get("rescore_harness"),
         "isolation": manifest.get("isolation"),
         "valid_runs": {"v10": valid_v10, "v11": valid_v11},
         "quality_pairs": {"included": len(quality_rows), "excluded": len(rows) - len(quality_rows)},
@@ -939,18 +944,23 @@ def command_report(args: argparse.Namespace) -> int:
             f"{v10['required_corrections']} | {v11['required_corrections']} | {v10['usage']['input_tokens']} | {v11['usage']['input_tokens']} |"
         )
     ratio = statistics.mean(combined_v11) / statistics.mean(combined_v10) if statistics.mean(combined_v10) else float("inf")
-    scorer_note = """
+    rescore_harness = manifest.get("rescore_harness", {})
+    scorer_note = f"""
 ## Frozen-artifact rescore
 
 Frozen subject artifacts and raw transcripts were rescored after
 mutation-tested evaluator corrections. The scorer recognizes canonical
 `lifecycle_state`, `Draft (Placeholder)`, multiline WHEN → THEN SHALL criteria,
 zero-open summaries, non-bypass principal wording, verified-readiness precedence
-over quoted inherited claims, and missing image-path classifications. Transcript
+over quoted inherited claims, missing image-path classifications, and browser
+entry-point mounting with an initially disabled approval control. Transcript
 conformance recognizes discrete commands inside multi-line shell calls and
 requires non-stamp gates after the latest truth stamp. Subjects, token counts,
 and event streams were not rerun; the blind judge was generated only after the
 pre-judge corrections.
+
+Rescore evaluator: `{rescore_harness.get('git_revision', 'unknown')}`
+(`{rescore_harness.get('sha256', 'unknown')}`).
 """ if rescored else ""
     context_section = ""
     if context_reports:
