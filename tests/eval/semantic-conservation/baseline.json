@@ -5,19 +5,25 @@
     {"path": "AGENTS.md", "start": "^## Non-negotiable principles$", "end": "^## Start every engagement$", "sha256": "a762a6cc49ce71ddb8521fb6879a802d2b2712221ff695c1eec54f9ad09b77a4"},
     {"path": "AGENTS.md", "start": "^## Start every engagement$", "end": "^## Play levels$", "sha256": "7253d1ccf761c88cdfae79ca6663a11c47b408a28cf4161422c1912572cc8c6b"},
     {"path": "AGENTS.md", "start": "^## Readiness$", "end": "^## Canonical flow$", "sha256": "8a9adc699b2d5da3458656e0a46cd07980ec7c3fb4a03a27e6a7867059466e56"},
-    {"path": "AGENTS.md", "start": "^## Always-on gates$", "end": "^## When user says$", "sha256": "1ac19c054403151bee8dd615362c97a7b72d04c78184c3e5a92b44a6bc89b04c"}
+    {"path": "AGENTS.md", "start": "^## Always-on gates$", "end": "^## When user says$", "sha256": "67644858acc40a53f3e4994086787acbadcc36e45d784d5f1ddf7ae5f47c2654"}
   ],
   "protected_files": [
-    {"path": "AGENTS.md", "sha256": "84350f96e369ddf0345e4411b0a73751b8bc9df36d0cada71183aeae957ede9c"},
-    {"path": ".cursor/skills/project-profile/SKILL.md", "sha256": "779960db0fe4b16f396b972cc9fd3388beddd680872c27458dfea529ca62688a"},
+    {"path": "AGENTS.md", "sha256": "8c337c9216a933f6c39da65635f35ba7199821971206a8ebe9d62f8727d21f10"},
+    {"path": ".cursor/skills/project-profile/SKILL.md", "sha256": "a8209f606003e674968eb05e48620e7d73879e9fc52f59ede89aa0104af3b40a"},
     {"path": ".cursor/skills/speck/SKILL.md", "sha256": "c8f29b894e6c7a1d272ef8883c95e4857f57368fb8b5250f6f4e5aaabebfc625"},
     {"path": ".cursor/skills/project-readme/SKILL.md", "sha256": "702ffc4be9d1fa17db1b587d03fb47b632cef5bbed61b0040c25678d9c0a67ff"},
     {"path": ".speck/reference/canonical-routing.md", "sha256": "933bc87666f4135f8ddbbf741edabfbbb3140ae1bca254cd89db548c33db2af3"},
     {"path": ".speck/reference/evidence-readiness-gate-criteria.md", "sha256": "871ea932ca15f05cecd8784d2bdab6f8ee1f9d98d69f7239a85531d43014801b"},
     {"path": ".speck/reference/gap-routes.md", "sha256": "aa5d9aaf861b5fb33408e03f7b78b2fa60e61f227353fa31aefdcadfe99f10b9"},
-    {"path": ".speck/reference/host-capabilities.md", "sha256": "fb3cac7d2a965377708faf4e68498cd4b39b9dddc39a2f3a26389b62e81c8d96"},
-    {"path": ".speck/reference/skill-load-contracts.json", "sha256": "bca07bc8f1ef61548e589fba679a803f37a9907e37f8c6a5969a5fb361e1e0ab"},
-    {"path": ".speck/reference/skill-routing-cases.json", "sha256": "32d29a12d07c42574440c693abbf7e2d111a58b48a6183aa2f5e448eaaa8043f"},
+    {"path": ".speck/reference/host-capabilities.md", "sha256": "b80ada9fac83e1a099ee3a6d8a17cb1c5bdb3544a15fc5836c4c142c21b6dd14"},
+    {"path": ".speck/reference/skill-load-contracts.json", "sha256": "ddcc03c5b95c775fd5fccb1a8ce5c3fb3ed1f07833ece17896cc881afdd6a56c"},
+    {"path": ".speck/reference/skill-routing-cases.json", "sha256": "ce4ddddc0e237a7c4480a83af5853e02beb955bdd02e00cf62be2942ee5e32ff"},
+    {"path": ".speck/reference/agent-dispatch.json", "sha256": "a497be98352270c34140030da41ff7cb466da16be1d4443c7aa09bd31e5b215a"},
+    {"path": ".cursor/skills/adjust/SKILL.md", "sha256": "fff6cd38a810fbbaee60f37eedcf5b024717852e28285f7bd32028532057ad9e"},
+    {"path": ".cursor/skills/adjust/references/story.md", "sha256": "cdbf3eead68adcd0372ea572e396785472764a9f9d770942bad591e5655da0e5"},
+    {"path": ".cursor/skills/adjust/references/epic.md", "sha256": "f9cfe4493cff9540c7bb872d387b4ed42bec511f914a79172a9791ae1d5f85d3"},
+    {"path": ".cursor/skills/adjust/references/project.md", "sha256": "726362647147743ad0664d889e31c30376550a8743fd02a398fd522e2158c30e"},
+    {"path": ".cursor/skills/analyze/SKILL.md", "sha256": "120ab294d23f8cb7c407e698dfa7c77f9061bda5e8bb7f2ca1f15653263b75ee"},
     {"path": ".speck/scripts/bash/analyze-scale.sh", "sha256": "a1ebc8a76a361a1ef5dea74ea63a1e0e0ffb7bd9119d138661491002d4c33d8f"},
     {"path": ".speck/scripts/bash/analyze-scale.test.sh", "sha256": "84d5113a3e98e50b81bb10985b21c5bcbb64a524c7962120b18b548a5d7c506d"},
     {"path": ".speck/scripts/bash/export-template-repo.sh", "sha256": "7dc279ec2066a49021192d9ea7771879fd2dd289504b6b39f302b097a1aa7c8c"},
@@ -25,19 +31,34 @@
     {"path": ".speck/scripts/context/speck_context.py", "sha256": "6aa672f0cadca437e744a74341e06c957b33e666b2a15b6c9627c74f8f9481e0"},
     {"path": ".speck/scripts/graph/speck_graph.py", "sha256": "df7c9e3d5734aaf20cdba8d5df0ea7ca1b19ef42b19de9f316c7facdf8825b8e"},
     {"path": ".speck/scripts/profile-surface-check.py", "sha256": "12f02bbf188cda6cda53f8506b3215f02ab8a6ef62bd774bd3c1f4f2b1b31d9f"},
+    {"path": ".speck/scripts/validation/check-story-prereqs.sh", "sha256": "58cbf44f569dc82cbdc0812d0187ccddf1076c11300078b5c17ca808a78bddf1"},
+    {"path": ".speck/scripts/validation/check-story-prereqs.test.sh", "sha256": "7395781c99295e78916cc9f87f9fe475e684a90f905c7a407a58919321f29a5b"},
     {"path": ".speck/scripts/validation/scaffold-clean.test.sh", "sha256": "4e2aab60fc72c267f991b6f9feb15c7cd3440fbb271bddc7decf4615d4d5d9c5"},
+    {"path": ".speck/scripts/validation/validators/_corpus_budget_lib.py", "sha256": "e83479ee964f9e1bee3bd2d294a3b88b4171801ceab3d7aeaa44e2bc6181e653"},
+    {"path": ".speck/scripts/validation/validators/validate-corpus-budget.test.sh", "sha256": "2ae791baac37f881ae38a5a54f54d5483ab6f93760d229f993038a785843dbe4"},
+    {"path": ".speck/scripts/validation/validators/validate-context-transcript.test.sh", "sha256": "e2b34dbb140e1437b1ee2e8407bf6f948a82936bea1f52f144568a9d1c5f346b"},
+    {"path": ".speck/scripts/validation/validators/validate-project-analysis.sh", "sha256": "b126511383c109d7ba9bf093fdd0f7e877f002ac95b7266c7afad506f2c61b7e"},
+    {"path": ".speck/scripts/validation/validators/validate-project-analysis.test.sh", "sha256": "07a0669453d81844ef1bd693db25c6b8a1522756d71c29acd5efa42285576cf9"},
     {"path": ".speck/scripts/validation/validators/validate-evidence-contract.sh", "sha256": "8bc6152ff8f08ae2fe20fc79506b2744f5cb49d22ba7392d62d7f711dfcff292"},
     {"path": ".speck/scripts/validation/validators/validate-readme.test.sh", "sha256": "34fa72b22722256ac788e5775b2062c4e81cda30b3411ab558aff481de3ac02e"},
     {"path": ".speck/templates/project/evidence-contract-template.md", "sha256": "13082658364fc9a5408fb483240c3c971181ad3783daf87d3bad5a1606197a7e"},
     {"path": ".speck/templates/project/project-template.md", "sha256": "95485d2ee5593704ea19f55e92b482645f80d833a78ccbb13f4634b7655b01d9"},
-    {"path": "packages/cli/lib/sync.js", "sha256": "4cb6e54dd9beecf756c450f20069373128cd463bdb1a3fe90a194fa5e6a73bcc"},
-    {"path": "packages/cli/lib/sync.preserve.test.js", "sha256": "e132dfb55aa8056713d866530c2a086f82e24850c27cfa533190f9c10378a6e7"},
-    {"path": "tests/eval/skill-routing/baseline.json", "sha256": "fa4b4debcc101427eb3173ff05676f4e2afde101ba7ef31c7ae5fcf2676c341c"},
+    {"path": ".speck/templates/story/tasks-template.md", "sha256": "06db7a618a8a0d88fddc78d881dbaaaf6fec3b82b16b32719646dd2f1fdbfaa7"},
+    {"path": ".speck/templates/story/story-analysis-report-template.md", "sha256": "160f8472545f6afc97491fd3210e09c12ac03eb272a2c7cc5c0e960b3bf331fa"},
+    {"path": ".cursor/skills/story-tasks/SKILL.md", "sha256": "2c8e840769cafa5ae3e88dcf503bc5fc652fd7439197ebb826b4ce6d8aee49b0"},
+    {"path": ".cursor/skills/story-tasks/references/spine.md", "sha256": "5dcf081bb0223c58795eae7a9d6a5b0ec9f8fcc5cb94c8aa7cb15d0205a732f7"},
+    {"path": ".cursor/skills/story-implement/SKILL.md", "sha256": "ebf08823431249db200ec1b3c25c3864191228824e0c6fae4b5ad63eafae52c7"},
+    {"path": ".cursor/skills/story-implement/references/spine.md", "sha256": "1b81bb9ad528da258d445969899f1c52383a91fd2a23107b36199094aca12983"},
+    {"path": "packages/cli/lib/agent-model-tiers.test.js", "sha256": "d6b310f3011b6c668671fcfc1f387facd7223aa1158d40ddc5d2dcc39ad1b691"},
+    {"path": "packages/cli/lib/generate-agents.js", "sha256": "c9e3ebf3c97b9ea86698ea987cb0d67acc24b5ee5a3ac3153f2795eb4ccb88f1"},
+    {"path": "packages/cli/lib/sync.js", "sha256": "a257b068115bddf58213f6531750bcd3586ac62c3de3b50465175303b7f5ac3d"},
+    {"path": "packages/cli/lib/sync.preserve.test.js", "sha256": "addf634e1751ac9ebdde19d8f6f4721dd15d2b0d6b6270f2c4ef63894d9dade1"},
+    {"path": "tests/eval/skill-routing/baseline.json", "sha256": "2f7c49bcd2d03b2376e40e64b3b2146942b235d5807dbd35f3583e826585d6aa"},
     {"path": "tests/eval/semantic-conservation/guard-baseline-change.sh", "sha256": "e054c7131b2810180dfec8953b71b6d1ed240b7b08513bda0038839bcc4ccf65"},
     {"path": "tests/eval/semantic-conservation/runner.py", "sha256": "0cbecf8bf21f0f00c04a288af159bb0119e5762a8d2b7c59f6d6595f0283fffa"},
     {"path": "tests/eval/semantic-conservation/runner.test.sh", "sha256": "c1a2e6d587cb207c062b130dc90cffa1b1f757777f731c95a12888938473c0ca"},
     {"path": ".github/workflows/canonical-flow-baseline.yml", "sha256": "836b34548aaf5b3baa6b968fed88ee8f8d0e0d7e48a0da5a48013796e3cf324d"},
-    {"path": "package.json", "sha256": "f2825701b70c933d7b6513cbc042017bbb9e123a598ab4d7215846cdf854d5df"}
+    {"path": "package.json", "sha256": "ceb6868af5d70393cfd526046518e82531a25583d24d79624b7aedc87c0f2ae2"}
   ],
   "obligations": [
     {
@@ -282,6 +303,61 @@
       ]
     },
     {
+      "id": "custom-agents-enter-canonical-skills",
+      "legacy_source": "Custom Speck role prompts",
+      "classification": "gate",
+      "rationale": "Custom roles must add model tier and independence without becoming a second copy of the methodology.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["Before dispatch, read `[.]speck/reference/agent-dispatch[.]json`", "mapped canonical skill"]},
+        {"path": ".speck/reference/agent-dispatch.json", "anchors": ["method_authority", "role_authority", "mode", "fallback", "return", "skills_invoked", "independence", "speck-validator"]},
+        {"path": "packages/cli/lib/generate-agents.js", "anchors": ["agent-dispatch[.]json", "ROLE_TIER = Object[.]fromEntries", "declaredTier !== tier"]},
+        {"path": "packages/cli/lib/agent-model-tiers.test.js", "anchors": ["every retained agent has a canonical skill route", "independence contract is missing", "agent prompts are thin adapters", "AGENTS.*dispatch.*role"]}
+      ]
+    },
+    {
+      "id": "adjust-rebuilds-and-reproves",
+      "legacy_source": "Post-validation deliberate redesign",
+      "classification": "jit",
+      "rationale": "A deliberate redesign must change and re-prove the implementation instead of stopping after documents are refreshed.",
+      "carriers": [
+        {"path": ".cursor/skills/adjust/SKILL.md", "anchors": ["downgrade", "Re-spec", "Re-plan", "re-implement", "speck-audit", "level-specific validation"]},
+        {"path": ".cursor/skills/adjust/references/story.md", "anchors": ["story-plan", "story-tasks", "analyze --level story", "story-implement", "speck-audit", "story-validate"]},
+        {"path": ".cursor/skills/adjust/references/epic.md", "anchors": ["Route every affected story.*planning.*tasks.*analysis.*implementation.*audit.*validation", "epic-validate"]},
+        {"path": ".cursor/skills/adjust/references/project.md", "anchors": ["downstream build-and-prove loop", "compute-cascade[.]sh --dec DEC-XXXX --strict"]}
+      ]
+    },
+    {
+      "id": "story-analysis-before-implementation",
+      "legacy_source": "Decorrelated story planning challenge",
+      "classification": "gate",
+      "rationale": "Build and Platform stories need an independent contradiction and readiness challenge before implementation begins.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["story-tasks.*analyze.*story.*story-implement"]},
+        {"path": ".cursor/skills/analyze/SKILL.md", "anchors": ["project.*epic.*story", "story-tasks", "Build uses one focused reviewer", "Platform uses three", "analyze-story-core"]},
+        {"path": ".speck/templates/story/tasks-template.md", "anchors": ["artifact_type: story-tasks", "analysis_required: \\[ANALYSIS_REQUIRED\\]"]},
+        {"path": ".speck/templates/story/story-analysis-report-template.md", "anchors": ["artifact_type: story-analysis-report", "Lens Roster", "Promise Coverage", "Required Corrections"]},
+        {"path": ".speck/scripts/validation/check-story-prereqs.sh", "anchors": ["analysis_required", "UNANALYZED_CORPUS[.]P1", "validate-project-analysis[.]sh", "Required story analysis has not cleared"]},
+        {"path": ".speck/scripts/validation/check-story-prereqs.test.sh", "anchors": ["pre-v11 tasks remain advisory", "Sprint task marker skips analysis explicitly", "fail closed without story analysis", "bound Build story analysis clears"]},
+        {"path": ".speck/scripts/validation/validators/validate-project-analysis.sh", "anchors": ["story-analysis-report", "ANALYSIS_DECORRELATION_MISSING[.]P1", "freshness_check.*spec[.]md.*plan[.]md.*tasks[.]md"]},
+        {"path": ".speck/scripts/validation/validators/validate-project-analysis.test.sh", "anchors": ["Build story with a bound independent analysis clears", "Build story without story-analysis-report[.]md is blocked", "Platform story with fewer than three lenses is blocked"]},
+        {"path": ".speck/scripts/validation/validators/validate-context-transcript.test.sh", "anchors": ["story analysis core loads only its level", "post-hoc transcript proves story lens timing and sibling exclusion", "story report load-before-write and closure gates"]},
+        {"path": ".cursor/skills/story-implement/SKILL.md", "anchors": ["analyzed story work", "before speck-audit"]},
+        {"path": ".cursor/skills/story-implement/references/spine.md", "anchors": ["story-analysis gate when `tasks[.]md` declares `analysis_required: true`"]},
+        {"path": ".cursor/skills/story-tasks/SKILL.md", "anchors": ["project `play_level` for the analysis marker"]},
+        {"path": ".cursor/skills/story-tasks/references/spine.md", "anchors": ["analysis_required: false` for Sprint and `true` for Build/Platform", "analyze --level story", "Sprint skips", "Build and Platform require"]}
+      ]
+    },
+    {
+      "id": "chat-output-format-is-not-methodology",
+      "legacy_source": "Uniform skill completion messages",
+      "classification": "gate",
+      "rationale": "Skill context should define artifacts and decisions, not decorative completion messages that no downstream mechanism reads.",
+      "carriers": [
+        {"path": ".speck/scripts/validation/validators/_corpus_budget_lib.py", "anchors": ["CHAT_OUTPUT_SCHEMA", "chat-only output schema", "artifact structure in templates", "machine-consumed return fields"]},
+        {"path": ".speck/scripts/validation/validators/validate-corpus-budget.test.sh", "anchors": ["chat-only output schemas fail", "Response Format"]}
+      ]
+    },
+    {
       "id": "thin-command-compatibility",
       "legacy_source": "Explicit /speck and /project-readme commands",
       "classification": "compatibility",
@@ -289,6 +365,19 @@
       "carriers": [
         {"path": ".cursor/skills/speck/SKILL.md", "anchors": ["disable-model-invocation: true", "Compatibility entry for AGENTS routing", "Apply `Start every engagement`", "Preserve `\\$ARGUMENTS`"]},
         {"path": ".cursor/skills/project-readme/SKILL.md", "anchors": ["disable-model-invocation: true", "Compatibility alias for project-profile", "Forward `\\$ARGUMENTS` unchanged"]}
+      ]
+    },
+    {
+      "id": "unused-level-adjust-and-story-analyze-aliases",
+      "legacy_source": "Level-specific adjust and story-analyze compatibility shims",
+      "classification": "retired",
+      "rationale": "Unobserved aliases add catalog ambiguity and migration surface without helping automatic or user routing.",
+      "carriers": [],
+      "forbidden": [
+        {"path": ".cursor/skills/project-adjust", "must_be_absent": true},
+        {"path": ".cursor/skills/epic-adjust", "must_be_absent": true},
+        {"path": ".cursor/skills/story-adjust", "must_be_absent": true},
+        {"path": ".cursor/skills/story-analyze", "must_be_absent": true}
       ]
     },
     {

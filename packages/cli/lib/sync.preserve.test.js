@@ -37,6 +37,22 @@ test('smartSync: project-custom skill dir survives upgrade', () => {
   assert.equal(readFileSync(customPath, 'utf8'), 'CUSTOM');
 });
 
+test('smartSync: removes retired level aliases without deleting custom skills', () => {
+  const { source, target } = makeDirs();
+  for (const name of ['project-adjust', 'epic-adjust', 'story-adjust', 'story-analyze']) {
+    const dir = join(target, '.cursor', 'skills', name);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'SKILL.md'), 'RETIRED');
+  }
+
+  smartSync(source, target);
+
+  for (const name of ['project-adjust', 'epic-adjust', 'story-adjust', 'story-analyze']) {
+    assert.ok(!existsSync(join(target, '.cursor', 'skills', name)), `${name} must be removed`);
+  }
+  assert.ok(existsSync(join(target, '.cursor', 'skills', 'myproject-custom', 'SKILL.md')));
+});
+
 test('smartSync: Speck-shipped skill dir is still fully overwritten', () => {
   const { source, target } = makeDirs();
   smartSync(source, target);

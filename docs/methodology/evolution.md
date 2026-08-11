@@ -23,7 +23,7 @@ An automatic skill description is discovery infrastructure, not a body summary:
 2. **WHEN** — `Use ...` plus observable user intent, artifact state, or concrete cases.
 3. **WHERE / BOUNDARY when selection-critical** — phase-bound optional skills name their nearest `after`/`before` boundary; event-driven skills name the event boundary (`before lock`, `before dispatch`, `after discovery`).
 
-Target two sentences: `<WHAT>. Use <WHEN, with WHERE or BOUNDARY if needed>.` Template paths, first actions, procedure, and exhaustive outputs stay in the JIT body. User-only routers and compatibility shims instead state that they run only when explicitly named.
+Target two sentences: `<WHAT>. Use <WHEN, with WHERE or BOUNDARY if needed>.` Template paths, first actions, and procedure stay in the JIT body. Artifact schemas live only in templates; machine-consumed return fields live only in orchestration contracts. Do not spend skill context prescribing uniform chat completion messages. User-only routers and compatibility shims instead state that they run only when explicitly named.
 
 The complete canonical flow lives in the marked block in root `AGENTS.md`, so every Speck agent receives it before skill selection. JIT references and skill bodies explain gates and procedure; they never own a competing sequence.
 

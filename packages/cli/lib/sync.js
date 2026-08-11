@@ -169,6 +169,11 @@ const REMOVE_FILES = [
   '.cursor/skills/visual-testing-extension',
   '.cursor/skills/visual-testing-mobile-flutter',
   '.cursor/skills/visual-testing-mobile-react-native',
+  // v11 canonical multi-level skills replace unobserved level aliases.
+  '.cursor/skills/project-adjust',
+  '.cursor/skills/epic-adjust',
+  '.cursor/skills/story-adjust',
+  '.cursor/skills/story-analyze',
   // Framework-only evaluation leaked through the old template exporter.
   // `.speck/feedback/` is project-owned runtime output from speck-feedback and must survive.
   '.speck/eval',

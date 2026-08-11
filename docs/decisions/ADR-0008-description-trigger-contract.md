@@ -4,7 +4,7 @@
 - **Status**: accepted
 - **Class**: skill-catalog
 - **Amends**: ADR-0001 and v11 north star §6
-- **Amended by**: ADR-0009 (routing evaluation includes always-on flow)
+- **Amended by**: ADR-0009 (routing evaluation includes always-on flow), ADR-0012
 
 ## Context
 
@@ -16,7 +16,7 @@ V11 reduced automatic description context from roughly 30k characters to 4k. Eve
 
 1. Every automatic description uses two semantic slots: third-person WHAT and specific `Use ...` WHEN.
 2. Lifecycle position or sibling boundaries appear only when they affect selection.
-3. Template paths, first actions, procedure, and exhaustive output detail remain JIT.
+3. Template paths, first actions, and procedure remain JIT. Artifact format belongs to its template; machine-consumed return fields belong to the orchestration contract. Fixed chat-only completion schemas are deleted.
 4. User-only routers and compatibility shims keep explicit-name-only descriptions.
 5. The 120-character per-entry and 10k aggregate ceilings remain. Evidence does not show that either blocks specific triggers.
 6. Static validation enforces shape. `skill-routing-cases.json` covers every automatic skill, and the routing evaluator measures model selection separately from body execution.

@@ -34,9 +34,9 @@ At SHIP-RC+, also run:
 bash .speck/scripts/validation/validators/validate-readme.sh --strict
 ```
 
-## 4. Report and continue
+## 4. Continue
 
-Report refreshed surfaces, preserved user-owned surfaces, per-surface drift, and the exact readiness cap. Then re-read the marked canonical flow in root `AGENTS.md` and continue at the first incomplete applicable slot.
+Surface blocking drift and its exact readiness cap. Then resume the canonical flow in root `AGENTS.md` at the first incomplete applicable slot.
 
 ## Rules
 

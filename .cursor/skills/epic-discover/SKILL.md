@@ -10,7 +10,7 @@ paths:
 # epic-discover
 
 Input: `$ARGUMENTS` (project id, code path, focus areas).
-Output: `[EPIC_DIR]/epic.md` per discovered epic + discovery summary (stdout).
+Output: `[EPIC_DIR]/epic.md` per discovered epic.
 Template: `.speck/templates/epic/epic-template.md` (no separate discovery template).
 Prereq: project with codebase or import artifacts.
 
@@ -78,17 +78,9 @@ Write `epic.md` from template:
 
 Map dependencies (which epic blocks which). Detect overlap: shared files, duplicate features, unclear boundaries. Recommend build order: no-deps first → dependents.
 
-## 6. Discovery summary (stdout only)
+## 6. Refine and continue
 
-Return (no new report template):
-- Epics: name, size, est. stories, confidence
-- Dependency order
-- Coverage gaps / unclear boundaries
-- Next: `/epic-clarify`, `/speck-scan --level epic`, `/story-extract`, `/epic-specify`, `/project-plan`
-
-## 7. Refinement
-
-Present findings; ask: boundaries align with team? combine/split? Validate uncertain epics.
+Validate uncertain boundaries with the user. Do not create a separate discovery report.
 
 Route by outcome:
 - Many small → suggest combine

@@ -111,19 +111,8 @@ Write output to UI_SPEC_PATH (`{STORY_DIR}/ui-spec.md`)
 
 The template is self-documenting - follow all sections and guidelines within it.
 
-### Step 5: Review and Guide
+### Step 5: Validate and continue
 
-Present what was created:
-- "I've created the UI specification at [path]"
-- "Documented [X] states and [Y] variants"
-- "Included implementation examples"
-
-Validate completeness:
-- "Any additional states or edge cases?"
-- "Need specific framework code examples?"
-- "Want me to generate CSS utility classes?"
-
-Guide to next steps:
-- Re-read the marked canonical flow in root `AGENTS.md` and continue at the next applicable story slot. This skill does not carry a second sequence.
+Check required states, variants, responsive behavior, and testability against the completed artifact. Then resume the canonical story flow in root `AGENTS.md`.
 
 The template contains comprehensive sections for all UI specification needs.

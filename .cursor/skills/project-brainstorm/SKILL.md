@@ -8,7 +8,7 @@ paths:
 # project-brainstorm
 
 Input: `$ARGUMENTS` (raw ideas, problems, inspirations — or empty for interactive).
-Output: project concept(s) ready for `/project-specify` (stdout); optional `specs/projects/brainstorm-[timestamp].md`.
+Result: project concept(s) ready for `/project-specify`; optionally save `specs/projects/brainstorm-[timestamp].md`.
 Position: BEFORE `/project-specify` — optional ideation.
 
 ## 1. Gather ideas

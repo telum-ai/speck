@@ -4,7 +4,7 @@
   "cases": [
     {
       "id": "adjust-validated-redesign",
-      "prompt": "The validated onboarding story still works, but we want to redesign its information architecture and promises deliberately.",
+      "prompt": "The validated onboarding story still works, but we want to redesign its information architecture and promises deliberately, then rebuild, audit, and revalidate the changed implementation.",
       "expect": "adjust",
       "forbid": ["harden"]
     },
@@ -13,6 +13,12 @@
       "prompt": "The project plan and epic map now exist. Have independent reviewers challenge the planning corpus before downstream specification begins.",
       "expect": "analyze",
       "forbid": ["speck-audit"]
+    },
+    {
+      "id": "analyze-story-before-implementation",
+      "prompt": "The Build story now has spec.md, plan.md, and tasks.md. Have an independent reviewer challenge implementation readiness and contradictions before any code is written.",
+      "expect": "analyze",
+      "forbid": ["story-implement", "speck-audit"]
     },
     {
       "id": "epic-architecture-cross-system",

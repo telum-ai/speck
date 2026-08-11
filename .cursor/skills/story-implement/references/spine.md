@@ -1,7 +1,7 @@
 # story-implement / spine
 
 1. Locate `STORY_DIR` by walking up to `spec.md`. STOP if absent or `Draft (Placeholder)`.
-2. Run `bash .speck/scripts/validation/check-story-prereqs.sh "$STORY_DIR"`. Require `spec.md`, `plan.md`, `tasks.md`; optional `analysis-report.md` may contain no open CRITICAL.
+2. Run `bash .speck/scripts/validation/check-story-prereqs.sh "$STORY_DIR"`. Require `spec.md`, `plan.md`, `tasks.md`, and the story-analysis gate when `tasks.md` declares `analysis_required: true`.
 3. Read `tasks.md`, `plan.md`, optional `data-model.md`, `contracts/`, `quickstart.md`, `codebase-scan-*.md`.
 4. Prefer one connected context read:
    ```bash

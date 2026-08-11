@@ -134,33 +134,6 @@ Create a comprehensive story breakdown that maps all user stories within the epi
    - Verify that there are zero `open` rows left in the matrix. Any unmapped/open rows remaining will block `/analyze --level epic` as a P1 unresolved promise.
    - Run `bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --check-fidelity "$EPIC_DIR"`; treat every fidelity warning as a mapping review item, not a pass.
 
-7. Output summary:
-   ```
-    Epic Story Breakdown Complete!
-   
-   Epic: [Name]
-   Total Stories: [X]
-   
-   Phase Breakdown:
-   - Phase 1: [Y] stories (setup)
-   - Phase 2: [Z] stories (core)
-   - Phase 3: [A] stories (integration)  
-   - Phase 4: [B] stories (quality)
-   
-   Parallel Opportunities: [Count]
-   Critical Path Length: [Duration]
-   
-   Story Directories Created: [Count]
-   Placeholder specs created: [Count] (spec.md with lifecycle: Draft — awaiting /story-specify)
-
-   Next Steps:
-   1. Review story breakdown with team
-   2. Run /story-specify on Phase 1 stories to complete the draft specs
-   3. Stories marked [P] can be specified/implemented in parallel
-   4. Or run /analyze --level epic for validation first
-
-   Note: Placeholder specs have lifecycle state "Draft (Placeholder)" in their spec.md.
-   /story-specify reads this state and fills in the full specification in-place.
-   ```
+7. Resume the canonical epic flow in root `AGENTS.md`. Placeholder lifecycle state, not chat output, tells downstream routing that `/story-specify` is still required.
 
 Note: This breakdown organizes stories for planning and coordination. Each story will generate its own concrete implementation tasks via /story-tasks. Placeholder specs provide a starting point but require /story-specify to reach "Specified" state before planning or implementation.

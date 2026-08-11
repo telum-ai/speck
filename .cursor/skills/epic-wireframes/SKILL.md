@@ -76,19 +76,9 @@ For screens needing definition:
    - Include responsive versions
    - Note content requirements
 
-### Step 5: Review and Guide
+### Step 5: Validate and continue
 
-Present what was created:
-- "I've created wireframes at [path]"
-- "Designed [X] screens with mobile/desktop versions"
-- "All journey touchpoints covered"
-
-Validate completeness:
-- "Any additional screens needed?"
-- "Should we add more states (error, empty)?"
-
-Guide to next steps:
-- Re-read the marked canonical flow in root `AGENTS.md` and continue at the next applicable epic slot. This skill does not carry a second sequence.
+Check every journey touchpoint and required state against the completed artifact. Then resume the canonical epic flow in root `AGENTS.md`.
 
 The template contains complete wireframe structures and examples.
 

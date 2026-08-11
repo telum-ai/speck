@@ -11,6 +11,8 @@ Bracketed slots in AGENTS are evaluated when reached. Skip only when the named c
 ### Build flow (4+ epics) — gate triggers required architecture + ux-strategy + project analysis
 Same as Build but `/project-architecture` and `/project-ux` are **required before** `/project-plan`, and `/analyze --level project` is **required after** `/project-plan` and before the first `/epic-specify` — 3 decorrelated lenses minimum (promise-coverage · cross-artifact drift · completeness critic). `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start on `UNANALYZED_CORPUS.P1`.
 
+At story altitude, Sprint skips independent planning analysis. Build requires one independent reviewer and Platform requires three after `story-tasks` and before `story-implement`. `check-story-prereqs.sh` blocks implementation when a v11 task artifact declares the analysis gate but the bound report is missing, stale, or insufficiently decorrelated.
+
 ### Platform gates
 
 Platform runs every non-UI foundation slot in the AGENTS flow; `project-domain` remains conditional on a specialized domain and `project-design-system` on a UI surface. Project analysis is required with all 7 lenses. `project-state` refreshes after truth gates land on main.
@@ -51,9 +53,9 @@ flowchart TD
 
 #### Triage Router Decision Matrix
 1. **Defect/Bug Fix in Validated Work**: Run `/harden` to document root-cause and add systemic tests.
-2. **Deliberate Story Redesign/Visual Overhaul**: Run `/adjust --level story` to spec the delta, update story `plan.md`, and conserve promises.
-3. **Deliberate Epic Structural Pivot / IA Redesign**: Run `/adjust --level epic` to re-spec epic-level deltas and update epic `traceability-matrix.md`.
-4. **Project Directional Pivot / Strategic Contract Change**: Run `/adjust --level project` to update `product-contract.md` and force a superseding DEC, run `compute-cascade.sh` to determine the blast-radius of affected downstream epics/stories, and route each to `/adjust --level epic` or `/adjust --level story`.
+2. **Deliberate Story Redesign/Visual Overhaul**: Run `/adjust --level story` to downgrade the prior claim, re-spec and re-plan the delta, rebuild it, audit it, and revalidate it.
+3. **Deliberate Epic Structural Pivot / IA Redesign**: Run `/adjust --level epic` to re-spec epic-level deltas, update traceability, complete affected story build/prove loops, and revalidate the epic.
+4. **Project Directional Pivot / Strategic Contract Change**: Run `/adjust --level project` to update the product contract, force a superseding DEC, compute the reverse blast radius, complete every affected downstream build/prove loop, and revalidate the project.
 5. **New Features / Addition**: Run `/project-specify`, `/epic-specify`, or `/story-specify` at the level where the new scope enters.
 6. **Time Gap / Audit**: Run `/recheck` to scan for drift, stale dependencies, and schema drift.
 7. **Scale/Rigor Outgrowth**: Run `/project-promote` to upgrade play levels (e.g. Sprint to Build, or Build to Platform).

@@ -153,6 +153,13 @@ run --strict "$d/epic-analysis-report.md"
   && pass "epic-analysis-report.md validates through the same entry point" \
   || fail "both altitudes must route to one implementation"
 
+# 3b. story analysis uses the same structural contract without reviving a standalone skill.
+d="$T/s3b"; mkdir -p "$d"; write_report "$d/story-analysis-report.md" story-analysis-report
+run --strict "$d/story-analysis-report.md"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "artifact_type: story-analysis-report"; } \
+  && pass "story-analysis-report.md validates through the shared analysis entry point" \
+  || fail "story analysis must reuse the shared structural contract"
+
 # 4. required frontmatter keys
 d="$T/s4"; mkdir -p "$d"; write_report "$d/project-analysis-report.md"
 sed -i.bak '/^speck_version:/d' "$d/project-analysis-report.md"
@@ -550,6 +557,48 @@ run --gate "$E"
 { [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "ANALYSIS_STALE.P1"; } \
   && pass "epic.md committed after the epic analysis → ANALYSIS_STALE.P1" \
   || fail "freshness must bind at the epic altitude too"
+
+# 35. STORY ALTITUDE — Build requires one independent lens and Platform requires all three
+# story lenses. This is the pre-implementation adversary that the old self-check did not provide.
+d="$T/g35"; P="$(mkproj "$d" 2 build)"
+S="$P/epics/E001-thing/stories/S001-ready"; mkdir -p "$S"
+printf '# Spec\n\n**Status**: Specified\n' > "$S/spec.md"
+printf '# Plan\n' > "$S/plan.md"
+printf '%s\n' '---' 'status: pending' 'analysis_required: true' '---' '# Tasks' > "$S/tasks.md"
+write_report "$S/story-analysis-report.md" story-analysis-report
+gitify "$d"
+run --gate "$S"
+{ [[ "$RC" == 0 ]] && echo "$OUT" | grep -q "Analysis gate (#106) — story"; } \
+  && pass "Build story with a bound independent analysis clears" \
+  || fail "story directories must route to story analysis rather than epic analysis"
+
+d="$T/g35b"; P="$(mkproj "$d" 2 build)"
+S="$P/epics/E001-thing/stories/S001-missing"; mkdir -p "$S"
+printf '# Spec\n' > "$S/spec.md"; printf '# Plan\n' > "$S/plan.md"; printf '# Tasks\n' > "$S/tasks.md"
+gitify "$d"
+run --gate "$S"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "UNANALYZED_CORPUS.P1"; } \
+  && pass "Build story without story-analysis-report.md is blocked" \
+  || fail "the restored story analysis capability must be structural"
+
+d="$T/g35c"; P="$(mkproj "$d" 2 platform)"
+S="$P/epics/E001-thing/stories/S001-platform"; mkdir -p "$S"
+printf '# Spec\n' > "$S/spec.md"; printf '# Plan\n' > "$S/plan.md"; printf '# Tasks\n' > "$S/tasks.md"
+write_report "$S/story-analysis-report.md" story-analysis-report
+python3 - "$S/story-analysis-report.md" <<'PY'
+import re, sys
+p = sys.argv[1]
+s = open(p).read()
+s = s.replace("play_level: build", "play_level: platform")
+s = re.sub(r"  - id: L6\n(?:    .*\n){3}", "", s, count=1)
+s = re.sub(r"  - id: L7\n(?:    .*\n){3}", "", s, count=1)
+open(p, "w").write(s)
+PY
+gitify "$d"
+run --gate "$S"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "ANALYSIS_DECORRELATION_MISSING.P1"; } \
+  && pass "Platform story with fewer than three lenses is blocked" \
+  || fail "Platform story analysis must require three independent lenses"
 
 echo "── mutation proofs (each assertion, proven red against a reverted copy) ──────"
 

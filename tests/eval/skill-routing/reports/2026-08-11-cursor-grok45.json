@@ -2,8 +2,8 @@
   "pass": true,
   "accuracy": 1.0,
   "minimum_accuracy": 0.95,
-  "correct": 66,
-  "total": 66,
+  "correct": 67,
+  "total": 67,
   "forbidden_selections": 0,
   "missing_ids": [],
   "extra_ids": [],
@@ -20,6 +20,13 @@
     },
     {
       "id": "analyze-planning-corpus",
+      "expected": "analyze",
+      "actual": "analyze",
+      "exact": true,
+      "forbidden": false
+    },
+    {
+      "id": "analyze-story-before-implementation",
       "expected": "analyze",
       "actual": "analyze",
       "exact": true,
@@ -478,12 +485,12 @@
   "provider": "cursor",
   "model": "cursor-grok-4.5-medium",
   "effort": "medium",
-  "started_at": "2026-08-11T09:12:56.652412+00:00",
-  "catalog_sha256": "f3a9f55cdc57bc7a096ca275cdffab16e3f4ab66ba1b9e953c065388fa388053",
-  "cases_sha256": "de941968bac0efe1edf85d96ceb2413fd99bd9ebbe994aca5a1a9eabda94923f",
-  "flow_sha256": "eee4497014258071a18d421cc81ae3391ad85c4debd7228983a4bf04aac54dd1",
-  "flow_contract_sha256": "501ff203070c059fc5754bc2f3d64c0e44730aa75e086fb772d8488d86d7b274",
-  "agents_sha256": "64a62ccacdc1803e24ae2768c2baaad63eec890763193f69fa7d29b6621dbdf9",
+  "started_at": "2026-08-11T12:42:06.960958+00:00",
+  "catalog_sha256": "ec91fa1900067a97639c642174056e9a09a9908aca1bd6f78d0209296fb8766a",
+  "cases_sha256": "c25e032bfb1eac7a53da18f1f0d992dcd49f743c043763e2efde4f28b3be2e2d",
+  "flow_sha256": "db343495f5e3d77d797876d4a735bda5bf2ce1fb9ce72932be006006a52e657d",
+  "flow_contract_sha256": "95e70f8092667663d8a6512c5511352972ac6833820cf02eba0af026f7a13987",
+  "agents_sha256": "d0554a70db66785565a6e03fdc616082b5f073b43835cb5dabc5e07147bf05f3",
   "user_only_aliases_available": false,
   "execution": {
     "command": [
@@ -500,7 +507,7 @@
       "--trust",
       "--approve-mcps",
       "--workspace",
-      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-cursor-kg8r4wlo"
+      "/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-skill-routing-cursor-igw7u8a1"
     ],
     "exit_code": 0,
     "terminal_event": {

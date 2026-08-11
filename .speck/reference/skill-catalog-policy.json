@@ -13,12 +13,12 @@
     "analyze": {
       "auto_entrypoints": ["analyze"],
       "user_only_routers": [],
-      "compatibility_shims": ["project-analyze", "epic-analyze", "story-analyze"]
+      "compatibility_shims": ["project-analyze", "epic-analyze"]
     },
     "adjust": {
       "auto_entrypoints": ["adjust"],
       "user_only_routers": [],
-      "compatibility_shims": ["project-adjust", "epic-adjust", "story-adjust"]
+      "compatibility_shims": []
     },
     "validate": {
       "auto_entrypoints": ["project-validate", "epic-validate", "story-validate"],

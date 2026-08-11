@@ -97,10 +97,6 @@ Filter: no project name, domain, features, velocity metrics. Include: command as
 
 Use `/speck-feedback`; its template is `.speck/templates/feedback/template.md`.
 
-## Report
-
-Goals/epics/stories/duration; patterns/gotchas/rules captured; methodology insights; top practices and gotchas for next project. Path to `project-retro.md`.
-
 ## NEVER / ALWAYS
 
 - NEVER read story-retro.md as primary signal

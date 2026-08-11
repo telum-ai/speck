@@ -6,7 +6,8 @@
 # 1. spec.md must exist and have lifecycle: Specified (or State: Specified)
 # 2. plan.md must exist
 # 3. tasks.md must exist
-# 4. analysis-report.md is OPTIONAL (v7+: /story-analyze retired — consistency folded into /story-tasks, adversarial check is /audit); if present, it must contain no unresolved CRITICAL items
+# 4. v11 tasks declare analysis_required by play level. Build/Platform require a bound
+#    story-analysis-report.md; Sprint declares false. Older tasks remain advisory.
 
 set -euo pipefail
 
@@ -68,28 +69,40 @@ else
   echo -e "${GREEN}✅ tasks.md is present${NC}"
 fi
 
-# 4. Check analysis-report.md or story-analysis-report.md
-analysis_report_path=""
-for possible_path in "${STORY_DIR}/analysis-report.md" "${STORY_DIR}/story-analysis-report.md" "${STORY_DIR}/story-analysis.md"; do
-  if [[ -f "$possible_path" ]]; then
-    analysis_report_path="$possible_path"
-    break
-  fi
-done
+# 4. Check the decorrelated story-analysis gate for task files created by v11.
+analysis_required=false
+if [[ -f "$tasks_path" ]] && grep -qE '^analysis_required:[[:space:]]*true[[:space:]]*$' "$tasks_path"; then
+  analysis_required=true
+fi
 
-if [[ -z "$analysis_report_path" ]]; then
-  echo -e "${YELLOW}⚠️  Missing analysis-report.md (Recommended, but optional in v7 since /story-analyze is folded into tasks + /audit)${NC}"
-else
-  # Check for unresolved CRITICAL items
-  # Typically lines with "[ ] CRITICAL" or similar in markdown checklists
-  criticals=$(grep -i "CRITICAL" "$analysis_report_path" | grep -v "✅" | grep -v "\[x\]" | grep -E "\[[[:space:]]\]|todo" || true)
-  if [[ -n "$criticals" ]]; then
-    echo -e "${RED}❌ Unresolved CRITICAL issues found in analysis-report.md:${NC}"
-    echo "$criticals" | sed 's/^/   /'
+if [[ "$analysis_required" == true ]]; then
+  analysis_validator=".speck/scripts/validation/validators/validate-project-analysis.sh"
+  template_validator=".speck/scripts/validation/validate-template.sh"
+  analysis_report="${STORY_DIR}/story-analysis-report.md"
+  if [[ ! -f "$analysis_validator" || ! -f "$template_validator" ]]; then
+    echo -e "${RED}❌ Story analysis validators are unavailable.${NC}"
+    failed=true
+  elif [[ ! -f "$analysis_report" ]]; then
+    echo -e "${RED}UNANALYZED_CORPUS.P1  story-analysis-report.md does not exist. Run /analyze --level story.${NC}"
     failed=true
   else
-    echo -e "${GREEN}✅ analysis-report.md is present with no unresolved CRITICAL items${NC}"
+    structural_rc=0
+    structural_out="$(bash "$template_validator" --strict "$analysis_report" 2>&1)" || structural_rc=$?
+    printf '%s\n' "$structural_out"
+    analysis_rc=0
+    analysis_out="$(bash "$analysis_validator" --gate "$STORY_DIR" 2>&1)" || analysis_rc=$?
+    printf '%s\n' "$analysis_out"
+    if [[ "$structural_rc" -ne 0 || "$analysis_rc" -ne 0 ]]; then
+      echo -e "${RED}❌ Required story analysis has not cleared.${NC}"
+      failed=true
+    else
+      echo -e "${GREEN}✅ Required story analysis is present and clear${NC}"
+    fi
   fi
+elif [[ -f "$tasks_path" ]] && grep -qE '^analysis_required:[[:space:]]*false[[:space:]]*$' "$tasks_path"; then
+  echo -e "${GREEN}✅ Sprint tasks declare story analysis not required${NC}"
+else
+  echo -e "${YELLOW}⚠️  This pre-v11 tasks.md does not declare analysis_required; story analysis remains advisory for this already-planned story.${NC}"
 fi
 
 # 5. Witness-graph forcing gate (v9): the story must be non-dangling AND trace UP to a promise,
@@ -140,7 +153,8 @@ if [[ "$failed" == true ]]; then
   echo -e "  1. Run ${GREEN}/story-specify${NC} to create and specify the story requirements."
   echo -e "  2. Run ${GREEN}/story-plan${NC} to design the technical solution."
   echo -e "  3. Run ${GREEN}/story-tasks${NC} to generate the implementation checklist (includes consistency check at tail)."
-  echo -e "  4. The spec↔plan↔tasks consistency check runs at the tail of ${GREEN}/story-tasks${NC}; the adversarial cross-check is ${GREEN}/audit${NC} after implementation (a standalone analysis-report.md is optional; /story-analyze is retired in v8)."
+  echo -e "  4. Run ${GREEN}/analyze --level story${NC} when tasks.md declares analysis_required: true."
+  echo -e "  5. After implementation, run the separate ${GREEN}/speck-audit${NC} before validation."
   echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   exit 1
 else

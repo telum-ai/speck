@@ -68,27 +68,6 @@ Create a project-level roadmap that shows epic execution timeline, dependencies,
    
    Write output to: `[PROJECT_DIR]/project-roadmap.md`
 
-5. Output summary:
-   ```
-   ✅ Project Roadmap Generated!
-   
-   Execution Strategy: [Type]
-   Total Epics: [X]
-   
-   Phase Breakdown:
-   - Phase 1: [X] epics ([Y] weeks)
-   - Phase 2: [X] epics ([Y] weeks)
-   - Phase 3: [X] epics ([Y] weeks)
-   
-   Parallel Opportunities: [X] epics can run simultaneously
-   
-   Critical Path: E001 → E004 ([X] weeks minimum)
-   
-   Next Steps:
-   1. Review execution plan with team
-   2. Assign epic owners
-   3. Begin Phase 1:
-      /epic-specify "E001: [Epic Name]"
-   ```
+5. Resume the canonical project flow in root `AGENTS.md`; the roadmap owns sequencing, not a second command flow.
 
 Note: This provides project-level orchestration and timeline. Each epic will have its own story breakdown via /epic-breakdown.

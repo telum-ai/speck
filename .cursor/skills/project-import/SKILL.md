@@ -48,13 +48,9 @@ If README/docs found: high-level goals only — no architecture extraction, no e
 
 If doing comprehensive analysis, architecture extraction, or epic identification → STOP; defer to `/speck-scan --level project`, `/speck-scan --level epic`, `/speck-scan --level story`.
 
-## 5. Report
+## 5. Continue
 
-```
-Created: specs/projects/[PROJECT_ID]/
-Next (required):
-  Re-read the marked canonical Entry flow in root AGENTS.md and continue at its first incomplete slot.
-```
+Re-read the canonical Entry flow in root `AGENTS.md` and continue at its first incomplete slot.
 
 ## Success criteria
 

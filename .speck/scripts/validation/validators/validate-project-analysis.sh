@@ -12,7 +12,7 @@
 # TWO MODES, ONE IMPLEMENTATION PER PREDICATE.
 #   structural:  validate-project-analysis.sh [--strict] <report.md>
 #                Routed from validate-template.sh by filename. Handles BOTH
-#                project-analysis-report.md and epic-analysis-report.md.
+#                project-, epic-, and story-analysis-report.md.
 #   gate:        validate-project-analysis.sh [--strict] --gate <PROJECT_DIR|EPIC_DIR>
 #                The blocking prerequisite check.
 #
@@ -24,7 +24,7 @@
 #
 # VINTAGE BINDING — why this needs no data migration.
 # The v10.3 structural requirements bind ONLY a report that DECLARES `artifact_type:
-# project-analysis-report` (resp. `epic-analysis-report`) in its frontmatter. A report with no such
+# project-analysis-report` (resp. `epic-analysis-report` / `story-analysis-report`) in its frontmatter. A report with no such
 # key is pre-v10.3 vintage and is exempt. Every analysis report already on disk is exactly that, so
 # none is retroactively convicted. validate-harden-report.sh is the precedent for the technique.
 # The gate still SEES a pre-v10.3 report — it just reports what it can and cannot evaluate rather
@@ -307,7 +307,7 @@ load_report() {
   ARTIFACT_TYPE="$(fm_value 'artifact_type')"
   BOUND=false
   case "$ARTIFACT_TYPE" in
-    project-analysis-report|epic-analysis-report) BOUND=true ;;
+    project-analysis-report|epic-analysis-report|story-analysis-report) BOUND=true ;;
   esac
   return 0
 }
@@ -376,7 +376,7 @@ structural_mode() {
   load_report "$f"
 
   if [[ "$BOUND" == false ]]; then
-    log_notice "pre-v10.3 analysis report (no 'artifact_type: project-analysis-report' / 'epic-analysis-report' in the frontmatter) — the v10.3 lens-roster, findings-table and gate-verdict requirements are not required of it. Re-run /analyze --level project (or /analyze --level epic) to opt in; no migration touches this file."
+    log_notice "pre-v10.3 analysis report (no bound project/epic/story artifact_type in the frontmatter) — current lens-roster, findings-table and gate-verdict requirements are not required of it. Re-run /analyze at the applicable level to opt in; no migration touches this file."
     echo -e "${GREEN}Validation PASSED.${NC}"
     exit 0
   fi
@@ -412,7 +412,7 @@ structural_mode() {
       log_ok "section present: $sec"
     else
       log_error "Missing required section: $sec" \
-        "Regenerate from .speck/templates/project/project-analysis-report-template.md (or the epic template) — do not hand-write around the structure."
+        "Regenerate from the selected project, epic, or story analysis template — do not hand-write around the structure."
     fi
   done
 
@@ -571,7 +571,14 @@ speck_root() {
 # another universal checklist item, and a 2-epic Build does not have the cross-artifact surface the
 # 7-lens pass exists to search.
 required_lens_count() {
-  local play="$1" epics="$2"
+  local play="$1" epics="$2" level="${3:-project}"
+  if [[ "$level" == "story" ]]; then
+    case "$(lc "$play")" in
+      platform) printf '3'; return 0 ;;
+      build)    printf '1'; return 0 ;;
+    esac
+    printf '0'; return 0
+  fi
   case "$(lc "$play")" in
     platform) printf '7'; return 0 ;;
     build)    if [[ "${epics:-0}" -ge 4 ]]; then printf '3'; else printf '0'; fi; return 0 ;;
@@ -774,7 +781,7 @@ raising_lens_of() {
 }
 
 decorrelation_check() {
-  local required="$1"
+  local required="$1" level="${2:-project}"
   local declared roster_rows=0
   declared="$(lens_declared_count)"
 
@@ -799,11 +806,19 @@ decorrelation_check() {
   local effective_declared="$declared"
   if [[ "${effective_declared:-0}" -lt 1 ]]; then effective_declared="$roster_rows"; fi
   if [[ "${effective_declared:-0}" -lt "$required" ]]; then
-    emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "this tier requires $required lens/lenses and the report declares ${effective_declared:-0}. The mandatory three at Build-with-4+-epics are L3 promise-coverage, L6 cross-artifact-drift and L7 completeness-critic; Platform requires all seven."
+    if [[ "$level" == "story" ]]; then
+      emit_p1 "ANALYSIS_DECORRELATION_MISSING.P1" "this story tier requires $required independent lens/lenses and the report declares ${effective_declared:-0}. Build requires S1; Platform requires S1-S3."
+    else
+      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "this tier requires $required lens/lenses and the report declares ${effective_declared:-0}. The mandatory three at Build-with-4+-epics are L3 promise-coverage, L6 cross-artifact-drift and L7 completeness-critic; Platform requires all seven."
+    fi
   fi
 
   if [[ -z "$ISSUES_HEADER" ]]; then
-    emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "the Issues Found table has no resolvable header row, so no finding's Verifier could be compared with the lens that raised it."
+    if [[ "$level" == "story" ]]; then
+      emit_p1 "ANALYSIS_DECORRELATION_MISSING.P1" "the Issues Found table has no resolvable header row, so no finding's Verifier could be compared with the lens that raised it."
+    else
+      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "the Issues Found table has no resolvable header row, so no finding's Verifier could be compared with the lens that raised it."
+    fi
     return 0
   fi
   resolve_columns_from_header "$ISSUES_HEADER" || true
@@ -811,7 +826,11 @@ decorrelation_check() {
   c_id="$(column_index 'id')"; c_cat="$(column_index 'category')"
   c_sev="$(column_index 'severity')"; c_ver="$(column_index 'verifier')"
   if [[ "$c_id" -lt 0 || "$c_ver" -lt 0 ]]; then
-    emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "the Issues Found table declares no ID and/or Verifier column, so no finding's verification could be compared with the lens that raised it."
+    if [[ "$level" == "story" ]]; then
+      emit_p1 "ANALYSIS_DECORRELATION_MISSING.P1" "the Issues Found table declares no ID and/or Verifier column, so no finding's verification could be compared with the lens that raised it."
+    else
+      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "the Issues Found table declares no ID and/or Verifier column, so no finding's verification could be compared with the lens that raised it."
+    fi
     return 0
   fi
   local fid fcat fsev fver eff bad="" raiser vlc rrev
@@ -846,7 +865,11 @@ decorrelation_check() {
   done <<< "$(table_data_rows "$ISSUES_TABLE")"
 
   if [[ -n "$bad" ]]; then
-    emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "CRITICAL/HIGH finding(s) whose verification is not decorrelated:$bad. Each must name a Verifier that is a different party from the lens that raised it — self-confirmation is the shape #106 exists to catch."
+    if [[ "$level" == "story" ]]; then
+      emit_p1 "ANALYSIS_DECORRELATION_MISSING.P1" "CRITICAL/HIGH finding(s) whose verification is not decorrelated:$bad. Each must name a Verifier that is a different party from the lens that raised it."
+    else
+      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "CRITICAL/HIGH finding(s) whose verification is not decorrelated:$bad. Each must name a Verifier that is a different party from the lens that raised it — self-confirmation is the shape #106 exists to catch."
+    fi
   elif [[ "${effective_declared:-0}" -ge "$required" ]]; then
     emit_note "decorrelation: $effective_declared lens/lenses declared (>= $required required), and every CRITICAL/HIGH finding names a verifier distinct from its lens. This proves the roster's WIDTH and the row-level distinctness — it does NOT prove the reviewer was genuinely a different party, and nothing here claims it does."
   fi
@@ -859,7 +882,9 @@ gate_mode() {
   dir="$(cd "$dir" && pwd)"
 
   local level report proj
-  if [[ -f "$dir/epic.md" || "$dir" == */epics/* ]]; then
+  if [[ -f "$dir/spec.md" && -f "$dir/tasks.md" ]]; then
+    level="story"; report="$dir/story-analysis-report.md"; proj="${dir%%/epics/*}"
+  elif [[ -f "$dir/epic.md" || "$dir" == */epics/* ]]; then
     level="epic"; report="$dir/epic-analysis-report.md"; proj="${dir%%/epics/*}"
   else
     level="project"; report="$dir/project-analysis-report.md"; proj="$dir"
@@ -881,7 +906,7 @@ gate_mode() {
     printf '%s' "$fm_epics" | grep -qE '^[0-9]+$' && epics="$fm_epics"
   fi
   [[ -z "$play" ]] && play="build"
-  required="$(required_lens_count "$play" "$epics")"
+  required="$(required_lens_count "$play" "$epics" "$level")"
 
   echo -e "${BLUE}🧪 Analysis gate (#106) — $level: $dir${NC}"
   echo "   play_level: $play · epics: $epics · lenses required: $required"
@@ -930,7 +955,7 @@ gate_mode() {
       exit 0
     fi
     if [[ ! -f "$report" ]]; then
-      emit_p1 "UNANALYZED_CORPUS.P1" "$(basename "$report") does not exist. This tier requires a decorrelated analysis pass before execution begins: the author who wrote the corpus is not the party who can certify it (AGENTS.md P4). Run /analyze --level project (or /analyze --level epic)."
+      emit_p1 "UNANALYZED_CORPUS.P1" "$(basename "$report") does not exist. This tier requires a decorrelated analysis pass before execution begins: the author who wrote the corpus is not the party who can certify it (AGENTS.md P4). Run /analyze --level $level."
     else
       # A report exists but predates the v10.3 contract. It is NOT unanalyzed — saying so would be
       # false — and its structure is exempt by the vintage rule, so the honest report is that its
@@ -946,7 +971,9 @@ gate_mode() {
   load_tables
 
   # --- predicate 2: freshness (CONTENT, never `stamped SHA == HEAD`) ---
-  if [[ "$level" == "epic" ]]; then
+  if [[ "$level" == "story" ]]; then
+    freshness_check "$dir" "$report" "$dir/spec.md" "$dir/plan.md" "$dir/tasks.md"
+  elif [[ "$level" == "epic" ]]; then
     freshness_check "$dir" "$report" "$dir/epic.md" "$dir/epic-tech-spec.md" "$dir/epic-breakdown.md"
   else
     freshness_check "$dir" "$report" "$dir/PRD.md" "$dir/epics.md" "$dir/product-contract.md"
@@ -961,11 +988,11 @@ gate_mode() {
   if [[ "$level" == "project" ]]; then
     promise_coverage_check "$proj"
   else
-    emit_note "promise coverage is a project-level predicate (MM-N/JOB-N/DIF-N are project-global nodes) — not evaluated for a single epic."
+    emit_note "promise coverage is a project-level predicate and is not evaluated at $level altitude; the selected report still checks its scoped coverage rows."
   fi
 
   # --- predicate 5: decorrelation ---
-  decorrelation_check "$required"
+  decorrelation_check "$required" "$level"
 
   gate_verdict_and_exit
 }

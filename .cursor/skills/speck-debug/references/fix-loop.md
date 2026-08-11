@@ -21,24 +21,4 @@ If you suspect context rot (accumulated stale context causing confusion):
    - Specific file(s) being worked on
 3. Re-attempt the operation with fresh, focused context
 
-## Output Summary
-
-```
-🔍 Debug Analysis Complete
-
-Error: [Brief description]
-Root Cause: [Prompt | Context | Technical] Issue
-Diagnosis: [Specific cause]
-
-Fix Applied:
-- [What was changed]
-
-Verification:
-- [Result of re-running operation]
-
-Learning Captured: [Yes/No - suggest /speck-learn if valuable]
-```
-
----
-
-**Philosophy**: Every error is a learning opportunity. This structured approach ensures we diagnose correctly, fix precisely, and capture insights for future improvement.
+Re-run the failing operation after the fix. Update binding artifacts when truth changed; use `/speck-learn` only for a reusable discovery.

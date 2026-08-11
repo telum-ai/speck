@@ -37,11 +37,12 @@ A story's lifecycle in Speck is defined by its specs, tasks, and validation stat
 1. **Draft (Placeholder)**: Listed in `epic-breakdown.md` but has no story folder or only carries an empty draft spec.
 2. **Specified**: Completed `/story-specify` and `/story-clarify`. `spec.md` is complete with user stories, Gherkin scenarios, and is marked as `Specified`.
 3. **Planned**: Completed `/story-plan` and generated `plan.md`, `data-model.md` (if database), and API contracts (if applicable).
-4. **Tasked**: Completed `/story-tasks` and generated `tasks.md` with structured phases and sequential/parallel tasks, **including the spec↔plan↔tasks consistency cross-check at its tail** (the pre-impl job of the retired `/story-analyze`).
-5. **Implemented**: Completed `/story-implement` and marked all tasks as `[X]` in `tasks.md` with status set to `completed` in frontmatter.
-6. **Audited (Post-impl)**: Completed `/audit` post-implementation and generated `audit-report.md`.
-7. **Validated**: Completed `/story-validate` and `/larp` (if UI), and generated a stamped `validation-report.md` claiming a verified readiness state.
-8. **Done**: Completed `/story-retrospective` and created `story-retro.md` with learning-tagged commits.
+4. **Tasked**: Completed `/story-tasks` and generated `tasks.md` with structured phases, owned paths, observable completion predicates, and the play-level `analysis_required` declaration.
+5. **Analyzed when required**: Completed `/analyze --level story` after tasks for Build or Platform, with a clear `story-analysis-report.md`. Sprint skips this state explicitly.
+6. **Implemented**: Completed `/story-implement` and marked all tasks as `[X]` in `tasks.md` with status set to `completed` in frontmatter.
+7. **Audited (Post-impl)**: Completed `/speck-audit` post-implementation and generated `audit-report.md`.
+8. **Validated**: Completed `/story-validate` and `/speck-larp` (if UI), and generated a stamped `validation-report.md` claiming a verified readiness state.
+9. **Done**: Completed `/story-retrospective` and created `story-retro.md` with learning-tagged commits.
 
 ---
 

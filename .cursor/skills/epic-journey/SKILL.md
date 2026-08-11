@@ -87,14 +87,8 @@ Based on pain points:
    - Add success metrics
    - Mark unclear areas with [NEEDS CLARIFICATION]
 
-### Step 6: Review and Guide
+### Step 6: Continue
 
-Present what was created:
-- "I've mapped the user journey at [path]"
-- "Key pain points identified: [list]"
-- "Opportunities for delight: [list]"
-
-Guide to next steps based on journey:
-- Re-read the marked canonical flow in root `AGENTS.md` and continue at the next applicable epic slot. This skill does not carry a second sequence.
+Re-read the canonical flow in root `AGENTS.md` and continue at the next applicable epic slot.
 
 The template contains the complete structure and guidance for journey documentation.

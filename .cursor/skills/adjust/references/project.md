@@ -8,7 +8,7 @@ The DEC must supersede the replaced decision. Then compute the reverse cascade:
 bash .speck/scripts/validation/validators/compute-cascade.sh --dec DEC-XXXX
 ```
 
-Declare every affected epic, story, and promise in the report. Route each through `/adjust --level epic` or `/adjust --level story`. Keep the project at `NO-SHIP` or the minimum supported downstream state while `CASCADE_STALE.P1` remains.
+Declare every affected epic, story, and promise in the report. Route each through the epic or story branch of `adjust` and complete the downstream build-and-prove loop. Keep the project at `NO-SHIP` or the minimum supported downstream state while `CASCADE_STALE.P1` remains.
 
 Write `specs/projects/<PROJECT_ID>/project-adjust-report-<YYYYMMDD>.md` from `.speck/templates/project/project-adjust-template.md`.
 

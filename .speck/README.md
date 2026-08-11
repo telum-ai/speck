@@ -277,7 +277,7 @@ For UI epics, `experience-chain.md` is required before `/epic-plan` (prevents th
 
 The marked canonical Story line in root `AGENTS.md` owns order. It evaluates brownfield, UI, premise, LARP, visual-proof, and closure slots without a competing README copy.
 
-Note: `/story-analyze` is **retired** (alias-shim) — its pre-implementation consistency check is folded into the tail of `/story-tasks`, and its adversarial behavior-vs-spec check is `/audit`. `/audit` runs **between** implement and validate — it's not optional.
+`/analyze --level story` runs after `/story-tasks` and before implementation: Sprint skips it, Build uses one independent lens, and Platform uses three. `/speck-audit` remains a separate post-implementation gate before validation.
 
 ### 4. Reengagement (PROVE)
 

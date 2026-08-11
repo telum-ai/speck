@@ -18,7 +18,7 @@ CI enforces: ban predicate-hiding phrasing; ban unconditional fake DAGs; require
 
 | Skill | Cheap keys (must be readable in router) | Nodes |
 |-------|-------------------------------------------|-------|
-| analyze | level, play_level/epic count, phase, lens id | core scope, one reviewer lens, late report template |
+| analyze | project/epic/story level, play_level/epic count, phase, lens id | selected scope, one reviewer lens, late report template |
 | adjust | promise blast radius | exactly one story/epic/project branch + template |
 | story-validate | archetype, claimed_state, UI, visual host | spine, backend-skip, larp, states/*, axes/*, … |
 | epic-validate | archetype, claimed_state, UI | rollup/matrix/graph + states + axes |
@@ -31,7 +31,7 @@ CI enforces: ban predicate-hiding phrasing; ban unconditional fake DAGs; require
 | project-promote | from→to play_level | spine, transitions/* |
 | story-implement | UI-bearing vs API/backend | spine, ui, backend |
 | story-tasks | UI-bearing vs API/backend | spine, ui-tasks, api-tasks |
-| project-clarify | workflow phase (start→Q&A→research→close) | load-rules, question-sets, research-flags, output |
+| project-clarify | workflow phase (start→Q&A→research→close) | load-rules, question-sets, research-flags |
 | story-clarify | workflow phase | same shape |
 | speck-debug | debug phase (triage→…→fix) | triage, hypotheses, evidence, fix-loop |
 | speck-skeptical-review | exploring vs locking | alternatives, tradeoffs, lock |
@@ -44,8 +44,8 @@ Including former “domain-refs” that had no cheap skip: `epic-experience-chai
 
 ## shim / user router
 
-- Analyze compatibility: `project-analyze`, `epic-analyze`, `story-analyze`
-- Adjust compatibility: `project-adjust`, `epic-adjust`, `story-adjust`
+- Analyze compatibility: `project-analyze`, `epic-analyze`
+- Adjust compatibility: none; the unused level aliases were removed
 - Scan compatibility: `project-scan`, `epic-scan`, `story-scan`
 - Retired compatibility: `epic-outline`, `story-outline`
 - Convenience routers over genuinely different specialists: `validate`, `retrospective`

@@ -147,37 +147,6 @@ Define project-specific principles and constraints that will guide all developme
    - Note in PRD.md compliance section
    - Reference in epic templates
 
-10. Output summary:
-   ```
-    Project Constitution Created!
-   
-   Project: [Name]
-   Version: 1.0.0
-   
-   Principles Defined:
-   1. [Principle Name]: [Focus area]
-   2. [Principle Name]: [Focus area]
-   [...]
-   
-   Validation Points:
-   - Story level: [X] checks
-   - Epic level: [Y] gates
-   - Project level: [Z] criteria
-   
-   Key Constraints:
-   - [Constraint type]: [Requirement]
-   - [Constraint type]: [Requirement]
-   
-   Next Steps:
-   1. Review with stakeholders
-   2. Distribute to team
-   3. Run /project-plan to create PRD (will incorporate these principles)
-   4. Configure automated validation (in CI/CD)
-   5. Principles will be enforced in epic/story development
-   
-   Note: Constitution provides essential principle inputs for PRD creation.
-   These principles will guide all technical decisions in /project-architecture
-   and be enforced throughout epic and story development.
-   ```
+10. Resume the canonical project flow in root `AGENTS.md`; downstream planning and validation inherit this constitution.
 
 Note: Project constitutions are living documents. Update as new requirements emerge or constraints change.

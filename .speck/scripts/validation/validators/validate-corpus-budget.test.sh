@@ -286,6 +286,27 @@ EOF
 echo "Test: executable load contract aligned with budget passes"
 bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"
 
+cat >> "$TMP/.cursor/skills/good/SKILL.md" <<'EOF'
+
+## Response Format
+
+Always print a uniform completion summary.
+EOF
+echo "Test: chat-only output schemas fail"
+if bash "$TMP/.speck/scripts/validation/validators/validate-corpus-budget.sh" "$TMP"; then
+  echo "FAIL: expected chat-output-schema failure"
+  exit 1
+fi
+python3 - "$TMP/.cursor/skills/good/SKILL.md" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+path.write_text(path.read_text().replace(
+    "\n## Response Format\n\nAlways print a uniform completion summary.\n",
+    "\n",
+))
+PY
+
 mkdir -p "$TMP/.cursor/skills/good/references"
 printf '# spine\nRead `AGENTS.md` again.\n' > "$TMP/.cursor/skills/good/references/spine.md"
 python3 - "$TMP/.speck/reference/skill-load-budgets.json" "$TMP/.speck/reference/skill-load-contracts.json" <<'PY'

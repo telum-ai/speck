@@ -12,4 +12,4 @@ Cheap keys: workflow phase of this run (start → Q&A → research → close). D
 1. Start: MUST Read `references/load-rules.md` (locate project; upstream-only context).
 2. After project located: MUST Read `references/question-sets.md`; ask; apply answers to `project.md`.
 3. Only after answers applied: MUST Read `references/research-flags.md`.
-4. Only when reporting completion: MUST Read `references/output.md`.
+4. Close: update `project.md`, surface unresolved blockers, then resume the canonical project flow in root `AGENTS.md`.

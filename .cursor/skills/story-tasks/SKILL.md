@@ -11,7 +11,7 @@ paths:
 
 # story-tasks
 
-Cheap keys: UI-bearing story vs API/backend story (from spec/plan/ui-spec presence).
+Cheap keys: UI-bearing story vs API/backend story, plus project `play_level` for the analysis marker.
 
 1. Classify the story before loading branch context.
 2. Before the first mutation, run exactly one:

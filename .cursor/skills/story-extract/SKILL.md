@@ -66,18 +66,9 @@ mkdir -p specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-[name]
 
 Batch: list endpoints, pages, service methods → group into stories (CRUD separate; multi-step workflow single).
 
-## 6. Extraction summary (stdout)
+## 6. Review and continue
 
-Return (no report template file):
-- Scope analyzed
-- Stories created/updated
-- Per-story: Complete / Partial / Unknown + confidence
-- Gaps needing clarification
-- Next: `/story-clarify`, `/story-plan`, `/story-validate`, `/speck-scan --level story`
-
-## 7. Review
-
-Present count + confidence; ask: boundaries correct? rules accurate?
+Surface uncertain boundaries, low-confidence inferences, and gaps needing clarification. Do not create a separate extraction report.
 
 Route: re-read the marked canonical Story flow in root `AGENTS.md` and resume at its first incomplete slot; many gaps may require scan/planning, while a scope too messy for one story becomes a debt epic.
 

@@ -717,6 +717,57 @@ run_validator "$ROOT" --transcript "$TRANSCRIPT_ANALYZE_REPORT" --profile "$ANAL
 [[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
   && pass "project report transcript proves late load and all post-write gates" || fail "analyze report transcript (rc=$RC)"
 
+STORY_CORE_PROFILE="analyze-story-core"
+STORY_CORE_CMD="python3 .speck/scripts/context/speck_context.py $STORY_CORE_PROFILE --select tier=build --root $ROOT"
+python3 "$LOADER" "$STORY_CORE_PROFILE" --select tier=build --root "$ROOT" > "$T/story-core.out"
+STORY_CORE_OUT=$(<"$T/story-core.out")
+[[ "$STORY_CORE_OUT" == *"references/levels/story.md"* ]] \
+  && [[ "$STORY_CORE_OUT" == *"references/tiers/story-build.md"* ]] \
+  && [[ "$STORY_CORE_OUT" != *"references/levels/project.md"* ]] \
+  && [[ "$STORY_CORE_OUT" != *"story-analysis-report-template.md"* ]] \
+  && pass "story analysis core loads only its level and selected tier" || fail "story core leaked deferred or sibling context"
+
+TRANSCRIPT_STORY_CORE="$T/story-core.jsonl"
+write_transcript "$TRANSCRIPT_STORY_CORE" \
+  cmd "$STORY_CORE_CMD" "$T/story-core.out" 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_STORY_CORE" --profile "$STORY_CORE_PROFILE" --select tier=build --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "post-hoc transcript proves story core reach and selectivity" || fail "story core transcript (rc=$RC)"
+
+STORY_LENS_PROFILE="analyze-story-lens"
+STORY_LENS_CMD="python3 .speck/scripts/context/speck_context.py $STORY_LENS_PROFILE --select lens=S2 --root $ROOT"
+python3 "$LOADER" "$STORY_LENS_PROFILE" --select lens=S2 --root "$ROOT" > "$T/story-lens.out"
+STORY_LENS_OUT=$(<"$T/story-lens.out")
+[[ "$STORY_LENS_OUT" == *"references/lenses/story/S2.md"* ]] \
+  && [[ "$STORY_LENS_OUT" != *"references/lenses/story/S1.md"* ]] \
+  && [[ "$STORY_LENS_OUT" != *"references/lenses/project/L2.md"* ]] \
+  && pass "one story reviewer receives one story lens" || fail "story lens selector leaked a sibling"
+
+TRANSCRIPT_STORY_LENS="$T/story-lens.jsonl"
+write_transcript "$TRANSCRIPT_STORY_LENS" \
+  cmd "$STORY_LENS_CMD" "$T/story-lens.out" 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_STORY_LENS" --profile "$STORY_LENS_PROFILE" --select lens=S2 --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "post-hoc transcript proves story lens timing and sibling exclusion" || fail "story lens transcript (rc=$RC)"
+
+STORY_REPORT_CMD="python3 .speck/scripts/context/speck_context.py $ANALYZE_REPORT_PROFILE --select level=story --root $ROOT"
+python3 "$LOADER" "$ANALYZE_REPORT_PROFILE" --select level=story --root "$ROOT" > "$T/story-report.out"
+STORY_REPORT_OUT=$(<"$T/story-report.out")
+[[ "$STORY_REPORT_OUT" == *"story-analysis-report-template.md"* ]] \
+  && [[ "$STORY_REPORT_OUT" == *"references/reports/story.md"* ]] \
+  && [[ "$STORY_REPORT_OUT" != *"project-analysis-report-template.md"* ]] \
+  && pass "story report context arrives only after story findings" || fail "story report selector leaked a sibling"
+
+TRANSCRIPT_STORY_REPORT="$T/story-report.jsonl"
+write_transcript "$TRANSCRIPT_STORY_REPORT" \
+  cmd "$STORY_REPORT_CMD" "$T/story-report.out" 0 \
+  change "specs/projects/demo/stories/S001/story-analysis-report.md" \
+  cmd "bash .speck/scripts/validation/validate-template.sh --strict specs/projects/demo/stories/S001/story-analysis-report.md" /dev/null 0 \
+  cmd "bash .speck/scripts/validation/validators/validate-project-analysis.sh --gate specs/projects/demo/stories/S001" /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_STORY_REPORT" --profile "$ANALYZE_REPORT_PROFILE" --select level=story --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "post-hoc transcript proves story report load-before-write and closure gates" || fail "story report transcript (rc=$RC)"
+
 ADJUST_PROFILE="adjust"
 ADJUST_CMD="python3 .speck/scripts/context/speck_context.py $ADJUST_PROFILE --select level=story --root $ROOT"
 python3 "$LOADER" "$ADJUST_PROFILE" --select level=story --root "$ROOT" > "$T/adjust-story.out"

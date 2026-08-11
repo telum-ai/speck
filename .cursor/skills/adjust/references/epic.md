@@ -2,7 +2,7 @@
 
 Map affected stories and shared components. Update only epic-level deltas in `epic.md`, `epic-tech-spec.md`, `epic-breakdown.md`, `wireframes.md`, `journey.md`, and `experience-chain.md` as applicable.
 
-Reconcile `traceability-matrix.md`. Retire superseded cross-story promises with a DEC and add PRM rows for new screens, elements, and seam rules. Route each affected story through `/adjust --level story`.
+Reconcile `traceability-matrix.md`. Retire superseded cross-story promises with a DEC and add PRM rows for new screens, elements, and seam rules. Route every affected story through the story branch of `adjust`, including planning, tasks, analysis, implementation, audit, and validation.
 
 Run a decorrelated epic audit, then `/epic-validate` on the changed JTBD and cross-story composition.
 

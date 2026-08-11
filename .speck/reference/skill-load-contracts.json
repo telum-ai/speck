@@ -12,8 +12,10 @@
       "forbidden_files": [
         ".speck/templates/project/project-analysis-report-template.md",
         ".speck/templates/epic/epic-analysis-report-template.md",
+        ".speck/templates/story/story-analysis-report-template.md",
         ".cursor/skills/analyze/references/reports/project.md",
         ".cursor/skills/analyze/references/reports/epic.md",
+        ".cursor/skills/analyze/references/reports/story.md",
         ".cursor/skills/analyze/references/lens-spine.md",
         ".cursor/skills/analyze/references/lenses/project/L1.md",
         ".cursor/skills/analyze/references/lenses/project/L2.md",
@@ -28,7 +30,10 @@
         ".cursor/skills/analyze/references/lenses/epic/L4.md",
         ".cursor/skills/analyze/references/lenses/epic/L5.md",
         ".cursor/skills/analyze/references/lenses/epic/L6.md",
-        ".cursor/skills/analyze/references/lenses/epic/L7.md"
+        ".cursor/skills/analyze/references/lenses/epic/L7.md",
+        ".cursor/skills/analyze/references/lenses/story/S1.md",
+        ".cursor/skills/analyze/references/lenses/story/S2.md",
+        ".cursor/skills/analyze/references/lenses/story/S3.md"
       ],
       "post_write_gates": [],
       "selectors": {
@@ -98,6 +103,15 @@
               "post_write_gates_all": [
                 ".speck/scripts/validation/check-epic-prereqs.sh"
               ]
+            },
+            "story": {
+              "required_files": [
+                ".speck/templates/story/story-analysis-report-template.md",
+                ".cursor/skills/analyze/references/reports/story.md"
+              ],
+              "post_write_gates_all": [
+                ".speck/scripts/validation/validators/validate-project-analysis.sh"
+              ]
             }
           }
         }
@@ -117,7 +131,10 @@
         ".cursor/skills/analyze/references/lenses/epic/L4.md",
         ".cursor/skills/analyze/references/lenses/epic/L5.md",
         ".cursor/skills/analyze/references/lenses/epic/L6.md",
-        ".cursor/skills/analyze/references/lenses/epic/L7.md"
+        ".cursor/skills/analyze/references/lenses/epic/L7.md",
+        ".cursor/skills/analyze/references/lenses/story/S1.md",
+        ".cursor/skills/analyze/references/lenses/story/S2.md",
+        ".cursor/skills/analyze/references/lenses/story/S3.md"
       ],
       "post_write_gates": [],
       "selectors": {
@@ -150,7 +167,10 @@
         ".cursor/skills/analyze/references/lenses/project/L4.md",
         ".cursor/skills/analyze/references/lenses/project/L5.md",
         ".cursor/skills/analyze/references/lenses/project/L6.md",
-        ".cursor/skills/analyze/references/lenses/project/L7.md"
+        ".cursor/skills/analyze/references/lenses/project/L7.md",
+        ".cursor/skills/analyze/references/lenses/story/S1.md",
+        ".cursor/skills/analyze/references/lenses/story/S2.md",
+        ".cursor/skills/analyze/references/lenses/story/S3.md"
       ],
       "post_write_gates": [],
       "selectors": {
@@ -165,6 +185,83 @@
             "L5": {"required_files": [".cursor/skills/analyze/references/lenses/epic/L5.md"]},
             "L6": {"required_files": [".cursor/skills/analyze/references/lenses/epic/L6.md"]},
             "L7": {"required_files": [".cursor/skills/analyze/references/lenses/epic/L7.md"]}
+          }
+        }
+      }
+    },
+    "analyze-story-core": {
+      "max_bytes": 8000,
+      "read_only": true,
+      "entrypoint": ".cursor/skills/analyze/SKILL.md",
+      "required_files": [
+        ".cursor/skills/analyze/references/spine.md",
+        ".cursor/skills/analyze/references/levels/story.md"
+      ],
+      "forbidden_files": [
+        ".cursor/skills/analyze/references/levels/project.md",
+        ".cursor/skills/analyze/references/levels/epic.md",
+        ".cursor/skills/analyze/references/promise-inventory.md",
+        ".cursor/skills/analyze/references/traceability.md",
+        ".speck/templates/project/project-analysis-report-template.md",
+        ".speck/templates/epic/epic-analysis-report-template.md",
+        ".speck/templates/story/story-analysis-report-template.md",
+        ".cursor/skills/analyze/references/reports/project.md",
+        ".cursor/skills/analyze/references/reports/epic.md",
+        ".cursor/skills/analyze/references/reports/story.md",
+        ".cursor/skills/analyze/references/lens-spine.md"
+      ],
+      "post_write_gates": [],
+      "selectors": {
+        "tier": {
+          "required": true,
+          "exclusive": true,
+          "values": {
+            "build": {
+              "required_files": [
+                ".cursor/skills/analyze/references/tiers/story-build.md"
+              ]
+            },
+            "platform": {
+              "required_files": [
+                ".cursor/skills/analyze/references/tiers/story-platform.md"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "analyze-story-lens": {
+      "max_bytes": 8000,
+      "read_only": true,
+      "entrypoint": ".cursor/skills/analyze/SKILL.md",
+      "required_files": [
+        ".cursor/skills/analyze/references/lens-spine.md"
+      ],
+      "forbidden_files": [
+        ".cursor/skills/analyze/references/lenses/project/L1.md",
+        ".cursor/skills/analyze/references/lenses/project/L2.md",
+        ".cursor/skills/analyze/references/lenses/project/L3.md",
+        ".cursor/skills/analyze/references/lenses/project/L4.md",
+        ".cursor/skills/analyze/references/lenses/project/L5.md",
+        ".cursor/skills/analyze/references/lenses/project/L6.md",
+        ".cursor/skills/analyze/references/lenses/project/L7.md",
+        ".cursor/skills/analyze/references/lenses/epic/L1.md",
+        ".cursor/skills/analyze/references/lenses/epic/L2.md",
+        ".cursor/skills/analyze/references/lenses/epic/L3.md",
+        ".cursor/skills/analyze/references/lenses/epic/L4.md",
+        ".cursor/skills/analyze/references/lenses/epic/L5.md",
+        ".cursor/skills/analyze/references/lenses/epic/L6.md",
+        ".cursor/skills/analyze/references/lenses/epic/L7.md"
+      ],
+      "post_write_gates": [],
+      "selectors": {
+        "lens": {
+          "required": true,
+          "exclusive": true,
+          "values": {
+            "S1": {"required_files": [".cursor/skills/analyze/references/lenses/story/S1.md"]},
+            "S2": {"required_files": [".cursor/skills/analyze/references/lenses/story/S2.md"]},
+            "S3": {"required_files": [".cursor/skills/analyze/references/lenses/story/S3.md"]}
           }
         }
       }

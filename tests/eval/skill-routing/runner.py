@@ -623,7 +623,11 @@ def main() -> int:
         if not any("always-on AGENTS flow omits" in error for error in validate_suite(catalog, suite, missing_flow, contract, agents_text)):
             print("FAIL: missing always-on flow skill mutant passed", file=sys.stderr)
             return 1
-        wrong_order = flow.replace("story-tasks → story-implement", "story-implement → story-tasks", 1)
+        wrong_order = flow.replace(
+            "story-tasks → [analyze(story), required Build/Platform] → story-implement",
+            "story-implement → [analyze(story), required Build/Platform] → story-tasks",
+            1,
+        )
         if not any("omits or misorders" in error for error in validate_suite(catalog, suite, wrong_order, contract, agents_text)):
             print("FAIL: wrong-order always-on flow mutant passed", file=sys.stderr)
             return 1

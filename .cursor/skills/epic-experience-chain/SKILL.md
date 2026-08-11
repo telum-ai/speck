@@ -113,23 +113,9 @@ Apply SHA stamp:
 .speck/scripts/stamp-truth.sh <epic-dir>/experience-chain.md
 ```
 
-### 11. Report to user
+### 11. Continue
 
-```
- experience-chain.md created
-
-Path: <epic-dir>/experience-chain.md
-Screens chained: <count>
-Variants per screen: <count> × 3 (first-time, returning, interrupted)
-Magic moments placed: <count>
-Continuity threads: <count>
-Cross-epic adjacencies: <count>
-
-Next steps:
-1. /epic-plan can now proceed
-2. The story-level work will reference this chain
-3. /epic-validate's JTBD walkthrough will use this as the test script
-```
+After stamping the artifact, update `project-state.md` and resume the canonical epic flow in root `AGENTS.md`.
 
 ## Behavior Rules
 

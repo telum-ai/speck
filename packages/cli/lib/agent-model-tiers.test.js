@@ -2,9 +2,9 @@
  * ENFORCES the model-tiering doctrine (see `.speck/reference/host-capabilities.md`) and the
  * decoupled per-harness generation.
  *
- * Source of truth: `.cursor/agents/speck-*.md` — humans set `tier:` + the markdown body there.
- * `generate-agents.js` derives every `model` value and the `.claude/*.md` + `.codex/*.toml`
- * outputs from `tier` via per-harness maps (each harness has its own model vocabulary — Claude
+ * Source of truth: `.cursor/agents/speck-*.md` owns the body; `agent-dispatch.json` owns the
+ * roster, tier, independence, and canonical skills. `generate-agents.js` derives every `model`
+ * value and the `.claude/*.md` + `.codex/*.toml` outputs via per-harness maps (Claude
  * bare aliases, Cursor slugs with no Sonnet/Haiku, Codex GPT slugs).
  *
  * Three guards:
@@ -17,7 +17,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generateAgents, ROLE_TIER, TIER } from './generate-agents.js';
@@ -26,7 +26,10 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const SRC = join(ROOT, '.cursor', 'agents');
 const CLAUDE = join(ROOT, '.claude', 'agents');
 const CODEX = join(ROOT, '.codex', 'agents');
+const DISPATCH_PATH = join(ROOT, '.speck', 'reference', 'agent-dispatch.json');
+const DISPATCH = JSON.parse(readFileSync(DISPATCH_PATH, 'utf-8'));
 const TIERS = ['frontier', 'mid', 'mechanical'];
+const MODES = ['artifact-owner', 'decision-contributor', 'evidence-contributor', 'read-only-contributor', 'evaluator'];
 
 const specAgents = readdirSync(SRC)
   .filter((f) => /^speck-.*\.md$/.test(f))
@@ -54,6 +57,43 @@ test('the roster on disk matches ROLE_TIER', () => {
   const governed = new Set(Object.keys(ROLE_TIER));
   for (const n of governed) assert.ok(onDisk.has(n), `ROLE_TIER lists ${n} but no source ${n}.md`);
   for (const n of onDisk) assert.ok(governed.has(n), `${n}.md exists but ROLE_TIER doesn't tier it`);
+});
+
+test('every retained agent has a canonical skill route and every route exists', () => {
+  assert.equal(DISPATCH.schema_version, 1);
+  const routed = new Set(Object.keys(DISPATCH.roles || {}));
+  assert.deepEqual(routed, new Set(specAgents), 'agent-dispatch roles must exactly match the shipped roster');
+
+  for (const name of specAgents) {
+    assert.ok(TIERS.includes(DISPATCH.roles[name]?.tier), `${name}: dispatch tier is invalid`);
+    assert.ok(MODES.includes(DISPATCH.roles[name]?.mode), `${name}: dispatch mode is invalid`);
+    assert.equal(DISPATCH.roles[name].tier, ROLE_TIER[name], `${name}: dispatch tier drift`);
+    assert.ok(DISPATCH.roles[name]?.independence?.length > 30, `${name}: independence contract is missing`);
+    const skills = DISPATCH.roles[name]?.skills;
+    assert.ok(Array.isArray(skills) && skills.length > 0, `${name}: no canonical skill routes`);
+    for (const skill of skills) {
+      assert.ok(
+        existsSync(join(ROOT, '.cursor', 'skills', skill, 'SKILL.md')),
+        `${name}: routed skill ${skill} does not exist`,
+      );
+    }
+  }
+});
+
+test('agent prompts are thin adapters, not parallel methodology or chat schemas', () => {
+  const alwaysOn = Buffer.byteLength(readFileSync(join(ROOT, 'AGENTS.md'), 'utf-8'));
+  const dispatchBytes = Buffer.byteLength(readFileSync(DISPATCH_PATH, 'utf-8'));
+
+  for (const name of specAgents) {
+    const source = readFileSync(join(SRC, `${name}.md`), 'utf-8');
+    assert.match(source, /\.speck\/reference\/agent-dispatch\.json/, `${name}: must load dispatch contract`);
+    assert.match(source, /canonical skill/, `${name}: must enter through a canonical skill`);
+    assert.doesNotMatch(source, /^#+\s+(Response|Output) Format\b/m, `${name}: chat output schema drift`);
+    assert.ok(source.split('\n').length <= 24, `${name}: role prompt is no longer thin`);
+
+    const overlay = alwaysOn + dispatchBytes + Buffer.byteLength(source);
+    assert.ok(overlay <= 16384, `${name}: AGENTS + dispatch + role overlay ${overlay} bytes > 16384`);
+  }
 });
 
 test('generated harness files are in sync with source (regenerate = no change)', () => {

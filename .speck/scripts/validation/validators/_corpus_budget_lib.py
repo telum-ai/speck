@@ -22,6 +22,12 @@ ESSAY_RES = [
     )
 ]
 EMOJI_HEADER = re.compile(r"^## .*[🎯🔄✅❌🚨📋🧠🔧💡🧪📊🧭🧱🏁]", re.M)
+CHAT_OUTPUT_SCHEMA = re.compile(
+    r"^(?:#{1,4}\s+)?(?:response format|output format|output summary|report to user|"
+    r".*summary \(stdout(?: only)?\)|present what was created):?\s*$|"
+    r"^Output:.*\bstdout\b",
+    re.I | re.M,
+)
 POINTER_ONLY = re.compile(
     r"Read and fully execute `?references/procedure\.md`?",
     re.I,
@@ -395,6 +401,11 @@ def lint_agent_prose(path: Path, text: str, err, *, strict: bool = True) -> None
     rel = path.as_posix()
     if EMOJI_HEADER.search(text):
         err(f"emoji section headers in {rel}")
+    if strict and CHAT_OUTPUT_SCHEMA.search(text):
+        err(
+            f"chat-only output schema in {rel} — keep artifact structure in templates "
+            "and machine-consumed return fields in orchestration contracts"
+        )
     for rx in STRICT_ESSAY if strict else REF_ROOT_ESSAY:
         if rx.search(text):
             err(f"agent-prose essay pattern /{rx.pattern}/ in {rel}")
