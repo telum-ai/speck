@@ -117,7 +117,7 @@ extract_readiness() {
 extract_vision_blurb() {
   local project_md="$1"
   [[ -f "$project_md" ]] || return
-  awk '/^## Vision|^## Overview|^## Problem/ { in_s=1; next } /^## / && in_s { exit } in_s && /^[^#-]/ && NF { gsub(/^[[:space:]]+|[[:space:]]+$/, ""); if (length($0) > 20) { print; exit } }' "$project_md" 2>/dev/null || true
+  awk '/^## (Project )?[Oo]verview|^## Vision|^## Problem/ { in_s=1; next } /^## / && in_s { exit } in_s && /^[^#-]/ && NF { gsub(/^[[:space:]]+|[[:space:]]+$/, ""); if (length($0) > 20) { print; exit } }' "$project_md" 2>/dev/null || true
 }
 
 TITLE="$(extract_project_title "$PROJECT_MD" || true)"

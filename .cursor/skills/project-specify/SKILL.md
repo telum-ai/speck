@@ -7,8 +7,6 @@ paths:
 
 # project-specify
 
-Input: `$ARGUMENTS` (project description — use conversation text if `$ARGUMENTS` literal).
-Output: `[PROJECT_DIR]/project.md` (+ play-level artifacts).
 Template: `.speck/templates/project/project-template.md`.
 
 ## 0. Completed project check
@@ -25,11 +23,11 @@ Infer **archetype**: `consumer_product` | `b2b_saas` | `internal_tool` | `infra_
 
 Infer **play level** from signals:
 
-| Level | Signals | Artifacts |
-|-------|---------|-----------|
-| Sprint | weekend, prototype, ship fast | `sprint-prd-template.md` → `PRD.md` + `sprint-log.md`; `play_level: sprint` |
-| Build | subscription, dashboard, v2 | `PRD.md`, `context.md`, `COMMERCIAL.md`; skip constitution/design-system in next-steps |
-| Platform | enterprise, marketplace, full governance | Full flow below |
+| Level | Signals | Later rigor |
+|-------|---------|-------------|
+| Sprint | weekend, prototype, ship fast | smallest PROMISE and PROVE set |
+| Build | subscription, dashboard, v2 | contracts plus conditional architecture/UX |
+| Platform | enterprise, marketplace, shared infrastructure | full project flow |
 
 Sprint/Build branches skip sections marked below.
 
@@ -54,7 +52,7 @@ Domain expertise required? → note in `project.md`; flag `/project-domain`.
 bash .speck/scripts/bash/create-new-project.sh --json "$ARGUMENTS"
 ```
 
-Fill template and set its lifecycle status to `Specified`; mark gaps
+Fill the minimum sufficient template and set its lifecycle status to `Specified`; delete inapplicable example rows and sections rather than expanding them. Every retained claim must trace to the source or be labeled as an inference. Mark gaps
 `[NEEDS CLARIFICATION: …]`. Preserve unresolved choices as questions. Do not
 turn them into goals, selected options, or invented comparison candidates.
 
@@ -75,7 +73,8 @@ bash .speck/scripts/regenerate-project-readme.sh
 ```
 The generated README must describe the specification phase honestly and may
 link only to artifacts that exist. Remove no-placeholder or broken-link defects
-before leaving this phase.
+before leaving this phase. Its overview and one-line vision must add distinct
+information rather than repeating the same sentence.
 
 ## 8. Next
 

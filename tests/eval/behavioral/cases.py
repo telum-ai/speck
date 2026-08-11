@@ -158,7 +158,7 @@ S001 uploads and extracts proposals. S002 reviews and confirms them. S003 schedu
         (
             "dependency metadata is preserved",
             "story advances from placeholder to specified",
-            "user story and testable WHEN/SHALL criteria exist",
+            "user story and at least three testable acceptance scenarios exist",
             "explicit confirmation gates scheduling",
             "constraints, failure behavior, and test approach are concrete",
         ),
@@ -225,7 +225,7 @@ Add a delivery_events migration with workspace and provider-event uniqueness. Ad
         "Implement S006 completely, update its tasks honestly, and run the relevant tests.",
         {
             ".speck/project.json": PROJECT_JSON,
-            "specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md": _frontmatter("Planned") + """# S006 Build reminder
+            "specs/projects/001-pulseboard/epics/E002-reminders/stories/S006-build-reminder/spec.md": _frontmatter("Specified") + """# S006 Build reminder
 
 Implement `build_reminder(action, now)` in `src/reminders.py`.
 
@@ -261,7 +261,7 @@ Implement `build_reminder(action, now)` in `src/reminders.py`.
         "Implement S007 completely, update its tasks honestly, and run the relevant tests.",
         {
             ".speck/project.json": PROJECT_JSON,
-            "specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md": _frontmatter("Planned") + """# S007 Review selection state
+            "specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/spec.md": _frontmatter("Specified") + """# S007 Review selection state
 
 Implement `initialState(items)`, `toggleSelection(state, id)`, and `approveSelected(state)` in `web/app.js` without mutating inputs.
 

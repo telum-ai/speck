@@ -62,12 +62,21 @@ echo '{"project_id":"early-proj"}' > "$EARLY/.speck/project.json"
 cat > "$EARLY/specs/projects/early-proj/project.md" << 'EOF'
 # Early Product
 
+## Project overview
+
+Early Product turns meeting transcripts into reviewed, owned actions.
+
 ## Vision
 
-Early Product helps facilitators turn meeting commitments into reviewed actions.
+Facilitators leave every meeting confident that commitments will not disappear.
 EOF
 bash "$ROOT/.speck/scripts/regenerate-project-readme.sh" early-proj "$EARLY"
 grep -q '^\*\*Status\*\*: Specified · no readiness claim$' "$EARLY/README.md"
+grep -q 'Early Product turns meeting transcripts into reviewed, owned actions.' "$EARLY/README.md"
+if grep -q 'Facilitators leave every meeting confident' "$EARLY/README.md"; then
+  echo "FAIL: README skipped the project overview and duplicated the later vision"
+  exit 1
+fi
 grep -q 'specs/projects/early-proj/project.md' "$EARLY/README.md"
 if grep -Eq 'REPLACE_BEFORE_SHIP|\[[^]]*placeholder[^]]*\]|architecture.md|product-contract.md|project-state.md|project-decisions-log.md' "$EARLY/README.md"; then
   echo "FAIL: early README contains a placeholder or phantom artifact link"

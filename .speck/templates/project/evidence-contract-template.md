@@ -33,6 +33,8 @@ This contract applies Speck's four principles; it is not a checklist to satisfy 
 
 *List every platform where the product will run in production. Each gets its own evidence rules below.*
 
+*Name only platforms, providers, datastores, commands, and CI stages already selected in project truth or an active recipe. When architecture is still open, write substrate-neutral proof requirements and keep the choice open. Delete examples; never promote one into a decision merely to fill this contract.*
+
 | Platform | Build artifact | Distribution |
 |----------|----------------|--------------|
 | REPLACE_BEFORE_SHIP: platform-1 | REPLACE_BEFORE_SHIP: build-artifact-1 | REPLACE_BEFORE_SHIP: distribution-1 |
@@ -178,6 +180,8 @@ For every validation report at UX-RC or higher:
 ### 6a. CI-Enforced Gate Registry
 
 *The machine-readable registry of the gates this contract relies on — so Speck can check they are actually **wired**, not just declared. A gate that never runs is indistinguishable from a passing one; both leave every validator green, and the dark one manufactures a clean-looking evidence trail. `validate-gate-liveness.sh` diffs each gate's declared stage against what the **committed** hook/CI config actually runs (`GATE_WIRING_DRIFT` when they disagree). Seeded from the recipe's `evidence_contract.ci_gates` by `seed-gate-registry.sh` — don't hand-author unless amending.*
+
+*Delete project-gate examples when no committed gate or active recipe declares them. Do not invent commands, tools, stages, scopes, or canaries. The two `speck:` standing rows remain.*
 
 | Gate ID | Command / Script | Stage | Domain | Scope | Subject | Canary | Waiver |
 |---------|------------------|-------|--------|-------|---------|--------|--------|
