@@ -748,7 +748,7 @@ for (let index = order.length - 1; index > 0; index -= 1) {
   const swap = crypto.randomInt(index + 1);
   [order[index], order[swap]] = [order[swap], order[index]];
 }
-const [first, second, third] = order;
+const [first, second, third, fourth, fifth] = order;
 const window = { document, reviewItems };
 window.addEventListener = (event, callback) => { if (event === 'DOMContentLoaded' || event === 'load') callback(); };
 const context = {
@@ -788,13 +788,15 @@ try {
   const approvedTwo = JSON.stringify(statuses()) === JSON.stringify(expectedStatuses([second, third])) &&
     aria().every(value => value === 'false') && approve.disabled === true;
   if (buttons()[first]) buttons()[first].click();
-  const selectedRemaining = JSON.stringify(aria()) === JSON.stringify(expectedAria([first])) &&
+  if (buttons()[fourth]) buttons()[fourth].click();
+  if (buttons()[fifth]) buttons()[fifth].click();
+  const selectedRemaining = JSON.stringify(aria()) === JSON.stringify(expectedAria([first, fourth, fifth])) &&
     JSON.stringify(statuses()) === JSON.stringify(expectedStatuses([second, third])) && approve.disabled === false;
   approve.click();
-  const approvedAll = JSON.stringify(statuses()) === JSON.stringify(expectedStatuses([first, second, third])) &&
+  const approvedAll = statuses().every(value => value === 'confirmed') &&
     aria().every(value => value === 'false') && approve.disabled === true;
   const approvalWorks = approvedTwo && selectedRemaining && approvedAll &&
-    context.__uiCalls.toggleSelection >= 5 && context.__uiCalls.approveSelected >= 2;
+    context.__uiCalls.toggleSelection >= 7 && context.__uiCalls.approveSelected >= 2;
   console.log(JSON.stringify([mountedPending, initiallyDisabled, selectionWorks, approvalWorks]));
 } catch (_) {
   console.log(JSON.stringify([false, false, false, false]));
