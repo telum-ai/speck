@@ -711,6 +711,11 @@ console.log(JSON.stringify(result));
         browser_probe = r"""
 const fs = require('node:fs');
 const vm = require('node:vm');
+let source = fs.readFileSync(process.argv[1], 'utf8');
+for (const name of ['initialState', 'toggleSelection', 'approveSelected']) {
+  const declaration = new RegExp(`(function\\s+${name}\\s*\\([^)]*\\)\\s*\\{)`);
+  source = source.replace(declaration, `$1 globalThis.__uiCalls.${name} += 1;`);
+}
 class Element {
   constructor(tag = 'div', id = '') { this.tag = tag; this.id = id; this.children = []; this.disabled = false; this.dataset = {}; this.attributes = {}; this.listeners = {}; this.textContent = ''; }
   replaceChildren(...nodes) { this.children = nodes; }
@@ -730,27 +735,48 @@ const document = {
   getElementById: id => id === 'review' ? review : id === 'approve' ? approve : null,
   createElement: tag => new Element(tag),
   createDocumentFragment: () => new Element(),
-  addEventListener: (_event, callback) => callback(),
+  addEventListener: (event, callback) => { if (event === 'DOMContentLoaded' || event === 'load') callback(); },
 };
-const window = { document, reviewItems: [{id: 'a', title: 'One'}] };
-window.addEventListener = (_event, callback) => callback();
-const context = { console, document, window };
+const probeToken = `probe-${process.pid}-${Date.now()}`;
+const reviewItems = [
+  {id: 'a', title: `${probeToken}-one`},
+  {id: 'b', title: `${probeToken}-two`},
+];
+const window = { document, reviewItems };
+window.addEventListener = (event, callback) => { if (event === 'DOMContentLoaded' || event === 'load') callback(); };
+const context = {
+  console,
+  document,
+  window,
+  __uiCalls: {initialState: 0, toggleSelection: 0, approveSelected: 0},
+};
 context.globalThis = context;
 try {
-  vm.runInNewContext(fs.readFileSync(process.argv[1], 'utf8'), context, {filename: process.argv[1]});
+  vm.runInNewContext(source, context, {filename: process.argv[1]});
   const descendants = root => root.children.flatMap(child => child instanceof Element ? [child, ...descendants(child)] : []);
   const buttons = () => descendants(review).filter(node => node.tag === 'button');
-  const statuses = () => descendants(review).map(node => node.textContent).filter(Boolean);
-  const initialButton = buttons()[0];
-  const mountedPending = Boolean(initialButton) && statuses().includes('pending');
+  const statuses = () => descendants(review).filter(node => node.tag === 'span').map(node => node.textContent).filter(Boolean);
+  const initialButtons = buttons();
+  const initialStatuses = statuses();
+  const mountedPending = initialButtons.length === 2 &&
+    initialButtons[0].textContent === reviewItems[0].title &&
+    initialButtons[1].textContent === reviewItems[1].title &&
+    initialStatuses.filter(value => value === 'pending').length === 2 &&
+    context.__uiCalls.initialState > 0;
   const initiallyDisabled = approve.disabled === true;
-  const initialAria = Boolean(initialButton) && initialButton.getAttribute('aria-pressed') === 'false';
-  if (initialButton) initialButton.click();
-  const selectedButton = buttons()[0];
-  const selectionWorks = initialAria && Boolean(selectedButton) && selectedButton.getAttribute('aria-pressed') === 'true' && approve.disabled === false;
+  const initialAria = initialButtons.length === 2 && initialButtons.every(button => button.getAttribute('aria-pressed') === 'false');
+  if (initialButtons[1]) initialButtons[1].click();
+  const selectedButtons = buttons();
+  const selectionWorks = initialAria && selectedButtons.length === 2 &&
+    selectedButtons[0].getAttribute('aria-pressed') === 'false' &&
+    selectedButtons[1].getAttribute('aria-pressed') === 'true' &&
+    approve.disabled === false && context.__uiCalls.toggleSelection > 0;
   approve.click();
-  const approvedButton = buttons()[0];
-  const approvalWorks = statuses().includes('confirmed') && Boolean(approvedButton) && approvedButton.getAttribute('aria-pressed') === 'false' && approve.disabled === true;
+  const approvedButtons = buttons();
+  const approvedStatuses = statuses();
+  const approvalWorks = approvedStatuses[0] === 'pending' && approvedStatuses[1] === 'confirmed' &&
+    approvedButtons.length === 2 && approvedButtons.every(button => button.getAttribute('aria-pressed') === 'false') &&
+    approve.disabled === true && context.__uiCalls.approveSelected > 0;
   console.log(JSON.stringify([mountedPending, initiallyDisabled, selectionWorks, approvalWorks]));
 } catch (_) {
   console.log(JSON.stringify([false, false, false, false]));
@@ -853,7 +879,7 @@ def self_test(root: Path) -> dict[str, object]:
     web = root / "web"
     web.mkdir(parents=True, exist_ok=True)
     (web / "index.html").write_text('<main id="review"></main><button id="approve" disabled>Approve</button>')
-    array_good = '''function initialState(items){const ids=new Set();return items.map(x=>{if(ids.has(x.id))throw Error("duplicate");ids.add(x.id);return {...x,status:"pending",selected:false}})}\nfunction toggleSelection(s,id){if(!s.some(x=>x.id===id))return s;return s.map(x=>x.id===id?{...x,selected:!x.selected}:x)}\nfunction approveSelected(s){if(!s.some(x=>x.selected))return s;return s.map(x=>x.selected?{...x,status:"confirmed",selected:false}:x)}\nfunction renderReview(root,approve,state){root.replaceChildren();state.forEach(item=>{const row=document.createElement("div");const toggle=document.createElement("button");toggle.setAttribute("aria-pressed",String(item.selected));toggle.addEventListener("click",()=>{state=toggleSelection(state,item.id);renderReview(root,approve,state)});const status=document.createElement("span");status.textContent=item.status;row.append(toggle,status);root.append(row)});approve.disabled=!state.some(x=>x.selected);approve.onclick=()=>{state=approveSelected(state);renderReview(root,approve,state)}}\nfunction mountReview(items){renderReview(document.querySelector("#review"),document.querySelector("#approve"),initialState(items))}\nif(typeof module!=="undefined")module.exports={initialState,toggleSelection,approveSelected};\nif(typeof window!=="undefined")mountReview(window.reviewItems||[]);\n'''
+    array_good = '''function initialState(items){const ids=new Set();return items.map(x=>{if(ids.has(x.id))throw Error("duplicate");ids.add(x.id);return {...x,status:"pending",selected:false}})}\nfunction toggleSelection(s,id){if(!s.some(x=>x.id===id))return s;return s.map(x=>x.id===id?{...x,selected:!x.selected}:x)}\nfunction approveSelected(s){if(!s.some(x=>x.selected))return s;return s.map(x=>x.selected?{...x,status:"confirmed",selected:false}:x)}\nfunction renderReview(root,approve,state){root.replaceChildren();state.forEach(item=>{const row=document.createElement("div");const toggle=document.createElement("button");toggle.textContent=item.title||item.id;toggle.setAttribute("aria-pressed",String(item.selected));toggle.addEventListener("click",()=>{state=toggleSelection(state,item.id);renderReview(root,approve,state)});const status=document.createElement("span");status.textContent=item.status;row.append(toggle,status);root.append(row)});approve.disabled=!state.some(x=>x.selected);approve.onclick=()=>{state=approveSelected(state);renderReview(root,approve,state)}}\nfunction mountReview(items){renderReview(document.querySelector("#review"),document.querySelector("#approve"),initialState(items))}\nif(typeof module!=="undefined")module.exports={initialState,toggleSelection,approveSelected};\nif(typeof window!=="undefined")mountReview(window.reviewItems||[]);\n'''
     (web / "app.js").write_text(array_good)
     ui_array_good = sum(float(c["earned"]) for c in _ui_hidden(root))
     clobber = array_good.replace(':x)}\nfunction renderReview', ':{...x,status:"pending",selected:false})}\nfunction renderReview')
@@ -871,6 +897,9 @@ def self_test(root: Path) -> dict[str, object]:
     )
     (web / "app.js").write_text(dummy_mount)
     ui_dummy_mount_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
+    dual_path_mutant = array_good.split('function renderReview', 1)[0] + '''if(typeof module!=="undefined")module.exports={initialState,toggleSelection,approveSelected};\ndocument.addEventListener("DOMContentLoaded",()=>{const root=document.querySelector("#review");const approve=document.querySelector("#approve");const button=document.createElement("button");button.textContent="theater";button.setAttribute("aria-pressed","false");const status=document.createElement("span");status.textContent="pending";root.append(button,status);approve.disabled=true;button.addEventListener("click",()=>{button.setAttribute("aria-pressed","true");approve.disabled=false});approve.onclick=()=>{status.textContent="confirmed";button.setAttribute("aria-pressed","false");approve.disabled=true}});\n'''
+    (web / "app.js").write_text(dual_path_mutant)
+    ui_dual_path_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
 
     # Project-artifact scorers must be isolated from the exported methodology.
     # This reproduces the v11 tournament contamination: a fixture matrix under
@@ -966,6 +995,7 @@ def self_test(root: Path) -> dict[str, object]:
         "ui_unmounted_mutant": ui_unmounted_mutant,
         "ui_enabled_mutant": ui_enabled_mutant,
         "ui_dummy_mount_mutant": ui_dummy_mount_mutant,
+        "ui_dual_path_mutant": ui_dual_path_mutant,
         "project_fixture_isolation": scorer_isolated,
         "parenthesized_placeholder": bool(placeholder_parenthesized["ok"]),
         "canonical_lifecycle_state": bool(lifecycle_state["ok"]),
@@ -979,5 +1009,5 @@ def self_test(root: Path) -> dict[str, object]:
         "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
         "project_owned_runtime_is_not_methodology": project_owned_runtime_is_not_methodology,
-        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 12.5 and ui_clobber_mutant < ui_array_good and ui_unmounted_mutant < ui_array_good and ui_enabled_mutant < ui_array_good and ui_dummy_mount_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
+        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 12.5 and ui_clobber_mutant < ui_array_good and ui_unmounted_mutant < ui_array_good and ui_enabled_mutant < ui_array_good and ui_dummy_mount_mutant < ui_array_good and ui_dual_path_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
     }
