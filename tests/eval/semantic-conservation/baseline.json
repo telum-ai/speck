@@ -13,6 +13,7 @@
     {"path": ".cursor/skills/speck/SKILL.md", "sha256": "c8f29b894e6c7a1d272ef8883c95e4857f57368fb8b5250f6f4e5aaabebfc625"},
     {"path": ".cursor/skills/project-readme/SKILL.md", "sha256": "702ffc4be9d1fa17db1b587d03fb47b632cef5bbed61b0040c25678d9c0a67ff"},
     {"path": ".speck/reference/canonical-routing.md", "sha256": "933bc87666f4135f8ddbbf741edabfbbb3140ae1bca254cd89db548c33db2af3"},
+    {"path": ".speck/reference/evidence-readiness-gate-criteria.md", "sha256": "871ea932ca15f05cecd8784d2bdab6f8ee1f9d98d69f7239a85531d43014801b"},
     {"path": ".speck/reference/gap-routes.md", "sha256": "aa5d9aaf861b5fb33408e03f7b78b2fa60e61f227353fa31aefdcadfe99f10b9"},
     {"path": ".speck/reference/host-capabilities.md", "sha256": "fb3cac7d2a965377708faf4e68498cd4b39b9dddc39a2f3a26389b62e81c8d96"},
     {"path": ".speck/reference/skill-load-contracts.json", "sha256": "bca07bc8f1ef61548e589fba679a803f37a9907e37f8c6a5969a5fb361e1e0ab"},
@@ -23,13 +24,14 @@
     {"path": ".speck/scripts/bash/export-template-repo.test.sh", "sha256": "07d0cb2f0d754175f7f22c0538634be2f05f879890ae67a2db2423680317402a"},
     {"path": ".speck/scripts/context/speck_context.py", "sha256": "6aa672f0cadca437e744a74341e06c957b33e666b2a15b6c9627c74f8f9481e0"},
     {"path": ".speck/scripts/graph/speck_graph.py", "sha256": "df7c9e3d5734aaf20cdba8d5df0ea7ca1b19ef42b19de9f316c7facdf8825b8e"},
-    {"path": ".speck/scripts/profile-surface-check.py", "sha256": "4de7225fdd9b52e6b2d36e44900b028f0dd8709d45a61e993d3f1da8577e738a"},
-    {"path": ".speck/scripts/validation/scaffold-clean.test.sh", "sha256": "44a77d9feb8c5f2ee5c3c3fe278256076ac970524cbbe1e5105ffebbd47fd548"},
-    {"path": ".speck/scripts/validation/validators/validate-evidence-contract.sh", "sha256": "82a6c59dba9934e8c79ba12648b8fb75c3e412e1a4152062656555bf569c5190"},
-    {"path": ".speck/templates/project/evidence-contract-template.md", "sha256": "9afb37e4a5215e7a45ea7c3b75dfe0b525b6ae22695112ac7274213b622df501"},
+    {"path": ".speck/scripts/profile-surface-check.py", "sha256": "12f02bbf188cda6cda53f8506b3215f02ab8a6ef62bd774bd3c1f4f2b1b31d9f"},
+    {"path": ".speck/scripts/validation/scaffold-clean.test.sh", "sha256": "4e2aab60fc72c267f991b6f9feb15c7cd3440fbb271bddc7decf4615d4d5d9c5"},
+    {"path": ".speck/scripts/validation/validators/validate-evidence-contract.sh", "sha256": "8bc6152ff8f08ae2fe20fc79506b2744f5cb49d22ba7392d62d7f711dfcff292"},
+    {"path": ".speck/scripts/validation/validators/validate-readme.test.sh", "sha256": "34fa72b22722256ac788e5775b2062c4e81cda30b3411ab558aff481de3ac02e"},
+    {"path": ".speck/templates/project/evidence-contract-template.md", "sha256": "4f6e9f14b672edbf4ce19271ecb072375f89c49001562faaed42f4a1ece7e2c4"},
     {"path": ".speck/templates/project/project-template.md", "sha256": "95485d2ee5593704ea19f55e92b482645f80d833a78ccbb13f4634b7655b01d9"},
-    {"path": "packages/cli/lib/sync.js", "sha256": "b9be7656aaed5c61097aa08236df2f6f218228dc5ceef65b66457243064bc569"},
-    {"path": "packages/cli/lib/sync.preserve.test.js", "sha256": "1bb3d5d10c881f3dfbdb56b4125904af8154f5a40eca02fdf9f01f9eb99eada8"},
+    {"path": "packages/cli/lib/sync.js", "sha256": "4cb6e54dd9beecf756c450f20069373128cd463bdb1a3fe90a194fa5e6a73bcc"},
+    {"path": "packages/cli/lib/sync.preserve.test.js", "sha256": "e132dfb55aa8056713d866530c2a086f82e24850c27cfa533190f9c10378a6e7"},
     {"path": "tests/eval/skill-routing/baseline.json", "sha256": "fa4b4debcc101427eb3173ff05676f4e2afde101ba7ef31c7ae5fcf2676c341c"},
     {"path": "tests/eval/semantic-conservation/guard-baseline-change.sh", "sha256": "e054c7131b2810180dfec8953b71b6d1ed240b7b08513bda0038839bcc4ccf65"},
     {"path": "tests/eval/semantic-conservation/runner.py", "sha256": "0cbecf8bf21f0f00c04a288af159bb0119e5762a8d2b7c59f6d6595f0283fffa"},
@@ -240,9 +242,11 @@
         {"path": ".cursor/skills/project-profile/SKILL.md", "anchors": ["Every retained registry row is binding", "required missing, unreachable, or severely divergent surface is `PROFILE_DRIFT[.]P1`"]},
         {"path": ".speck/scripts/profile-surface-check.py", "anchors": ["parse_registry", "github_description", "PROFILE_DRIFT_SUMMARY"]},
         {"path": ".speck/templates/project/project-template.md", "anchors": ["Surface.*Adapter.*Target.*Source of truth.*Required by", "GitHub repo description", "Landing page hero"]},
-        {"path": ".speck/templates/project/evidence-contract-template.md", "anchors": ["PROFILE Gate Criteria", "binding public-surface registry", "inspect every row", "PROFILE_DRIFT[.]P1"]},
-        {"path": ".speck/scripts/validation/validators/validate-evidence-contract.sh", "anchors": ["profile_section", "Binding multi-surface PROFILE Gate Criteria", "PROFILE Gate Criteria is shape-only or incomplete"]},
-        {"path": ".speck/scripts/validation/scaffold-clean.test.sh", "anchors": ["heading-only PROFILE gate cannot pass", "binding PROFILE contract diagnostic"]}
+        {"path": ".speck/reference/evidence-readiness-gate-criteria.md", "anchors": ["authoritative machine contract", "PROFILE_COVERAGE=every-row", "PROFILE_P1_BLOCKS=true"]},
+        {"path": ".speck/scripts/validation/validators/validate-readme.test.sh", "anchors": ["targeted PROFILE checks cannot return before registry errors", "malformed Required by state was delayed", "non-executable wrapper"]},
+        {"path": ".speck/templates/project/evidence-contract-template.md", "anchors": ["PROFILE Gate Criteria", "binding public-surface registry", "PROFILE_COVERAGE=every-row", "PROFILE_P1_BLOCKS=true", "PROFILE_PLACEHOLDER_POLICY=finding"]},
+        {"path": ".speck/scripts/validation/validators/validate-evidence-contract.sh", "anchors": ["profile_section", "grep -Fqx", "PROFILE_P1_BLOCKS=true", "PROFILE Gate Criteria is shape-only or incomplete"]},
+        {"path": ".speck/scripts/validation/scaffold-clean.test.sh", "anchors": ["prose-only PROFILE gate cannot pass", "PROFILE keywords inside explicit negations cannot pass", "authoritative PROFILE machine-contract diagnostic"]}
       ]
     },
     {
@@ -271,8 +275,8 @@
       "classification": "gate",
       "rationale": "Vanilla installs stay empty while feedback and learned material created by a real project survive upgrades.",
       "carriers": [
-        {"path": "packages/cli/lib/sync.js", "anchors": ["[.]speck/feedback/` is project-owned runtime output", "remove only.*exact files Speck previously shipped", "preserve every project-created sibling"]},
-        {"path": "packages/cli/lib/sync.preserve.test.js", "anchors": ["preserves project-created learned patterns", "preserving project feedback", "PROJECT LEARNING"]},
+        {"path": "packages/cli/lib/sync.js", "anchors": ["[.]speck/feedback/` is project-owned runtime output", "remove only.*exact files Speck previously shipped", "preserve every project-created sibling", "__pycache__", "[.]pyc"]},
+        {"path": "packages/cli/lib/sync.preserve.test.js", "anchors": ["preserves project-created learned patterns", "preserving project feedback", "PROJECT LEARNING", "excludes generated caches from shipped runtime"]},
         {"path": ".speck/scripts/bash/export-template-repo.sh", "anchors": ["Shipped Speck runtime", "README[.]md VERSION mcp recipes reference scripts templates"]},
         {"path": ".speck/scripts/bash/export-template-repo.test.sh", "anchors": ["[.]speck/feedback", "[.]speck/patterns", "Python bytecode cache leaked"]}
       ]

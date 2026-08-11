@@ -88,6 +88,19 @@ if OUT="$(SPECK_PROFILE_TEST_MODE=1 SPECK_PROFILE_GITHUB_DESCRIPTION="We help te
 fi
 grep -q 'PROFILE_DRIFT.P1: \[registry\].*requires 5 columns.*found 3' <<< "$OUT"
 
+echo "Test: targeted PROFILE checks cannot return before registry errors"
+awk '
+  /Package description/ { print "| Broken package | `package` | `package.json#description` | `README.md#one-liner` |"; next }
+  { print }
+' "$TMP/specs/projects/test-proj/project.valid.md" > "$TMP/specs/projects/test-proj/project.md"
+if OUT="$(SPECK_PROFILE_TEST_MODE=1 SPECK_PROFILE_GITHUB_DESCRIPTION="We help teams ship faster with evidence-driven specs." \
+  bash "$ROOT/.speck/scripts/profile-drift-check.sh" --claim ship-rc --surface package "$TMP" test-proj 2>&1)"; then
+  echo "FAIL: targeted PROFILE check returned before its malformed registry row"
+  exit 1
+fi
+grep -q 'PROFILE_DRIFT.P1: \[registry\].*requires 5 columns.*found 4' <<< "$OUT"
+grep -q 'PROFILE_DRIFT_SUMMARY P1=1 P2=1' <<< "$OUT"
+
 echo "Test: unknown Required by states fail closed at every claim"
 sed 's/COMMERCIAL-RC/COMMERCIAL RC/' \
   "$TMP/specs/projects/test-proj/project.valid.md" > "$TMP/specs/projects/test-proj/project.md"

@@ -156,6 +156,18 @@ To guarantee that agent-verified success translates to actual runtime success on
 | SHIP-RC | Zero `PROFILE_DRIFT.P1`; remote surfaces observed through their real provider read |
 | SHIP | SHIP-RC + all declared PROFILE adapters green in CI or post-deploy proof |
 
+The following declarations are the authoritative machine contract for the project evidence contract's PROFILE gate:
+
+```text
+PROFILE_REGISTRY=project.md#PROFILE surfaces
+PROFILE_GATE_COMMAND=bash .speck/scripts/profile-drift-check.sh --claim <state>
+PROFILE_COVERAGE=every-row
+PROFILE_P1_BLOCKS=true
+PROFILE_MISSING_POLICY=finding
+PROFILE_UNREACHABLE_POLICY=finding
+PROFILE_PLACEHOLDER_POLICY=finding
+```
+
 Per declared PROFILE surface (from `project.md`):
 
 | Adapter | Target example | Source example | Refresh owner |

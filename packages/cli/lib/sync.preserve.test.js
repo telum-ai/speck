@@ -77,6 +77,21 @@ test('smartSync: ships runtime reference files required by AGENTS and skills', (
   );
 });
 
+test('smartSync: excludes generated caches from shipped runtime', () => {
+  const { source, target } = makeDirs();
+  const scripts = join(source, '.speck', 'scripts');
+  mkdirSync(join(scripts, '__pycache__'), { recursive: true });
+  writeFileSync(join(scripts, 'profile-check.py'), 'print("runtime")');
+  writeFileSync(join(scripts, '__pycache__', 'profile-check.cpython-312.pyc'), 'BYTECODE');
+  writeFileSync(join(scripts, '.DS_Store'), 'MACOS');
+
+  smartSync(source, target);
+
+  assert.ok(existsSync(join(target, '.speck', 'scripts', 'profile-check.py')));
+  assert.ok(!existsSync(join(target, '.speck', 'scripts', '__pycache__')));
+  assert.ok(!existsSync(join(target, '.speck', 'scripts', '.DS_Store')));
+});
+
 test('smartSync: preserves project-created learned patterns while retiring former Speck files', () => {
   const { source, target } = makeDirs();
   const learned = join(target, '.speck', 'patterns', 'learned');

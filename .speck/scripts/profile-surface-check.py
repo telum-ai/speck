@@ -290,17 +290,6 @@ def main() -> int:
     if legacy_registry:
         surfaces = [Surface("Root README", "readme", "README.md", "product-contract.md#1", "UX-RC / API-RC")]
 
-    if args.surface:
-        needle = args.surface.lower()
-        surfaces = [
-            surface for surface in surfaces
-            if needle in surface.name.lower() or needle == surface.adapter.lower()
-        ]
-        if not surfaces:
-            print(f'PROFILE_DRIFT.P2: [registry] no declared surface matches "{args.surface}"')
-            print(f"PROFILE_DRIFT_SUMMARY P1=0 P2=1 P3=0 surfaces=0 project={project_id} claim={args.claim or 'none'}")
-            return 0
-
     claim = normalize_state(args.claim) if args.claim else ""
     if claim and claim not in STATE_RANK:
         print(f"ERROR: Unknown readiness claim: {args.claim}", file=sys.stderr)
@@ -311,6 +300,22 @@ def main() -> int:
     for error in registry_errors:
         print(f"PROFILE_DRIFT.P1: [registry] {error}")
         counts["P1"] += 1
+
+    if args.surface:
+        needle = args.surface.lower()
+        surfaces = [
+            surface for surface in surfaces
+            if needle in surface.name.lower() or needle == surface.adapter.lower()
+        ]
+        if not surfaces:
+            print(f'PROFILE_DRIFT.P2: [registry] no declared surface matches "{args.surface}"')
+            counts["P2"] += 1
+            print(
+                "PROFILE_DRIFT_SUMMARY "
+                f"P1={counts['P1']} P2={counts['P2']} P3={counts['P3']} "
+                f"surfaces=0 project={project_id} claim={claim or 'none'}"
+            )
+            return 1 if counts["P1"] else 0
 
     if legacy_registry:
         severity = "P1" if claim else "P3"

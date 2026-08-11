@@ -251,6 +251,18 @@ Never claim SHIP-RC from dev-server evidence. Cap with logged attempt when P3 ap
 
 Run `bash .speck/scripts/profile-drift-check.sh --claim <state>`. The gate must inspect every row and emit a per-surface result. Any `PROFILE_DRIFT.P1` on a surface required by the claimed state blocks that claim. Missing, unreachable, or placeholder targets remain findings; README green cannot compensate for another surface's drift.
 
+The declarations below are the authoritative machine contract for this section. Prose cannot override them.
+
+```text
+PROFILE_REGISTRY=project.md#PROFILE surfaces
+PROFILE_GATE_COMMAND=bash .speck/scripts/profile-drift-check.sh --claim <state>
+PROFILE_COVERAGE=every-row
+PROFILE_P1_BLOCKS=true
+PROFILE_MISSING_POLICY=finding
+PROFILE_UNREACHABLE_POLICY=finding
+PROFILE_PLACEHOLDER_POLICY=finding
+```
+
 Local managed placeholders may be refreshed by `project-profile`. User-owned files and remote metadata require their owning story, project adjustment, or owner gesture; never overwrite them merely to turn the gate green.
 
 ## 9. Evidence Storage

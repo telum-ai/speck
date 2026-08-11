@@ -163,15 +163,26 @@ profile_section="$(printf '%s\n' "$content" | awk '
 if [[ -z "$profile_section" ]]; then
   log_error "Missing PROFILE Gate Criteria subsection" \
     "Add ### PROFILE Gate Criteria under Section 7, or run /speck-catch-up --phase=profile"
-elif printf '%s\n' "$profile_section" | grep -Eqi 'project[.]md.*PROFILE surfaces' \
-  && printf '%s\n' "$profile_section" | grep -Eqi 'profile-drift-check[.]sh --claim' \
-  && printf '%s\n' "$profile_section" | grep -Eqi 'inspect every row' \
-  && printf '%s\n' "$profile_section" | grep -Eqi 'PROFILE_DRIFT[.]P1' \
-  && printf '%s\n' "$profile_section" | grep -Eqi 'Missing, unreachable, or placeholder'; then
-  log_success "Binding multi-surface PROFILE Gate Criteria found"
 else
-  log_error "PROFILE Gate Criteria is shape-only or incomplete" \
-    "Require the project.md registry, --claim-aware all-row evaluation, PROFILE_DRIFT.P1 blocking, and explicit missing/unreachable/placeholder findings."
+  profile_contract_valid=true
+  for declaration in \
+    'PROFILE_REGISTRY=project.md#PROFILE surfaces' \
+    'PROFILE_GATE_COMMAND=bash .speck/scripts/profile-drift-check.sh --claim <state>' \
+    'PROFILE_COVERAGE=every-row' \
+    'PROFILE_P1_BLOCKS=true' \
+    'PROFILE_MISSING_POLICY=finding' \
+    'PROFILE_UNREACHABLE_POLICY=finding' \
+    'PROFILE_PLACEHOLDER_POLICY=finding'; do
+    if ! printf '%s\n' "$profile_section" | grep -Fqx "$declaration"; then
+      profile_contract_valid=false
+    fi
+  done
+  if [[ "$profile_contract_valid" == true ]]; then
+    log_success "Binding multi-surface PROFILE machine contract found"
+  else
+    log_error "PROFILE Gate Criteria is shape-only or incomplete" \
+      "Restore the authoritative PROFILE_REGISTRY, PROFILE_GATE_COMMAND, PROFILE_COVERAGE, PROFILE_P1_BLOCKS, and missing/unreachable/placeholder policy declarations."
+  fi
 fi
 
 # === OUTPUT RESULTS ===

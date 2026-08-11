@@ -94,6 +94,9 @@ const SKIP_IF_CUSTOMIZED = {
 const SKIP_PATTERNS = [
   /.*-test\.yml$/,       // Test workflow files (e.g., speck-orchestrator-test.yml)
   /^tests\//,            // Test directory
+  /(^|\/)__pycache__(\/|$)/,
+  /(^|\/).*\.pyc$/,
+  /(^|\/)\.DS_Store$/,
 ];
 
 /**
