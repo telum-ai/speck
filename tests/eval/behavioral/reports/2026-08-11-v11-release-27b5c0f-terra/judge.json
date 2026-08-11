@@ -1,0 +1,162 @@
+{
+  "blinded": true,
+  "cases": [
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 76
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "case_id": "project-specify",
+      "reason": "B preserves the brief\u2019s facts, confirmation gate, metrics, non-goals, and open channel/commercial gaps with explicit inference markers; A is usable but pads with invented JTBD/competitive content.",
+      "winner": "B"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 87
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 87
+      },
+      "case_id": "project-plan",
+      "reason": "Both deliver PRD + E000/E001/E002 covering capture, confirmation, delivery, and isolation with a hard confirmation gate and no invented provider.",
+      "winner": "tie"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 83
+      },
+      "B": {
+        "critical_failure": true,
+        "score": 34
+      },
+      "case_id": "epic-breakdown",
+      "reason": "A orders ingest\u2192isolation\u2192confirm with correct PRM\u2192AC mapping; B misassigns PRM-002/PRM-004 and lacks a coherent isolation story.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 70
+      },
+      "case_id": "story-specify",
+      "reason": "A preserves deps and delivers a usable Specified story with set-level confirmation gating S003, three concrete ACs, and explicit empty-confirm/failure paths; B meets the minimum but is thinner on evidence paths and accidental-confirmation coverage.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 91
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "case_id": "story-plan",
+      "reason": "Both plans cover symmetric reserve/finalize/recredit, transactions, idempotency, and race tests without tasks, but A\u2019s attempt_key-consistent contract and clearer provider-outside-transaction boundary need less correction before use.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 88
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 76
+      },
+      "case_id": "story-tasks",
+      "reason": "A\u2019s ordered tasks name concrete files and explicitly cover migration, signature, idempotency, endpoints, cross-workspace denial, and concurrent/duplicate/partial-failure probes; B covers the core but omits several negative paths and overclaims implement readiness.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 92
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 84
+      },
+      "case_id": "implement-backend",
+      "reason": "A matches the contract with typed id/owner checks, UTC/Z parsing, full 24h and five-minute boundaries, exact deterministic fields, immutability tests, and honest task completion; B\u2019s core scheduling works but validation and boundary coverage are thinner.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 91
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 66
+      },
+      "case_id": "implement-ui",
+      "reason": "A delivers immutable transitions, duplicate/unknown handling, status-preserving approval, aria-pressed toggles, initially disabled Approve, and mount wiring; B\u2019s state machine is fine but never mounts, leaves Approve enabled in HTML, and adds out-of-scope graph artifacts.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 88
+      },
+      "B": {
+        "critical_failure": true,
+        "score": 52
+      },
+      "case_id": "audit-defects",
+      "reason": "A reproduces all five planted defects with concrete probes and correctly BLOCKED/P0 severity for authz, cache leak, and SQL injection; B finds the same bugs but marks p0:0, NEEDS_FIXES, and IMPL-GREEN\u2014false readiness that needs rewrite before use.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 86
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 90
+      },
+      "case_id": "validate-fake-green",
+      "reason": "Both correctly kill UX-RC to NO-SHIP and reject missing screenshot/a11y-as-felt, but B\u2019s claim-by-claim inherited-evidence challenge is more directly usable and on-rubric.",
+      "winner": "B"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 91
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 76
+      },
+      "case_id": "validate-unreachable",
+      "reason": "A exhausts open_demo, explicitly does not reproduce the auth-wall blocker, rejects the developer screenshot, and logs the inert upload plus sandbox access gap under NO-SHIP.",
+      "winner": "A"
+    },
+    {
+      "A": {
+        "critical_failure": false,
+        "score": 90
+      },
+      "B": {
+        "critical_failure": false,
+        "score": 71
+      },
+      "case_id": "evidence-contract",
+      "reason": "A stays on-task with falsifiable claim\u2013mechanism\u2013evidence mappings and required failure probes without inventing a platform stack or regenerating out-of-scope project-state.",
+      "winner": "A"
+    }
+  ],
+  "model": "cursor-grok-4.5-high"
+}

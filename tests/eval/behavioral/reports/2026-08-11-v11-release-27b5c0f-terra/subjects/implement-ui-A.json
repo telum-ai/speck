@@ -1,0 +1,105 @@
+{
+  "artifact_changed": true,
+  "case_id": "implement-ui",
+  "condition": "v10",
+  "context_conformance": null,
+  "context_conformant": null,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "f6bf6abfd7f5990dc08404c6bfb7b52a2af631895fd66f3532ff2bed78e0329c",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md",
+    " M web/app.js",
+    " M web/index.html",
+    "?? web/app.test.js"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "7c9cebb06222bd597d0772990ca0a7a42359ce50ddbae6af22e5ff89cb322461",
+  "required_corrections": 0,
+  "rescored_at": "2026-08-11T19:02:33.459550+00:00",
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-1",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-2",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-3",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-4",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-5",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-behavior-6",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-runtime-mounted-pending",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-runtime-initial-disabled",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-runtime-selection",
+        "ok": true,
+        "weight": 1.25
+      },
+      {
+        "earned": 1.25,
+        "label": "ui-runtime-approval",
+        "ok": true,
+        "weight": 1.25
+      }
+    ],
+    "earned": 12.5,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 12.5,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 14,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 450304,
+    "input_tokens": 514181,
+    "output_tokens": 8312
+  },
+  "valid_run": true,
+  "wall_seconds": 169.31
+}

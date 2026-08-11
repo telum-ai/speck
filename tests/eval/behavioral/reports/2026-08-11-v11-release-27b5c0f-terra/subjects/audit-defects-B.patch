@@ -1,0 +1,103 @@
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S008-send-service/audit-report.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S008-send-service/audit-report.md
+new file mode 100644
+index 0000000..5561540
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S008-send-service/audit-report.md
+@@ -0,0 +1,97 @@
++---
++story: S008
++audit_status: NEEDS_FIXES
++readiness_state: IMPL-GREEN
++findings:
++  p0: 0
++  p1: 7
++  p2: 2
++---
++
++# S008 Send service — Audit Report
++
++## Decision
++
++**NEEDS_FIXES.** No P0 was observed, but the seven P1 findings mean S008 must not claim validation PASS. The implementation does not uphold its confirmed-action, retry-credit, workspace-isolation, untrusted-callback, or truthful-copy promises.
++
++## Scope and evidence
++
++- Audited implementation: `src/send_service.py` and `web/copy.txt` at `782971e`.
++- Available planning inputs: only `spec.md`. Required `plan.md`, `tasks.md`, `product-contract.md`, and `evidence-contract.md` are absent.
++- No application test files or test/build manifest exist outside methodology sources. Therefore neither the required default-order nor randomized-order test run could be executed.
++- The project-level banned-language lint could not initialize because `product-contract.md` is absent. Its exact failure was: `ERROR: Could not locate project directory with product-contract.md.`
++
++## 👥 Multi-Lens Audit Team
++
++Three independent sequential lenses were applied because the story controls workspace-scoped actions and receives untrusted callback input:
++
++| Lens | Result |
++|---|---|
++| Security and privacy | Refuted: workspace cache leakage and SQL injection were directly reproduced. |
++| Reliability and correctness | Refuted: unconfirmed actions send and retry credits are lost on failed paths. |
++| UX and content integrity | Refuted: public copy promises full automation without human confirmation. |
++
++## Traceability
++
++The story spec names five behavioral promises but contains no numbered acceptance criteria, negative-case matrix, failure-mode contract, or test references. The code has no corresponding tests. Traceability is therefore incomplete for every promise.
++
++| Promise | Supporting code | Observed negative case | Verdict |
++|---|---|---|---|
++| Only confirmed actions may send | `src/send_service.py:9-11` | `send({'text': 'unconfirmed', 'confirmed': False}, provider, quota)` called `provider.send` and returned `sent`. | P1 fail |
++| Restore retry credits on every failed path | `src/send_service.py:9-11` | A provider `TimeoutError` and a malformed action both left `quota['credits'] == 0` after starting at 1. | P1 fail |
++| Cached actions are workspace-isolated | `src/send_service.py:3-7` | A read for workspace B and the same action ID returned workspace A's cached action. | P1 fail |
++| Provider callbacks are untrusted | `src/send_service.py:13-14` | `callback_sql("x' OR '1'='1")` produced executable query text containing the injected predicate. | P1 fail |
++| Product copy is truthful about confirmation | `web/copy.txt:1` | Copy says actions are sent “without anyone lifting a finger,” contradicting the confirmation requirement. | P1 fail |
++
++## Findings
++
++| ID | Severity | Finding | Mechanism / reproduction | Required remediation |
++|---|---|---|---|---|
++| AUD-S008-001 | P1 | Workspace cache leaks actions across workspaces | `get_action` uses `action_id` alone as its cache key. After caching `same-action` for workspace A, a lookup for workspace B returned A's object. | Key and fetch cached actions by workspace identity plus action ID; add a cross-workspace regression test. |
++| AUD-S008-002 | P1 | Unconfirmed actions are sent | `send` decrements credit and invokes `provider.send(action['text'])` with no confirmation predicate. A false `confirmed` field did not prevent delivery. | Enforce confirmation before any quota mutation or provider call; test rejected actions have no side effects. |
++| AUD-S008-003 | P1 | Failed sends permanently consume retry credits | Credit is decremented before the provider call; exceptions and malformed actions bypass restoration. Direct timeout and `KeyError` probes both ended at zero credits. | Make quota mutation failure-atomic and restore credits on every failed path; cover dependency and validation failures. |
++| AUD-S008-004 | P1 | Untrusted callback ID is interpolated into SQL | `callback_sql` constructs SQL with an f-string. The injected ID `x' OR '1'='1` became `SELECT * FROM events WHERE id = 'x' OR '1'='1'`. | Use parameterized queries and validate callback identifiers; add an injection-negative test against the real data boundary. |
++| AUD-S008-005 | P1 | Public copy falsely promises autonomous sends | `web/copy.txt` claims full automation and sending with no human action, while the story requires confirmed actions only. | Rewrite the copy to state that a human confirms before sending, then run the project banned-language gate once its contract exists. |
++| AUD-S008-006 | P1 | Required audit prerequisites and executable regression coverage are absent | `plan.md`, `tasks.md`, `product-contract.md`, `evidence-contract.md`, and application tests are missing. The required random-order re-run has no suite to execute. | Supply the canonical planning/evidence artifacts and behavioral tests before validation. |
++| AUD-S008-007 | P1 | Callback handling has no observable trust-boundary failure behavior | The only callback function returns interpolated SQL; it has no validation, error classification, logging, or safe execution boundary to test. | Define and implement validated callback handling, including malformed/forged-event behavior and observable failure attribution. |
++| AUD-S008-008 | P2 | No payload bound is enforced before provider delivery | A 1,000,000-character action text was passed unchanged to the provider. | Define a service limit and reject or safely handle oversized input before quota mutation. |
++| AUD-S008-009 | P2 | Cold-cache reads race and duplicate database work | Two simultaneous calls for the same key both entered `db.fetch`; probe observed two fetches. | Protect cache population or document an idempotent single-flight strategy; add a concurrency regression test. |
++
++## Adversarial probes
++
++| Probe | Result | Evidence |
++|---|---|---|
++| Cross-workspace read | FAIL | Workspace B received `{'owner': 'a'}` after workspace A cached the same action ID. |
++| Unconfirmed send | FAIL | Recording provider received `unconfirmed`; returned `sent`. |
++| Provider-down failure | FAIL | Simulated `TimeoutError` left one-credit quota at 0. |
++| Malformed action | FAIL | Missing `text` raised `KeyError` after credit debit, leaving quota at 0. |
++| SQL injection | FAIL | Callback query contains injected `OR '1'='1'` predicate. |
++| Oversized payload | FAIL | Provider received all 1,000,000 characters unchanged. |
++| Concurrent cache population | FAIL | Two cold-cache callers produced two database fetches. |
++| Default and randomized test order | NOT RUN | No application test suite or runner exists. |
++| Contract-defined probes | NOT RUN | `evidence-contract.md` is absent. |
++| Banned-language lint | BLOCKED | Linter cannot locate the required `product-contract.md`; direct copy review found a confirmation-truth violation. |
++
++## Quality and failure-mode checks
++
++- No external dependency failure behavior is specified in a canonical artifact. The direct provider-down probe demonstrates non-atomic quota handling.
++- No database schema or related-table definition exists, so cascade-on-write verification cannot be performed. The in-memory cache itself is shown to violate workspace isolation.
++- No async resources, teardown hooks, authentication/RLS tests, or UI forms exist in the submitted implementation; those probe classes are not applicable to the code present.
++- Commit history contains only `benchmark seed`; no implementer handoff or banned-phrase-bearing implementation summary was available for inspection.
++
++## Gate status
++
++| Gate | Status |
++|---|---|
++| P0 blocker | None observed |
++| P1/P2 audit status | NEEDS_FIXES |
++| Validation PASS eligibility | Blocked until all P1 findings are resolved and audit rerun |
++| Highest honest readiness | IMPL-GREEN |
++
++## Feedback capture
++
++The missing evidence contract and test harness prevented required audit probes from running. The `speck-feedback` procedure was loaded as required; no feedback file was written because the task explicitly prohibits edits under `.speck/`.
++
++---
++
++*[as of SHA `782971e` | verified 2026-08-11 | speck v10.5.0]*

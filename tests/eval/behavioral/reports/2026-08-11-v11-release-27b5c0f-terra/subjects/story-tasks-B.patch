@@ -1,0 +1,236 @@
+diff --git a/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md
+new file mode 100644
+index 0000000..aac4edd
+--- /dev/null
++++ b/specs/projects/001-pulseboard/epics/E002-reminders/stories/S005-delivery-status/tasks.md
+@@ -0,0 +1,230 @@
++---
++status: pending
++---
++
++# Tasks: S005 Delivery status
++
++**Input**: `spec.md`, `plan.md`
++
++**Scope assumption**: The supplied plan names the schema and HTTP capabilities but does not
++name an application stack, existing module layout, or test runner. The tasks therefore use a
++small, conventional boundary (`migrations/`, `src/reminders/`, and `tests/integration/`). The
++first implementation task must align these paths with the target application's established
++layout without changing the required behaviour.
++
++## Implementation Context
++
++### Derived requirement → task mapping
++
++`spec.md` does not define formal numbered functional-requirement identifiers. The five SHALL clauses below are
++stable derived IDs for this execution checklist only; they do not amend the source spec.
++
++| Derived ID | Requirement summary | Implementing tasks | Test coverage |
++|---|---|---|---|
++| FR-001 | Authenticate every provider callback before it can change delivery state. | Tasks 5, 7 | Task 2 |
++| FR-002 | Deduplicate callbacks by provider event ID. | Tasks 4, 6 | Task 4 |
++| FR-003 | Persist delivery status for the action. | Tasks 4, 6 | Task 3 |
++| FR-004 | Persist and use `workspace_id` for delivery state. | Tasks 4, 6, 8 | Tasks 3, 5 |
++| FR-005 | Expose `GET /actions/{id}/delivery` only to the action's workspace. | Task 8 | Task 5 |
++
++### Research decisions reference
++
++1. **Database-enforced callback idempotency** (Tasks 4, 6)
++   - **Why**: The plan requires uniqueness by workspace and provider event ID. A database
++     constraint protects the invariant across retries and concurrent callback delivery.
++   - **How**: Create `delivery_events` with `workspace_id`, `action_id`,
++     `provider_event_id`, and `status`; enforce unique `(workspace_id, provider_event_id)`.
++     The callback service must treat the unique-conflict path as an acknowledged duplicate,
++     not as a second delivery-state write.
++
++2. **Authenticate before persistence** (Tasks 2, 5, 7)
++   - **Why**: The spec makes authentication a precondition for accepting a provider callback.
++   - **How**: Verify the provider signature against the raw callback payload using the
++     provider secret from the existing server configuration mechanism. Reject missing,
++     malformed, or invalid signatures before invoking the persistence service.
++
++3. **Workspace ownership is enforced in the read query** (Tasks 5, 8)
++   - **Why**: The delivery endpoint is visible only to the action's workspace.
++   - **How**: Resolve the request workspace from the request role/context, then query the
++     action and its delivery event with that workspace as a required predicate. Return the
++     application's normal not-found/forbidden behaviour without leaking another workspace's
++     delivery status.
++
++### Codebase patterns to reuse
++
++No application source or scan artifact is present in this workspace. Reuse the target
++application's existing migration convention, provider-secret configuration, request-role
++workspace resolver, error formatter, and integration-test fixture pattern. Do not introduce a
++second authentication or tenancy mechanism for this story.
++
++### Security requirements
++
++| Requirement | Implementation | Tasks | Validation |
++|---|---|---|---|
++| Callback authenticity | Verify raw-payload signature before parsing/persisting the event. | Tasks 2, 5, 7 | Invalid/missing signature produces no row or action-state change. |
++| Tenant isolation | Scope reads and writes to `workspace_id` from trusted request/callback context. | Tasks 3-6, 8 | A request-role principal in workspace B cannot retrieve workspace A's delivery status. |
++| Replay safety | Enforce provider-event uniqueness in the database and acknowledge duplicates idempotently. | Tasks 4, 6, 7 | Repeated valid callback leaves exactly one `delivery_events` row. |
++
++## Phase 1: Setup
++
++- [ ] T001 Establish the delivery-status integration-test fixture boundary and align the assumed paths with the target application's existing conventions
++
++**Implements**: Enables FR-001 through FR-005 without creating a competing stack convention.
++
++**Pattern**: Use the application's existing request-role fixture, workspace/action factories,
++provider-secret configuration seam, and database cleanup mechanism. If the conventional paths
++below differ, update the remaining task paths consistently before writing production code; do
++not create a parallel framework or tenancy abstraction.
++
++**Testing**: Provide reusable fixtures for two workspaces, an action in each workspace, a valid
++provider callback payload, and a signing helper that produces an intentionally invalid variant.
++
++**File**: `tests/integration/reminders/conftest.py`
++
++## Phase 2: Tests First (TDD)
++
++**Complete these tests and observe them fail before Phase 3 implementation.**
++
++- [ ] T002 [P] Write the failing callback-authentication integration test
++
++**Implements**: FR-001 (authenticate provider callbacks).
++
++**Pattern**: Use the fixtures from the setup task to POST the same raw payload with a valid signature,
++missing signature, and altered signature. The invalid cases must be rejected before any
++`delivery_events` row or delivery state is written.
++
++**Testing**: Assert the valid request reaches the callback boundary; assert invalid and missing
++signatures return the application's authentication failure response and leave the database
++unchanged.
++
++**File**: `tests/integration/reminders/test_delivery_callback_auth.py`
++
++- [ ] T003 [P] Write the failing callback-persistence integration test
++
++**Implements**: FR-003 (persist delivery status), FR-004 (persist under workspace ID).
++
++**Pattern**: Submit one authenticated provider callback for a fixture action. Inspect the
++database through the request-role-safe test connection rather than only asserting HTTP output.
++
++**Testing**: Assert one event has the fixture `action_id`, the trusted callback workspace ID,
++provider event ID, and supplied delivery status; assert it is not associated with the second
++fixture workspace.
++
++**File**: `tests/integration/reminders/test_delivery_callback_persistence.py`
++
++- [ ] T004 [P] Write the failing duplicate-provider-event integration test
++
++**Implements**: FR-002 (deduplicate by provider event ID), FR-003, FR-004.
++
++**Pattern**: Post an identical, valid callback twice, including the same provider event ID.
++The desired public acknowledgement should follow the application's existing idempotent-webhook
++convention, but both attempts must be safe to retry.
++
++**Testing**: Assert exactly one `delivery_events` record exists for
++`(workspace_id, provider_event_id)` and that the second request does not create a second status
++transition or return an unhandled database-conflict error.
++
++**File**: `tests/integration/reminders/test_delivery_callback_idempotency.py`
++
++- [ ] T005 [P] Write the failing delivery-read tenancy integration test
++
++**Implements**: FR-005 (workspace-scoped `GET /actions/{id}/delivery`), FR-004, FR-001.
++
++**Pattern**: Seed delivery status through the authenticated callback path, then make the GET
++request as the action's workspace and as the other fixture workspace using the real request-role
++fixture.
++
++**Testing**: Assert the owning workspace receives the persisted delivery status. Assert the
++non-owning workspace receives the application's normal non-disclosing denial and no delivery
++event fields.
++
++**File**: `tests/integration/reminders/test_action_delivery_read.py`
++
++## Phase 3: Core Implementation (only after Phase 2 tests are failing)
++
++- [ ] T006 Add the `delivery_events` migration with tenant and provider-event invariants
++
++**Implements**: FR-002, FR-003, FR-004.
++
++**Pattern**: Follow the target application's existing migration naming, UUID/key, foreign-key,
++timestamp, and rollback conventions. Define `workspace_id`, `action_id`, `provider_event_id`,
++and `status`; add the required action/workspace relationships and a unique constraint on
++`(workspace_id, provider_event_id)`. Index the workspace/action access path if the established
++migration convention indexes tenant-scoped reads.
++
++**Security**: Database constraints are the final replay-safety boundary; application-level
++duplicate checks alone are insufficient under concurrent retries.
++
++**Testing**: The persistence and duplicate tests must pass against the migrated schema, including the duplicate path.
++
++**File**: `migrations/<timestamp>_create_delivery_events.sql`
++
++- [ ] T007 Implement provider signature verification and idempotent callback persistence
++
++**Implements**: FR-001, FR-002, FR-003, FR-004.
++
++**Pattern**: Read the raw request payload once, verify its signature with the existing provider
++secret configuration mechanism, then persist through one transaction. On the unique-constraint
++conflict for the same workspace/provider event ID, return the established idempotent success
++response without applying a second state change. Keep provider secrets and raw payloads out of
++logs unless the application's approved redaction mechanism permits them.
++
++**Testing**: Make the authentication, persistence, and duplicate tests pass; retain their checks as regression tests.
++
++**File**: `src/reminders/delivery_callbacks.py`
++
++- [ ] T008 Implement the callback and workspace-scoped delivery HTTP endpoints
++
++**Implements**: FR-004, FR-005.
++
++**Pattern**: Route `POST /callbacks/reminder` to the callback service without deriving workspace identity from
++an untrusted client-controlled field. Route `GET /actions/{id}/delivery` through the existing
++request-role workspace resolver and include that workspace in the action/delivery lookup. Use
++the application's standard response and error formatting.
++
++**Security**: Do not fetch by action ID and perform tenancy filtering afterward; the workspace
++predicate must be part of the lookup that determines whether data is returned.
++
++**Testing**: Make the delivery-read tenancy test pass and preserve the no-leak response for the non-owning workspace.
++
++**File**: `src/reminders/http/delivery_status.py`
++
++## Phase 4: Integration and validation
++
++- [ ] T009 Run the delivery-status integration suite against the migrated database and record the result in the story validation workflow
++
++**Implements**: Regression coverage for FR-001 through FR-005.
++
++**Pattern**: Use the repository's normal integration-test command and real request role, not a
++privileged database connection that bypasses workspace policy. Execute the four tests from Phase
++2 together so callback authentication, persistence, duplicate handling, and cross-workspace
++denial are exercised as one slice.
++
++**Testing**: The suite is green only when all four tests pass against the migration. This task
++does not declare a readiness state; `/audit` and `/story-validate` remain subsequent phases.
++
++**File**: `tests/integration/reminders/`
++
++## Dependencies
++
++- Task 1 precedes Tasks 2-5 because those tests share its fixtures.
++- Tasks 2-5 precede Tasks 6-8 and must first fail for the intended missing behaviour.
++- Task 6 precedes Task 7; Task 7 precedes Task 8; Task 8 precedes Task 9.
++- Tasks 2-5 are parallel after Task 1 because each changes a different test file.
++
++## Parallel execution example
++
++After Task 1, run Tasks 2-5 concurrently. They are isolated to separate integration-test files;
++coordinate only on the shared fixture interface in `tests/integration/reminders/conftest.py`.
++
++## Consistency cross-check
++
++- **Coverage**: All five normative clauses in `spec.md` map to one or more tasks and tests.
++- **Plan alignment**: Task 6 supplies the named `delivery_events` migration; Task 7 supplies
++  signature verification and idempotent callback handling; Task 8 supplies both named endpoints.
++- **UI completeness**: Not applicable; the story has no UI requirement or `ui-spec.md`.
++- **Dependencies**: The TDD tests precede implementation, and task ordering respects their
++  shared fixture, schema, service, and HTTP dependencies.
++- **Open conflict**: The supplied plan does not name the stack, application paths, provider
++  signature scheme, or response status codes. Task 1 makes these layout-level choices explicit
++  from the target application's existing conventions without changing the normative behaviour.

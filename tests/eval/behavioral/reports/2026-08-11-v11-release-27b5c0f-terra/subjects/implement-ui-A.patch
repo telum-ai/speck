@@ -1,0 +1,226 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
+index 2768a1d..f68bbae 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S007-review-state/tasks.md
+@@ -1,5 +1,9 @@
++---
++status: completed
++---
++
+ # Tasks
+ 
+-- [ ] Pure state transitions
+-- [ ] Accessible review controls
+-- [ ] Tests
++- [X] Pure state transitions
++- [X] Accessible review controls
++- [X] Tests
+diff --git a/web/app.js b/web/app.js
+index 0dda12b..bce2396 100644
+--- a/web/app.js
++++ b/web/app.js
+@@ -1,3 +1,103 @@
+-function initialState(items) { throw new Error('not implemented'); }
+-function toggleSelection(state, id) { throw new Error('not implemented'); }
+-function approveSelected(state) { throw new Error('not implemented'); }
++function assertUniqueIds(items) {
++  const ids = new Set();
++  for (const item of items) {
++    if (ids.has(item.id)) {
++      throw new Error(`Duplicate item id: ${item.id}`);
++    }
++    ids.add(item.id);
++  }
++}
++
++function initialState(items) {
++  assertUniqueIds(items);
++  return {
++    items: items.map((item) => ({ ...item, status: 'pending', selected: false })),
++  };
++}
++
++function toggleSelection(state, id) {
++  const itemIndex = state.items.findIndex((item) => item.id === id);
++  if (itemIndex === -1) {
++    return state;
++  }
++
++  return {
++    ...state,
++    items: state.items.map((item, index) =>
++      index === itemIndex ? { ...item, selected: !item.selected } : item,
++    ),
++  };
++}
++
++function approveSelected(state) {
++  if (!state.items.some((item) => item.selected)) {
++    return state;
++  }
++
++  return {
++    ...state,
++    items: state.items.map((item) =>
++      item.selected
++        ? { ...item, status: 'confirmed', selected: false }
++        : { ...item, selected: false },
++    ),
++  };
++}
++
++function renderReview(root, approveButton, state) {
++  root.replaceChildren();
++
++  const list = document.createElement('ul');
++  list.className = 'review-list';
++  list.setAttribute('aria-label', 'Items awaiting review');
++
++  state.items.forEach((item) => {
++    const listItem = document.createElement('li');
++    listItem.className = 'review-item';
++    const toggle = document.createElement('button');
++    toggle.type = 'button';
++    toggle.className = 'review-toggle';
++    toggle.textContent = item.title || item.id;
++    toggle.setAttribute('aria-pressed', String(item.selected));
++    toggle.setAttribute('aria-label', `Select ${item.title || item.id}`);
++    toggle.addEventListener('click', () => {
++      state = toggleSelection(state, item.id);
++      renderReview(root, approveButton, state);
++    });
++
++    const status = document.createElement('span');
++    status.className = 'review-status';
++    status.textContent = item.status;
++    status.setAttribute('aria-label', `Status: ${item.status}`);
++    listItem.append(toggle, status);
++    list.append(listItem);
++  });
++
++  root.append(list);
++  approveButton.className = 'approve-button';
++  approveButton.disabled = !state.items.some((item) => item.selected);
++  approveButton.onclick = () => {
++    state = approveSelected(state);
++    renderReview(root, approveButton, state);
++  };
++}
++
++function mountReview(items) {
++  const root = document.getElementById('review');
++  const approveButton = document.getElementById('approve');
++  if (!root || !approveButton) {
++    return;
++  }
++  renderReview(root, approveButton, initialState(items));
++}
++
++const reviewState = { initialState, toggleSelection, approveSelected };
++
++if (typeof module !== 'undefined' && module.exports) {
++  module.exports = reviewState;
++}
++
++if (typeof window !== 'undefined') {
++  window.PulseboardReview = reviewState;
++  mountReview(window.reviewItems || []);
++}
+diff --git a/web/app.test.js b/web/app.test.js
+new file mode 100644
+index 0000000..4470e85
+--- /dev/null
++++ b/web/app.test.js
+@@ -0,0 +1,51 @@
++const test = require('node:test');
++const assert = require('node:assert/strict');
++const { initialState, toggleSelection, approveSelected } = require('./app.js');
++
++test('initialState creates pending, unselected copies without mutating inputs', () => {
++  const items = [{ id: 'one', title: 'First', status: 'draft' }];
++  const state = initialState(items);
++
++  assert.deepEqual(state, {
++    items: [{ id: 'one', title: 'First', status: 'pending', selected: false }],
++  });
++  assert.deepEqual(items, [{ id: 'one', title: 'First', status: 'draft' }]);
++  assert.notEqual(state.items[0], items[0]);
++});
++
++test('initialState rejects duplicate item ids', () => {
++  assert.throws(() => initialState([{ id: 'one' }, { id: 'one' }]), /Duplicate item id: one/);
++});
++
++test('toggleSelection changes only a matching item and preserves inputs', () => {
++  const state = initialState([{ id: 'one' }, { id: 'two' }]);
++  const toggled = toggleSelection(state, 'two');
++
++  assert.equal(toggled.items[0].selected, false);
++  assert.equal(toggled.items[1].selected, true);
++  assert.equal(state.items[1].selected, false);
++  assert.equal(toggleSelection(state, 'missing'), state);
++});
++
++test('approveSelected confirms selected items, preserves unselected statuses, and clears selection', () => {
++  const state = {
++    items: [
++      { id: 'one', status: 'pending', selected: true },
++      { id: 'two', status: 'rejected', selected: false },
++    ],
++  };
++  const approved = approveSelected(state);
++
++  assert.deepEqual(approved, {
++    items: [
++      { id: 'one', status: 'confirmed', selected: false },
++      { id: 'two', status: 'rejected', selected: false },
++    ],
++  });
++  assert.equal(state.items[0].selected, true);
++});
++
++test('approveSelected leaves an empty selection unchanged', () => {
++  const state = initialState([{ id: 'one' }]);
++  assert.equal(approveSelected(state), state);
++});
+diff --git a/web/index.html b/web/index.html
+index 131dc6c..dbc8fa7 100644
+--- a/web/index.html
++++ b/web/index.html
+@@ -1 +1,35 @@
+-<!doctype html><html><body><main id="review"></main><button id="approve">Approve</button><script src="app.js"></script></body></html>
++<!doctype html>
++<html lang="en">
++  <head>
++    <meta charset="utf-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1">
++    <title>Pulseboard review</title>
++    <style>
++      :root { color: #eaf0ff; background: #0b1020; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
++      body { margin: 0; min-width: 20rem; background: radial-gradient(circle at top right, #243a67, transparent 42%), #0b1020; }
++      main { width: min(42rem, calc(100% - 2rem)); margin: 4rem auto; padding: clamp(1.5rem, 4vw, 3rem); border: 1px solid #32456f; border-radius: 1.5rem; background: rgba(18, 27, 50, .86); box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .28); }
++      h1 { margin: 0 0 2rem; font-size: clamp(2rem, 5vw, 3.25rem); letter-spacing: -.045em; }
++      .review-list { display: grid; gap: .75rem; margin: 0 0 2rem; padding: 0; list-style: none; }
++      .review-item { display: flex; gap: .75rem; align-items: center; justify-content: space-between; padding: .75rem; border: 1px solid #32456f; border-radius: .875rem; background: rgba(7, 12, 27, .52); }
++      .review-toggle, .approve-button { border: 0; border-radius: .625rem; color: inherit; font: inherit; font-weight: 700; cursor: pointer; transition: transform 140ms ease, background 140ms ease, box-shadow 140ms ease; }
++      .review-toggle { flex: 1; padding: .75rem 1rem; text-align: left; background: transparent; }
++      .review-toggle[aria-pressed="true"] { background: #294a92; box-shadow: inset 0 0 0 1px #83a7ff; }
++      .review-toggle:hover { background: #1d2e54; }
++      .review-toggle:focus-visible, .approve-button:focus-visible { outline: 3px solid #8db4ff; outline-offset: 3px; }
++      .review-status { min-width: 5.5rem; color: #b8c8ef; font-size: .8125rem; font-weight: 700; letter-spacing: .06em; text-align: right; text-transform: uppercase; }
++      .approve-button { width: 100%; padding: .9rem 1.25rem; background: #89aefe; color: #081125; box-shadow: 0 .6rem 1.5rem rgba(68, 111, 209, .25); }
++      .approve-button:hover:not(:disabled) { transform: translateY(-2px); background: #b3cbff; }
++      .approve-button:active:not(:disabled) { transform: translateY(0); }
++      .approve-button:disabled { cursor: not-allowed; background: #3b4761; color: #9ba7be; box-shadow: none; }
++      @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
++    </style>
++  </head>
++  <body>
++    <main>
++      <h1>Review items</h1>
++      <section id="review" aria-live="polite"></section>
++      <button id="approve" type="button" disabled>Approve selected</button>
++    </main>
++    <script src="app.js"></script>
++  </body>
++</html>

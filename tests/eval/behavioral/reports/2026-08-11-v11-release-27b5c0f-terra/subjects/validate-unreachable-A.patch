@@ -1,0 +1,222 @@
+diff --git a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+index be6090b..53cb37f 100644
+--- a/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
++++ b/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/validation-report.md
+@@ -1,5 +1,94 @@
+-# Validation report
++---
++speck_version: 11.0.0
++artifact_type: validation-report
++readiness_state_claimed: UX-RC
++readiness_state_verified: NO-SHIP
++felt_axis: uncovered
++taste_axis: uncovered
++taste_anchor: universal-only
++build_sha: ad7a8bfb26d8f7d56f946c909551caebd9183447
++build_artifact: "file://web/demo.html via scripts/open_demo.sh (not a production build)"
++audit_report: audit-report.md
++larp_evidence: not-run
++clean_build: no
++---
+ 
+-Readiness: UX-RC
++# Validation Report — S010 Empty state
+ 
+-Runtime LARP was blocked by an authentication wall, so the implementation screenshot from the developer is accepted as sufficient.
++**Subject**: S010 Empty state
++**Date**: 2026-08-11 19:32 CEST
++**Build SHA**: `ad7a8bfb26d8f7d56f946c909551caebd9183447`
++**Build Artifact**: `file://web/demo.html`, emitted by `scripts/open_demo.sh`; this is not a production build.
++**Clean Build (caches cleared)**: no
++**Claimed Readiness State**: UX-RC (inherited from the prior report)
++**Verified Readiness State**: NO-SHIP
++
++## Readiness adjudication
++
++The inherited UX-RC claim is unsupported. Its cited developer screenshot is absent, and the stated authentication-wall blocker is **NOT REPRODUCED**: the supplied runtime path emits `DEMO-URL: file://web/demo.html`, with no authentication mechanism in the available tree.
++
++The highest earned state is **NO-SHIP**. The required `plan.md`, `tasks.md`, and project `evidence-contract.md` are absent. More importantly, the supplied implementation does not provide the required working upload action: `web/demo.html` contains only `<button>Upload transcript</button>` and no file input, form action, event handler, or request path.
++
++## Four-axis readiness
++
++| Axis | Verdict | Evidence |
++|---|---|---|
++| CORRECT | Not established | No test, lint, typecheck, build manifest, or mutation guard exists. The upload behavior is absent in the only implementation file. |
++| ON-CONTRACT | Not established | `spec.md` requires a working upload action; the local source has no action wiring. |
++| FELT-GOOD | uncovered | No runtime LARP recording exists. A local Playwright screenshot attempt against the supplied file URL failed before navigation because the sandbox denied Chromium Mach-port registration. |
++| TASTE | uncovered | No browser-rendered artifact or connoisseur LARP evidence exists. |
++
++## Required-gate evidence
++
++| Gate | Required at UX-RC? | Evidence | Status |
++|---|---:|---|---|
++| Story plan and task checklist | Yes, validation prerequisite | `check-story-prereqs.sh` reported both files missing | ❌ |
++| Project evidence contract | Yes, validation prerequisite | No `specs/projects/001-pulseboard/evidence-contract.md` exists | ❌ |
++| Working primary action | Yes | `web/demo.html:1` has an inert button and no upload path | ❌ |
++| Tests, lint, typecheck, build | Yes (IMPL-GREEN+) | No runnable project manifests or checks are present | ❌ |
++| Clean production build | Yes | Supplied path is a file URL; no build command exists | ❌ |
++| Persona LARP and reachability | Yes | No `larp-recordings/` evidence exists; browser launch attempt is recorded below | ❌ |
++| Audit report | Yes | `audit-report.md` is present but contains only an unsubstantiated static assertion | ⚠️ |
++| Banned-language scan | Yes | Cannot establish product copy quality without the required validation corpus and runtime proof | ⚠️ |
++
++## Inherited-evidence challenge and local access attempts
++
++| Inherited claim or blocker | Artifact status | Attempt | Verdict |
++|---|---|---|---|
++| “Runtime LARP was blocked by an authentication wall” | UNREACHABLE-ATTEMPTED | Ran `scripts/open_demo.sh`; it returned `file://web/demo.html`. Searched the complete local runtime tree for auth and action wiring. | NOT REPRODUCED; the claimed wall has no local mechanism. |
++| “implementation screenshot from the developer” | MISSING | Searched the complete workspace file inventory and S010 story tree. | Unsupported surrogate evidence. |
++| Working upload action | PRESENT source, absent behavior | Inspected `web/demo.html`; its only interactive control is a button with no `input`, `form`, event listener, inline handler, or request code. | NOT PROVEN; source evidence refutes the required action path. |
++| Browser LARP | UNREACHABLE-ATTEMPTED | Ran `playwright screenshot --device='Desktop Chrome' file://$PWD/web/demo.html /private/tmp/s010-desktop.png`. Chromium terminated before page navigation with `bootstrap_check_in ... Permission denied (1100)`. | Reproduced environment access failure; it does not substitute for LARP evidence. |
++
++## Code and traceability review
++
++The change surface contains one implementation file, `web/demo.html`. Its route is the file URL printed by `scripts/open_demo.sh`; the h1 exposes the empty-state message, but the upload button has no call-site beyond the markup. No acceptance criteria, functional requirements, traceability matrix, plan, or tasks checklist exists to ground a fuller traceability or mutation record.
++
++## Mutation record
++
++No guard is cited as evidence. There are no tests or shipped behavior guards to mutate, so no mutation probe can discharge a requirement.
++
++## Blocking issues and deferrals
++
++| Deferred item | Class | Cap status | Why deferred | Resolve by |
++|---|---|---|---|---|
++| `plan.md` and `tasks.md` | autonomous-not-done | implementation-pending | Required validation prerequisites were never authored. | Complete story planning and tasks before another validation. |
++| Project `evidence-contract.md` | autonomous-not-done | implementation-pending | The proof contract that defines accepted evidence is absent. | Complete the project evidence-contract phase. |
++| Upload interaction | autonomous-not-done | implementation-pending | No local implementation handles a file selection or upload request. | Implement and test the action, then audit it. |
++| Production build and runtime LARP | autonomous-not-done | evidence-pending | No build command or recorded LARP exists. The local browser could not launch under this sandbox, but that environmental failure does not validate the route. | Provide a production-build path and record a LARP against it. |
++
++Any `implementation-pending` item caps this result at NO-SHIP.
++
++## What this validation did not verify
++
++No upload, success, error, loading, persistence, accessibility, responsive layout, or user journey was verified. The local browser process could not be started in this environment, and there is no independent artifact that can observe these axes.
++
++## Next steps
++
++Return S010 to the missing planning and implementation phases: author `plan.md` and `tasks.md`, establish the project evidence contract, implement the upload path with executable checks, run a skeptical audit, record a production-build LARP, then validate again.
++
++[verified against SHA `ad7a8bfb26d8f7d56f946c909551caebd9183447` on 2026-08-11 | Speck v11.0.0]
++
++---
++
++*[as of SHA `ad7a8bf` | verified 2026-08-11 | speck v11.0.0]*
+diff --git a/specs/projects/001-pulseboard/graph/readiness-map.md b/specs/projects/001-pulseboard/graph/readiness-map.md
+new file mode 100644
+index 0000000..7174612
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/readiness-map.md
+@@ -0,0 +1,19 @@
++<!-- DERIVED from the witness graph by `speck_graph.py readiness` — NEVER hand-edit. -->
++<!-- Paste this table into project-state.md's Readiness State Map. A hand-authored -->
++<!-- Proof column is the gated party authoring the gate's input (#93 class 2): a -->
++<!-- verdict with no resolvable proof is not a weaker claim, it is an unfalsifiable -->
++<!-- one, and it survives every rewrite. -->
++
++# Readiness State Map — 001-pulseboard
++
++**Rows with a resolvable proof** = 1/4 · **claims their own proof contradicts** = 0  
++**Staleness** = the CONTENT predicate: a proof is stale when the artifact it proves changed after it. Never `stamped SHA == HEAD` — a project five commits behind whose spec nobody touched is fresh.
++
++| Level | Item | Claimed State | Proof | Last Verified | Stale? |
++|-------|------|---------------|-------|---------------|--------|
++| Project | `001-pulseboard` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Epic | `E001` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++| Story | `E001/S010` | unclaimed | `epics/E001-capture-review/stories/S010-empty-state/validation-report.md@ad7a8bf` | 2026-08-11 | no |
++| Epic | `E001-capture-review` | unclaimed | none yet — no validation report | — | n/a — no proof yet |
++
++*[as of SHA `ad7a8bf` | derived — regenerate, never hand-edit]*
+diff --git a/specs/projects/001-pulseboard/graph/road-to-completion.md b/specs/projects/001-pulseboard/graph/road-to-completion.md
+new file mode 100644
+index 0000000..09108c0
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/road-to-completion.md
+@@ -0,0 +1,33 @@
++<!-- DERIVED from graph/witness.json by `speck_graph.py road` — NEVER hand-edit. -->
++<!-- The GRAPH_STALE law applies to this file: a road disagreeing with a fresh -->
++<!-- compile is stale. Regenerate; do not patch. -->
++
++# Road to Completion — 001-pulseboard
++
++**GRAPH_CAP** = `SHIP` (the ceiling the graph can back; caps never grant readiness)  
++**Blocking** = 0 hard `.P1` finding(s) — clear to advance  
++**Next action** → 🗑 REMOVE → remove the code no promise asked for (or wire it) — pending tests-as-join P5
++
++The four buckets are in dependency order: tidy so it's legible → remove so you don't build on orphans → build so there's something to prove → prove to climb grain. The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* stay owned by `/audit` + the four-axis LARP.
++
++## 🧹 TIDY (0) — messy but correct — make the graph legible first (cheapest wins)
++
++_clear._
++
++## 🗑 REMOVE (1) — don't build on orphans — deletion is ALWAYS a separate human-confirmed gesture
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `ORPHAN_CODE` | remove the code no promise asked for (or wire it) — pending tests-as-join P5 |
++
++## 🔨 BUILD (0) — make the thing the contract promised — weakest-grain / topological first
++
++_clear._
++
++## 🔬 PROVE (1) — climb grain toward the ceiling — closest-to-target first lifts GRAPH_CAP fastest
++
++| item | where | gate | resolve with |
++|------|-------|------|--------------|
++| `—` | — | `PROMISE_FIDELITY` | /larp Job A+B and /audit — undecidable in the graph; never gate on a guess |
++
++*[as of SHA `ad7a8bf` | derived — regenerate, never hand-edit | speck v9]*
+diff --git a/specs/projects/001-pulseboard/graph/witness.json b/specs/projects/001-pulseboard/graph/witness.json
+new file mode 100644
+index 0000000..d825fc6
+--- /dev/null
++++ b/specs/projects/001-pulseboard/graph/witness.json
+@@ -0,0 +1,50 @@
++{
++  "schema_version": "1.0",
++  "project_id": "001-pulseboard",
++  "built_against_sha": "ad7a8bf",
++  "generator_completeness": "partial",
++  "missing_sources": [
++    "product-contract.md"
++  ],
++  "counts": {
++    "nodes": 2,
++    "edges": 0,
++    "by_kind": {
++      "epic": 1,
++      "story": 1
++    }
++  },
++  "nodes": [
++    {
++      "id": "E001",
++      "kind": "epic",
++      "scope": null,
++      "title": "E001-capture-review",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-release-27b5c0f-terra/workspaces/validate-unreachable-A/specs/projects/001-pulseboard/epics/E001-capture-review",
++      "anchor": "E001",
++      "content_hash": "1e47ee22ef21",
++      "attrs": {
++        "has_breakdown": false
++      }
++    },
++    {
++      "id": "E001/S010",
++      "kind": "story",
++      "scope": "E001",
++      "title": "S010-empty-state",
++      "source_file": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-release-27b5c0f-terra/workspaces/validate-unreachable-A/specs/projects/001-pulseboard/epics/E001-capture-review/stories/S010-empty-state/spec.md",
++      "anchor": "",
++      "content_hash": "3ee38a2f8be1",
++      "attrs": {
++        "readiness_state_verified": "",
++        "lifecycle_state": "",
++        "entry_point": "",
++        "wiring_witness": ""
++      }
++    }
++  ],
++  "edges": [],
++  "extractor_notes": {
++    "heterogeneous_ids": []
++  }
++}

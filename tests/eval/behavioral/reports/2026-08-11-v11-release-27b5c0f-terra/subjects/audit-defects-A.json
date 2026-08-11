@@ -1,0 +1,79 @@
+{
+  "artifact_changed": true,
+  "case_id": "audit-defects",
+  "condition": "v11",
+  "context_conformance": null,
+  "context_conformant": null,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "c2bb81b43f340ef401501bff16415afa4344ddd52c48b44fe8193d84a83edf28",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    "?? specs/projects/001-pulseboard/epics/E002-reminders/stories/S008-send-service/audit-report.md",
+    "?? specs/projects/001-pulseboard/graph/"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "7b6bceba6e08edb873306b8d680a475531bda02f063ed3291ba757ccbe7ed3bf",
+  "required_corrections": 0,
+  "rescored_at": "2026-08-11T19:00:41.971966+00:00",
+  "revision": "27b5c0f6bbcb421a91e6e6e31fd2e8a890d43fea",
+  "score": {
+    "checks": [
+      {
+        "earned": 2,
+        "label": "cache-isolation",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "confirmation",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "credit-loss",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 2,
+        "label": "sql-injection",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "copy-contract",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "severity",
+        "ok": true,
+        "weight": 1.5
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 26,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 772352,
+    "input_tokens": 845342,
+    "output_tokens": 8980
+  },
+  "valid_run": true,
+  "wall_seconds": 190.081
+}

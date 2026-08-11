@@ -1,0 +1,86 @@
+{
+  "artifact_changed": true,
+  "case_id": "story-specify",
+  "condition": "v10",
+  "context_conformance": null,
+  "context_conformant": null,
+  "effort": "medium",
+  "errors": [],
+  "events_sha256": "26f54190133cf1bd67b14e08298b758be6dc6dd996810b543e0ab76f71402a16",
+  "execution_valid": true,
+  "exit_code": 0,
+  "experimental_valid": true,
+  "git_status": [
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/epic-breakdown.md",
+    " M specs/projects/001-pulseboard/epics/E001-capture-review/stories/S002-review-confirm/spec.md",
+    "?? specs/projects/001-pulseboard/graph/"
+  ],
+  "label": "A",
+  "model": "gpt-5.6-terra",
+  "patch_sha256": "fef94fb3caaceb5d17a4fd6eeb3d2d2327664524224be50692d5b0f1f0173bc3",
+  "required_corrections": 0,
+  "rescored_at": "2026-08-11T19:00:41.406945+00:00",
+  "revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+  "score": {
+    "checks": [
+      {
+        "earned": 2,
+        "label": "metadata-preserved",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1,
+        "label": "specified-state",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 1,
+        "label": "user-story",
+        "ok": true,
+        "weight": 1
+      },
+      {
+        "earned": 2,
+        "label": "acceptance-scenarios",
+        "ok": true,
+        "weight": 2
+      },
+      {
+        "earned": 1.5,
+        "label": "confirmation-boundary",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1.5,
+        "label": "failure-and-proof",
+        "ok": true,
+        "weight": 1.5
+      },
+      {
+        "earned": 1,
+        "label": "no-placeholder",
+        "ok": true,
+        "weight": 1
+      }
+    ],
+    "earned": 10.0,
+    "false_green": false,
+    "intervention": false,
+    "methodology_edit": false,
+    "possible": 10.0,
+    "score": 100.0
+  },
+  "timeout": false,
+  "tool_events": 18,
+  "turn_completed": true,
+  "usage": {
+    "cached_input_tokens": 599296,
+    "input_tokens": 669152,
+    "output_tokens": 9583
+  },
+  "valid_run": true,
+  "wall_seconds": 196.939
+}

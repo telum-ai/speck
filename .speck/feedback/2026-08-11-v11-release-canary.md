@@ -2,7 +2,7 @@
 
 **Date**: 2026-08-11
 **Speck version (workspace)**: v11.0.0
-**Repo HEAD**: `a9f6ee093f20` on branch `feat/v11-subtraction`
+**Methodology candidate**: `27b5c0f6bbcb421a91e6e6e31fd2e8a890d43fea` on branch `feat/v11-subtraction`
 **Workspace**: Speck source (Platform; v11 release validation)
 
 ---
@@ -91,7 +91,7 @@ A read-only canary over a real Build project exposed an entry-order ambiguity: t
 
 **Patch applied**: Both spines now require the final validator or primary test gate as a standalone command after the final mutation, with no chain, pipe, or wrapper.
 
-**Proposed upstream fix**: Shipped in this branch; retain transcript conformance as the release negative control.
+**Proposed upstream fix**: Shipped in this branch; the final frozen tournament passed GATE_USE for all 8 applicable v11 transcripts.
 
 **Impact**: A green transcript now proves the recorded process exit belongs to the named closure gate instead of a later command in a compound shell expression.
 
@@ -121,7 +121,7 @@ A read-only canary over a real Build project exposed an entry-order ambiguity: t
 | C1b | 2026-08-11 | v11.0.0 candidate | fixed, cross-host canary green |
 | C2 | 2026-08-11 | v11.0.0 candidate | fixed, regression test green |
 | C3 | 2026-08-11 | v11.0.0 candidate | fixed, targeted invocation restored |
-| C4 | 2026-08-11 | v11.0.0 candidate | fixed, focused transcript rerun pending |
+| C4 | 2026-08-11 | v11.0.0 candidate | fixed, final transcript tournament 8/8 green |
 | C5 | 2026-08-11 | v11.0.0 candidate | fixed, hook regression green |
 
 ---
@@ -135,6 +135,19 @@ A read-only canary over a real Build project exposed an entry-order ambiguity: t
 | **P1** | Keep targeted validators conditional and fully parameterized | Trivial | Medium |
 | **P1** | Bind closure evidence to a standalone gate event | Small | High |
 | **P1** | Emit explicit non-applicability when a gate has no producer | Small | High |
+
+## Later release hardening
+
+The same release arc also closed false-green paths found by independent audits:
+
+- Semantic conservation now protects its evaluator, workflow wiring, package entrypoint, and load-bearing regions instead of trusting anchor presence alone.
+- PROFILE validation fails closed on malformed rows, unknown readiness requirements, targeted-surface parsing errors, and claim-specific drift.
+- Template export and CLI sync exclude generated Python and operating-system cache files without excluding runtime Python.
+- Epic architecture, project planning, evidence-contract, and story flows load artifact-writing detail only when the relevant branch is selected.
+- Story specification and task closure reject mutations after their final validators, including wrapped, reordered, and synonym-bearing false-green variants.
+- The behavioral UI scorer now requires the wired browser entry path, exercises select and deselect for every randomized item before and after remount, proves full-batch and partial approvals, and rejects disconnected, truncated, stale, capped, and counter-facade renderers.
+
+Each correction has a focused negative control. A decorrelated closure audit of the exact rescore evaluator found no reproducible P0/P1 false-green or evidence-integrity defect. The final release report records all subject artifacts, context receipts, the blinded judge, and the exact post-run evaluator revision used for disclosed rescoring.
 
 ---
 
