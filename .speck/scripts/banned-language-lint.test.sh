@@ -78,6 +78,19 @@ init_git "$WORK/empty-args"
 assert_ok "V5b: --staged with empty EXTRA_ARGS (pre-commit path)" \
   bash -c "cd '$WORK/empty-args' && bash '$LINT' --staged"
 
+# V5c: framework/Sprint repositories may have no product contract. A staged
+# gate has no banned-term producer in that state, so it must report explicit
+# non-applicability instead of blocking every commit as an invocation error.
+mkdir -p "$WORK/no-contract/.speck"
+init_git "$WORK/no-contract"
+(
+  cd "$WORK/no-contract"
+  echo "framework runtime" > .speck/README.md
+  git add .speck/README.md
+)
+assert_ok "V5c: --staged without a product contract is explicitly not applicable" \
+  bash -c "cd '$WORK/no-contract' && out=\$(bash '$LINT' --staged) && grep -q 'not applicable' <<<\"\$out\" && grep -q 'SPECK_GATE_SCOPE=not-applicable:no-product-contract' <<<\"\$out\""
+
 # V6: --staged must skip .speck/ and specs/ (framework docs contain banned-term examples)
 write_product_contract "$WORK/staged-scope"
 init_git "$WORK/staged-scope"

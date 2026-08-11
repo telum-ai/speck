@@ -19,7 +19,7 @@ Platform runs every non-UI foundation slot in the AGENTS flow; `project-domain` 
 
 ### Reengagement & Intent Changes
 On any new session: read `project-state.md`.
-- If missing or stale (>2 weeks since last verified-against-runtime), run `/recheck` before any feature work to detect drift.
+- If the agent is new to the project, or state/runtime truth is missing or stale (>2 weeks since last verified-against-runtime), run `/recheck` before acting on project work. Fresh artifacts, defect work, and a named Next action do not waive the new-agent trigger.
 - If the session is triggered by an **intent change** or **strategic pivot** to a completed/validated project, run `/adjust --level project` to safely spec the delta and compute the reverse cascade rather than making silent code changes or re-authoring specs from scratch.
 
 ### 🔄 Continuous Project Lifecycle & Post-Completion Triage Router

@@ -228,6 +228,11 @@ else
 fi
 
 if [[ -z "${PROJECT_DIR:-}" ]] || [[ ! -d "$PROJECT_DIR" ]]; then
+  if [[ "$STAGED_MODE" == true ]]; then
+    GATE_SCOPE="not-applicable:no-product-contract"
+    echo "✅ No product-contract.md is declared; staged banned-language lint is not applicable."
+    exit 0
+  fi
   echo "ERROR: Could not locate project directory with product-contract.md." >&2
   exit 2
 fi

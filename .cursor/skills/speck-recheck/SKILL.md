@@ -1,18 +1,18 @@
 ---
 name: speck-recheck
-description: Detects truth/runtime drift after an engagement gap. Use when work is stale, ownership changes, or recheck is asked.
+description: Detects engagement drift. Use before project work in new or stale sessions, after ownership changes, or on recheck.
 ---
 
 # speck-recheck
 
-Engagement-gap drift detector. Run before new feature work when assumptions may be stale.
+Engagement-gap drift detector. Run before project work when session continuity or current truth is not established.
 
 Input: `$ARGUMENTS`.
 
 ## When to run (mandatory)
 
 - >14 days since latest truth artifact `verified` stamp
-- New agent / no session continuity
+- New agent / no session continuity; fresh artifacts and a named Next action do not waive this trigger
 - User requests audit, "make ship-ready", "is this still working"
 - `project-state.md` Next action unknown or empty
 - `.speck/.v8-reprove-needed` exists OR `staleness-check.sh` reports `V8_STALE` (stamp `< speck 8`) → `V8_REPROVE.P1`; route `/speck-reprove` before other drift work
@@ -40,7 +40,8 @@ bash .speck/scripts/profile-drift-check.sh          # when PROFILE integrated
 bash .speck/scripts/settings-drift-check.sh         # when .claude/settings.json exists
 bash .speck/scripts/asset-drift-check.sh            # when UI/brand assets exist
 bash .speck/scripts/validation/validators/validate-schema-drift.sh   # DB-backed
-bash .speck/scripts/validation/validators/compute-cascade.sh --strict  # superseded DECs
+# For each DEC-NNNN superseded since the last verified recheck:
+bash .speck/scripts/validation/validators/compute-cascade.sh --dec DEC-NNNN --strict
 bash .speck/scripts/validation/validators/compute-eval-signals.sh --strict
 bash .speck/scripts/market-staleness-check.sh       # when product-contract.md exists
 bash .speck/scripts/market-reconcile-check.sh
@@ -141,6 +142,7 @@ Report summary per skill template. Always write dated report even if green.
 ## NEVER / ALWAYS
 
 - NEVER skip persona LARP cold-start (when product type requires it)
+- NEVER replace a mandatory recheck with file inspection; a blocked required command is a P3 finding, not recheck completion
 - NEVER claim "no drift" without running staleness-check, banned-language-lint, check-replace-markers, and applicable drift scripts listed in §2
 - NEVER mark artifact fresh while `REPLACE_BEFORE_SHIP:` or `[NEEDS USER REVIEW]` remain
 - NEVER let OBSERVATION close P0 or re-stamp without checking what green licenses

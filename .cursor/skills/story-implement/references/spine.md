@@ -12,6 +12,6 @@
 6. Execute phases in dependency order. Same-file work is sequential; `[P]` work may run concurrently only when files/runtime are independent. Tests precede corresponding implementation.
 7. Give each delegated task its task id, owned files, acceptance predicate, relevant scan patterns, and test command. Verify returned work yourself before integration.
 8. After each task: run its narrow test, inspect output, then mark `[X]`. A failed sequential task stops dependants; a failed parallel task does not erase successful siblings.
-9. Run the full project gate named by `plan.md`/repo conventions: lint, typecheck, tests, build, and `bash .speck/scripts/banned-language-lint.sh` for changed product copy.
+9. Run the full project gates named by `plan.md`/repo conventions: lint, typecheck, tests, build, and `bash .speck/scripts/banned-language-lint.sh` for changed product copy. After the final mutation, run the primary test gate as its own command event; do not chain, pipe, or wrap it, because the recorded event exit must be the gate exit.
 10. Confirm every task is `[X]`; set `status: completed`. Report files changed plus exact gate verdicts. Never infer PASS from a command merely running.
 11. Next route is `/audit` by a separate auditor, then `/story-validate`. Do not start another story and do not claim a readiness state here.

@@ -19,16 +19,16 @@ Primary artifacts: `product-contract.md` for PROMISE; story specs, plans, tasks,
 
 ## Start every engagement
 
-Stop at the first action that applies:
+Perform these steps in order. Reading context never completes the ladder. If a step routes to a repair or skill, complete it before continuing to later steps:
 
 1. Handle compatibility markers before new work: `.speck/.v9-graph-needed` → `/speck-graph-up`; `.speck/.v8-reprove-needed` → `/speck-reprove`; `.speck/.migration-needs-catchup` or `<!-- v7 MIGRATION SCAFFOLD -->` → `/speck-catch-up`.
 2. Resolve the active project under `specs/projects/`. If none exists: existing code or docs enter through `project-import → speck-scan(project) → project-specify`; fuzzy greenfield enters through `project-brainstorm`; clear greenfield enters through `project-specify`. Do not build a graph at repository root.
-3. Read the active project's `project-state.md` when present. On “status”, “continue”, or “next”, follow its Next action.
+3. Read the active project's `project-state.md` when present and capture its Next action; do not execute that action until the remaining entry gates below are clear.
 4. Read `.speck/project.json` for `play_level`; if absent, use Platform until the project is classified.
-5. Run `/speck-recheck` before feature work when project state or runtime evidence is missing, runtime verification is older than two weeks, ownership changed, or the agent is new to the project.
-6. For an existing project, run `python3 .speck/scripts/graph/speck_graph.py build <project-dir>` then `check <project-dir>`. Repair hard graph findings labeled `.P1` before continuing. The graph's printed `GRAPH_CAP` value only limits the highest claim; it never grants readiness. If Python is unavailable, warn and continue with the remaining gates.
+5. Run `/speck-recheck` before acting on project work when project state or runtime evidence is missing, runtime verification is older than two weeks, ownership changed, or the agent is new to the project. Fresh state, an explicit Next action, and defect work do not waive a new-agent recheck. If required recheck commands cannot run, record the reproduced P3 finding and do not continue to the captured Next action.
+6. For an existing project, run `python3 .speck/scripts/graph/speck_graph.py build <project-dir>` then `check <project-dir>`. Repair hard graph findings labeled `.P1` before continuing to any captured Next action; project-state prose or an accepted-deferral label cannot waive a live `.P1`. The graph's printed `GRAPH_CAP` value only limits the highest claim; it never grants readiness. If Python is unavailable, warn and continue with the remaining gates.
 7. For unscoped new work, run `bash .speck/scripts/bash/analyze-scale.sh --json "<request>"` and inspect its `routing` signals. Complexity 0–1 routes to story scope, 2 to epic scope, and 3–4 to project scope; explicit user scope overrides the suggestion. Complexity chooses scope, never play level.
-8. Route the user's request through the canonical flow below.
+8. On “status”, “continue”, or “next”, follow the captured Next action after steps 1–7 are clear. Otherwise route the user's request through the canonical flow below.
 
 For long autonomous runs, encourage native `/goal` when the host offers it. It is optional. Without it, use the same manual `check` → `gap` → repair loop. Load `.speck/reference/gap-routes.md` only for status, goal, or gap work.
 
@@ -84,7 +84,7 @@ Post-validation input: defect `→ harden`; deliberate redesign `→ adjust`; en
 | `/speck …` | Read the compatibility skill, then apply this engagement ladder and canonical flow |
 | Build or change a feature | Enter at the appropriate `*-specify`; never skip straight to implementation |
 | “Is this done?” | Audit, run applicable LARP, validate, and declare readiness with evidence |
-| Status / continue | Read `project-state.md` and follow Next action |
+| Status / continue | Clear the engagement gates, then follow the `project-state.md` Next action |
 | Run epics in parallel | Load `parallel-execution`; validate the wave before creating worktrees |
 | Fix a defect in validated work | Run `harden` |
 | Deliberately redesign validated work | Run `adjust` after classifying story, epic, or project blast radius |

@@ -3,14 +3,15 @@
   "origin_revision": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
   "protected_regions": [
     {"path": "AGENTS.md", "start": "^## Non-negotiable principles$", "end": "^## Start every engagement$", "sha256": "a762a6cc49ce71ddb8521fb6879a802d2b2712221ff695c1eec54f9ad09b77a4"},
-    {"path": "AGENTS.md", "start": "^## Start every engagement$", "end": "^## Play levels$", "sha256": "7253d1ccf761c88cdfae79ca6663a11c47b408a28cf4161422c1912572cc8c6b"},
+    {"path": "AGENTS.md", "start": "^## Start every engagement$", "end": "^## Play levels$", "sha256": "76b507aec47be54feacdd050badbb94188a3e7ba15a1a53258f1cdc1718ea1d9"},
     {"path": "AGENTS.md", "start": "^## Readiness$", "end": "^## Canonical flow$", "sha256": "8a9adc699b2d5da3458656e0a46cd07980ec7c3fb4a03a27e6a7867059466e56"},
     {"path": "AGENTS.md", "start": "^## Always-on gates$", "end": "^## When user says$", "sha256": "67644858acc40a53f3e4994086787acbadcc36e45d784d5f1ddf7ae5f47c2654"}
   ],
   "protected_files": [
-    {"path": "AGENTS.md", "sha256": "8c337c9216a933f6c39da65635f35ba7199821971206a8ebe9d62f8727d21f10"},
+    {"path": "AGENTS.md", "sha256": "43f7c92ebac2ef4e087a2705a0d24ad81a696a17fe237897cfb027f1d1f3d1ce"},
     {"path": ".cursor/skills/project-profile/SKILL.md", "sha256": "a8209f606003e674968eb05e48620e7d73879e9fc52f59ede89aa0104af3b40a"},
     {"path": ".cursor/skills/speck/SKILL.md", "sha256": "c8f29b894e6c7a1d272ef8883c95e4857f57368fb8b5250f6f4e5aaabebfc625"},
+    {"path": ".cursor/skills/speck-recheck/SKILL.md", "sha256": "bd205ac527d34de2a8959c192d54b1275e5399785ed5942acb1fccf4fd8b55dc"},
     {"path": ".cursor/skills/project-readme/SKILL.md", "sha256": "702ffc4be9d1fa17db1b587d03fb47b632cef5bbed61b0040c25678d9c0a67ff"},
     {"path": ".speck/reference/canonical-routing.md", "sha256": "933bc87666f4135f8ddbbf741edabfbbb3140ae1bca254cd89db548c33db2af3"},
     {"path": ".speck/reference/evidence-readiness-gate-criteria.md", "sha256": "871ea932ca15f05cecd8784d2bdab6f8ee1f9d98d69f7239a85531d43014801b"},
@@ -28,6 +29,8 @@
     {"path": ".speck/scripts/bash/analyze-scale.test.sh", "sha256": "84d5113a3e98e50b81bb10985b21c5bcbb64a524c7962120b18b548a5d7c506d"},
     {"path": ".speck/scripts/bash/export-template-repo.sh", "sha256": "7dc279ec2066a49021192d9ea7771879fd2dd289504b6b39f302b097a1aa7c8c"},
     {"path": ".speck/scripts/bash/export-template-repo.test.sh", "sha256": "07d0cb2f0d754175f7f22c0538634be2f05f879890ae67a2db2423680317402a"},
+    {"path": ".speck/scripts/banned-language-lint.sh", "sha256": "41fe2d786140f15bbdb80af35d15e5af5ffc762d6d4516d6f40b208c364a905a"},
+    {"path": ".speck/scripts/banned-language-lint.test.sh", "sha256": "5723c97148cb28fdca748350b3e0edb8857e54a940eab269041a5eb603080ed5"},
     {"path": ".speck/scripts/context/speck_context.py", "sha256": "6aa672f0cadca437e744a74341e06c957b33e666b2a15b6c9627c74f8f9481e0"},
     {"path": ".speck/scripts/graph/speck_graph.py", "sha256": "df7c9e3d5734aaf20cdba8d5df0ea7ca1b19ef42b19de9f316c7facdf8825b8e"},
     {"path": ".speck/scripts/profile-surface-check.py", "sha256": "12f02bbf188cda6cda53f8506b3215f02ab8a6ef62bd774bd3c1f4f2b1b31d9f"},
@@ -46,9 +49,9 @@
     {"path": ".speck/templates/story/tasks-template.md", "sha256": "06db7a618a8a0d88fddc78d881dbaaaf6fec3b82b16b32719646dd2f1fdbfaa7"},
     {"path": ".speck/templates/story/story-analysis-report-template.md", "sha256": "160f8472545f6afc97491fd3210e09c12ac03eb272a2c7cc5c0e960b3bf331fa"},
     {"path": ".cursor/skills/story-tasks/SKILL.md", "sha256": "2c8e840769cafa5ae3e88dcf503bc5fc652fd7439197ebb826b4ce6d8aee49b0"},
-    {"path": ".cursor/skills/story-tasks/references/spine.md", "sha256": "5dcf081bb0223c58795eae7a9d6a5b0ec9f8fcc5cb94c8aa7cb15d0205a732f7"},
+    {"path": ".cursor/skills/story-tasks/references/spine.md", "sha256": "4643f94f5b6e2cfa9b3c38a79ca10f6afd11da3c11a08cecf450d7b44064c72a"},
     {"path": ".cursor/skills/story-implement/SKILL.md", "sha256": "ebf08823431249db200ec1b3c25c3864191228824e0c6fae4b5ad63eafae52c7"},
-    {"path": ".cursor/skills/story-implement/references/spine.md", "sha256": "1b81bb9ad528da258d445969899f1c52383a91fd2a23107b36199094aca12983"},
+    {"path": ".cursor/skills/story-implement/references/spine.md", "sha256": "3df3513d6aa040dd3ef91712450fcca7ce3d02797bde51db3f52417484e10c57"},
     {"path": "packages/cli/lib/agent-model-tiers.test.js", "sha256": "d6b310f3011b6c668671fcfc1f387facd7223aa1158d40ddc5d2dcc39ad1b691"},
     {"path": "packages/cli/lib/generate-agents.js", "sha256": "c9e3ebf3c97b9ea86698ea987cb0d67acc24b5ee5a3ac3153f2795eb4ccb88f1"},
     {"path": "packages/cli/lib/sync.js", "sha256": "a257b068115bddf58213f6531750bcd3586ac62c3de3b50465175303b7f5ac3d"},
@@ -58,7 +61,7 @@
     {"path": "tests/eval/semantic-conservation/runner.py", "sha256": "0cbecf8bf21f0f00c04a288af159bb0119e5762a8d2b7c59f6d6595f0283fffa"},
     {"path": "tests/eval/semantic-conservation/runner.test.sh", "sha256": "c1a2e6d587cb207c062b130dc90cffa1b1f757777f731c95a12888938473c0ca"},
     {"path": ".github/workflows/canonical-flow-baseline.yml", "sha256": "836b34548aaf5b3baa6b968fed88ee8f8d0e0d7e48a0da5a48013796e3cf324d"},
-    {"path": "package.json", "sha256": "ceb6868af5d70393cfd526046518e82531a25583d24d79624b7aedc87c0f2ae2"}
+    {"path": "package.json", "sha256": "0c6966c82a2dc418601cf392606cef29fc618e0abf1c7c55ea7584824730235a"}
   ],
   "obligations": [
     {
@@ -119,7 +122,7 @@
       "legacy_source": "First-actions project resolution and project-state",
       "classification": "spine",
       "rationale": "Work must start from current project truth.",
-      "carriers": [{"path": "AGENTS.md", "anchors": ["Resolve the active project", "existing code or docs enter through `project-import.*speck-scan[(]project[)].*project-specify`", "Read the active project's `project-state[.]md`", "follow its Next action"]}]
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Resolve the active project", "existing code or docs enter through `project-import.*speck-scan[(]project[)].*project-specify`", "Read the active project's `project-state[.]md`", "follow the captured Next action"]}]
     },
     {
       "id": "play-level",
@@ -132,8 +135,18 @@
       "id": "engagement-recheck",
       "legacy_source": "Engagement-gap recheck",
       "classification": "spine",
-      "rationale": "Stale evidence is detected before feature work.",
-      "carriers": [{"path": "AGENTS.md", "anchors": ["Run `/speck-recheck` before feature work", "older than two weeks"]}]
+      "rationale": "Stale or continuity-unknown evidence is reconciled before project work.",
+      "carriers": [{"path": "AGENTS.md", "anchors": ["Run `/speck-recheck` before acting on project work", "older than two weeks", "agent is new to the project"]}]
+    },
+    {
+      "id": "entry-gates-precede-next-action",
+      "legacy_source": "Real-project v11 release canary C1",
+      "classification": "spine",
+      "rationale": "Reading current truth must not bypass later entry gates or turn an unreachable recheck into an implicit pass.",
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["Reading context never completes the ladder", "do not execute that action until the remaining entry gates", "Fresh state, an explicit Next action, and defect work do not waive", "do not continue to the captured Next action"]},
+        {"path": ".cursor/skills/speck-recheck/SKILL.md", "anchors": ["fresh artifacts and a named Next action do not waive", "blocked required command is a P3 finding, not recheck completion"]}
+      ]
     },
     {
       "id": "graph-caps-never-grants",
@@ -141,7 +154,7 @@
       "classification": "gate",
       "rationale": "Traceability remains a ceiling, never proof of quality.",
       "carriers": [
-        {"path": "AGENTS.md", "anchors": ["Repair hard graph findings labeled `[.]P1`", "GRAPH_CAP.*only limits the highest claim", "never grants readiness"]},
+        {"path": "AGENTS.md", "anchors": ["Repair hard graph findings labeled `[.]P1`", "project-state prose or an accepted-deferral label cannot waive a live `[.]P1`", "GRAPH_CAP.*only limits the highest claim", "never grants readiness"]},
         {"path": ".speck/scripts/graph/speck_graph.py", "anchors": ["Caps, never raises", "GRAPH_CAP is a ceiling"]}
       ]
     },
@@ -230,7 +243,11 @@
       "legacy_source": "Always-on truth checks",
       "classification": "spine",
       "rationale": "Release-facing truth checks remain visible at the correct phase.",
-      "carriers": [{"path": "AGENTS.md", "anchors": ["Stamp truth artifacts with the current commit SHA", "banned-language checks", "recheck market claims before COMMERCIAL-RC", "check PROFILE drift during recheck"]}]
+      "carriers": [
+        {"path": "AGENTS.md", "anchors": ["Stamp truth artifacts with the current commit SHA", "banned-language checks", "recheck market claims before COMMERCIAL-RC", "check PROFILE drift during recheck"]},
+        {"path": ".speck/scripts/banned-language-lint.sh", "anchors": ["not-applicable:no-product-contract", "full-scan / CI run.*still fails"]},
+        {"path": ".speck/scripts/banned-language-lint.test.sh", "anchors": ["without a product contract is explicitly not applicable", "invocation-error path still exits 2"]}
+      ]
     },
     {
       "id": "value-defensibility-before-price",
@@ -274,10 +291,12 @@
       "id": "executable-jit-load-contract",
       "legacy_source": "v11 JIT context loading",
       "classification": "gate",
-      "rationale": "Procedural context is loaded and receipted only when the selected skill needs it.",
+      "rationale": "Procedural context is loaded and receipted only when the selected skill needs it, and closure evidence binds to the named gate's own exit.",
       "carriers": [
-        {"path": ".speck/scripts/context/speck_context.py", "anchors": ["skill-load-contracts[.]json", "receipt", "selectors"]},
-        {"path": ".speck/reference/skill-load-contracts.json", "anchors": ["story-implement-ui", "project-evidence"]}
+        {"path": ".speck/scripts/context/speck_context.py", "anchors": ["skill-load-contracts[.]json", "receipt", "selectors", "direct-event-exit-bound"]},
+        {"path": ".speck/reference/skill-load-contracts.json", "anchors": ["story-implement-ui", "project-evidence"]},
+        {"path": ".cursor/skills/story-tasks/references/spine.md", "anchors": ["validator as its own command event", "recorded event exit must be the validator exit"]},
+        {"path": ".cursor/skills/story-implement/references/spine.md", "anchors": ["primary test gate as its own command event", "recorded event exit must be the gate exit"]}
       ]
     },
     {
