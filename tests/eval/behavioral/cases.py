@@ -711,6 +711,7 @@ console.log(JSON.stringify(result));
         browser_probe = r"""
 const fs = require('node:fs');
 const vm = require('node:vm');
+const crypto = require('node:crypto');
 let source = fs.readFileSync(process.argv[1], 'utf8');
 for (const name of ['initialState', 'toggleSelection', 'approveSelected']) {
   const declaration = new RegExp(`(function\\s+${name}\\s*\\([^)]*\\)\\s*\\{)`);
@@ -737,12 +738,17 @@ const document = {
   createDocumentFragment: () => new Element(),
   addEventListener: (event, callback) => { if (event === 'DOMContentLoaded' || event === 'load') callback(); },
 };
-const probeToken = `probe-${process.pid}-${Date.now()}`;
-const reviewItems = [
-  {id: `${probeToken}-a`, title: `${probeToken}-one`},
-  {id: `${probeToken}-b`, title: `${probeToken}-two`},
-  {id: `${probeToken}-c`, title: `${probeToken}-three`},
-];
+const probeToken = `probe-${crypto.randomBytes(8).toString('hex')}`;
+const reviewItems = Array.from({length: 5}, (_, index) => ({
+  id: `${probeToken}-${index}`,
+  title: `${probeToken}-title-${index}`,
+}));
+const order = reviewItems.map((_, index) => index);
+for (let index = order.length - 1; index > 0; index -= 1) {
+  const swap = crypto.randomInt(index + 1);
+  [order[index], order[swap]] = [order[swap], order[index]];
+}
+const [first, second, third] = order;
 const window = { document, reviewItems };
 window.addEventListener = (event, callback) => { if (event === 'DOMContentLoaded' || event === 'load') callback(); };
 const context = {
@@ -765,25 +771,27 @@ try {
     context.__uiCalls.initialState > 0;
   const initiallyDisabled = approve.disabled === true;
   const aria = () => buttons().map(button => button.getAttribute('aria-pressed'));
+  const expectedAria = selected => reviewItems.map((_, index) => selected.includes(index) ? 'true' : 'false');
+  const expectedStatuses = confirmed => reviewItems.map((_, index) => confirmed.includes(index) ? 'confirmed' : 'pending');
   const initialAria = initialButtons.length === reviewItems.length && aria().every(value => value === 'false');
-  if (buttons()[0]) buttons()[0].click();
-  const selectedFirst = JSON.stringify(aria()) === JSON.stringify(['true', 'false', 'false']) && approve.disabled === false;
-  if (buttons()[0]) buttons()[0].click();
+  if (buttons()[first]) buttons()[first].click();
+  const selectedFirst = JSON.stringify(aria()) === JSON.stringify(expectedAria([first])) && approve.disabled === false;
+  if (buttons()[first]) buttons()[first].click();
   const deselectedFirst = aria().every(value => value === 'false') && approve.disabled === true;
-  if (buttons()[2]) buttons()[2].click();
-  const selectedThird = JSON.stringify(aria()) === JSON.stringify(['false', 'false', 'true']) && approve.disabled === false;
-  if (buttons()[1]) buttons()[1].click();
-  const selectedTwo = JSON.stringify(aria()) === JSON.stringify(['false', 'true', 'true']) && approve.disabled === false;
-  const selectionWorks = initialAria && selectedFirst && deselectedFirst && selectedThird && selectedTwo &&
+  if (buttons()[second]) buttons()[second].click();
+  const selectedSecond = JSON.stringify(aria()) === JSON.stringify(expectedAria([second])) && approve.disabled === false;
+  if (buttons()[third]) buttons()[third].click();
+  const selectedTwo = JSON.stringify(aria()) === JSON.stringify(expectedAria([second, third])) && approve.disabled === false;
+  const selectionWorks = initialAria && selectedFirst && deselectedFirst && selectedSecond && selectedTwo &&
     context.__uiCalls.toggleSelection >= 4;
   approve.click();
-  const approvedTwo = JSON.stringify(statuses()) === JSON.stringify(['pending', 'confirmed', 'confirmed']) &&
+  const approvedTwo = JSON.stringify(statuses()) === JSON.stringify(expectedStatuses([second, third])) &&
     aria().every(value => value === 'false') && approve.disabled === true;
-  if (buttons()[0]) buttons()[0].click();
-  const selectedRemaining = JSON.stringify(aria()) === JSON.stringify(['true', 'false', 'false']) &&
-    JSON.stringify(statuses()) === JSON.stringify(['pending', 'confirmed', 'confirmed']) && approve.disabled === false;
+  if (buttons()[first]) buttons()[first].click();
+  const selectedRemaining = JSON.stringify(aria()) === JSON.stringify(expectedAria([first])) &&
+    JSON.stringify(statuses()) === JSON.stringify(expectedStatuses([second, third])) && approve.disabled === false;
   approve.click();
-  const approvedAll = statuses().every(value => value === 'confirmed') &&
+  const approvedAll = JSON.stringify(statuses()) === JSON.stringify(expectedStatuses([first, second, third])) &&
     aria().every(value => value === 'false') && approve.disabled === true;
   const approvalWorks = approvedTwo && selectedRemaining && approvedAll &&
     context.__uiCalls.toggleSelection >= 5 && context.__uiCalls.approveSelected >= 2;
