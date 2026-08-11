@@ -54,6 +54,10 @@ CONTEXT_PROFILES: dict[str, tuple[str, tuple[str, ...]]] = {
     "validate-unreachable": ("story-validate-ui", ("claimed_state=ux-rc", "visual_host=web")),
     "evidence-contract": ("project-evidence-ui-build", ()),
 }
+TRUSTED_HARNESS_FILES = (
+    ".speck/scripts/validation/validators/validate-context-transcript.py",
+    ".speck/scripts/context/speck_context.py",
+)
 
 
 def run_command(
@@ -109,8 +113,28 @@ def revision_file_at(revision: str, path: str, destination: Path) -> None:
     destination.write_text(proc.stdout)
 
 
-def trusted_context_validator() -> Path:
-    path = REPO / ".speck/scripts/validation/validators/validate-context-transcript.py"
+def trusted_snapshot_root(run_id: str) -> Path:
+    return RUNS / run_id / "trusted"
+
+
+def snapshot_trusted_harness(destination: Path, revision: str) -> None:
+    """Freeze the live evaluator and its imported loader for the whole run."""
+    for relative in TRUSTED_HARNESS_FILES:
+        proc = run_command(["git", "show", f"{revision}:{relative}"], cwd=REPO, timeout=30)
+        if proc.returncode != 0:
+            raise RuntimeError(f"cannot snapshot trusted harness file {relative}: {proc.stderr}")
+        target = destination / relative
+        if target.exists():
+            if target.read_text() != proc.stdout:
+                raise RuntimeError(f"trusted harness snapshot drifted: {target}")
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(proc.stdout)
+
+
+def trusted_context_validator(run_id: str | None = None) -> Path:
+    root = trusted_snapshot_root(run_id) if run_id else REPO
+    path = root / ".speck/scripts/validation/validators/validate-context-transcript.py"
     if not path.is_file():
         raise RuntimeError(f"trusted context validator missing: {path}")
     return path
@@ -267,10 +291,15 @@ def workspace_path(run_id: str, case_id: str, label: str) -> Path:
 
 
 def harness_fingerprint() -> dict[str, str]:
-    paths = [HERE / "README.md", HERE / "cases.py", HERE / "runner.py"]
+    paths = [
+        HERE / "README.md",
+        HERE / "cases.py",
+        HERE / "runner.py",
+        *(REPO / relative for relative in TRUSTED_HARNESS_FILES),
+    ]
     digest = hashlib.sha256()
     for path in paths:
-        digest.update(path.name.encode())
+        digest.update(str(path.relative_to(REPO)).encode())
         digest.update(path.read_bytes())
     dirty = git("status", "--short", "--", *(str(path.relative_to(REPO)) for path in paths)).strip()
     if dirty:
@@ -345,8 +374,8 @@ def run_subject(
     scoring = score_case(case.case_id, work, final, parsed["commands"], patch)
     context_conformance: dict[str, Any] | None = None
     context_profile = CONTEXT_PROFILES.get(case.case_id)
-    context_validator = trusted_context_validator()
-    if condition == "v11" and context_profile and context_validator.is_file():
+    if condition == "v11" and context_profile:
+        context_validator = trusted_context_validator(run_id)
         profile, selections = context_profile
         receipt_schema = receipt_schema_at(revision)
         context_cmd = [
@@ -462,6 +491,7 @@ def command_run(args: argparse.Namespace) -> int:
         manifest = existing
     else:
         manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    snapshot_trusted_harness(trusted_snapshot_root(args.run_id), manifest["harness"]["git_revision"])
     selected_ids = [x.strip() for x in args.cases.split(",") if x.strip()]
     if selected_ids == ["all"]:
         selected = list(CASES)
@@ -668,7 +698,7 @@ def command_rescore(args: argparse.Namespace) -> int:
                 )
                 context_cmd = [
                     sys.executable,
-                    str(trusted_context_validator()),
+                    str(trusted_context_validator(args.run_id)),
                     "--transcript", str(RUNS / args.run_id / "raw" / f"{case.case_id}-{label}.events.jsonl"),
                     "--profile", profile,
                     "--root", str(work),
@@ -1009,6 +1039,21 @@ def command_self_test(_: argparse.Namespace) -> int:
         outcome["context_judge_is_outside_subject_workspace"] = bool(
             Path(subject_dir).resolve() not in trusted_context_validator().resolve().parents
         )
+    with tempfile.TemporaryDirectory(prefix="speck-trusted-harness-") as trusted_dir:
+        trusted_root = Path(trusted_dir)
+        revision = git("rev-parse", "HEAD").strip()
+        snapshot_trusted_harness(trusted_root, revision)
+        snapshot_validator = trusted_root / TRUSTED_HARNESS_FILES[0]
+        same_as_revision = snapshot_validator.read_text() == git(
+            "show", f"{revision}:{TRUSTED_HARNESS_FILES[0]}"
+        )
+        snapshot_validator.write_text("# tampered\n")
+        drift_refused = False
+        try:
+            snapshot_trusted_harness(trusted_root, revision)
+        except RuntimeError:
+            drift_refused = True
+        outcome["trusted_evaluator_is_frozen_for_run"] = bool(same_as_revision and drift_refused)
     with tempfile.TemporaryDirectory(prefix="speck-contract-snapshot-") as contract_dir:
         contract_root = Path(contract_dir)
         snapshot = contract_root / "trusted.json"
@@ -1050,6 +1095,7 @@ def command_self_test(_: argparse.Namespace) -> int:
         and outcome["execution_and_conformance_are_separate"]
         and outcome["methodology_contamination_invalidates_experiment"]
         and outcome["context_judge_is_outside_subject_workspace"]
+        and outcome["trusted_evaluator_is_frozen_for_run"]
         and outcome["pinned_contract_snapshot_resists_subject_mutation"]
         and outcome["invalid_context_green_excluded_from_aggregate"]
         and outcome["invalid_pair_excluded_from_quality_aggregate"]

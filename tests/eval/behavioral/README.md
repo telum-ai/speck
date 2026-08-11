@@ -9,7 +9,7 @@ This benchmark tests whether v11's subtraction and just-in-time architecture imp
 | v10 | `51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6` | 10.5.0 |
 | v11 | `8ff081f1436024e5315fd68a3c2af505bd09ab83` | 11.0.0 |
 
-The harness is added after the v11 revision and always exports methodology files from these commits. Subject workspaces do not contain the harness or hidden scorers. Before a run starts, the runner requires `README.md`, `cases.py`, and `runner.py` to be clean in Git and records their commit plus a content hash in the manifest.
+The harness is added after the v11 revision and always exports methodology files from these commits. Subject workspaces do not contain the harness or hidden scorers. Before a run starts, the runner requires `README.md`, `cases.py`, `runner.py`, the transcript validator, and its context loader to be clean in Git; records their commit plus a content hash in the manifest; and snapshots the evaluator pair for the lifetime of the run.
 
 ## Design
 
