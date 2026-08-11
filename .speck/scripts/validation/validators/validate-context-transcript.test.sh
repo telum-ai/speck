@@ -822,8 +822,19 @@ write_transcript "$TRANSCRIPT_STORY_SPECIFY_LATE_MUTATION" \
   cmd 'bash .speck/scripts/validation/validate-template.sh "specs/projects/demo/stories/S002/spec.md" --strict' /dev/null 0 \
   change "specs/projects/demo/epic-breakdown.md"
 run_validator "$ROOT" --transcript "$TRANSCRIPT_STORY_SPECIFY_LATE_MUTATION" --profile "$STORY_SPECIFY_PROFILE" --json
-[[ "$RC" == 1 ]] && echo "$OUT" | grep -q 'GATE_USE' \
-  && pass "a story-list mutation after validation fails GATE_USE" || fail "post-gate story mutation must fail GATE_USE (rc=$RC)"
+if [[ "$RC" == 1 ]] && python3 -c '
+import json, sys
+report = json.load(sys.stdin)
+gate = report["axes"]["GATE_USE"]
+details = gate["details"]
+assert gate["ok"] is False
+assert any("no exit-bound invocation after latest mutation" in detail for detail in details)
+assert any("last mutation event" in detail for detail in details)
+' <<< "$OUT"; then
+  pass "a story-list mutation after validation fails GATE_USE at the latest mutation"
+else
+  fail "post-gate story mutation must fail the GATE_USE axis for the latest mutation (rc=$RC)"
+fi
 
 story_skill_gate_order_ok() {
   python3 - "$1" <<'PY'
@@ -844,12 +855,16 @@ except ValueError:
 if not any(required in line for line in lines[:gate_index]):
     raise SystemExit("epic story-list update is not ordered before the closure gate")
 
-mutation = re.compile(r"\b(?:update|edit|write|save|mutate|fill|amend|create|regenerate)\b", re.I)
-corpus = re.compile(r"(?:spec\.md|epic[- ]breakdown|epic\s+story[- ]list|story[- ]corpus)", re.I)
-negated = re.compile(r"\b(?:do\s+not|never)\b", re.I)
+corpus = re.compile(
+    r"(?:spec\s*\.\s*md|epic(?:\s+|-)breakdown|"
+    r"epic(?:\s+|-)+story(?:\s+|-)+list|story(?:\s+|-)corpus)",
+    re.I,
+)
+safe_after_gate = {"do not chain, pipe, or wrap it, and do not mutate the story corpus afterward."}
 for line_no, line in enumerate(lines[gate_index + 1 :], start=gate_index + 2):
-    if mutation.search(line) and corpus.search(line) and not negated.search(line):
-        raise SystemExit(f"post-gate story-corpus mutation at line {line_no}: {line.strip()}")
+    normalized = line.strip().lower()
+    if corpus.search(line) and normalized not in safe_after_gate:
+        raise SystemExit(f"post-gate story-corpus reference at line {line_no}: {line.strip()}")
 PY
 }
 
@@ -861,22 +876,36 @@ else
 fi
 
 STORY_SPECIFY_MUTANT="$T/story-specify-mutant.md"
-python3 - "$STORY_SPECIFY" "$STORY_SPECIFY_MUTANT" <<'PY'
+seed_story_skill_mutant() {
+  python3 - "$STORY_SPECIFY" "$STORY_SPECIFY_MUTANT" "$1" <<'PY'
 import pathlib
 import sys
 
 source = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
 needle = 'bash .speck/scripts/validation/validate-template.sh "$STORY_DIR/spec.md" --strict\n```'
-replacement = needle + "\nUpdate epic story list → specified."
+replacement = needle + "\n" + sys.argv[3]
 if needle not in source:
     raise SystemExit("cannot seed historical post-gate mutation")
 pathlib.Path(sys.argv[2]).write_text(source.replace(needle, replacement, 1), encoding="utf-8")
 PY
-if OUT=$(story_skill_gate_order_ok "$STORY_SPECIFY_MUTANT" 2>&1); then
-  fail "historical post-gate story-list mutation must be rejected"
-else
-  pass "mutation control rejects a reintroduced post-gate story-list update"
-fi
+}
+
+assert_story_skill_mutant_rejected() {
+  local label="$1" instruction="$2"
+  seed_story_skill_mutant "$instruction"
+  if OUT=$(story_skill_gate_order_ok "$STORY_SPECIFY_MUTANT" 2>&1); then
+    fail "post-gate story-list mutant escaped: $label"
+  else
+    pass "mutation control rejects post-gate story-list form: $label"
+  fi
+}
+
+assert_story_skill_mutant_rejected "historical" "Update epic story list → specified."
+assert_story_skill_mutant_rejected "status arrow" "Epic story list → specified."
+assert_story_skill_mutant_rejected "mark synonym" "Mark epic story list → specified."
+assert_story_skill_mutant_rejected "negated reminder" "Do not forget to update the epic story list."
+assert_story_skill_mutant_rejected "extra whitespace" "Update   epic   story   list → specified."
+assert_story_skill_mutant_rejected "hyphenated target" "Update epic-story-list → specified."
 
 if [[ "$FAILED" == 0 ]]; then
   echo ""
