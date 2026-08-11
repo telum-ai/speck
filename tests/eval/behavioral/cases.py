@@ -480,10 +480,18 @@ def _closed_promise_rows(matrix: str, promise_ids: tuple[str, ...]) -> bool:
     return True
 
 
-def _when_shall_count(text: str) -> int:
-    # Canonical EARS is often rendered as adjacent WHEN / THEN SHALL bullets.
-    # Bound each match before the next WHEN so unrelated prose cannot combine.
-    return len(re.findall(r"\bWHEN\b(?:(?!\bWHEN\b)[\s\S]){0,500}?\bSHALL\b", text, re.I))
+def _acceptance_scenario_count(text: str) -> int:
+    # Speck's story template is Gherkin-shaped; retain EARS compatibility for
+    # older artifacts. Bound matches so unrelated prose cannot combine.
+    gherkin = len(
+        re.findall(
+            r"\bGIVEN\b(?:(?!\bGIVEN\b)[\s\S]){0,700}?\bWHEN\b(?:(?!\bGIVEN\b)[\s\S]){0,500}?\bTHEN\b",
+            text,
+            re.I,
+        )
+    )
+    ears = len(re.findall(r"\bWHEN\b(?:(?!\bWHEN\b)[\s\S]){0,500}?\bSHALL\b", text, re.I))
+    return max(gherkin, ears)
 
 
 def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict[str, object]]:
@@ -536,7 +544,7 @@ def _doc_score(case_id: str, root: Path, final: str, commands: str) -> list[dict
             _check("metadata-preserved", "depends_on: [S001]" in s and "blocks: [S003]" in s, 2),
             _check("specified-state", bool(re.search(r"(?:current_state|lifecycle_state):\s*(specified|ready)", s, re.I)), 1),
             _check("user-story", "as a" in sl and "i want" in sl and "so that" in sl, 1),
-            _check("ears-criteria", _when_shall_count(s) >= 3, 2),
+            _check("acceptance-scenarios", _acceptance_scenario_count(s) >= 3, 2),
             _check("confirmation-boundary", "confirm" in sl and "before" in sl and "schedul" in sl, 1.5),
             _check("failure-and-tests", "failure" in sl and "test" in sl, 1.5),
             _check("no-placeholder", "todo" not in sl and "draft placeholder" not in sl, 1),
@@ -792,7 +800,7 @@ def self_test(root: Path) -> dict[str, object]:
     specified.parent.mkdir(parents=True, exist_ok=True)
     specified.write_text("depends_on: [S001]\nblocks: [S003]\nlifecycle_state: Specified\nAs a user, I want review so that I can confirm.\nWHEN x\nTHEN system SHALL y\nWHEN a\nTHEN system SHALL b\nWHEN c\nTHEN system SHALL d\nconfirm before scheduling\nfailure test\n")
     lifecycle_state = next(c for c in _doc_score("story-specify", root, "", "") if c["label"] == "specified-state")
-    multiline_ears = next(c for c in _doc_score("story-specify", root, "", "") if c["label"] == "ears-criteria")
+    acceptance_grammar = next(c for c in _doc_score("story-specify", root, "", "") if c["label"] == "acceptance-scenarios")
 
     evidence = root / "specs/projects/p/evidence-contract.md"
     evidence.write_text(
@@ -852,7 +860,7 @@ def self_test(root: Path) -> dict[str, object]:
         "project_fixture_isolation": scorer_isolated,
         "parenthesized_placeholder": bool(placeholder_parenthesized["ok"]),
         "canonical_lifecycle_state": bool(lifecycle_state["ok"]),
-        "multiline_ears": bool(multiline_ears["ok"]),
+        "acceptance_grammar": bool(acceptance_grammar["ok"]),
         "principal_role": bool(principal_role["ok"] and not mock_role_mutant["ok"]),
         "quoted_inherited_readiness_is_not_current": quoted_inherited_state,
         "verified_false_green_mutant": verified_false_green_mutant,
@@ -860,5 +868,5 @@ def self_test(root: Path) -> dict[str, object]:
         "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
         "project_owned_runtime_is_not_methodology": project_owned_runtime_is_not_methodology,
-        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(multiline_ears["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
+        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
     }

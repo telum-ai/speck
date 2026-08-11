@@ -63,7 +63,7 @@ Load: `domain-model.md`, `ux-strategy.md`, `design-system.md`, `epic.md`. Misali
 
 ## 5. Specify
 
-Enhance draft: show content; refine gaps. Fresh: gather user story, triggers, completion signals, AC (EARS: `WHEN <trigger>, the system SHALL <response>`), constraints, test approach, FE/BE scope, API/DB impacts.
+Enhance draft: show content; refine gaps. Fresh: gather user story, triggers, completion signals, stable `AC-N` scenarios in the template's `GIVEN`/`WHEN`/`THEN` grammar, constraints, test approach, FE/BE scope, API/DB impacts.
 
 ```bash
 mkdir -p specs/projects/[PROJECT_ID]/epics/[EPIC_ID]/stories/[STORY_ID]-[name]
