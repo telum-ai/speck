@@ -28,7 +28,7 @@
     {"path": ".speck/scripts/validation/scaffold-clean.test.sh", "sha256": "4e2aab60fc72c267f991b6f9feb15c7cd3440fbb271bddc7decf4615d4d5d9c5"},
     {"path": ".speck/scripts/validation/validators/validate-evidence-contract.sh", "sha256": "8bc6152ff8f08ae2fe20fc79506b2744f5cb49d22ba7392d62d7f711dfcff292"},
     {"path": ".speck/scripts/validation/validators/validate-readme.test.sh", "sha256": "34fa72b22722256ac788e5775b2062c4e81cda30b3411ab558aff481de3ac02e"},
-    {"path": ".speck/templates/project/evidence-contract-template.md", "sha256": "4f6e9f14b672edbf4ce19271ecb072375f89c49001562faaed42f4a1ece7e2c4"},
+    {"path": ".speck/templates/project/evidence-contract-template.md", "sha256": "13082658364fc9a5408fb483240c3c971181ad3783daf87d3bad5a1606197a7e"},
     {"path": ".speck/templates/project/project-template.md", "sha256": "95485d2ee5593704ea19f55e92b482645f80d833a78ccbb13f4634b7655b01d9"},
     {"path": "packages/cli/lib/sync.js", "sha256": "4cb6e54dd9beecf756c450f20069373128cd463bdb1a3fe90a194fa5e6a73bcc"},
     {"path": "packages/cli/lib/sync.preserve.test.js", "sha256": "e132dfb55aa8056713d866530c2a086f82e24850c27cfa533190f9c10378a6e7"},
@@ -37,7 +37,7 @@
     {"path": "tests/eval/semantic-conservation/runner.py", "sha256": "0cbecf8bf21f0f00c04a288af159bb0119e5762a8d2b7c59f6d6595f0283fffa"},
     {"path": "tests/eval/semantic-conservation/runner.test.sh", "sha256": "c1a2e6d587cb207c062b130dc90cffa1b1f757777f731c95a12888938473c0ca"},
     {"path": ".github/workflows/canonical-flow-baseline.yml", "sha256": "836b34548aaf5b3baa6b968fed88ee8f8d0e0d7e48a0da5a48013796e3cf324d"},
-    {"path": "package.json", "sha256": "6f53aec996d9839b698b9dcf2f2c3fc0bff3b2953ca0ca0ce547c277297a1514"}
+    {"path": "package.json", "sha256": "f2825701b70c933d7b6513cbc042017bbb9e123a598ab4d7215846cdf854d5df"}
   ],
   "obligations": [
     {
