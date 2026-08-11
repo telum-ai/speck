@@ -132,7 +132,11 @@ Create a comprehensive story breakdown that maps all user stories within the epi
      a semantic match. Correct any wrong-promise/wrong-AC pairing before save.
    - Update its Status from `open` to `mapped` (or `pilot-gated` if retrofitted/deferred).
    - Verify that there are zero `open` rows left in the matrix. Any unmapped/open rows remaining will block `/analyze --level epic` as a P1 unresolved promise.
-   - Run `bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --check-fidelity "$EPIC_DIR"`; treat every fidelity warning as a mapping review item, not a pass.
+   - After the final breakdown, placeholder, and matrix edit, run
+     `bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --check-fidelity "$EPIC_DIR"`
+     as a standalone command event. Do not chain, pipe, or wrap it, and do not
+     mutate afterward; the recorded exit must belong to this validator. Treat
+     every fidelity warning as a mapping review item, not a pass.
 
 7. Resume the canonical epic flow in root `AGENTS.md`. Placeholder lifecycle state, not chat output, tells downstream routing that `/story-specify` is still required.
 

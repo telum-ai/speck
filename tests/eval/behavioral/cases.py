@@ -695,11 +695,19 @@ console.log(JSON.stringify(result));
 
 
 def patch_changes_methodology(patch: str) -> bool:
+    project_owned_speck_paths = (
+        ".speck/feedback/",
+        ".speck/patterns/learned/",
+    )
     for match in re.finditer(r"^diff --git a/(.+?) b/(.+)$", patch, re.M):
         path = match.group(1)
         if path.startswith((".cursor/", ".agents/", ".codex/", ".claude/")):
             return True
-        if path.startswith(".speck/") and path != ".speck/project.json":
+        if (
+            path.startswith(".speck/")
+            and path != ".speck/project.json"
+            and not path.startswith(project_owned_speck_paths)
+        ):
             return True
     return False
 
@@ -826,6 +834,14 @@ def self_test(root: Path) -> dict[str, object]:
     missing_image_overbreadth_mutant = next(
         check for check in _doc_score("validate-fake-green", root, "", "") if check["label"] == "missing-screenshot"
     )
+    feedback_patch = "diff --git a/.speck/feedback/finding.md b/.speck/feedback/finding.md\n"
+    learned_patch = "diff --git a/.speck/patterns/learned/process/pattern.md b/.speck/patterns/learned/process/pattern.md\n"
+    methodology_patch = "diff --git a/.speck/reference/canonical-routing.md b/.speck/reference/canonical-routing.md\n"
+    project_owned_runtime_is_not_methodology = bool(
+        not patch_changes_methodology(feedback_patch)
+        and not patch_changes_methodology(learned_patch)
+        and patch_changes_methodology(methodology_patch)
+    )
 
     scorer_isolated = bool(closed_before["ok"] and closed_after["ok"] and not open_mutant["ok"] and not duplicate_open_mutant["ok"])
     return {
@@ -843,5 +859,6 @@ def self_test(root: Path) -> dict[str, object]:
         "missing_image_path_is_detected": bool(validation_checks["missing-screenshot"]["ok"]),
         "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
-        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(multiline_ears["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]),
+        "project_owned_runtime_is_not_methodology": project_owned_runtime_is_not_methodology,
+        "passed": good_score == 8.0 and mutant_score < good_score and ui_array_good == 10.0 and ui_clobber_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(multiline_ears["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
     }

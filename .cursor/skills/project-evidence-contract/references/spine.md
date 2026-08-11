@@ -10,7 +10,7 @@
 8. Fill readiness criteria from NO-SHIP through SHIP. Every state names required artifacts and blockers; paid products require COMMERCIAL-RC.
 9. Customize the standard adversarial probes without treating the probe list as done. Require negative controls and evidence storage paths.
 10. Enforce boundaries: product-contract owns the promise; evidence-contract owns proof; AGENTS owns workspace process. Do not duplicate or contradict them.
-11. Write `evidence-contract.md`; run applicable strict template/gate validators; apply `.speck/scripts/stamp-truth.sh`.
-12. Regenerate `/project-state`. Report platform, valid/invalid proof, readiness, persona/scenario, and probe counts.
+11. Write `evidence-contract.md`. After its final edit, run `stamp-truth.sh` standalone, then its strict template validator standalone. Do not chain, pipe, wrap, or mutate afterward; each recorded exit must belong to that command.
+12. Regenerate `/project-state`.
 
 Never allow one source to be both valid and invalid. Never permit a readiness claim without its criteria or a claim without an observable mechanism.

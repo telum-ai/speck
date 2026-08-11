@@ -658,6 +658,10 @@ def command_judge(args: argparse.Namespace) -> int:
 
 def command_rescore(args: argparse.Namespace) -> int:
     manifest = load_manifest(args.run_id)
+    snapshot_trusted_harness(
+        trusted_snapshot_root(args.run_id),
+        str(manifest["harness"]["git_revision"]),
+    )
     mapping = manifest["anonymous_mapping"]
     selected_ids = [value.strip() for value in args.cases.split(",") if value.strip()]
     if selected_ids == ["all"]:

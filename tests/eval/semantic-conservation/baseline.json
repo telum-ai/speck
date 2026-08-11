@@ -53,13 +53,17 @@
     {"path": ".cursor/skills/story-tasks/references/spine.md", "sha256": "4643f94f5b6e2cfa9b3c38a79ca10f6afd11da3c11a08cecf450d7b44064c72a"},
     {"path": ".cursor/skills/story-implement/SKILL.md", "sha256": "ebf08823431249db200ec1b3c25c3864191228824e0c6fae4b5ad63eafae52c7"},
     {"path": ".cursor/skills/story-implement/references/spine.md", "sha256": "3df3513d6aa040dd3ef91712450fcca7ce3d02797bde51db3f52417484e10c57"},
+    {"path": ".cursor/skills/story-specify/SKILL.md", "sha256": "a75ac4c61c4e06648dec12c79ce8c83e11957b430014bdf527dd1024d6225bba"},
+    {"path": ".cursor/skills/epic-breakdown/SKILL.md", "sha256": "9ee875fdf47dd0bc129fdbd248a7c071f56343ad86d7aa0df20e7c9f96901c76"},
+    {"path": ".cursor/skills/project-evidence-contract/SKILL.md", "sha256": "ecb778ca71a080090524412fafd31245da9fe1e584d57dab5eb3f1df111855af"},
+    {"path": ".cursor/skills/project-evidence-contract/references/spine.md", "sha256": "4406f78ec149f7603bb75b2102221bcb505d942320bc06a15517c8334aaad486"},
     {"path": "packages/cli/lib/agent-model-tiers.test.js", "sha256": "d6b310f3011b6c668671fcfc1f387facd7223aa1158d40ddc5d2dcc39ad1b691"},
     {"path": "packages/cli/lib/generate-agents.js", "sha256": "c9e3ebf3c97b9ea86698ea987cb0d67acc24b5ee5a3ac3153f2795eb4ccb88f1"},
     {"path": "packages/cli/lib/sync.js", "sha256": "a257b068115bddf58213f6531750bcd3586ac62c3de3b50465175303b7f5ac3d"},
     {"path": "packages/cli/lib/sync.preserve.test.js", "sha256": "addf634e1751ac9ebdde19d8f6f4721dd15d2b0d6b6270f2c4ef63894d9dade1"},
-    {"path": "tests/eval/behavioral/README.md", "sha256": "e5fd29c2b3c4b07ec33396de173df429f6fce0e654564215222a9b17a991f1ed"},
-    {"path": "tests/eval/behavioral/cases.py", "sha256": "30065e6b5e323721da965dab0be935f1ddf52493015802a85a7595a534fb4ef7"},
-    {"path": "tests/eval/behavioral/runner.py", "sha256": "2abaaa02253466db89fea13c8e4f4f89d14076588c968fe37649844490cffb82"},
+    {"path": "tests/eval/behavioral/README.md", "sha256": "db5b3bd0d4ed12281c461ef064d5fb22f51732ba650ad1ec0e3d2cbf2ca3427d"},
+    {"path": "tests/eval/behavioral/cases.py", "sha256": "dfb22567af8523c966cdc85bf9c00827cb6069287119a9ed64024c92df4cc918"},
+    {"path": "tests/eval/behavioral/runner.py", "sha256": "06c0a6cb78b2bdcb308e078692b6dd55f62f381a04ca8f415d454515b7f9b3de"},
     {"path": "tests/eval/skill-routing/baseline.json", "sha256": "2f7c49bcd2d03b2376e40e64b3b2146942b235d5807dbd35f3583e826585d6aa"},
     {"path": "tests/eval/semantic-conservation/guard-baseline-change.sh", "sha256": "e054c7131b2810180dfec8953b71b6d1ed240b7b08513bda0038839bcc4ccf65"},
     {"path": "tests/eval/semantic-conservation/runner.py", "sha256": "0cbecf8bf21f0f00c04a288af159bb0119e5762a8d2b7c59f6d6595f0283fffa"},
@@ -300,7 +304,10 @@
         {"path": ".speck/scripts/context/speck_context.py", "anchors": ["skill-load-contracts[.]json", "receipt", "selectors", "direct-event-exit-bound"]},
         {"path": ".speck/reference/skill-load-contracts.json", "anchors": ["story-implement-ui", "project-evidence"]},
         {"path": ".cursor/skills/story-tasks/references/spine.md", "anchors": ["validator as its own command event", "recorded event exit must be the validator exit"]},
-        {"path": ".cursor/skills/story-implement/references/spine.md", "anchors": ["primary test gate as its own command event", "recorded event exit must be the gate exit"]}
+        {"path": ".cursor/skills/story-implement/references/spine.md", "anchors": ["primary test gate as its own command event", "recorded event exit must be the gate exit"]},
+        {"path": ".cursor/skills/story-specify/SKILL.md", "anchors": ["standalone command event", "recorded event exit must belong to the validator itself"]},
+        {"path": ".cursor/skills/epic-breakdown/SKILL.md", "anchors": ["standalone command event", "recorded exit must belong to this validator"]},
+        {"path": ".cursor/skills/project-evidence-contract/references/spine.md", "anchors": ["stamp-truth[.]sh` standalone", "strict template validator standalone", "Do not chain, pipe, wrap, or mutate afterward"]}
       ]
     },
     {

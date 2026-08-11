@@ -82,10 +82,12 @@ named failure behavior; and a concrete test/LARP approach for every failure.
 Preserve `depends_on` and `blocks` byte-for-byte unless the epic breakdown has
 also been deliberately amended.
 
-After save, run:
+After the final artifact edit, run the validator as a standalone command event:
 ```bash
 bash .speck/scripts/validation/validate-template.sh "$STORY_DIR/spec.md" --strict
 ```
+Do not chain, pipe, or wrap it, and do not mutate the story afterward. The
+recorded event exit must belong to the validator itself.
 
 **5-minute test**: explain in <5 min. Needs "AND" or >3 AC scenarios → split.
 
