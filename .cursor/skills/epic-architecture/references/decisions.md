@@ -1,61 +1,13 @@
 # epic-architecture / decisions
 
-The text the user typed after `/epic-architecture` in the triggering message. Parse any specific architectural concerns or focus areas.
+Own only architecture needed to make the active epic implementable without violating project-level contracts.
 
-## Context Requirements
+1. Read the active `epic.md`, project architecture and constitution when present, relevant project context, and any existing `epic-architecture.md`.
+2. Trace each proposed component or boundary to an epic promise. Do not invent infrastructure, scale targets, vendors, or deployment topology absent from the sources.
+3. Identify the decisions that must be locked before `epic-plan`; leave story-local choices open.
+4. For unstable external facts, invoke `just-in-time-research` before locking the choice and retain only sources that affect the decision.
+5. Load `.speck/templates/epic/architecture-template.md`. Fill applicable sections with epic-specific interfaces, data flow, failure behavior, security boundaries, operability, and proof seams; remove unused placeholders.
+6. Record assumptions with a falsifier and deferred decisions with a reopening trigger.
+7. Run the relevant artifact and reference checks, then append every non-trivial lock to the decision log.
 
-This command requires:
-- Active epic with epic.md
-- Project-level architecture.md (from /project-architecture)
-- Ideally run after `/epic-clarify` but before `/epic-plan`
-
-**Research Approach**: Uses just-in-time research pattern (`.cursor/skills/just-in-time-research/SKILL.md`) for epic-specific architecture patterns, integration strategies, and technology evaluation
-
-## Epic Architecture Design Process
-
-1. Load context:
-   - Current epic.md for scope and requirements
-   - Project architecture.md for system design
-   - Project PRD for epic relationships
-   - Check for existing research reports: epic-*-research-report-*.md (from earlier commands)
-   - Check for existing epic-architecture.md
-
-2. Just-In-Time Research (before architectural decisions):
-
-   **Reference**: Follow the just-in-time research pattern (`.cursor/skills/just-in-time-research/SKILL.md`)
-
-   Before designing epic architecture, identify knowledge gaps and conduct research:
-
-   ### Research Areas for Epic Architecture
-
-   **1. Integration Patterns**:
-   - Decision: How should this epic integrate with existing system?
-   - Web Search: API integration patterns, event-driven architectures, service mesh patterns
-   - Deep Research (if needed): Complex integration scenarios, third-party API evaluation
-
-   **2. Data Architecture**:
-   - Decision: What data storage/flow patterns should we use?
-   - Web Search: Database schema patterns, caching strategies, data synchronization
-   - Deep Research (if needed): Complex data modeling, multi-tenant architectures
-
-   **3. Technology Evaluation** (if new tech for epic):
-   - Decision: Should we use [library/framework] for this epic?
-   - Web Search: Library comparisons, benchmarks, compatibility checks
-   - Deep Research (if needed): Technology proof-of-concept recommendations
-
-   **4. Performance Patterns**:
-   - Decision: What optimizations are needed for this epic?
-   - Web Search: Performance benchmarks, optimization techniques, caching patterns
-   - Deep Research (if needed): Complex performance analysis
-
-   **5. Security Architecture** (if security-critical):
-   - Decision: How do we secure this epic's functionality?
-   - Web Search: Security patterns, authentication/authorization approaches, threat models
-   - Deep Research (if needed): Security audit recommendations, compliance requirements
-
-   ### Execute Research
-
-   For each area with knowledge gaps:
-   1. **Quick web search** for patterns and best practices
-   2. **Generate deep research prompt** if web search insufficient
-   3. **Document findings** in "Research Informing This Architecture" section of output
+The artifact must be detailed enough for `epic-plan` and `epic-breakdown`, but must not pre-implement stories.

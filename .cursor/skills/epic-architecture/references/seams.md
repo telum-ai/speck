@@ -1,64 +1,19 @@
 # epic-architecture / seams
 
-If deep research needed, PAUSE and instruct user:
-   ```
-   ⏸ Deep Research Needed
+Use this node only when the epic crosses a service, package, team, trust, or external-system boundary.
 
-   Topic: [Research Area]
-   Prompt Generated: epic-architecture-research-prompt-[topic].md
+For every seam, define:
 
-   Please:
-   1. Review research prompt in epic directory
-   2. Run in Perplexity/Claude/Gemini/Grok
-   3. Save results as: epic-architecture-research-report-[topic].md
-   4. Re-run this command to continue
-   ```
+- producer, consumer, and owner;
+- request, response, event, or data contract;
+- authentication, authorization, tenant, and sensitive-data boundary;
+- timeout, rejection, partial-success, duplicate, retry, cancellation, and recovery behavior that applies;
+- compatibility and migration expectations;
+- observability needed to distinguish success, delay, and terminal failure;
+- the executable contract or integration probe that will prove the seam.
 
-3. Analyze epic architectural needs:
-   - Epic's role in system architecture
-   - Integration points with other epics
-   - Data dependencies
-   - Performance requirements
-   - Security considerations
-   - Scalability needs specific to epic
+Map ordering and consistency explicitly when more than one system mutates state. Prefer the smallest interface that preserves the epic promises. Use a diagram only when it makes component or event relationships clearer than the contract list.
 
-3. Design epic architecture:
+Research external integration behavior through `just-in-time-research` before locking it. Unknown provider behavior stays an open decision; examples must not become invented requirements.
 
-   **Component Design**:
-   - Identify epic-specific components
-   - Define component responsibilities
-   - Map component interactions
-   - Establish clear boundaries
-
-   **Data Architecture**:
-   - Epic's data models
-   - Data flow within epic
-   - Storage requirements
-   - State management approach
-
-   **API Design**:
-   - External APIs epic exposes
-   - Internal APIs epic consumes
-   - Event contracts
-   - Error handling strategies
-
-4. Integration architecture:
-   - How epic fits into system architecture
-   - Dependencies on other epics/services
-   - Consumers of epic's functionality
-   - Shared components usage
-   - Data synchronization needs
-
-5. Technical decisions:
-   - Technology choices within project stack
-   - Epic-specific libraries/frameworks
-   - Design patterns to apply
-   - Caching strategies
-   - Background job handling
-
-6. Generate epic-architecture.md:
-   - Load template from `.speck/templates/epic/architecture-template.md`
-   - Fill all sections with epic-specific details
-   - **Add "Research Informing This Architecture" section** documenting:
-     * Web search findings with sources
-     * Deep research reports referenced (if any)
+Write the retained seam contracts into `epic-architecture.md`, then ensure `epic-plan` and later story boundaries can trace to them.
