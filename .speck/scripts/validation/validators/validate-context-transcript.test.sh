@@ -801,15 +801,81 @@ run_validator "$ROOT" --transcript "$TRANSCRIPT_ADJUST_LEAK" --profile "$ADJUST_
   && pass "post-hoc validator rejects sibling adjustment context" || fail "adjust sibling leak should fail SELECTIVITY (rc=$RC)"
 
 echo "── canonical skill ordering: story corpus closes before its final gate ─────────────────────"
+STORY_SPECIFY_PROFILE="story-specify"
+STORY_SPECIFY_CMD="python3 .speck/scripts/context/speck_context.py $STORY_SPECIFY_PROFILE --root $ROOT"
+python3 "$LOADER" "$STORY_SPECIFY_PROFILE" --root "$ROOT" > "$T/story-specify.out"
+
+TRANSCRIPT_STORY_SPECIFY="$T/story-specify.jsonl"
+write_transcript "$TRANSCRIPT_STORY_SPECIFY" \
+  cmd "$STORY_SPECIFY_CMD" "$T/story-specify.out" 0 \
+  change "specs/projects/demo/stories/S002/spec.md" \
+  change "specs/projects/demo/epic-breakdown.md" \
+  cmd 'bash .speck/scripts/validation/validate-template.sh "specs/projects/demo/stories/S002/spec.md" --strict' /dev/null 0
+run_validator "$ROOT" --transcript "$TRANSCRIPT_STORY_SPECIFY" --profile "$STORY_SPECIFY_PROFILE" --json
+[[ "$RC" == 0 ]] && echo "$OUT" | grep -q '"pass": true' \
+  && pass "story-specify transcript closes after both story-corpus mutations" || fail "story-specify closure transcript (rc=$RC)"
+
+TRANSCRIPT_STORY_SPECIFY_LATE_MUTATION="$T/story-specify-late-mutation.jsonl"
+write_transcript "$TRANSCRIPT_STORY_SPECIFY_LATE_MUTATION" \
+  cmd "$STORY_SPECIFY_CMD" "$T/story-specify.out" 0 \
+  change "specs/projects/demo/stories/S002/spec.md" \
+  cmd 'bash .speck/scripts/validation/validate-template.sh "specs/projects/demo/stories/S002/spec.md" --strict' /dev/null 0 \
+  change "specs/projects/demo/epic-breakdown.md"
+run_validator "$ROOT" --transcript "$TRANSCRIPT_STORY_SPECIFY_LATE_MUTATION" --profile "$STORY_SPECIFY_PROFILE" --json
+[[ "$RC" == 1 ]] && echo "$OUT" | grep -q 'GATE_USE' \
+  && pass "a story-list mutation after validation fails GATE_USE" || fail "post-gate story mutation must fail GATE_USE (rc=$RC)"
+
+story_skill_gate_order_ok() {
+  python3 - "$1" <<'PY'
+import pathlib
+import re
+import sys
+
+path = pathlib.Path(sys.argv[1])
+lines = path.read_text(encoding="utf-8").splitlines()
+gate = 'bash .speck/scripts/validation/validate-template.sh "$STORY_DIR/spec.md" --strict'
+required = "Update the epic story list to mark this story specified"
+
+try:
+    gate_index = lines.index(gate)
+except ValueError:
+    raise SystemExit("standalone story-specify closure gate is missing")
+
+if not any(required in line for line in lines[:gate_index]):
+    raise SystemExit("epic story-list update is not ordered before the closure gate")
+
+mutation = re.compile(r"\b(?:update|edit|write|save|mutate|fill|amend|create|regenerate)\b", re.I)
+corpus = re.compile(r"(?:spec\.md|epic[- ]breakdown|epic\s+story[- ]list|story[- ]corpus)", re.I)
+negated = re.compile(r"\b(?:do\s+not|never)\b", re.I)
+for line_no, line in enumerate(lines[gate_index + 1 :], start=gate_index + 2):
+    if mutation.search(line) and corpus.search(line) and not negated.search(line):
+        raise SystemExit(f"post-gate story-corpus mutation at line {line_no}: {line.strip()}")
+PY
+}
+
 STORY_SPECIFY="$ROOT/.cursor/skills/story-specify/SKILL.md"
-STORY_LIST_LINE="$(grep -nF 'Update the epic story list to mark this story specified' "$STORY_SPECIFY" | cut -d: -f1)"
-STORY_GATE_LINE="$(grep -nF 'After all `spec.md` and epic story-list edits' "$STORY_SPECIFY" | cut -d: -f1)"
-if [[ -n "$STORY_LIST_LINE" && -n "$STORY_GATE_LINE" && "$STORY_LIST_LINE" -lt "$STORY_GATE_LINE" ]] \
-  && grep -Fq 'do not mutate the story corpus afterward' "$STORY_SPECIFY"; then
-  pass "story-specify orders every declared corpus mutation before the standalone validator"
+if OUT=$(story_skill_gate_order_ok "$STORY_SPECIFY" 2>&1); then
+  pass "story-specify source orders all declared corpus mutations before its closure gate"
 else
-  OUT="story-list line=$STORY_LIST_LINE final-gate line=$STORY_GATE_LINE"
-  fail "story-specify must not mutate its corpus after the closure gate"
+  fail "story-specify source must not instruct a corpus mutation after its closure gate"
+fi
+
+STORY_SPECIFY_MUTANT="$T/story-specify-mutant.md"
+python3 - "$STORY_SPECIFY" "$STORY_SPECIFY_MUTANT" <<'PY'
+import pathlib
+import sys
+
+source = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+needle = 'bash .speck/scripts/validation/validate-template.sh "$STORY_DIR/spec.md" --strict\n```'
+replacement = needle + "\nUpdate epic story list → specified."
+if needle not in source:
+    raise SystemExit("cannot seed historical post-gate mutation")
+pathlib.Path(sys.argv[2]).write_text(source.replace(needle, replacement, 1), encoding="utf-8")
+PY
+if OUT=$(story_skill_gate_order_ok "$STORY_SPECIFY_MUTANT" 2>&1); then
+  fail "historical post-gate story-list mutation must be rejected"
+else
+  pass "mutation control rejects a reintroduced post-gate story-list update"
 fi
 
 if [[ "$FAILED" == 0 ]]; then
