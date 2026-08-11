@@ -774,16 +774,22 @@ try {
   const expectedAria = selected => reviewItems.map((_, index) => selected.includes(index) ? 'true' : 'false');
   const expectedStatuses = confirmed => reviewItems.map((_, index) => confirmed.includes(index) ? 'confirmed' : 'pending');
   const initialAria = initialButtons.length === reviewItems.length && aria().every(value => value === 'false');
-  if (buttons()[first]) buttons()[first].click();
-  const selectedFirst = JSON.stringify(aria()) === JSON.stringify(expectedAria([first])) && approve.disabled === false;
-  if (buttons()[first]) buttons()[first].click();
-  const deselectedFirst = aria().every(value => value === 'false') && approve.disabled === true;
+  let everyItemToggles = true;
+  for (const index of order) {
+    if (buttons()[index]) buttons()[index].click();
+    everyItemToggles = everyItemToggles &&
+      JSON.stringify(aria()) === JSON.stringify(expectedAria([index])) &&
+      statuses().every(value => value === 'pending') && approve.disabled === false;
+    if (buttons()[index]) buttons()[index].click();
+    everyItemToggles = everyItemToggles && aria().every(value => value === 'false') &&
+      statuses().every(value => value === 'pending') && approve.disabled === true;
+  }
   for (const index of order) {
     if (buttons()[index]) buttons()[index].click();
   }
   const selectedAll = aria().every(value => value === 'true') && approve.disabled === false;
-  const selectionWorks = initialAria && selectedFirst && deselectedFirst && selectedAll &&
-    context.__uiCalls.toggleSelection >= 7;
+  const selectionWorks = initialAria && everyItemToggles && selectedAll &&
+    context.__uiCalls.toggleSelection >= 15;
   approve.click();
   const approvedBatch = statuses().every(value => value === 'confirmed') &&
     aria().every(value => value === 'false') && approve.disabled === true;
@@ -793,6 +799,16 @@ try {
   const resetPending = resetAvailable && statuses().every(value => value === 'pending') &&
     aria().every(value => value === 'false') && approve.disabled === true &&
     context.__uiCalls.initialState > initialCallsBeforeReset;
+  let postResetToggles = true;
+  for (const index of order) {
+    if (buttons()[index]) buttons()[index].click();
+    postResetToggles = postResetToggles &&
+      JSON.stringify(aria()) === JSON.stringify(expectedAria([index])) &&
+      statuses().every(value => value === 'pending') && approve.disabled === false;
+    if (buttons()[index]) buttons()[index].click();
+    postResetToggles = postResetToggles && aria().every(value => value === 'false') &&
+      statuses().every(value => value === 'pending') && approve.disabled === true;
+  }
   if (buttons()[second]) buttons()[second].click();
   const selectedSecond = JSON.stringify(aria()) === JSON.stringify(expectedAria([second])) && approve.disabled === false;
   if (buttons()[third]) buttons()[third].click();
@@ -808,8 +824,8 @@ try {
   approve.click();
   const approvedAll = statuses().every(value => value === 'confirmed') &&
     aria().every(value => value === 'false') && approve.disabled === true;
-  const approvalWorks = approvedBatch && resetPending && selectedSecond && selectedTwo && approvedTwo &&
-    selectedRemaining && approvedAll && context.__uiCalls.toggleSelection >= 12 &&
+  const approvalWorks = approvedBatch && resetPending && postResetToggles && selectedSecond && selectedTwo && approvedTwo &&
+    selectedRemaining && approvedAll && context.__uiCalls.toggleSelection >= 30 &&
     context.__uiCalls.approveSelected >= 3;
   console.log(JSON.stringify([mountedPending, initiallyDisabled, selectionWorks, approvalWorks]));
 } catch (_) {
@@ -828,8 +844,12 @@ try {
         except Exception:
             pass
     html_text = html.read_text(errors="replace") if html.exists() else ""
-    has_browser_targets = bool(re.search(r'id=["\']review["\']', html_text) and re.search(r'id=["\']approve["\']', html_text))
-    browser_entry[0] = browser_entry[0] and has_browser_targets
+    has_browser_wiring = bool(
+        re.search(r'id=["\']review["\']', html_text)
+        and re.search(r'id=["\']approve["\']', html_text)
+        and re.search(r'<script\b[^>]*\bsrc=["\'][^"\']*app\.js(?:[?#][^"\']*)?["\']', html_text, re.I)
+    )
+    browser_entry[0] = browser_entry[0] and has_browser_wiring
     checks = [_check(f"ui-behavior-{i+1}", ok, 1.25) for i, ok in enumerate(behavior)]
     checks += [
         _check("ui-runtime-mounted-pending", browser_entry[0], 1.25),
@@ -912,10 +932,14 @@ def self_test(root: Path) -> dict[str, object]:
     mutant_score = sum(float(c["earned"]) for c in _backend_hidden(root))
     web = root / "web"
     web.mkdir(parents=True, exist_ok=True)
-    (web / "index.html").write_text('<main id="review"></main><button id="approve" disabled>Approve</button>')
+    wired_html = '<main id="review"></main><button id="approve" disabled>Approve</button><script src="app.js"></script>'
+    (web / "index.html").write_text(wired_html)
     array_good = '''function initialState(items){const ids=new Set();return items.map(x=>{if(ids.has(x.id))throw Error("duplicate");ids.add(x.id);return {...x,status:"pending",selected:false}})}\nfunction toggleSelection(s,id){if(!s.some(x=>x.id===id))return s;return s.map(x=>x.id===id?{...x,selected:!x.selected}:x)}\nfunction approveSelected(s){if(!s.some(x=>x.selected))return s;return s.map(x=>x.selected?{...x,status:"confirmed",selected:false}:x)}\nfunction renderReview(root,approve,state){root.replaceChildren();state.forEach(item=>{const row=document.createElement("div");const toggle=document.createElement("button");toggle.textContent=item.title||item.id;toggle.setAttribute("aria-pressed",String(item.selected));toggle.addEventListener("click",()=>{state=toggleSelection(state,item.id);renderReview(root,approve,state)});const status=document.createElement("span");status.textContent=item.status;row.append(toggle,status);root.append(row)});approve.disabled=!state.some(x=>x.selected);approve.onclick=()=>{state=approveSelected(state);renderReview(root,approve,state)}}\nfunction mountReview(items){renderReview(document.querySelector("#review"),document.querySelector("#approve"),initialState(items))}\nif(typeof module!=="undefined")module.exports={initialState,toggleSelection,approveSelected};\nif(typeof window!=="undefined")mountReview(window.reviewItems||[]);\n'''
     (web / "app.js").write_text(array_good)
     ui_array_good = sum(float(c["earned"]) for c in _ui_hidden(root))
+    (web / "index.html").write_text('<main id="review"></main><button id="approve" disabled>Approve</button>')
+    ui_unwired_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
+    (web / "index.html").write_text(wired_html)
     clobber = array_good.replace(':x)}\nfunction renderReview', ':{...x,status:"pending",selected:false})}\nfunction renderReview')
     (web / "app.js").write_text(clobber)
     ui_clobber_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
@@ -943,6 +967,15 @@ def self_test(root: Path) -> dict[str, object]:
     )
     (web / "app.js").write_text(capped_approval_mutant)
     ui_capped_approval_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
+    single_deselect_mutant = array_good.replace(
+        "function renderReview",
+        "let deselects=0;\nfunction renderReview",
+    ).replace(
+        'toggle.addEventListener("click",()=>{state=toggleSelection(state,item.id);renderReview(root,approve,state)})',
+        'toggle.addEventListener("click",()=>{const current=state.find(x=>x.id===item.id);if(current&&current.selected){deselects+=1;if(deselects>1){toggleSelection(state,item.id);return}}state=toggleSelection(state,item.id);renderReview(root,approve,state)})',
+    )
+    (web / "app.js").write_text(single_deselect_mutant)
+    ui_single_deselect_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
 
     # Project-artifact scorers must be isolated from the exported methodology.
     # This reproduces the v11 tournament contamination: a fixture matrix under
@@ -1034,6 +1067,7 @@ def self_test(root: Path) -> dict[str, object]:
         "boundary_mutant_rejected": boundary_mutant_rejected,
         "mutant": mutant_score,
         "ui_array_good": ui_array_good,
+        "ui_unwired_mutant": ui_unwired_mutant,
         "ui_clobber_mutant": ui_clobber_mutant,
         "ui_unmounted_mutant": ui_unmounted_mutant,
         "ui_enabled_mutant": ui_enabled_mutant,
@@ -1041,6 +1075,7 @@ def self_test(root: Path) -> dict[str, object]:
         "ui_dual_path_mutant": ui_dual_path_mutant,
         "ui_counter_facade_mutant": ui_counter_facade_mutant,
         "ui_capped_approval_mutant": ui_capped_approval_mutant,
+        "ui_single_deselect_mutant": ui_single_deselect_mutant,
         "project_fixture_isolation": scorer_isolated,
         "parenthesized_placeholder": bool(placeholder_parenthesized["ok"]),
         "canonical_lifecycle_state": bool(lifecycle_state["ok"]),
@@ -1054,5 +1089,5 @@ def self_test(root: Path) -> dict[str, object]:
         "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
         "project_owned_runtime_is_not_methodology": project_owned_runtime_is_not_methodology,
-        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 12.5 and ui_clobber_mutant < ui_array_good and ui_unmounted_mutant < ui_array_good and ui_enabled_mutant < ui_array_good and ui_dummy_mount_mutant < ui_array_good and ui_dual_path_mutant < ui_array_good and ui_counter_facade_mutant < ui_array_good and ui_capped_approval_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
+        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 12.5 and ui_unwired_mutant < ui_array_good and ui_clobber_mutant < ui_array_good and ui_unmounted_mutant < ui_array_good and ui_enabled_mutant < ui_array_good and ui_dummy_mount_mutant < ui_array_good and ui_dual_path_mutant < ui_array_good and ui_counter_facade_mutant < ui_array_good and ui_capped_approval_mutant < ui_array_good and ui_single_deselect_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
     }
