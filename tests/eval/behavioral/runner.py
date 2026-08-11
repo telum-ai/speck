@@ -666,10 +666,7 @@ def command_judge(args: argparse.Namespace) -> int:
 
 def command_rescore(args: argparse.Namespace) -> int:
     manifest = load_manifest(args.run_id)
-    manifest["rescore_harness"] = harness_fingerprint()
-    (RUNS / args.run_id / "manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n"
-    )
+    rescore_harness = harness_fingerprint()
     snapshot_trusted_harness(
         trusted_snapshot_root(args.run_id),
         str(manifest["harness"]["git_revision"]),
@@ -758,6 +755,10 @@ def command_rescore(args: argparse.Namespace) -> int:
             result["rescored_at"] = datetime.now(timezone.utc).isoformat()
             result_file.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
             count += 1
+    manifest["rescore_harness"] = rescore_harness
+    (RUNS / args.run_id / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    )
     print(f"rescored {count} frozen subject artifacts without rerunning subjects")
     return 0
 
@@ -952,8 +953,8 @@ Frozen subject artifacts and raw transcripts were rescored after
 mutation-tested evaluator corrections. The scorer recognizes canonical
 `lifecycle_state`, `Draft (Placeholder)`, multiline WHEN → THEN SHALL criteria,
 zero-open summaries, non-bypass principal wording, verified-readiness precedence
-over quoted inherited claims, missing image-path classifications, and browser
-entry-point mounting with an initially disabled approval control. Transcript
+over quoted inherited claims, missing image-path classifications, and the full
+browser interaction from pending mount through selection and approval. Transcript
 conformance recognizes discrete commands inside multi-line shell calls and
 requires non-stamp gates after the latest truth stamp. Subjects, token counts,
 and event streams were not rerun; the blind judge was generated only after the

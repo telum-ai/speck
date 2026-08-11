@@ -678,7 +678,7 @@ def _ui_hidden(root: Path) -> list[dict[str, object]]:
     js = root / "web/app.js"
     html = root / "web/index.html"
     behavior = [False] * 6
-    browser_entry = [False, False]
+    browser_entry = [False, False, False, False]
     if js.exists():
         probe = r"""
 const f = require(process.argv[1]);
@@ -712,21 +712,23 @@ console.log(JSON.stringify(result));
 const fs = require('node:fs');
 const vm = require('node:vm');
 class Element {
-  constructor(id = '') { this.id = id; this.children = []; this.disabled = false; this.dataset = {}; this.touched = false; }
-  replaceChildren(...nodes) { this.children = nodes; this.touched = true; }
-  append(...nodes) { this.children.push(...nodes); this.touched = true; }
-  appendChild(node) { this.children.push(node); this.touched = true; return node; }
-  setAttribute(name, value) { this[name] = value; }
-  addEventListener() {}
-  set innerHTML(value) { this._innerHTML = value; this.touched = true; }
+  constructor(tag = 'div', id = '') { this.tag = tag; this.id = id; this.children = []; this.disabled = false; this.dataset = {}; this.attributes = {}; this.listeners = {}; this.textContent = ''; }
+  replaceChildren(...nodes) { this.children = nodes; }
+  append(...nodes) { this.children.push(...nodes); }
+  appendChild(node) { this.children.push(node); return node; }
+  setAttribute(name, value) { this.attributes[name] = String(value); }
+  getAttribute(name) { return this.attributes[name]; }
+  addEventListener(event, callback) { this.listeners[event] = callback; }
+  click() { if (this.listeners.click) this.listeners.click(); if (typeof this.onclick === 'function') this.onclick(); }
+  set innerHTML(value) { this._innerHTML = value; this.children = []; }
   get innerHTML() { return this._innerHTML || ''; }
 }
-const review = new Element('review');
-const approve = new Element('approve');
+const review = new Element('main', 'review');
+const approve = new Element('button', 'approve');
 const document = {
   querySelector: selector => selector === '#review' ? review : selector === '#approve' ? approve : null,
   getElementById: id => id === 'review' ? review : id === 'approve' ? approve : null,
-  createElement: () => new Element(),
+  createElement: tag => new Element(tag),
   createDocumentFragment: () => new Element(),
   addEventListener: (_event, callback) => callback(),
 };
@@ -736,9 +738,22 @@ const context = { console, document, window };
 context.globalThis = context;
 try {
   vm.runInNewContext(fs.readFileSync(process.argv[1], 'utf8'), context, {filename: process.argv[1]});
-  console.log(JSON.stringify([review.touched || review.children.length > 0, approve.disabled === true]));
+  const descendants = root => root.children.flatMap(child => child instanceof Element ? [child, ...descendants(child)] : []);
+  const buttons = () => descendants(review).filter(node => node.tag === 'button');
+  const statuses = () => descendants(review).map(node => node.textContent).filter(Boolean);
+  const initialButton = buttons()[0];
+  const mountedPending = Boolean(initialButton) && statuses().includes('pending');
+  const initiallyDisabled = approve.disabled === true;
+  const initialAria = Boolean(initialButton) && initialButton.getAttribute('aria-pressed') === 'false';
+  if (initialButton) initialButton.click();
+  const selectedButton = buttons()[0];
+  const selectionWorks = initialAria && Boolean(selectedButton) && selectedButton.getAttribute('aria-pressed') === 'true' && approve.disabled === false;
+  approve.click();
+  const approvedButton = buttons()[0];
+  const approvalWorks = statuses().includes('confirmed') && Boolean(approvedButton) && approvedButton.getAttribute('aria-pressed') === 'false' && approve.disabled === true;
+  console.log(JSON.stringify([mountedPending, initiallyDisabled, selectionWorks, approvalWorks]));
 } catch (_) {
-  console.log(JSON.stringify([false, false]));
+  console.log(JSON.stringify([false, false, false, false]));
 }
 """
         try:
@@ -752,13 +767,15 @@ try {
                 browser_entry = [bool(x) for x in json.loads(proc.stdout.strip().splitlines()[-1])]
         except Exception:
             pass
-    text = ((js.read_text(errors="replace") if js.exists() else "") + "\n" + (html.read_text(errors="replace") if html.exists() else "")).lower()
+    html_text = html.read_text(errors="replace") if html.exists() else ""
+    has_browser_targets = bool(re.search(r'id=["\']review["\']', html_text) and re.search(r'id=["\']approve["\']', html_text))
+    browser_entry[0] = browser_entry[0] and has_browser_targets
     checks = [_check(f"ui-behavior-{i+1}", ok, 1.25) for i, ok in enumerate(behavior)]
     checks += [
-        _check("ui-aria-pressed", "aria-pressed" in text, 1.25),
-        _check("ui-disabled-approve", "disabled" in text and "approve" in text and ("selected" in text or "some(" in text), 1.25),
-        _check("ui-runtime-mounted", browser_entry[0], 1.25),
+        _check("ui-runtime-mounted-pending", browser_entry[0], 1.25),
         _check("ui-runtime-initial-disabled", browser_entry[1], 1.25),
+        _check("ui-runtime-selection", browser_entry[2], 1.25),
+        _check("ui-runtime-approval", browser_entry[3], 1.25),
     ]
     return checks
 
@@ -836,7 +853,7 @@ def self_test(root: Path) -> dict[str, object]:
     web = root / "web"
     web.mkdir(parents=True, exist_ok=True)
     (web / "index.html").write_text('<main id="review"></main><button id="approve" disabled>Approve</button>')
-    array_good = '''function initialState(items){const ids=new Set();return items.map(x=>{if(ids.has(x.id))throw Error("duplicate");ids.add(x.id);return {...x,status:"pending",selected:false}})}\nfunction toggleSelection(s,id){if(!s.some(x=>x.id===id))return s;return s.map(x=>x.id===id?{...x,selected:!x.selected}:x)}\nfunction approveSelected(s){if(!s.some(x=>x.selected))return s;return s.map(x=>x.selected?{...x,status:"confirmed",selected:false}:x)}\nfunction renderReview(root,approve,state){root.replaceChildren();const toggle=document.createElement("button");toggle.setAttribute("aria-pressed","false");root.append(toggle);approve.disabled=!state.some(x=>x.selected)}\nfunction mountReview(items){renderReview(document.querySelector("#review"),document.querySelector("#approve"),initialState(items))}\nif(typeof module!=="undefined")module.exports={initialState,toggleSelection,approveSelected};\nif(typeof window!=="undefined")mountReview(window.reviewItems||[]);\n'''
+    array_good = '''function initialState(items){const ids=new Set();return items.map(x=>{if(ids.has(x.id))throw Error("duplicate");ids.add(x.id);return {...x,status:"pending",selected:false}})}\nfunction toggleSelection(s,id){if(!s.some(x=>x.id===id))return s;return s.map(x=>x.id===id?{...x,selected:!x.selected}:x)}\nfunction approveSelected(s){if(!s.some(x=>x.selected))return s;return s.map(x=>x.selected?{...x,status:"confirmed",selected:false}:x)}\nfunction renderReview(root,approve,state){root.replaceChildren();state.forEach(item=>{const row=document.createElement("div");const toggle=document.createElement("button");toggle.setAttribute("aria-pressed",String(item.selected));toggle.addEventListener("click",()=>{state=toggleSelection(state,item.id);renderReview(root,approve,state)});const status=document.createElement("span");status.textContent=item.status;row.append(toggle,status);root.append(row)});approve.disabled=!state.some(x=>x.selected);approve.onclick=()=>{state=approveSelected(state);renderReview(root,approve,state)}}\nfunction mountReview(items){renderReview(document.querySelector("#review"),document.querySelector("#approve"),initialState(items))}\nif(typeof module!=="undefined")module.exports={initialState,toggleSelection,approveSelected};\nif(typeof window!=="undefined")mountReview(window.reviewItems||[]);\n'''
     (web / "app.js").write_text(array_good)
     ui_array_good = sum(float(c["earned"]) for c in _ui_hidden(root))
     clobber = array_good.replace(':x)}\nfunction renderReview', ':{...x,status:"pending",selected:false})}\nfunction renderReview')
@@ -846,6 +863,14 @@ def self_test(root: Path) -> dict[str, object]:
     ui_unmounted_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
     (web / "app.js").write_text(array_good.replace('approve.disabled=!state.some(x=>x.selected)', 'approve.disabled=false'))
     ui_enabled_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
+    dummy_mount = re.sub(
+        r'function renderReview\(.*?\nfunction mountReview',
+        'function renderReview(root,approve,state){root.append(document.createElement("div"));approve.disabled=true}\nfunction mountReview',
+        array_good,
+        flags=re.S,
+    )
+    (web / "app.js").write_text(dummy_mount)
+    ui_dummy_mount_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
 
     # Project-artifact scorers must be isolated from the exported methodology.
     # This reproduces the v11 tournament contamination: a fixture matrix under
@@ -940,6 +965,7 @@ def self_test(root: Path) -> dict[str, object]:
         "ui_clobber_mutant": ui_clobber_mutant,
         "ui_unmounted_mutant": ui_unmounted_mutant,
         "ui_enabled_mutant": ui_enabled_mutant,
+        "ui_dummy_mount_mutant": ui_dummy_mount_mutant,
         "project_fixture_isolation": scorer_isolated,
         "parenthesized_placeholder": bool(placeholder_parenthesized["ok"]),
         "canonical_lifecycle_state": bool(lifecycle_state["ok"]),
@@ -953,5 +979,5 @@ def self_test(root: Path) -> dict[str, object]:
         "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
         "project_owned_runtime_is_not_methodology": project_owned_runtime_is_not_methodology,
-        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 12.5 and ui_clobber_mutant < ui_array_good and ui_unmounted_mutant < ui_array_good and ui_enabled_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
+        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 12.5 and ui_clobber_mutant < ui_array_good and ui_unmounted_mutant < ui_array_good and ui_enabled_mutant < ui_array_good and ui_dummy_mount_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
     }
