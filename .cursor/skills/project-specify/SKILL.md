@@ -54,7 +54,9 @@ Domain expertise required? → note in `project.md`; flag `/project-domain`.
 bash .speck/scripts/bash/create-new-project.sh --json "$ARGUMENTS"
 ```
 
-Fill template; mark gaps `[NEEDS CLARIFICATION: …]`.
+Fill template and set its lifecycle status to `Specified`; mark gaps
+`[NEEDS CLARIFICATION: …]`. Preserve unresolved choices as questions. Do not
+turn them into goals, selected options, or invented comparison candidates.
 
 ## 6. Brownfield — pre-fill
 
@@ -71,6 +73,9 @@ After `project.md` written:
 ```bash
 bash .speck/scripts/regenerate-project-readme.sh
 ```
+The generated README must describe the specification phase honestly and may
+link only to artifacts that exist. Remove no-placeholder or broken-link defects
+before leaving this phase.
 
 ## 8. Next
 

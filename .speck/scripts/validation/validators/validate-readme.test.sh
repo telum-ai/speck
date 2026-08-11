@@ -53,6 +53,28 @@ speck v7.7.0
 EOF
 bash "$ROOT/.speck/scripts/profile-drift-check.sh" "$TMP" test-proj
 
+echo "Test: specification-phase README links only to truth that exists"
+EARLY="$TMP/early"
+mkdir -p "$EARLY/.speck/templates/project" "$EARLY/specs/projects/early-proj"
+cp "$ROOT/.speck/templates/project/readme-template.md" "$EARLY/.speck/templates/project/readme-template.md"
+echo "11.0.0" > "$EARLY/.speck/VERSION"
+echo '{"project_id":"early-proj"}' > "$EARLY/.speck/project.json"
+cat > "$EARLY/specs/projects/early-proj/project.md" << 'EOF'
+# Early Product
+
+## Vision
+
+Early Product helps facilitators turn meeting commitments into reviewed actions.
+EOF
+bash "$ROOT/.speck/scripts/regenerate-project-readme.sh" early-proj "$EARLY"
+grep -q '^\*\*Status\*\*: Specified · no readiness claim$' "$EARLY/README.md"
+grep -q 'specs/projects/early-proj/project.md' "$EARLY/README.md"
+if grep -Eq 'REPLACE_BEFORE_SHIP|\[[^]]*placeholder[^]]*\]|architecture.md|product-contract.md|project-state.md|project-decisions-log.md' "$EARLY/README.md"; then
+  echo "FAIL: early README contains a placeholder or phantom artifact link"
+  exit 1
+fi
+bash "$ROOT/.speck/scripts/validation/validators/validate-readme.sh" --strict "$EARLY" >/dev/null
+
 cat > "$TMP/specs/projects/test-proj/project.md" << 'EOF'
 # Test Product
 

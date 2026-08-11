@@ -82,6 +82,11 @@ named failure behavior; and a concrete test/LARP approach for every failure.
 Preserve `depends_on` and `blocks` byte-for-byte unless the epic breakdown has
 also been deliberately amended.
 
+Preserve requirement fidelity. A new required field, actor, integration, or
+solution choice must trace to the epic/breakdown/input; otherwise mark it
+`[NEEDS CLARIFICATION]` instead of inventing it. Give every named failure path a
+negative acceptance criterion and matching test/LARP approach.
+
 After the final artifact edit, run the validator as a standalone command event:
 ```bash
 bash .speck/scripts/validation/validate-template.sh "$STORY_DIR/spec.md" --strict

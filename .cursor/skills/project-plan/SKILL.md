@@ -87,6 +87,10 @@ Create `epics/E###-[name]/epic.md` placeholders:
 - [ ] **Specified**
 ```
 NEVER set `Specified` on placeholders.
+Each placeholder still carries enough planning truth to be usable: intended
+outcome, owned `PRM-NNN` promises, hard boundaries/non-goals, dependencies, and
+observable epic success criteria. It defers detailed specification; it is not
+an empty title shell.
 
 ## 7. Validation
 

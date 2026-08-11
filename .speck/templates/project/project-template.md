@@ -2,7 +2,7 @@
 
 **Project ID**: [PROJECT_NUM]  
 **Created**: [DATE]  
-**Status**: Planning  
+**Status**: Specified
 **Scale**: [To be determined: Level 0-4]  
 **Recipe**: [None / recipe-name if using a recipe]
 
@@ -27,7 +27,7 @@ project-import + project-landscape-overview + user input
   ↓
 project.md (this document)
   ↓
-project-clarify → context → architecture → design-system → plan
+project-clarify → product-contract → project-profile → evidence-contract → context → optional architecture/UX → project-plan
 ```
 
 ---
@@ -46,8 +46,8 @@ project-clarify → context → architecture → design-system → plan
 5. Ensure internal consistency
    → Goals align with vision, scope supports goals, metrics measure goals
 6. Review against project-level checklist
-   → All sections complete, no conflicts, ready for planning
-7. Return: SUCCESS (ready for /project-clarify or /project-plan)
+   → All sections complete, no conflicts, lifecycle remains Specified
+7. Leave the next phase to the canonical flow in root AGENTS.md
 ```
 
 ---
@@ -56,8 +56,10 @@ project-clarify → context → architecture → design-system → plan
 - ✅ Focus on WHAT the project achieves and WHY it matters
 - ✅ Define clear boundaries (what's in v1 vs future)
 - ✅ Identify key user groups and their primary needs
+- ✅ Preserve unresolved choices as named clarification questions
 - ❌ Avoid implementation details (no tech stack, architecture, or timelines yet)
 - ❌ Don't list individual features - use capability areas instead
+- ❌ Don't turn an unresolved choice into a goal, selected option, or invented comparison
 
 ---
 

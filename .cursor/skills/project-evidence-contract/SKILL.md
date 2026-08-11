@@ -13,4 +13,4 @@ Cheap keys: `.speck/project.json` → `play_level`, `project_archetype` (UI vs b
 2. Before the first mutation, run the matching profile:
    `python3 .speck/scripts/context/speck_context.py project-evidence-<ui|backend>-<build|platform>`.
 3. Require exit 0 and `SPECK_CONTEXT_RECEIPT`; do not separately load sibling tier/archetype branches.
-4. Execute the loaded template/spine/branches. Write `evidence-contract.md`; SHA-stamp, then validate in the spine's standalone events; regenerate project state.
+4. Execute loaded context. Write only `evidence-contract.md`; stamp, then validate as the spine requires. State and graph refresh happen later.
