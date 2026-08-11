@@ -800,6 +800,18 @@ run_validator "$ROOT" --transcript "$TRANSCRIPT_ADJUST_LEAK" --profile "$ADJUST_
 [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "SELECTIVITY" \
   && pass "post-hoc validator rejects sibling adjustment context" || fail "adjust sibling leak should fail SELECTIVITY (rc=$RC)"
 
+echo "── canonical skill ordering: story corpus closes before its final gate ─────────────────────"
+STORY_SPECIFY="$ROOT/.cursor/skills/story-specify/SKILL.md"
+STORY_LIST_LINE="$(grep -nF 'Update the epic story list to mark this story specified' "$STORY_SPECIFY" | cut -d: -f1)"
+STORY_GATE_LINE="$(grep -nF 'After all `spec.md` and epic story-list edits' "$STORY_SPECIFY" | cut -d: -f1)"
+if [[ -n "$STORY_LIST_LINE" && -n "$STORY_GATE_LINE" && "$STORY_LIST_LINE" -lt "$STORY_GATE_LINE" ]] \
+  && grep -Fq 'do not mutate the story corpus afterward' "$STORY_SPECIFY"; then
+  pass "story-specify orders every declared corpus mutation before the standalone validator"
+else
+  OUT="story-list line=$STORY_LIST_LINE final-gate line=$STORY_GATE_LINE"
+  fail "story-specify must not mutate its corpus after the closure gate"
+fi
+
 if [[ "$FAILED" == 0 ]]; then
   echo ""
   echo "All validate-context-transcript tests passed."

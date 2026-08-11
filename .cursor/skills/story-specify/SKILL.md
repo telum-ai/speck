@@ -87,16 +87,17 @@ solution choice must trace to the epic/breakdown/input; otherwise mark it
 `[NEEDS CLARIFICATION]` instead of inventing it. Give every named failure path a
 negative acceptance criterion and matching test/LARP approach.
 
-After the final artifact edit, run the validator as a standalone command event:
+Update the epic story list to mark this story specified before closing the
+story-specification corpus.
+
+After all `spec.md` and epic story-list edits, run the validator as a standalone command event:
 ```bash
 bash .speck/scripts/validation/validate-template.sh "$STORY_DIR/spec.md" --strict
 ```
-Do not chain, pipe, or wrap it, and do not mutate the story afterward. The
-recorded event exit must belong to the validator itself.
+Do not chain, pipe, or wrap it, and do not mutate the story corpus afterward.
+The recorded event exit must belong to the validator itself.
 
 **5-minute test**: explain in <5 min. Needs "AND" or >3 AC scenarios → split.
-
-Update epic story list → specified.
 
 ## 6. Optional step evaluation
 
