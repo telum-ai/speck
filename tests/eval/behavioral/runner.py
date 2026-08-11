@@ -611,8 +611,16 @@ def command_judge(args: argparse.Namespace) -> int:
     manifest = load_manifest(args.run_id)
     mapping = manifest["anonymous_mapping"]
     revisions = manifest["revisions"]
+    selected_ids = [value.strip() for value in args.cases.split(",") if value.strip()]
+    if selected_ids == ["all"]:
+        selected = list(CASES)
+    else:
+        unknown = sorted(set(selected_ids) - set(CASE_BY_ID))
+        if unknown:
+            raise RuntimeError(f"unknown cases: {', '.join(unknown)}")
+        selected = [CASE_BY_ID[value] for value in selected_ids]
     missing: list[str] = []
-    for case in CASES:
+    for case in selected:
         for condition in ("v10", "v11"):
             label = mapping[case.case_id][condition]
             if not result_paths(args.run_id, case.case_id, label)[0].exists():
@@ -621,7 +629,7 @@ def command_judge(args: argparse.Namespace) -> int:
         raise RuntimeError(f"subject results missing: {', '.join(missing)}")
     judge_dir = RUNS / args.run_id / "judge"
     judge_dir.mkdir(parents=True, exist_ok=True)
-    bundles = [list(CASES[i:i + args.bundle_size]) for i in range(0, len(CASES), args.bundle_size)]
+    bundles = [selected[i:i + args.bundle_size] for i in range(0, len(selected), args.bundle_size)]
     all_cases: list[dict[str, Any]] = []
     blind_checks: list[dict[str, Any]] = []
     for index, bundle in enumerate(bundles, 1):
@@ -1127,6 +1135,7 @@ def build_parser() -> argparse.ArgumentParser:
     judge = sub.add_parser("judge", help="run blinded Cursor judge")
     judge.add_argument("--run-id", default=DEFAULT_RUN_ID)
     judge.add_argument("--model", required=True)
+    judge.add_argument("--cases", default="all", help="comma-separated case ids or all")
     judge.add_argument("--bundle-size", type=int, default=3)
     judge.add_argument("--force", action="store_true")
     judge.set_defaults(func=command_judge)
