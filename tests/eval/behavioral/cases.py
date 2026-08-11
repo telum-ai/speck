@@ -778,12 +778,25 @@ try {
   const selectedFirst = JSON.stringify(aria()) === JSON.stringify(expectedAria([first])) && approve.disabled === false;
   if (buttons()[first]) buttons()[first].click();
   const deselectedFirst = aria().every(value => value === 'false') && approve.disabled === true;
+  for (const index of order) {
+    if (buttons()[index]) buttons()[index].click();
+  }
+  const selectedAll = aria().every(value => value === 'true') && approve.disabled === false;
+  const selectionWorks = initialAria && selectedFirst && deselectedFirst && selectedAll &&
+    context.__uiCalls.toggleSelection >= 7;
+  approve.click();
+  const approvedBatch = statuses().every(value => value === 'confirmed') &&
+    aria().every(value => value === 'false') && approve.disabled === true;
+  const initialCallsBeforeReset = context.__uiCalls.initialState;
+  const resetAvailable = typeof context.mountReview === 'function';
+  if (resetAvailable) context.mountReview(reviewItems);
+  const resetPending = resetAvailable && statuses().every(value => value === 'pending') &&
+    aria().every(value => value === 'false') && approve.disabled === true &&
+    context.__uiCalls.initialState > initialCallsBeforeReset;
   if (buttons()[second]) buttons()[second].click();
   const selectedSecond = JSON.stringify(aria()) === JSON.stringify(expectedAria([second])) && approve.disabled === false;
   if (buttons()[third]) buttons()[third].click();
   const selectedTwo = JSON.stringify(aria()) === JSON.stringify(expectedAria([second, third])) && approve.disabled === false;
-  const selectionWorks = initialAria && selectedFirst && deselectedFirst && selectedSecond && selectedTwo &&
-    context.__uiCalls.toggleSelection >= 4;
   approve.click();
   const approvedTwo = JSON.stringify(statuses()) === JSON.stringify(expectedStatuses([second, third])) &&
     aria().every(value => value === 'false') && approve.disabled === true;
@@ -795,8 +808,9 @@ try {
   approve.click();
   const approvedAll = statuses().every(value => value === 'confirmed') &&
     aria().every(value => value === 'false') && approve.disabled === true;
-  const approvalWorks = approvedTwo && selectedRemaining && approvedAll &&
-    context.__uiCalls.toggleSelection >= 7 && context.__uiCalls.approveSelected >= 2;
+  const approvalWorks = approvedBatch && resetPending && selectedSecond && selectedTwo && approvedTwo &&
+    selectedRemaining && approvedAll && context.__uiCalls.toggleSelection >= 12 &&
+    context.__uiCalls.approveSelected >= 3;
   console.log(JSON.stringify([mountedPending, initiallyDisabled, selectionWorks, approvalWorks]));
 } catch (_) {
   console.log(JSON.stringify([false, false, false, false]));
@@ -923,6 +937,12 @@ def self_test(root: Path) -> dict[str, object]:
     counter_facade_mutant = array_good.split('function renderReview', 1)[0] + '''if(typeof module!=="undefined")module.exports={initialState,toggleSelection,approveSelected};\nif(typeof window!=="undefined"){const items=window.reviewItems||[];const root=document.querySelector("#review");const approve=document.querySelector("#approve");initialState(items);const buttons=items.map(item=>{const button=document.createElement("button");button.textContent=item.title;button.setAttribute("aria-pressed","false");return button});const states=items.map(()=>{const status=document.createElement("span");status.textContent="pending";return status});root.append(buttons[0],states[0],buttons[1],states[1],buttons[2],states[2]);approve.disabled=true;buttons[1].addEventListener("click",()=>{toggleSelection(initialState(items),items[1].id);buttons[1].setAttribute("aria-pressed","true");approve.disabled=false});approve.onclick=()=>{approveSelected(toggleSelection(initialState(items),items[1].id));states[1].textContent="confirmed";buttons[1].setAttribute("aria-pressed","false");approve.disabled=true}}\n'''
     (web / "app.js").write_text(counter_facade_mutant)
     ui_counter_facade_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
+    capped_approval_mutant = array_good.replace(
+        'state=approveSelected(state);renderReview(root,approve,state)',
+        'state=approveSelected(state.map((item,index)=>({...item,selected:item.selected&&index<3})));renderReview(root,approve,state)',
+    )
+    (web / "app.js").write_text(capped_approval_mutant)
+    ui_capped_approval_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
 
     # Project-artifact scorers must be isolated from the exported methodology.
     # This reproduces the v11 tournament contamination: a fixture matrix under
@@ -1020,6 +1040,7 @@ def self_test(root: Path) -> dict[str, object]:
         "ui_dummy_mount_mutant": ui_dummy_mount_mutant,
         "ui_dual_path_mutant": ui_dual_path_mutant,
         "ui_counter_facade_mutant": ui_counter_facade_mutant,
+        "ui_capped_approval_mutant": ui_capped_approval_mutant,
         "project_fixture_isolation": scorer_isolated,
         "parenthesized_placeholder": bool(placeholder_parenthesized["ok"]),
         "canonical_lifecycle_state": bool(lifecycle_state["ok"]),
@@ -1033,5 +1054,5 @@ def self_test(root: Path) -> dict[str, object]:
         "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
         "project_owned_runtime_is_not_methodology": project_owned_runtime_is_not_methodology,
-        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 12.5 and ui_clobber_mutant < ui_array_good and ui_unmounted_mutant < ui_array_good and ui_enabled_mutant < ui_array_good and ui_dummy_mount_mutant < ui_array_good and ui_dual_path_mutant < ui_array_good and ui_counter_facade_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
+        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 12.5 and ui_clobber_mutant < ui_array_good and ui_unmounted_mutant < ui_array_good and ui_enabled_mutant < ui_array_good and ui_dummy_mount_mutant < ui_array_good and ui_dual_path_mutant < ui_array_good and ui_counter_facade_mutant < ui_array_good and ui_capped_approval_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
     }
