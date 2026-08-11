@@ -739,8 +739,9 @@ const document = {
 };
 const probeToken = `probe-${process.pid}-${Date.now()}`;
 const reviewItems = [
-  {id: 'a', title: `${probeToken}-one`},
-  {id: 'b', title: `${probeToken}-two`},
+  {id: `${probeToken}-a`, title: `${probeToken}-one`},
+  {id: `${probeToken}-b`, title: `${probeToken}-two`},
+  {id: `${probeToken}-c`, title: `${probeToken}-three`},
 ];
 const window = { document, reviewItems };
 window.addEventListener = (event, callback) => { if (event === 'DOMContentLoaded' || event === 'load') callback(); };
@@ -758,25 +759,34 @@ try {
   const statuses = () => descendants(review).filter(node => node.tag === 'span').map(node => node.textContent).filter(Boolean);
   const initialButtons = buttons();
   const initialStatuses = statuses();
-  const mountedPending = initialButtons.length === 2 &&
-    initialButtons[0].textContent === reviewItems[0].title &&
-    initialButtons[1].textContent === reviewItems[1].title &&
-    initialStatuses.filter(value => value === 'pending').length === 2 &&
+  const mountedPending = initialButtons.length === reviewItems.length &&
+    initialButtons.every((button, index) => button.textContent === reviewItems[index].title) &&
+    initialStatuses.length === reviewItems.length && initialStatuses.every(value => value === 'pending') &&
     context.__uiCalls.initialState > 0;
   const initiallyDisabled = approve.disabled === true;
-  const initialAria = initialButtons.length === 2 && initialButtons.every(button => button.getAttribute('aria-pressed') === 'false');
-  if (initialButtons[1]) initialButtons[1].click();
-  const selectedButtons = buttons();
-  const selectionWorks = initialAria && selectedButtons.length === 2 &&
-    selectedButtons[0].getAttribute('aria-pressed') === 'false' &&
-    selectedButtons[1].getAttribute('aria-pressed') === 'true' &&
-    approve.disabled === false && context.__uiCalls.toggleSelection > 0;
+  const aria = () => buttons().map(button => button.getAttribute('aria-pressed'));
+  const initialAria = initialButtons.length === reviewItems.length && aria().every(value => value === 'false');
+  if (buttons()[0]) buttons()[0].click();
+  const selectedFirst = JSON.stringify(aria()) === JSON.stringify(['true', 'false', 'false']) && approve.disabled === false;
+  if (buttons()[0]) buttons()[0].click();
+  const deselectedFirst = aria().every(value => value === 'false') && approve.disabled === true;
+  if (buttons()[2]) buttons()[2].click();
+  const selectedThird = JSON.stringify(aria()) === JSON.stringify(['false', 'false', 'true']) && approve.disabled === false;
+  if (buttons()[1]) buttons()[1].click();
+  const selectedTwo = JSON.stringify(aria()) === JSON.stringify(['false', 'true', 'true']) && approve.disabled === false;
+  const selectionWorks = initialAria && selectedFirst && deselectedFirst && selectedThird && selectedTwo &&
+    context.__uiCalls.toggleSelection >= 4;
   approve.click();
-  const approvedButtons = buttons();
-  const approvedStatuses = statuses();
-  const approvalWorks = approvedStatuses[0] === 'pending' && approvedStatuses[1] === 'confirmed' &&
-    approvedButtons.length === 2 && approvedButtons.every(button => button.getAttribute('aria-pressed') === 'false') &&
-    approve.disabled === true && context.__uiCalls.approveSelected > 0;
+  const approvedTwo = JSON.stringify(statuses()) === JSON.stringify(['pending', 'confirmed', 'confirmed']) &&
+    aria().every(value => value === 'false') && approve.disabled === true;
+  if (buttons()[0]) buttons()[0].click();
+  const selectedRemaining = JSON.stringify(aria()) === JSON.stringify(['true', 'false', 'false']) &&
+    JSON.stringify(statuses()) === JSON.stringify(['pending', 'confirmed', 'confirmed']) && approve.disabled === false;
+  approve.click();
+  const approvedAll = statuses().every(value => value === 'confirmed') &&
+    aria().every(value => value === 'false') && approve.disabled === true;
+  const approvalWorks = approvedTwo && selectedRemaining && approvedAll &&
+    context.__uiCalls.toggleSelection >= 5 && context.__uiCalls.approveSelected >= 2;
   console.log(JSON.stringify([mountedPending, initiallyDisabled, selectionWorks, approvalWorks]));
 } catch (_) {
   console.log(JSON.stringify([false, false, false, false]));
@@ -900,6 +910,9 @@ def self_test(root: Path) -> dict[str, object]:
     dual_path_mutant = array_good.split('function renderReview', 1)[0] + '''if(typeof module!=="undefined")module.exports={initialState,toggleSelection,approveSelected};\ndocument.addEventListener("DOMContentLoaded",()=>{const root=document.querySelector("#review");const approve=document.querySelector("#approve");const button=document.createElement("button");button.textContent="theater";button.setAttribute("aria-pressed","false");const status=document.createElement("span");status.textContent="pending";root.append(button,status);approve.disabled=true;button.addEventListener("click",()=>{button.setAttribute("aria-pressed","true");approve.disabled=false});approve.onclick=()=>{status.textContent="confirmed";button.setAttribute("aria-pressed","false");approve.disabled=true}});\n'''
     (web / "app.js").write_text(dual_path_mutant)
     ui_dual_path_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
+    counter_facade_mutant = array_good.split('function renderReview', 1)[0] + '''if(typeof module!=="undefined")module.exports={initialState,toggleSelection,approveSelected};\nif(typeof window!=="undefined"){const items=window.reviewItems||[];const root=document.querySelector("#review");const approve=document.querySelector("#approve");initialState(items);const buttons=items.map(item=>{const button=document.createElement("button");button.textContent=item.title;button.setAttribute("aria-pressed","false");return button});const states=items.map(()=>{const status=document.createElement("span");status.textContent="pending";return status});root.append(buttons[0],states[0],buttons[1],states[1],buttons[2],states[2]);approve.disabled=true;buttons[1].addEventListener("click",()=>{toggleSelection(initialState(items),items[1].id);buttons[1].setAttribute("aria-pressed","true");approve.disabled=false});approve.onclick=()=>{approveSelected(toggleSelection(initialState(items),items[1].id));states[1].textContent="confirmed";buttons[1].setAttribute("aria-pressed","false");approve.disabled=true}}\n'''
+    (web / "app.js").write_text(counter_facade_mutant)
+    ui_counter_facade_mutant = sum(float(c["earned"]) for c in _ui_hidden(root))
 
     # Project-artifact scorers must be isolated from the exported methodology.
     # This reproduces the v11 tournament contamination: a fixture matrix under
@@ -996,6 +1009,7 @@ def self_test(root: Path) -> dict[str, object]:
         "ui_enabled_mutant": ui_enabled_mutant,
         "ui_dummy_mount_mutant": ui_dummy_mount_mutant,
         "ui_dual_path_mutant": ui_dual_path_mutant,
+        "ui_counter_facade_mutant": ui_counter_facade_mutant,
         "project_fixture_isolation": scorer_isolated,
         "parenthesized_placeholder": bool(placeholder_parenthesized["ok"]),
         "canonical_lifecycle_state": bool(lifecycle_state["ok"]),
@@ -1009,5 +1023,5 @@ def self_test(root: Path) -> dict[str, object]:
         "missing_image_prose_is_detected": bool(missing_image_prose["ok"]),
         "missing_image_overbreadth_mutant_rejected": not bool(missing_image_overbreadth_mutant["ok"]),
         "project_owned_runtime_is_not_methodology": project_owned_runtime_is_not_methodology,
-        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 12.5 and ui_clobber_mutant < ui_array_good and ui_unmounted_mutant < ui_array_good and ui_enabled_mutant < ui_array_good and ui_dummy_mount_mutant < ui_array_good and ui_dual_path_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
+        "passed": good_score == 9.0 and boundary_mutant_score < good_score and boundary_mutant_rejected and mutant_score < good_score and ui_array_good == 12.5 and ui_clobber_mutant < ui_array_good and ui_unmounted_mutant < ui_array_good and ui_enabled_mutant < ui_array_good and ui_dummy_mount_mutant < ui_array_good and ui_dual_path_mutant < ui_array_good and ui_counter_facade_mutant < ui_array_good and scorer_isolated and bool(placeholder_parenthesized["ok"]) and bool(lifecycle_state["ok"]) and bool(acceptance_grammar["ok"]) and bool(failure_larp["ok"]) and not bool(failure_without_proof["ok"]) and bool(principal_role["ok"]) and not bool(mock_role_mutant["ok"]) and quoted_inherited_state and verified_false_green_mutant and bool(validation_checks["missing-screenshot"]["ok"]) and bool(missing_image_prose["ok"]) and not bool(missing_image_overbreadth_mutant["ok"]) and project_owned_runtime_is_not_methodology,
     }
