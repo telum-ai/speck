@@ -56,7 +56,7 @@ What/order only — how is in skills. Brackets are conditional slots; evaluate t
 
 <!-- SPECK:FLOW:START -->
 Entry: brownfield `project-import → speck-scan(project) → project-specify`; fuzzy greenfield `project-brainstorm → project-specify`.
-Sprint: `project-specify → ship → [project-promote if outgrown]`.
+Sprint: `project-specify → story loop → speck-audit → speck-larp(+ visual-testing if UI) → project-validate → [project-promote if outgrown]`.
 Build foundation: `project-specify → project-clarify → [project-domain if specialized] → project-product-contract → project-profile → project-evidence-contract → project-context → [project-ux if UI/4+] → [project-constitution if governance-heavy] → [project-architecture if cross-system/4+] → [project-design-system if shared UI] → project-plan → [analyze(project), required 4+]`.
 Platform foundation: `project-specify → project-clarify → [project-domain if specialized] → project-ux → project-context → project-constitution → project-architecture → [project-design-system if UI] → project-product-contract → project-profile → project-evidence-contract → project-plan → analyze(project) → project-roadmap`.
 Epic: `[epic-discover if brownfield has no map] → epic-specify → epic-clarify → [epic-constitution if local principles] → [epic-architecture if cross-cutting] → [epic-journey → epic-wireframes if UX-heavy] → [epic-experience-chain if UI] → epic-plan → epic-breakdown → analyze(epic) → story loop → speck-audit(epic) → speck-larp(+ visual-testing if UI) → epic-validate → epic-retrospective`.

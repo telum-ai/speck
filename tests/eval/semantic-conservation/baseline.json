@@ -30,7 +30,7 @@
   "protected_files": [
     {
       "path": "AGENTS.md",
-      "sha256": "0df4165e5e32c025462acbfb447a050d2916f303b92ae9e27dc3d14a87d5f288"
+      "sha256": "5002bd866897b38e0cbd2ab37356624f2c76681c32bd62dedf4537dae79a3bdb"
     },
     {
       "path": ".cursor/skills/project-profile/SKILL.md",
@@ -210,11 +210,11 @@
     },
     {
       "path": ".speck/scripts/bash/analyze-scale.sh",
-      "sha256": "a1ebc8a76a361a1ef5dea74ea63a1e0e0ffb7bd9119d138661491002d4c33d8f"
+      "sha256": "8cf08795771b71f8eb6bd7a9a0095374f54b1dd142b219b5f77233a4b3486dc2"
     },
     {
       "path": ".speck/scripts/bash/analyze-scale.test.sh",
-      "sha256": "84d5113a3e98e50b81bb10985b21c5bcbb64a524c7962120b18b548a5d7c506d"
+      "sha256": "790895af06a7387094bc75b379c7e8df3e414611fb0c6ef4101836340e1fed7e"
     },
     {
       "path": ".speck/scripts/bash/export-template-repo.sh",
@@ -226,11 +226,11 @@
     },
     {
       "path": ".speck/scripts/banned-language-lint.sh",
-      "sha256": "41fe2d786140f15bbdb80af35d15e5af5ffc762d6d4516d6f40b208c364a905a"
+      "sha256": "f0f2469434b16dc16cc9562110ae07a94517bf1922737e1fc7258547c1a88c36"
     },
     {
       "path": ".speck/scripts/banned-language-lint.test.sh",
-      "sha256": "5723c97148cb28fdca748350b3e0edb8857e54a940eab269041a5eb603080ed5"
+      "sha256": "248aa780b5c3de70d28f62bc18ded0fc2a3741c37a775ede00241f5318048f0f"
     },
     {
       "path": ".speck/scripts/context/speck_context.py",
@@ -258,11 +258,11 @@
     },
     {
       "path": ".speck/scripts/bash/create-new-project.sh",
-      "sha256": "845901b8698cd4271c418efeb610bb25b1ec21f6fef82ad8069bedcb9ff1edf7"
+      "sha256": "00c8f86d4c3016e7d18d79f8c521c58c4f1063c63612a07d7ab3004cf02c271d"
     },
     {
       "path": ".speck/scripts/bash/create-new-project.test.sh",
-      "sha256": "51a216b86cd7d0e8307c267aa55964805788edc1a6c9d86261199ee3f5a0bc0e"
+      "sha256": "6996e177a2833d9c6f10d1b5a86a5b5210ed61e9fd81632508d4bd059875630c"
     },
     {
       "path": ".speck/scripts/validation/validators/_corpus_budget_lib.py",
@@ -294,7 +294,7 @@
     },
     {
       "path": ".speck/scripts/validation/validators/validate-recipes.test.sh",
-      "sha256": "e01c9c5999257f078e4ff1ee89218ca3d37a38c786d1c6c24beef359dd2735ed"
+      "sha256": "40a9ff5827ba23b97df964197bf350fb1edfb0216bc72b5a5aa76300a1e5a6d0"
     },
     {
       "path": ".speck/recipes/capacitor-wrapped-web/recipe.yaml",
@@ -302,11 +302,11 @@
     },
     {
       "path": ".speck/scripts/validation/validators/validate-evidence-contract.sh",
-      "sha256": "9cd40837d284213d97ba9a384bde7ce2621b97e8e0a2e3ce641af3090adcb38f"
+      "sha256": "9333ab7e64bfb9e0c1c66c4b40c5ab7f6ff6cabc4e47e10320cee055294271b9"
     },
     {
       "path": ".speck/scripts/validation/validators/validate-evidence-contract.test.sh",
-      "sha256": "c1c45110a2f9eb6e31930dc4f312d197405e64d7c58908e0726343e4f734ef30"
+      "sha256": "ebba23461095916daf8bf560f7c9cff87cd90100cd2569619414f91a3325fe2f"
     },
     {
       "path": ".speck/scripts/validation/validators/validate-readme.test.sh",
@@ -386,11 +386,11 @@
     },
     {
       "path": ".speck/scripts/validation/validators/validate-proof-flow.sh",
-      "sha256": "e74445036f8504180efb2cf125fd30f2085d515f4d2b2475005b52d334f0a217"
+      "sha256": "761a186aa4e3061ef4131ea344cdb54dbe97d9a7fe33739373addb574784fe18"
     },
     {
       "path": ".speck/scripts/validation/validators/validate-proof-flow.test.sh",
-      "sha256": "0066d0538ed5dba9aa2da2acae348815193b82905596f1ef41ec4f144bf8db6d"
+      "sha256": "83027315761ddcd2e46aa5a5a5f62c7ef5a1d0af70cafb13c210e628b5ac3e62"
     },
     {
       "path": "packages/cli/lib/generate-agents.js",
@@ -438,7 +438,7 @@
     },
     {
       "path": "tests/eval/skill-routing/baseline.json",
-      "sha256": "f7714d69bbe8b79fb9ae5e64930cf4366a7e895b8d18c634c4d83304af8b0164"
+      "sha256": "5db5f1eb5da93518da779037638e64bbbebf6555ad8928c10c732c7f222b9ee8"
     },
     {
       "path": "tests/eval/skill-routing/runner.py",
@@ -462,11 +462,11 @@
     },
     {
       "path": ".github/workflows/canonical-flow-baseline.yml",
-      "sha256": "836b34548aaf5b3baa6b968fed88ee8f8d0e0d7e48a0da5a48013796e3cf324d"
+      "sha256": "7fcfecd3a5890ad70575ff6e8bb046818f033d7473bbe6e28f528ab617b76454"
     },
     {
       "path": "package.json",
-      "sha256": "0e430df04c3ea174cfcb8053c7f0ad9683f5486369fdb3ef381198148315960f"
+      "sha256": "b11a4f3af7df425d75a77f1cbf35b5c049bcf5d61c00d3b6c3972222f630427e"
     }
   ],
   "obligations": [

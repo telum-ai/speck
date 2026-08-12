@@ -1,0 +1,119 @@
+{
+  "artifact_changed": {
+    "v10": 12,
+    "v11": 12
+  },
+  "classification": "inconclusive",
+  "combined_70_30": {
+    "bootstrap_95_ci": [
+      -7.875,
+      5.071424999999997
+    ],
+    "mean": {
+      "v10": 91.86433333333333,
+      "v11": 91.46666666666667
+    },
+    "mean_difference_v11_minus_v10": -0.3976666666666648
+  },
+  "context_conformance": {
+    "applicable_runs": 8,
+    "axes": {
+      "GATE_USE": {
+        "checked": 8,
+        "pass": 8
+      },
+      "REACH": {
+        "checked": 8,
+        "pass": 8
+      },
+      "SELECTIVITY": {
+        "checked": 8,
+        "pass": 8
+      },
+      "TIMING": {
+        "checked": 8,
+        "pass": 8
+      }
+    },
+    "excluded_invalid_runs": 0,
+    "overall_pass": 8
+  },
+  "deterministic": {
+    "bootstrap_95_ci": [
+      -13.333333333333334,
+      2.1733333333333342
+    ],
+    "mean": {
+      "v10": 98.91333333333333,
+      "v11": 94.16666666666667
+    },
+    "mean_difference_v11_minus_v10": -4.746666666666666,
+    "sign_test_p": 1.0,
+    "wins_ties_losses": {
+      "losses": 2,
+      "ties": 9,
+      "wins": 1
+    }
+  },
+  "effort": "medium",
+  "false_greens": {
+    "v10": 0,
+    "v11": 0
+  },
+  "harness": {
+    "git_revision": "27b5c0f6bbcb421a91e6e6e31fd2e8a890d43fea",
+    "sha256": "51fb7e0110bd68b54a73435b55fb942afb5f812b1de73ec8e7fe6184fe00718b"
+  },
+  "input_tokens": {
+    "cached_mean_v10": 934314.6666666666,
+    "cached_mean_v11": 804288.0,
+    "mean_v10": 1034552.6666666666,
+    "mean_v11": 872781.3333333334,
+    "total_v10": 12414632.0,
+    "total_v11": 10473376.0,
+    "uncached_mean_v10": 100238.0,
+    "uncached_mean_v11": 68493.33333333333
+  },
+  "isolation": {
+    "ancestor_package_json": [],
+    "outside_repository_tree": true,
+    "workspace_root": "/private/var/folders/f7/by4sp65x1pj0kyz1rm27085h0000gn/T/speck-behavioral-workspaces/2026-08-11-v11-release-27b5c0f-terra/workspaces"
+  },
+  "judge": {
+    "complete": true,
+    "mean": {
+      "v10": 75.41666666666667,
+      "v11": 85.16666666666667
+    },
+    "mean_difference_v11_minus_v10": 9.75
+  },
+  "judge_model": "cursor-grok-4.5-high",
+  "model": "gpt-5.6-terra",
+  "quality_pairs": {
+    "excluded": 0,
+    "included": 12
+  },
+  "required_corrections": {
+    "v10": 1,
+    "v11": 5
+  },
+  "rescore_harness": {
+    "git_revision": "332e168f30ffac35aac22bf97264b3d2a485e034",
+    "sha256": "63dc4bc3c14980e82757e81d23b950b212216ace476535d75e25b970bbc36385"
+  },
+  "revisions": {
+    "v10": "51dbbb1f7b037cf0b5a12ccc9cd8846744f4f1f6",
+    "v11": "27b5c0f6bbcb421a91e6e6e31fd2e8a890d43fea"
+  },
+  "run_id": "2026-08-11-v11-release-27b5c0f-terra",
+  "valid_runs": {
+    "v10": 12,
+    "v11": 12
+  },
+  "wall_seconds": {
+    "mean_v10": 269.08416666666665,
+    "mean_v11": 210.23216666666667,
+    "total_v10": 3229.01,
+    "total_v11": 2522.786
+  }
+}

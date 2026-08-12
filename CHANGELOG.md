@@ -9,8 +9,8 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 
 | Metric | Before (~10.5) | After (11.0) |
 |--------|----------------|--------------|
-| AGENTS.md | ~62810 bytes / 578 lines | **11274 bytes / 103 lines** |
-| Auto skill description sum | ~30k chars | **6614 chars** (specific trigger contracts) |
+| AGENTS.md | ~62810 bytes / 578 lines | **11434 bytes / 103 lines** |
+| Auto skill description sum | ~30k chars | **6592 chars** (specific trigger contracts) |
 | Auto skill entries | 76 after initial v11 pass | **60** |
 | Domain/integration skills | ~20 | **0** (deleted) |
 | `disable-model-invocation: true` | inverted / scattered | **machine-owned family policy** |
@@ -39,7 +39,7 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 - A 67-case always-on routing suite covers every automatic skill with near-neighbor exclusions. Evaluation runs and reports are generated locally and ignored; only harness code and release conclusions are versioned.
 - The complete project/epic/story flow is always in AGENTS context; JIT references explain gates without carrying competing sequences (ADR-0009).
 - Encyclopedic AGENTS sections → `.speck/reference/` (canonical-routing, command-phases, host-capabilities).
-- Evidence-contract template principle-compressed (≤400 lines); detail JIT under `.speck/reference/evidence-*`.
+- Evidence-contract template principle-compressed (414 lines, down from 700+); detail JIT under `.speck/reference/evidence-*`.
 
 ### Host wiring
 
@@ -65,6 +65,8 @@ ceilings; P1–P4 and prove gates stayed load-bearing.
 - V11 reduced mean input tokens 15.6%, uncached input tokens 31.7%, and wall time 21.9%; all 8 applicable v11 transcripts passed REACH, SELECTIVITY, TIMING, and GATE_USE.
 - Real-project entry canaries preserved mandatory recheck precedence and proved that live graph P1 findings outrank stale project-state prose. Generated transcripts and reports remain reproducible local output, not versioned methodology context.
 - This supports a substantially leaner, more inspectable release candidate without claiming a universal quality increase; replication across another model/host and a longitudinal multi-story project remains the next confidence step.
+- The tournament was frozen at methodology revision `27b5c0f`; the branch continued past it, so these numbers evidence the v11 architecture rather than the exact shipped tree. What binds the shipped tree is the static layer — semantic conservation, corpus budget, and the routing baseline all run against HEAD in `npm test`.
+- Decision-grade evidence is versioned at `docs/evidence/2026-08-11-v11-release-27b5c0f-terra/` (report, decision, aggregate scores, judge blinding) with the reasoning in `docs/feedback/2026-08-11-v11-release-confidence.md`. Per-subject transcripts stay reproducible local output; recover them with `git show ef87041`.
 
 ### Agent prose + load DAG
 
