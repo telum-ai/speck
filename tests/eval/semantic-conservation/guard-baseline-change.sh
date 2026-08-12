@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Full standalone enforcement. This file is sha256-protected in
+# tests/eval/semantic-conservation/baseline.json's protected_files, which is
+# what makes tampering it visible to the trusted pull_request_target job
+# (.github/workflows/canonical-flow-baseline.yml -> the "Evaluate candidate
+# with trusted semantic runner" step, which flags any protected file whose
+# content changed without a baseline update). Do NOT route this guard's
+# decision logic through tests/eval/skill-routing/guard-baseline-change.sh
+# (or any other unprotected file): that file is not in protected_files, so an
+# edit there would silently change this guard's behavior with nothing to
+# catch it — this restores from exactly that regression. Bootstrap policy is
+# stricter than the canonical-flow guard's: a base commit missing this
+# baseline still requires the flow-baseline-change-approved label.
+#
+# usage: guard-baseline-change.sh <base-sha> [head-sha]
 BASE_SHA="${1:?usage: guard-baseline-change.sh <base-sha> [head-sha]}"
 HEAD_SHA="${2:-HEAD}"
 BASELINE_PATH="tests/eval/semantic-conservation/baseline.json"

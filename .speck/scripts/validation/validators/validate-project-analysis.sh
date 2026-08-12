@@ -324,8 +324,79 @@ fm_value() {
   printf '%s' "$line"
 }
 
+# is_v11_report <report-file> <scope-dir>
+# v11-ness is a claim to VERIFY against live truth, never one to trust blindly — the same rule
+# ANALYSIS_SCOPE_DRIFT.P1 already applies to play_level and epic_count, extended here so a report
+# cannot duck the whole Flow Fit contract by simply typing an old speck_version.
+#
+# But "live truth" for a claim about WHEN a report was produced is not simply "whatever
+# .speck/VERSION reads on disk right now" — that retroactively convicts every analysis report
+# genuinely written before THIS workspace's own tooling reached v11, which is exactly what VINTAGE
+# BINDING (above) promises never happens: "every analysis report already on disk ... none is
+# retroactively convicted." The signal that actually separates "genuinely predates v11" from "claims
+# a version below the tooling that produced it" is ANCESTRY — the same technique freshness_check
+# already uses for staleness (git log on the FILE, never a self-reported SHA field): what did
+# .speck/VERSION read AT THE REPORT'S OWN COMMIT? A report committed before the workspace's tooling
+# reached v11 predates the Flow Fit requirement and is exempt — it is judged by its own claim, which
+# is ordinarily consistent with that history anyway. A report committed at or after was produced BY
+# v11 tooling regardless of what number its own frontmatter types, and is held to the v11 contract.
+# Ancestry is read off the LAST COMMIT, never the working tree: an uncommitted edit sitting on top of
+# an already-vintage commit (fixing one unrelated cell, say) does not retroactively re-author the
+# whole report under today's tooling — only a report with NO prior commit at all has nothing to judge
+# by except the live tooling authoring it right now.
+#
+# Falls back to the report's own claim whenever ancestry cannot be computed at all: no reachable
+# workspace root, no live VERSION file, the scope is outside git, or VERSION did not exist yet at the
+# report's own commit. Inability to verify is a finding to route elsewhere, never a silent conviction
+# (AGENTS.md P3) — and never a silent pass either, which was the ORIGINAL defect this replaced.
 is_v11_report() {
-  local v major
+  local report="${1:-}" scope="${2:-}" root v major
+  root="$([[ -n "$scope" ]] && speck_root "$scope" || true)"
+  if [[ -z "$root" || ! -f "$root/.speck/VERSION" ]]; then
+    v="$(fm_value 'speck_version')"
+    major="${v%%.*}"
+    [[ "$major" =~ ^[0-9]+$ && "$major" -ge 11 ]]
+    return
+  fi
+  local live live_major
+  live="$(tr -d '[:space:]' < "$root/.speck/VERSION" 2>/dev/null || true)"
+  live_major="${live%%.*}"
+  if [[ ! "$live_major" =~ ^[0-9]+$ || "$live_major" -lt 11 ]]; then
+    # the workspace itself has not reached v11 yet; nothing under it can be a v11 report.
+    return 1
+  fi
+  local git_root rel_version report_sha hist hist_major
+  git_root="$(git -C "$root" rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -z "$git_root" || -z "$report" || ! -f "$report" ]]; then
+    v="$(fm_value 'speck_version')"
+    major="${v%%.*}"
+    [[ "$major" =~ ^[0-9]+$ && "$major" -ge 11 ]]
+    return
+  fi
+  case "$root" in
+    "$git_root") rel_version=".speck/VERSION" ;;
+    "$git_root"/*) rel_version="${root#"$git_root"/}/.speck/VERSION" ;;
+    *) rel_version=".speck/VERSION" ;;
+  esac
+  report_sha="$(git -C "$git_root" log -1 --format=%H -- "$report" 2>/dev/null || true)"
+  if [[ -z "$report_sha" ]]; then
+    # Never committed at all — there is no ancestry to read, so the only tooling that could have
+    # produced it is whatever is live on disk right now.
+    return 0
+  fi
+  hist="$(git -C "$git_root" show "${report_sha}:${rel_version}" 2>/dev/null || true)"
+  hist="$(tr -d '[:space:]' <<<"$hist")"
+  if [[ -z "$hist" ]]; then
+    # VERSION did not exist yet at the report's own commit — cannot verify, so do not convict.
+    v="$(fm_value 'speck_version')"
+    major="${v%%.*}"
+    [[ "$major" =~ ^[0-9]+$ && "$major" -ge 11 ]]
+    return
+  fi
+  hist_major="${hist%%.*}"
+  if [[ "$hist_major" =~ ^[0-9]+$ && "$hist_major" -ge 11 ]]; then
+    return 0
+  fi
   v="$(fm_value 'speck_version')"
   major="${v%%.*}"
   [[ "$major" =~ ^[0-9]+$ && "$major" -ge 11 ]]
@@ -370,20 +441,74 @@ flow_cell_is_substantive() { # reject blank/sentinel/template cells masquerading
   return 0
 }
 
-flow_artifact_exists() { # <artifact-cell> <analysis-scope-dir>
-  local artifact="$1" scope="$2" root project token
-  root="$(speck_root "$scope")"
-  project="$scope"
-  case "$scope" in */epics/*) project="${scope%%/epics/*}" ;; esac
+# flow_artifact_keyword <slot> → an ERE fragment the artifact's basename must contain (case-
+# insensitive) before its existence is even checked. Canonical filenames come from each skill's own
+# SKILL.md "Output:" line (ux-strategy.md, architecture.md, design-system.md, constitution.md,
+# domain-model.md, user-journey.md, wireframes.md, experience-chain.md, ui-spec.md). Slots with no
+# single fixed deliverable — discovery/scan/extract steps, whose output name varies by topic — key on
+# their own verb instead, so a genuinely-produced artifact still resolves while an incidental mention
+# elsewhere in the sentence does not. Without this filter, ANY existing .md token in the cell
+# resolved (FLOW_INCLUDED_PHANTOM.P1's whole reason to exist), which is what let a rationale merely
+# mentioning an unrelated, real filename discharge the check for a step that never ran.
+#
+# TWO SLOTS DELIBERATELY DO NOT KEY ON A GUARANTEED-TO-EXIST FILENAME. epic-discover's own SKILL.md
+# names its output `epic.md` — but epic-specify writes the SAME filename, so `epic.md`'s mere presence
+# in an epic dir (true of every epic, discovered or not) is not evidence discovery ran; the keyword is
+# `discover` alone, so a bare "epic.md" mention can no longer stand in. story-extract's SKILL.md names
+# two outputs, `spec.md` and `codebase-scan-extracted.md` — but story-specify ALSO writes spec.md, so
+# only the extract-unique artifact counts; `spec.md` was dropped from the alternation for the same
+# reason. Both previously let "the filename exists" trivially pass for a step that never ran, because
+# the filename it matched was one every story/epic already carries regardless.
+flow_artifact_keyword() {
+  case "$1" in
+    project-import)        printf 'import|landscape-overview' ;;
+    speck-scan-project)    printf 'scan|landscape-overview' ;;
+    project-brainstorm)    printf 'brainstorm' ;;
+    project-domain)        printf 'domain' ;;
+    project-ux)            printf 'ux-strategy' ;;
+    project-constitution)  printf 'constitution' ;;
+    project-architecture)  printf 'architecture' ;;
+    project-design-system) printf 'design-system|primitives' ;;
+    epic-discover)         printf 'discover' ;;
+    epic-constitution)     printf 'constitution' ;;
+    epic-architecture)     printf 'architecture' ;;
+    epic-journey)          printf 'journey' ;;
+    epic-wireframes)       printf 'wireframe' ;;
+    epic-experience-chain) printf 'experience-chain' ;;
+    story-extract)         printf 'extract|codebase-scan' ;;
+    speck-scan)            printf 'scan' ;;
+    story-ui-spec)         printf 'ui-spec' ;;
+    *)                     printf '%s' "$(lc "$1")" ;;
+  esac
+  return 0
+}
+
+# flow_artifact_exists <artifact-cell> <analysis-scope-dir> <slot>
+# The scope directory ONLY — never the project root, never the repo root. Every slot's own SKILL.md
+# writes its output into the directory the step ran AT (an epic step into its own epic dir, a story
+# step into its own story dir; see flow_artifact_keyword above), so that directory is the entire
+# search space. Widening the search to $project or $root let a SAME-NAMED artifact from a DIFFERENT
+# altitude discharge a claim it never earned — a project-wide constitution.md satisfying "included"
+# for epic-constitution with nothing epic-specific on disk. "A filename in the report is not evidence
+# that the step ran" has to mean the step ran HERE, not merely that the name exists somewhere in the
+# tree.
+flow_artifact_exists() {
+  local artifact="$1" scope="$2" slot="$3" token keyword
+  keyword="$(flow_artifact_keyword "$slot")"
   while IFS= read -r token; do
     [[ -n "$token" ]] || continue
+    # The token must NAME this slot's own artifact. A filename that merely exists somewhere in the
+    # tree is not evidence THIS step ran — binding it to the slot is the entire point of the check.
+    printf '%s' "$(lc "$(basename "$token")")" | grep -qE "$keyword" || continue
+    # Confine every candidate to the scope directory. An absolute path, or a relative one
+    # walking out through `..`, would otherwise reach a same-named artifact at another
+    # altitude and discharge a claim this step never earned — the exact bypass the
+    # scope-only rule above exists to prevent.
     case "$token" in
-      /*) [[ -f "$token" ]] && return 0 ;;
-      *)
-        [[ -f "$scope/$token" ]] && return 0
-        [[ -f "$project/$token" ]] && return 0
-        [[ -n "$root" && -f "$root/$token" ]] && return 0
-        ;;
+      */../*|*/..|../*|..) continue ;;
+      /*) [[ "$token" == "$scope"/* ]] || continue
+          [[ -f "$token" ]] && return 0 ;;
+      *)  [[ -f "$scope/$token" ]] && return 0 ;;
     esac
   done <<< "$(printf '%s' "$artifact" | grep -oE '[A-Za-z0-9_./-]+\.md' || true)"
   return 1
@@ -426,9 +551,9 @@ load_tables() {
   return 0
 }
 
-flow_fit_structural_check() {
-  local scope="$1"
-  is_v11_report || return 0
+flow_fit_structural_check() { # <report-file> <scope-dir>
+  local report_file="$1" scope="$2"
+  is_v11_report "$report_file" "$scope" || return 0
   if [[ -z "$FLOW_HEADER" ]]; then
     log_error "the Flow Fit table has no resolvable header row" \
       "Use: Slot | Trigger evidence | Artifact or rationale | Verdict. Every reached optional slot must be adjudicated."
@@ -455,7 +580,7 @@ flow_fit_structural_check() {
     if ! flow_cell_is_substantive "$trigger" || ! flow_cell_is_substantive "$artifact"; then
       weak="$weak $slot"
     fi
-    if [[ "$verdict" == included ]] && ! flow_artifact_exists "$artifact" "$scope"; then
+    if [[ "$verdict" == included ]] && ! flow_artifact_exists "$artifact" "$scope" "$slot"; then
       phantom="$phantom $slot"
     fi
   done <<< "$(flow_slots "$ARTIFACT_TYPE")"
@@ -471,9 +596,9 @@ flow_fit_structural_check() {
   return 0
 }
 
-flow_fit_gate_check() {
-  local level="$1" play="${2:-}" epics="${3:-0}" scope="$4"
-  is_v11_report || return 0
+flow_fit_gate_check() { # <level> <play> <epics> <scope-dir> <report-file>
+  local level="$1" play="${2:-}" epics="${3:-0}" scope="$4" report_file="${5:-}"
+  is_v11_report "$report_file" "$scope" || return 0
   if [[ -z "$FLOW_HEADER" ]]; then
     emit_p1 "FLOW_OPTIONAL_UNREVIEWED.P1" "the v11 report has no readable Flow Fit table. Optional flow steps were not adjudicated, so absence cannot be distinguished from deliberate omission."
     return 0
@@ -501,7 +626,7 @@ flow_fit_gate_check() {
     if ! flow_cell_is_substantive "$trigger" || ! flow_cell_is_substantive "$artifact"; then
       weak="$weak $slot"
     fi
-    if [[ "$verdict" == included ]] && ! flow_artifact_exists "$artifact" "$scope"; then
+    if [[ "$verdict" == included ]] && ! flow_artifact_exists "$artifact" "$scope" "$slot"; then
       phantom="$phantom $slot"
     fi
   done <<< "$(flow_slots "$level")"
@@ -541,9 +666,10 @@ gate_verdict() {
 }
 
 structural_mode() {
-  local f="$1"
+  local f="$1" scope_dir
   [[ -f "$f" ]] || { echo "ERROR: file not found: $f" >&2; exit 2; }
-  DECISIONS_LOG="$(resolve_decisions_log "$(cd "$(dirname "$f")" && pwd)")"
+  scope_dir="$(cd "$(dirname "$f")" && pwd)"
+  DECISIONS_LOG="$(resolve_decisions_log "$scope_dir")"
   load_report "$f"
 
   if [[ "$BOUND" == false ]]; then
@@ -586,14 +712,14 @@ structural_mode() {
         "Regenerate from the selected project, epic, or story analysis template — do not hand-write around the structure."
     fi
   done
-  if is_v11_report; then
+  if is_v11_report "$f" "$scope_dir"; then
     if grep -qE '^#+[[:space:]].*Flow Fit' <<<"$CONTENT"; then
       log_ok "section present: Flow Fit"
     else
       log_error "Missing required section: Flow Fit" \
         "v11 analysis must adjudicate each conditional step before downstream work."
     fi
-    flow_fit_structural_check "$(cd "$(dirname "$f")" && pwd)"
+    flow_fit_structural_check "$f" "$scope_dir"
   fi
 
   # --- Lens Roster columns, BY HEADER NAME ---
@@ -1078,19 +1204,26 @@ gate_mode() {
   fi
   DECISIONS_LOG="$(resolve_decisions_log "$dir")"
 
-  local root play epics required fm_play="" fm_epics=""
+  local root play play_declared epics required fm_play="" fm_epics=""
   root="$(speck_root "$dir")"
   epics="$(count_epics "$proj")"
-  play="$(play_level_of "$root")"
+  play_declared="$(play_level_of "$root")"
+  play="$play_declared"
   [[ -z "$play" ]] && play="platform"
 
   # Live project truth decides rigor. Report frontmatter is a bound claim to compare, never an
-  # authority that can lower the gate by declaring a cheaper play level or smaller epic count.
+  # authority that can lower the gate by declaring a cheaper play level or smaller epic count. But
+  # the comparison needs a LIVE declaration to disagree with — when .speck/project.json carries no
+  # play_level at all, "platform" above is this gate's own conservative assumption (AGENTS.md: "if
+  # absent, use Platform until the project is classified"), not a fact the report can be convicted of
+  # contradicting. Accusing a report of drifting from a guess this gate invented is the exact
+  # self-referential shape ANALYSIS_SCOPE_DRIFT.P1 exists to catch, one level up — so the play_level
+  # comparison runs only against $play_declared, never against the synthesized default.
   if [[ -f "$report" ]]; then
     load_report "$report"
     fm_play="$(fm_value 'play_level')"; fm_epics="$(fm_value 'epic_count')"
-    if [[ -n "$fm_play" && "$(lc "$fm_play")" != "$(lc "$play")" ]]; then
-      emit_p1 "ANALYSIS_SCOPE_DRIFT.P1" "report play_level '$fm_play' disagrees with live project level '$play'. The report cannot lower or redefine its own rigor."
+    if [[ -n "$play_declared" && -n "$fm_play" && "$(lc "$fm_play")" != "$(lc "$play_declared")" ]]; then
+      emit_p1 "ANALYSIS_SCOPE_DRIFT.P1" "report play_level '$fm_play' disagrees with live project level '$play_declared'. The report cannot lower or redefine its own rigor."
     fi
     if [[ "$level" != story ]] && printf '%s' "$fm_epics" | grep -qE '^[0-9]+$' && [[ "$fm_epics" -ne "$epics" ]]; then
       emit_p1 "ANALYSIS_SCOPE_DRIFT.P1" "report epic_count '$fm_epics' disagrees with the live plan/directory count '$epics'. The report cannot shrink the corpus it claims to analyze."
@@ -1103,9 +1236,9 @@ gate_mode() {
   echo ""
 
   if [[ "$required" -eq 0 ]]; then
-    if [[ -f "$report" && "$BOUND" == true ]] && is_v11_report; then
+    if [[ -f "$report" && "$BOUND" == true ]] && is_v11_report "$report" "$dir"; then
       load_tables
-      flow_fit_gate_check "$level" "$play" "$epics" "$dir"
+      flow_fit_gate_check "$level" "$play" "$epics" "$dir" "$report"
     fi
     if (( p1 > 0 )); then
       gate_verdict_and_exit
@@ -1168,7 +1301,7 @@ gate_mode() {
   load_tables
 
   # --- predicate 2: conditional flow coverage ---
-  flow_fit_gate_check "$level" "$play" "$epics" "$dir"
+  flow_fit_gate_check "$level" "$play" "$epics" "$dir" "$report"
 
   # --- predicate 3: freshness (CONTENT, never `stamped SHA == HEAD`) ---
   if [[ "$level" == "story" ]]; then

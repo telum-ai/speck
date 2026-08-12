@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import re
 import subprocess
@@ -21,14 +22,47 @@ REPORTS_ROOT = ROOT / "tests/eval/skill-routing/reports"
 FLOW_CONTRACT_PATH = ROOT / "tests/eval/skill-routing/baseline.json"
 FLOW_START = "<!-- SPECK:FLOW:START -->"
 FLOW_END = "<!-- SPECK:FLOW:END -->"
+CORPUS_BUDGET_LIB_PATH = ROOT / ".speck/scripts/validation/validators/_corpus_budget_lib.py"
+
+# Prose tokens that legitimately appear inside SPECK:FLOW backtick spans
+# without naming a catalog skill (play-level names, conditional-clause
+# words, and the two-word "story loop"/"[analyze|speck-audit|speck-larp](scope)"
+# phrasing). A flow token that resolves to neither the live catalog nor this
+# allowlist is either a typo of a real skill name or a skill that no longer
+# exists — flow_token_errors() below fails on it either way, so extending
+# this set is always a deliberate, reviewable act, never silent.
+FLOW_PROSE_ALLOWLIST = frozenset(
+    {
+        "Build", "Platform", "UI", "UX-heavy", "artifacts", "brownfield",
+        "code", "complex", "cross-cutting", "cross-system", "epic", "exists",
+        "external", "facts", "for", "governance-heavy", "has", "if", "local",
+        "lock", "loop", "map", "no", "outgrown", "principles", "project",
+        "required", "shared", "specialized", "story", "without", "worktrees",
+    }
+)
+
+
+def _load_corpus_budget_lib():
+    """Import the sha256-pinned _corpus_budget_lib module by path. Reused
+    (not reimplemented) so this runner's frontmatter reader shares the one
+    place that already handles a folded `description: >` block correctly."""
+    spec = importlib.util.spec_from_file_location("corpus_budget_lib", CORPUS_BUDGET_LIB_PATH)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_CORPUS_BUDGET_LIB = _load_corpus_budget_lib()
 
 
 def parse_frontmatter(text: str) -> str:
-    match = re.match(r"^---\n(.*?)\n---", text, re.S)
-    return match.group(1) if match else ""
+    frontmatter, _ = _CORPUS_BUDGET_LIB.parse_fm(text)
+    return frontmatter
 
 
 def field(frontmatter: str, key: str) -> str:
+    if key == "description":
+        return _CORPUS_BUDGET_LIB.description(frontmatter)
     match = re.search(rf"^{re.escape(key)}:\s*(.+?)\s*$", frontmatter, re.M)
     return match.group(1) if match else ""
 
@@ -116,6 +150,75 @@ def competing_flow_errors(catalog: dict[str, str], root: Path = ROOT) -> list[st
             named = {name for name in catalog if flow_has_skill(block, name)}
             if "State:" in block and "Run:" in block and len(named) >= 3:
                 errors.append(f"{rel} carries a competing state-machine flow")
+    return errors
+
+
+def flow_token_errors(catalog: dict[str, str], flow: str) -> list[str]:
+    """Every hyphen-or-bare word inside a SPECK:FLOW backtick span must resolve
+    to either a live catalog skill or FLOW_PROSE_ALLOWLIST. validate_suite's
+    missing_from_flow/extra_in_flow checks only ever probe the flow for names
+    that are already in the baseline's routes or already in the catalog, so a
+    flow token naming no skill at all (a stale reference left behind when a
+    skill is deleted, or a typo) was structurally invisible to every existing
+    gate. This closes that hole without hand-listing every legitimate skill
+    name: only genuinely unresolved tokens are ever reported."""
+    unresolved: set[str] = set()
+    for span in re.findall(r"`([^`]*)`", flow):
+        for token in re.findall(r"[A-Za-z][A-Za-z0-9-]*", span):
+            if token in catalog or token in FLOW_PROSE_ALLOWLIST:
+                continue
+            unresolved.add(token)
+    if not unresolved:
+        return []
+    return [f"canonical flow references unresolved tokens: {sorted(unresolved)}"]
+
+
+# Bare hyphenated backtick spans elsewhere in AGENTS.md (outside the
+# SPECK:FLOW block, or a lone skill name inside it) that are not catalog
+# skill names but are still legitimate — e.g. a PR label name. Empty today;
+# extending this is a deliberate, reviewable edit like FLOW_PROSE_ALLOWLIST.
+STALE_REFERENCE_ALLOWLIST: frozenset[str] = frozenset()
+
+
+def stale_skill_reference_errors(catalog: dict[str, str], agents_text: str) -> list[str]:
+    """Every backtick span in AGENTS.md that, taken as a whole, looks exactly
+    like a skill name (a bare lowercase hyphenated identifier — no dots, no
+    slashes, no surrounding prose in the same span) must resolve to a live
+    catalog skill or STALE_REFERENCE_ALLOWLIST. flow_token_errors only ever
+    looks inside the SPECK:FLOW block, so a stale reference left in prose
+    outside it (e.g. "through `speck-feedback` while the evidence is fresh"
+    in Always-on gates, after speck-feedback is deleted) was invisible to
+    every gate, including flow_token_errors. Requiring the WHOLE span to
+    match (rather than tokenizing sub-words the way flow_token_errors does)
+    is what keeps this free of false positives on file paths like
+    `.speck/reference/gap-routes.md` or `project-state.md` — those split on
+    '.' and '/' and never fully match a bare identifier on their own."""
+    pattern = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$")
+    unresolved: set[str] = set()
+    for span in re.findall(r"`([^`]*)`", agents_text):
+        if not pattern.match(span):
+            continue
+        if span in catalog or span in STALE_REFERENCE_ALLOWLIST:
+            continue
+        unresolved.add(span)
+    if not unresolved:
+        return []
+    return [f"AGENTS.md references skills that no longer exist: {sorted(unresolved)}"]
+
+
+def collect_errors(
+    catalog: dict[str, str], suite: dict[str, Any], flow: str,
+    contract: dict[str, Any], agents_text: str
+) -> list[str]:
+    """The single, shared error-aggregation path used by both main() and
+    self-test. Every gate function must be wired in HERE, not separately in
+    main() — self-test exercises this function directly, so a gate wired
+    into main() but not into collect_errors() (or vice versa) cannot exist,
+    which is what keeps a gate from being silently unwired with zero red."""
+    errors = validate_suite(catalog, suite, flow, contract, agents_text)
+    errors.extend(competing_flow_errors(catalog))
+    errors.extend(flow_token_errors(catalog, flow))
+    errors.extend(stale_skill_reference_errors(catalog, agents_text))
     return errors
 
 
@@ -566,8 +669,7 @@ def main() -> int:
     agents_text = load_agents()
     flow = load_flow(agents_text=agents_text)
     contract = load_flow_contract()
-    errors = validate_suite(catalog, suite, flow, contract, agents_text)
-    errors.extend(competing_flow_errors(catalog))
+    errors = collect_errors(catalog, suite, flow, contract, agents_text)
     if errors:
         for error in errors:
             print(f"FAIL: {error}", file=sys.stderr)
@@ -656,6 +758,47 @@ def main() -> int:
             if not competing_flow_errors(catalog, mutant_root):
                 print("FAIL: competing-flow detector mutant passed", file=sys.stderr)
                 return 1
+        phantom_flow = flow.replace("story-tasks", "story-tasks-retired", 1)
+        # Routed through collect_errors(), not flow_token_errors() directly:
+        # main() calls collect_errors() too, so a future edit that deletes
+        # flow_token_errors()'s wiring from collect_errors() fails THIS
+        # assertion, not just a standalone unit check — the gate cannot be
+        # silently unwired with zero red.
+        if not any(
+            "unresolved tokens" in error
+            for error in collect_errors(catalog, suite, phantom_flow, contract, agents_text)
+        ):
+            print("FAIL: phantom flow-token mutant passed", file=sys.stderr)
+            return 1
+        if any(
+            "unresolved tokens" in error
+            for error in collect_errors(catalog, suite, flow, contract, agents_text)
+        ):
+            print("FAIL: live flow carries a token flow_token_errors cannot resolve", file=sys.stderr)
+            return 1
+        mutant_catalog = dict(catalog)
+        mutant_catalog.pop("speck-feedback", None)
+        # Same wiring guarantee for stale_skill_reference_errors(): a subtracted
+        # skill whose flow-block reference was cleaned up but whose prose
+        # reference elsewhere in AGENTS.md (e.g. Always-on gates' "through
+        # `speck-feedback`") was left behind must still surface through the
+        # same collect_errors() path main() uses.
+        if not any(
+            "references skills that no longer exist" in error
+            for error in collect_errors(mutant_catalog, suite, flow, contract, agents_text)
+        ):
+            print("FAIL: stale skill reference mutant passed", file=sys.stderr)
+            return 1
+        if any(
+            "references skills that no longer exist" in error
+            for error in collect_errors(catalog, suite, flow, contract, agents_text)
+        ):
+            print("FAIL: live AGENTS.md carries a token stale_skill_reference_errors cannot resolve", file=sys.stderr)
+            return 1
+        folded_frontmatter = "name: demo\ndescription: >\n  Does a thing. Use when the thing is needed.\nother: 1"
+        if field(folded_frontmatter, "description") != "Does a thing. Use when the thing is needed.":
+            print("FAIL: folded description parsing regressed", file=sys.stderr)
+            return 1
         print(f"skill-routing self-test: PASS cases={len(suite['cases'])} auto_skills={len(catalog)}")
         return 0
 

@@ -359,7 +359,11 @@ def run_subject(
         proc = run_command(command, cwd=work, input_text=subject_prompt(case), timeout=1800, env=os.environ.copy())
         timeout_hit = False
     except subprocess.TimeoutExpired as exc:
-        proc = subprocess.CompletedProcess(command, 124, exc.stdout or "", exc.stderr or "subject timeout")
+        # TimeoutExpired carries bytes even under text=True (verified on CPython 3.12),
+        # so the captured output has to be decoded before it reaches write_text.
+        timed_out_stdout = exc.stdout.decode(errors="replace") if isinstance(exc.stdout, bytes) else exc.stdout
+        timed_out_stderr = exc.stderr.decode(errors="replace") if isinstance(exc.stderr, bytes) else exc.stderr
+        proc = subprocess.CompletedProcess(command, 124, timed_out_stdout or "", timed_out_stderr or "subject timeout")
         timeout_hit = True
     wall = time.monotonic() - started
     raw = proc.stdout or ""

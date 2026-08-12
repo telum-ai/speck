@@ -7,7 +7,30 @@ BASELINE="$ROOT/tests/eval/semantic-conservation/baseline.json"
 GUARD="$ROOT/tests/eval/semantic-conservation/guard-baseline-change.sh"
 
 python3 "$RUNNER"
-bash "$ROOT/.speck/scripts/bash/analyze-scale.test.sh"
+
+# This suite must stay a pure check of semantic-conservation's own subject
+# (obligation carriers and protected-file hashes). It used to also shell out
+# to .speck/scripts/bash/analyze-scale.test.sh here — an unrelated suite that
+# package.json already runs as its own top-level `npm test` entry — which
+# meant a scale-routing regression surfaced as an unlabeled Python traceback
+# under this suite's own PASS banner instead of at its own entry, and paid
+# for the analyze-scale suite twice on every clean run. Guard against losing
+# that coverage silently now that it is not re-run from here. This must check
+# the actual `scripts.test` chain (parsed as JSON), not merely that the
+# string appears somewhere in package.json — a substring grep over the whole
+# file still matches if the invocation is moved to an unrun sibling script
+# (e.g. a stray `scripts["test:scale-orphan"]`), which is exactly the failure
+# this check exists to catch.
+if ! python3 -c "
+import json, sys
+with open('$ROOT/package.json') as f:
+    data = json.load(f)
+test_script = data.get('scripts', {}).get('test', '')
+sys.exit(0 if 'bash .speck/scripts/bash/analyze-scale.test.sh' in test_script else 1)
+"; then
+  echo "FAIL: analyze-scale.test.sh must be invoked from package.json's scripts.test chain now that semantic-conservation no longer runs it"
+  exit 1
+fi
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

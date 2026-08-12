@@ -93,20 +93,25 @@ def parse_registry(project_md: Path) -> tuple[list[Surface], bool, list[str]]:
 
     rows: list[tuple[int, list[str]]] = []
     errors: list[str] = []
-    header_width = 0
+    header_width = 0  # width of the most recently seen VALID header; 0 means "no valid header yet"
     for line_number, line in section:
         if not re.match(r"^\s*\|.*\|\s*$", line):
             continue
         cells = [clean_cell(cell) for cell in line.strip().strip("|").split("|")]
         if cells and cells[0].lower() == "surface":
-            header_width = len(cells)
-            if header_width not in {4, 5}:
-                errors.append(f"line {line_number}: PROFILE header requires 4 or 5 columns, found {header_width}")
+            width = len(cells)
+            if width not in {4, 5}:
+                errors.append(f"line {line_number}: PROFILE header requires 4 or 5 columns, found {width}")
+                # Invalidate: a bad header must not admit rows sized to match it, or the
+                # unpack below has no branch for them and crashes (UnboundLocalError).
+                header_width = 0
+            else:
+                header_width = width
             continue
         if all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells):
             continue
         if not header_width:
-            errors.append(f"line {line_number}: PROFILE data row appears before a Surface header")
+            errors.append(f"line {line_number}: PROFILE data row appears before a valid Surface header")
             continue
         if len(cells) != header_width:
             errors.append(
@@ -128,6 +133,11 @@ def parse_registry(project_md: Path) -> tuple[list[Surface], bool, list[str]]:
                 "github" if "github" in label else
                 "file"
             )
+        else:
+            # Defense in depth: rows are only ever admitted at header_width (4 or 5), so this
+            # is unreachable in practice, but it must fail safe rather than crash if it ever is.
+            errors.append(f"line {line_number}: PROFILE row has unsupported column count {len(cells)}")
+            continue
         if not all((name, adapter, target, source, required)):
             errors.append(f"line {line_number}: PROFILE row contains an empty required field")
             continue
@@ -161,8 +171,11 @@ def paid_promise(path: Path) -> str:
         if active and re.match(r"^## [0-9]+\.", line):
             break
         stripped = line.strip()
-        if active and stripped and not stripped.startswith("#"):
-            return stripped.lstrip("> ").strip()
+        # Mirror profile-lib.sh's profile_extract_paid_promise exactly (the length > 10 gate
+        # skips short structural lines like an opening HTML comment marker or a bare label),
+        # so this gate and the bash producers judge the same Section 1 sentence.
+        if active and stripped and not stripped.startswith("#") and len(stripped) > 10:
+            return stripped
     return ""
 
 
@@ -338,17 +351,75 @@ def main() -> int:
             print(result_line("PROFILE_DRIFT.P1", surface, f'unknown required_by="{surface.required_by}"'))
             counts["P1"] += 1
             continue
-        due = bool(claim) and claim_rank >= required
+        # No --claim means the caller (validate-readme.sh, speck-recheck, the pre-commit
+        # PROFILE gate) never asserts a readiness state, so every content-drift finding must
+        # fail closed at P1 — that's the bare-invocation contract every one of those callers
+        # relies on. An explicit --claim narrows severity to P1 only once that claim has
+        # actually reached the surface's required readiness rank.
+        due = (not claim) or claim_rank >= required
         if placeholder(surface.target) or placeholder(surface.source):
             severity = "P1" if due else "P2"
             print(result_line(f"PROFILE_DRIFT.{severity}", surface, f"registry placeholder remains required_by=\"{surface.required_by}\""))
             counts[severity] += 1
             continue
 
+        # README structural checks (markers, scaffold placeholders, legacy marketing title) are
+        # independent defects the deleted bash script evaluated on their own — they must not be
+        # masked just because the one-liner is missing or diverged from the paid promise below.
+        # Only skip them when the README file itself can't be read at all (already covered by
+        # the missing-target finding), so this can't manufacture new findings for a file that
+        # was never fetched.
+        if surface.adapter == "readme":
+            path = safe_repo_path(root, surface.target)
+            if path is not None and path.is_file():
+                readme = path.read_text(errors="replace")
+                if "<!-- SPECK:START -->" not in readme or "<!-- SPECK:END -->" not in readme:
+                    print(result_line("PROFILE_DRIFT.P1", surface, "lacks SPECK:START..END markers"))
+                    counts["P1"] += 1
+                if placeholder(readme):
+                    severity = "P1" if due else "P3"
+                    print(result_line(f"PROFILE_DRIFT.{severity}", surface, "contains unreplaced scaffold placeholders"))
+                    counts[severity] += 1
+                first = readme.splitlines()[0] if readme.splitlines() else ""
+                if first.startswith("# Speck"):
+                    print(result_line("PROFILE_DRIFT.P1", surface, "still has the legacy Speck marketing title"))
+                    counts["P1"] += 1
+
         expected, source_error = source_text(root, project_dir, surface.source)
         actual, target_error = surface_text(root, surface)
+
+        # An "unreachable" target error (currently only the github adapter, when `gh` is
+        # missing, unauthenticated, or times out) is an environment/tooling gap, not a
+        # README content defect — editing the surface cannot fix it, so the always-on bare
+        # path (validate-readme.sh, speck-recheck, the pre-commit gate) must not fail closed
+        # on it. It only escalates once the caller is actually claiming the readiness state
+        # this surface is required by, same as every other finding once its claim is due.
+        surface_due = due
+        if target_error and "unreachable" in target_error:
+            surface_due = bool(claim) and claim_rank >= required
+
+        if (
+            legacy_registry
+            and not claim
+            and source_error
+            and not target_error
+            and not placeholder(actual)
+        ):
+            # This carve-out belongs to exactly one shape: the synthetic legacy README-only
+            # fallback surface Speck invents when a project has declared no PROFILE registry
+            # at all, evaluated on the always-on bare path with no explicit readiness claim.
+            # An early-stage project in that state has an unwritten product-contract.md and
+            # nothing yet to compare its README against — the deleted bash script stayed
+            # silent on exactly this case too. An explicitly declared registry row never
+            # gets this pass (a missing or empty declared source of truth is a defect its
+            # author must fix), and even the fallback surface loses the pass the moment any
+            # readiness claim is being evaluated — project-validate's ship-rc gate must see
+            # every PROFILE_DRIFT.P1 a real --claim would otherwise produce.
+            print(result_line("PROFILE_DRIFT.P2", surface, f"{source_error}; required_by=\"{surface.required_by}\""))
+            counts["P2"] += 1
+            continue
         if source_error or target_error or placeholder(actual):
-            severity = "P1" if due else "P2"
+            severity = "P1" if surface_due else "P2"
             detail = source_error or target_error or "target contains a placeholder"
             print(result_line(f"PROFILE_DRIFT.{severity}", surface, f"{detail}; required_by=\"{surface.required_by}\""))
             counts[severity] += 1
@@ -365,21 +436,6 @@ def main() -> int:
             counts[severity] += 1
         else:
             print(result_line("PROFILE_SURFACE PASS", surface, f"overlap={overlap}% required_by=\"{surface.required_by}\""))
-
-        if surface.adapter == "readme":
-            path = safe_repo_path(root, surface.target)
-            readme = path.read_text(errors="replace") if path and path.is_file() else ""
-            if "<!-- SPECK:START -->" not in readme or "<!-- SPECK:END -->" not in readme:
-                print(result_line("PROFILE_DRIFT.P1", surface, "lacks SPECK:START..END markers"))
-                counts["P1"] += 1
-            if placeholder(readme):
-                severity = "P1" if due else "P3"
-                print(result_line(f"PROFILE_DRIFT.{severity}", surface, "contains unreplaced scaffold placeholders"))
-                counts[severity] += 1
-            first = readme.splitlines()[0] if readme.splitlines() else ""
-            if first.startswith("# Speck"):
-                print(result_line("PROFILE_DRIFT.P1", surface, "still has the legacy Speck marketing title"))
-                counts["P1"] += 1
 
     print(
         "PROFILE_DRIFT_SUMMARY "

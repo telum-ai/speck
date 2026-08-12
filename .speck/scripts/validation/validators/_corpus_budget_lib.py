@@ -8,12 +8,19 @@ import re
 import sys
 from pathlib import Path
 
+# Single agent-prose essay-pattern registry, used verbatim for both skill
+# bodies/references and .speck/reference/*.md. There used to be a second,
+# hand-copied ref-root subset (REF_ROOT_ESSAY) that had already drifted —
+# ADR-0004 states the essay ban at category level with no strict/ref-root
+# tier, so the split was an accident of two copy-pastes, not policy. The
+# version-history pattern is a generalized "Until v<N>." rather than a
+# per-release literal so a future cycle's "Until v12." ships flagged
+# without a manual regex edit here.
 ESSAY_RES = [
     re.compile(p, re.I)
     for p in (
         r"Field evidence",
-        r"Until v10\.",
-        r"Until v9\.",
+        r"Until v\d+\.",
         r"001-odd",
         r"Why this is no longer optional",
         r"anti-bloat trade",
@@ -21,7 +28,15 @@ ESSAY_RES = [
         r"\bfeel free to\b",
     )
 ]
-EMOJI_HEADER = re.compile(r"^## .*[🎯🔄✅❌🚨📋🧠🔧💡🧪📊🧭🧱🏁]", re.M)
+# Union of the pre-v11 bash/rg AGENTS.md-only set and the Python skill/ref
+# set — the two were maintained separately and had drifted (9 of the 24
+# rg-covered glyphs, e.g. 🚦🎚📁🗺⚖🔌🎛🦾📚, were absent here). Keeping a
+# single set for every agent-prose surface (AGENTS.md, SKILL.md bodies,
+# references, .speck/reference/*.md) means a future addition only needs to
+# land once.
+EMOJI_HEADER = re.compile(
+    r"^## .*[🧭🧱🏁🚦🎚📁🗺📋⚖🧠🔌🎛🦾🧪🚨📊🎯📚🔄✅❌🔧💡]", re.M
+)
 CHAT_OUTPUT_SCHEMA = re.compile(
     r"^(?:#{1,4}\s+)?(?:response format|output format|output summary|report to user|"
     r".*summary \(stdout(?: only)?\)|present what was created):?\s*$|"
@@ -36,6 +51,35 @@ POINTER_ONLY = re.compile(
 MAX_REF_LINES = 120
 MAX_REF_BYTES = 8192
 MAX_ROUTER_BODY = 80
+ROUTER_BRANCH_PREDICATE = re.compile(
+    r"Cheap keys:|\bIf\b|\bElse\b|Only (after|when|before)|"
+    r"Do not Read|matching `|Skip if|UI-bearing|play_level|"
+    r"archetype|claimed_state|Backend/"
+)
+
+
+def router_body_cap(n_refs: int, body: str, max_body: int) -> int:
+    """ADR-0005 §6: router SKILL.md body <= 80 lines. Shared by the forward
+    cap check and the grandfather reverse-staleness audit so the two stay
+    identical by construction instead of by manual mirroring.
+
+    NOTE (speck-feedback candidate, not yet applied): ADR-0005 §2 defines a
+    router by branch-key divergence, not by reference count, so a skill
+    with exactly one reference reached through a conditional predicate
+    (`If ...: read`) is a router too and this cap should apply to it. Doing
+    that here today makes the live repo fail: .cursor/skills/
+    project-constitution/SKILL.md (n_refs=1, body=146, one `If two or more
+    principles...read references/enforcement.md` predicate) would flip
+    from PASS to FAIL, and that file is outside this validator's ownership
+    lane. Widening this function to `n_refs == 1 and
+    ROUTER_BRANCH_PREDICATE.search(body)` must land in the same change as
+    shrinking that skill's body to <= 80 lines (or restructuring it into a
+    real >=2-ref DAG) — not before."""
+    if n_refs >= 2:
+        return MAX_ROUTER_BODY
+    return max_body
+
+
 LOCAL_REF_EDGE = re.compile(
     r"(?<![A-Za-z0-9_./-])references/([A-Za-z0-9_./<>#*-]+\.md)"
 )
@@ -58,9 +102,23 @@ SHORT_ROUTE_REPLACEMENTS = {
 NONEXISTENT_SHORT_ROUTE = re.compile(
     rf"(?<![A-Za-z0-9._/-])/({'|'.join(SHORT_ROUTE_REPLACEMENTS)})(?![-/A-Za-z0-9])"
 )
+# Routes that live at the host/runtime level, not as a .cursor/skills entry —
+# declared here because they are genuinely not skills and will not become
+# ones, not because someone forgot to add a directory for them.
+NON_SKILL_HOST_ROUTES = {"goal", "loop", "scan", "summarize"}
+# Names RETIRED_MIGRATION_ROUTE / NONEXISTENT_SHORT_ROUTE already catch with
+# a specific "use /X" suggestion; the catalog check below skips them so a
+# single bad route in markdown does not produce two FAIL lines for the same
+# defect.
+LEGACY_HANDLED_ROUTES = set(SHORT_ROUTE_REPLACEMENTS) | {
+    "speck-catch-up",
+    "speck-reprove",
+    "speck-graph-up",
+}
+ROUTE_TOKEN = re.compile(r"`/([a-z][a-z0-9-]*)`")
 
 
-def lint_retired_migration_routes(root: Path, err) -> None:
+def lint_retired_migration_routes(root: Path, skill_names: set[str], err) -> None:
     """Retired skill names may survive in removal lists/history, never as live commands."""
     scan_roots = (
         root / ".cursor" / "skills",
@@ -69,6 +127,7 @@ def lint_retired_migration_routes(root: Path, err) -> None:
         root / ".speck" / "reference",
         root / "packages" / "cli" / "lib",
     )
+    known_routes = skill_names | NON_SKILL_HOST_ROUTES | LEGACY_HANDLED_ROUTES
     for base in scan_roots:
         if not base.is_dir():
             continue
@@ -89,6 +148,28 @@ def lint_retired_migration_routes(root: Path, err) -> None:
                     f"nonexistent short command {short.group(0)} in "
                     f"{path.relative_to(root).as_posix()} — use /{replacement}"
                 )
+            # Catalog-driven, not a fixed name dictionary (ADR-0001): every
+            # backtick-quoted /route must resolve to a live skill directory
+            # or a declared host command, so a retired or mistyped route
+            # (e.g. /project-analyze, /story-spec) cannot ship green just
+            # because nobody added its name to a hardcoded list. Covers the
+            # same scan_roots as the sibling retired/short-route checks
+            # above, .speck/templates included — a template's own "Next
+            # Steps" prose ships into every downstream repo
+            # (packages/cli/lib/sync.js ALWAYS_OVERWRITE includes
+            # .speck/templates) and readers follow those routes literally,
+            # so a template is a load edge too, not exempt from resolving.
+            if path.suffix == ".md":
+                for m in ROUTE_TOKEN.finditer(text):
+                    route = m.group(1)
+                    if route in known_routes:
+                        continue
+                    err(
+                        f"route `/{route}` in {path.relative_to(root).as_posix()} does not "
+                        "resolve to a skill in .cursor/skills or a declared host command "
+                        "(NON_SKILL_HOST_ROUTES) — fix the reference or retire it"
+                    )
+                    break
 
 
 def router_owns_ref(body: str, rel: str) -> bool:
@@ -281,12 +362,13 @@ def lint_load_contracts(root: Path, err) -> dict[str, set[str]]:
             instruction_files = {entrypoint, *(path for path in all_required if path.endswith(".md"))}
             for owner in instruction_files:
                 text = (root / owner).read_text()
+                owner_lines = text.splitlines()
                 for target in all_required - {owner}:
                     duplicate_edge = any(
                         target in line
                         and re.search(r"\b(?:read|load|open)\b", line, re.IGNORECASE)
                         and not re.search(r"\b(?:do not|don't|never)\s+(?:re-?)?(?:read|load|open)\b", line, re.IGNORECASE)
-                        for line in text.splitlines()
+                        for line in owner_lines
                     )
                     if duplicate_edge:
                         err(
@@ -426,19 +508,6 @@ def lint_auto_description(name: str, desc: str, err) -> None:
         err(f"automatic skill {name} description WHEN lacks a concrete trigger/context preposition: {trigger}")
 
 
-STRICT_ESSAY = ESSAY_RES
-REF_ROOT_ESSAY = [
-    re.compile(p, re.I)
-    for p in (
-        r"Field evidence",
-        r"Until v10\.",
-        r"001-odd",
-        r"Why this is no longer optional",
-        r"why Speck exists",
-    )
-]
-
-
 def lint_agent_prose(path: Path, text: str, err, *, strict: bool = True) -> None:
     rel = path.as_posix()
     if EMOJI_HEADER.search(text):
@@ -448,7 +517,7 @@ def lint_agent_prose(path: Path, text: str, err, *, strict: bool = True) -> None
             f"chat-only output schema in {rel} — keep artifact structure in templates "
             "and machine-consumed return fields in orchestration contracts"
         )
-    for rx in STRICT_ESSAY if strict else REF_ROOT_ESSAY:
+    for rx in ESSAY_RES:
         if rx.search(text):
             err(f"agent-prose essay pattern /{rx.pattern}/ in {rel}")
             break
@@ -480,9 +549,14 @@ def main() -> int:
         fail = 1
 
     expected_disabled, compatibility_shims, catalog_families = load_skill_catalog_policy(root, err)
-    lint_retired_migration_routes(root, err)
+    skill_names_on_disk = {p.parent.name for p in skills.glob("*/SKILL.md")} if skills.is_dir() else set()
+    lint_retired_migration_routes(root, skill_names_on_disk, err)
     contract_owned = lint_load_contracts(root, err)
     seen_skills: set[str] = set()
+
+    agents_path = root / "AGENTS.md"
+    if agents_path.is_file():
+        lint_agent_prose(agents_path, agents_path.read_text(), err)
 
     for skill_md in sorted(skills.glob("*/SKILL.md")):
         name = skill_md.parent.name
@@ -552,20 +626,11 @@ def main() -> int:
 
         # Ban always-all fake DAGs: ≥2 refs but every Read is unconditional MUST
         # with no If/Else/Only/Cheap keys — that is always-path; inline instead.
-        if n_refs >= 2:
-            has_pred = bool(
-                re.search(
-                    r"Cheap keys:|\bIf\b|\bElse\b|Only (after|when|before)|"
-                    r"Do not Read|matching `|Skip if|UI-bearing|play_level|"
-                    r"archetype|claimed_state|Backend/",
-                    body,
-                )
+        if n_refs >= 2 and not ROUTER_BRANCH_PREDICATE.search(body):
+            err(
+                f"skill {name} has {n_refs} refs but no inline branch predicates — "
+                "inline always-path into SKILL.md or add cheap keys (ADR-0005)"
             )
-            if not has_pred:
-                err(
-                    f"skill {name} has {n_refs} refs but no inline branch predicates — "
-                    "inline always-path into SKILL.md or add cheap keys (ADR-0005)"
-                )
 
         body_lines = len(body.splitlines())
         if name in compatibility_shims:
@@ -573,9 +638,9 @@ def main() -> int:
                 err(f"compatibility shim {name} owns references; route to the canonical skill instead")
             if body_lines > 25:
                 err(f"compatibility shim {name} body lines {body_lines} > 25")
-        body_cap = MAX_ROUTER_BODY if n_refs >= 2 else max_body
+        body_cap = router_body_cap(n_refs, body, max_body)
         if body_lines > body_cap:
-            gf_key = name if n_refs < 2 else f"{name}#router"
+            gf_key = f"{name}#router" if body_cap == MAX_ROUTER_BODY else name
             if gf_key in grandfather or name in grandfather:
                 print(f"WARN grandfather body {name} lines={body_lines} cap={body_cap}")
             else:
@@ -633,13 +698,22 @@ def main() -> int:
                 if len(sm.read_text().splitlines()) <= MAX_REF_LINES:
                     err(f"grandfather entry '{name}' is now <= {MAX_REF_LINES} — remove from grandfather file")
                 continue
-            sm = skills / name / "SKILL.md"
+            # The forward mint at gf_key = f"{name}#router" (n_refs >= 2) has
+            # no matching branch here otherwise: the '#' makes it fail the
+            # "/" skill-ref check above, and a bare router name re-checked
+            # against max_body (200) instead of MAX_ROUTER_BODY (80) fails
+            # even when the router waiver is still legitimately in force.
+            skill_name = name[: -len("#router")] if name.endswith("#router") else name
+            sm = skills / skill_name / "SKILL.md"
             if not sm.is_file():
                 err(f"grandfather entry '{name}' skill missing — remove from grandfather file")
                 continue
             fm, body = parse_fm(sm.read_text())
-            if len(body.splitlines()) <= max_body:
-                err(f"grandfather entry '{name}' is now <= {max_body} — remove from grandfather file")
+            skill_refs = skills / skill_name / "references"
+            skill_n_refs = len(list(skill_refs.rglob("*.md"))) if skill_refs.is_dir() else 0
+            cap = router_body_cap(skill_n_refs, body, max_body)
+            if len(body.splitlines()) <= cap:
+                err(f"grandfather entry '{name}' is now <= {cap} — remove from grandfather file")
 
     return fail
 

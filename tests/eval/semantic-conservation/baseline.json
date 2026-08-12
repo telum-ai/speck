@@ -54,7 +54,7 @@
     },
     {
       "path": ".speck/reference/canonical-routing.md",
-      "sha256": "62d7ce0f8db5fa13fbcb9c1fa9244e0eb4fd916effac3d315089ef4c32c7457d"
+      "sha256": "c039ed834628b624903ae05f6d486725d835b1aa8eadb2873534ba37cba8d42b"
     },
     {
       "path": ".speck/reference/evidence-readiness-gate-criteria.md",
@@ -74,7 +74,7 @@
     },
     {
       "path": ".speck/reference/skill-load-budgets.json",
-      "sha256": "81e6798ef926e314bcc1a176a739f5a3ba8625cc11db5f4e32fabb4d7fc53ecc"
+      "sha256": "9add4ec4a90394163fcf49c5ba68972390e9b10784c8c53237d5fe6e6ccac59a"
     },
     {
       "path": ".speck/reference/skill-routing-cases.json",
@@ -94,7 +94,7 @@
     },
     {
       "path": ".cursor/skills/adjust/references/epic.md",
-      "sha256": "f9cfe4493cff9540c7bb872d387b4ed42bec511f914a79172a9791ae1d5f85d3"
+      "sha256": "3551bbae03af7a121611118ab8cc3f669c2d713cae6b1f42c0cbec07803715ac"
     },
     {
       "path": ".cursor/skills/adjust/references/project.md",
@@ -242,15 +242,15 @@
     },
     {
       "path": ".speck/scripts/profile-surface-check.py",
-      "sha256": "12f02bbf188cda6cda53f8506b3215f02ab8a6ef62bd774bd3c1f4f2b1b31d9f"
+      "sha256": "26c4816eee562815113e257f857f850f1ada10891833825ec1556ce6d63d3c34"
     },
     {
       "path": ".speck/scripts/validation/check-story-prereqs.sh",
-      "sha256": "58cbf44f569dc82cbdc0812d0187ccddf1076c11300078b5c17ca808a78bddf1"
+      "sha256": "9a2055edd033b0f65cdb6346b404be0a1fffab482e9903d935346b052ee8a7db"
     },
     {
       "path": ".speck/scripts/validation/check-story-prereqs.test.sh",
-      "sha256": "423898efcbe30aa63e3ba0420cf2178d1c3d90d451fafcd87c2c7896b59711ed"
+      "sha256": "c96cabece7714e2a1e32d623f20d74ef3d5b2282fa69b0495fad417fa32df111"
     },
     {
       "path": ".speck/scripts/validation/scaffold-clean.test.sh",
@@ -266,11 +266,11 @@
     },
     {
       "path": ".speck/scripts/validation/validators/_corpus_budget_lib.py",
-      "sha256": "dcf66b898d9f5ad1dd10b13f7f1eddc0a73e56aa6ad42bfe1ed480955ed5ec54"
+      "sha256": "69b4e6c28465aa2251fb9232023521e3941025e226eb399c11d17b07646db4ac"
     },
     {
       "path": ".speck/scripts/validation/validators/validate-corpus-budget.test.sh",
-      "sha256": "4cde50f24828348c23c6ed96b0b989630162020314535453d598ca3596561fdf"
+      "sha256": "8a9471143a25b658b772a2cba3b3f2133fcb89b49343a3728c2ef352f7b9e94d"
     },
     {
       "path": ".speck/scripts/validation/validators/validate-context-transcript.py",
@@ -282,11 +282,11 @@
     },
     {
       "path": ".speck/scripts/validation/validators/validate-project-analysis.sh",
-      "sha256": "7aea00727db9cd203aebbbfaaf0a68e50ae4b1dd448dbe474915eba3e7860090"
+      "sha256": "3b05beaca006297d4c421dfc5cd3ef0345584257ac7863b6c9e1d000000f0fbb"
     },
     {
       "path": ".speck/scripts/validation/validators/validate-project-analysis.test.sh",
-      "sha256": "286b8bc76eefa7bc3d1b37a9bf58c82bc15737b0d16ba82964fa26888d4f98c1"
+      "sha256": "5adff3c81616e774adb1fdff68841a3ddaf7174edd1da01f6ace5aa4f2a8079a"
     },
     {
       "path": ".speck/scripts/validation/validators/validate-recipes.sh",
@@ -310,7 +310,7 @@
     },
     {
       "path": ".speck/scripts/validation/validators/validate-readme.test.sh",
-      "sha256": "bb19e7148505e3a87aef2516676c4ffcbd7c15a5b0489b2453d566c05a05c51e"
+      "sha256": "f1c73df2baeb9d887cb095b29b0c4432680afc77fd08dbe454e6be16ade3c509"
     },
     {
       "path": ".speck/scripts/regenerate-project-readme.sh",
@@ -374,7 +374,7 @@
     },
     {
       "path": "packages/cli/lib/agent-model-tiers.test.js",
-      "sha256": "d23d0ffa39deb24de0e84ec69ea604d18454f96dc163da51bcbd91e841539217"
+      "sha256": "84c8dacf2507c39062cb888a5cbf80a4bc1f0a2a272c0842e21cd5a8635304be"
     },
     {
       "path": ".cursor/skills/project-validate/references/spine.md",
@@ -394,11 +394,11 @@
     },
     {
       "path": "packages/cli/lib/generate-agents.js",
-      "sha256": "c9e3ebf3c97b9ea86698ea987cb0d67acc24b5ee5a3ac3153f2795eb4ccb88f1"
+      "sha256": "a0e7578640feb060a64f7ca6460df317ba1de6091241c935960a9e09ca1d3a21"
     },
     {
       "path": "packages/cli/lib/sync.js",
-      "sha256": "7b71970e97e6b52bf9adc801c8d4a85523df89d45cc762844b9ab0c7daac607e"
+      "sha256": "458e426a5eb3bc282c1c9a9934ea9e2930aac5baeea2ac03b8bdf9d6aa6b2096"
     },
     {
       "path": "packages/cli/lib/sync.preserve.test.js",
@@ -434,7 +434,7 @@
     },
     {
       "path": "tests/eval/behavioral/runner.py",
-      "sha256": "8068bbfb3ae212569399e15ad81a9f8462ec69c95d3789dcc1e25ee6a14aee36"
+      "sha256": "b15c074787f0714991680c338be6522a34847cbb415d5ad7cb1f5fa26a48fe92"
     },
     {
       "path": "tests/eval/skill-routing/baseline.json",
@@ -442,15 +442,15 @@
     },
     {
       "path": "tests/eval/skill-routing/runner.py",
-      "sha256": "2208c18ef096b2f2df7b8e275c54d9d76e84614210565d8173772e9a04225eb6"
+      "sha256": "22d60f3f08decea6b94ccc51919ac51c5e555671fe0aa2852ff89a643f4b6598"
     },
     {
       "path": "tests/eval/skill-routing/runner.test.sh",
-      "sha256": "1cbf3db778f8036a8e3288e962cf70fafaef99229fa9cbc08589e1c6578ff893"
+      "sha256": "357183624ac7c02e4c87625e0d433da646506acf55ff32bb018c1a042069edcc"
     },
     {
       "path": "tests/eval/semantic-conservation/guard-baseline-change.sh",
-      "sha256": "e054c7131b2810180dfec8953b71b6d1ed240b7b08513bda0038839bcc4ccf65"
+      "sha256": "65ca07c09c0de1327ae1d66084bf76d8817f908d257a5e91f3df8d088ab8abc4"
     },
     {
       "path": "tests/eval/semantic-conservation/runner.py",
@@ -458,7 +458,7 @@
     },
     {
       "path": "tests/eval/semantic-conservation/runner.test.sh",
-      "sha256": "c1a2e6d587cb207c062b130dc90cffa1b1f757777f731c95a12888938473c0ca"
+      "sha256": "e955f1df1e2bedc9f70f9e45b77a959a378d71e62832894608cd9835e8e44035"
     },
     {
       "path": ".github/workflows/canonical-flow-baseline.yml",
@@ -466,7 +466,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "b11a4f3af7df425d75a77f1cbf35b5c049bcf5d61c00d3b6c3972222f630427e"
+      "sha256": "9f07f96652592495100dbc1bcb50e3140070527f2e5a676619ce74c7bf1dbd92"
     }
   ],
   "obligations": [

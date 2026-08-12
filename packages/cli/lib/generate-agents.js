@@ -100,6 +100,17 @@ function needsWrite(toolsStr) {
   return /\b(Write|Bash|StrReplace|Edit)\b/.test(toolsStr || '');
 }
 
+// Removes files in `dir` that match `pattern` but are no longer in `keepFiles` — e.g. a
+// generated agent whose `.cursor/agents` source (and agent-dispatch.json role) was deleted.
+// Without this, retired agents survive forever in .claude/agents and .codex/agents, both of
+// which are copied wholesale downstream (sync.js ALWAYS_OVERWRITE, export-template-repo.sh).
+export function pruneStale(dir, keepFiles, pattern) {
+  if (!existsSync(dir)) return;
+  for (const f of readdirSync(dir)) {
+    if (pattern.test(f) && !keepFiles.has(f)) unlinkSync(join(dir, f));
+  }
+}
+
 // ---- emitters (stable field order for idempotency) ------------------------------
 
 function emitCursor(name, tier, fm, body) {
@@ -153,6 +164,8 @@ export function generateAgents({ write = true } = {}) {
     if (!tier || !TIER.claude[tier]) {
       throw new Error(`${name}: agent-dispatch.json requires tier frontier|mid|mechanical`);
     }
+    // A source file that declares a different tier than dispatch is an unresolved conflict
+    // between two humans' intent, not something to silently overwrite.
     if (declaredTier !== tier) {
       throw new Error(`${name}: source tier ${declaredTier} != dispatch tier ${tier}`);
     }
@@ -169,6 +182,8 @@ export function generateAgents({ write = true } = {}) {
     }
     mkdirSync(CLAUDE_DIR, { recursive: true });
     mkdirSync(CODEX_DIR, { recursive: true });
+    pruneStale(CLAUDE_DIR, new Set(Object.keys(outputs.claude)), /^speck-.*\.md$/);
+    pruneStale(CODEX_DIR, new Set(Object.keys(outputs.codex)), /^speck-.*\.toml$/);
     for (const [f, content] of Object.entries(outputs.cursor)) writeFileSync(join(SRC_DIR, f), content);
     for (const [f, content] of Object.entries(outputs.claude)) writeFileSync(join(CLAUDE_DIR, f), content);
     for (const [f, content] of Object.entries(outputs.codex)) writeFileSync(join(CODEX_DIR, f), content);

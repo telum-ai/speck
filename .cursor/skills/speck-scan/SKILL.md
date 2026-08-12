@@ -13,7 +13,7 @@ $ARGUMENTS
 
 ## Purpose
 
-`/scan` extracts code-side facts from an existing codebase and produces a scan artifact that downstream Speck commands consume. One level-aware engine serves project, epic, and story scope.
+`/speck-scan` extracts code-side facts from an existing codebase and produces a scan artifact that downstream Speck commands consume. One level-aware engine serves project, epic, and story scope.
 
 | Scope | Output artifact | Used by |
 |-------|------------------|---------|
@@ -101,7 +101,7 @@ Use the level-appropriate template. Write to the level-appropriate path.
 ### 6. Report
 
 ```
-🔍 /scan complete
+🔍 /speck-scan complete
 
 Level: <project | epic | story>
 Output: <path>

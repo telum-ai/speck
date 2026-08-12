@@ -108,8 +108,9 @@ if python3 "$RUNNER" verify-reports --reports-dir "$TMP/reports-mutant" >/dev/nu
   exit 1
 fi
 
-mkdir -p "$TMP/guard-repo/tests/eval/skill-routing"
+mkdir -p "$TMP/guard-repo/tests/eval/skill-routing" "$TMP/guard-repo/.speck/reference"
 cp "$ROOT/tests/eval/skill-routing/baseline.json" "$TMP/guard-repo/tests/eval/skill-routing/baseline.json"
+cp "$ROOT/.speck/reference/skill-routing-cases.json" "$TMP/guard-repo/.speck/reference/skill-routing-cases.json"
 (
   cd "$TMP/guard-repo"
   git init -q
@@ -127,6 +128,24 @@ cp "$ROOT/tests/eval/skill-routing/baseline.json" "$TMP/guard-repo/tests/eval/sk
     exit 1
   fi
   FLOW_BASELINE_APPROVED=true bash "$BASELINE_GUARD" "$base_sha" >/dev/null
+
+  # U4 regression: guard scope must also cover the cases file (it carries
+  # minimum_accuracy and every routing prompt) on its own base commit, with
+  # the baseline.json now unchanged so this second path is what is actually
+  # under test. Both paths are present on base here (unlike the earlier
+  # bootstrap step above), so a silent narrowing of GUARD_BASELINE_PATHS back
+  # to a single path — which would make this always take the bootstrap
+  # branch and pass regardless of the mutation below — goes red.
+  cases_base_sha="$(git rev-parse HEAD)"
+  FLOW_BASELINE_APPROVED=false bash "$BASELINE_GUARD" "$cases_base_sha" >/dev/null
+  printf '\n' >> .speck/reference/skill-routing-cases.json
+  git add .
+  git commit -qm cases-mutant
+  if FLOW_BASELINE_APPROVED=false bash "$BASELINE_GUARD" "$cases_base_sha" >/dev/null 2>&1; then
+    echo "FAIL: unapproved skill-routing-cases.json mutation passed the guard"
+    exit 1
+  fi
+  FLOW_BASELINE_APPROVED=true bash "$BASELINE_GUARD" "$cases_base_sha" >/dev/null
 )
 
 echo "Skill-routing evaluator tests passed"

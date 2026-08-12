@@ -34,6 +34,8 @@ specs/projects/<PROJECT_ID>/
         ├── spec.md             # PROMISE+BUILD: User experience-first spec
         ├── plan.md             # BUILD: Technical approach
         ├── tasks.md            # BUILD: Implementation checklist
+        ├── story-analysis-report.md  # PROVE: Decorrelated multi-lens analysis (req. Build/Platform)
+        ├── connoisseur-critique.md  # PROVE: Taste/craft critique (speck-larp Job C IS-IT-CRAFTED)
         ├── audit-report.md     # PROVE: Skeptical audit
         ├── validation-report.md  # PROVE: Evidence-backed, declares readiness state
         ├── screenshots/        # PROVE: Runtime LARP evidence (checked in)
@@ -53,6 +55,7 @@ When you have content to write down, route it to its canonical home. **Never inv
 |---|---|
 | Project vision changes | `project.md` |
 | Requirements/features delivered | `PRD.md` |
+| Epic index (waves, dependencies, E000 gate) | `epics.md` |
 | Architectural decisions | `architecture.md` |
 | Constraints discovered | `context.md` |
 | Paid promise / differentiator / JTBD / magic moments / banned language | `product-contract.md` |
@@ -66,6 +69,9 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Post-validation hardening report | `project-harden-report-*.md` |
 | Post-validation project adjustment report | `project-adjust-report-*.md` |
 | Project punch list (remaining work to ship) | `project-punch-list.md` |
+| Project validation summary (companion to project-validation-report.md) | `project-validation-summary.md` |
+| Multi-epic sequencing, dependencies, and resource plan | `project-roadmap.md` |
+| Locked interface between parallel-executing epic/story owners (shared file/schema/migration serialization) | `seam-contract-*.md` |
 | Sprint progress (Sprint play level only) | `sprint-log.md` |
 | Domain terminology + entities + rules (Platform; merges to product-contract at Build) | `domain-model.md` |
 | UX principles + voice/tone (Platform; merges to product-contract at Build) | `ux-strategy.md` |
@@ -103,10 +109,12 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Runtime breadth coverage (opt-in torture tier; every cell RUN/waived/GAP) | `coverage-matrix.md` |
 | Story map + ordering | `epic-breakdown.md` |
 | Cross-screen UI flow + emotional state (REQUIRED for UI epics) | `experience-chain.md` |
+| Backfilled UI-epic experience chain (pre-v7 brownfield migration exemption) | `experience-chain-historical.md` |
 | User journey map | `user-journey.md` |
 | Wireframes (epic-level) | `wireframes.md` |
 | Epic-level skeptical audit findings | `audit-report.md` |
 | Epic validation report (JTBD walkthrough) | `epic-validation-report.md` |
+| Epic punch list (remaining work to ship) | `epic-punch-list.md` |
 | Post-validation epic adjustment report | `epic-adjust-report-*.md` |
 | Epic-level pre-implementation analysis (decorrelated multi-lens) | `epic-analysis-report.md` |
 | Epic retrospective | `epic-retro.md` |
@@ -124,6 +132,8 @@ When you have content to write down, route it to its canonical home. **Never inv
 | API/library contracts | `contracts/*.md` |
 | UI spec (REQUIRED for UI-bearing stories) | `ui-spec.md` |
 | Test scenarios / quickstart / manual validation | `quickstart.md` |
+| Story-level pre-implementation analysis (decorrelated multi-lens; required Build/Platform) | `story-analysis-report.md` |
+| Taste/craft critique (per-screen GOOD/ACCEPTABLE/BAD; witness-graph verdict source) | `connoisseur-critique.md` |
 | Story-level skeptical audit findings | `audit-report.md` |
 | Story validation evidence (declares readiness state) | `validation-report.md` |
 | Post-validation story adjustment report | `story-adjust-report-*.md` |

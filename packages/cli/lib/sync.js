@@ -2,7 +2,7 @@
  * Core sync logic for Speck files with smart merging
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync, copyFileSync, symlinkSync, lstatSync, unlinkSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync, copyFileSync, symlinkSync, lstatSync, unlinkSync, readlinkSync } from 'fs';
 import { join, dirname, relative } from 'path';
 import { execSync } from 'child_process';
 import { tmpdir } from 'os';
@@ -585,12 +585,150 @@ function symlinkCursorDir(targetDir, runtimeDir, relativeDir) {
 
   mkdirSync(join(targetDir, runtimeDir), { recursive: true });
 
-  if (existsSync(destDir)) {
+  // lstat, never existsSync: existsSync follows the link and reports false for a DANGLING
+  // symlink at destDir, which would skip the removal below and make symlinkSync throw EEXIST
+  // against the leftover link node. lstat tells us what's actually sitting at destDir.
+  let destStat = null;
+  try {
+    destStat = lstatSync(destDir);
+  } catch {
+    destStat = null;
+  }
+
+  let migrated = 0;
+
+  if (destStat && destStat.isSymbolicLink()) {
+    // A symlink (valid or dangling) never holds real content — safe to drop and recreate.
+    unlinkSync(destDir);
+  } else if (destStat && destStat.isDirectory()) {
+    // A REAL directory here is user-owned content (e.g. a project's own pre-existing
+    // .agents/skills tree) — never Speck's to delete. Classify every top-level entry as
+    // safe (migrate into .cursor/<relativeDir>) or unsafe, and only touch anything if
+    // EVERY entry is safe — a single unsafe entry blocks the whole directory from being
+    // migrated or removed this run, so nothing is ever destroyed or laundered.
+    //
+    // An entry is unsafe when:
+    //   - its name matches a RETIRED Speck skill (REMOVE_FILES deletes that exact path
+    //     under .cursor/<relativeDir> a few steps later in smartSync — migrating a
+    //     same-named user directory there would launder it straight into that deletion), or
+    //   - its name matches something .cursor/<relativeDir> already ships (from this sync's
+    //     ALWAYS_OVERWRITE step, or from an earlier runtimeDir's migration in this same
+    //     symlink loop) with DIFFERENT content — the shipped copy must stay authoritative,
+    //     so we cannot silently overwrite it, and we must not silently drop the user's copy
+    //     either.
+    // Identical-content collisions are simply skipped (nothing to migrate, no data lost).
+    const retired = retiredSkillNames(relativeDir);
+    const shipped = new Set(readdirSync(sourceDir));
+    const entries = readdirSync(destDir);
+    const safeEntries = [];
+    const unsafeEntries = [];
+
+    for (const entry of entries) {
+      const srcPath = join(destDir, entry);
+      if (retired.has(entry)) {
+        unsafeEntries.push(`'${entry}' matches a retired Speck skill name and would be deleted next`);
+        continue;
+      }
+      if (shipped.has(entry)) {
+        if (treesEqual(srcPath, join(sourceDir, entry))) {
+          continue; // identical to what Speck already ships — nothing to migrate
+        }
+        unsafeEntries.push(`'${entry}' collides with a Speck-shipped skill but its content differs`);
+        continue;
+      }
+      safeEntries.push(entry);
+    }
+
+    if (unsafeEntries.length > 0) {
+      return {
+        action: 'error',
+        reason: `refusing to replace ${runtimeDir}/${relativeDir}: could not safely migrate ${unsafeEntries.join('; ')}. Move the conflicting item(s) out of ${runtimeDir}/${relativeDir} manually, then re-run sync.`,
+      };
+    }
+
+    for (const entry of safeEntries) {
+      copyEntryTree(join(destDir, entry), join(sourceDir, entry));
+      migrated++;
+    }
     rmSync(destDir, { recursive: true, force: true });
+  } else if (destStat) {
+    // A plain file sits where a directory/symlink belongs. Refuse rather than destroy it.
+    return {
+      action: 'error',
+      reason: `refusing to replace ${runtimeDir}/${relativeDir} (a file, not a directory or symlink)`,
+    };
   }
 
   symlinkSync(join('..', '.cursor', relativeDir), destDir);
-  return { action: 'sync', path: `${runtimeDir}/${relativeDir}/` };
+  return migrated > 0
+    ? { action: 'migrated', path: `${runtimeDir}/${relativeDir}/`, migrated }
+    : { action: 'sync', path: `${runtimeDir}/${relativeDir}/` };
+}
+
+/**
+ * Names under .cursor/<relativeDir> that REMOVE_FILES will delete on this same sync run
+ * (e.g. '.cursor/skills/gdpr-compliance' -> 'gdpr-compliance'). Derived from REMOVE_FILES
+ * itself so the two lists can never drift apart.
+ */
+function retiredSkillNames(relativeDir) {
+  const prefix = `.cursor/${relativeDir}/`;
+  const names = new Set();
+  for (const removedPath of REMOVE_FILES) {
+    if (removedPath.startsWith(prefix)) {
+      names.add(removedPath.slice(prefix.length).split('/')[0]);
+    }
+  }
+  return names;
+}
+
+/**
+ * Recursively compare two filesystem entries for identical structure and content.
+ * Uses lstat throughout (never follows symlinks) so a dangling symlink compares by its
+ * link target rather than throwing.
+ */
+function treesEqual(a, b) {
+  let statA, statB;
+  try {
+    statA = lstatSync(a);
+    statB = lstatSync(b);
+  } catch {
+    return false;
+  }
+
+  if (statA.isSymbolicLink() || statB.isSymbolicLink()) {
+    return statA.isSymbolicLink() && statB.isSymbolicLink() && readlinkSync(a) === readlinkSync(b);
+  }
+  if (statA.isDirectory() !== statB.isDirectory()) return false;
+  if (statA.isDirectory()) {
+    const entriesA = readdirSync(a).sort();
+    const entriesB = readdirSync(b).sort();
+    if (entriesA.length !== entriesB.length || entriesA.some((e, i) => e !== entriesB[i])) return false;
+    return entriesA.every(entry => treesEqual(join(a, entry), join(b, entry)));
+  }
+  return readFileSync(a).equals(readFileSync(b));
+}
+
+/**
+ * Recursively copy a filesystem entry (file, directory, or symlink) to a new path.
+ * Uses lstat throughout — a symlink (valid or dangling) is recreated as a symlink at the
+ * destination instead of being followed via stat, which would throw ENOENT on a dangling
+ * one and abort the whole migration partway through.
+ */
+function copyEntryTree(srcPath, destPath) {
+  const stat = lstatSync(srcPath);
+
+  if (stat.isSymbolicLink()) {
+    mkdirSync(dirname(destPath), { recursive: true });
+    symlinkSync(readlinkSync(srcPath), destPath);
+  } else if (stat.isDirectory()) {
+    mkdirSync(destPath, { recursive: true });
+    for (const entry of readdirSync(srcPath)) {
+      copyEntryTree(join(srcPath, entry), join(destPath, entry));
+    }
+  } else {
+    mkdirSync(dirname(destPath), { recursive: true });
+    copyFileSync(srcPath, destPath);
+  }
 }
 
 /**
@@ -1104,11 +1242,16 @@ export function smartSync(sourceDir, targetDir, options = {}) {
     for (const relativeDir of ['skills']) {
       try {
         const symlinkResult = symlinkCursorDir(targetDir, runtimeDir, relativeDir);
-        if (symlinkResult.action === 'sync') {
+        if (symlinkResult.action === 'sync' || symlinkResult.action === 'migrated') {
           results.updated.push(symlinkResult.path);
           if (verbose) {
-            console.log(`  ✅ Symlinked: ${symlinkResult.path} → .cursor/${relativeDir}/`);
+            const suffix = symlinkResult.action === 'migrated'
+              ? ` (migrated ${symlinkResult.migrated} pre-existing item(s) into .cursor/${relativeDir}/ first)`
+              : '';
+            console.log(`  ✅ Symlinked: ${symlinkResult.path} → .cursor/${relativeDir}/${suffix}`);
           }
+        } else if (symlinkResult.action === 'error') {
+          results.errors.push({ file: `${runtimeDir}/${relativeDir}`, error: symlinkResult.reason });
         }
       } catch (error) {
         results.errors.push({ file: `${runtimeDir}/${relativeDir}`, error: error.message });

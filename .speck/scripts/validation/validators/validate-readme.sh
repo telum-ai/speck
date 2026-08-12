@@ -96,6 +96,7 @@ fi
 if [[ -f "$LIB_DIR/profile-drift-check.sh" ]]; then
   DRIFT_RC=0
   DRIFT_OUT="$(bash "$LIB_DIR/profile-drift-check.sh" "$WORKSPACE_ROOT" "${PROJECT_ID:-}" 2>&1)" || DRIFT_RC=$?
+  saw_summary=false
   while IFS= read -r line; do
     [[ -z "$line" ]] && continue
     if [[ "$line" == PROFILE_DRIFT.P1* ]]; then
@@ -104,10 +105,19 @@ if [[ -f "$LIB_DIR/profile-drift-check.sh" ]]; then
       log_warn "${line#PROFILE_DRIFT.P2: }"
     elif [[ "$line" == PROFILE_DRIFT.P3* ]]; then
       log_warn "${line#PROFILE_DRIFT.P3: }"
+    elif [[ "$line" == PROFILE_DRIFT_SUMMARY* ]]; then
+      saw_summary=true
     fi
   done <<< "$DRIFT_OUT"
   if [[ "$DRIFT_RC" -eq 2 ]]; then
     log_error "PROFILE drift checker could not resolve the active project"
+  elif [[ "$saw_summary" != true ]]; then
+    # The checker exits 0 on a clean pass and 1 when it finds a P1, but always prints a
+    # PROFILE_DRIFT_SUMMARY line on every real run (rc 2 is the one deliberate exception,
+    # handled above). No summary line means the checker itself failed — a missing
+    # interpreter, a crash, a bad wrapper — not that the surfaces are clean, so this must
+    # not read as a pass regardless of DRIFT_RC.
+    log_error "PROFILE drift checker did not complete (rc=$DRIFT_RC): ${DRIFT_OUT:-no output}"
   fi
 else
   log_error "PROFILE drift checker missing: $LIB_DIR/profile-drift-check.sh"

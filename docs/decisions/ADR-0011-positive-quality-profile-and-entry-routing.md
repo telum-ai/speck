@@ -32,6 +32,25 @@ Locked choice: **Option 2**.
 5. Semantic conservation is a separately guarded evaluation surface. Every load-bearing pre-v11 obligation is classified as spine, JIT, executable gate, compatibility, or deliberate retirement and mapped to reachable current carriers. Deleting a carrier or anchor must turn the harness red.
 6. PROFILE gates fail closed for required local surfaces. Remote surfaces use a real provider read or produce an explicit unreachable finding; a manual assertion cannot silently count as alignment.
 
+## Budget delta
+
+Measured at the commit boundary (`git archive` of the parent commit vs. the commit that lands this ADR), via `validate-corpus-budget.sh`:
+
+| Metric | Before | After | Delta |
+|--------|--------|-------|-------|
+| AGENTS bytes | 9121 | 10048 | +927 |
+| AGENTS lines | 97 | 100 | +3 |
+| Desc sum | 6902 | 6904 | +2 |
+| Auto-invoked skill count | 63 | 63 | 0 |
+| Skill dirs (total) | 79 | 80 | +1 |
+
+Equal retirement: `project-profile` is added as the sole automatic PROFILE entrypoint (+1 auto-invoked skill); `project-readme` is demoted to `disable-model-invocation: true` in the same change (-1 auto-invoked skill), holding the auto-invoked skill count at 63. The new skill dir (`project-profile`) is the only net addition to the catalog.
+
+## Evidence
+
+- Gate change (PROFILE fail-closed, Decision item 6): fail-closed A1-lite candidate-corpus score against the immutable baseline, `bash tests/eval/score.sh --root . --check` — 12/12 fixtures correct, `catch_rate_pct` 100.0, `clean_rate_pct` 100.0, 0 regressions against `tests/eval/reports/baseline.json`.
+- Catalog expansion (`project-profile` added, `project-readme` demoted): `bash .speck/scripts/validation/validators/validate-corpus-budget.sh` passes at the commit boundary, and the equal-retirement arithmetic above holds the auto-invoked skill count flat.
+
 ## Consequences
 
 - Existing explicit commands keep working without owning sequence.

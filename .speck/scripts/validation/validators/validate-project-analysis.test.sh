@@ -105,10 +105,16 @@ EOF
 }
 
 # A project tree the witness graph can actually read: product-contract.md carries MM-1, MM-2, JOB-1.
+# play_level "" (explicit empty string, distinct from the "build" default) omits the key entirely —
+# AGENTS.md:27's documented normal, "if absent, use Platform until the project is classified".
 mkproj() { # <repo-root> [n-epics] [play_level]
-  local d="$1" n="${2:-6}" play="${3:-build}" i p
+  local d="$1" n="${2:-6}" play="${3-build}" i p
   mkdir -p "$d/.speck"
-  printf '{"project_id":"001-x","play_level":"%s"}\n' "$play" > "$d/.speck/project.json"
+  if [[ -z "$play" ]]; then
+    printf '{"project_id":"001-x"}\n' > "$d/.speck/project.json"
+  else
+    printf '{"project_id":"001-x","play_level":"%s"}\n' "$play" > "$d/.speck/project.json"
+  fi
   p="$d/specs/projects/001-x"
   mkdir -p "$p/epics"
   i=1
@@ -142,6 +148,19 @@ gitify() { # <repo-root>
   git -C "$1" config user.name t
   git -C "$1" add -A >/dev/null 2>&1
   git -C "$1" -c commit.gpgsign=false commit -qm init >/dev/null 2>&1
+  # is_v11_report reads .speck/VERSION by ANCESTRY (what did it read at the report's own commit?),
+  # never by "does it exist on disk right now" — so the workspace's move to v11 tooling has to land
+  # in its own, LATER commit, exactly like a real repo upgrading Speck sometime after a project's
+  # analysis report was already written. Every caller that does not pre-create .speck/VERSION itself
+  # (mkproj does not) gets this ordering for free: the report's commit predates the version bump, so
+  # it reads as genuinely vintage. A caller that DOES pre-create .speck/VERSION before calling gitify
+  # (the dodge-detection fixtures) folds it into the SAME commit as the report instead — see g39/g40.
+  mkdir -p "$1/.speck"
+  printf '11.0.0' > "$1/.speck/VERSION"
+  git -C "$1" add -A >/dev/null 2>&1
+  if ! git -C "$1" diff --cached --quiet 2>/dev/null; then
+    git -C "$1" -c commit.gpgsign=false commit -qm "speck tooling upgraded to v11" >/dev/null 2>&1
+  fi
 }
 
 echo "── structural mode ──────────────────────────────────────────────────────────"
@@ -724,6 +743,256 @@ run --gate "$P"
 { [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_OPTIONAL_MISSING.P1" && echo "$OUT" | grep -q "lenses required: 0"; } \
   && pass "optional analysis tier still enforces a submitted v11 Flow Fit report" \
   || fail "the zero-lens early exit must not waive authored flow findings"
+
+# 37. PHANTOM CHECK MUST BIND TO THE SLOT, NOT TO "ANY .md THAT EXISTS SOMEWHERE". A rationale that
+# merely mentions an unrelated, real filename (here: README.md, sitting in the project dir for an
+# entirely different reason) must not satisfy an "included" verdict for story-ui-spec when no
+# ui-spec.md was ever produced. Story altitude, matching the auditor's exact reproduction shape.
+d="$T/g37"; P="$(mkproj "$d" 2 build)"
+S="$P/epics/E001-thing/stories/S001-uispec"; mkdir -p "$S"
+printf '# Spec\n' > "$S/spec.md"; printf '# Plan\n' > "$S/plan.md"; printf '# Tasks\n' > "$S/tasks.md"
+write_report "$S/story-analysis-report.md" story-analysis-report
+sed -i.bak 's/speck_version: 10.3.0/speck_version: 11.0.0/' "$S/story-analysis-report.md"
+cat >> "$S/story-analysis-report.md" <<'EOF'
+
+## Flow Fit
+
+| Slot | Trigger evidence | Artifact or rationale | Verdict |
+|---|---|---|---|
+| story-extract | Code exists without artifacts | Not applicable, greenfield story | not-applicable |
+| speck-scan | No existing code for this story | Not applicable | not-applicable |
+| story-ui-spec | Multi-state UI | rationale mentions README.md | included |
+EOF
+# README.md is real and resolves under the project dir, but it is NOT a ui-spec — no ui-spec.md
+# exists anywhere in the tree.
+printf '# Readme\n' > "$P/README.md"
+gitify "$d"
+run --gate "$S"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_INCLUDED_PHANTOM.P1" && echo "$OUT" | grep -q "story-ui-spec"; } \
+  && pass "an incidental .md mention cannot stand in for the slot's own artifact (story-ui-spec/README.md)" \
+  || fail "flow_artifact_exists must bind the resolved file to the slot it is adjudicating"
+
+# 38. SCOPE_DRIFT.P1 MUST NOT FIRE AGAINST A FALLBACK THIS GATE INVENTED. When .speck/project.json
+# carries no play_level at all (AGENTS.md:27's documented normal state — "if absent, use Platform
+# until the project is classified"), "platform" below is this gate's OWN conservative guess, not a
+# live declaration the report can be convicted of disagreeing with.
+d="$T/g38"; P="$(mkproj "$d" 6 "")"; write_report "$P/project-analysis-report.md"; gitify "$d"
+run --gate "$P"
+{ [[ "$RC" == 0 ]] && ! echo "$OUT" | grep -q "ANALYSIS_SCOPE_DRIFT.P1" && echo "$OUT" | grep -q "lenses required: 7"; } \
+  && pass "an absent live play_level falls back to platform for RIGOR without accusing the report of drift" \
+  || fail "SCOPE_DRIFT.P1 must only fire against a live declaration, never against this gate's own guess"
+
+# 39. is_v11_report MUST BIND TO THE LIVE .speck/VERSION, NEVER TO THE REPORT'S OWN CLAIM. Every
+# other self-declared field in this file is treated as a claim to compare against live truth, never
+# an authority (ANALYSIS_SCOPE_DRIFT.P1 above) — speck_version cannot be the one field exempted from
+# that rule, or a report can duck the entire v11 Flow Fit contract by simply typing an older number.
+d="$T/g39"; P="$(mkproj "$d" 6 build)"; write_v11_project_report "$P/project-analysis-report.md"
+sed -i.bak 's/speck_version: 11.0.0/speck_version: 10.3.0/' "$P/project-analysis-report.md"
+python3 - "$P/project-analysis-report.md" <<'PY'
+import re, sys
+p = sys.argv[1]
+s = open(p).read()
+s = re.sub(r"\n## Flow Fit\n(?:.|\n)*$", "\n", s, count=1)
+open(p, "w").write(s)
+PY
+printf '11.0.0' > "$d/.speck/VERSION"
+gitify "$d"
+run --gate "$P"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_OPTIONAL_UNREVIEWED.P1"; } \
+  && pass "a report cannot duck the v11 Flow Fit gate by stamping a lower speck_version while .speck/VERSION reads 11.0.0" \
+  || fail "is_v11_report must compare against the live .speck/VERSION, not the report's own frontmatter"
+
+# 40. THE OTHER HALF OF 39's RULE, MADE EXPLICIT. Reading live .speck/VERSION must not retroactively
+# convict a report that GENUINELY predates the workspace's own move to v11 — VINTAGE BINDING's whole
+# promise ("every analysis report already on disk ... none is retroactively convicted") has to keep
+# holding one level up. Here the report is committed to git BEFORE the workspace's tooling upgrade
+# lands in its own later commit — the honest ancestry a real repo has when it upgrades Speck sometime
+# after a project's last analysis pass, never touching that report again.
+d="$T/g40"; P="$(mkproj "$d" 6 build)"; write_report "$P/project-analysis-report.md"
+git -C "$d" init -q; git -C "$d" config user.email t@t.co; git -C "$d" config user.name t
+git -C "$d" add -A >/dev/null 2>&1
+git -C "$d" -c commit.gpgsign=false commit -qm "project, pre-v11" >/dev/null 2>&1
+mkdir -p "$d/.speck"; printf '11.0.0' > "$d/.speck/VERSION"
+git -C "$d" add -A >/dev/null 2>&1
+git -C "$d" -c commit.gpgsign=false commit -qm "speck tooling upgraded to v11, report untouched" >/dev/null 2>&1
+run --gate "$P"
+{ [[ "$RC" == 0 ]] && ! echo "$OUT" | grep -q "FLOW_OPTIONAL_UNREVIEWED.P1"; } \
+  && pass "a report committed BEFORE the workspace reached v11 stays advisory even though live VERSION now reads 11.0.0" \
+  || fail "is_v11_report must read ancestry, not merely 'does VERSION exist on disk right now'"
+
+# 40b. NEIGHBOUR: the dodge caught by 39 was constructed with .speck/VERSION pre-created before a
+# SINGLE commit. Prove the mechanism also catches a report edited and committed AFTER the workspace
+# had already separately upgraded — a different, more ordinary-looking shape of the same lie.
+d="$T/g40b"; P="$(mkproj "$d" 6 build)"; write_v11_project_report "$P/project-analysis-report.md"
+gitify "$d"
+# The workspace is already on v11 (gitify's own second commit). NOW, in a THIRD commit, the report is
+# downgraded to look pre-v11 — its Flow Fit table stripped and its speck_version claim lowered — but
+# this edit happens strictly AFTER the upgrade was already live and committed.
+sed -i.bak 's/speck_version: 11.0.0/speck_version: 10.3.0/' "$P/project-analysis-report.md"
+python3 - "$P/project-analysis-report.md" <<'PY'
+import re, sys
+p = sys.argv[1]
+s = open(p).read()
+s = re.sub(r"\n## Flow Fit\n(?:.|\n)*$", "\n", s, count=1)
+open(p, "w").write(s)
+PY
+git -C "$d" add -A >/dev/null 2>&1
+git -C "$d" -c commit.gpgsign=false commit -qm "report rewritten to look older, after the v11 upgrade" >/dev/null 2>&1
+run --gate "$P"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_OPTIONAL_UNREVIEWED.P1"; } \
+  && pass "a report re-committed to claim an old version AFTER the workspace already reached v11 is still caught" \
+  || fail "the ancestry check must not be specific to g39's exact single-commit construction"
+
+# 40c. NEIGHBOUR: an uncommitted report, never committed at all, in a live v11 workspace. There is no
+# ancestry to read, so the only tooling that could have produced it is whatever is live right now.
+d="$T/g40c"; P="$(mkproj "$d" 6 build)"
+git -C "$d" init -q; git -C "$d" config user.email t@t.co; git -C "$d" config user.name t
+mkdir -p "$d/.speck"; printf '11.0.0' > "$d/.speck/VERSION"
+git -C "$d" add -A >/dev/null 2>&1
+git -C "$d" -c commit.gpgsign=false commit -qm "workspace already on v11" >/dev/null 2>&1
+write_report "$P/project-analysis-report.md"
+run --gate "$P"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_OPTIONAL_UNREVIEWED.P1"; } \
+  && pass "a never-committed report in a live v11 workspace is held to v11, not to its own unbound claim" \
+  || fail "a report with no ancestry at all must fall back to the LIVE tooling authoring it right now"
+
+# 41. ALTITUDE CONFINEMENT — a project-level constitution.md/architecture.md/user-journey.md must not
+# discharge an EPIC-level slot's "included" claim. The epic dir here has nothing epic-specific on
+# disk; only same-named files sitting at the project root, produced (if at all) by a different
+# altitude's own skill.
+d="$T/g41"; P="$(mkproj "$d" 6 build)"
+E="$P/epics/E001-thing"; mkdir -p "$E"
+printf '# Epic\n' > "$E/epic.md"; printf '# Tech spec\n' > "$E/epic-tech-spec.md"
+write_report "$E/epic-analysis-report.md" epic-analysis-report
+sed -i.bak 's/speck_version: 10.3.0/speck_version: 11.0.0/' "$E/epic-analysis-report.md"
+cat >> "$E/epic-analysis-report.md" <<'EOF'
+
+## Flow Fit
+
+| Slot | Trigger evidence | Artifact or rationale | Verdict |
+|---|---|---|---|
+| epic-discover | Epic created via epic-specify | Not discovered from code | not-applicable |
+| epic-constitution | Local principles needed | constitution.md | included |
+| epic-architecture | Cross-cutting integration | architecture.md | included |
+| epic-journey | UX-heavy epic | user-journey.md | included |
+| epic-wireframes | No UX surface | Claimed unnecessary | not-applicable |
+| epic-experience-chain | No UX surface | Claimed unnecessary | not-applicable |
+EOF
+printf '# Constitution\n' > "$P/constitution.md"
+printf '# Architecture\n' > "$P/architecture.md"
+printf '# User Journey\n' > "$P/user-journey.md"
+gitify "$d"
+run --gate "$E"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_INCLUDED_PHANTOM.P1" \
+    && echo "$OUT" | grep -q "epic-constitution" && echo "$OUT" | grep -q "epic-architecture" \
+    && echo "$OUT" | grep -q "epic-journey"; } \
+  && pass "project-root constitution.md/architecture.md/user-journey.md cannot discharge epic-altitude slots" \
+  || fail "flow_artifact_exists must confine its search to the slot's OWN altitude, not the project root"
+
+# 41b. CONTROL for 41: the SAME three files, placed in the epic dir itself (the altitude the skills
+# actually write to), must still satisfy the claim. Confinement must not become a false rejection of
+# legitimate epic-local artifacts.
+d="$T/g41b"; P="$(mkproj "$d" 6 build)"
+E="$P/epics/E001-thing"; mkdir -p "$E"
+printf '# Epic\n' > "$E/epic.md"; printf '# Tech spec\n' > "$E/epic-tech-spec.md"
+write_report "$E/epic-analysis-report.md" epic-analysis-report
+sed -i.bak 's/speck_version: 10.3.0/speck_version: 11.0.0/' "$E/epic-analysis-report.md"
+cat >> "$E/epic-analysis-report.md" <<'EOF'
+
+## Flow Fit
+
+| Slot | Trigger evidence | Artifact or rationale | Verdict |
+|---|---|---|---|
+| epic-discover | Epic created via epic-specify | Not discovered from code | not-applicable |
+| epic-constitution | Local principles needed | constitution.md | included |
+| epic-architecture | Cross-cutting integration | architecture.md | included |
+| epic-journey | UX-heavy epic | user-journey.md | included |
+| epic-wireframes | No UX surface | Claimed unnecessary | not-applicable |
+| epic-experience-chain | No UX surface | Claimed unnecessary | not-applicable |
+EOF
+printf '# Constitution\n' > "$E/constitution.md"
+printf '# Architecture\n' > "$E/architecture.md"
+printf '# User Journey\n' > "$E/user-journey.md"
+gitify "$d"
+run --gate "$E"
+{ [[ "$RC" == 0 ]] && ! echo "$OUT" | grep -q "FLOW_INCLUDED_PHANTOM"; } \
+  && pass "legitimate epic-local constitution.md/architecture.md/user-journey.md still satisfy their slots" \
+  || fail "confining the search to scope must not reject artifacts that genuinely live there"
+
+# 42. NEIGHBOUR KEYWORD — story-extract's OWN Output line names spec.md, but story-specify ALSO
+# writes spec.md to every story dir regardless. Pointing "included" at bare spec.md, with no
+# codebase-scan-extracted.md anywhere, must not pass — spec.md's presence is not evidence extraction
+# ran.
+d="$T/g42"; P="$(mkproj "$d" 6 build)"
+S="$P/epics/E001-thing/stories/S001-extract"; mkdir -p "$S"
+printf '# Spec\n' > "$S/spec.md"; printf '# Plan\n' > "$S/plan.md"; printf '# Tasks\n' > "$S/tasks.md"
+write_report "$S/story-analysis-report.md" story-analysis-report
+sed -i.bak 's/speck_version: 10.3.0/speck_version: 11.0.0/' "$S/story-analysis-report.md"
+cat >> "$S/story-analysis-report.md" <<'EOF'
+
+## Flow Fit
+
+| Slot | Trigger evidence | Artifact or rationale | Verdict |
+|---|---|---|---|
+| story-extract | Code exists without artifacts | see spec.md | included |
+| speck-scan | No existing code for this story | Not applicable | not-applicable |
+| story-ui-spec | No complex UI | Claimed unnecessary | not-applicable |
+EOF
+gitify "$d"
+run --gate "$S"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_INCLUDED_PHANTOM.P1" && echo "$OUT" | grep -q "story-extract"; } \
+  && pass "story-extract 'included' cannot be satisfied by spec.md alone, which story-specify also writes" \
+  || fail "the story-extract keyword must not accept the filename every story dir already carries"
+
+# 42b. CONTROL for 42: the real, extract-unique artifact still satisfies the claim.
+d="$T/g42b"; P="$(mkproj "$d" 6 build)"
+S="$P/epics/E001-thing/stories/S001-extract"; mkdir -p "$S"
+printf '# Spec\n' > "$S/spec.md"; printf '# Plan\n' > "$S/plan.md"; printf '# Tasks\n' > "$S/tasks.md"
+printf '# Codebase scan\n' > "$S/codebase-scan-extracted.md"
+write_report "$S/story-analysis-report.md" story-analysis-report
+sed -i.bak 's/speck_version: 10.3.0/speck_version: 11.0.0/' "$S/story-analysis-report.md"
+cat >> "$S/story-analysis-report.md" <<'EOF'
+
+## Flow Fit
+
+| Slot | Trigger evidence | Artifact or rationale | Verdict |
+|---|---|---|---|
+| story-extract | Code exists without artifacts | codebase-scan-extracted.md | included |
+| speck-scan | No existing code for this story | Not applicable | not-applicable |
+| story-ui-spec | No complex UI | Claimed unnecessary | not-applicable |
+EOF
+gitify "$d"
+run --gate "$S"
+{ [[ "$RC" == 0 ]] && ! echo "$OUT" | grep -q "FLOW_INCLUDED_PHANTOM"; } \
+  && pass "story-extract's own codebase-scan-extracted.md still satisfies the claim" \
+  || fail "tightening the keyword must not reject the artifact the step actually produces"
+
+# 43. NEIGHBOUR KEYWORD — epic-discover's OWN Output line names epic.md, but epic-specify ALSO
+# writes epic.md to every epic dir regardless (it is the same filename either way). Pointing
+# "included" at bare epic.md is not evidence discovery ran, any more than spec.md was for extraction.
+d="$T/g43"; P="$(mkproj "$d" 6 build)"
+E="$P/epics/E001-thing"; mkdir -p "$E"
+printf '# Epic\n' > "$E/epic.md"; printf '# Tech spec\n' > "$E/epic-tech-spec.md"
+write_report "$E/epic-analysis-report.md" epic-analysis-report
+sed -i.bak 's/speck_version: 10.3.0/speck_version: 11.0.0/' "$E/epic-analysis-report.md"
+cat >> "$E/epic-analysis-report.md" <<'EOF'
+
+## Flow Fit
+
+| Slot | Trigger evidence | Artifact or rationale | Verdict |
+|---|---|---|---|
+| epic-discover | Brownfield epic map | see epic.md | included |
+| epic-constitution | No local principles | Project rules suffice | not-applicable |
+| epic-architecture | No cross-cutting concerns | Claimed unnecessary | not-applicable |
+| epic-journey | No UX surface | Claimed unnecessary | not-applicable |
+| epic-wireframes | No UX surface | Claimed unnecessary | not-applicable |
+| epic-experience-chain | No UX surface | Claimed unnecessary | not-applicable |
+EOF
+gitify "$d"
+run --gate "$E"
+{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_INCLUDED_PHANTOM.P1" && echo "$OUT" | grep -q "epic-discover"; } \
+  && pass "epic-discover 'included' cannot be satisfied by bare epic.md, which epic-specify also writes" \
+  || fail "the epic-discover keyword must not accept the filename every epic dir already carries"
 
 echo "── mutation proofs (each assertion, proven red against a reverted copy) ──────"
 

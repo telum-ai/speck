@@ -1,6 +1,6 @@
 # Epic adjustment branch
 
-Map affected stories and shared components. Update only epic-level deltas in `epic.md`, `epic-tech-spec.md`, `epic-breakdown.md`, `wireframes.md`, `journey.md`, and `experience-chain.md` as applicable.
+Map affected stories and shared components. Update only epic-level deltas in `epic.md`, `epic-tech-spec.md`, `epic-breakdown.md`, `wireframes.md`, `user-journey.md`, and `experience-chain.md` as applicable.
 
 Reconcile `traceability-matrix.md`. Retire superseded cross-story promises with a DEC and add PRM rows for new screens, elements, and seam rules. Route every affected story through the story branch of `adjust`, including planning, tasks, analysis, implementation, audit, and validation.
 
