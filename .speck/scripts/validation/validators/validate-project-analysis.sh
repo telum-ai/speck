@@ -325,83 +325,41 @@ fm_value() {
 }
 
 # is_v11_report <report-file> <scope-dir>
-# v11-ness is a claim to VERIFY against live truth, never one to trust blindly — the same rule
-# ANALYSIS_SCOPE_DRIFT.P1 already applies to play_level and epic_count, extended here so a report
-# cannot duck the whole Flow Fit contract by simply typing an old speck_version.
+# v11-ness decides whether the Flow Fit contract applies. The ORIGINAL defect was that a report
+# could duck the whole contract by simply typing an old speck_version, and nothing said a word.
 #
-# But "live truth" for a claim about WHEN a report was produced is not simply "whatever
-# .speck/VERSION reads on disk right now" — that retroactively convicts every analysis report
-# genuinely written before THIS workspace's own tooling reached v11, which is exactly what VINTAGE
-# BINDING (above) promises never happens: "every analysis report already on disk ... none is
-# retroactively convicted." The signal that actually separates "genuinely predates v11" from "claims
-# a version below the tooling that produced it" is ANCESTRY — the same technique freshness_check
-# already uses for staleness (git log on the FILE, never a self-reported SHA field): what did
-# .speck/VERSION read AT THE REPORT'S OWN COMMIT? A report committed before the workspace's tooling
-# reached v11 predates the Flow Fit requirement and is exempt — it is judged by its own claim, which
-# is ordinarily consistent with that history anyway. A report committed at or after was produced BY
-# v11 tooling regardless of what number its own frontmatter types, and is held to the v11 contract.
-# Ancestry is read off the LAST COMMIT, never the working tree: an uncommitted edit sitting on top of
-# an already-vintage commit (fixing one unrelated cell, say) does not retroactively re-author the
-# whole report under today's tooling — only a report with NO prior commit at all has nothing to judge
-# by except the live tooling authoring it right now.
+# The fix is NOT to override the report's claim from live truth. "Which tooling produced this
+# report" is a fact about the past, and every mechanism for recovering it (git ancestry, file
+# mtime) is absent in ordinary workspaces — squashed history, gitignored specs/, an uncommitted
+# edit, a repo initialised after adoption — so any such rule retroactively convicts genuinely
+# vintage reports, which VINTAGE BINDING (above) promises never happens.
 #
-# Falls back to the report's own claim whenever ancestry cannot be computed at all: no reachable
-# workspace root, no live VERSION file, the scope is outside git, or VERSION did not exist yet at the
-# report's own commit. Inability to verify is a finding to route elsewhere, never a silent conviction
-# (AGENTS.md P3) — and never a silent pass either, which was the ORIGINAL defect this replaced.
+# So the claim is still honoured, and the dodge is made VISIBLE instead: a report claiming a
+# version below the workspace's own tooling raises ANALYSIS_VINTAGE_UNVERIFIED.P2 at the gate
+# (see the caller), which --strict escalates. Silence was the bug; a wrong conviction is not the
+# cure. Inability to verify is a finding, never a silent pass and never a silent conviction
+# (AGENTS.md P3).
 is_v11_report() {
-  local report="${1:-}" scope="${2:-}" root v major
-  root="$([[ -n "$scope" ]] && speck_root "$scope" || true)"
-  if [[ -z "$root" || ! -f "$root/.speck/VERSION" ]]; then
-    v="$(fm_value 'speck_version')"
-    major="${v%%.*}"
-    [[ "$major" =~ ^[0-9]+$ && "$major" -ge 11 ]]
-    return
-  fi
-  local live live_major
-  live="$(tr -d '[:space:]' < "$root/.speck/VERSION" 2>/dev/null || true)"
-  live_major="${live%%.*}"
-  if [[ ! "$live_major" =~ ^[0-9]+$ || "$live_major" -lt 11 ]]; then
-    # the workspace itself has not reached v11 yet; nothing under it can be a v11 report.
-    return 1
-  fi
-  local git_root rel_version report_sha hist hist_major
-  git_root="$(git -C "$root" rev-parse --show-toplevel 2>/dev/null || true)"
-  if [[ -z "$git_root" || -z "$report" || ! -f "$report" ]]; then
-    v="$(fm_value 'speck_version')"
-    major="${v%%.*}"
-    [[ "$major" =~ ^[0-9]+$ && "$major" -ge 11 ]]
-    return
-  fi
-  case "$root" in
-    "$git_root") rel_version=".speck/VERSION" ;;
-    "$git_root"/*) rel_version="${root#"$git_root"/}/.speck/VERSION" ;;
-    *) rel_version=".speck/VERSION" ;;
-  esac
-  report_sha="$(git -C "$git_root" log -1 --format=%H -- "$report" 2>/dev/null || true)"
-  if [[ -z "$report_sha" ]]; then
-    # Never committed at all — there is no ancestry to read, so the only tooling that could have
-    # produced it is whatever is live on disk right now.
-    return 0
-  fi
-  hist="$(git -C "$git_root" show "${report_sha}:${rel_version}" 2>/dev/null || true)"
-  hist="$(tr -d '[:space:]' <<<"$hist")"
-  if [[ -z "$hist" ]]; then
-    # VERSION did not exist yet at the report's own commit — cannot verify, so do not convict.
-    v="$(fm_value 'speck_version')"
-    major="${v%%.*}"
-    [[ "$major" =~ ^[0-9]+$ && "$major" -ge 11 ]]
-    return
-  fi
-  hist_major="${hist%%.*}"
-  if [[ "$hist_major" =~ ^[0-9]+$ && "$hist_major" -ge 11 ]]; then
-    return 0
-  fi
+  local v major
   v="$(fm_value 'speck_version')"
   major="${v%%.*}"
   [[ "$major" =~ ^[0-9]+$ && "$major" -ge 11 ]]
 }
 
+# report_claims_stale_vintage <scope-dir> — true when the report claims a pre-v11 version while
+# the workspace's own tooling is v11+. Not a conviction on its own; the caller raises a P2.
+report_claims_stale_vintage() {
+  local scope="${1:-}" root live live_major v major
+  root="$([[ -n "$scope" ]] && speck_root "$scope" || true)"
+  [[ -n "$root" && -f "$root/.speck/VERSION" ]] || return 1
+  live="$(tr -d '[:space:]' < "$root/.speck/VERSION" 2>/dev/null || true)"
+  live_major="${live%%.*}"
+  [[ "$live_major" =~ ^[0-9]+$ && "$live_major" -ge 11 ]] || return 1
+  v="$(fm_value 'speck_version')"
+  major="${v%%.*}"
+  [[ "$major" =~ ^[0-9]+$ ]] || return 1
+  [[ "$major" -lt 11 ]]
+}
 flow_slots() {
   case "$1" in
     project|project-analysis-report)
@@ -493,8 +451,10 @@ flow_artifact_keyword() {
 # that the step ran" has to mean the step ran HERE, not merely that the name exists somewhere in the
 # tree.
 flow_artifact_exists() {
-  local artifact="$1" scope="$2" slot="$3" token keyword
+  local artifact="$1" scope="$2" slot="$3" token keyword candidate project
   keyword="$(flow_artifact_keyword "$slot")"
+  project="$scope"
+  case "$scope" in */epics/*) project="${scope%%/epics/*}" ;; esac
   while IFS= read -r token; do
     [[ -n "$token" ]] || continue
     # The token must NAME this slot's own artifact. A filename that merely exists somewhere in the
@@ -504,12 +464,22 @@ flow_artifact_exists() {
     # walking out through `..`, would otherwise reach a same-named artifact at another
     # altitude and discharge a claim this step never earned — the exact bypass the
     # scope-only rule above exists to prevent.
+    # Confine every candidate to the scope directory, but accept the spellings the template
+    # actually invites ("[path or rationale]"): a bare filename, a path relative to the project
+    # root, or an absolute path. Whichever spelling is used, the file it names has to LAND inside
+    # the scope dir — otherwise a same-named artifact at another altitude would discharge a claim
+    # this step never earned. Confinement is a property of the resolved path, not of the spelling.
     case "$token" in
       */../*|*/..|../*|..) continue ;;
-      /*) [[ "$token" == "$scope"/* ]] || continue
-          [[ -f "$token" ]] && return 0 ;;
-      *)  [[ -f "$scope/$token" ]] && return 0 ;;
+      /*)  candidate="$token" ;;
+      *)   if [[ -f "$scope/$token" ]]; then
+             candidate="$scope/$token"
+           else
+             candidate="$project/$token"
+           fi ;;
     esac
+    [[ "$candidate" == "$scope"/* ]] || continue
+    [[ -f "$candidate" ]] && return 0
   done <<< "$(printf '%s' "$artifact" | grep -oE '[A-Za-z0-9_./-]+\.md' || true)"
   return 1
 }
@@ -1297,6 +1267,13 @@ gate_mode() {
 
   log_ok_gate "analysis report present and v10.3-vintage: $(basename "$report")"
   [[ -f "$marker" ]] && emit_note "a .analysis-gate-grandfathered marker is present but a v10.3 report exists, so the exemption has expired and the marker is inert. It is safe to delete."
+
+  # A report may exempt itself from the Flow Fit contract by declaring a pre-v11 version. That
+  # claim is honoured (see is_v11_report) but never silently: when the workspace's own tooling is
+  # already v11, say so, so the exemption is a visible decision instead of an invisible one.
+  if report_claims_stale_vintage "$dir"; then
+    emit_p2 "ANALYSIS_VINTAGE_UNVERIFIED.P2" "$(basename "$report") declares speck_version $(fm_value 'speck_version') while this workspace's .speck/VERSION is already v11+, so it is exempt from the Flow Fit contract on its own say-so. That exemption is legitimate for a report genuinely written before the upgrade and is NOT verifiable from the artifact itself. Re-run /analyze --level $level to produce a report this gate can read in full."
+  fi
 
   load_tables
 

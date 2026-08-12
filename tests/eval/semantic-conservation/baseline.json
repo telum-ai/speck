@@ -282,11 +282,11 @@
     },
     {
       "path": ".speck/scripts/validation/validators/validate-project-analysis.sh",
-      "sha256": "3b05beaca006297d4c421dfc5cd3ef0345584257ac7863b6c9e1d000000f0fbb"
+      "sha256": "b1e384c5d25e7c5316b1330c37573852882743ff91497b91ec5f65809e436b35"
     },
     {
       "path": ".speck/scripts/validation/validators/validate-project-analysis.test.sh",
-      "sha256": "5adff3c81616e774adb1fdff68841a3ddaf7174edd1da01f6ace5aa4f2a8079a"
+      "sha256": "a81f890a7018975ae60b3496b95662b1318c548a2b62475bc01c3b32f26a9432"
     },
     {
       "path": ".speck/scripts/validation/validators/validate-recipes.sh",

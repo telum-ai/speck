@@ -782,79 +782,53 @@ run --gate "$P"
   && pass "an absent live play_level falls back to platform for RIGOR without accusing the report of drift" \
   || fail "SCOPE_DRIFT.P1 must only fire against a live declaration, never against this gate's own guess"
 
-# 39. is_v11_report MUST BIND TO THE LIVE .speck/VERSION, NEVER TO THE REPORT'S OWN CLAIM. Every
-# other self-declared field in this file is treated as a claim to compare against live truth, never
-# an authority (ANALYSIS_SCOPE_DRIFT.P1 above) — speck_version cannot be the one field exempted from
-# that rule, or a report can duck the entire v11 Flow Fit contract by simply typing an older number.
+# 39. A REPORT MAY CLAIM A PRE-v11 VINTAGE, BUT NEVER SILENTLY. Recovering "which tooling produced
+# this report" is not possible from the artifact, and every proxy for it (git ancestry, mtime) is
+# absent in ordinary workspaces — squashed history, a gitignored specs/, an uncommitted edit, a repo
+# initialised after adoption. A rule built on those proxies retroactively convicts genuinely vintage
+# reports, which VINTAGE BINDING promises never happens. So the claim is honoured and the exemption
+# is DISCLOSED: silence was the original defect, and a wrong conviction is not the cure.
 d="$T/g39"; P="$(mkproj "$d" 6 build)"; write_v11_project_report "$P/project-analysis-report.md"
 sed -i.bak 's/speck_version: 11.0.0/speck_version: 10.3.0/' "$P/project-analysis-report.md"
-python3 - "$P/project-analysis-report.md" <<'PY'
+python3 - "$P/project-analysis-report.md" <<'PY_INNER'
 import re, sys
 p = sys.argv[1]
 s = open(p).read()
 s = re.sub(r"\n## Flow Fit\n(?:.|\n)*$", "\n", s, count=1)
 open(p, "w").write(s)
-PY
+PY_INNER
 printf '11.0.0' > "$d/.speck/VERSION"
 gitify "$d"
 run --gate "$P"
-{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_OPTIONAL_UNREVIEWED.P1"; } \
-  && pass "a report cannot duck the v11 Flow Fit gate by stamping a lower speck_version while .speck/VERSION reads 11.0.0" \
-  || fail "is_v11_report must compare against the live .speck/VERSION, not the report's own frontmatter"
+{ echo "$OUT" | grep -q "ANALYSIS_VINTAGE_UNVERIFIED.P2"; } \
+  && pass "a report claiming a pre-v11 version in a v11 workspace raises a visible P2, never a silent exemption" \
+  || fail "a self-declared vintage exemption must be disclosed as ANALYSIS_VINTAGE_UNVERIFIED.P2"
 
-# 40. THE OTHER HALF OF 39's RULE, MADE EXPLICIT. Reading live .speck/VERSION must not retroactively
-# convict a report that GENUINELY predates the workspace's own move to v11 — VINTAGE BINDING's whole
-# promise ("every analysis report already on disk ... none is retroactively convicted") has to keep
-# holding one level up. Here the report is committed to git BEFORE the workspace's tooling upgrade
-# lands in its own later commit — the honest ancestry a real repo has when it upgrades Speck sometime
-# after a project's last analysis pass, never touching that report again.
+# 39b. THAT DISCLOSURE IS ESCALATABLE. A P2 is not a shrug: --strict turns every advisory into a
+# blocking exit, so a reviewer who does not accept an unverifiable vintage claim has a mechanism.
+run --gate --strict "$P"
+{ [[ "$RC" == 1 ]]; } \
+  && pass "--strict escalates the undisclosed-vintage advisory to a blocking failure" \
+  || fail "ANALYSIS_VINTAGE_UNVERIFIED.P2 must escalate under --strict"
+
+# 40. NO RETROACTIVE CONVICTION. A report that genuinely predates the workspace's move to v11 keeps
+# its vintage exemption — it is not rejected merely because .speck/VERSION now reads 11.0.0. This is
+# the regression an ancestry-based rule caused in four separate ordinary repo shapes.
 d="$T/g40"; P="$(mkproj "$d" 6 build)"; write_report "$P/project-analysis-report.md"
-git -C "$d" init -q; git -C "$d" config user.email t@t.co; git -C "$d" config user.name t
-git -C "$d" add -A >/dev/null 2>&1
-git -C "$d" -c commit.gpgsign=false commit -qm "project, pre-v11" >/dev/null 2>&1
 mkdir -p "$d/.speck"; printf '11.0.0' > "$d/.speck/VERSION"
-git -C "$d" add -A >/dev/null 2>&1
-git -C "$d" -c commit.gpgsign=false commit -qm "speck tooling upgraded to v11, report untouched" >/dev/null 2>&1
 run --gate "$P"
 { [[ "$RC" == 0 ]] && ! echo "$OUT" | grep -q "FLOW_OPTIONAL_UNREVIEWED.P1"; } \
-  && pass "a report committed BEFORE the workspace reached v11 stays advisory even though live VERSION now reads 11.0.0" \
-  || fail "is_v11_report must read ancestry, not merely 'does VERSION exist on disk right now'"
+  && pass "a genuinely vintage report is not retroactively convicted by a live v11 VERSION" \
+  || fail "VINTAGE BINDING must hold: no report already on disk is retroactively convicted"
 
-# 40b. NEIGHBOUR: the dodge caught by 39 was constructed with .speck/VERSION pre-created before a
-# SINGLE commit. Prove the mechanism also catches a report edited and committed AFTER the workspace
-# had already separately upgraded — a different, more ordinary-looking shape of the same lie.
-d="$T/g40b"; P="$(mkproj "$d" 6 build)"; write_v11_project_report "$P/project-analysis-report.md"
-gitify "$d"
-# The workspace is already on v11 (gitify's own second commit). NOW, in a THIRD commit, the report is
-# downgraded to look pre-v11 — its Flow Fit table stripped and its speck_version claim lowered — but
-# this edit happens strictly AFTER the upgrade was already live and committed.
-sed -i.bak 's/speck_version: 11.0.0/speck_version: 10.3.0/' "$P/project-analysis-report.md"
-python3 - "$P/project-analysis-report.md" <<'PY'
-import re, sys
-p = sys.argv[1]
-s = open(p).read()
-s = re.sub(r"\n## Flow Fit\n(?:.|\n)*$", "\n", s, count=1)
-open(p, "w").write(s)
-PY
-git -C "$d" add -A >/dev/null 2>&1
-git -C "$d" -c commit.gpgsign=false commit -qm "report rewritten to look older, after the v11 upgrade" >/dev/null 2>&1
-run --gate "$P"
-{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_OPTIONAL_UNREVIEWED.P1"; } \
-  && pass "a report re-committed to claim an old version AFTER the workspace already reached v11 is still caught" \
-  || fail "the ancestry check must not be specific to g39's exact single-commit construction"
-
-# 40c. NEIGHBOUR: an uncommitted report, never committed at all, in a live v11 workspace. There is no
-# ancestry to read, so the only tooling that could have produced it is whatever is live right now.
-d="$T/g40c"; P="$(mkproj "$d" 6 build)"
-git -C "$d" init -q; git -C "$d" config user.email t@t.co; git -C "$d" config user.name t
+# 40b. NEIGHBOUR — the same non-conviction must hold with NO git history at all, which is where the
+# ancestry rule failed hardest (gitignored specs/, never-committed reports, fresh repos).
+d="$T/g40b"; P="$(mkproj "$d" 6 build)"; write_report "$P/project-analysis-report.md"
 mkdir -p "$d/.speck"; printf '11.0.0' > "$d/.speck/VERSION"
-git -C "$d" add -A >/dev/null 2>&1
-git -C "$d" -c commit.gpgsign=false commit -qm "workspace already on v11" >/dev/null 2>&1
-write_report "$P/project-analysis-report.md"
 run --gate "$P"
-{ [[ "$RC" == 1 ]] && echo "$OUT" | grep -q "FLOW_OPTIONAL_UNREVIEWED.P1"; } \
-  && pass "a never-committed report in a live v11 workspace is held to v11, not to its own unbound claim" \
-  || fail "a report with no ancestry at all must fall back to the LIVE tooling authoring it right now"
+{ [[ "$RC" == 0 ]]; } \
+  && pass "outside git entirely, a vintage report is still not convicted" \
+  || fail "the vintage rule must not depend on git history being present"
 
 # 41. ALTITUDE CONFINEMENT — a project-level constitution.md/architecture.md/user-journey.md must not
 # discharge an EPIC-level slot's "included" claim. The epic dir here has nothing epic-specific on
