@@ -123,7 +123,7 @@ test('a shipped skill name wins over IDENTICAL user content without an error (sa
   assert.ok(results.errors.every(e => e.file !== '.agents/skills'), 'no error for a no-op dedup');
 });
 
-test('a shipped-name collision with DIFFERING content is refused, not silently resolved by deleting the extra file', () => {
+test('a shipped-name collision with DIFFERING content is set aside, never destroyed, and the upgrade still completes', () => {
   // Round-2 finding 3: migration was per-top-level-entry, so a shipped-name collision
   // skipped the WHOLE user directory (including files Speck never ships) and then the
   // caller's rmSync destroyed it — the lane's own test only asserted the shipped file won,
@@ -136,22 +136,22 @@ test('a shipped-name collision with DIFFERING content is refused, not silently r
   const results = smartSync(source, target);
 
   assert.ok(
-    !lstatSync(join(target, '.agents/skills')).isSymbolicLink(),
-    'the collision blocks the symlink swap — nothing is silently resolved',
+    lstatSync(join(target, '.agents/skills')).isSymbolicLink(),
+    'the upgrade completes — a colliding copy must not strand the project on a dead catalog',
   );
   assert.equal(
-    readFileSync(join(target, '.agents/skills/speck/SKILL.md'), 'utf-8'),
+    readFileSync(join(target, '.agents/skills.superseded/speck/SKILL.md'), 'utf-8'),
     'MY OWN speck NOTES - IRREPLACEABLE',
-    'the user SKILL.md survives untouched at its original path',
+    'the user SKILL.md is set aside intact, never destroyed',
   );
   assert.equal(
-    readFileSync(join(target, '.agents/skills/speck/extra-notes.md'), 'utf-8'),
+    readFileSync(join(target, '.agents/skills.superseded/speck/extra-notes.md'), 'utf-8'),
     'ALSO MINE',
-    'the extra file (which has no shipped counterpart) survives too',
+    'the extra file (which has no shipped counterpart) is set aside too',
   );
   assert.ok(
-    results.errors.some(e => e.file === '.agents/skills'),
-    'the unresolved collision is reported, not swallowed',
+    !results.errors.some(e => e.file === '.agents/skills'),
+    'setting a copy aside is not an error condition',
   );
 });
 
@@ -167,13 +167,13 @@ test('a user skill named after a RETIRED Speck skill (e.g. gdpr-compliance) surv
   const results = smartSync(source, target);
 
   assert.ok(
-    !lstatSync(join(target, '.agents/skills')).isSymbolicLink(),
-    'the retired-name collision blocks the symlink swap for this runtime dir',
+    lstatSync(join(target, '.agents/skills')).isSymbolicLink(),
+    'the upgrade still completes — a name collision must not strand the project on a stale catalog',
   );
   assert.equal(
-    readFileSync(join(target, '.agents/skills/gdpr-compliance/SKILL.md'), 'utf-8'),
+    readFileSync(join(target, '.agents/skills.superseded/gdpr-compliance/SKILL.md'), 'utf-8'),
     'OUR COMPANY GDPR PLAYBOOK',
-    'the user content survives untouched — never migrated into the directory REMOVE_FILES prunes',
+    'the user content is set aside intact — never migrated into the directory REMOVE_FILES prunes',
   );
   assert.ok(
     !existsSync(join(target, '.cursor/skills/gdpr-compliance')),
@@ -182,10 +182,6 @@ test('a user skill named after a RETIRED Speck skill (e.g. gdpr-compliance) surv
   assert.ok(
     results.removed.every(r => !r.includes('gdpr-compliance')),
     'results.removed carries no laundered-then-cleaned-up entry for it',
-  );
-  assert.ok(
-    results.errors.some(e => e.file === '.agents/skills'),
-    'the collision is loudly reported as needing manual action',
   );
 });
 
@@ -200,10 +196,10 @@ test('a user skill named after a DIFFERENT retired name (docker-containerization
   const results = smartSync(source, target);
 
   assert.equal(
-    readFileSync(join(target, '.claude/skills/docker-containerization/SKILL.md'), 'utf-8'),
+    readFileSync(join(target, '.claude/skills.superseded/docker-containerization/SKILL.md'), 'utf-8'),
     'OUR DOCKER NOTES',
   );
-  assert.ok(results.errors.some(e => e.file === '.claude/skills'));
+  assert.ok(lstatSync(join(target, '.claude/skills')).isSymbolicLink(), 'the upgrade completes');
 });
 
 test('a retired name buried INSIDE a normal user skill (not a top-level collision) still migrates fine', () => {
@@ -225,7 +221,7 @@ test('a retired name buried INSIDE a normal user skill (not a top-level collisio
   assert.ok(results.errors.every(e => e.file !== '.claude/skills'));
 });
 
-test('the same skill name in TWO runtime dirs with different content: the second is refused, not silently destroyed', () => {
+test('the same skill name in TWO runtime dirs with different content: the second is set aside, not silently destroyed', () => {
   // Round-2 finding 2 [MAJOR]: the runtime-dir loop is ['.claude', '.codex', '.agents']. The
   // first real dir migrates its copy of the name into .cursor/skills, which joins the
   // "shipped" set for the next dir's check — so the second dir's differently-content skill of
@@ -243,17 +239,13 @@ test('the same skill name in TWO runtime dirs with different content: the second
   assert.equal(readFileSync(join(target, '.cursor/skills/my-skill/SKILL.md'), 'utf-8'), 'CLAUDE VARIANT');
 
   assert.ok(
-    !lstatSync(join(target, '.agents/skills')).isSymbolicLink(),
-    'the second dir hits a real collision and is left as a real directory',
+    lstatSync(join(target, '.agents/skills')).isSymbolicLink(),
+    'the second dir still completes its swap',
   );
   assert.equal(
-    readFileSync(join(target, '.agents/skills/my-skill/SKILL.md'), 'utf-8'),
+    readFileSync(join(target, '.agents/skills.superseded/my-skill/SKILL.md'), 'utf-8'),
     'AGENTS VARIANT (different content)',
-    'the AGENTS variant survives untouched — it exists nowhere else, so it must not be destroyed',
-  );
-  assert.ok(
-    results.errors.some(e => e.file === '.agents/skills'),
-    'the cross-runtime-dir collision is reported',
+    'the AGENTS variant is set aside — it exists nowhere else, so it must not be destroyed',
   );
 });
 
@@ -266,14 +258,14 @@ test('three runtime dirs sharing a name (neighbouring input: .claude + .codex + 
 
   const results = smartSync(source, target);
 
-  assert.equal(readFileSync(join(target, '.claude/skills/tri-skill/SKILL.md'), 'utf-8'), 'CLAUDE V', 'first dir wins the migration');
-  assert.equal(readFileSync(join(target, '.codex/skills/tri-skill/SKILL.md'), 'utf-8'), 'CODEX V', 'second dir survives untouched');
-  assert.equal(readFileSync(join(target, '.agents/skills/tri-skill/SKILL.md'), 'utf-8'), 'AGENTS V', 'third dir survives untouched');
-  assert.equal(
-    results.errors.filter(e => e.file === '.codex/skills' || e.file === '.agents/skills').length,
-    2,
-    'both later collisions are reported',
-  );
+  // The first dir's copy becomes the live catalog entry; the two later, differing copies are
+  // each set aside under their own runtime dir. Every variant remains readable somewhere.
+  assert.equal(readFileSync(join(target, '.cursor/skills/tri-skill/SKILL.md'), 'utf-8'), 'CLAUDE V', 'first dir wins the migration');
+  assert.equal(readFileSync(join(target, '.codex/skills.superseded/tri-skill/SKILL.md'), 'utf-8'), 'CODEX V', 'second variant is set aside');
+  assert.equal(readFileSync(join(target, '.agents/skills.superseded/tri-skill/SKILL.md'), 'utf-8'), 'AGENTS V', 'third variant is set aside');
+  for (const dir of ['.claude', '.codex', '.agents']) {
+    assert.ok(lstatSync(join(target, dir, 'skills')).isSymbolicLink(), `${dir}/skills completes its swap`);
+  }
 });
 
 test('a broken symlink inside a real pre-existing skills dir migrates cleanly instead of throwing ENOENT mid-migration', () => {
@@ -387,5 +379,35 @@ test('a dangling .agents/skills symlink is repaired, not left as EEXIST', () => 
     readFileSync(join(target, '.agents/skills/speck/SKILL.md'), 'utf-8'),
     'shipped-speck-skill',
     'the repaired symlink resolves into the real .cursor/skills',
+  );
+});
+
+test('a stale Speck catalog left by an older version does not block the upgrade (the real Streb/Flyt shape)', () => {
+  // Found by dry-running the upgrade against real v9.5 and v7.16 project copies. Older Speck
+  // versions POPULATED .agents/skills instead of symlinking it, so a real upgrade meets a
+  // directory holding dozens of stale Speck skills — many under names v11 retired. Refusing on
+  // those stranded the project on a dead catalog while telling the user to move 77 directories
+  // by hand. The user's OWN skills sit in the same directory and must still come across.
+  const { source, target } = freshDirs('stale-speck-catalog');
+  mkdirSync(join(target, '.agents/skills/gdpr-compliance'), { recursive: true });
+  writeFileSync(join(target, '.agents/skills/gdpr-compliance/SKILL.md'), 'stale v9 speck skill');
+  mkdirSync(join(target, '.agents/skills/speck'), { recursive: true });
+  writeFileSync(join(target, '.agents/skills/speck/SKILL.md'), 'stale v9 copy of a shipped skill');
+  mkdirSync(join(target, '.agents/skills/axe'), { recursive: true });
+  writeFileSync(join(target, '.agents/skills/axe/SKILL.md'), 'MY OWN axe SKILL');
+
+  const results = smartSync(source, target);
+
+  assert.ok(lstatSync(join(target, '.agents/skills')).isSymbolicLink(), 'the upgrade completes');
+  assert.equal(
+    readFileSync(join(target, '.cursor/skills/axe/SKILL.md'), 'utf-8'),
+    'MY OWN axe SKILL',
+    'a genuinely project-owned skill is carried into the live catalog',
+  );
+  assert.ok(existsSync(join(target, '.agents/skills.superseded/gdpr-compliance/SKILL.md')), 'the retired-name copy is kept, not deleted');
+  assert.ok(existsSync(join(target, '.agents/skills.superseded/speck/SKILL.md')), 'the stale shipped-name copy is kept too');
+  assert.ok(
+    !results.errors.some(e => e.file === '.agents/skills'),
+    'a stale catalog is an ordinary upgrade, not an error the user must hand-resolve',
   );
 });

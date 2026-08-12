@@ -398,7 +398,7 @@
     },
     {
       "path": "packages/cli/lib/sync.js",
-      "sha256": "458e426a5eb3bc282c1c9a9934ea9e2930aac5baeea2ac03b8bdf9d6aa6b2096"
+      "sha256": "398be1f6c85c0577494463f3d2f6428e24ed1e899060d0ad292761140307866c"
     },
     {
       "path": "packages/cli/lib/sync.preserve.test.js",

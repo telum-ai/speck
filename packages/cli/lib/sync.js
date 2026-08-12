@@ -596,6 +596,7 @@ function symlinkCursorDir(targetDir, runtimeDir, relativeDir) {
   }
 
   let migrated = 0;
+  let superseded = 0;
 
   if (destStat && destStat.isSymbolicLink()) {
     // A symlink (valid or dangling) never holds real content — safe to drop and recreate.
@@ -625,31 +626,40 @@ function symlinkCursorDir(targetDir, runtimeDir, relativeDir) {
 
     for (const entry of entries) {
       const srcPath = join(destDir, entry);
-      if (retired.has(entry)) {
-        unsafeEntries.push(`'${entry}' matches a retired Speck skill name and would be deleted next`);
-        continue;
-      }
-      if (shipped.has(entry)) {
-        if (treesEqual(srcPath, join(sourceDir, entry))) {
+      if (retired.has(entry) || shipped.has(entry)) {
+        // A name Speck owns or used to own. In practice this is almost always a stale copy from
+        // an older Speck that populated this directory instead of symlinking it, so refusing the
+        // whole upgrade over it strands the project on a dead catalog. But it CAN be the user's
+        // own skill that happens to share the name, and that must not be destroyed either.
+        // Quarantine resolves both: identical content is a no-op, anything else is set aside.
+        if (shipped.has(entry) && treesEqual(srcPath, join(sourceDir, entry))) {
           continue; // identical to what Speck already ships — nothing to migrate
         }
-        unsafeEntries.push(`'${entry}' collides with a Speck-shipped skill but its content differs`);
+        unsafeEntries.push(entry);
         continue;
       }
       safeEntries.push(entry);
     }
 
-    if (unsafeEntries.length > 0) {
-      return {
-        action: 'error',
-        reason: `refusing to replace ${runtimeDir}/${relativeDir}: could not safely migrate ${unsafeEntries.join('; ')}. Move the conflicting item(s) out of ${runtimeDir}/${relativeDir} manually, then re-run sync.`,
-      };
-    }
-
+    // Genuine user content Speck has never owned is carried forward into the live catalog.
     for (const entry of safeEntries) {
       copyEntryTree(join(destDir, entry), join(sourceDir, entry));
       migrated++;
     }
+
+    // Superseded copies are set aside next to their original, where the user will actually find
+    // them, rather than deleted or left blocking the symlink.
+    if (unsafeEntries.length > 0) {
+      const quarantine = `${destDir}.superseded`;
+      mkdirSync(quarantine, { recursive: true });
+      for (const entry of unsafeEntries) {
+        const parked = join(quarantine, entry);
+        rmSync(parked, { recursive: true, force: true });
+        copyEntryTree(join(destDir, entry), parked);
+      }
+      superseded = unsafeEntries.length;
+    }
+
     rmSync(destDir, { recursive: true, force: true });
   } else if (destStat) {
     // A plain file sits where a directory/symlink belongs. Refuse rather than destroy it.
@@ -660,8 +670,8 @@ function symlinkCursorDir(targetDir, runtimeDir, relativeDir) {
   }
 
   symlinkSync(join('..', '.cursor', relativeDir), destDir);
-  return migrated > 0
-    ? { action: 'migrated', path: `${runtimeDir}/${relativeDir}/`, migrated }
+  return migrated > 0 || superseded > 0
+    ? { action: 'migrated', path: `${runtimeDir}/${relativeDir}/`, migrated, superseded }
     : { action: 'sync', path: `${runtimeDir}/${relativeDir}/` };
 }
 
@@ -1245,9 +1255,10 @@ export function smartSync(sourceDir, targetDir, options = {}) {
         if (symlinkResult.action === 'sync' || symlinkResult.action === 'migrated') {
           results.updated.push(symlinkResult.path);
           if (verbose) {
-            const suffix = symlinkResult.action === 'migrated'
-              ? ` (migrated ${symlinkResult.migrated} pre-existing item(s) into .cursor/${relativeDir}/ first)`
-              : '';
+            const parts = [];
+            if (symlinkResult.migrated) parts.push(`migrated ${symlinkResult.migrated} project-owned item(s) into .cursor/${relativeDir}/`);
+            if (symlinkResult.superseded) parts.push(`set aside ${symlinkResult.superseded} superseded copy/copies in ${runtimeDir}/${relativeDir}.superseded/`);
+            const suffix = parts.length ? ` (${parts.join('; ')})` : '';
             console.log(`  ✅ Symlinked: ${symlinkResult.path} → .cursor/${relativeDir}/${suffix}`);
           }
         } else if (symlinkResult.action === 'error') {
