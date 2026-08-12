@@ -14,7 +14,7 @@
 # Usage:
 #   .speck/scripts/market-staleness-check.sh [PROJECT_DIR]
 #
-# Output: emits zero or more TYPE.Pn lines (consumed by /recheck), e.g.
+# Output: emits zero or more TYPE.Pn lines (consumed by /speck-recheck), e.g.
 #   MARKET_DRIFT.P1  <detail>
 #   MARKET_DRIFT.P2  <detail>
 #
@@ -180,7 +180,7 @@ else
 
   # Honest bad verdict forces the fix (evaluation over verification).
   if [[ "$VERDICT" == "eroded" || "$VERDICT" == "false" ]]; then
-    emit "MARKET_DRIFT.P1" "last scan recorded verdict:${VERDICT} on the differentiator — reconcile §3 / run /project-adjust"
+    emit "MARKET_DRIFT.P1" "last scan recorded verdict:${VERDICT} on the differentiator — reconcile §3 / run /adjust --level project"
   fi
   # Phantom evidence: the cited scan report must actually exist.
   if [[ -n "$SCAN" && ! -f "$PROJECT_DIR/$SCAN" ]]; then

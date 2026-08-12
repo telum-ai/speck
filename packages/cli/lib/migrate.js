@@ -219,12 +219,12 @@ export function detectMigration(currentVersion, targetVersion) {
   const scaffoldV7 = toMajor >= 7 && (fromMajor == null || fromMajor < 7);
 
   // Crossing into v8 from anything older → semantic re-prove (cap-and-worklist).
-  // The mechanical upgrade is trusted; v7-era "green" is NOT (see docs/v8/v8-north-star.md §5).
+  // The mechanical upgrade is trusted; v7-era "green" is NOT (see docs/history/north-stars/v8.md §5).
   const reproveV8 = toMajor >= 8 && (fromMajor == null || fromMajor < 8);
 
   // Crossing into v9 from anything older → establish the witness graph as the spine.
   // Chain-aware: a v6→v9 jump runs scaffoldV7 → reproveV8 → graphV9 in dependency order (the
-  // graph extracts from the v7 artifacts and inherits the v8 caps). See docs/v9/v9-north-star.md §4.
+  // graph extracts from the v7 artifacts and inherits the v8 caps). See docs/history/north-stars/v9.md §4.
   const graphV9 = toMajor >= 9 && (fromMajor == null || fromMajor < 9);
 
   // Crossing into v10 from anything older → run the named-migration lane (below).
@@ -258,9 +258,9 @@ export function writeV8ReproveMarker(targetDir, targetVersion = '8.0.0') {
 This project was upgraded to Speck v8 (Evaluation Over Verification) on ${date}
 (target ${targetVersion}). The mechanical upgrade — files, alias-shims, lazy patterns,
 version — is done. But v8 does NOT trust v7-era "green" as evaluation-proven
-(see docs/v8/v8-north-star.md §5).
+(see docs/history/north-stars/v8.md §5).
 
-BEFORE any new feature work, run:  /speck-reprove
+BEFORE any new feature work, run:  /speck-migrate
 
 It will:
   - triage suspect-green artifacts against the four v8 principles (P1-P4),
@@ -272,7 +272,7 @@ It will:
 States climb back to \`verified\` only as real v8 evidence lands. Nothing is reset
 to zero; nothing suspect keeps claiming ship-readiness.
 
-Delete this marker only after /speck-reprove has produced the report and the
+Delete this marker only after /speck-migrate has produced the report and the
 worklist is tracked.
 `;
   writeFileSync(markerPath, body);
@@ -282,7 +282,7 @@ worklist is tracked.
 /**
  * Write the repo-level .speck/.v9-graph-needed marker — the v9 analog of writeV8ReproveMarker.
  * The mechanical upgrade cannot BUILD the graph (it needs identity hardened first, and the per-project
- * graph work is a reversible gesture the /speck-graph-up skill owns). Non-destructive, idempotent.
+ * graph work is a reversible gesture the /speck-migrate skill owns). Non-destructive, idempotent.
  */
 export function writeV9GraphMarker(targetDir, targetVersion = '9.0.0') {
   const speckDir = join(targetDir, '.speck');
@@ -300,11 +300,11 @@ This project was upgraded to Speck v9 (the witness graph is the spine) on ${date
 (target ${targetVersion}). The mechanical upgrade — files, scripts, version — is done.
 But the graph itself has NOT been built: it requires identity hardened first, and the
 per-project graph work + retroactive cleanup is a reversible gesture the skill owns
-(see docs/v9/v9-north-star.md §4).
+(see docs/history/north-stars/v9.md §4).
 
-BEFORE any new feature work, run:  /speck-graph-up
+BEFORE any new feature work, run:  /speck-migrate
 
-It will (chain-aware — runs /speck-catch-up or /speck-reprove first if their markers exist):
+It is chain-aware: the scaffold and proof stages run first when their older markers exist. Then it will:
   - harden identity (AC-N numbering; surface MM-N/JOB-N for manual add; make lint-refs resolve),
   - build the witness graph (specs/projects/<id>/graph/witness.json),
   - run retroactive-cleanup reconcilers (--dry-run first; heal stale digests, over-claimed
@@ -991,7 +991,7 @@ export const REBUILD_WITNESS_GRAPH_ID = 'v10-1-rebuild-witness-graph';
 //
 // SCOPE — only projects that already committed a witness. A project with no witness.json reads
 // `unbuilt`, which explicitly does NOT cap, and minting its first graph here would be the wrong
-// gesture: the first build belongs to /speck-graph-up, behind identity hardening, because an
+// gesture: the first build belongs to /speck-migrate, behind identity hardening, because an
 // unhardened project's fresh graph can carry DANGLING_REF.P1 caps that did not exist a minute ago.
 // Fixing staleness must not manufacture a different green→red.
 registerMigration({
@@ -1176,14 +1176,14 @@ function grandfatherMarkerBody(projectId, version) {
     '  repeated NOTICE for this project instead of blocking. Projects planned after v10.3 have no',
     '  marker and DO block — the gate is real forward and advisory backward, by decision.',
     'clears_with: |',
-    `  /project-analyze specs/projects/${projectId}`,
+    `  /analyze --level project specs/projects/${projectId}`,
     `  rm specs/projects/${projectId}/${ANALYSIS_GATE_GRANDFATHER_MARKER}`,
     '',
   ].join('\n');
 }
 
 // WHY THIS RIDES THE UPGRADE, and why the marker is PER-PROJECT.
-// v10.3 makes /project-analyze a precondition for epic work (#106). Every project already on disk
+// v10.3 makes /analyze --level project a precondition for epic work (#106). Every project already on disk
 // planned its corpus before that gate existed, so on upgrade day every one of them would go from
 // green to blocked on work nobody in the project touched — and a gate that is red on arrival across
 // an entire estate gets bypassed rather than satisfied. The marker is what makes the asymmetry a
@@ -1200,7 +1200,7 @@ function grandfatherMarkerBody(projectId, version) {
 registerMigration({
   id: ANALYSIS_GATE_GRANDFATHER_ID,
   description:
-    'Mark pre-v10.3 planned projects as grandfathered against the /project-analyze gate (#106)',
+    'Mark pre-v10.3 planned projects as grandfathered against the /analyze --level project gate (#106)',
   version: '10.3.0',
   appliesTo: atOrAfter('10.3.0'),
   run: (targetDir, ctx = {}) => {

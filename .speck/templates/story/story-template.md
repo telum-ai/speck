@@ -45,12 +45,11 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 *Which magic moments from `product-contract.md` does this story deliver? Each gets a verification step.*
 
-> **A claim lives in the `serves:` frontmatter above (Speck v10, witness graph).** `serves: [MM-2, JOB-1]`
+> **A claim lives in the `serves:` frontmatter above.** `serves: [MM-2, JOB-1]`
 > is the ONLY thing that makes this story claim a promise; `serves: []` means it claims none.
 > Naming an id anywhere else in this spec — a cross-reference, an aside, an explicit non-claim —
-> creates no claim (it surfaces as a `UNCLAIMED_MM_REF.P3` hint, never a block). Before v10 a bare
-> mention WAS the claim, so a sentence saying "MM-1 is not claimed here" asserted MM-1; write freely
-> now. The checklist line below is read as a fallback only while a project migrates, and only when
+> creates no claim (it surfaces as a `UNCLAIMED_MM_REF.P3` hint, never a block). A bare mention in
+> body prose is not a claim. The checklist line below is read as a fallback only while a project migrates, and only when
 > the id is the first token after the label — run `speck_graph.py migrate <PROJECT_DIR> --lift-serves`
 > to move existing claims into the frontmatter.
 
@@ -74,11 +73,11 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 (Verifiability Rules: Choose `agent-LARP` for behaviors verifiable programmatically on a dev server. Choose `device-walk` for native shell behaviors [keyboard-avoidance, native gestures, biometrics] OR artifact-config dependencies [baked environment variables, tokens, API host urls, signing, origin/redirect allowlists]. Since agent-LARP runs on dev servers with injected environments, any behaviors depending on final baked build config MUST be marked `device-walk` to prevent false verification at UX-RC.)
 
-> **AC-N is a real, resolvable id (Speck v8.7, witness graph).** Each scenario heading below is
+> **AC-N is a real, resolvable id in the witness graph.** Each scenario heading below is
 > `#### AC-N — [name]`, numbered from 1, stable for the life of the story. The traceability matrix
 > discharges promises by pointing at these anchors — `Discharge = E0NN/S0MM/AC-N` (or bare `AC-N`
 > inside this story's own epic docs). An `AC-N` referenced by a matrix row that does not exist here
-> is a `DANGLING_REF.P1`. Renumber only via `/story-adjust` (never silently) — a matrix points at
+> is a `DANGLING_REF.P1`. Renumber only via `/adjust --level story` (never silently) — a matrix points at
 > the number. Keep the `— [name]` label; the number is the machine key.
 
 #### AC-1 — [Primary success path]
@@ -107,7 +106,7 @@ As a [persona-id], I want to [action] so that I can [outcome].
 
 ## 3. Evidence Required
 
-*What artifacts must `/larp` and `/audit` produce for this story to advance through readiness states?*
+*What artifacts must `/speck-larp` and `/speck-audit` produce for this story to advance through readiness states?*
 
 | Evidence type | Required for state | Verifiable by | Path / convention |
 |---------------|--------------------|---------------|--------------------|
@@ -197,7 +196,7 @@ As a [persona-id], I want to [action] so that I can [outcome].
 ### Verifiability
 - [ ] Every acceptance scenario specifies EVIDENCE (screenshot path, AX tree, transcript line)
 - [ ] Verifiability tier (`Verifiable by: agent-LARP | device-walk`) is declared for each scenario and evidence requirement
-- [ ] Every dependency has a failure-mode-handled row
+- [ ] Every dependency has a failure-mode-handled row with named behavior and a concrete test/LARP probe
 - [ ] Related tables / surfaces enumerated
 - [ ] Adversarial cases match the spec's positive claims
 

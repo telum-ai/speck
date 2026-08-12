@@ -79,7 +79,7 @@ function frictionSignals(cwd, projects) {
   if (fs.existsSync(readmePath)) {
     const readme = fs.readFileSync(readmePath, 'utf-8');
     if (isSpeckMarketingReadme(readme)) {
-      signals.push('PROFILE: root README.md still has legacy Speck marketing content (run speck upgrade or /project-readme)');
+      signals.push('PROFILE: root README.md still has legacy Speck marketing content (run speck upgrade or project-profile)');
     } else if (!readme.includes('<!-- SPECK:START -->')) {
       signals.push('PROFILE: root README.md lacks SPECK markers (footer not managed by Speck)');
     } else if (fs.existsSync(path.join(cwd, '.speck/scripts/profile-drift-check.sh'))) {
@@ -92,7 +92,7 @@ function frictionSignals(cwd, projects) {
         if (drift.includes('PROFILE_DRIFT.P1')) {
           signals.push('PROFILE: README one-liner drift P1 vs product-contract (SHIP-RC blocker)');
         } else if (drift.includes('PROFILE_DRIFT.P2')) {
-          signals.push('PROFILE: README one-liner partial drift P2 — run /project-readme');
+          signals.push('PROFILE: one or more declared surfaces have partial drift P2 — run project-profile');
         }
       } catch {
         signals.push('PROFILE: profile-drift-check failed or P1 drift detected');

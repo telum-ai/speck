@@ -19,7 +19,7 @@
 - Rough size: ~[X] source files
 - Organization: [Feature-based/layer-based/domain-driven/unclear]
 
-**Potential Epic Areas**: [X] areas spotted (LOW confidence - validate with epic-scan)
+**Potential Epic Areas**: [X] areas spotted (LOW confidence - validate with `/speck-scan --level epic`)
 
 ---
 
@@ -40,7 +40,7 @@
 
 **Pattern**: Appears to be [describe observed organizational pattern at high level]
 
-**Note**: This is based on directory structure only. Run `/epic-scan` to validate architecture within domains.
+**Note**: This is based on directory structure only. Run `/speck-scan --level epic` to validate architecture within domains.
 
 ---
 
@@ -98,28 +98,28 @@
 
 ## Potential Epic Areas (⚠️ LOW/MEDIUM CONFIDENCE)
 
-**Warning**: These are candidates based on directory structure and keyword heatmaps. Run `/epic-scan --domain=X` on each area to validate.
+**Warning**: These are candidates based on directory structure and keyword heatmaps. Run `/speck-scan --level epic --domain=X` on each area to validate.
 
 ### Area 1: [Name Based on Directory/Files Found]
 - **Location**: [Directory path or file pattern]
 - **Initial Assessment**: "Appears to be [X] based on [directory names/file patterns]"
 - **Reasoning**: [Why we think this is an epic area - e.g., "High 'auth' keyword density (15 hits)"]
 - **Confidence**: MEDIUM - backed by heatmap
-- **Next Step**: Run `/epic-scan --domain=[area-name]` to validate
+- **Next Step**: Run `/speck-scan --level epic --domain=[area-name]` to validate
 
 ### Area 2: [Name]
 - **Location**: [Directory path or file pattern]
 - **Initial Assessment**: "Looks like [X] functionality"
 - **Reasoning**: [Why this might be an epic area]
 - **Confidence**: LOW - needs validation
-- **Next Step**: Run `/epic-scan --domain=[area-name]` to confirm
+- **Next Step**: Run `/speck-scan --level epic --domain=[area-name]` to confirm
 
 ### Area 3: [Name]
 - **Location**: [Directory path or file pattern]
 - **Initial Assessment**: "[Brief guess]"
 - **Reasoning**: [Evidence from quick scan]
 - **Confidence**: LOW - pattern match only
-- **Next Step**: Run `/epic-scan --domain=[area-name]` to analyze
+- **Next Step**: Run `/speck-scan --level epic --domain=[area-name]` to analyze
 
 [Continue for each spotted area - typically 5-10 potential areas]
 
@@ -139,7 +139,7 @@
 ## What We Didn't Analyze (Intentionally)
 
 This quick scan **did not**:
-- ❌ **Read code or extract patterns** → Use `/epic-scan` for domain-specific patterns
+- ❌ **Read code or extract patterns** → Use `/speck-scan --level epic` for domain-specific patterns
 - ❌ **Run tests or measure coverage** → Expensive operation, not needed for landscape view
 - ❌ **Assess code quality or technical debt** → Requires deep analysis
 - ❌ **Identify specific technologies with versions** → Needs package manifest inspection
@@ -159,7 +159,7 @@ This quick scan **did not**:
 
 1. **Review** this landscape overview to get oriented
 2. **Pick 1-2 interesting potential areas** from the list above
-3. **Run `/epic-scan --domain=[area]`** on each to:
+3. **Run `/speck-scan --level epic --domain=[area]`** on each to:
    - Validate it's actually an epic-worthy domain
    - Find patterns and similar implementations
    - Get MEDIUM-confidence assessment (15-20 min per area)
@@ -212,7 +212,7 @@ This quick scan **did not**:
 
 ### When to Re-scan
 
-Re-run `/project-scan` when:
+Re-run `/speck-scan --level project` when:
 - Major architectural changes occur
 - New major domains/epics added
 - Technology stack significantly changes
@@ -230,10 +230,10 @@ Re-run `/project-scan` when:
 
 ---
 
-**Next Command**: `/epic-scan --domain=[choose-an-area]` or `/project-context`  
+**Next Command**: `/speck-scan --level epic --domain=[choose-an-area]` or `/project-context`
 **Confidence Level**: LOW (Quick survey only)  
-**Validation Required**: Yes - use epic-scan on each potential area
+**Validation Required**: Yes - use `/speck-scan --level epic` on each potential area
 
 ---
 
-*This landscape overview informs: `/epic-scan`, `/project-context`, `/project-architecture`*
+*This landscape overview informs: `/speck-scan --level epic`, `/project-context`, `/project-architecture`*

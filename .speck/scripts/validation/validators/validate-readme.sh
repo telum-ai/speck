@@ -44,7 +44,7 @@ CONTENT="$(cat "$README_PATH")"
 FIRST_LINE="$(head -1 "$README_PATH" | tr -d '\r')"
 
 if [[ "$FIRST_LINE" == "# Speck"* ]]; then
-  log_error "Legacy Speck marketing README detected — run speck upgrade or /project-readme"
+  log_error "Legacy Speck marketing README detected — run speck upgrade or project-profile"
 else
   log_ok "Not legacy Speck marketing README"
 fi
@@ -86,26 +86,41 @@ if grep -q "speck ${SPECK_VER}\|speck v${SPECK_VER#v}" "$README_PATH"; then
   log_ok "Footer Speck version matches .speck/VERSION (${SPECK_VER})"
 else
   if [[ "$strict" == true ]]; then
-    log_error "Footer Speck version stale (expected ${SPECK_VER}) — run speck upgrade or /project-readme"
+    log_error "Footer Speck version stale (expected ${SPECK_VER}) — run speck upgrade or project-profile"
   else
     log_warn "Footer Speck version may be stale (expected ${SPECK_VER})"
   fi
 fi
 
 # Drift check
-if [[ -x "$LIB_DIR/profile-drift-check.sh" ]]; then
-  if ! DRIFT_OUT="$("$LIB_DIR/profile-drift-check.sh" "$WORKSPACE_ROOT" "${PROJECT_ID:-}" 2>&1)"; then
-    while IFS= read -r line; do
-      [[ -z "$line" ]] && continue
-      if [[ "$line" == PROFILE_DRIFT.P1* ]]; then
-        log_error "${line#PROFILE_DRIFT.P1: }"
-      elif [[ "$line" == PROFILE_DRIFT.P2* ]]; then
-        log_warn "${line#PROFILE_DRIFT.P2: }"
-      elif [[ "$line" == PROFILE_DRIFT.P3* ]]; then
-        log_warn "${line#PROFILE_DRIFT.P3: }"
-      fi
-    done <<< "$DRIFT_OUT"
+if [[ -f "$LIB_DIR/profile-drift-check.sh" ]]; then
+  DRIFT_RC=0
+  DRIFT_OUT="$(bash "$LIB_DIR/profile-drift-check.sh" "$WORKSPACE_ROOT" "${PROJECT_ID:-}" 2>&1)" || DRIFT_RC=$?
+  saw_summary=false
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    if [[ "$line" == PROFILE_DRIFT.P1* ]]; then
+      log_error "${line#PROFILE_DRIFT.P1: }"
+    elif [[ "$line" == PROFILE_DRIFT.P2* ]]; then
+      log_warn "${line#PROFILE_DRIFT.P2: }"
+    elif [[ "$line" == PROFILE_DRIFT.P3* ]]; then
+      log_warn "${line#PROFILE_DRIFT.P3: }"
+    elif [[ "$line" == PROFILE_DRIFT_SUMMARY* ]]; then
+      saw_summary=true
+    fi
+  done <<< "$DRIFT_OUT"
+  if [[ "$DRIFT_RC" -eq 2 ]]; then
+    log_error "PROFILE drift checker could not resolve the active project"
+  elif [[ "$saw_summary" != true ]]; then
+    # The checker exits 0 on a clean pass and 1 when it finds a P1, but always prints a
+    # PROFILE_DRIFT_SUMMARY line on every real run (rc 2 is the one deliberate exception,
+    # handled above). No summary line means the checker itself failed — a missing
+    # interpreter, a crash, a bad wrapper — not that the surfaces are clean, so this must
+    # not read as a pass regardless of DRIFT_RC.
+    log_error "PROFILE drift checker did not complete (rc=$DRIFT_RC): ${DRIFT_OUT:-no output}"
   fi
+else
+  log_error "PROFILE drift checker missing: $LIB_DIR/profile-drift-check.sh"
 fi
 
 echo ""

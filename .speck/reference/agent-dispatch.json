@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "contract": {
+    "method_authority": "Root AGENTS.md, then the selected canonical SKILL.md and its receipted JIT context",
+    "role_authority": "The custom agent supplies dispatch mode, model tier, independence, scope, and a compact integration return only",
+    "fallback": "If the custom role cannot invoke or read the selected skill, return SKILL_UNAVAILABLE so the conductor can reroute to a general-purpose agent",
+    "return": ["status", "artifact_paths", "blocking_findings", "skills_invoked", "context_receipts", "gate_checks"]
+  },
+  "roles": {
+    "speck-architect": {
+      "mode": "decision-contributor",
+      "tier": "frontier",
+      "independence": "May design and challenge decisions; must not validate its own architecture.",
+      "skills": ["project-architecture", "epic-architecture", "speck-skeptical-review"]
+    },
+    "speck-scribe": {
+      "mode": "artifact-owner",
+      "tier": "mid",
+      "independence": "Artifact author; cannot serve as auditor or validator for the same corpus.",
+      "skills": ["project-specify", "epic-specify", "story-specify", "epic-breakdown"]
+    },
+    "speck-planner": {
+      "mode": "artifact-owner",
+      "tier": "frontier",
+      "independence": "Planning author; cannot verify its own planning analysis.",
+      "skills": ["project-plan", "epic-plan", "story-plan", "story-tasks"]
+    },
+    "speck-coder": {
+      "mode": "artifact-owner",
+      "tier": "mid",
+      "independence": "Implementation author; stops before audit and validation.",
+      "skills": ["story-implement", "harden"]
+    },
+    "speck-auditor": {
+      "mode": "evaluator",
+      "tier": "frontier",
+      "independence": "Must not have authored the corpus or implementation under review.",
+      "skills": ["analyze", "speck-audit", "project-retrospective", "epic-retrospective"]
+    },
+    "speck-validator": {
+      "mode": "evaluator",
+      "tier": "frontier",
+      "independence": "Adjudicates prior audit and experience evidence and declares readiness; never produces that evidence or implements fixes.",
+      "skills": ["story-validate", "epic-validate", "project-validate"]
+    },
+    "speck-researcher": {
+      "mode": "evidence-contributor",
+      "tier": "mid",
+      "independence": "Researches external claims; does not lock the decision it informs.",
+      "skills": ["just-in-time-research", "speck-frontier-scan"]
+    },
+    "speck-explorer": {
+      "mode": "read-only-contributor",
+      "tier": "mechanical",
+      "independence": "Read-only discovery role; reports facts and uncertainty without planning or implementation.",
+      "skills": ["speck-scan", "epic-discover", "story-extract"]
+    },
+    "speck-scanner": {
+      "mode": "read-only-contributor",
+      "tier": "mechanical",
+      "independence": "Read-only extraction role; reports facts and uncertainty without planning or implementation.",
+      "skills": ["speck-scan", "speck-recheck"]
+    }
+  }
+}

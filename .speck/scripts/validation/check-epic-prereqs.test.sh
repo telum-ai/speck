@@ -179,12 +179,12 @@ install_stub "$WS" clear
 cat > "$P/.analysis-gate-grandfathered" <<'EOF'
 speck_version: 10.3.0
 reason: planned before the v10.3 project-analysis gate existed
-clears_with: /project-analyze specs/projects/001-legacy
+clears_with: /analyze --level project specs/projects/001-legacy
 EOF
 run "$P"
 { [[ "$RC" == 0 ]] \
   && grep -q "GRANDFATHERED" <<<"$OUT" \
-  && grep -q "clears_with: /project-analyze" <<<"$OUT" \
+  && grep -q "clears_with: /analyze --level project" <<<"$OUT" \
   && grep -q "repeats on every run" <<<"$OUT"; } \
   && pass "grandfathered project → loud repeated notice with the marker's own contents, exit 0" \
   || fail "the grandfather marker must print a repeated notice and never block"

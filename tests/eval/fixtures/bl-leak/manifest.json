@@ -1,0 +1,6 @@
+{
+  "id": "bl-leak",
+  "class": "banned-language",
+  "expect": "catch",
+  "description": "banned phrases"
+}

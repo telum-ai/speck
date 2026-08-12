@@ -1,33 +1,53 @@
 ---
 name: analyze
-description: Level-dispatching pre-implementation analysis (Speck v8 unified entry). Routes to project-analyze / epic-analyze based on --level or the current directory. Story-level analysis is retired — its consistency job runs at the tail of /story-tasks and its adversarial job is /audit. Use when the user says "analyze this epic/project" before planning/implementation.
-disable-model-invocation: false
+description: Runs decorrelated planning analysis. Use after project-plan, epic-breakdown, or story-tasks before downstream work.
 ---
 
-The user input can be provided directly by the agent or as a command argument:
+# analyze
 
-$ARGUMENTS
+Canonical planning-analysis engine. `$ARGUMENTS` may contain `--level project|epic|story`.
 
-## Purpose
+## Select level and depth
 
-`/analyze` is the unified, level-dispatching entry point for Speck pre-implementation analysis. It detects the level and routes to the specialist.
+1. Honor explicit `--level`; else infer story, epic, or project from the target path.
+2. Project requires `project.md`, `PRD.md`, `epics.md`; epic requires `epic.md`, `epic-tech-spec.md`, `epic-breakdown.md`; story requires `spec.md`, `plan.md`, `tasks.md`. STOP on a missing prerequisite.
+3. Read `.speck/project.json` (`play_level`; missing = Platform). Count epics from `epics.md` and `epics/` directories.
+4. Story: Sprint skips; Build runs S1; Platform runs S1-S3. Project: Build 1-3 runs focused L7 only when requested, Build 4+ runs L3/L6/L7, Platform runs L1-L7. Epic: Build runs focused L7 and Platform runs L1-L7.
 
-## Level detection
+## Load the core
 
-Use `--level <project|epic|story>` if provided. Otherwise infer from the current directory:
+Before analysis, run one receipted load. It supplies scope, flow-fit, promise, traceability, severity, and role-separation rules without loading any reviewer lens or report template:
 
-1. In `specs/projects/<id>/epics/<eid>/stories/<sid>/` → **story** (see note below)
-2. In `specs/projects/<id>/epics/<eid>/` → **epic**
-3. In `specs/projects/<id>/` or higher → **project**
+```bash
+python3 .speck/scripts/context/speck_context.py analyze-core \
+  --select level=<project|epic|story>
+```
 
-## Routing
+Require exit 0 and `SPECK_CONTEXT_RECEIPT`. Report templates and `references/reports/*` are forbidden until findings return.
 
-| Level | Read and fully execute |
-|-------|------------------------|
-| epic | `.cursor/skills/epic-analyze/SKILL.md` |
-| project | `.cursor/skills/project-analyze/SKILL.md` |
-| story | **Retired** — do not author a standalone `analysis-report.md`. The pre-impl spec↔plan↔tasks consistency check runs at the tail of `/story-tasks`; the adversarial behavior-vs-spec check is `/audit` (`speck-audit`) after implementation. |
+## Dispatch lenses
 
-**Read the target `SKILL.md` and follow it end-to-end.**
+For every required lens id, dispatch one reviewer that did not author the corpus. That reviewer runs exactly one level-specific loader and receives the target artifact list:
 
-> v8: `/project-analyze`, `/epic-analyze` remain valid direct entry points (unchanged, full logic). `/story-analyze` is a retired alias-shim (folded into `/story-tasks` + `/audit`). `/analyze` is a convenience that unifies the surface — dispatcher pattern, no lossy merge.
+```bash
+# project or epic
+python3 .speck/scripts/context/speck_context.py analyze-<project|epic>-lens \
+  --select lens=L#
+
+# story
+python3 .speck/scripts/context/speck_context.py analyze-story-lens \
+  --select lens=S#
+```
+
+The loader emits `references/lens-spine.md` plus exactly one of `references/lenses/project/L#.md` or `references/lenses/epic/L#.md`; sibling level and lens nodes are forbidden. The conductor does not preload lens nodes. Lenses do not share findings before verification.
+
+## Finish
+
+After findings return, run exactly one second-stage load before any report mutation:
+
+```bash
+python3 .speck/scripts/context/speck_context.py analyze-report \
+  --select level=<project|epic|story>
+```
+
+It emits the selected template plus exactly one level report contract. Follow it to verify findings, write the report, run gates, commit after the analyzed corpus, and declare `BLOCKED | NEEDS_FIXES | CLEAN`. Read `references/gate-codes.md` only when enforcing or explaining analysis codes. STOP on any loaded-node STOP.

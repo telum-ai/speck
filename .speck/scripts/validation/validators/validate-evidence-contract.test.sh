@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
+VALIDATOR="$ROOT/.speck/scripts/validation/validators/validate-evidence-contract.sh"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+PROJECT="$TMP/specs/projects/probe"
+mkdir -p "$PROJECT"
+
+cat > "$PROJECT/product-contract.md" <<'EOF'
+# Product contract
+PRM-001 Explicit confirmation precedes scheduling.
+PRM-002 Workspace data is isolated.
+EOF
+
+write_valid() {
+  cat > "$PROJECT/evidence-contract.md" <<'EOF'
+---
+artifact_type: evidence-contract
+---
+# Evidence Contract: Probe
+
+## 1. Target Launch Platforms
+| Platform | Build | Distribution |
+|---|---|---|
+| Web | Production-like build | Hosted target |
+
+### 1a. Promise Proof Map
+| Promise | Claim | Observable mechanism | Admissible evidence | Failure probe |
+|---|---|---|---|---|
+| PRM-001 | Confirmation precedes scheduling | Schedule transition | live-probe:path | Bypass confirmation |
+| PRM-002 | Workspace data is isolated | Request-role denial | live-probe:path | Cross-workspace read |
+
+## 2. Valid Proof Sources
+Live reads and writes against the real target as named principals.
+
+## 3. Invalid Proof Sources
+Development-server screenshots, mock or bypass clients, and unadjudicated captures or source inspection do not establish these claims.
+
+## 4. Required Runtime LARP / Integration Stress Tests
+| Test | Persona / principal | Pass condition | Evidence home |
+|---|---|---|---|
+| Confirmation bypass | Facilitator | No schedule is created | live-probe:path |
+
+## 5. Quality Judgment & Scoring Protocol
+Judge CORRECT, ON-CONTRACT, FELT-GOOD, and TASTE separately. Record DOES-IT-WORK and IS-IT-GOOD separately.
+
+## 6. Required Static Evidence
+Current-SHA test and build output.
+
+## 7. Required Live-Service Evidence
+Real-boundary confirmation and request-role probes.
+
+## 8. Readiness State Gate Criteria
+NO-SHIP → IMPL-GREEN → INTEGRATION-GREEN → SHIP-RC → SHIP.
+
+### 8a. PROFILE Gate Criteria
+PROFILE_REGISTRY=project.md#PROFILE surfaces
+PROFILE_GATE_COMMAND=bash .speck/scripts/profile-drift-check.sh --claim <state>
+PROFILE_COVERAGE=every-row
+PROFILE_P1_BLOCKS=true
+PROFILE_MISSING_POLICY=finding
+PROFILE_UNREACHABLE_POLICY=finding
+PROFILE_PLACEHOLDER_POLICY=finding
+EOF
+}
+
+expect_red() {
+  local label="$1" expected="$2"
+  if out="$(bash "$VALIDATOR" --strict "$PROJECT/evidence-contract.md" 2>&1)"; then
+    echo "FAIL: $label passed strict validation"
+    exit 1
+  fi
+  if ! grep -Fq "$expected" <<<"$out"; then
+    echo "FAIL: $label failed for the wrong reason"
+    echo "$out"
+    exit 1
+  fi
+  echo "  ✓ $label"
+}
+
+write_legacy_profile() {
+  # The exact PROFILE Gate Criteria shape every project scaffolded from the
+  # pre-v11 (v7.7-v10) evidence-contract-template.md carries — table-based,
+  # no PROFILE_*= machine-readable declarations. No v11 migration rewrites
+  # this on upgrade, so the validator must accept it rather than hard-failing
+  # every pre-v11 project's pre-commit path (see AGENTS.md finding: "v11
+  # evidence-contract checks break existing projects").
+  write_valid
+  python3 - "$PROJECT/evidence-contract.md" <<'PY'
+from pathlib import Path
+import re, sys
+p = Path(sys.argv[1])
+text = p.read_text()
+legacy = '''### PROFILE Gate Criteria (v7.7+)
+
+*Public-face drift must not block release silently. See `project.md` PROFILE surfaces table.*
+
+| State | PROFILE requirement |
+|-------|---------------------|
+| IMPL-GREEN | README footer matches `.speck/VERSION`; no orphan README placeholders |
+| UX-RC | README one-liner token-overlap with product-contract Section 1 ≥ 60% |
+| COMMERCIAL-RC | All declared PROFILE surfaces within drift threshold |
+| SHIP-RC | Zero `PROFILE_DRIFT.P1` at `/recheck`; GitHub repo description aligned (manual attestation) |
+| SHIP | SHIP-RC + `validate-readme.sh --strict` green in CI |
+
+Per declared PROFILE surface (from `project.md`):
+
+| Surface | Source of truth | Drift check | Refresh |
+|---------|-----------------|-------------|---------|
+| Root README | product-contract §1 | `profile-drift-check.sh` | `/project-readme` |
+| package.json description | README one-liner | `regenerate-project-readme.sh --surface=package` | `/project-readme --surface=package` |
+| GitHub repo description | README one-liner | manual `/recheck` | `gh repo edit --description` |
+| Landing hero (if declared) | product-contract §1 + ui-spec | `--surface=landing` (check-only) | story validate gate |
+'''
+text = re.sub(r'(?ms)^### 8a\. PROFILE Gate Criteria\n.*\Z', legacy, text)
+p.write_text(text)
+PY
+}
+
+echo "validate-evidence-contract semantic controls"
+write_valid
+bash "$VALIDATOR" --strict "$PROJECT/evidence-contract.md" >/dev/null
+echo "  ✓ substantive contract passes"
+
+write_legacy_profile
+bash "$VALIDATOR" --strict "$PROJECT/evidence-contract.md" >/dev/null
+echo "  ✓ pre-v11 (v7.7-v10) PROFILE Gate Criteria table passes without migration"
+
+write_valid
+python3 - "$PROJECT/evidence-contract.md" <<'PY'
+from pathlib import Path
+import re, sys
+p = Path(sys.argv[1])
+text = p.read_text()
+text = re.sub(r'(?ms)^## 1\..*?(?=^## 2\.)', '## 1. Target Launch Platforms\n\n', text)
+p.write_text(text)
+PY
+expect_red "headers-only promise map" "Promise Proof Map has no concrete PRM-NNN row"
+
+write_valid
+sed -i.bak 's/## 5\. Quality Judgment & Scoring Protocol/## 5. Required Static Evidence/' "$PROJECT/evidence-contract.md"
+expect_red "wrong section identity" "Section 5 has the wrong or missing semantic title"
+
+write_valid
+sed -i.bak '/PRM-002 |/d' "$PROJECT/evidence-contract.md"
+expect_red "omitted product promise" "Promise Proof Map omits product-contract promises: PRM-002"
+
+write_valid
+python3 - "$PROJECT/evidence-contract.md" <<'PY'
+from pathlib import Path
+import re, sys
+p = Path(sys.argv[1])
+text = p.read_text()
+text = re.sub(r'(?ms)(^## 3\.[^\n]*\n).*?(?=^## 4\.)', r'\1Generic proof cautions apply.\n\n', text)
+p.write_text(text)
+PY
+expect_red "generic anti-proof pointer" "Invalid Proof Sources is a pointer or generic warning"
+
+write_valid
+sed -i.bak '/| Confirmation bypass |/d' "$PROJECT/evidence-contract.md"
+expect_red "empty LARP table" "Runtime LARP / stress section has no executable row"
+
+write_valid
+sed -i.bak 's/CORRECT, ON-CONTRACT, FELT-GOOD, and TASTE/ON-CONTRACT and FELT-GOOD/' "$PROJECT/evidence-contract.md"
+expect_red "missing quality axes" "Quality section omits non-collapsible axes or LARP judgments"
+
+write_valid
+sed -i.bak 's/NO-SHIP → IMPL-GREEN → INTEGRATION-GREEN → SHIP-RC → SHIP/NO-SHIP → IMPL-GREEN → SHIP/' "$PROJECT/evidence-contract.md"
+expect_red "truncated readiness ladder" "Readiness section does not bind the full delivery ladder"
+
+echo "All evidence-contract semantic tests passed"

@@ -101,8 +101,7 @@ PLACEHOLDER CONVENTION:
 heading each, same grammar as `### MM-N` in §5: **the number is the machine key**, the title is for
 humans, sub-lettered ids (`DIF-2a`) are real ids.*
 
-*Why they carry ids (#108): v10.3 made promise coverage a hard gate, but it could only reach MM-N and
-JOB-N. §3 was free prose with no id, so the gate honestly reported "pillars: not evaluated" rather
+*Why they carry ids: promise coverage can only reach stable identifiers. When §3 was free prose, the gate honestly reported "pillars: not evaluated" rather
 than claim a verdict it could not compute. With ids, a pillar no epic delivers is caught by the same
 machinery that catches an unaddressed magic moment — `PROMISE_UNCOVERED.P1`, CRITICAL by rule.*
 
@@ -182,7 +181,7 @@ Story validation fails if a user-facing story has no evidence for at least the f
 * **WHEN: consumer_product / b2b_saas / internal_tool**: List the **Magic Moments** where the user says "wow, this gets me." Each must be testable in runtime LARP.
 * **WHEN: infra_service / backend_api**: List the **Operational Milestones** (e.g., graceful recovery from DB disconnect, sub-millisecond hot-path caching hits, exact rate-limiting blocks).
 
-> **Each moment carries a stable `MM-N` id (Speck v8.7, witness graph).** The number (not the name)
+> **Each moment carries a stable `MM-N` id in the witness graph.** The number (not the name)
 > is the machine key: stories tie to `MM-N`, and the witness graph blocks
 > (`UNJUDGED_SURFACE.P1`) any `MM-N` that reaches validation with no IS-IT-GOOD verdict recorded
 > against it. Keep the human name in the heading; never renumber a shipped moment silently.
@@ -276,12 +275,12 @@ Story validation fails if a user-facing story has no evidence for at least the f
 * **WHEN: consumer_product / b2b_saas / internal_tool**: Fill this out as **Banned Language** (user-visible terms, enforced by `banned-language-lint.sh`).
 * **WHEN: infra_service / backend_api**: Fill this out as **Banned System Anti-Patterns / Anti-Conventions** (forbidden architecture/payload practices, e.g., camelCase payload keys when snake_case is required, leaking DB error stacks, or raw SQL queries).
 
-**How the terms below are matched (Speck v10).** `banned-language-lint.sh` scans product-surface directories at any depth (`src/`, `app/`, `pages/`, `components/`, `public/`, `locales/`, `i18n/` — wherever they sit, so a monorepo's `frontend/src/**` is reached), and inside each file it reads only what a **user could read**: locale *values* (never keys), string literals and template literals, and markup text nodes. Identifiers, imports, comments and type names are not copy, so `import { createClient } from "./api"` is not a violation while `"Check the API status"` is. Markdown and plain text count as copy in full. A file the lexer cannot read is scanned whole and counted in `SPECK_GATE_UNPARSED`, so a green result is never quietly resting on files nobody parsed.
+**How the terms below are matched.** `banned-language-lint.sh` scans product-surface directories at any depth (`src/`, `app/`, `pages/`, `components/`, `public/`, `locales/`, `i18n/` — wherever they sit, so a monorepo's `frontend/src/**` is reached), and inside each file it reads only what a **user could read**: locale *values* (never keys), string literals and template literals, and markup text nodes. Identifiers, imports, comments and type names are not copy, so `import { createClient } from "./api"` is not a violation while `"Check the API status"` is. Markdown and plain text count as copy in full. A file the lexer cannot read is scanned whole and counted in `SPECK_GATE_UNPARSED`, so a green result is never quietly resting on files nobody parsed.
 
 Two consequences for how you WRITE this section:
 
 1. **Write each term as it would appear in copy**, not as it appears in code. A term is matched whole-word and case-insensitively, so `revolutionize` catches "Revolutionize"; underscore is a word character, so `revolutionize` does **not** catch `revolutionize_cta`.
-2. **A term that also names a real code symbol is now safe to ban.** Before v10 banning a word like `database` convicted every variable of that name; it no longer does. That is a reason to ban the word your users must not see, rather than a softer synonym.
+2. **A term that also names a real code symbol is safe to ban.** The scanner excludes identifiers, so banning a word like `database` does not convict variables of that name. Ban the word users must not see rather than choosing a softer synonym for the gate.
 
 ### Option A: Banned Language (for UI/Human-facing products)
 

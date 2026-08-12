@@ -1,0 +1,6 @@
+{
+  "id": "ue-named-blocker",
+  "class": "unreachable-excuse",
+  "expect": "catch",
+  "description": "blocker without attempt log"
+}

@@ -1,6 +1,6 @@
 ---
 name: just-in-time-research
-description: Load when making decisions that require external knowledge - technology evaluation, standards/compliance checking, market data, or current best practices not in your training data.
+description: Researches external facts. Use before locking choices about technology, standards, compliance, markets, or integrations.
 ---
 
 # Just-In-Time Research

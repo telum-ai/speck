@@ -1,565 +1,99 @@
-# 🥓 Speck — Promise → Build → Prove
+# Speck runtime guide
 
-**Speck** is an evidence-driven specification methodology for AI-led software development: every spec assertion compiles to evidence, every claim ties to runtime proof, and every truth artifact is SHA-stamped against current HEAD. It produces excellent products regardless of how hands-on the human is.
+Speck turns explicit product promises into excellent, proven products. The marked block in root `AGENTS.md` is the only always-loaded operating doctrine and the only canonical flow. This guide is an index for humans and agents who need more context; selected skills own procedures and templates own artifact shape.
 
----
+## Operating model
 
-## 🎯 Quick Start
+- PROMISE defines the product contract and what good means.
+- BUILD turns that promise into traceable specs, plans, tasks, and implementation.
+- PROVE independently searches for defects and evaluates the real outcome.
+- PROFILE keeps every declared public surface aligned with the promise and evidence.
 
-Just type `/speck` followed by what you want to do:
+Green checks and complete-looking files are evidence, not the objective. Readiness is judged independently on CORRECT, ON-CONTRACT, FELT-GOOD, and TASTE.
 
-```
-/speck Build a social networking app
-/speck Add user authentication
-/speck Fix the login button
-/speck Import my existing codebase at ~/projects/myapp
-/speck Continue from last session
-/speck Make this premium and shippable
-```
+## Start and routing
 
-The `/speck` router detects:
-- The right level (project / epic / story)
-- The right play level (sprint / build / platform)
-- The right next command
-- Whether you need `/recheck` first (engagement gap detection)
+Always begin with `AGENTS.md` → **Start every engagement**. It owns compatibility repair, project resolution, `project-state.md`, play level, recheck triggers, witness-graph checks, scope analysis, and status continuation.
 
-**That's it!** No need to memorize commands — just describe what you want to accomplish.
+The canonical Project, Epic, Story, decision, and post-validation order lives only inside the marked `SPECK:FLOW` block in `AGENTS.md`. `.speck/reference/command-phases.md` explains conditional gates without copying the order. Artifact writes consult `.speck/reference/canonical-routing.md`.
 
----
+Play level lives in `.speck/project.json`. Absence is treated as Platform for backward-compatible, fail-safe rigor.
 
-## 📦 Installation & Setup
+| Play level | Intended use | Planning and proof depth |
+|---|---|---|
+| Sprint | Small, time-bounded bet | Smallest artifacts; audit and runtime LARP at validation |
+| Build | Meaningful users, revenue, or multiple epics | Product/context/evidence contracts; project architecture, UX, and analysis become required at four or more epics |
+| Platform | Regulated, enterprise, marketplace, or cross-system work | Full foundation, seven-lens project analysis, and full PROVE gates |
 
-### First Time Setup
+## Core artifacts
 
-If you're starting a new project with Speck:
+Project truth lives under `specs/projects/<id>/`:
 
-```bash
-# Initialize Speck in your project
-npx github:telum-ai/speck init
-```
+- `project.md` — vision, boundaries, and binding PROFILE surface registry
+- `product-contract.md` — promises, jobs, differentiators, magic moments, and language constraints
+- `evidence-contract.md` — valid proof, readiness gates, and platform evidence rules
+- `context.md`, plus conditional `domain-model.md`, `ux-strategy.md`, `constitution.md`, `architecture.md`, and `design-system.md`
+- `PRD.md`, `epics.md`, and `project-analysis-report.md`
+- `project-state.md` — current readiness, drift, blockers, and next action
+- `project-decisions-log.md`, `project-validation-report.md`, and `project-retro.md`
 
-This sets up:
-- Skill files (`.cursor/skills/` and `.claude/skills/`)
-- Templates (`.speck/templates/`)
-- A **project skeleton** `README.md` at repo root (your product identity — not Speck marketing)
-- Validation hooks (`.cursor/hooks/`)
-- Update workflows (`.github/workflows/`)
+Epic truth lives in `epics/E###-name/` and includes `epic.md`, `epic-tech-spec.md`, `epic-breakdown.md`, the traceability matrix, conditional `user-journey.md`, `wireframes.md`, and `experience-chain.md`, `epic-analysis-report.md`, `audit-report.md`, validation evidence, and retrospective.
 
-Runtime source of truth:
-- Canonical runtime source is `.cursor/skills/` + `.cursor/agents/`
-- `.claude/skills/` + `.claude/agents/` are symlinked from `.cursor/` for Claude Code compatibility
-- Sync manually with: `bash .speck/scripts/bash/sync-claude-runtime.sh` (manages symlinks)
+Story truth lives in `stories/S###-name/` and includes `spec.md`, `plan.md`, conditional `ui-spec.md`, `tasks.md`, `story-analysis-report.md` when required, implementation evidence, `audit-report.md`, `validation-report.md`, and `story-retro.md`.
 
-Instruction source of truth:
-- `AGENTS.md` is the single instruction source for both Cursor and Claude Code
-- We intentionally avoid `CLAUDE.md` to reduce instruction drift risk
+Never invent another filename under `specs/`; use `.speck/reference/canonical-routing.md`.
 
-### Claude Code advanced setup (recommended)
+## Analysis and conditional steps
 
-To leverage Claude-native features beyond Cursor:
-- Subagents via `.claude/agents/` (symlinked from `.cursor/agents/`)
-- Agent teams (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`)
-- Claude settings baseline at `.claude/settings.json.example`
-- Claude hooks/settings scopes (project/user/local) via `.claude/settings*.json`
+Planning analysis runs after planning and before downstream build work. It loads one compact common core, one level-specific lens per independent reviewer, and the selected report contract only after findings return.
 
-Start from:
-```bash
-cp .claude/settings.json.example .claude/settings.json
-```
+Every reached conditional flow slot gets a Flow Fit verdict:
 
-### Recommended: MCP Setup
+- `included` with its artifact;
+- `not-applicable` with trigger evidence and rationale; or
+- `missing`, which blocks downstream work.
 
-For the best experience, configure MCP servers for research and documentation:
+Absence is not an implicit skip. `validate-project-analysis.sh` enforces this for v11 reports.
 
-1. See `.cursor/MCP-SETUP.md` for setup instructions
-2. Recommended servers:
-   - **Perplexity** — Research and web search
-   - **GitHub** — PRs, issues, code search
-   - **Context7** — Up-to-date library docs
+## PROVE roles
 
-> Speck works without MCP servers, but they're highly recommended for research capabilities.
+- `speck-audit` attacks the implementation, negative paths, mechanisms, and test authenticity. It creates findings and does not declare readiness.
+- `speck-larp` exercises the real user job and judges function, feel, and taste. Backend-only work takes the explicit non-UI branch.
+- `visual-testing` runs inside UI LARP and supplies recipe-selected host evidence: screenshots, accessibility inspection, runtime logs, states, and interaction coverage.
+- Project, epic, or story validation adjudicates all applicable evidence and alone declares the highest readiness earned.
 
----
+The order and role boundaries are pinned in `AGENTS.md` and the routing/semantic-conservation tests.
 
-## 🔄 Keeping Speck Updated
+## Recipes and host evidence
 
-### Automatic Updates (Recommended)
+`.speck/recipes/<name>/recipe.yaml` is a stack starting point, not current vendor documentation. Every recipe declares one recognized `visual_testing.platform`; `api` and `cli` are explicit nonvisual routes. Current APIs and standards are researched just in time from official sources.
 
-Speck includes a workflow that **automatically checks for updates daily** and creates PRs:
+Visual host procedures live under `.cursor/skills/visual-testing/references/`. The active recipe selects exactly one. Capacitor-wrapped web uses its own native-shell host rather than borrowing Flutter or React Native instructions.
 
-- **Works out of the box** for public Speck repos
-- **Smart merging** preserves your customizations
-- For private repos: Add `SPECK_GITHUB_TOKEN` secret
+## Learning and feedback
 
-### Manual Updates
+`speck-learn` captures an observation immediately in current work. Story retrospective keeps the first occurrence local. Epic/project retrospective may promote repeated, evidence-backed rules with named consumers into the project's own `.speck/patterns/learned/`.
 
-```bash
-# Check for available updates
-npx github:telum-ai/speck check
+Vanilla Speck seeds no project-learned patterns, and upgrades preserve project-owned ones. A defect in Speck templates, scripts, routing, or methodology goes to `speck-feedback`, not the project pattern library. See `docs/methodology/project-learning.md` in the Speck source repository.
 
-# Upgrade to latest version
-npx github:telum-ai/speck upgrade
+## Compatibility migration
 
-# Preview changes without applying
-npx github:telum-ai/speck upgrade --dry-run
+`speck-migrate` is the single migration entry. It selects one procedure for explicit upgrade or the oldest active scaffold, proof, or graph repair marker. Historical version tokens remain only where existing repositories need them. See `docs/history/migrations.md` in the Speck source repository.
 
-# Upgrade to a specific release tag
-npx github:telum-ai/speck upgrade <tag>
-```
+## Runtime locations
 
-### What Gets Updated
+| Need | Location |
+|---|---|
+| Canonical flow and engagement ladder | `AGENTS.md` |
+| Skill procedure | `.cursor/skills/<skill>/SKILL.md` |
+| Artifact templates | `.speck/templates/{project,epic,story}/` |
+| Artifact homes | `.speck/reference/canonical-routing.md` |
+| Gate explanations | `.speck/reference/command-phases.md` |
+| Host/model capabilities | `.speck/reference/host-capabilities.md` |
+| Stack starting points | `.speck/recipes/` |
+| Witness graph | `.speck/scripts/graph/speck_graph.py` |
+| Planning analysis gate | `.speck/scripts/validation/validators/validate-project-analysis.sh` |
+| PROFILE drift | `.speck/scripts/profile-surface-check.py` |
+| Corpus/JIT budgets | `.speck/scripts/validation/validators/validate-corpus-budget.sh` |
 
-Updates preserve your customizations:
-- Your `AGENTS.md` content outside `SPECK:START..END` tags
-- Your `.gitignore` entries
-- Your custom hooks and MCP config
-- Your root `README.md` (project identity — Speck only merges the `<!-- SPECK:START -->` footer)
-
-### Major-Version Upgrades
-
-Crossing a major boundary (e.g. v6→v7, v7→v8) happens **automatically on `upgrade` and non-destructively**: the CLI drops a re-prove marker and the next engagement runs the matching skill — `/speck-catch-up` (v6→v7) or `/speck-reprove` (v7→v8). Historical claims are **preserved and re-proven** against the current principles, never reset to zero. Full mechanics → [DEVELOPMENT.md](../DEVELOPMENT.md#migration-major-version-upgrades).
-
----
-
-## 🧭 The Mental Model
-
-```
-PROMISE          BUILD            PROVE
-(the contract) → (the work)   →   (the truth)
-                       ↑               │
-                       └── drift ──────┘
-                              │
-                              ↓
-                          PROFILE
-                     (the public face)
-```
-
-Every Speck project lives in this loop:
-
-| Pillar | Purpose | Center-of-gravity artifact |
-|--------|---------|----------------------------|
-| **PROMISE** | What product are we building? Who pays? What's banned? What's magic? | `product-contract.md` |
-| **BUILD** | Implement evidence-producing slices | `spec.md`, `tasks.md`, `experience-chain.md` |
-| **PROVE** | Runtime evidence that promise = reality | `project-state.md`, `evidence-contract.md`, runtime LARP |
-| **PROFILE** | How the project presents itself to outsiders | Root `README.md` + declared surfaces — **enforced** via validators and readiness gates |
-
-The loop closes via drift detection. PROFILE derives from PROMISE + PROVE; `validate-readme.sh` and `profile-drift-check.sh` enforce it at commit and SHIP-RC gates.
-
----
-
-## 📄 Root README vs `.speck/README.md`
-
-| Context | Root `README.md` | `.speck/README.md` |
-|---------|------------------|---------------------|
-| **Speck framework repo** (`telum-ai/speck`) | Symlink → `.speck/README.md` | **Canonical** methodology + setup docs (this file) |
-| **User projects** (after `speck init`) | **Project identity** — your product, how to run it | Methodology reference — synced by `speck upgrade` |
-
-In the **Speck framework repo**, root `README.md` is a symlink to this file so GitHub visitors and agents see one source of truth. **Do not copy that symlink into user projects** — the CLI sync engine never overwrites a user's root README with Speck marketing.
-
-On `speck init`, Speck writes a **project skeleton** README from `.speck/templates/project/readme-template.md` (not this file). Speck only manages the `<!-- SPECK:START -->` … `<!-- SPECK:END -->` footer on upgrade. The `/project-readme` skill (and `/project-state` regeneration) keeps PROFILE status current.
-
----
-
-## 🏗️ The Three Levels
-
-```
-Project Level (Strategic)
-├── Epic Level (Tactical)
-└── Story Level (Implementation)
-```
-
-- **Project**: Overall product vision, JTBD, magic moments, evidence requirements
-- **Epic**: Feature sets that deliver specific JTBD value
-- **Story**: Individual implementable slices producing evidence
-
----
-
-## 🎚️ Play Levels (rigor dial)
-
-Speck adapts artifact depth to project stage. Play level lives in `.speck/project.json` → `play_level`. **Discipline (skeptical review, LARP, audit, decision locks, banned-phrase detection) applies at every level** — only artifact depth changes.
-
-| Level | When | Required PROMISE artifacts | Required PROVE gates |
-|-------|------|---------------------------|----------------------|
-| **Sprint** | Weekend bets, prototypes, simple tools | `PRD.md` (sprint) + `sprint-log.md` | LARP at validate |
-| **Build** | Products with subscriptions, dashboards, teams | `product-contract.md` + `evidence-contract.md` + `context.md` | LARP + `/audit` + decision log + readiness states; `/project-analyze` required at 4+ epics |
-| **Platform** | Enterprise, marketplace, multi-system | Full foundation (incl. domain-model, ux-strategy, design-system, constitution, architecture) | Full PROVE pillar + `/project-analyze` after `/project-plan` + `/recheck` on every engagement gap |
-
-**Build complexity gate**: If a Build project hits **4+ epics**, `architecture.md`, `ux-strategy.md`, and a cleared `/project-analyze` become required. Consider `/project-promote` to Platform instead of patching Build.
-
-**Planning-analysis gate (v10.3)**: `/project-analyze` is **required** after `/project-plan` and before any `/epic-specify` — at Platform, and at Build with 4+ epics (the same threshold that already forces architecture + ux-strategy). Below that threshold it stays optional and recommended. It became required because a planning corpus can pass every inline gate and still be wrong: one that walked the full canonical Build flow — every skill entered, five skeptical-review primitives, premise-challenge, strict validators green — still carried 1 CRITICAL and 13 HIGH defects, all 14 found only by a decorrelated multi-lens pass. The author of the corpus was the party deciding whether to invite the adversary. Lens tier: **3 mandatory at Build 4+** (promise-coverage · cross-artifact drift · completeness critic), **all 7 at Platform**; a lens whose reviewer authored a corpus artifact does not count toward the tier. `/epic-analyze` carries the same contract at the epic altitude.
-
-**The gate is real forward, advisory backward.** Projects planned before v10.3 are grandfathered by a per-project marker file, `<PROJECT_DIR>/.analysis-gate-grandfathered` — they get a loud notice that repeats on every run at `/epic-specify` and `/recheck`, and are never blocked. Projects planned on v10.3+ block. The marker does not remove itself: once an analysis report exists next to it, `check-epic-prereqs.sh` calls the exemption spent and prints the `rm` command to retire it, so a stale exemption cannot quietly go on exempting. This asymmetry is deliberate and disclosed, not hidden.
-
-**Signals for detection**:
-- **Sprint**: "this weekend", "48 hours", "quick", "prototype", "simple tool"
-- **Build**: "subscription", "dashboard", "expand this", multi-user features
-- **Platform**: enterprise, marketplace, multi-system, explicit "full governance"
-
-**Promote between levels**: `/project-promote`. No `project.json` = treated as Platform (back-compat).
-
----
-
-## 📁 Canonical Directory Structure
-
-```
-specs/projects/<PROJECT_ID>/
-├── project-state.md            # PROVE: Auto-regenerated single-page status. First read.
-├── product-contract.md         # PROMISE: Paid promise, JTBD, magic moments, banned language, AI contract
-├── evidence-contract.md        # PROVE: What counts as proof for THIS product
-├── project-decisions-log.md    # PROVE: SHA-stamped decisions + alternatives considered
-├── project.md                  # PROMISE: Vision (TRUTH)
-├── PRD.md                      # PROMISE: Requirements (TRUTH)
-├── context.md                  # PROMISE: Constraints (TRUTH)
-├── architecture.md             # PROMISE: System design (TRUTH — required for Platform / 4+ epic Build)
-├── epics.md                    # BUILD: Epic index
-├── project-analysis-report.md  # PROVE: Decorrelated multi-lens analysis of the planning corpus
-│                               #        (required — Platform / 4+ epic Build)
-├── constitution.md             # PROMISE: Principles + enforcement (optional at Build)
-├── domain-model.md             # PROMISE: Terminology (optional at Build)
-├── ux-strategy.md              # PROMISE: UX principles (optional at Build)
-├── design-system.md            # PROMISE: Design tokens + primitives index (optional at Build)
-├── design-system/primitives.md # BUILD: Live primitive registry (UI projects)
-├── personas/<id>.md            # PROVE: Detection signals + LARP script per persona
-├── adaptive-axes/<name>.md     # PROMISE: Adaptive behavior decomposition (if product adapts)
-├── project-import.md           # Brownfield only
-├── project-landscape-overview.md  # Brownfield only
-└── epics/E###-name/
-    ├── epic.md                 # PROMISE: Epic scope
-    ├── experience-chain.md     # BUILD: Required for UI epics
-    ├── epic-tech-spec.md       # BUILD: Approach
-    ├── epic-breakdown.md       # BUILD: Story mapping
-    ├── epic-analysis-report.md # PROVE: Decorrelated multi-lens analysis (required before story work)
-    ├── audit-report.md         # PROVE: Skeptical audit
-    ├── epic-validation-report.md  # PROVE: JTBD walkthrough included
-    └── stories/S###-name/
-        ├── spec.md             # User experience-first spec
-        ├── plan.md             # Technical approach
-        ├── tasks.md            # Implementation checklist
-        ├── audit-report.md     # PROVE: Skeptical audit
-        ├── validation-report.md  # PROVE: Evidence + readiness state
-        ├── screenshots/        # PROVE: Runtime LARP evidence
-        └── larp-recordings/    # PROVE: Recorded execution traces
-```
-
-**Naming**: `E###-epic-name`, `S###-story-name`. Shorthand: `E001`, `S001`.
-
----
-
-## 📋 The Speck Workflow (Build flow shown)
-
-### 1. Project Foundation (PROMISE)
-
-```mermaid
-graph TD
-    A["/speck Build XYZ"] --> B["/project-specify"]
-    B --> C["/project-clarify"]
-    C --> D["/project-product-contract"]
-    D --> E["/project-evidence-contract"]
-    E --> F["/project-context"]
-    F --> G{"4+ epics<br/>expected?"}
-    G -->|Yes| H["/project-architecture"]
-    G -->|Yes| I["/project-ux"]
-    H --> J["/project-plan"]
-    I --> J
-    G -->|No| J
-    J --> K["Epics & E000 Infrastructure"]
-    K --> L{"Platform, or<br/>Build with 4+ epics?"}
-    L -->|Yes| M["/project-analyze<br/>REQUIRED gate"]
-    L -->|No| N["/project-analyze<br/>optional, recommended"]
-    M --> O["/epic-specify"]
-    N --> O
-```
-
-`/project-analyze` sits between planning and epic work on purpose: it is the only pass whose reviewers are decorrelated from the corpus authors. On the required side, `/epic-specify` runs `check-epic-prereqs.sh` and refuses to start until the gate clears.
-
-Required artifacts at Build level:
-- `product-contract.md` — defines the paid promise, differentiator, banned language, magic moments, JTBD scorecard, AI behavior contract (if AI-using), longitudinal axes (if adaptive)
-- `evidence-contract.md` — defines what valid evidence looks like for this product (valid/invalid proof sources, runtime LARP scope, commercial gates, readiness state gate criteria)
-- `context.md` — constraints
-
-Optional at Build (required at Platform):
-- `architecture.md`, `ux-strategy.md`, `constitution.md`, `design-system.md`, `domain-model.md`
-
-Required at Platform and at Build with 4+ epics, produced after `/project-plan`:
-- `project-analysis-report.md` — the decorrelated multi-lens pass over the planning corpus (see the planning-analysis gate above). Optional and recommended at Build with 1-3 epics.
-
-### 2. Epic Work (BUILD)
-
-```mermaid
-graph TD
-    A["/epic-specify"] --> B["/epic-clarify"]
-    B --> C{"UI Epic?"}
-    C -->|Yes| D["/epic-experience-chain"]
-    C -->|Yes| E["/epic-journey"]
-    C -->|Yes| F["/epic-wireframes"]
-    D --> G["/epic-plan"]
-    E --> G
-    F --> G
-    C -->|No| G
-    G --> H["/epic-breakdown"]
-    H --> I["/epic-analyze<br/>required gate"]
-    I --> J["Story Work"]
-    J --> K["/audit epic-level"]
-    K --> L["/epic-validate"]
-    L --> M["/larp full JTBD"]
-    M --> N["/epic-retrospective"]
-```
-
-For UI epics, `experience-chain.md` is required before `/epic-plan` (prevents the "seven different apps stitched together" failure).
-
-`/epic-analyze` is a required gate before any story work, and its lenses must be decorrelated from whoever authored the epic corpus — same contract as `/project-analyze`, one altitude down.
-
-### 3. Story Work (BUILD → PROVE)
-
-```mermaid
-graph TD
-    A["/story-specify"] --> B["/story-clarify"]
-    B --> C{"Brownfield?"}
-    C -->|Yes| D["/speck-scan --level story"]
-    C -->|No| E["/story-plan"]
-    D --> E
-    E --> F{"UI Story?"}
-    F -->|Yes| G["/story-ui-spec"]
-    F -->|No| H["/story-tasks"]
-    G --> H
-    H --> I["/story-implement"]
-    I --> J["/audit"]
-    J --> K["/story-validate"]
-    K --> L["/larp"]
-    L --> M["/story-retrospective"]
-```
-
-Note: `/story-analyze` is **retired** (alias-shim) — its pre-implementation consistency check is folded into the tail of `/story-tasks`, and its adversarial behavior-vs-spec check is `/audit`. `/audit` runs **between** implement and validate — it's not optional.
-
-### 4. Reengagement (PROVE)
-
-Any new session reads `project-state.md` first.
-
-If `project-state.md` is missing or stale (>2 weeks since last `verified-against-runtime` stamp, OR a new agent picks up): run `/recheck` before any new feature work.
-
-`/recheck`:
-- Compares assertions in truth docs to current HEAD via SHA stamps
-- Persona LARP cold-start (does fresh user flow still work?)
-- Third-party integration risk surface scan (ToS posture, auth model)
-- Constitution/principle compliance scan
-- Updates `project-state.md` with findings
-- Blocks new feature work until drift is reconciled
-
----
-
-## ⚖️ Always-On Discipline
-
-These apply at every play level, in every command, on every project — unconditionally:
-
-| Discipline | When | What |
-|------------|------|------|
-| **First-read state** | Every engagement | Read `project-state.md` before anything else |
-| **Engagement-gap recheck** | >2 weeks since verified OR new agent | Run `/recheck` before new work |
-| **Decision-lock log** | Every phase boundary | Enumerate decisions, log SHA + alternatives |
-| **Skeptical-review** | Before any non-trivial proposal locks | Produce N≥3 alternatives + tradeoff scoring |
-| **Planning-corpus adversary** | After `/project-plan` (Platform / Build 4+) · after `/epic-breakdown` | Run `/project-analyze` / `/epic-analyze` with lenses decorrelated from the corpus authors. Severity is by rule, not author judgment — a cross-artifact contradiction, an unaddressed `MM-N`/`JOB-N`, or a gate precondition that contradicts the evidence contract are CRITICAL by construction |
-| **Skeptical audit** | Between implement and validate | Run `/audit` — auditor doesn't trust implementer |
-| **Runtime LARP** | Every UI story/epic validate gate | Run `/larp [persona]` — checked-in evidence |
-| **Readiness-state declaration** | At every validate | Declare IMPL-GREEN / UX-RC / COMMERCIAL-RC / SHIP-RC / SHIP / NO-SHIP |
-| **SHA stamps** | On every truth artifact write | Footer with `[as of SHA | verified <date>]` |
-| **Banned-phrase detector** | In every self-summary | "ready for launch", "outside autonomous reach" etc. trigger re-audit |
-| **Banned-language lint** | On every commit + at audit | `banned-language-lint.sh` against product-contract.md |
-| **Evidence-or-it-didn't-happen** | Every validation gate | "Tests pass" is one signal, not proof |
-
----
-
-## 🚦 Readiness States
-
-Replaces single PASS/FAIL with a meaningful gradient:
-
-| State | Meaning | Gate criteria |
-|-------|---------|---------------|
-| `NO-SHIP` | One or more hard blockers remain | Default when blocked |
-| `IMPL-GREEN` | Tests / lint / types pass | Unit + integration green |
-| `INTEGRATION-GREEN` | External API/LLM deps exercised for real | Real round-trip smoke per §7 service + live DB schema matches migrations (DB-backed) |
-| `UX-RC` / `API-RC` | Primary flows pass in target runtime | Persona LARP (UI) or operational walkthrough (backend) |
-| `COMMERCIAL-RC` | Billing / entitlements / support / legal pass | Paid products only — checklist in `evidence-contract.md` |
-| `SHIP-RC` | All core gates pass, pending release ops | Runtime LARP against launch build (not dev server) |
-| `SHIP` | Production / live proof complete | Post-deploy smoke + healthcheck green |
-
-Validation only marks the claimed state. Never let `IMPL-GREEN` be confused with `SHIP`.
-
----
-
-## 🧩 Core Concepts
-
-### `product-contract.md` — The PROMISE center of gravity
-
-The canonical single contract — it consolidates the domain model, UX voice/tone, constitution principles, and magic moments that would otherwise be scattered across separate artifacts:
-
-- **Paid promise** + primary persona
-- **Differentiator** + anti-differentiators ("we are NOT")
-- **Inspiration sources** with "principle, not template" frame
-- **JTBD scorecard**: functional / emotional / social / trust / commercial
-- **Magic moments**: the surfaces a user would pay for
-- **Public language** + **banned language** (per locale if multilingual)
-- **AI behavior contract** (if AI is user-visible)
-- **Longitudinal axes** (if the product adapts over time)
-
-Downstream artifacts MUST reference the product-contract. Stories that violate banned language fail linting.
-
-### `evidence-contract.md` — The PROVE center of gravity
-
-Defines what counts as proof for THIS product:
-
-- Per-platform valid proof sources (e.g., for native iOS: standalone simulator/TestFlight with production-like bundle ID + AXe screenshots + AX trees + native logs)
-- Per-platform **invalid** proof sources (e.g., browser localhost ≠ launch proof for native iOS)
-- Required runtime LARP scope (which personas, which flows, which platforms)
-- Commercial readiness gates (for paid products)
-- Readiness state gate criteria
-
-### `project-state.md` — The auto-regenerated agent first-read
-
-A single-page status doc that any AI reads on engagement:
-
-- **Current state**: what's built, validated, drifted
-- **Open questions** awaiting user decision
-- **Locked decisions** with rationale (linked to `project-decisions-log.md`)
-- **Known issues** (severity-ranked, from recent `/recheck`)
-- **Next action**: what the last session ended on / what the next should pick up
-- **Truth staleness** flags (any SHA stamps that drifted from HEAD)
-
-Replaces ad-hoc handoff docs, ad-hoc summaries, and human reconstruction. Auto-regenerates on truth-affecting commands.
-
-### `/recheck`, `/larp`, `/audit` — The PROVE commands
-
-- **`/recheck`**: Engagement-gap drift detector. Mandatory on >2-week gap or new-agent pickup. Compares truth-doc assertions to current HEAD, runs persona LARP cold-start, scans for security/legal red flags.
-- **`/larp`**: First-class persona-based runtime LARP. Recipe-driven (uses `visual_testing` config). Produces checked-in evidence: screenshots, AX trees, transcripts, timings, taste notes. Required at every UI validate gate.
-- **`/audit`**: Adversarial skeptical audit between `implement` and `validate`. Required for every epic. Auto-checks: adversarial inputs, dep failure modes, concurrency, N+1, env vars, observability reach, related-table cascade behavior.
-
-### `experience-chain.md` — Required for UI epics
-
-Defines the seams between screens so each story doesn't get optimized in isolation:
-
-- Entry state per screen
-- Single job per screen
-- Emotional state on arrival vs handoff
-- First-time / returning / interrupted / resumed variants
-- No-repetition rule between adjacent screens
-- "Why now?" for the first viewport
-
-Without `experience-chain.md`, UI epics build "seven different apps stitched together."
-
-### `design-system/primitives.md` — The live registry
-
-Eagerly maintained list of required UI primitives (PageHeader, Section, Eyebrow, StatGrid, EmptyState, ActionGroup, FormField, etc.). UI stories MUST use registered primitives. `/audit` greps for inline-styled re-implementations. Prevents drift across pages.
-
----
-
-## 🚀 Where Things Live
-
-| Want to... | Look here |
-|------------|-----------|
-| Find a skill | `.cursor/skills/<skill>/SKILL.md` |
-| Find a template | `.speck/templates/{project,epic,story}/` |
-| Find a recipe (stack starting point) | `.speck/recipes/` |
-| Read learned cross-project patterns | `.speck/patterns/learned/` |
-| Configure project Cursor rules | `.cursor/rules/*.mdc` |
-| See AGENT routing rules | `AGENTS.md` (workspace root) |
-| Run drift detection manually | `.speck/scripts/staleness-check.sh` |
-| Run banned-language lint manually | `.speck/scripts/banned-language-lint.sh` |
-| Check the planning-analysis gate manually | `.speck/scripts/validation/validators/validate-project-analysis.sh --gate specs/projects/<id>` |
-| Check every epic prerequisite before `/epic-specify` | `.speck/scripts/validation/check-epic-prereqs.sh specs/projects/<id>` |
-| Migrate v6 project to v7 | `/speck-migrate` |
-
----
-
-## 🔌 MCP Servers (all optional)
-
-Configure in `.cursor/mcp.json` (see `.cursor/MCP-SETUP.md`):
-
-| Server | Purpose |
-|--------|---------|
-| **Perplexity** | Just-in-time research; embedded in commands as needed |
-| **GitHub** | PRs, issues, repos |
-| **Context7** | Up-to-date library documentation (always prefer over training data) |
-
-Speck works without them via fallbacks.
-
----
-
-## 📊 Commit Learning Tags
-
-When committing, ALWAYS add tags if you discovered something:
-
-| Tag | Use for |
-|-----|---------|
-| `PATTERN:` | Reusable code pattern discovered |
-| `GOTCHA:` | Surprise or pitfall encountered |
-| `PERF:` | Performance insight or optimization |
-| `ARCH:` | Architecture decision or structural insight |
-| `RULE:` | Cursor rule update needed |
-| `DEBT:` | Technical debt created (with reason) |
-
-Example:
-```
-git commit -m "feat(matching): implement overlap detection
-
-PATTERN: Window functions for time overlaps - 10x faster than Python
-PERF: Query time 500ms → 50ms with proper indexing
-GOTCHA: Timezone must be normalized before comparison
-"
-```
-
-These feed retrospectives. Without tags, learnings are lost.
-
----
-
-## 🚨 Critical Rules (NEVER / ALWAYS)
-
-**NEVER**:
-- Skip reading `project-state.md` on engagement
-- Skip `/recheck` on engagement gap >2 weeks or new-agent pickup
-- Mark a validation gate passed without checked-in evidence
-- Use dev-server screenshots as launch proof for native apps
-- Create non-canonical filenames in `specs/` (use the routing table in AGENTS.md)
-- Claim `SHIP-RC` based on dev-mode evidence
-- Generate a Speck artifact without reading its template and SKILL.md first
-- Run `/project-plan` before required PROMISE artifacts exist
-- Run `/epic-specify` on a Platform or 4+-epic Build project before `/project-analyze` has cleared
-- Let a reviewer who authored part of the planning corpus count as one of the required lenses
-- Skip `/audit` between implement and validate
-- Trust historical PASS docs over current runtime proof
-
-**ALWAYS**:
-- Read `project-state.md` first
-- Read SKILL.md AND template before generating an artifact
-- Stamp truth artifacts with `[as of SHA <hash> | verified <date>]`
-- Surface 3+ alternatives at non-trivial decisions
-- Run `/larp` on UI stories at validate time
-- Run `/project-analyze` after `/project-plan` (required at Platform / Build 4+) and `/epic-analyze` after `/epic-breakdown`
-- Run `/audit` between implement and validate
-- Declare a readiness state at every validate gate
-- Log decisions to `project-decisions-log.md` at phase boundaries
-- Add commit learning tags when you discover something
-- Treat AI-generated user-facing text as governed product copy
-
----
-
-## 📚 Learn More
-
-- **AI agent rules**: `AGENTS.md` (workspace root) — the table-of-contents the agent reads on every task
-- **Setup MCP**: `.cursor/MCP-SETUP.md`
-- **Recipes**: `.speck/recipes/README.md`
-- **Patterns library**: `.speck/patterns/learned/README.md`
-
----
-
-## 🛠️ Development
-
-For contributing to Speck itself (CLI, sync system, versioning, releases), see **[DEVELOPMENT.md](../DEVELOPMENT.md)**.
-
-## 🤝 Contributing Methodology Insights
-
-After running retrospective commands (`/story-retrospective`, `/epic-retrospective`, `/project-retrospective`), you can opt-in to share methodology insights with the Speck team. Only process improvements are shared — no project-specific data.
-
----
-
-**Need help?** Just type `/speck` and describe what you want to build. Speck will guide you through the rest!
-
-**Methodology**: Promise → Build → Prove + Profile (evidence-driven specification)
+Methodology development records, ADRs, history, evaluation harnesses, and release evidence belong only in the Speck source repository. They are not product-development context or exported runtime output.

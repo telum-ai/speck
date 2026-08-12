@@ -1,0 +1,9 @@
+# Generated methodology evaluation output (reproducible, never release payload).
+# Scoped to this directory (nested .gitignore, not the repo root) so these
+# Speck-internal patterns never get copied into a downstream project's
+# .gitignore by `speck init`/`speck upgrade` (mergeGitignore only reads the
+# repo-root .gitignore as its source).
+behavioral/.runs/
+behavioral/reports/
+skill-routing/reports/
+reports/latest.md

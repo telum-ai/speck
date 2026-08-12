@@ -63,8 +63,8 @@ artifact_type: project-adjust-report
 *How will the affected downstream epics and stories be re-aligned and re-proven?*
 
 - **Downstream Actions**:
-  - [ ] Run `/epic-adjust` on `E003-billing` to re-spec checkout flows and update its `traceability-matrix.md`
-  - [ ] Run `/story-adjust` on `S014` and `S015` to implement Stripe Checkout and Webhooks
+  - [ ] Run `/adjust --level epic` on `E003-billing` to re-spec checkout flows and update its `traceability-matrix.md`
+  - [ ] Run `/adjust --level story` on `S014` and `S015` to implement Stripe Checkout and Webhooks
 - **New Adversarial test guardrails required**: [e.g., "Mock Stripe webhook signature validation to ensure invalid payloads are rejected."]
 
 ---

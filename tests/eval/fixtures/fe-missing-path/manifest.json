@@ -1,0 +1,6 @@
+{
+  "id": "fe-missing-path",
+  "class": "fabricated-evidence",
+  "expect": "catch",
+  "description": "missing evidence path"
+}

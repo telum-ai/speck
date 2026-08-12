@@ -1,262 +1,102 @@
 ---
 name: epic-discover
-description: Load for brownfield projects where epics haven't been defined yet. Analyzes existing code and documentation to discover natural epic boundaries. Use before epic-specify on brownfield projects with no existing epic structure. FIRST ACTION after loading: read template at .speck/templates/epic/epic-template.md before any context loading or artifact generation.
-disable-model-invocation: false
+description: Discovers epic boundaries from existing code and docs. Use before epic-specify when brownfield work has no epic map.
 ---
 
+# epic-discover
 
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
+Input: `$ARGUMENTS` (project id, code path, focus areas).
+Output: `[EPIC_DIR]/epic.md` per discovered epic.
+Template: `.speck/templates/epic/epic-template.md` (no separate discovery template).
+Prereq: project with codebase or import artifacts.
 
-User input:
+## 0. Template
 
-$ARGUMENTS
+Read `.speck/templates/epic/epic-template.md` — defines epic sections to populate.
 
-## ⚠️ Step 0: Read Template First
+## 1. Context
 
-**Before any other action** — read this template now using the Read tool:
-```
-.speck/templates/epic/epic-template.md
-```
-The template defines required sections and formatting for `epic.md`. Reading it first shapes what you look for when scanning the codebase — you'll know what information each epic document needs to contain.
+Resolve project from args or ask. Load `project.md`, `project-import.md` if present.
 
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
+Verify: codebase path, docs, or import report exists.
 
-Discover epic boundaries from existing code and documentation.
+Scope questions if unclear: whole codebase vs areas; features to focus; existing boundaries to respect.
 
-## Context Requirements
-
-First, establish project context:
-- If project specified in arguments, use it
-- Otherwise ask: "Which project should I discover epics for?"
-- Load project.md and any import report
-
-Verify project has:
-- Existing codebase path or
-- Documentation to analyze or
-- Previous import analysis
-
-## Step 1: Analysis Preparation
-
-### Determine Analysis Scope
-
-Ask if not clear:
-- "Should I analyze the entire codebase or specific areas?"
-- "Any particular features you want me to focus on?"
-- "Are there existing epic boundaries I should respect?"
-
-### Load Previous Analysis
-
-If project was imported:
-- Load import report
-- Review epic candidates
-- Note confidence levels
-
-## Step 2: Deep Code Analysis
-
-### Structural Analysis
-
-Examine code organization:
+## 2. Code analysis
 
 ```bash
-# Top-level feature directories
-find [PROJECT_PATH] -type d -mindepth 1 -maxdepth 2 | grep -E "(feature|module|domain|service|component)s?" | sort
+# Feature dirs
+find [PROJECT_PATH] -type d -mindepth 1 -maxdepth 2 \
+  | grep -Ei '(feature|module|domain|service|component)s?' | sort
 
-# Route/endpoint analysis
-grep -r "router\|route\|endpoint\|path\|api/" [PROJECT_PATH] --include="*.{js,ts,py,java,go}" | grep -v node_modules | head -20
+# Routes
+grep -rE 'router|route|endpoint|path|api/' [PROJECT_PATH] \
+  --include='*.{js,ts,py,java,go}' | grep -v node_modules | head -20
 
-# Database schema indicators
-find [PROJECT_PATH] -name "*.sql" -o -name "*migration*" -o -name "*schema*" | head -20
+# Schema
+find [PROJECT_PATH] -name '*.sql' -o -name '*migration*' -o -name '*schema*' | head -20
 
-# Service boundaries
-grep -r "class.*Service\|function.*Service" [PROJECT_PATH] --include="*.{js,ts,py,java,go}" | head -20
+# Services
+grep -rE 'class.*Service|function.*Service' [PROJECT_PATH] \
+  --include='*.{js,ts,py,java,go}' | head -20
 ```
 
-### Semantic Analysis
+Semantic clusters: auth, user-mgmt, CRUD/data patterns. Trace imports, FKs, API calls, shared utils.
 
-Look for business capabilities:
+## 3. Epic boundary scoring
 
-**Authentication Patterns:**
-```
-auth, login, logout, session, token, oauth, sso, 
-password, credential, permission, role, access
-```
+Per candidate epic score (1–10 each):
 
-**User Management Patterns:**
-```
-user, profile, account, settings, preferences,
-registration, onboarding, avatar, notification
-```
+| Dimension | Signals |
+|-----------|---------|
+| Cohesion | shared files (+3), shared model (+2), common user goal (+3), single team (+2) |
+| Independence | few deps (+3), clear API (+3), separate tables (+2), independent deploy (+2) |
+| Value | standalone value (+4), metrics (+3), priority (+3) |
 
-**Data Management Patterns:**
-```
-create, read, update, delete, list, search,
-filter, sort, paginate, export, import
-```
+Size: 3–5 stories small · 6–12 medium · 13–20 large · >20 split.
 
-### Dependency Analysis
+## 4. Generate epics
 
-Trace connections between code areas:
-- Import/require statements
-- Database foreign keys
-- API call patterns
-- Shared utilities
-
-## Step 3: Epic Boundary Definition
-
-### Epic Candidate Evaluation
-
-For each potential epic, assess:
-
-**Cohesion Score** (1-10):
-- Files work together: +3
-- Shared data model: +2
-- Common user goal: +3
-- Single team ownership: +2
-
-**Independence Score** (1-10):
-- Few external dependencies: +3
-- Clear API boundaries: +3
-- Separate database tables: +2
-- Independent deployment: +2
-
-**Value Score** (1-10):
-- Delivers user value alone: +4
-- Clear success metrics: +3
-- Business priority: +3
-
-### Epic Sizing
-
-Estimate story count by analyzing:
-- Number of endpoints/routes
-- Distinct UI components
-- Database operations
-- Business rules complexity
-
-Size guidelines:
-- 3-5 stories: Small epic
-- 6-12 stories: Medium epic
-- 13-20 stories: Large epic
-- >20 stories: Consider splitting
-
-## Step 4: Generate Epic Specifications
-
-For each discovered epic:
-
-### Create Epic Structure
+Per discovered epic:
 
 ```bash
-mkdir -p specs/projects/[PROJECT_ID]/epics/[EPIC_ID]-[epic-name]
+mkdir -p specs/projects/[PROJECT_ID]/epics/[EPIC_ID]-[name]
 ```
 
-### Generate Epic Spec
+Write `epic.md` from template:
+- Populate from code behavior + docs
+- `[FROM SCAN]` under Information Sources for code evidence
+- `[INFERRED]` for unverified inferences
+- `[NEEDS CLARIFICATION: …]` for uncertain items
+- Do NOT paste endpoint/file inventories into `epic.md` — those go in `epic-codebase-scan.md` via `/speck-scan --level epic`
 
-This command does NOT have its own output template. Generate/update canonical Speck artifacts using existing templates:
+## 5. Cross-epic analysis
 
-Generate `epic.md` (WHAT/WHY + boundaries)
-- **Load and follow the template exactly**: `.speck/templates/epic/epic-template.md`
-- Populate from code-derived behavior + docs
-- If you need to preserve code evidence, add a brief `[FROM SCAN]` note under **Information Sources** in `epic.md` (e.g., top-level paths/keywords analyzed)
-- **Do not** paste deep technical inventories (endpoints/models/files) into `epic.md` — those belong in `epic-codebase-scan.md` generated by `/epic-scan`
-- Mark uncertain items as: `[NEEDS CLARIFICATION: ...]`
+Map dependencies (which epic blocks which). Detect overlap: shared files, duplicate features, unclear boundaries. Recommend build order: no-deps first → dependents.
 
-**Traceability markers**:
-- Use `[FROM SCAN]` for statements grounded in code scan results
-- Use `[INFERRED]` for inferences not directly verified
+## 6. Refine and continue
 
-## Step 5: Cross-Epic Analysis
+Validate uncertain boundaries with the user. Do not create a separate discovery report.
 
-### Dependency Map
+Route by outcome:
+- Many small → suggest combine
+- Few large → suggest split by journey
+- Clear → re-read the marked canonical Epic flow in root `AGENTS.md` and resume at its first incomplete slot
+- Unclear → team input + `/speck-scan --level epic`
 
-Create visual representation:
+## Patterns
 
-```
-Authentication Epic
-    ↓ provides sessions to
-User Management Epic
-    ↓ provides users to
-Content Management Epic
-    ↓ provides content to
-Analytics Epic
-```
+| Codebase | Approach |
+|----------|----------|
+| Well-structured | Trust top-level dirs |
+| DDD | Bounded contexts, aggregates |
+| Legacy | User capabilities over file layout |
+| Microservices | Service ≈ epic; watch cross-service epics |
 
-### Overlap Detection
+## NEVER / ALWAYS
 
-Identify shared concerns:
-- Shared files between epics
-- Duplicate functionality
-- Unclear boundaries
-
-### Recommended Epic Order
-
-Based on dependencies:
-1. [Epic] - No dependencies
-2. [Epic] - Depends on #1
-3. [Epic] - Depends on #1, #2
-
-## Step 6: Discovery Report
-
-Return a discovery summary as command output (do not introduce a new “report template” doc).
-
-Include:
-- Epics discovered (name, size, estimated stories, confidence)
-- Key dependency relationships + recommended order
-- Coverage gaps / unclear boundaries
-- Recommendations + next commands (`/epic-specify`, `/story-extract`, `/project-plan`, etc.)
-
-## Step 7: Interactive Refinement
-
-Present findings:
-- "I've discovered [N] potential epics. Here's what I found..."
-- "These boundaries make sense based on your code structure"
-- "I'm less certain about [epic] - can you clarify?"
-
-Get feedback:
-- "Do these epic boundaries align with your team structure?"
-- "Are there business boundaries I missed?"
-- "Should any of these be combined or split?"
-
-## Step 8: Guide Next Steps
-
-Based on discovery:
-- Many small epics → "Consider combining related ones"
-- Few large epics → "Consider splitting by user journey"
-- Clear boundaries → "Ready to extract stories"
-- Unclear code → "Need team input on organization"
-
-Recommend:
-- `/epic-clarify` - Confirm/adjust scope + resolve `[NEEDS CLARIFICATION]` items
-- `/epic-scan` - Generate/update `epic-codebase-scan.md` (domain evidence + reusable patterns) before planning
-- `/story-extract` - Extract stories from code
-- `/epic-plan` - Create tech specs
-- "Review with team for validation"
-
-## Discovery Patterns
-
-### Well-Structured Codebases
-- Trust directory structure
-- Epics align with top-level directories
-- High confidence in boundaries
-
-### Domain-Driven Codebases
-- Epics align with bounded contexts
-- Look for aggregates and entities
-- Focus on business capabilities
-
-### Legacy Codebases
-- Ignore file organization
-- Focus on user capabilities
-- Plan refactoring within epics
-
-### Microservices
-- Services often = epics
-- Check for service boundaries
-- Consider cross-service epics
-
-## Success Criteria
-
-Successful epic discovery:
-- ✅ All major features covered
-- ✅ Clear boundaries defined
-- ✅ Dependencies mapped
-- ✅ Sizing seems reasonable
-- ✅ Team agrees with structure
+- NEVER invent a discovery report template file
+- NEVER put deep technical inventories in `epic.md`
+- NEVER skip dependency map
+- ALWAYS mark inference confidence honestly
+- ALWAYS recommend `/speck-scan --level epic` before planning for evidence depth

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # validate-project-analysis.sh — Gate A for the decorrelated analysis pass (issue #106).
 #
-# WHY THIS EXISTS. /project-analyze was optional at exactly the altitude where the author
+# WHY THIS EXISTS. /analyze --level project was optional at exactly the altitude where the author
 # self-certifies. Field evidence, project 001-odd: a planning corpus produced through the FULL
 # canonical Build flow — every skill entered, five skeptical-review primitives, a premise-challenge
 # pass, every strict validator green — still carried 1 CRITICAL and 13 HIGH defects. All fourteen
@@ -12,7 +12,7 @@
 # TWO MODES, ONE IMPLEMENTATION PER PREDICATE.
 #   structural:  validate-project-analysis.sh [--strict] <report.md>
 #                Routed from validate-template.sh by filename. Handles BOTH
-#                project-analysis-report.md and epic-analysis-report.md.
+#                project-, epic-, and story-analysis-report.md.
 #   gate:        validate-project-analysis.sh [--strict] --gate <PROJECT_DIR|EPIC_DIR>
 #                The blocking prerequisite check.
 #
@@ -24,7 +24,7 @@
 #
 # VINTAGE BINDING — why this needs no data migration.
 # The v10.3 structural requirements bind ONLY a report that DECLARES `artifact_type:
-# project-analysis-report` (resp. `epic-analysis-report`) in its frontmatter. A report with no such
+# project-analysis-report` (resp. `epic-analysis-report` / `story-analysis-report`) in its frontmatter. A report with no such
 # key is pre-v10.3 vintage and is exempt. Every analysis report already on disk is exactly that, so
 # none is retroactively convicted. validate-harden-report.sh is the precedent for the technique.
 # The gate still SEES a pre-v10.3 report — it just reports what it can and cannot evaluate rather
@@ -52,7 +52,8 @@
 #
 # CODES. UNANALYZED_CORPUS.P1 · ANALYSIS_STALE.P1 · ANALYSIS_CRITICAL_OPEN.P1 ·
 # PROMISE_UNCOVERED.P1 · ANALYSIS_DECORRELATION_UNVERIFIED.P2 · ANALYSIS_COVERAGE_UNCOMPUTED.P2 ·
-# ANALYSIS_GRANDFATHERED.P2. All validator-local. Deliberately NOT reused: GATE_VACUOUS /
+# ANALYSIS_GRANDFATHERED.P2 · FLOW_OPTIONAL_UNREVIEWED.P1 · FLOW_OPTIONAL_MISSING.P1.
+# All validator-local. Deliberately NOT reused: GATE_VACUOUS /
 # GATE_EMPTY_LEGITIMATE are canary-owned verdicts that gate-liveness-probe.sh produces ABOUT a gate
 # from its telemetry; a gate self-emitting them would create two producers of one code — the exact
 # drift v10 introduced them to prevent.
@@ -307,7 +308,7 @@ load_report() {
   ARTIFACT_TYPE="$(fm_value 'artifact_type')"
   BOUND=false
   case "$ARTIFACT_TYPE" in
-    project-analysis-report|epic-analysis-report) BOUND=true ;;
+    project-analysis-report|epic-analysis-report|story-analysis-report) BOUND=true ;;
   esac
   return 0
 }
@@ -321,6 +322,166 @@ fm_value() {
   line="${line%\"}"; line="${line#\"}"
   line="${line%\'}"; line="${line#\'}"
   printf '%s' "$line"
+}
+
+# is_v11_report <report-file> <scope-dir>
+# v11-ness decides whether the Flow Fit contract applies. The ORIGINAL defect was that a report
+# could duck the whole contract by simply typing an old speck_version, and nothing said a word.
+#
+# The fix is NOT to override the report's claim from live truth. "Which tooling produced this
+# report" is a fact about the past, and every mechanism for recovering it (git ancestry, file
+# mtime) is absent in ordinary workspaces — squashed history, gitignored specs/, an uncommitted
+# edit, a repo initialised after adoption — so any such rule retroactively convicts genuinely
+# vintage reports, which VINTAGE BINDING (above) promises never happens.
+#
+# So the claim is still honoured, and the dodge is made VISIBLE instead: a report claiming a
+# version below the workspace's own tooling raises ANALYSIS_VINTAGE_UNVERIFIED.P2 at the gate
+# (see the caller), which --strict escalates. Silence was the bug; a wrong conviction is not the
+# cure. Inability to verify is a finding, never a silent pass and never a silent conviction
+# (AGENTS.md P3).
+is_v11_report() {
+  local v major
+  v="$(fm_value 'speck_version')"
+  major="${v%%.*}"
+  [[ "$major" =~ ^[0-9]+$ && "$major" -ge 11 ]]
+}
+
+# report_claims_stale_vintage <scope-dir> — true when the report claims a pre-v11 version while
+# the workspace's own tooling is v11+. Not a conviction on its own; the caller raises a P2.
+report_claims_stale_vintage() {
+  local scope="${1:-}" root live live_major v major
+  root="$([[ -n "$scope" ]] && speck_root "$scope" || true)"
+  [[ -n "$root" && -f "$root/.speck/VERSION" ]] || return 1
+  live="$(tr -d '[:space:]' < "$root/.speck/VERSION" 2>/dev/null || true)"
+  live_major="${live%%.*}"
+  [[ "$live_major" =~ ^[0-9]+$ && "$live_major" -ge 11 ]] || return 1
+  v="$(fm_value 'speck_version')"
+  major="${v%%.*}"
+  [[ "$major" =~ ^[0-9]+$ ]] || return 1
+  [[ "$major" -lt 11 ]]
+}
+flow_slots() {
+  case "$1" in
+    project|project-analysis-report)
+      printf '%s\n' project-import speck-scan-project project-brainstorm project-domain project-ux project-constitution project-architecture project-design-system ;;
+    epic|epic-analysis-report)
+      printf '%s\n' epic-discover epic-constitution epic-architecture epic-journey epic-wireframes epic-experience-chain ;;
+    story|story-analysis-report)
+      printf '%s\n' story-extract speck-scan story-ui-spec ;;
+  esac
+  return 0
+}
+
+flow_row_for_slot() { # <rows> <slot-column-index> <exact-slot>
+  local rows="$1" slot_index="$2" wanted="$3" candidate actual
+  while IFS= read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    split_row "$candidate"
+    actual="$(lc "$(cell_at "$slot_index")")"
+    if [[ "$actual" == "$wanted" ]]; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done <<< "$rows"
+  return 1
+}
+
+flow_cell_is_substantive() { # reject blank/sentinel/template cells masquerading as adjudication
+  local value lower
+  value="$(sp_trim "$1")"; lower="$(lc "$value")"
+  [[ -n "$value" ]] || return 1
+  case "$lower" in
+    -|—|–|n/a|na|none|tbd|unknown) return 1 ;;
+  esac
+  case "$value" in
+    \[*\]) return 1 ;;
+  esac
+  return 0
+}
+
+# flow_artifact_keyword <slot> → an ERE fragment the artifact's basename must contain (case-
+# insensitive) before its existence is even checked. Canonical filenames come from each skill's own
+# SKILL.md "Output:" line (ux-strategy.md, architecture.md, design-system.md, constitution.md,
+# domain-model.md, user-journey.md, wireframes.md, experience-chain.md, ui-spec.md). Slots with no
+# single fixed deliverable — discovery/scan/extract steps, whose output name varies by topic — key on
+# their own verb instead, so a genuinely-produced artifact still resolves while an incidental mention
+# elsewhere in the sentence does not. Without this filter, ANY existing .md token in the cell
+# resolved (FLOW_INCLUDED_PHANTOM.P1's whole reason to exist), which is what let a rationale merely
+# mentioning an unrelated, real filename discharge the check for a step that never ran.
+#
+# TWO SLOTS DELIBERATELY DO NOT KEY ON A GUARANTEED-TO-EXIST FILENAME. epic-discover's own SKILL.md
+# names its output `epic.md` — but epic-specify writes the SAME filename, so `epic.md`'s mere presence
+# in an epic dir (true of every epic, discovered or not) is not evidence discovery ran; the keyword is
+# `discover` alone, so a bare "epic.md" mention can no longer stand in. story-extract's SKILL.md names
+# two outputs, `spec.md` and `codebase-scan-extracted.md` — but story-specify ALSO writes spec.md, so
+# only the extract-unique artifact counts; `spec.md` was dropped from the alternation for the same
+# reason. Both previously let "the filename exists" trivially pass for a step that never ran, because
+# the filename it matched was one every story/epic already carries regardless.
+flow_artifact_keyword() {
+  case "$1" in
+    project-import)        printf 'import|landscape-overview' ;;
+    speck-scan-project)    printf 'scan|landscape-overview' ;;
+    project-brainstorm)    printf 'brainstorm' ;;
+    project-domain)        printf 'domain' ;;
+    project-ux)            printf 'ux-strategy' ;;
+    project-constitution)  printf 'constitution' ;;
+    project-architecture)  printf 'architecture' ;;
+    project-design-system) printf 'design-system|primitives' ;;
+    epic-discover)         printf 'discover' ;;
+    epic-constitution)     printf 'constitution' ;;
+    epic-architecture)     printf 'architecture' ;;
+    epic-journey)          printf 'journey' ;;
+    epic-wireframes)       printf 'wireframe' ;;
+    epic-experience-chain) printf 'experience-chain' ;;
+    story-extract)         printf 'extract|codebase-scan' ;;
+    speck-scan)            printf 'scan' ;;
+    story-ui-spec)         printf 'ui-spec' ;;
+    *)                     printf '%s' "$(lc "$1")" ;;
+  esac
+  return 0
+}
+
+# flow_artifact_exists <artifact-cell> <analysis-scope-dir> <slot>
+# The scope directory ONLY — never the project root, never the repo root. Every slot's own SKILL.md
+# writes its output into the directory the step ran AT (an epic step into its own epic dir, a story
+# step into its own story dir; see flow_artifact_keyword above), so that directory is the entire
+# search space. Widening the search to $project or $root let a SAME-NAMED artifact from a DIFFERENT
+# altitude discharge a claim it never earned — a project-wide constitution.md satisfying "included"
+# for epic-constitution with nothing epic-specific on disk. "A filename in the report is not evidence
+# that the step ran" has to mean the step ran HERE, not merely that the name exists somewhere in the
+# tree.
+flow_artifact_exists() {
+  local artifact="$1" scope="$2" slot="$3" token keyword candidate project
+  keyword="$(flow_artifact_keyword "$slot")"
+  project="$scope"
+  case "$scope" in */epics/*) project="${scope%%/epics/*}" ;; esac
+  while IFS= read -r token; do
+    [[ -n "$token" ]] || continue
+    # The token must NAME this slot's own artifact. A filename that merely exists somewhere in the
+    # tree is not evidence THIS step ran — binding it to the slot is the entire point of the check.
+    printf '%s' "$(lc "$(basename "$token")")" | grep -qE "$keyword" || continue
+    # Confine every candidate to the scope directory. An absolute path, or a relative one
+    # walking out through `..`, would otherwise reach a same-named artifact at another
+    # altitude and discharge a claim this step never earned — the exact bypass the
+    # scope-only rule above exists to prevent.
+    # Confine every candidate to the scope directory, but accept the spellings the template
+    # actually invites ("[path or rationale]"): a bare filename, a path relative to the project
+    # root, or an absolute path. Whichever spelling is used, the file it names has to LAND inside
+    # the scope dir — otherwise a same-named artifact at another altitude would discharge a claim
+    # this step never earned. Confinement is a property of the resolved path, not of the spelling.
+    case "$token" in
+      */../*|*/..|../*|..) continue ;;
+      /*)  candidate="$token" ;;
+      *)   if [[ -f "$scope/$token" ]]; then
+             candidate="$scope/$token"
+           else
+             candidate="$project/$token"
+           fi ;;
+    esac
+    [[ "$candidate" == "$scope"/* ]] || continue
+    [[ -f "$candidate" ]] && return 0
+  done <<< "$(printf '%s' "$artifact" | grep -oE '[A-Za-z0-9_./-]+\.md' || true)"
+  return 1
 }
 
 # Count of declared lenses. Both the block form (`  - id: L3`) and a bare list (`  - L3`) count;
@@ -346,6 +507,7 @@ lens_declared_count() {
 ISSUES_TABLE=""; ISSUES_HEADER=""
 ROSTER_TABLE=""; ROSTER_HEADER=""
 COVERAGE_TABLE=""; COVERAGE_HEADER=""
+FLOW_TABLE=""; FLOW_HEADER=""
 
 load_tables() {
   ISSUES_TABLE="$(section_table '^#+[[:space:]].*Issues Found')"
@@ -354,6 +516,110 @@ load_tables() {
   ROSTER_HEADER="$(table_header_row "$ROSTER_TABLE" '\|[[:space:]]*\**[[:space:]]*Lens[[:space:]]*\**[[:space:]]*\|')"
   COVERAGE_TABLE="$(section_table '^#+[[:space:]].*Promise Coverage')"
   COVERAGE_HEADER="$(table_header_row "$COVERAGE_TABLE" '\|[[:space:]]*\**[[:space:]]*Promise dimension')"
+  FLOW_TABLE="$(section_table '^#+[[:space:]].*Flow Fit')"
+  FLOW_HEADER="$(table_header_row "$FLOW_TABLE" '\|[[:space:]]*\**[[:space:]]*Slot[[:space:]]*\**[[:space:]]*\|')"
+  return 0
+}
+
+flow_fit_structural_check() { # <report-file> <scope-dir>
+  local report_file="$1" scope="$2"
+  is_v11_report "$report_file" "$scope" || return 0
+  if [[ -z "$FLOW_HEADER" ]]; then
+    log_error "the Flow Fit table has no resolvable header row" \
+      "Use: Slot | Trigger evidence | Artifact or rationale | Verdict. Every reached optional slot must be adjudicated."
+    return 0
+  fi
+  resolve_columns_from_header "$FLOW_HEADER" || true
+  local c_slot c_trigger c_artifact c_verdict
+  c_slot="$(column_index 'slot')"; c_trigger="$(column_index 'trigger evidence')"
+  c_artifact="$(column_index 'artifact or rationale')"; c_verdict="$(column_index 'verdict')"
+  if [[ "$c_slot" -lt 0 || "$c_trigger" -lt 0 || "$c_artifact" -lt 0 || "$c_verdict" -lt 0 ]]; then
+    log_error "the Flow Fit table is missing a required column" \
+      "Required: Slot | Trigger evidence | Artifact or rationale | Verdict."
+    return 0
+  fi
+  local rows slot row verdict trigger artifact missing="" invalid="" weak="" phantom=""
+  rows="$(table_data_rows "$FLOW_TABLE")"
+  while IFS= read -r slot; do
+    row="$(flow_row_for_slot "$rows" "$c_slot" "$slot" || true)"
+    if [[ -z "$row" ]]; then missing="$missing $slot"; continue; fi
+    split_row "$row"
+    verdict="$(lc "$(cell_at "$c_verdict")")"
+    trigger="$(cell_at "$c_trigger")"; artifact="$(cell_at "$c_artifact")"
+    case "$verdict" in included|not-applicable|missing) : ;; *) invalid="$invalid $slot('${verdict:-empty}')" ;; esac
+    if ! flow_cell_is_substantive "$trigger" || ! flow_cell_is_substantive "$artifact"; then
+      weak="$weak $slot"
+    fi
+    if [[ "$verdict" == included ]] && ! flow_artifact_exists "$artifact" "$scope" "$slot"; then
+      phantom="$phantom $slot"
+    fi
+  done <<< "$(flow_slots "$ARTIFACT_TYPE")"
+  [[ -z "$missing" ]] || log_error "Flow Fit omits required slot(s):$missing" \
+    "Review every conditional slot; absence is not an implicit not-applicable verdict."
+  [[ -z "$invalid" ]] || log_error "Flow Fit uses an invalid verdict:$invalid" \
+    "Verdict vocabulary is included | not-applicable | missing."
+  [[ -z "$weak" ]] || log_error "Flow Fit lacks substantive trigger evidence or artifact/rationale for:$weak" \
+    "Replace blank, sentinel, or template cells with the observed trigger and a concrete artifact path or not-applicable rationale."
+  [[ -z "$phantom" ]] || log_error "Flow Fit claims included artifact(s) that do not exist:$phantom" \
+    "Point each included row at a checked-in Markdown artifact reachable from the analysis scope."
+  [[ -n "$missing$invalid$weak$phantom" ]] || log_ok "Flow Fit adjudicates every conditional $ARTIFACT_TYPE slot"
+  return 0
+}
+
+flow_fit_gate_check() { # <level> <play> <epics> <scope-dir> <report-file>
+  local level="$1" play="${2:-}" epics="${3:-0}" scope="$4" report_file="${5:-}"
+  is_v11_report "$report_file" "$scope" || return 0
+  if [[ -z "$FLOW_HEADER" ]]; then
+    emit_p1 "FLOW_OPTIONAL_UNREVIEWED.P1" "the v11 report has no readable Flow Fit table. Optional flow steps were not adjudicated, so absence cannot be distinguished from deliberate omission."
+    return 0
+  fi
+  resolve_columns_from_header "$FLOW_HEADER" || true
+  local c_slot c_trigger c_artifact c_verdict rows slot row verdict trigger artifact omitted="" missing="" weak="" phantom="" required_missing=""
+  c_slot="$(column_index 'slot')"; c_trigger="$(column_index 'trigger evidence')"
+  c_artifact="$(column_index 'artifact or rationale')"; c_verdict="$(column_index 'verdict')"
+  if [[ "$c_slot" -lt 0 || "$c_trigger" -lt 0 || "$c_artifact" -lt 0 || "$c_verdict" -lt 0 ]]; then
+    emit_p1 "FLOW_OPTIONAL_UNREVIEWED.P1" "the Flow Fit table lacks a required Slot, Trigger evidence, Artifact or rationale, or Verdict column, so conditional flow coverage cannot be read."
+    return 0
+  fi
+  rows="$(table_data_rows "$FLOW_TABLE")"
+  while IFS= read -r slot; do
+    row="$(flow_row_for_slot "$rows" "$c_slot" "$slot" || true)"
+    if [[ -z "$row" ]]; then omitted="$omitted $slot"; continue; fi
+    split_row "$row"
+    verdict="$(lc "$(cell_at "$c_verdict")")"
+    trigger="$(cell_at "$c_trigger")"; artifact="$(cell_at "$c_artifact")"
+    case "$verdict" in
+      missing) missing="$missing $slot" ;;
+      included|not-applicable) : ;;
+      *) omitted="$omitted $slot(unreadable:'${verdict:-empty}')" ;;
+    esac
+    if ! flow_cell_is_substantive "$trigger" || ! flow_cell_is_substantive "$artifact"; then
+      weak="$weak $slot"
+    fi
+    if [[ "$verdict" == included ]] && ! flow_artifact_exists "$artifact" "$scope" "$slot"; then
+      phantom="$phantom $slot"
+    fi
+  done <<< "$(flow_slots "$level")"
+  if [[ "$level" == project ]]; then
+    local required_slots=""
+    if [[ "$(lc "$play")" == platform ]]; then
+      required_slots="project-ux project-constitution project-architecture"
+    elif [[ "$(lc "$play")" == build && "$epics" =~ ^[0-9]+$ && "$epics" -ge 4 ]]; then
+      required_slots="project-ux project-architecture"
+    fi
+    for slot in $required_slots; do
+      row="$(flow_row_for_slot "$rows" "$c_slot" "$slot" || true)"
+      [[ -n "$row" ]] || continue
+      split_row "$row"; verdict="$(lc "$(cell_at "$c_verdict")")"
+      [[ "$verdict" == included ]] || required_missing="$required_missing $slot"
+    done
+  fi
+  [[ -z "$omitted" ]] || emit_p1 "FLOW_OPTIONAL_UNREVIEWED.P1" "conditional slot(s) were not adjudicated:$omitted."
+  [[ -z "$weak" ]] || emit_p1 "FLOW_OPTIONAL_UNREVIEWED.P1" "conditional slot(s) lack substantive trigger evidence or artifact/rationale:$weak."
+  [[ -z "$phantom" ]] || emit_p1 "FLOW_INCLUDED_PHANTOM.P1" "conditional slot(s) claim included artifacts that do not exist:$phantom. A filename in the report is not evidence that the step ran."
+  [[ -z "$missing" ]] || emit_p1 "FLOW_OPTIONAL_MISSING.P1" "applicable conditional work is missing:$missing. Complete it or change the triggering decision before downstream execution."
+  [[ -z "$required_missing" ]] || emit_p1 "FLOW_REQUIRED_MISSING.P1" "the selected play level requires these flow slots to be included:$required_missing. A not-applicable verdict cannot waive a mandatory foundation step."
+  [[ -n "$omitted$weak$phantom$missing$required_missing" ]] || emit_note "flow fit: every conditional $level slot was adjudicated and none is missing."
   return 0
 }
 
@@ -370,13 +636,14 @@ gate_verdict() {
 }
 
 structural_mode() {
-  local f="$1"
+  local f="$1" scope_dir
   [[ -f "$f" ]] || { echo "ERROR: file not found: $f" >&2; exit 2; }
-  DECISIONS_LOG="$(resolve_decisions_log "$(cd "$(dirname "$f")" && pwd)")"
+  scope_dir="$(cd "$(dirname "$f")" && pwd)"
+  DECISIONS_LOG="$(resolve_decisions_log "$scope_dir")"
   load_report "$f"
 
   if [[ "$BOUND" == false ]]; then
-    log_notice "pre-v10.3 analysis report (no 'artifact_type: project-analysis-report' / 'epic-analysis-report' in the frontmatter) — the v10.3 lens-roster, findings-table and gate-verdict requirements are not required of it. Re-run /project-analyze (or /epic-analyze) to opt in; no migration touches this file."
+    log_notice "pre-v10.3 analysis report (no bound project/epic/story artifact_type in the frontmatter) — current lens-roster, findings-table and gate-verdict requirements are not required of it. Re-run /analyze at the applicable level to opt in; no migration touches this file."
     echo -e "${GREEN}Validation PASSED.${NC}"
     exit 0
   fi
@@ -412,9 +679,18 @@ structural_mode() {
       log_ok "section present: $sec"
     else
       log_error "Missing required section: $sec" \
-        "Regenerate from .speck/templates/project/project-analysis-report-template.md (or the epic template) — do not hand-write around the structure."
+        "Regenerate from the selected project, epic, or story analysis template — do not hand-write around the structure."
     fi
   done
+  if is_v11_report "$f" "$scope_dir"; then
+    if grep -qE '^#+[[:space:]].*Flow Fit' <<<"$CONTENT"; then
+      log_ok "section present: Flow Fit"
+    else
+      log_error "Missing required section: Flow Fit" \
+        "v11 analysis must adjudicate each conditional step before downstream work."
+    fi
+    flow_fit_structural_check "$f" "$scope_dir"
+  fi
 
   # --- Lens Roster columns, BY HEADER NAME ---
   if [[ -z "$ROSTER_HEADER" ]]; then
@@ -571,7 +847,21 @@ speck_root() {
 # another universal checklist item, and a 2-epic Build does not have the cross-artifact surface the
 # 7-lens pass exists to search.
 required_lens_count() {
-  local play="$1" epics="$2"
+  local play="$1" epics="$2" level="${3:-project}"
+  if [[ "$level" == "story" ]]; then
+    case "$(lc "$play")" in
+      platform) printf '3'; return 0 ;;
+      build)    printf '1'; return 0 ;;
+    esac
+    printf '0'; return 0
+  fi
+  if [[ "$level" == "epic" ]]; then
+    case "$(lc "$play")" in
+      platform) printf '7'; return 0 ;;
+      build)    printf '1'; return 0 ;;
+    esac
+    printf '0'; return 0
+  fi
   case "$(lc "$play")" in
     platform) printf '7'; return 0 ;;
     build)    if [[ "${epics:-0}" -ge 4 ]]; then printf '3'; else printf '0'; fi; return 0 ;;
@@ -774,7 +1064,7 @@ raising_lens_of() {
 }
 
 decorrelation_check() {
-  local required="$1"
+  local required="$1" level="${2:-project}"
   local declared roster_rows=0
   declared="$(lens_declared_count)"
 
@@ -799,11 +1089,19 @@ decorrelation_check() {
   local effective_declared="$declared"
   if [[ "${effective_declared:-0}" -lt 1 ]]; then effective_declared="$roster_rows"; fi
   if [[ "${effective_declared:-0}" -lt "$required" ]]; then
-    emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "this tier requires $required lens/lenses and the report declares ${effective_declared:-0}. The mandatory three at Build-with-4+-epics are L3 promise-coverage, L6 cross-artifact-drift and L7 completeness-critic; Platform requires all seven."
+    if [[ "$level" == "story" ]]; then
+      emit_p1 "ANALYSIS_DECORRELATION_MISSING.P1" "this story tier requires $required independent lens/lenses and the report declares ${effective_declared:-0}. Build requires S1; Platform requires S1-S3."
+    else
+      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "this tier requires $required lens/lenses and the report declares ${effective_declared:-0}. The mandatory three at Build-with-4+-epics are L3 promise-coverage, L6 cross-artifact-drift and L7 completeness-critic; Platform requires all seven."
+    fi
   fi
 
   if [[ -z "$ISSUES_HEADER" ]]; then
-    emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "the Issues Found table has no resolvable header row, so no finding's Verifier could be compared with the lens that raised it."
+    if [[ "$level" == "story" ]]; then
+      emit_p1 "ANALYSIS_DECORRELATION_MISSING.P1" "the Issues Found table has no resolvable header row, so no finding's Verifier could be compared with the lens that raised it."
+    else
+      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "the Issues Found table has no resolvable header row, so no finding's Verifier could be compared with the lens that raised it."
+    fi
     return 0
   fi
   resolve_columns_from_header "$ISSUES_HEADER" || true
@@ -811,7 +1109,11 @@ decorrelation_check() {
   c_id="$(column_index 'id')"; c_cat="$(column_index 'category')"
   c_sev="$(column_index 'severity')"; c_ver="$(column_index 'verifier')"
   if [[ "$c_id" -lt 0 || "$c_ver" -lt 0 ]]; then
-    emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "the Issues Found table declares no ID and/or Verifier column, so no finding's verification could be compared with the lens that raised it."
+    if [[ "$level" == "story" ]]; then
+      emit_p1 "ANALYSIS_DECORRELATION_MISSING.P1" "the Issues Found table declares no ID and/or Verifier column, so no finding's verification could be compared with the lens that raised it."
+    else
+      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "the Issues Found table declares no ID and/or Verifier column, so no finding's verification could be compared with the lens that raised it."
+    fi
     return 0
   fi
   local fid fcat fsev fver eff bad="" raiser vlc rrev
@@ -846,7 +1148,11 @@ decorrelation_check() {
   done <<< "$(table_data_rows "$ISSUES_TABLE")"
 
   if [[ -n "$bad" ]]; then
-    emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "CRITICAL/HIGH finding(s) whose verification is not decorrelated:$bad. Each must name a Verifier that is a different party from the lens that raised it — self-confirmation is the shape #106 exists to catch."
+    if [[ "$level" == "story" ]]; then
+      emit_p1 "ANALYSIS_DECORRELATION_MISSING.P1" "CRITICAL/HIGH finding(s) whose verification is not decorrelated:$bad. Each must name a Verifier that is a different party from the lens that raised it."
+    else
+      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "CRITICAL/HIGH finding(s) whose verification is not decorrelated:$bad. Each must name a Verifier that is a different party from the lens that raised it — self-confirmation is the shape #106 exists to catch."
+    fi
   elif [[ "${effective_declared:-0}" -ge "$required" ]]; then
     emit_note "decorrelation: $effective_declared lens/lenses declared (>= $required required), and every CRITICAL/HIGH finding names a verifier distinct from its lens. This proves the roster's WIDTH and the row-level distinctness — it does NOT prove the reviewer was genuinely a different party, and nothing here claims it does."
   fi
@@ -859,36 +1165,68 @@ gate_mode() {
   dir="$(cd "$dir" && pwd)"
 
   local level report proj
-  if [[ -f "$dir/epic.md" || "$dir" == */epics/* ]]; then
+  if [[ -f "$dir/spec.md" && -f "$dir/tasks.md" ]]; then
+    level="story"; report="$dir/story-analysis-report.md"; proj="${dir%%/epics/*}"
+  elif [[ -f "$dir/epic.md" || "$dir" == */epics/* ]]; then
     level="epic"; report="$dir/epic-analysis-report.md"; proj="${dir%%/epics/*}"
   else
     level="project"; report="$dir/project-analysis-report.md"; proj="$dir"
   fi
   DECISIONS_LOG="$(resolve_decisions_log "$dir")"
 
-  local root play epics required
+  local root play play_declared epics required fm_play="" fm_epics=""
   root="$(speck_root "$dir")"
   epics="$(count_epics "$proj")"
-  play="$(play_level_of "$root")"
+  play_declared="$(play_level_of "$root")"
+  play="$play_declared"
+  [[ -z "$play" ]] && play="platform"
 
-  # The report's own frontmatter is the primary declaration; project.json and a directory count are
-  # the fallbacks for a project that has no report yet (which is the case the gate exists for).
+  # Live project truth decides rigor. Report frontmatter is a bound claim to compare, never an
+  # authority that can lower the gate by declaring a cheaper play level or smaller epic count. But
+  # the comparison needs a LIVE declaration to disagree with — when .speck/project.json carries no
+  # play_level at all, "platform" above is this gate's own conservative assumption (AGENTS.md: "if
+  # absent, use Platform until the project is classified"), not a fact the report can be convicted of
+  # contradicting. Accusing a report of drifting from a guess this gate invented is the exact
+  # self-referential shape ANALYSIS_SCOPE_DRIFT.P1 exists to catch, one level up — so the play_level
+  # comparison runs only against $play_declared, never against the synthesized default.
   if [[ -f "$report" ]]; then
     load_report "$report"
-    local fm_play fm_epics
     fm_play="$(fm_value 'play_level')"; fm_epics="$(fm_value 'epic_count')"
-    [[ -n "$fm_play" ]] && play="$fm_play"
-    printf '%s' "$fm_epics" | grep -qE '^[0-9]+$' && epics="$fm_epics"
+    if [[ -n "$play_declared" && -n "$fm_play" && "$(lc "$fm_play")" != "$(lc "$play_declared")" ]]; then
+      emit_p1 "ANALYSIS_SCOPE_DRIFT.P1" "report play_level '$fm_play' disagrees with live project level '$play_declared'. The report cannot lower or redefine its own rigor."
+    fi
+    if [[ "$level" != story ]] && printf '%s' "$fm_epics" | grep -qE '^[0-9]+$' && [[ "$fm_epics" -ne "$epics" ]]; then
+      emit_p1 "ANALYSIS_SCOPE_DRIFT.P1" "report epic_count '$fm_epics' disagrees with the live plan/directory count '$epics'. The report cannot shrink the corpus it claims to analyze."
+    fi
   fi
-  [[ -z "$play" ]] && play="build"
-  required="$(required_lens_count "$play" "$epics")"
+  required="$(required_lens_count "$play" "$epics" "$level")"
 
   echo -e "${BLUE}🧪 Analysis gate (#106) — $level: $dir${NC}"
   echo "   play_level: $play · epics: $epics · lenses required: $required"
   echo ""
 
   if [[ "$required" -eq 0 ]]; then
-    emit_note "the decorrelated-analysis mandate does not reach this tier (it binds Build with 4+ epics and Platform). Nothing to gate."
+    if [[ -f "$report" && "$BOUND" == true ]]; then
+      load_tables
+      if is_v11_report "$report" "$dir"; then
+        flow_fit_gate_check "$level" "$play" "$epics" "$dir" "$report"
+      fi
+      # The zero-lens early exit waives the WIDTH mandate only (this tier does not require a
+      # decorrelated roster) — it must never be read as "no CRITICAL was found", which is a
+      # different claim this branch has no way to make honestly without actually reading the
+      # table. A submitted BOUND report's Issues Found table already carries adjudicated findings
+      # regardless of tier, and skipping this read here is exactly what let a Sprint-tier
+      # story-analysis-report.md with a live open CRITICAL print an affirmative green while the
+      # delegating caller (check-story-prereqs.sh step 4) harvested only the ANALYSIS_CRITICAL_OPEN.P1
+      # signal and found none to harvest. 36f already established the same asymmetry rule for Flow
+      # Fit ("the zero-lens early exit must not waive authored flow findings"); the open-CRITICAL
+      # predicate was the one left out of it.
+      critical_open_check
+    fi
+    if (( p1 > 0 )); then
+      gate_verdict_and_exit
+    fi
+    emit_note "the decorrelated-analysis mandate does not reach this tier. Project scope binds Build with 4+ epics and Platform; epic scope binds Build and Platform; story scope binds Build and Platform. Nothing to gate here."
     echo -e "${GREEN}Analysis gate: not applicable at this tier.${NC}"
     exit 0
   fi
@@ -904,11 +1242,11 @@ gate_mode() {
 
   if [[ "$bound_report" == false ]]; then
     # THE GRANDFATHER PATH. Decided by the repo owner: a project planned before this release gets a
-    # loud, repeated notice, never a block, until /project-analyze runs once. The gate is real
+    # loud, repeated notice, never a block, until /analyze --level project runs once. The gate is real
     # FORWARD and advisory BACKWARD, and that asymmetry is disclosed here rather than hidden.
     #
     # The marker keys on "no report this contract can read", which covers both the absent report and
-    # the pre-v10.3-vintage one — running /project-analyze under v10.3 writes a bound report, so the
+    # the pre-v10.3-vintage one — running /analyze --level project under v10.3 writes a bound report, so the
     # exemption expires by itself and nobody has to remember to delete the marker.
     #
     # DELIBERATELY NOT ESCALATED BY --strict, unlike every other P2 in this file. An exemption is a
@@ -923,19 +1261,19 @@ gate_mode() {
       echo -e "  primitives, premise-challenge, every strict validator green — was measured"
       echo -e "  carrying 1 CRITICAL and 13 HIGH defects that only an adversarial decorrelated"
       echo -e "  pass found. That is what this project has not had."
-      echo -e "  Clear it by running ${GREEN}/project-analyze${YELLOW} once; the marker expires by itself"
+      echo -e "  Clear it by running ${GREEN}/analyze --level project${YELLOW} once; the marker expires by itself"
       echo -e "  the moment a v10.3 report lands (${marker#"$dir"/})."
       echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
       echo -e "${GREEN}Analysis gate: grandfathered (advisory, non-blocking).${NC}"
       exit 0
     fi
     if [[ ! -f "$report" ]]; then
-      emit_p1 "UNANALYZED_CORPUS.P1" "$(basename "$report") does not exist. This tier requires a decorrelated analysis pass before execution begins: the author who wrote the corpus is not the party who can certify it (AGENTS.md P4). Run /project-analyze (or /epic-analyze)."
+      emit_p1 "UNANALYZED_CORPUS.P1" "$(basename "$report") does not exist. This tier requires a decorrelated analysis pass before execution begins: the author who wrote the corpus is not the party who can certify it (AGENTS.md P4). Run /analyze --level $level."
     else
       # A report exists but predates the v10.3 contract. It is NOT unanalyzed — saying so would be
       # false — and its structure is exempt by the vintage rule, so the honest report is that its
       # decorrelation is unverifiable, not that it passed.
-      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "$(basename "$report") predates v10.3 (no 'artifact_type:' in its frontmatter), so it declares no lens roster and no per-finding verifier. Its structure is exempt by the vintage rule; its decorrelation is UNKNOWN, never verified. Re-run /project-analyze to produce a report this gate can read, or drop a .analysis-gate-grandfathered marker to take the disclosed exemption."
+      emit_p2 "ANALYSIS_DECORRELATION_UNVERIFIED.P2" "$(basename "$report") predates v10.3 (no 'artifact_type:' in its frontmatter), so it declares no lens roster and no per-finding verifier. Its structure is exempt by the vintage rule; its decorrelation is UNKNOWN, never verified. Re-run /analyze --level project to produce a report this gate can read, or drop a .analysis-gate-grandfathered marker to take the disclosed exemption."
     fi
     gate_verdict_and_exit
   fi
@@ -943,29 +1281,41 @@ gate_mode() {
   log_ok_gate "analysis report present and v10.3-vintage: $(basename "$report")"
   [[ -f "$marker" ]] && emit_note "a .analysis-gate-grandfathered marker is present but a v10.3 report exists, so the exemption has expired and the marker is inert. It is safe to delete."
 
+  # A report may exempt itself from the Flow Fit contract by declaring a pre-v11 version. That
+  # claim is honoured (see is_v11_report) but never silently: when the workspace's own tooling is
+  # already v11, say so, so the exemption is a visible decision instead of an invisible one.
+  if report_claims_stale_vintage "$dir"; then
+    emit_p2 "ANALYSIS_VINTAGE_UNVERIFIED.P2" "$(basename "$report") declares speck_version $(fm_value 'speck_version') while this workspace's .speck/VERSION is already v11+, so it is exempt from the Flow Fit contract on its own say-so. That exemption is legitimate for a report genuinely written before the upgrade and is NOT verifiable from the artifact itself. Re-run /analyze --level $level to produce a report this gate can read in full."
+  fi
+
   load_tables
 
-  # --- predicate 2: freshness (CONTENT, never `stamped SHA == HEAD`) ---
-  if [[ "$level" == "epic" ]]; then
+  # --- predicate 2: conditional flow coverage ---
+  flow_fit_gate_check "$level" "$play" "$epics" "$dir" "$report"
+
+  # --- predicate 3: freshness (CONTENT, never `stamped SHA == HEAD`) ---
+  if [[ "$level" == "story" ]]; then
+    freshness_check "$dir" "$report" "$dir/spec.md" "$dir/plan.md" "$dir/tasks.md"
+  elif [[ "$level" == "epic" ]]; then
     freshness_check "$dir" "$report" "$dir/epic.md" "$dir/epic-tech-spec.md" "$dir/epic-breakdown.md"
   else
     freshness_check "$dir" "$report" "$dir/PRD.md" "$dir/epics.md" "$dir/product-contract.md"
   fi
 
-  # --- predicate 3: an open CRITICAL ---
+  # --- predicate 4: an open CRITICAL ---
   critical_open_check
 
-  # --- predicate 4: promise coverage, read from the graph ---
+  # --- predicate 5: promise coverage, read from the graph ---
   # Project-level only. MM-N/JOB-N/DIF-N are project-global nodes, so requiring one epic's matrix to name
   # every promise in the product would manufacture a finding out of correct scoping.
   if [[ "$level" == "project" ]]; then
     promise_coverage_check "$proj"
   else
-    emit_note "promise coverage is a project-level predicate (MM-N/JOB-N/DIF-N are project-global nodes) — not evaluated for a single epic."
+    emit_note "promise coverage is a project-level predicate and is not evaluated at $level altitude; the selected report still checks its scoped coverage rows."
   fi
 
-  # --- predicate 5: decorrelation ---
-  decorrelation_check "$required"
+  # --- predicate 6: decorrelation ---
+  decorrelation_check "$required" "$level"
 
   gate_verdict_and_exit
 }

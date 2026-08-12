@@ -94,6 +94,7 @@ REPLACEMENTS = {
     "[branch name]": "main",
     "[git diff --name-only against last validation SHA]": "no diff recorded",
     "[ISO_TIMESTAMP]": "2026-07-30T00:00:00Z",
+    "PRM-NNN": "PRM-001",
 }
 
 for path in sys.argv[1:]:
@@ -241,6 +242,47 @@ if [[ "$EC" -eq 0 ]]; then
 fi
 if ! printf '%s\n' "$OUT" | grep -q "Found unreplaced 'REPLACE_BEFORE_SHIP' placeholders"; then
   echo "FAIL: expected validate-evidence-contract.sh's REPLACE_BEFORE_SHIP check to name the failure:"
+  echo "$OUT"
+  exit 1
+fi
+echo "  ✓ caught"
+
+echo "Test: negative control — a prose-only PROFILE gate cannot pass"
+NEG_PROFILE_DIR="$TMP/neg-specs/projects/probe-neg-profile"
+mkdir -p "$NEG_PROFILE_DIR"
+cp "$PROBE/evidence-contract.md" "$NEG_PROFILE_DIR/evidence-contract.md"
+sed '/^PROFILE_/d' \
+  "$NEG_PROFILE_DIR/evidence-contract.md" > "$NEG_PROFILE_DIR/evidence-contract.mutant.md"
+mv "$NEG_PROFILE_DIR/evidence-contract.mutant.md" "$NEG_PROFILE_DIR/evidence-contract.md"
+if OUT="$("$VT" --strict "$NEG_PROFILE_DIR/evidence-contract.md" 2>&1)"; then EC=0; else EC=$?; fi
+if [[ "$EC" -eq 0 ]]; then
+  echo "FAIL: validate-template.sh passed a prose-only PROFILE gate"
+  exit 1
+fi
+if ! printf '%s\n' "$OUT" | grep -q "PROFILE Gate Criteria is shape-only or incomplete"; then
+  echo "FAIL: expected the binding PROFILE contract diagnostic:"
+  echo "$OUT"
+  exit 1
+fi
+echo "  ✓ caught"
+
+echo "Test: negative control — PROFILE keywords inside explicit negations cannot pass"
+NEG_PROFILE_WORDS_DIR="$TMP/neg-specs/projects/probe-neg-profile-words"
+mkdir -p "$NEG_PROFILE_WORDS_DIR"
+cp "$PROBE/evidence-contract.md" "$NEG_PROFILE_WORDS_DIR/evidence-contract.md"
+sed \
+  -e 's/^PROFILE_COVERAGE=every-row$/PROFILE_COVERAGE=do-not-inspect-every-row/' \
+  -e 's/^PROFILE_P1_BLOCKS=true$/PROFILE_P1_BLOCKS=false # PROFILE_DRIFT.P1 never blocks/' \
+  -e 's/^PROFILE_PLACEHOLDER_POLICY=finding$/PROFILE_PLACEHOLDER_POLICY=may-be-ignored/' \
+  "$NEG_PROFILE_WORDS_DIR/evidence-contract.md" > "$NEG_PROFILE_WORDS_DIR/evidence-contract.mutant.md"
+mv "$NEG_PROFILE_WORDS_DIR/evidence-contract.mutant.md" "$NEG_PROFILE_WORDS_DIR/evidence-contract.md"
+if OUT="$("$VT" --strict "$NEG_PROFILE_WORDS_DIR/evidence-contract.md" 2>&1)"; then EC=0; else EC=$?; fi
+if [[ "$EC" -eq 0 ]]; then
+  echo "FAIL: validate-template.sh accepted negated PROFILE semantics"
+  exit 1
+fi
+if ! printf '%s\n' "$OUT" | grep -q "PROFILE Gate Criteria is shape-only or incomplete"; then
+  echo "FAIL: expected the authoritative PROFILE machine-contract diagnostic:"
   echo "$OUT"
   exit 1
 fi

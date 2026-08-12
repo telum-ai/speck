@@ -44,7 +44,7 @@
 #         3 = probe-integrity failure ($ROOT was mutated — should be impossible; loud, never green).
 #
 # Opt-in + lazy (v8 SHRINK ethos): mutation runs are too slow for a push. Runs at /epic-validate,
-# /project-validate, on-demand at /audit — NEVER in the always-on /recheck shell or on pre-commit.
+# /project-validate, on-demand at /speck-audit — NEVER in the always-on /speck-recheck shell or on pre-commit.
 #
 # Portable bash 3.2 / macOS. No associative arrays, no mapfile.
 

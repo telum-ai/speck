@@ -4,7 +4,7 @@
 The conductor's persistent working memory for a concurrent multi-epic run. It is the ONE file
 that survives context compaction, spend-limit pauses, and rate-limit resets — re-read it on every
 resume to know exactly where the wave stands. Keep it terse and CURRENT (overwrite, don't append
-prose). Update it after every state change. See .speck/patterns/learned/process/parallel-epic-execution.md.
+prose). Update it after every state change. Load `.cursor/skills/parallel-execution/SKILL.md` before using it.
 
 Coordination-only file (not a truth artifact): keep it on `main` (or the conductor's branch).
 Do NOT regenerate project-state.md from epic branches — that stays merge-only.
@@ -40,7 +40,8 @@ Do NOT regenerate project-state.md from epic branches — that stays merge-only.
 - [ ] Planning corpus pushed to `origin/main` before this wave was spawned (worktrees branch from `origin/main`, not local HEAD)
 - [ ] Each merged epic's worktree removed (`git worktree remove ../repo-eNNN` - omit `--force` by default so git safely blocks on dirty trees and warns of lost WIP) — disk is shared cross-session state
 - [ ] Interrupted/killed background agent WIP recovered directly from its worktree on disk (`git add -A && commit`) instead of restarting
-- [ ] Conflicted merges committed with `--no-verify` (prevents lint-staged `--keep-index` index corruption / file drop), and verified with `git show --stat HEAD` to ensure 2 parent hashes and all files are intact
+- [ ] Merge hooks ran without bypass; any lint-staged stash conflict was repaired with a no-stash merge-hook path, then the full gate reran
+- [ ] `git show --stat HEAD` confirms the expected files and merge parents
 - [ ] Migration filenames use real wall-clock `date -u +%Y%m%d%H%M%S` (no rounded placeholders); per-epic offset bands as fallback
 - [ ] No epic accepted on a self-reported `{readiness_state, pass}` — Verify-Skills Gate passed for each merged story (including verifying `gate_checks` for full pre-commit gate success)
 - [ ] `project-state.md` regenerated on `main` only (never overwritten from `epic/*` branches)

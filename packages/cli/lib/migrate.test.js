@@ -113,7 +113,7 @@ test('writeV8ReproveMarker: writes marker, is idempotent, needs .speck', () => {
     assert.ok(existsSync(join(dir, '.speck', '.v8-reprove-needed')));
     const body = readFileSync(join(dir, '.speck', '.v8-reprove-needed'), 'utf-8');
     assert.match(body, /RE-PROVE/);
-    assert.match(body, /\/speck-reprove/);
+    assert.match(body, /\/speck-migrate/);
     assert.match(body, /INTEGRATION-GREEN/);
 
     // Idempotent: second call must not overwrite.
@@ -141,7 +141,7 @@ test('writeV9GraphMarker: writes marker, is idempotent, needs .speck', () => {
     assert.ok(existsSync(join(dir, '.speck', '.v9-graph-needed')));
     const body = readFileSync(join(dir, '.speck', '.v9-graph-needed'), 'utf-8');
     assert.match(body, /WITNESS-GRAPH/);
-    assert.match(body, /\/speck-graph-up/);
+    assert.match(body, /\/speck-migrate/);
     assert.match(body, /road-to-completion\.md/);
     const second = writeV9GraphMarker(dir, '9.0.0');
     assert.equal(second.written, false);
@@ -1624,7 +1624,7 @@ test('v10.1: a project with NO committed witness is left unbuilt, not silently g
     assert.deepEqual(result.applied, [REBUILD_WITNESS_GRAPH_ID], 'nothing stale, nothing to fix');
     assert.ok(
       !existsSync(join(proj, 'graph', 'witness.json')),
-      'building a first graph is /speck-graph-up\'s gesture, behind identity hardening — a ' +
+      'building a first graph is /speck-migrate\'s gesture, behind identity hardening — a ' +
         'migration that minted one here could invent DANGLING_REF.P1 caps that did not exist',
     );
   } finally {
@@ -1958,7 +1958,7 @@ test('v10.3: only PLANNED, un-analyzed projects are marked — and the marker sa
     const body = readFileSync(join(planned, GRANDFATHER_MARKER), 'utf-8');
     assert.match(body, /speck_version: 10\.3\.0/, 'it records the upgrade that granted the exemption');
     assert.match(body, /reason:/, 'it records why the exemption exists');
-    assert.match(body, /\/project-analyze specs\/projects\/001-planned/, 'and the exact command that clears it');
+    assert.match(body, /\/analyze --level project specs\/projects\/001-planned/, 'and the exact command that clears it');
     assert.match(body, /rm specs\/projects\/001-planned\/\.analysis-gate-grandfathered/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -2076,7 +2076,7 @@ test('v10.3: the marker a real upgrade writes is the one check-epic-prereqs.sh h
     const out = `${r.stdout}${r.stderr}`;
     assert.equal(r.status, 0, `a grandfathered project must NOT be blocked\n${out}`);
     assert.match(out, /GRANDFATHERED/, out);
-    assert.match(out, /\/project-analyze specs\/projects\/001-planned/, 'the notice carries the clearing command');
+    assert.match(out, /\/analyze --level project specs\/projects\/001-planned/, 'the notice carries the clearing command');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

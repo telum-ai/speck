@@ -6,7 +6,7 @@ display_name: "CLI Tool"
 description: "Command-line utility for developers or automation"
 version: "1.0.0"
 
-# Keywords for /speck detection
+# Keywords for project-entry detection
 keywords:
   - cli
   - command line

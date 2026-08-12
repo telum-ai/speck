@@ -1,18 +1,13 @@
 ---
 name: epic-experience-chain
-description: Required for UI epics. Defines the SEAMS between screens — entry state, single job per screen, emotional progression, handoff, no-repetition rule, first-viewport "why now", magic-moment placement, backtracking, cross-epic adjacency. Prevents the "seven different apps stitched together" failure mode (Fauna's Sept 2025 audit). Produces experience-chain.md, required before /epic-plan. Load when epic has any user-facing UI, when user says "the app feels disjointed", or when designing a multi-screen flow. FIRST ACTION is read the template at .speck/templates/epic/experience-chain-template.md.
-disable-model-invocation: false
+description: Defines epic UI seams and emotional flow. Use after any epic UX artifacts before epic-plan for user-facing epics.
 ---
 
-The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
-
-User input:
-
-$ARGUMENTS
+# epic-experience-chain
 
 ---
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 Before any other action, read:
 ```
@@ -23,7 +18,7 @@ Before any other action, read:
 
 ## Purpose
 
-Three v6 retrospectives independently surfaced this failure:
+Three independent retrospectives surfaced this failure:
 - **Brightstance**: "Specifying screens in isolation is not enough. We need to specify SEAMS — what state precedes a screen, what emotional momentum a screen inherits, what it MUST hand off to the next screen."
 - **Streb**: "Each magic moment was a story passing, but they didn't compose. The shared context between sessions was lost between stories."
 - **Fauna**: "Once one screen falls into AI cliché, the next does too. There's no mechanism to enforce voice contagion."
@@ -114,23 +109,9 @@ Apply SHA stamp:
 .speck/scripts/stamp-truth.sh <epic-dir>/experience-chain.md
 ```
 
-### 11. Report to user
+### 11. Continue
 
-```
-✅ experience-chain.md created
-
-Path: <epic-dir>/experience-chain.md
-Screens chained: <count>
-Variants per screen: <count> × 3 (first-time, returning, interrupted)
-Magic moments placed: <count>
-Continuity threads: <count>
-Cross-epic adjacencies: <count>
-
-Next steps:
-1. /epic-plan can now proceed
-2. The story-level work will reference this chain
-3. /epic-validate's JTBD walkthrough will use this as the test script
-```
+After stamping the artifact, update `project-state.md` and resume the canonical epic flow in root `AGENTS.md`.
 
 ## Behavior Rules
 

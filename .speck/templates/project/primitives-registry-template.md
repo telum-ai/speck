@@ -11,7 +11,7 @@ This is an EAGERLY MAINTAINED list of required UI primitives.
 The primitives registry prevents drift: when every page is allowed to inline its own
 header / section / empty state / loading state, the result is "seven different apps."
 
-The /audit skill greps for inline-styled re-implementations against this list.
+The /speck-audit skill greps for inline-styled re-implementations against this list.
 The /story-ui-spec skill refuses to spec a UI that doesn't use registered primitives.
 
 Update this file whenever a new primitive is recognized, and update existing pages
@@ -28,7 +28,7 @@ to consume it (this is part of the eagerly-maintain discipline).
 
 1. Every shared UI surface (page header, section, eyebrow, stat grid, empty state, error state, loading state, form field, etc.) is represented by ONE registered primitive.
 2. UI stories MUST consume registered primitives — NOT inline `<div className="...">` re-implementations.
-3. The `/audit` skill greps for inline-styled patterns matching primitive responsibilities and flags them.
+3. The `/speck-audit` skill greps for inline-styled patterns matching primitive responsibilities and flags them.
 4. New primitive needed? Add it here, implement it, refactor existing usage, then ship the dependent story.
 
 ---
@@ -60,7 +60,7 @@ Add primitives that emerged from this project's domain (e.g., `WorkoutBlock`, `S
 
 ---
 
-## Anti-Patterns Detected by `/audit`
+## Anti-Patterns Detected by `/speck-audit`
 
 The audit skill greps for these in story implementations and flags them:
 
@@ -94,7 +94,7 @@ The audit skill greps for these in story implementations and flags them:
 
 Rendering recipes that look correct in code/DOM but produce wrong pixels in the target runtime. Unlike component anti-patterns above, these survive unit tests and code review — only screenshots or grep catch them.
 
-`/audit` and the visual-quality pass grep for the **Grep signature** column against changed UI files. Any raw anti-pattern match outside the **Canonical safe form** is a P1 finding.
+`/speck-audit` and the visual-quality pass grep for the **Grep signature** column against changed UI files. Any raw anti-pattern match outside the **Canonical safe form** is a P1 finding.
 
 | Anti-pattern | Why it looks fine but isn't | Canonical safe form | Grep signature |
 |--------------|----------------------------|---------------------|----------------|
@@ -111,7 +111,7 @@ Rendering recipes that look correct in code/DOM but produce wrong pixels in the 
 
 ---
 
-## How `/audit` Detects Drift
+## How `/speck-audit` Detects Drift
 
 ```bash
 # Pseudocode — actual audit runs this against changed files
@@ -119,7 +119,7 @@ rg -t tsx -t jsx 'className=".*(page-header|section-header|stat-grid|empty-state
 # → Each match is a finding: replace with the registered primitive
 ```
 
-Story-implementation tasks that introduce non-primitive UI patterns fail `/audit`.
+Story-implementation tasks that introduce non-primitive UI patterns fail `/speck-audit`.
 
 ---
 

@@ -1,15 +1,9 @@
 ---
 name: epic-clarify
-description: Load after epic.md exists but scope, boundaries, or technical approach are ambiguous. Use when acceptance criteria are missing or the epic could be interpreted multiple ways. Run before epic-outline or epic-plan to prevent rework.
-disable-model-invocation: false
+description: Fills gaps in epic.md. Use after epic-specify when scope, boundaries, or technical intent are unclear.
 ---
 
-
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
-
-User input:
-
-$ARGUMENTS
+# epic-clarify
 
 Goal: Detect and reduce ambiguity in the epic specification before moving to technical planning.
 
@@ -72,7 +66,7 @@ Goal: Detect and reduce ambiguity in the epic specification before moving to tec
 
    Output:
    ```
-   ✅ Epic Clarifications Complete!
+    Epic Clarifications Complete!
 
    Clarified: [X] questions
    Sections Updated: [List]
@@ -82,12 +76,12 @@ Goal: Detect and reduce ambiguity in the epic specification before moving to tec
 
    Evaluate using these criteria (same as epic-specify, now with more context):
 
-   | Step | 🔴 Required when | ⚠️ Recommended when | ⬜ Skip when |
+   | Step | 🔴 Required when |  Recommended when | ⬜ Skip when |
    |------|-----------------|---------------------|------------|
    | `/epic-constitution` | Regulated domain; defines API boundary; multi-team coordination | Domain-specific rules not in project constitution | Simple feature, no compliance concerns |
    | `/epic-architecture` | Touches 2+ services; new infra; explicit perf targets; complex new integrations | Modifies existing API contracts; new architectural patterns | Simple CRUD; single-service; clear path |
    | `/epic-journey` + `/epic-wireframes` | Any mention of UI, screens, forms, user flows, front-end | Mixes backend and light UI | Backend-only / API-only / CLI / infra |
-   | `/epic-outline` | Unfamiliar tech; TBD sections; competing technical approaches | Minor unknowns | Clear path, established patterns |
+   | `/speck-skeptical-review` | Unfamiliar tech; TBD sections; competing technical approaches | Minor unknowns | Clear path, established patterns |
 
    Output:
    ```
@@ -95,13 +89,13 @@ Goal: Detect and reduce ambiguity in the epic specification before moving to tec
 
    | Step | Recommendation | Evidence |
    |------|---------------|----------|
-   | /epic-constitution         | ⬜ / ⚠️ / 🔴 | "[observation]" |
-   | /epic-architecture         | ⬜ / ⚠️ / 🔴 | "[observation]" |
+   | /epic-constitution         | ⬜ /  / 🔴 | "[observation]" |
+   | /epic-architecture         | ⬜ /  / 🔴 | "[observation]" |
    | /epic-journey + /wireframes| ⬜ / 🔴       | "[observation]" |
-   | /epic-outline              | ⬜ / ⚠️       | "[observation]" |
+   | /speck-skeptical-review              | ⬜ /        | "[observation]" |
 
-   Recommended path to /epic-plan:
-   → [only Required/Recommended steps in flow order] → /epic-plan
+   Next applicable slot from the marked canonical Epic flow in root AGENTS.md:
+   → [first incomplete Required/Recommended slot]
 
    Shall I proceed with [first recommended step]?
    ```

@@ -6,7 +6,7 @@ display_name: "Expo + FastAPI"
 description: "Cross-platform mobile app with Expo/React Native and FastAPI backend"
 version: "1.0.0"
 
-# Keywords for /speck detection
+# Keywords for project-entry detection
 keywords:
   - mobile app
   - expo

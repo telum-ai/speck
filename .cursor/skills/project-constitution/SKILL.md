@@ -1,17 +1,11 @@
 ---
 name: project-constitution
-description: Load (Platform play level only) to define technical principles and architectural guardrails for the project. Produces constitution.md — optional but valuable when a team needs explicit coding standards, governance rules, or non-negotiable constraints. FIRST ACTION after loading: read template at .speck/templates/project/constitution-template.md before any context loading or artifact generation.
-disable-model-invocation: false
+description: Defines project technical principles. Use after project-context before project-architecture when governance is needed.
 ---
 
+# project-constitution
 
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
-
-User input:
-
-$ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now using the Read tool:
 ```
@@ -27,7 +21,7 @@ Read `.speck/project.json` (if it exists) for `play_level`.
 
 - **Sprint**: Tell the user: "Sprint projects don't need a constitution. Ship first, structure later. If you're growing to Platform, run `/project-promote` and come back."
 - **Build**: Constitution is optional for Build. Only proceed if the user confirms they want it.
-- **Platform** (or no project.json): Full flow below — constitution is recommended.
+- **Platform** (or no project.json): Full flow below — constitution is REQUIRED before project architecture.
 
 ---
 
@@ -142,6 +136,7 @@ Define project-specific principles and constraints that will guide all developme
    - Per-story checklist items
    - Per-epic validation gates
    - Project-level success criteria
+   - If two or more principles are mechanically detectable, read `references/enforcement.md` and bind them to repository gates
 
 8. Save as `specs/projects/[PROJECT_ID]/constitution.md`
 
@@ -150,37 +145,6 @@ Define project-specific principles and constraints that will guide all developme
    - Note in PRD.md compliance section
    - Reference in epic templates
 
-10. Output summary:
-   ```
-   ✅ Project Constitution Created!
-   
-   Project: [Name]
-   Version: 1.0.0
-   
-   Principles Defined:
-   1. [Principle Name]: [Focus area]
-   2. [Principle Name]: [Focus area]
-   [...]
-   
-   Validation Points:
-   - Story level: [X] checks
-   - Epic level: [Y] gates
-   - Project level: [Z] criteria
-   
-   Key Constraints:
-   - [Constraint type]: [Requirement]
-   - [Constraint type]: [Requirement]
-   
-   Next Steps:
-   1. Review with stakeholders
-   2. Distribute to team
-   3. Run /project-plan to create PRD (will incorporate these principles)
-   4. Configure automated validation (in CI/CD)
-   5. Principles will be enforced in epic/story development
-   
-   Note: Constitution provides essential principle inputs for PRD creation.
-   These principles will guide all technical decisions in /project-architecture
-   and be enforced throughout epic and story development.
-   ```
+10. Resume the canonical project flow in root `AGENTS.md`; downstream planning and validation inherit this constitution.
 
 Note: Project constitutions are living documents. Update as new requirements emerge or constraints change.

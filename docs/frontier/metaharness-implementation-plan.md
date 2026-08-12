@@ -129,7 +129,7 @@ Each is a self-contained, buildable unit. `Create` = new files; `Edit` = touch e
 
 ### Phase 1 - B1: Per-repo Speck-fit scorecard / genome  ·  Effort M  ·  Status: NOT STARTED
 
-**What.** `speck genome` / `/speck-genome`: a no-exec, deterministic, `--json`-for-CI read of a repo that emits a 0-100 card + **recommended Speck config** (play level; which optional artifacts to require; which `/recheck` probes matter; model tiers). Replaces the human's play-level guess at `/project-specify`.
+**What.** `speck genome` / `/speck-genome`: a no-exec, deterministic, `--json`-for-CI read of a repo that emits a 0-100 card + **recommended Speck config** (play level; which optional artifacts to require; which `/speck-recheck` probes matter; model tiers). Replaces the human's play-level guess at `/project-specify`.
 
 **Create:**
 - `.cursor/skills/speck-genome/SKILL.md` (alias `/speck-score`).

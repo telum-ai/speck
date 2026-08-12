@@ -404,10 +404,10 @@ Based on existing structure:
 
 ## Next Steps
 
-1. **Review** this scan report thoroughly before running `/plan`
+1. **Review** this scan report thoroughly before running `/story-plan`
 2. **Reference** the identified patterns during planning phase
-3. **Run `/research`** if external best practices needed to supplement internal patterns
-4. **Run `/plan`** - planning will automatically incorporate this scan
+3. **Flag** external best practices needed to supplement internal patterns — `/story-plan` performs just-in-time research inline when needed
+4. **Run `/story-plan`** - planning will automatically incorporate this scan
 5. **Bookmark** reference implementations for consultation during implementation
 
 ---

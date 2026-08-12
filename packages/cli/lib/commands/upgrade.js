@@ -122,8 +122,8 @@ export async function upgrade(targetDir, version, options = {}) {
   if (results.readmeRepaired) {
     console.log(`
 🔧 README repaired: replaced legacy Speck marketing content with a project skeleton.
-   Run /project-readme (or /project-specify then /project-product-contract) to populate
-   from your specs. Your project README is yours — Speck only manages <!-- SPECK:START --> footer.`);
+   Run project-profile (or project-specify then project-product-contract) to populate
+   from your specs and inspect every declared public surface. Your project README is yours — Speck only manages <!-- SPECK:START --> footer.`);
   }
 
   const readmeResult = runReadmeRegen(targetDir);
@@ -149,7 +149,7 @@ export async function upgrade(targetDir, version, options = {}) {
     parseFloat(String(targetVersion).replace(/^v/, '')) >= 7.7;
   if (crossedProfileEnforcement) {
     console.log(`
-📋 PROFILE enforcement (v7.7+): Run /speck-catch-up --phase=profile on existing projects
+📋 PROFILE enforcement (v7.7+): Run /speck-migrate on existing projects
    to backfill PROFILE gates in evidence-contract.md and project.md.`);
   }
 
@@ -194,8 +194,8 @@ ${migrationSummary.projects.map(p => `   • ${p.path}: ${p.created} new artifac
      git checkout -b speck-v7-migration
      # already done: speck CLI synced files + ran migrate.sh
      # now run catch-up:
-     /speck-catch-up                    (or --phase=triage for large projects)
-     # ...iterate phases if large project...
+     /speck-migrate
+     # ...complete each marker stage, oldest first...
      git add -A
      git commit -m "chore: upgrade Speck to ${targetVersion} + brownfield catch-up"
      # open as a PR against main for review BEFORE merging
@@ -204,9 +204,8 @@ ${migrationSummary.projects.map(p => `   • ${p.path}: ${p.created} new artifac
    you trust the result. The important rule: scaffolded-template state should
    NEVER reach main. Either catch-up first, or revert.
 
-   Large project tip: /speck-catch-up supports --phase=triage|contracts|
-   decisions|epic-artifacts|honesty|state|plan|finalize so you can commit
-   between phases instead of doing one giant change.
+   Large project tip: commit after each completed marker stage. The skill loads
+   only the active scaffold, proof, graph, or upgrade procedure.
 
    See <project>/migration-report.md for what was scaffolded. The next agent
    that engages any of these projects will detect the marker and start
@@ -221,14 +220,14 @@ ${migrationSummary.projects.map(p => `   • ${p.path}: ${p.created} new artifac
    The mechanical upgrade is complete; the truth is not yet re-established.
 
    BEFORE new feature work, run:
-     /speck-reprove
+     /speck-migrate
 
    It triages suspect green against P1–P4, caps effective shippable state at
    INTEGRATION-GREEN, reverts consumer FELT-GOOD to \`uncovered\`, preserves each
    historical claim as [pre-v8-proof], and emits project-v8-reprove-report.md.
    States climb back to \`verified\` only as real v8 evidence lands.
 
-   See docs/v8/v8-north-star.md §5. Do NOT commit a green-claiming state as if it
+   See docs/history/north-stars/v8.md §5. Do NOT commit a green-claiming state as if it
    were v8-proven — reprove first. The next agent that engages will detect the
    marker and start the re-prove automatically.`);
   }
@@ -300,7 +299,6 @@ function runTemplateDriftCheck(targetDir) {
     if (driftCount > 5) {
       console.log(`   • ... and ${driftCount - 5} more artifact(s)`);
     }
-    console.log('\n   To fix structural drift, run `/recheck` or `/speck-catch-up --phase=refresh`');
+    console.log('\n   To fix structural drift, run `/speck-recheck` or `/speck-migrate`');
   }
 }
-

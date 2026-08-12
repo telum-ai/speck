@@ -1,0 +1,6 @@
+{
+  "id": "fg-clean-adjudicated",
+  "class": "fake-green",
+  "expect": "clean-pass",
+  "description": "control adjudicated"
+}

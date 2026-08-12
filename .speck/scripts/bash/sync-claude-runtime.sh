@@ -1,27 +1,31 @@
 #!/usr/bin/env bash
+# Sync skill trees only. Do NOT symlink agents — those are generated per-harness
+# by `npm run gen-agents` (see packages/cli/lib/generate-agents.js).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+SRC="$ROOT/.cursor/skills"
 
-symlink_dir() {
-  local name="$1"
-  local src="$ROOT/.cursor/$name"
+if [ ! -d "$SRC" ]; then
+  echo "Missing source directory: $SRC" >&2
+  exit 1
+fi
 
-  if [ ! -d "$src" ]; then
-    echo "❌ Missing source directory: $src" >&2
-    exit 1
-  fi
-
-  for runtime in .claude .codex; do
-    local dest="$ROOT/$runtime/$name"
-    mkdir -p "$ROOT/$runtime"
-    rm -rf "$dest"
-    ln -s "../.cursor/$name" "$dest"
-    echo "✅ Symlinked $runtime/$name → .cursor/$name"
-  done
+symlink_skills() {
+  local dest="$1"
+  local link_target="$2"
+  mkdir -p "$(dirname "$dest")"
+  rm -rf "$dest"
+  ln -s "$link_target" "$dest"
+  echo "Symlinked $dest → $link_target"
 }
 
-symlink_dir skills
-symlink_dir agents
+symlink_skills "$ROOT/.claude/skills" "../.cursor/skills"
+symlink_skills "$ROOT/.codex/skills" "../.cursor/skills"
+symlink_skills "$ROOT/.agents/skills" "../.cursor/skills"
 
-echo "✅ Claude Code and Codex runtime symlinks are up to date"
+if [ -L "$ROOT/.claude/agents" ] || [ -L "$ROOT/.codex/agents" ]; then
+  echo "WARN: .claude/agents or .codex/agents is a symlink — run npm run gen-agents to restore generated agent defs" >&2
+fi
+
+echo "Skill symlinks up to date (agents left untouched)"

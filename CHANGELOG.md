@@ -1,5 +1,84 @@
 # Speck Changelog
 
+## v11.0.0 — 2026-08-09 — Subtraction + JIT + meta-methodology
+
+Speck's always-on surface shrank with teeth. Host loaders (Cursor / Claude Code / Codex) set the
+ceilings; P1–P4 and prove gates stayed load-bearing.
+
+### Budget (before → after)
+
+| Metric | Before (~10.5) | After (11.0) |
+|--------|----------------|--------------|
+| AGENTS.md | ~62810 bytes / 578 lines | **11434 bytes / 103 lines** |
+| Auto skill description sum | ~30k chars | **6592 chars** (specific trigger contracts) |
+| Auto skill entries | 76 after initial v11 pass | **60** |
+| Domain/integration skills | ~20 | **0** (deleted) |
+| `disable-model-invocation: true` | inverted / scattered | **machine-owned family policy** |
+
+### Immune system
+
+- `validate-corpus-budget.sh` hard-fails regressions (AGENTS ≤16KiB/≤200 lines; desc ≤120/≤10k sum;
+  disable-model allowlist; skill body ≤200; ref nodes ≤120 lines/≤8KiB; declared branch-byte caps;
+  direct router ownership; no missing or ref-to-ref continuation edges).
+- A1-lite: 12 seeded fixtures / 6 classes; fail closed on wrong verdicts, harness errors, immutable-baseline
+  regressions, and candidate-corpus capability deletion; `bash tests/eval/score.sh` → `tests/eval/reports/`.
+- GitHub Actions runs the complete repository suite and PR/push whitespace checks.
+- Methodology ADRs: `docs/decisions/` + `docs/history/north-stars/v11.md`.
+
+### Catalog surgery
+
+- Deleted generic domain skills (Stripe/Clerk/Supabase/…/`model-selection`). Substitutes: recipes +
+  Context7 / official docs JIT.
+- Visual-testing hosts folded under `visual-testing/references/`.
+- Oversized/branching skills → real router-owned DAG nodes; single always-loaded `procedure.md` pointers are rejected.
+- Analyze/adjust now have one canonical automatic entry. Analyze stages one compact scope core, one reviewer lens, then the report template; adjust loads one blast-radius branch.
+- Analyze checks every conditional flow slot already reached and records `included`, `not-applicable`, or `missing`. Its project/epic compatibility shims and the generic retrospective router were deleted; validation and retrospective remain level-specific.
+- Audit now carries its common adversarial procedure inline and loads only the UI supplement when applicable. PROVE has one sequence: audit implementation, LARP the real experience, use visual testing as UI evidence inside LARP, then validate readiness.
+- Migration repair now enters through one staged `speck-migrate` skill. It selects only the oldest active scaffold, proof, graph, or upgrade procedure; the three version-specific skill directories were deleted.
+- All 60 automatic descriptions use third-person WHAT + specific WHEN; lifecycle WHERE or sibling boundaries appear only when selection-critical (ADR-0008).
+- A 67-case always-on routing suite covers every automatic skill with near-neighbor exclusions. Evaluation runs and reports are generated locally and ignored; only harness code and release conclusions are versioned.
+- The complete project/epic/story flow is always in AGENTS context; JIT references explain gates without carrying competing sequences (ADR-0009).
+- Encyclopedic AGENTS sections → `.speck/reference/` (canonical-routing, command-phases, host-capabilities).
+- Evidence-contract template principle-compressed (414 lines, down from 700+); detail JIT under `.speck/reference/evidence-*`.
+
+### Host wiring
+
+- `.agents/skills` → `.cursor/skills` (Codex discovery); `smartSync` creates the symlink on upgrade.
+- `CLAUDE.md` is a managed `@AGENTS.md` import; init/upgrade merges it without overwriting user instructions.
+- Upgrade `REMOVE_FILES` deletes retired domain + visual-testing host skill dirs from consumer projects.
+- `sync-claude-runtime.sh` syncs **skills only** (no longer clobbers generated agents/).
+
+### Current runtime boundary
+
+- `AGENTS.md` now teaches only the current method in plain language. Release rationale lives under
+  `docs/history/`; maintainers use `docs/methodology/` and `tests/eval/` without shipping them into projects.
+- `.speck/reference/` is explicitly shipped because AGENTS and skills depend on it at runtime.
+- Vanilla Speck no longer seeds or overwrites `.speck/patterns/learned/`; upgrades remove only the exact
+  former framework files and preserve project-created learning.
+- Template export now emits the same curated runtime boundary as init/upgrade, including host-native
+  generated agents, while excluding methodology evaluation and history.
+- Upgrade removes framework-owned `.speck/eval/` and `.speck/feedback/` leaked by older template exports.
+
+### Release evidence retained
+
+- The frozen 24-run paired tournament observed a 1.00x composite quality ratio: hidden scorer −4.7 points, blinded decorrelated judge +9.8 points, and the predeclared composite −0.4 with a confidence interval crossing zero.
+- V11 reduced mean input tokens 15.6%, uncached input tokens 31.7%, and wall time 21.9%; all 8 applicable v11 transcripts passed REACH, SELECTIVITY, TIMING, and GATE_USE.
+- Real-project entry canaries preserved mandatory recheck precedence and proved that live graph P1 findings outrank stale project-state prose. Generated transcripts and reports remain reproducible local output, not versioned methodology context.
+- This supports a substantially leaner, more inspectable release candidate without claiming a universal quality increase; replication across another model/host and a longitudinal multi-story project remains the next confidence step.
+- The tournament was frozen at methodology revision `27b5c0f`; the branch continued past it, so these numbers evidence the v11 architecture rather than the exact shipped tree. What binds the shipped tree is the static layer — semantic conservation, corpus budget, and the routing baseline all run against HEAD in `npm test`.
+- Decision-grade evidence is versioned at `docs/evidence/2026-08-11-v11-release-27b5c0f-terra/` (report, decision, aggregate scores, judge blinding) with the reasoning in `docs/feedback/2026-08-11-v11-release-confidence.md`. Per-subject transcripts stay reproducible local output; recover them with `git show ef87041`.
+
+### Agent prose + load DAG
+
+AGENTS.md / skills / skill `references/` / `.speck/reference/` are dense imperative instructions
+(ADR-0003/0004). Field evidence for analyze gates (`001-odd` / #106) lives in ADR-0004 + CHANGELOG only.
+
+Skill load (ADR-0005): complete map in `docs/decisions/skill-load-map.md`. Load contracts and post-hoc
+transcript tests prove selected context, timing, sibling exclusion, and closure-gate use. Skill frontmatter
+contains only trigger metadata; redundant `paths:` hints were removed.
+
+---
+
 ## v10.5.0 — 2026-08-07 — Nine gates, and the population each one never reached
 
 Nine issues from one epic in one project, and eight of them are the same sentence: **a check that
@@ -973,7 +1052,7 @@ compute, and directs the user to run `/goal` (a client command a skill cannot in
 - **AGENTS.md "Drive to Done"** section: the routing table (gap item → owning skill) + the hierarchy
   (`/goal` = conductor/loop; Speck skills = players/work; the graph = score/condition+evidence).
   User-initiated with a mandatory turn bound; STOP-BLOCKED at owner-gated inches (taste forks, contract
-  pivots, price, deploy). Full workflow/sequence in `docs/v9/v9-north-star.md` §6.
+  pivots, price, deploy). Full workflow/sequence in `docs/history/north-stars/v9.md` §6.
 
 +2 tests (29 total). npm test green. (MM "judged" stays honestly pending verdict extraction, v9.4.)
 
@@ -1002,7 +1081,7 @@ false-clean. `/speck-graph-up` Phase 4 emits it. +2 tests (27 total). npm test g
 v9 promotes the witness graph from a late gate into the project's **spine** — the derived,
 content-hashed index that project-state renders from, that the forcing gates fire off, that
 `road-to-completion.md` re-projects, and that native `/goal` drives against to reach *actual* 100%.
-Full architecture (incl. the `/goal` workflow, hierarchy, and sequence): `docs/v9/v9-north-star.md`.
+Full architecture (incl. the `/goal` workflow, hierarchy, and sequence): `docs/history/north-stars/v9.md`.
 Shipping incrementally (v9.0 → v9.5); this is the **additive spine + forcing** arc — no deletions yet.
 
 ### Forcing: "you cannot advance if the graph lacks what it needs" — without bricking greenfield
@@ -1032,7 +1111,7 @@ One signal makes it safe: **id-scheme adoption**, counted from the graph (never 
 
 ### Also
 - +3 forcing tests (25 total) in the graph suite; +5 migrate tests (13 total) for `graphV9` /
-  `writeV9GraphMarker`. `docs/v9/v9-north-star.md` is the canonical v9 record. AGENTS.md banner → v9 with
+  `writeV9GraphMarker`. `docs/history/north-stars/v9.md` is the canonical v9 record. AGENTS.md banner → v9 with
   the graph-spine + `/goal` doctrine. `npm test` green.
 
 ### Roadmap (each a committed, parity-gated arc)
@@ -1320,7 +1399,7 @@ disclose the wholesale replacement.
 
 ## v8.0.0 — 2026-07-03 — Evaluation Over Verification
 
-The v7 patch line fought agent green-hacking by writing down ever more explicit checks. That is self-defeating: an agent optimizes to satisfy the *letter* of any enumerated gate (Goodhart), and the enumeration itself becomes the context-rot that crowds out common sense. v8 changes **what the agent optimizes for** — from "produce green evidence" to "find what is wrong" — and **shrinks the corpus** so common sense fits back in context. Design: `docs/v8/v8-north-star.md`.
+The v7 patch line fought agent green-hacking by writing down ever more explicit checks. That is self-defeating: an agent optimizes to satisfy the *letter* of any enumerated gate (Goodhart), and the enumeration itself becomes the context-rot that crowds out common sense. v8 changes **what the agent optimizes for** — from "produce green evidence" to "find what is wrong" — and **shrinks the corpus** so common sense fits back in context. Design: `docs/history/north-stars/v8.md`.
 
 ### The four principles (the spine — govern every gate)
 - **P1 — Evaluation over verification.** Every gate's default flips from "confirm the claim" to "find what is wrong." A clean pass is the residue of a genuine attempt to break it.

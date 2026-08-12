@@ -178,7 +178,7 @@ if [[ ${#matrices[@]} -eq 0 ]]; then
 
   echo -e "\n📋  ${YELLOW}ADJUSTMENT WORK-LIST REQUIRED (Pre-Matrix Fallback):${NC}"
   echo -e "The project has no traceability matrices yet, but the files above reference the changed contract or decision."
-  echo -e "You should run ${BLUE}/epic-adjust${NC} or ${BLUE}/story-adjust${NC} on the affected epics/stories to align them."
+  echo -e "You should run ${BLUE}/adjust --level epic${NC} or ${BLUE}/adjust --level story${NC} on the affected epics/stories to align them."
 
   if [[ "$STRICT" == true ]]; then
     echo -e "\n${RED}❌ CASCADE BLOCKER DETECTED (CASCADE_STALE.P1)${NC}"
@@ -310,10 +310,10 @@ if [[ ${#affected_epics[@]} -gt 0 ]]; then
   echo -e "\n📋  ${YELLOW}ADJUSTMENT WORK-LIST REQUIRED:${NC}"
   echo -e "The following epics and stories are in the blast-radius. You MUST run:"
   for epic in "${affected_epics[@]}"; do
-    echo -e "  - ${BLUE}/epic-adjust${NC} on ${YELLOW}$epic${NC}"
+    echo -e "  - ${BLUE}/adjust --level epic${NC} on ${YELLOW}$epic${NC}"
   done
   if [[ ${#affected_stories[@]} -gt 0 ]]; then
-    echo -e "And run ${BLUE}/story-adjust${NC} on the following affected stories:"
+    echo -e "And run ${BLUE}/adjust --level story${NC} on the following affected stories:"
     printf "  - "
     for story in "${affected_stories[@]}"; do
       printf "${YELLOW}%s${NC} " "$story"
@@ -326,7 +326,7 @@ if [[ "$STRICT" == true && $discharged_violations -gt 0 ]]; then
   echo -e "\n${RED}❌ CASCADE BLOCKER DETECTED (CASCADE_STALE.P1)${NC}"
   echo -e "${RED}A project-level directional change or superseded decision was found, but${NC}"
   echo -e "${RED}$discharged_violations downstream promise(s) are still active as 'discharged' under the old state.${NC}"
-  echo -e "${YELLOW}Every affected story and epic must run /story-adjust or /epic-adjust to${NC}"
+  echo -e "${YELLOW}Every affected story and epic must run /adjust --level story or /adjust --level epic to${NC}"
   echo -e "${YELLOW}either descope the promise (via a new DEC) or re-specify and re-validate the delta.${NC}"
   exit 1
 fi

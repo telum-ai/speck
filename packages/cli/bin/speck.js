@@ -99,6 +99,13 @@ MORE INFO
 async function main() {
   const args = process.argv.slice(2);
   const command = args[0];
+
+  // Help is globally read-only, including after a command. Resolve it before
+  // option parsing or dispatch so `speck upgrade --help` can never upgrade.
+  if (args.includes('--help') || args.includes('-h') || command === 'help' || command === undefined) {
+    console.log(HELP);
+    return;
+  }
   
   // Parse options
   const options = {
@@ -222,7 +229,6 @@ async function main() {
       case 'help':
       case '-h':
       case '--help':
-      case undefined:
         console.log(HELP);
         break;
         

@@ -1,0 +1,6 @@
+{
+  "id": "bl-clean",
+  "class": "banned-language",
+  "expect": "clean-pass",
+  "description": "control clean copy"
+}

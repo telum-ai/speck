@@ -420,6 +420,9 @@ case "$filename" in
   *epic-analysis-report-*.md|*epic-analysis-report.md)
     validation_type="epic-analysis-report"
     ;;
+  *story-analysis-report-*.md|*story-analysis-report.md)
+    validation_type="story-analysis-report"
+    ;;
   *story-adjust-report-*.md|*story-adjust-report.md)
     validation_type="story-adjust-report"
     ;;
@@ -532,7 +535,7 @@ case "$validation_type" in
     # line and every gate stayed green. This is the chokepoint the mutation-record work needed.
     bash "$SCRIPT_DIR/validators/validate-harden-report.sh" $strict_flag "$file_path"
     ;;
-  project-analysis-report|epic-analysis-report)
+  project-analysis-report|epic-analysis-report|story-analysis-report)
     # WAS: the `*)` arm below — "not a tracked template, skip", exit 0. Same defect as the
     # harden-report arm above, one altitude up: every section the two analysis-report templates
     # declare was unenforceable BY CONSTRUCTION, so an agent could ship a report with the Lens

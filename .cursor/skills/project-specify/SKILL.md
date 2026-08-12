@@ -1,271 +1,91 @@
 ---
 name: project-specify
-description: Load at the very start of a new project when the user describes what they want to build, or to update an existing project.md. Produces project.md — must run before project-clarify, project-context, and all downstream project commands. FIRST ACTION after loading: read template at .speck/templates/project/project-template.md before any Q&A or artifact generation.
-disable-model-invocation: false
+description: Creates project.md vision and boundaries. Use when starting after any needed brainstorming or brownfield import.
 ---
 
+# project-specify
 
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
+Template: `.speck/templates/project/project-template.md`.
 
-User input:
+## 0. Completed project check
 
-$ARGUMENTS
+If project validated/completed and user wants pivot/redesign → STOP; route `/adjust --level project` (not this skill).
 
-The text the user typed after `/project-specify` in the triggering message **is** the project description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
+## 1. Template
 
-## 🚦 Completed Project Check (Post-Completion Triage Router)
+Read `.speck/templates/project/project-template.md` before writing.
 
-**CRITICAL**: If this project is already completed or validated, and the user is requesting a directional pivot, strategic contract change, or redesigned feature, **do NOT run `/project-specify`**. 
-- Running `/project-specify` on a validated project clobbers the existing specifications and breaks promise conservation.
-- Instead, route the user to **`/project-adjust`** (or `/epic-adjust` / `/story-adjust` / `/harden` per the Post-Completion Triage Router in `AGENTS.md`). `/project-adjust` will safely spec the delta and compute the reverse cascade of affected downstream epics/stories.
+## 2. Archetype + play level
 
-## ⚠️ Step 0: Read Template First
+Infer **archetype**: `consumer_product` | `b2b_saas` | `internal_tool` | `infra_service` | `backend_api`. Ask if unclear. Write to `.speck/project.json` → `project_archetype`.
 
-**Before any other action** — read this template now using the Read tool:
+Infer **play level** from signals:
+
+| Level | Signals | Later rigor |
+|-------|---------|-------------|
+| Sprint | weekend, prototype, ship fast | smallest PROMISE and PROVE set |
+| Build | subscription, dashboard, v2 | contracts plus conditional architecture/UX |
+| Platform | enterprise, marketplace, shared infrastructure | full project flow |
+
+Sprint/Build branches skip sections marked below.
+
+## 3. Mode
+
+| Indicator | Mode |
+|-----------|------|
+| `project-import.md` OR `project-landscape-overview.md` | Brownfield |
+| Neither | Greenfield |
+
+## 4. Greenfield — recipe (optional)
+
+Scan `.speck/recipes/*/recipe.yaml` `keywords:` vs description. Match → offer recipe; on accept set `_active_recipe:` in `project.md` metadata.
+
+## 5. Greenfield — create
+
+Parse description; ask gaps: product type, users, problem, scale.
+
+Domain expertise required? → note in `project.md`; flag `/project-domain`.
+
+```bash
+bash .speck/scripts/bash/create-new-project.sh --json [--project-id "$DECLARED_PROJECT_ID"] "$ARGUMENTS"
 ```
-.speck/templates/project/project-template.md
+
+If `.speck/project.json` already declares `project_id`, pass it as
+`--project-id`; never create a second project directory from the brief text.
+Omit the flag only when no canonical project ID exists yet.
+
+Fill the minimum sufficient template and set its lifecycle status to `Specified`; delete inapplicable example rows and sections rather than expanding them. Every retained claim must trace to the source or be labeled as an inference. Mark gaps
+`[NEEDS CLARIFICATION: …]`. Preserve unresolved choices as questions. Do not
+turn them into goals, selected options, or invented comparison candidates.
+
+## 6. Brownfield — pre-fill
+
+Load import + landscape. Pre-fill template:
+- `[FROM IMPORT]` — import data
+- `[INFERRED FROM CODE]` — scan data
+- `[NEEDS VALIDATION]` — uncertain
+
+Ask only strategic gaps (vision, personas, metrics, positioning, hidden constraints). Skip discoverable-from-code questions.
+
+## 7. PROFILE refresh
+
+After `project.md` written:
+```bash
+bash .speck/scripts/regenerate-project-readme.sh
 ```
-The template defines required sections and formatting for `project.md`. Reading it first shapes your discovery Q&A — you'll know what information each section needs. Generating `project.md` from memory produces structurally incorrect output.
+The generated README must describe the specification phase honestly and may
+link only to artifacts that exist. Remove no-placeholder or broken-link defects
+before leaving this phase. Its overview and one-line vision must add distinct
+information rather than repeating the same sentence.
 
-**Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
+## 8. Next
 
-## Interactive Project Specification Process
+Re-read the marked canonical flow in root `AGENTS.md` and continue at the first incomplete applicable project slot for the selected play level.
 
-### Step -0.5: Detect Project Archetype
+## NEVER / ALWAYS
 
-Before play level detection, infer or ask for the **Project Archetype** from the project's description or conversation context:
-- **consumer_product**: End-user B2C products (e.g. mobile apps, public consumer webs).
-- **b2b_saas**: Business-to-business products, multi-tenant portal platforms, dashboards.
-- **internal_tool**: Internal back-office tools, admin panels, utility webapps used inside an organization.
-- **infra_service**: Developer infrastructure, databases, CI/CD, queue/worker nodes, operational tools.
-- **backend_api**: Headless backend APIs, microservices, protocol-level data endpoints.
-
-If unclear, ask: "Which archetype best describes this project's target architecture? (consumer_product | b2b_saas | internal_tool | infra_service | backend_api)"
-
-Write the archetype to `.speck/project.json` under `project_archetype`.
-
-### Step -1: Detect Play Level
-
-Before anything else, infer the play level from conversation context (same signals as the Speck router):
-
-- **Sprint**: "this weekend", "48 hours", "quick", "simple tool", "ship it", "prototype"
-- **Build**: "subscription", "dashboard", "expand this", "v2", multi-user features
-- **Platform** (play level): enterprise, marketplace, multi-system, explicit full-governance intent — *not* the same as complexity scale 3–4 (large projects can stay **Build**; see AGENTS.md “Complexity scale vs play level”)
-
-If Sprint detected:
-1. Tell the user: "This sounds like a Sprint. I'll use the one-page PRD and skip heavy upfront planning."
-2. Load `.speck/templates/sprint/sprint-prd-template.md` instead of the standard PRD template
-3. Create only: `PRD.md` (from sprint template) + `sprint-log.md` (from sprint-log-template)
-4. Create `.speck/project.json` with `{"play_level": "sprint", "project_archetype": "[ARCHETYPE]"}` (replace with detected archetype)
-5. Skip Steps 0.5 through 4 below — go straight to creating the sprint artifacts and sprint-log
-6. Next steps: ship something, fill in the sprint-log daily, run `/project-promote` if it gets traction
-
-If Build detected:
-1. Tell the user: "This sounds like a Build. I'll create a PRD + context and structure for epics."
-2. Use standard `prd-template.md`
-3. Create: `PRD.md`, `context.md`, `COMMERCIAL.md`
-4. Create `.speck/project.json` with `{"play_level": "build", "project_archetype": "[ARCHETYPE]"}` (replace with detected archetype)
-5. Skip constitution and design-system from next-steps recommendations
-6. Continue with the standard flow below
-
-If Platform detected (or unclear):
-1. Create `.speck/project.json` with `{"play_level": "platform", "project_archetype": "[ARCHETYPE]"}` (replace with detected archetype)
-2. Full standard flow below
-
----
-
-### Step 0: Detect Mode (Greenfield vs Brownfield)
-
-Check for brownfield indicators in the active project directory:
-- Look for `project-import.md` (non-code aspects extraction)
-- Look for `project-landscape-overview.md` (code aspects extraction)
-
-**If EITHER exists → BROWNFIELD MODE**
-**If NEITHER exists → GREENFIELD MODE**
-
----
-
-### Step 0.5: Recipe Detection (Greenfield Only)
-
-**For greenfield projects**, check if the user's description matches a known recipe:
-
-1. **Scan recipe keywords**: Read `.speck/recipes/*/recipe.yaml` files and match `keywords:` against user input
-2. **If match found**, offer the recipe:
-   ```
-   🍳 I found a matching recipe: "[recipe display_name]"
-   
-   This recipe provides:
-   - Stack: [frontend + backend + database from recipe]
-   - Pre-configured patterns for [key patterns]
-   - Suggested epics: [list epic names from suggested_epics]
-   
-   Options:
-   1. Use this recipe (pre-fills architecture, context, and epic suggestions)
-   2. Start from scratch (full custom specification)
-   3. See other recipes
-   
-   Your choice [1]:
-   ```
-
-3. **If user selects recipe**:
-   - Store recipe selection: `_active_recipe: [recipe-name]` in project.md metadata
-   - Pre-fill relevant sections from recipe's `stack:`, `ideal_for:`, `patterns:`
-   - Recipe will also inform `/project-architecture`, `/project-context`, and `/project-plan`
-
-4. **If no match or user declines**: Continue with standard greenfield flow
-
-**Recipe Reference**: See `.speck/recipes/README.md` for available recipes and their use cases.
-
----
-
-### GREENFIELD MODE: Create from Scratch
-
-### Step 1: Parse and Validate Input
-
-Analyze the provided project description:
-- Extract key concepts from `$ARGUMENTS`
-- If empty or too vague, ask: "What would you like to build?"
-- If minimal, identify what's missing for the template
-
-### Step 2: Interactive Gap Filling
-
-The project template needs specific information. If any of these are missing from the input, ask targeted questions:
-
-**If project type unclear:**
-- "Is this a web app, mobile app, API, or something else?"
-
-**If user groups undefined:**
-- "Who will use this product?"
-
-**If core problem unstated:**
-- "What main problem does this solve?"
-
-**If scale ambiguous:**
-- "Is this a small enhancement, a new feature set, or a full platform?"
-
-### Step 2.5: Domain Expertise Check
-
-Determine if this project requires specialized domain knowledge:
-
-**Ask if domain is specialized:**
-- "Does this product operate in a specialized domain that requires subject matter expertise?"
-- Examples: Healthcare, Finance, Fitness/Exercise Science, Legal, Agriculture, Education
-
-**If YES (specialized domain):**
-- Note in project.md: `**Domain Expertise Required**: Yes - [domain name]`
-- Capture any initial domain knowledge the user provides
-- Flag for `/project-domain` command after clarification
-
-**If NO (generic/technical domain):**
-- Note in project.md: `**Domain Expertise Required**: No`
-- Skip `/project-domain` in the recommended flow
-
-**Why this matters**: Projects with specialized domains need a domain model to capture terminology, rules, and principles that inform all downstream decisions.
-
-### Step 3: Create Project Structure
-
-Once we have enough information:
-
-1. Run `bash .speck/scripts/bash/create-new-project.sh --json "$ARGUMENTS"` to create project structure
-2. Load `.speck/templates/project/project-template.md`
-3. Fill the template systematically:
-   - Parse description for each template section
-   - Use provided information where available
-   - Mark gaps with [NEEDS CLARIFICATION: specific question]
-   - Don't leave generic placeholders
-
-### Step 4: Review and Guide
-
-Show what was created:
-- "I've created the project specification in [path]"
-- "Key areas marked for clarification: [list]"
-- "The project appears to be [scale] complexity"
-
-Guide to next steps:
-- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
-- For most non-Sprint flows, the next canonical step after specification is `/project-clarify` to resolve ambiguities before contracts are locked.
-
----
-
-### BROWNFIELD MODE: Pre-fill from Import/Scan Data
-
-### Step 1: Load Extraction Artifacts
-
-Load brownfield artifacts that exist:
-- `project-import.md` → Non-code aspects (vision, stakeholders, constraints)
-- `project-landscape-overview.md` → Code aspects (tech stack, features, architecture)
-
-### Step 2: Pre-fill Project Template
-
-1. Load `.speck/templates/project/project-template.md`
-2. Pre-fill sections from extracted data:
-
-**From project-import.md (if exists):**
-- Project Vision → Use discovered vision/purpose
-- Target Users → Use stakeholder findings
-- Success Metrics → Use existing metrics if found
-- Goals → Infer from documented objectives
-
-**From project-landscape-overview.md (if exists):**
-- Current State → Use scan's "Current State" section
-- Core Features → Use scan's "Potential Epic Areas"
-- Tech Stack (in context) → Use scan's "Tech Stack" findings
-- Architecture Overview → Reference scan findings
-
-**Markers for pre-filled content:**
-- Mark with `[FROM IMPORT]` for data from project-import.md
-- Mark with `[INFERRED FROM CODE]` for data from project-landscape-overview.md
-- Mark with `[NEEDS VALIDATION]` for uncertain inferences
-
-### Step 3: Interactive Completion
-
-Ask targeted questions to fill gaps that **cannot be discovered from code**:
-- Strategic vision and long-term goals
-- User personas and pain points
-- Success metrics and business objectives
-- Competitive positioning
-- Constraints not evident in code (budget, team, timeline)
-
-**Skip questions about:**
-- Existing features (already in scan)
-- Tech stack (already in scan)
-- Current architecture (already in scan)
-
-### Step 4: Generate Final project.md
-
-Combine:
-- Pre-filled sections from import/scan
-- User-provided strategic information
-- Validated inferences
-
-Generate `project.md` with all markers preserved for transparency.
-
-### Step 5: Review and Guide
-
-Show what was created:
-- "I've created the project specification in [path]"
-- "Pre-filled from import/scan data: [list sections]"
-- "Areas needing validation: [list NEEDS VALIDATION markers]"
-- "Strategic areas completed through Q&A: [list]"
-
-Guide to next steps:
-- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
-- For most non-Sprint flows, the next canonical step after specification is `/project-clarify` to resolve ambiguities before contracts are locked.
-
-### PROFILE refresh (both modes — mandatory)
-
-After `project.md` is written, **automatically invoke `/project-readme`** (run `.speck/scripts/regenerate-project-readme.sh`) to populate the root README scaffold with project title and spec links. Do not wait for the user to ask.
-
----
-
-## Key Differences Summary
-
-| Aspect | Greenfield | Brownfield |
-|-----|----|-----|
-| Starting Point | User description | Import/scan artifacts |
-| Questions | All aspects | Strategic/non-discoverable only |
-| project.md | From scratch | Pre-filled, then completed |
-| Markers | [NEEDS CLARIFICATION] | [FROM IMPORT], [INFERRED FROM CODE], [NEEDS VALIDATION] |
-| Focus | Define what to build | Document + enhance what exists |
-
-The template itself contains all the detailed guidance for what goes in each section.
+- NEVER run on validated project for pivots — use `/adjust --level project`
+- NEVER skip template read
+- NEVER leave generic placeholders unfilled
+- ALWAYS write `project_archetype` + `play_level` to `.speck/project.json`
+- ALWAYS regenerate README after `project.md`

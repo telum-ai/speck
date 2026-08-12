@@ -1,7 +1,7 @@
 ---
 name: epic-outline
-description: Retired in Speck v8 (alias-shim). The v6 epic-outline research-mapping step is replaced by /speck-skeptical-review (enumerate technical-approach alternatives) + /speck-decision-log (lock the choice with rationale + SHA), with just-in-time research folded into /epic-plan. New invocations route there.
-disable-model-invocation: false
+description: Retired alias → speck-skeptical-review / story-tasks. Use when /epic-outline named.
+disable-model-invocation: true
 ---
 
 # /epic-outline — retired in Speck v8 (alias-shim)
@@ -12,6 +12,6 @@ The v6 outline (a separate research-mapping step) no longer exists as its own ar
 - `/speck-decision-log` — lock the chosen approach with rationale + SHA
 - `/epic-plan` — performs just-in-time research inline
 
-**Do this instead**: `/epic-clarify` → (`/speck-skeptical-review` if the approach is unclear) → `/epic-plan`.
+**Do this instead**: re-read the marked canonical Epic flow in root `AGENTS.md` and resume at its first incomplete applicable slot.
 
-> Alias-shim kept for muscle memory / back-compat. See `docs/v8/v8-north-star.md` §4 and AGENTS.md.
+Alias kept for user-invoked muscle memory and excluded from automatic selection.

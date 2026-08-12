@@ -1,7 +1,6 @@
 ---
 name: epic-journey
-description: Load for UX-heavy epics to map user touchpoints, emotions, and flow before planning. Use when the epic significantly changes how users interact with the product. Run before epic-wireframes and epic-plan.
-disable-model-invocation: false
+description: Maps epic touchpoints, emotions, and flow. Use after epic-clarify and any architecture, before wireframes or epic-plan.
 ---
 
 
@@ -84,15 +83,8 @@ Based on pain points:
    - Add success metrics
    - Mark unclear areas with [NEEDS CLARIFICATION]
 
-### Step 6: Review and Guide
+### Step 6: Continue
 
-Present what was created:
-- "I've mapped the user journey at [path]"
-- "Key pain points identified: [list]"
-- "Opportunities for delight: [list]"
-
-Guide to next steps based on journey:
-- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
-- If this UI epic requires layout design, the canonical next step is `/epic-wireframes`. For simpler or well-defined UIs, /epic-experience-chain is the core UI transition gate before planning.
+Re-read the canonical flow in root `AGENTS.md` and continue at the next applicable epic slot.
 
 The template contains the complete structure and guidance for journey documentation.

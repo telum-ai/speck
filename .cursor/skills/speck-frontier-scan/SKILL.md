@@ -1,14 +1,9 @@
 ---
 name: speck-frontier-scan
-description: Execute a 4-angle SOTA frontier scan on autonomous engineering practices. Scans current academic, enterprise, and open-source benchmarks (Architectures, Context Engineering, Verification, Spec-Driven Development) using Perplexity/WebSearch, synthesizes deltas against the Speck baseline, maps them to canonical files, and proposes spec-adjustments. Recommended quarterly or on a recurring /loop cadence. Also supports a `--product` mode that re-validates a product's differentiator / competitive ("no competitor does X") claims against the live market and re-stamps them (issue #80).
-disable-model-invocation: false
+description: Scans current methodology or product frontiers. Use for SOTA research or live-market claim rechecks.
 ---
 
-The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
-
-User input:
-
-$ARGUMENTS
+# speck-frontier-scan
 
 ---
 
@@ -24,7 +19,7 @@ Rather than treating methodology rules as static or frozen, this skill codifies 
 - When a major new model family or agentic framework is released
 - When starting a brand new Platform-level project to establish a modern research baseline
 - Explicitly requested by the user: `/speck-frontier-scan` or "refresh SOTA baseline"
-- **Product-market recheck** (`--product`): re-validate a product's differentiator / "no competitor does X" claims against the live market — on cadence, or when `/recheck` flags `MARKET_DRIFT` (see **Product Mode** below, issue #80)
+- **Product-market recheck** (`--product`): re-validate a product's differentiator / "no competitor does X" claims against the live market — on cadence, or when `/speck-recheck` flags `MARKET_DRIFT` (see **Product Mode** below, issue #80)
 
 ## Prerequisites
 
@@ -56,7 +51,7 @@ For each identified delta, find its canonical location in the Speck directory st
 - Verifiable proof rules, anti-proof, or irreversible action tiers → `evidence-contract.md`
 - Codebase style, agent-behavior rules → `AGENTS.md`
 - Validation logic → `.speck/scripts/validation/validators/`
-- Orchestration patterns, conductor rules → `.speck/patterns/learned/process/parallel-epic-execution.md`
+- Parallel orchestration behavior → `.cursor/skills/parallel-execution/SKILL.md`
 
 ### 4. Author the Frontier Research Report
 
@@ -112,7 +107,7 @@ Trigger `/project-state` to record the new frontier research report under projec
 
 ## Product Mode (`--product`) — competitive-claim re-validation (issue #80)
 
-This skill also runs against a **product's live market** instead of Speck's own methodology. Trigger: `/speck-frontier-scan --product` (or "product-market" in `$ARGUMENTS`), or when `/recheck` surfaces `MARKET_DRIFT`. It reuses the machinery above — resilient Perplexity/WebSearch, dated report, cited sources — but re-points the four angles:
+This skill also runs against a **product's live market** instead of Speck's own methodology. Trigger: `/speck-frontier-scan --product` (or "product-market" in `$ARGUMENTS`), or when `/speck-recheck` surfaces `MARKET_DRIFT`. It reuses the machinery above — resilient Perplexity/WebSearch, dated report, cited sources — but re-points the four angles:
 
 1. **Direct competitors & feature parity** — who now ships the capability §3 claims is unique? Name products + dates.
 2. **Substitute / DIY landscape** — free general-purpose AI + effort, OSS, free tiers (feeds `product-contract.md` §2a Value Defensibility).
@@ -124,7 +119,7 @@ This skill also runs against a **product's live market** instead of Speck's own 
 **Output**: `specs/projects/<PROJECT_ID>/project-market-research-report-<YYYYMMDD>.md` (matches the existing `project-*-research-report-*.md` routing glob — no new routing row). Reuse the report skeleton above with the four angles re-pointed.
 
 **Then**:
-- Propose concrete `/project-adjust` deltas to §3 / §2a / §3a / PRD. **Never auto-rewrite §3** — the differentiator is an always-preserve; STOP-AND-PROPOSE.
+- Propose concrete `/adjust --level project` deltas to §3 / §2a / §3a / PRD. **Never auto-rewrite §3** — the differentiator is an always-preserve; STOP-AND-PROPOSE.
 - Re-stamp the differentiator via the SOLE writer (`stamp-market.sh` refuses without an existing report, and for `holds` requires `sources ≥ market_sources_floor` — so a claim can never read fresh without a real sourced re-validation behind it, P2):
 
   ```bash
@@ -132,7 +127,7 @@ This skill also runs against a **product's live market** instead of Speck's own 
     --verdict holds --sources <N> --scan project-market-research-report-<YYYYMMDD>.md
   ```
 
-  An `eroded`/`false` verdict is stamped honestly and then treated as `MARKET_DRIFT.P1` by `/recheck` to force the fix (evaluation over verification).
+  An `eroded`/`false` verdict is stamped honestly and then treated as `MARKET_DRIFT.P1` by `/speck-recheck` to force the fix (evaluation over verification).
 
 **Cadence & config** (all optional in `.speck/project.json`, absent = safe default): `market_absolute_claim_days` (default **30** — deliberately below the observed ~8-week rot half-life), `market_scan_cadence_days` (default **45** for consumer/SaaS/paid-API, **90** for infra/backend), `market_sources_floor` (default **3**), `market_scan` (`false` opts a claim-free internal tool out). Sprint play level is skipped (no `product-contract.md`).
 
@@ -147,4 +142,4 @@ This skill also runs against a **product's live market** instead of Speck's own 
 
 - Required input: Perplexity/WebSearch access, existing Speck methodology (`AGENTS.md`).
 - Required output: `project-frontier-research-report-<YYYYMMDD>.md` (with SHA stamp).
-- Downstream consumers: `/project-adjust`, `/epic-adjust`, and developer-facing backlogs.
+- Downstream consumers: `/adjust --level project`, `/adjust --level epic`, and developer-facing backlogs.

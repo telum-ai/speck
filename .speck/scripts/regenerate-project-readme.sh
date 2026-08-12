@@ -56,22 +56,13 @@ CONTRACT="$PROJECT_DIR/product-contract.md"
 STATE="$PROJECT_DIR/project-state.md"
 
 if [[ "$CHECK_ONLY" == true || "$SURFACE" == "check" ]]; then
-  exec "$SCRIPT_DIR/profile-drift-check.sh" "$WORKSPACE_ROOT" "$PROJECT_ID"
+  exec bash "$SCRIPT_DIR/profile-drift-check.sh" "$WORKSPACE_ROOT" "$PROJECT_ID"
 fi
 
-if [[ "$SURFACE" == "landing" || "$SURFACE" == "og" ]]; then
-  PROMISE="$(profile_extract_paid_promise "$CONTRACT")"
-  echo "PROFILE_SURFACE_CHECK surface=${SURFACE} project=${PROJECT_ID}"
-  # Check-only: grep common landing paths for hero copy overlap
-  for f in "$WORKSPACE_ROOT"/app/**/page.tsx "$WORKSPACE_ROOT"/src/**/landing*.tsx; do
-    [[ -f "$f" ]] || continue
-    if [[ -n "$PROMISE" ]] && grep -qi "$(echo "$PROMISE" | cut -c1-40)" "$f" 2>/dev/null; then
-      echo "  OK: $f appears aligned with paid promise"
-    else
-      echo "  WARN: $f may drift from product-contract Section 1"
-    fi
-  done
-  exit 0
+if [[ "$SURFACE" == "landing" || "$SURFACE" == "og" || "$SURFACE" == "github" ]]; then
+  # These surfaces are user- or provider-owned. Inspect the declared target; never
+  # rewrite it merely to manufacture a green PROFILE result.
+  exec bash "$SCRIPT_DIR/profile-drift-check.sh" --surface "$SURFACE" "$WORKSPACE_ROOT" "$PROJECT_ID"
 fi
 
 if [[ "$SURFACE" == "package" ]]; then
@@ -91,7 +82,7 @@ else:
     print('PACKAGE_DESCRIPTION_PRESERVED (user-owned)')
 " "$PITCH"
   fi
-  exit 0
+  exec bash "$SCRIPT_DIR/profile-drift-check.sh" --surface package "$WORKSPACE_ROOT" "$PROJECT_ID"
 fi
 
 if [[ ! -f "$TEMPLATE_PATH" ]]; then
@@ -109,6 +100,7 @@ extract_project_title() {
   [[ -f "$project_md" ]] || return
   local title
   title="$(grep -m1 '^# ' "$project_md" 2>/dev/null | sed 's/^# //' || true)"
+  title="${title#Project Specification: }"
   if [[ -n "$title" && "$title" != "Project Specification" && "$title" != "Project" ]]; then
     echo "$title"; return
   fi
@@ -125,13 +117,16 @@ extract_readiness() {
 extract_vision_blurb() {
   local project_md="$1"
   [[ -f "$project_md" ]] || return
-  awk '/^## Vision|^## Overview|^## Problem/ { in_s=1; next } /^## / && in_s { exit } in_s && /^[^#-]/ && NF { gsub(/^[[:space:]]+|[[:space:]]+$/, ""); if (length($0) > 20) { print; exit } }' "$project_md" 2>/dev/null || true
+  awk '/^## (Project )?[Oo]verview|^## Vision|^## Problem/ { in_s=1; next } /^## / && in_s { exit } in_s && /^[^#-]/ && NF { gsub(/^[[:space:]]+|[[:space:]]+$/, ""); if (length($0) > 20) { print; exit } }' "$project_md" 2>/dev/null || true
 }
 
-TITLE="$(extract_project_title "$PROJECT_MD")"
-PROMISE="$(profile_extract_paid_promise "$CONTRACT")"
-VISION="$(extract_vision_blurb "$PROJECT_MD")"
-READINESS="$(extract_readiness "$STATE")"
+TITLE="$(extract_project_title "$PROJECT_MD" || true)"
+PROMISE="$(profile_extract_paid_promise "$CONTRACT" || true)"
+VISION="$(extract_vision_blurb "$PROJECT_MD" || true)"
+READINESS="$(extract_readiness "$STATE" || true)"
+if [[ -z "$READINESS" ]]; then
+  READINESS="Specified · no readiness claim"
+fi
 SPECK_VER="$(profile_read_speck_version "$WORKSPACE_ROOT")"
 
 PITCH="$PROMISE"
@@ -139,9 +134,20 @@ PITCH="$PROMISE"
 [[ -z "$PITCH" ]] && PITCH="[One-line elevator pitch — what is this product/service/system?]"
 [[ -z "$TITLE" ]] && TITLE="[Project Name]"
 
+FOOTER_LINKS="Methodology docs: [.speck/README.md](.speck/README.md)"
+if [[ -f "$PROJECT_MD" ]]; then
+  FOOTER_LINKS="$FOOTER_LINKS · Project vision: [project.md](specs/projects/${PROJECT_ID}/project.md)"
+fi
+if [[ -f "$STATE" ]]; then
+  FOOTER_LINKS="$FOOTER_LINKS · Project state: [project-state.md](specs/projects/${PROJECT_ID}/project-state.md)"
+fi
+if [[ -f "$PROJECT_DIR/project-decisions-log.md" ]]; then
+  FOOTER_LINKS="$FOOTER_LINKS · Decisions: [project-decisions-log.md](specs/projects/${PROJECT_ID}/project-decisions-log.md)"
+fi
+
 FOOTER="<!-- SPECK:START -->
 Built with [Speck 🥓](https://github.com/telum-ai/speck) — evidence-driven specification methodology (speck ${SPECK_VER}).
-Methodology docs: [.speck/README.md](.speck/README.md) · Project state: [project-state.md](specs/projects/${PROJECT_ID}/project-state.md) · Decisions: [project-decisions-log.md](specs/projects/${PROJECT_ID}/project-decisions-log.md)
+$FOOTER_LINKS
 <!-- SPECK:END -->"
 
 if [[ -f "$README_PATH" ]]; then
@@ -229,10 +235,10 @@ if echo "$USER_BODY" | grep -q 'PROJECT_ID'; then
   USER_BODY="$(echo "$USER_BODY" | sed "s|PROJECT_ID|${PROJECT_ID}|g")"
 fi
 if echo "$USER_BODY" | grep -q '\*\*Status\*\*: Spec phase'; then
-  update_line '^\*\*Status\*\*: Spec phase' "**Status**: ${READINESS}"
+  update_line '^\*\*Status\*\*: Spec phase.*$' "**Status**: ${READINESS}"
 fi
 if echo "$USER_BODY" | grep -q '\[Project description — placeholder for user to fill\]'; then
-  if [[ -n "$VISION" && "$VISION" != "$PITCH" ]]; then
+  if [[ -n "$VISION" ]]; then
     update_line '^\[Project description — placeholder for user to fill\]' "$VISION"
   fi
 fi

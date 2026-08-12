@@ -1,7 +1,6 @@
 ---
 name: speck-decision-log
-description: Append a decision-lock entry to project-decisions-log.md at every phase boundary. Unconditional discipline — invoked from project-specify, project-product-contract, project-evidence-contract, project-architecture, project-plan, epic-plan, epic-architecture, story-plan, and any other skill that locks a non-trivial choice. Captures 3+ alternatives + tradeoff + chosen + rationale + SHA + date. Read this skill when you need to log a decision; do not write to the log directly. FIRST ACTION is read the template at .speck/templates/project/project-decisions-log-template.md.
-disable-model-invocation: false
+description: Appends a decision lock to the project log. Use at phase boundaries whenever a non-trivial choice is locked.
 ---
 
 The user input can be provided directly by the agent or as a command argument — you **MUST** consider it before proceeding with the prompt (if not empty).
@@ -124,7 +123,7 @@ Invoked by:
 - `/epic-plan` (technical approach lock)
 - `/epic-architecture` (cross-cutting decisions)
 - `/story-plan` (significant technical choices only)
-- `/recheck` (decisions reopened by drift findings)
+- `/speck-recheck` (decisions reopened by drift findings)
 - Any skill that runs the skeptical-review primitive
 
 ## Context: $ARGUMENTS

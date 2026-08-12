@@ -1,7 +1,6 @@
 ---
 name: project-roadmap
-description: Load after project-plan to sequence epics into a delivery timeline with dependencies and resource allocation. Produces project-roadmap.md — optional, most useful for multi-team or multi-quarter projects. FIRST ACTION after loading: read template at .speck/templates/project/roadmap-template.md before any context loading or artifact generation.
-disable-model-invocation: false
+description: Sequences epics, dependencies, and resources. Use after project-plan for multi-team or multi-quarter Platform delivery.
 ---
 
 
@@ -11,7 +10,7 @@ User input:
 
 $ARGUMENTS
 
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now using the Read tool:
 ```
@@ -67,27 +66,6 @@ Create a project-level roadmap that shows epic execution timeline, dependencies,
    
    Write output to: `[PROJECT_DIR]/project-roadmap.md`
 
-5. Output summary:
-   ```
-   ✅ Project Roadmap Generated!
-   
-   Execution Strategy: [Type]
-   Total Epics: [X]
-   
-   Phase Breakdown:
-   - Phase 1: [X] epics ([Y] weeks)
-   - Phase 2: [X] epics ([Y] weeks)
-   - Phase 3: [X] epics ([Y] weeks)
-   
-   Parallel Opportunities: [X] epics can run simultaneously
-   
-   Critical Path: E001 → E004 ([X] weeks minimum)
-   
-   Next Steps:
-   1. Review execution plan with team
-   2. Assign epic owners
-   3. Begin Phase 1:
-      /epic-specify "E001: [Epic Name]"
-   ```
+5. Resume the canonical project flow in root `AGENTS.md`; the roadmap owns sequencing, not a second command flow.
 
 Note: This provides project-level orchestration and timeline. Each epic will have its own story breakdown via /epic-breakdown.

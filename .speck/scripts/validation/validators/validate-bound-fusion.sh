@@ -6,7 +6,7 @@
 # field carries both. Fused, the quality bar ANNEXES the go/no-go and the gate can never fail
 # loudly — every blocked thing reads as merely unripe. #93 filed this as the one class of its five
 # with NO mechanism, and the first write-up
-# (.speck/patterns/learned/testing/quality-bound-vs-existence-bound.md) concluded the same, calling
+# Speck's methodology analysis concluded the same, calling
 # out one specific structural property it declined to build. This is that property, built.
 #
 # THE DISCRIMINATOR #93 GIVES: self-held is fine when the bound governs CONTENT; pathological when
@@ -328,7 +328,7 @@ else
    3). The repair is to SEPARATE the two, never to raise the bar: keep the quality axis scoped to
    the quality rungs (UX-RC and above), and let the existence rungs be capped only by existence
    facts (implementation-pending, autonomous-not-done).
-   See .speck/patterns/learned/testing/quality-bound-vs-existence-bound.md."
+   A quality axis may improve a permitted readiness rung; it may not erase the independent go/no-go gate."
         fi
         ;;
       *)

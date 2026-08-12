@@ -1,30 +1,24 @@
 ---
 name: story-ui-spec
-description: Load when a story has significant UI work — multiple components, interaction states, animations, or complex layouts. Run after story-plan and before story-tasks. Produces ui-spec.md with exact styling, component hierarchy, and interaction details. Required for UI-heavy stories; skip for backend/API-only stories. FIRST ACTION after loading: read template at .speck/templates/story/ui-spec-template.md before any context loading or artifact generation.
-disable-model-invocation: false
+description: Creates ui-spec.md for complex UI. Use after story-plan before story-tasks for multi-state or interactive work.
 ---
 
+# story-ui-spec
 
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
-
-User input:
-
-$ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now using the Read tool:
 ```
 .speck/templates/story/ui-spec-template.md
 ```
-The template defines required sections and formatting for `ui-spec.md`, including **PROFILE surface impact** (v7.7+), component hierarchy, state matrix, design token usage, and interaction spec.
+The template defines required sections and formatting for `ui-spec.md`, including **PROFILE surface impact**, component hierarchy, state matrix, design token usage, and interaction spec.
 
 **Checkpoint**: After reading, note the top-level sections from the template. Then continue to Step 1.
 
 Generate precise UI specifications that developers can implement directly.
 
 **When to use this command**:
-- ⚠️ **REQUIRED** for stories that include UI components (forms, pages, interactive elements)
+-  **REQUIRED** for stories that include UI components (forms, pages, interactive elements)
 - **REQUIRED** for stories with multiple component states, variants, or animations
 - **OPTIONAL** for simple, single-state UI elements that follow existing patterns
 
@@ -35,7 +29,7 @@ If `/story-plan` detected UI requirements, you MUST run this command before `/st
 1. Locate the active story directory (STORY_DIR):
    - Preferred: user is already in the story directory (or a subfolder like `contracts/`)
    - Determine STORY_DIR by walking up from current directory until you find `spec.md`
-   - If no `spec.md` found: instruct user to `cd` into the story directory or run `/speck` to route
+   - If no `spec.md` found: instruct the user to `cd` into the story directory or return to root and let AGENTS route the request
    - Define:
      - SPEC_PATH = `{STORY_DIR}/spec.md`
      - UI_SPEC_PATH = `{STORY_DIR}/ui-spec.md`
@@ -73,7 +67,7 @@ Load context:
   - Populate **Responsive Behavior** with the actual breakpoints/devices we will validate
   - Populate **Testing Checklist** coverage matrix (web browsers vs mobile devices vs desktop OS)
   - Add **stability requirements** for automation (e.g. `data-testid`/`testID`/Flutter keys for critical elements)
-  - Reference `.cursor/skills/visual-testing-web/SKILL.md (or platform-specific skill per visual_testing.pattern_file)` so implementers know the expected visual test approach
+  - Reference `.cursor/skills/visual-testing/references/web.md (or platform-specific skill per visual_testing.pattern_file)` so implementers know the expected visual test approach
 
 ### Step 2: Component Discovery
 
@@ -112,25 +106,8 @@ Write output to UI_SPEC_PATH (`{STORY_DIR}/ui-spec.md`)
 
 The template is self-documenting - follow all sections and guidelines within it.
 
-### Step 5: Review and Guide
+### Step 5: Validate and continue
 
-Present what was created:
-- "I've created the UI specification at [path]"
-- "Documented [X] states and [Y] variants"
-- "Included implementation examples"
-
-Validate completeness:
-- "Any additional states or edge cases?"
-- "Need specific framework code examples?"
-- "Want me to generate CSS utility classes?"
-
-Guide to next steps:
-- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
-- Based on the canonical story flow in `AGENTS.md`, the typical sequence is:
-  1. `/story-tasks` (generate implementation tasks)
-  2. `/story-implement` (implement the tasks)
-  3. `/audit` (skeptical audit between implement and validate)
-  4. `/story-validate` (evidence-backed validation)
-  5. `/story-retrospective` (retrospective extraction)
+Check required states, variants, responsive behavior, and testability against the completed artifact. Then resume the canonical story flow in root `AGENTS.md`.
 
 The template contains comprehensive sections for all UI specification needs.

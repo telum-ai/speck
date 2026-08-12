@@ -1,21 +1,16 @@
 ---
 name: harden
-description: Lightweight skill for post-validation hardening. Run when a defect is found in already validated/shipped work. Captures the defect, technical root cause, gate defect (why gates missed it), systemic guardrail (tests/lint/checks), and readiness re-assessment — bypassing the heavy spec -> plan -> tasks lifecycle. FIRST ACTION after loading is read template at .speck/templates/project/harden-template.md.
-disable-model-invocation: false
+description: Hardens post-validation defects and missed gates. Use for bugs; use adjust for deliberate redesign.
 ---
+
+# harden
 
 > 🚦 **METHODOLOGY INTENT SPLIT**: 
 > - Use `/harden` when something you previously validated/shipped is **broken** (defect, bug, incident).
-> - Use `/story-adjust` or `/epic-adjust` when you have **deliberately changed** what you specified/shipped (redesign, visual overhaul, scope pivot) at the story or epic level.
-> - Use `/project-adjust` when you have a **deliberate directional or strategic intent change** (such as pivoting a product contract or strategic vision) at the project level.
+> - Use `/adjust --level story` or `/adjust --level epic` when you have **deliberately changed** what you specified/shipped (redesign, visual overhaul, scope pivot) at the story or epic level.
+> - Use `/adjust --level project` when you have a **deliberate directional or strategic intent change** (such as pivoting a product contract or strategic vision) at the project level.
 
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
-
-User input:
-
-$ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
+## Step 0: Read Template First
 
 **Before any other action** — read this template now:
 ```
@@ -24,7 +19,7 @@ $ARGUMENTS
 
 ---
 
-## 🎯 The Harden Flow (/harden scope)
+## The Harden Flow (/harden scope)
 
 When a bug is found post-validate or post-ship, do NOT spin up a full-ceremony story with spec, plan, and tasks unless the feature requires brand-new functionality. Instead, use the **Harden Flow**:
 

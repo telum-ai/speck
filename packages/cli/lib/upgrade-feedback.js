@@ -18,7 +18,7 @@ export const FEEDBACK_ADDRESSED_BY_RELEASE = [
       { id: '#77.1', summary: 'story-level shuffle rerun: random-order test execution in speck-audit' },
       { id: '#77.2', summary: 'P2 — RLS test bypasses guard: RLS/authz negative tests must attempt forbidden op as a real least-privileged principal' },
       { id: 'bloat', summary: 'Consolidation: retired 3 skills, unified scan, parameterized dispatchers, demoted 20 integration patterns + 6 visual hosts to lazy-load' },
-      { id: 'migration', summary: 'Two-Layer Migration: mechanical Layer 1 (.v8-reprove-needed marker) + semantic Layer 2 (/speck-reprove cap-and-worklist)' },
+      { id: 'migration', summary: 'Two-Layer Migration: mechanical Layer 1 (.v8-reprove-needed marker) + semantic Layer 2 (/speck-migrate cap-and-worklist)' },
     ],
   },
   {
@@ -78,7 +78,7 @@ export const FEEDBACK_ADDRESSED_BY_RELEASE = [
   {
     version: '7.14.0',
     items: [
-      { id: 'E1', summary: 'Promise conservation: traceability-matrix.md + validate-traceability-matrix.sh (epic-plan produces, epic-analyze blocks, story-validate cites, epic-validate re-walks)' },
+      { id: 'E1', summary: 'Promise conservation: traceability-matrix.md + validate-traceability-matrix.sh (epic-plan produces, analyze at epic scope blocks, story-validate cites, epic-validate re-walks)' },
       { id: 'E2', summary: 'Design docs are promises — wireframes/experience-chain seams enumerated or DEC-descoped ("wireframes are inspiration" banned)' },
       { id: 'E3', summary: 'Anti-simulation Verify-Skills Gate + sub-agent return contract (skills_invoked) in /epic + /story; advance-on-evidence not file-presence' },
       { id: 'E4', summary: 'Chaining/continuation closers in story-specify/epic-specify/speck-audit — orchestrated runs do not stop at the menu' },
@@ -105,7 +105,7 @@ export const FEEDBACK_ADDRESSED_BY_RELEASE = [
     version: '7.13.2',
     items: [
       { id: 'S1', summary: 'Ambition-aware UI path in epic-specify — Redesign Ambition blocks Rubric Mode default' },
-      { id: 'S2', summary: 'Promise-coverage (unaddressed-promise gap) check in epic-analyze and project-analyze' },
+      { id: 'S2', summary: 'Promise-coverage (unaddressed-promise gap) check in analyze at epic and project scope' },
       { id: 'S3', summary: 'Forbidding-context filter for banned-language-lint (NOT This / Banned columns)' },
       { id: 'S4', summary: 'banned-language-lint --staged + pre-commit hook wiring' },
       { id: 'S5', summary: 'validate-epic-spec X-Y range parse + overview awk fix' },
@@ -133,7 +133,7 @@ export const FEEDBACK_ADDRESSED_BY_RELEASE = [
     items: [
       { id: 'H1', summary: 'Command-type Stop hook (lifecycle-scoped)' },
       { id: 'H2', summary: 'SPECK-managed settings blocks + reconcile-settings' },
-      { id: 'H3', summary: 'SETTINGS_DRIFT detection on /recheck' },
+      { id: 'H3', summary: 'SETTINGS_DRIFT detection on /speck-recheck' },
       { id: 'H4', summary: 'Auto-reconcile on speck upgrade / init' },
     ],
   },
@@ -163,7 +163,7 @@ export const FEEDBACK_ADDRESSED_BY_RELEASE = [
     version: '7.12.1',
     items: [
       { id: 'M1', summary: 'Rendering Gotchas in primitives registry + audit/visual-quality grep for pixel-level anti-patterns' },
-      { id: 'M2', summary: 'Asset single-source norm + asset-drift-check.sh for duplicate SVG geometry (ASSET_DRIFT.P1 on /recheck)' },
+      { id: 'M2', summary: 'Asset single-source norm + asset-drift-check.sh for duplicate SVG geometry (ASSET_DRIFT.P1 on /speck-recheck)' },
       { id: 'M3', summary: 'Brownfield UI Rubric Mode in /epic-specify — shared Screen Rubric instead of duplicate wireframes' },
     ],
   },

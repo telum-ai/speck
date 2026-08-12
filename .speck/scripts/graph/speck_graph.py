@@ -9,7 +9,7 @@ of truth — this file is a compile artifact, like a binary.
 Design invariants (see docs/graph/witness-graph-design.md §6):
   1. Derived + disposable. No one edits witness.json. Dirty-vs-HEAD → gates fail.
   2. The arc RETIRES bespoke parsers; it does not add a parallel truth.
-  3. STRUCTURAL edges only. Fidelity / taste / completeness stay with /audit + the canaries.
+  3. STRUCTURAL edges only. Fidelity / taste / completeness stay with /speck-audit + the canaries.
      This module can prove `traceable · complete · fresh`. It CANNOT prove `faithful · good`.
   4. Caps, never raises: GRAPH_CAP is a ceiling on claimable readiness, never a grant.
 
@@ -720,8 +720,8 @@ def _extract_story(spec, story_path, epic_id, story_qual, nodes, edges, add_node
 
     # verdict extraction (v9.4): scan this story's validation artifacts for RECORDED MM verdicts →
     # `judges` edges. The graph proves a verdict was recorded (the excellence machinery RAN), NOT that
-    # it is honest — that stays with /audit. So an agent can't dodge UNJUDGED by writing a bare token
-    # without the /audit adversary catching a fabricated one.
+    # it is honest — that stays with /speck-audit. So an agent can't dodge UNJUDGED by writing a bare token
+    # without the /speck-audit adversary catching a fabricated one.
     _extract_verdicts(story_path, story_qual, epic_id, nodes, edges, add_node)
 
 
@@ -740,7 +740,7 @@ def _extract_story(spec, story_path, epic_id, story_qual, nodes, edges, add_node
 #     mm_verdicts: MM-1=GOOD, MM-2=BAD
 # The old loose pattern survives as a HINT ONLY (`UNPARSED_VERDICT.P3`): verdict-shaped prose with
 # no machine-readable line is surfaced so the author can convert it — it can no longer clear a gate.
-# As before, the graph proves a verdict was RECORDED, never that it is honest; that stays with /audit.
+# As before, the graph proves a verdict was RECORDED, never that it is honest; that stays with /speck-audit.
 # ---------------------------------------------------------------------------
 
 VERDICT_WORDS = r"GOOD|BAD|PASS|FAIL|CONDITIONAL[ _-]?PASS"
@@ -1090,7 +1090,7 @@ def cmd_context(project_dir, subject):
 # check — the forcing gates. LOUD and structural. Caps or blocks; NEVER grants.
 #
 # The anti-rubber-stamp law: this proves traceable/complete/fresh. It CANNOT prove
-# faithful/good — those stay with /audit + the canaries. Gates that need data not yet in the
+# faithful/good — those stay with /speck-audit + the canaries. Gates that need data not yet in the
 # graph (orphan-code needs code nodes from tests-as-join P5; un-judged needs verdict nodes)
 # are reported as HONEST pending notes, never as a false pass.
 # ---------------------------------------------------------------------------
@@ -1817,19 +1817,19 @@ def check_graph(project_dir):
     # machinery ran). Migration-aware: if NO MM anywhere has a verdict yet, LARP simply hasn't run →
     # honest cap, not a block. Once ANY MM is judged, an unjudged MM is a real gap → caps ux-rc+
     # (the /epic-validate gate blocks the ux-rc transition on it). The graph proves a verdict EXISTS;
-    # whether it is honest stays with /audit + LARP (the anti-rubber-stamp line).
+    # whether it is honest stays with /speck-audit + LARP (the anti-rubber-stamp line).
     judged = set(e.dst for e in edges if e.kind == "judges" and e.dst)
     mm_nodes = [n for n in nodes.values() if n.kind == "magic-moment"]
     if mm_nodes:
         if not judged:
             caps.append("UNJUDGED_SURFACE.P2: %d magic-moment(s) defined, none judged yet — run "
-                        "/larp connoisseur Job B (LARP not yet run; honest cap, not a block)" % len(mm_nodes))
+                        "/speck-larp connoisseur Job B (LARP not yet run; honest cap, not a block)" % len(mm_nodes))
             cap_state = _min_readiness(cap_state, "integration-green")
         else:
             unjudged = [n.id for n in mm_nodes if n.id not in judged]
             if unjudged:
                 caps.append("UNJUDGED_SURFACE.P2: %d/%d magic-moment(s) have no recorded verdict (%s) — "
-                            "/larp Job B judges them; bars ux-rc+ until then"
+                            "/speck-larp Job B judges them; bars ux-rc+ until then"
                             % (len(unjudged), len(mm_nodes), ", ".join(sorted(unjudged)[:5])))
                 cap_state = _min_readiness(cap_state, "integration-green")
 
@@ -1846,7 +1846,7 @@ def check_graph(project_dir):
         "PROMISE_FIDELITY: NOT evaluated and not decidable here — the graph proves a delivery claim "
         "RESOLVES (entry point named · mutation site recorded · path/symbol/line not refuted by the "
         "tree), never that the gesture reaches it or that the code keeps the promise. Runtime "
-        "reach stays with /larp; mutation execution with `mutate-guard.sh --verify-receipt`.",
+        "reach stays with /speck-larp; mutation execution with `mutate-guard.sh --verify-receipt`.",
     ]
 
     # The exceptions registry, matched LAST so it sees every live finding and cap this run minted.
@@ -1869,13 +1869,13 @@ def cmd_check(project_dir):
     #   • exit non-zero — `check` used to return `1 if hard else 0`, so `build && check` chains and
     #     CI both read a 142-commits-behind witness as a pass. GRAPH_UNBUILT deliberately does NOT
     #     land here: exiting non-zero on a never-built graph would brick every greenfield project
-    #     before it can run `build` / `/speck-graph-up`.
+    #     before it can run `build` / `/speck-migrate`.
     #   • withhold the cap NUMBER — the number is what gets quoted onward into project-state and
     #     pickups, where it outlives the warning printed beside it (brightstance read `SHIP` off a
     #     road that a fresh compile scored NO-SHIP, 227 nodes out of date). Say STALE instead.
     stale = any(c.startswith("GRAPH_STALE") for c in caps)
     sys.stdout.write("Speck Witness Graph — forcing gates (structural: traceable · complete · fresh)\n")
-    sys.stdout.write("(faithful · good · excellent are NOT graph-provable — owned by /audit + LARP)\n\n")
+    sys.stdout.write("(faithful · good · excellent are NOT graph-provable — owned by /speck-audit + LARP)\n\n")
     if hard:
         sys.stdout.write("❌ %d hard finding(s) — BLOCK:\n\n" % len(hard))
         for f in hard:
@@ -2006,7 +2006,8 @@ def cmd_gate(project_dir, story=None, epic=None):
 # supplies the three things native /goal cannot compute: the completion CONDITION, the evidence
 # SURFACE the evaluator reads (this line), and — via AGENTS.md — the per-turn routing. The
 # evaluator judges SURFACED text and runs no tools, so `gap` folds the structural remainder +
-# report-frontmatter axes into ONE machine-legible `SPECK-GAP:` line. See docs/v9/v9-north-star.md §6.
+# report-frontmatter axes into ONE machine-legible `SPECK-GAP:` line. Historical rationale:
+# docs/history/north-stars/v9.md §6.
 # ---------------------------------------------------------------------------
 
 def _collect_axes(project_dir):
@@ -2135,7 +2136,7 @@ def emit_goal(project_dir, target=None):
         "OUTCOME: `speck_graph.py check` and `gap` both report SPECK-GAP with no `.P1` and no caps, "
         "every validation-report declares readiness>=%s with felt_axis and taste_axis non-uncovered "
         "and no forks-open, every MM-N observed firing in LARP Job A and judged good in Job B, every "
-        "JOB-N served (no PHANTOM_PROMISE), and /audit reports P0=0 P1=0. "
+        "JOB-N served (no PHANTOM_PROMISE), and /speck-audit reports P0=0 P1=0. "
         "VERIFICATION SURFACE: each turn, re-run and print VERBATIM the stdout of "
         "`python3 .speck/scripts/graph/speck_graph.py check %s` and `... gap %s` — the terminating "
         "token is a literal `SPECK-GAP: none` line, never a hand-typed summary. "
@@ -2146,7 +2147,7 @@ def emit_goal(project_dir, target=None):
         "ITERATION POLICY: take the item `gap` names in its `NEXT=` token — it is COMPUTED (severity, "
         "then gate code, then subject), so it is the same item every session and the same row "
         "`findings` ranks first; never re-rank it by hand. Close it (untraced/phantom -> the story "
-        "chain; audit P0/P1 -> /harden; uncovered FELT / unjudged MM -> /larp; stale -> build), then "
+        "chain; audit P0/P1 -> /harden; uncovered FELT / unjudged MM -> /speck-larp; stale -> build), then "
         "re-check before advancing. "
         "BLOCKED STOP: stop and report for an owner decision at any forks-open TASTE, contract/project "
         "pivot, price lock, or deploy. "
@@ -2176,14 +2177,14 @@ def cmd_gap(project_dir, emit=False, target=None, punch=False):
 # 🔨 BUILD (make something to prove) → 🔬 PROVE (climb grain to the ceiling). Each line is
 # {node · source · gate-code · resolving-skill}. Disposable: the GRAPH_STALE law applies to the
 # road itself (a road disagreeing with a fresh compile is stale), so it never becomes a 9th
-# authored copy. It charts what remains AND (via /speck-graph-up) heals the road already walked.
+# authored copy. It charts what remains AND (via /speck-migrate) heals the road already walked.
 # ---------------------------------------------------------------------------
 
 # gate-code → (bucket, resolving-skill). Buckets are ordered; a code not listed defaults to TIDY.
 ROAD_ROUTING = {
     "GRAPH_STALE": ("TIDY", "speck_graph.py build"),
-    "GRAPH_UNBUILT": ("TIDY", "speck_graph.py build (first build — or /speck-graph-up if migrating)"),
-    "GRAPH_UNMIGRATED": ("TIDY", "/speck-graph-up (harden ids) — or fill the promise ledger"),
+    "GRAPH_UNBUILT": ("TIDY", "speck_graph.py build (first build — or /speck-migrate if migrating)"),
+    "GRAPH_UNMIGRATED": ("TIDY", "/speck-migrate (graph stage: harden ids) — or fill the promise ledger"),
     "DANGLING_REF": ("TIDY", "fix the reference (repoint or restore the target)"),
     "DUP_ID": ("TIDY", "rename one of the colliding dirs to a free S-number"),
     "DEP_CYCLE": ("TIDY", "break the circular dependency (drop one depends_on edge)"),
@@ -2194,14 +2195,14 @@ ROAD_ROUTING = {
     "UNCLAIMED_MM_REF": ("TIDY", "if the story delivers it, add `serves: [MM-N]` to its frontmatter — else ignore"),
     "HETEROGENEOUS_ID": ("TIDY", "give the §5 heading an `MM-N —` id (`MM-5a` is accepted)"),
     "ORPHAN_CODE": ("REMOVE", "remove the code no promise asked for (or wire it) — pending tests-as-join P5"),
-    "PROMISE_FIDELITY": ("PROVE", "/larp Job A+B and /audit — undecidable in the graph; never gate on a guess"),
+    "PROMISE_FIDELITY": ("PROVE", "/speck-larp Job A+B and /speck-audit — undecidable in the graph; never gate on a guess"),
     "MAPPED_UNWITNESSED": ("PROVE", "name the production `entry_point` and cite the `<path>:<line>` a delete-the-call mutation reddened"),
     "WIRING_UNRESOLVED": ("TIDY", "repoint the citation at the path/symbol/line that really exists — or delete it"),
     "EXCEPTION_PHANTOM": ("TIDY", "delete the row from findings-exceptions.md — the finding it excepts no longer fires"),
     "EXCEPTION_UNJUSTIFIED": ("TIDY", "give the row a posture (ACCEPTED|SUPERSEDED) and a reason an outsider can check"),
-    "UNJUDGED_SURFACE": ("PROVE", "/larp connoisseur Job B — judge this surface (pending verdict extraction)"),
+    "UNJUDGED_SURFACE": ("PROVE", "/speck-larp connoisseur Job B — judge this surface (pending verdict extraction)"),
     "UNPARSED_VERDICT": ("PROVE", "record it as `- **VERDICT** MM-N = GOOD|BAD` in the validation report"),
-    "PRE_V9_PROOF": ("PROVE", "/speck-reprove — re-earn the claim under v9 evidence"),
+    "PRE_V9_PROOF": ("PROVE", "/speck-migrate — re-earn the claim under current evidence"),
     "GRAIN_DEFICIT": ("PROVE", "collect product-grain evidence (cold-start build-LARP) and re-grade the row"),
 }
 BUCKET_ORDER = ["TIDY", "REMOVE", "BUILD", "PROVE"]
@@ -2269,7 +2270,7 @@ def render_road(project_dir):
     out.append("The four buckets are in dependency order: tidy so it's legible → remove so you don't "
                "build on orphans → build so there's something to prove → prove to climb grain. "
                "The graph proves *traceable · complete · fresh* only — *faithful · good · excellent* "
-               "stay owned by `/audit` + the four-axis LARP.")
+               "stay owned by `/speck-audit` + the four-axis LARP.")
     out.append("")
     for b in BUCKET_ORDER:
         rows = buckets[b]

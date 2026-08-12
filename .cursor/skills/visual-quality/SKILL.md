@@ -1,6 +1,6 @@
 ---
 name: visual-quality
-description: Enforce visual design quality in every UI file. Fires for .tsx, .jsx, .vue, .svelte, and similar component files. Ensures implementations express the project's design personality rather than producing generic/boilerplate UI.
+description: Applies project visual personality and quality rules. Use while building or reviewing user-facing UI components.
 ---
 
 # Visual Quality Gate
@@ -105,16 +105,16 @@ If ANY answer is "no" or "not sure" — iterate before marking done.
 
 ## Common Anti-Patterns to Reject
 
-- ❌ All text the same size/weight (no hierarchy)
-- ❌ Default browser focus rings with no custom styling
-- ❌ Solid flat backgrounds with no texture or depth
-- ❌ Components that look like they came from a generic UI kit
-- ❌ Padding/margin that's uniform everywhere (no rhythm)
-- ❌ Animations added "because" rather than to communicate
-- ❌ Color palette used but without emphasis/drama
-- ❌ Hover states that are just opacity changes
-- ❌ Empty states with just text and no design
-- ❌ Forms that feel like spreadsheets instead of conversations
+-  All text the same size/weight (no hierarchy)
+-  Default browser focus rings with no custom styling
+-  Solid flat backgrounds with no texture or depth
+-  Components that look like they came from a generic UI kit
+-  Padding/margin that's uniform everywhere (no rhythm)
+-  Animations added "because" rather than to communicate
+-  Color palette used but without emphasis/drama
+-  Hover states that are just opacity changes
+-  Empty states with just text and no design
+-  Forms that feel like spreadsheets instead of conversations
 
 ## Integration with Speck Workflow
 

@@ -130,6 +130,116 @@ else
 ## 7. Required Live-Service Evidence"
 fi
 
+# 8a. Exact section identities and load-bearing substance. A numbered heading
+# is not an evidence contract: every center below must contain the mechanism it
+# claims to own, and strict validation must reject a shape-only artifact.
+declare -a section_contracts=(
+  '1|Target Launch Platforms'
+  '2|Valid Proof Sources'
+  '3|Invalid Proof Sources'
+  '4|Required Runtime LARP / Integration Stress Tests'
+  '5|Quality Judgment & Scoring Protocol'
+  '6|Required Static Evidence'
+  '7|Required Live-Service Evidence'
+  '8|Readiness State Gate Criteria'
+)
+for section_contract in "${section_contracts[@]}"; do
+  section_number="${section_contract%%|*}"
+  section_title="${section_contract#*|}"
+  if ! printf '%s\n' "$content" | grep -Eiq "^##[[:space:]]+${section_number}[.][[:space:]]+${section_title}([[:space:]]|$)"; then
+    log_error "Section ${section_number} has the wrong or missing semantic title" \
+      "Restore '## ${section_number}. ${section_title}' so a different section cannot satisfy this gate by number alone."
+  fi
+done
+
+section_body() {
+  local number="$1"
+  printf '%s\n' "$content" | awk -v number="$number" '
+    $0 ~ ("^##[[:space:]]+" number "[.]") { active=1; next }
+    active && /^##[[:space:]]+/ { exit }
+    active { print }
+  '
+}
+
+if printf '%s\n' "$content" | grep -Eq '^\|[[:space:]]*PRM-[0-9]{3}[[:space:]]*\|'; then
+  log_success "Promise Proof Map contains concrete PRM rows"
+else
+  log_error "Promise Proof Map has no concrete PRM-NNN row" \
+    "Add one row per product-contract promise with claim, observable mechanism, admissible evidence, and a reddening failure probe."
+fi
+
+product_contract="$(dirname "$file_path")/product-contract.md"
+if [[ -f "$product_contract" ]]; then
+  missing_promises=""
+  while IFS= read -r promise_id; do
+    [[ -n "$promise_id" ]] || continue
+    if ! printf '%s\n' "$content" | grep -Eq "(^|[^A-Z0-9-])${promise_id}([^A-Z0-9-]|$)"; then
+      missing_promises="${missing_promises}${missing_promises:+, }${promise_id}"
+    fi
+  done < <(grep -oE 'PRM-[0-9]{3}' "$product_contract" | sort -u)
+  if [[ -n "$missing_promises" ]]; then
+    log_error "Promise Proof Map omits product-contract promises: $missing_promises" \
+      "Enumerate every product-contract PRM-NNN separately; aggregate rows cannot conserve promises."
+  else
+    log_success "Every numeric product-contract promise is represented"
+  fi
+fi
+
+invalid_proof_section="$(section_body 3)"
+anti_proof_categories=0
+printf '%s\n' "$invalid_proof_section" | grep -Eiq 'dev([ -]?server|elopment)|localhost' && ((anti_proof_categories+=1))
+printf '%s\n' "$invalid_proof_section" | grep -Eiq 'mock|bypass|superuser' && ((anti_proof_categories+=1))
+printf '%s\n' "$invalid_proof_section" | grep -Eiq 'screenshot|capture|un.?adjudicated|source inspection' && ((anti_proof_categories+=1))
+if [[ "$anti_proof_categories" -eq 3 ]]; then
+  log_success "Invalid Proof Sources names concrete surrogate classes"
+else
+  log_error "Invalid Proof Sources is a pointer or generic warning, not an anti-proof contract" \
+    "Name concrete dev/local, mock/bypass, and capture/source-inspection proof that cannot establish this project's claims."
+fi
+
+larp_rows="$(section_body 4 | awk -F'|' '
+  /^\|/ && $0 !~ /^[[:space:]]*\|[-:|[:space:]]+$/ && tolower($0) !~ /persona.*pass condition/ {
+    nonempty=0
+    for (i=2; i<NF; i++) {
+      cell=$i
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", cell)
+      if (cell != "") nonempty++
+    }
+    if (nonempty >= 3) rows++
+  }
+  END { print rows+0 }
+')"
+if [[ "$larp_rows" -gt 0 ]]; then
+  log_success "Runtime LARP / stress section has at least one executable row"
+else
+  log_error "Runtime LARP / stress section has no executable row" \
+    "Name an actor or principal, observable pass condition, and evidence home for at least one product flow."
+fi
+
+quality_section="$(section_body 5)"
+quality_axes_valid=true
+for axis in CORRECT ON-CONTRACT FELT-GOOD TASTE; do
+  printf '%s\n' "$quality_section" | grep -Fqi "$axis" || quality_axes_valid=false
+done
+if [[ "$quality_axes_valid" == true ]] && printf '%s\n' "$quality_section" | grep -Fqi 'DOES-IT-WORK' && printf '%s\n' "$quality_section" | grep -Fqi 'IS-IT-GOOD'; then
+  log_success "Quality section binds the four axes and both LARP judgments"
+else
+  log_error "Quality section omits non-collapsible axes or LARP judgments" \
+    "Bind CORRECT, ON-CONTRACT, FELT-GOOD, TASTE, DOES-IT-WORK, and IS-IT-GOOD explicitly."
+fi
+
+readiness_section="$(section_body 8)"
+readiness_valid=true
+for state in NO-SHIP IMPL-GREEN INTEGRATION-GREEN SHIP-RC SHIP; do
+  printf '%s\n' "$readiness_section" | grep -Fq "$state" || readiness_valid=false
+done
+if [[ "$readiness_valid" == true ]]; then
+  log_success "Readiness section binds the delivery ladder"
+else
+  log_error "Readiness section does not bind the full delivery ladder" \
+    "Define NO-SHIP, IMPL-GREEN, INTEGRATION-GREEN, SHIP-RC, and SHIP requirements and blockers."
+fi
+
 # 8. Scan for unreplaced REPLACE_BEFORE_SHIP placeholders
 #
 # P2-4 (#93): this used to be `grep -q "REPLACE_BEFORE_SHIP"` — unanchored,
@@ -154,12 +264,54 @@ else
     "Search for all occurrences of 'REPLACE_BEFORE_SHIP' and fill in concrete values."
 fi
 
-# 9. PROFILE Gate Criteria (v7.7+)
-if echo "$content" | grep -q "PROFILE Gate Criteria"; then
-  log_success "PROFILE Gate Criteria section found"
+# 9. PROFILE Gate Criteria
+#
+# The anchor accepts both the v11 heading ("### 8a. PROFILE Gate Criteria")
+# and the pre-v11 heading it replaces ("### PROFILE Gate Criteria (v7.7+)").
+# No v11 migration rewrites an existing project's evidence-contract.md (no
+# registerMigration entry in packages/cli/lib/migrate.js at 11.0.0 — outside
+# this validator's lane), so a v7.7-v10 project's PROFILE section must keep
+# passing on its own shape rather than hard-failing pre-commit until that
+# migration lands.
+profile_section="$(printf '%s\n' "$content" | awk '
+  /^### ([0-9]+[a-z]?[.] )?PROFILE Gate Criteria([[:space:]]*\(v[0-9]+(\.[0-9]+)?\+\))?[[:space:]]*$/ { active=1 }
+  active && /^##[^#]/ { exit }
+  active { print }
+')"
+if [[ -z "$profile_section" ]]; then
+  log_error "Missing PROFILE Gate Criteria subsection" \
+    "Add ### PROFILE Gate Criteria under Section 7, or run /speck-migrate --phase=profile"
 else
-  log_warning "Missing PROFILE Gate Criteria subsection (v7.7+)" \
-    "Add ### PROFILE Gate Criteria under Section 7, or run /speck-catch-up --phase=profile"
+  profile_contract_valid=true
+  for declaration in \
+    'PROFILE_REGISTRY=project.md#PROFILE surfaces' \
+    'PROFILE_GATE_COMMAND=bash .speck/scripts/profile-drift-check.sh --claim <state>' \
+    'PROFILE_COVERAGE=every-row' \
+    'PROFILE_P1_BLOCKS=true' \
+    'PROFILE_MISSING_POLICY=finding' \
+    'PROFILE_UNREACHABLE_POLICY=finding' \
+    'PROFILE_PLACEHOLDER_POLICY=finding'; do
+    if ! printf '%s\n' "$profile_section" | grep -Fqx "$declaration"; then
+      profile_contract_valid=false
+    fi
+  done
+  # Legacy (v7.7+) shape: a filled-in "PROFILE requirement" ladder table plus
+  # a per-surface table, scaffolded from the pre-v11 template. It predates
+  # the machine-readable PROFILE_* declarations and is accepted as-is until
+  # a real migration rewrites it to the v11 form.
+  profile_legacy_valid=false
+  if printf '%s\n' "$profile_section" | grep -Fq "PROFILE requirement" \
+    && printf '%s\n' "$profile_section" | grep -Fq "Per declared PROFILE surface"; then
+    profile_legacy_valid=true
+  fi
+  if [[ "$profile_contract_valid" == true ]]; then
+    log_success "Binding multi-surface PROFILE machine contract found"
+  elif [[ "$profile_legacy_valid" == true ]]; then
+    log_success "Legacy (v7.7+) PROFILE Gate Criteria table accepted pending v11 migration"
+  else
+    log_error "PROFILE Gate Criteria is shape-only or incomplete" \
+      "Restore the authoritative PROFILE_REGISTRY, PROFILE_GATE_COMMAND, PROFILE_COVERAGE, PROFILE_P1_BLOCKS, and missing/unreachable/placeholder policy declarations."
+  fi
 fi
 
 # === OUTPUT RESULTS ===

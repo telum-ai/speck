@@ -6,7 +6,7 @@
 # at /epic-specify. It answers one question — "is this project's planning corpus allowed to be
 # built on yet?"
 #
-# WHY IT EXISTS (issue #106). /project-analyze was optional at exactly the altitude where the
+# WHY IT EXISTS (issue #106). /analyze --level project was optional at exactly the altitude where the
 # author self-certifies. Measured on project 001-odd: a planning corpus produced through the FULL
 # canonical Build flow — every skill entered, five skeptical-review primitives, premise-challenge,
 # strict validators green — still carried 1 CRITICAL and 13 HIGH defects. Every one of them
@@ -210,7 +210,7 @@ echo "   play_level: ${play_level}   [${play_level_source}]"
 echo "   epic count: ${epic_count}   [epics.md headings: ${epics_md_count}, epics/ dirs: ${epic_dir_count} — MAX taken]"
 if [[ "$applicable" != true ]]; then
   echo -e "${GREEN}   → NOT APPLICABLE (${applicability_reason}).${NC}"
-  echo -e "${GREEN}\n✅ /project-analyze is not required at this scale. Clear to specify epic${epic_id:+ $epic_id}.${NC}"
+  echo -e "${GREEN}\n✅ /analyze --level project is not required at this scale. Clear to specify epic${epic_id:+ $epic_id}.${NC}"
   echo "   (It stays a good idea; it is simply not a gate below Build-with-4-epics — AGENTS.md:37's anti-bloat rule.)"
   exit 0
 fi
@@ -252,7 +252,7 @@ if [[ -f "$marker" ]]; then
     # only this step can show is the marker's own contents — which upgrade granted it, and the exact
     # gesture that ends it. Two copies of the same paragraph is noise, and noise is how a repeated
     # notice stops being read.
-    echo -e "${YELLOW}   ⚠️  GRANDFATHERED (planned before the v10.3 analysis gate) — NOT blocked; repeats on every run until /project-analyze runs once.${NC}"
+    echo -e "${YELLOW}   ⚠️  GRANDFATHERED (planned before the v10.3 analysis gate) — NOT blocked; repeats on every run until /analyze --level project runs once.${NC}"
     echo "   ── marker: ${marker} ──"
     sed 's/^/   │ /' "$marker" || true
     echo "   ────────────────────────────────────────────────────────────"
@@ -323,7 +323,7 @@ if [[ "$rc" -ne 0 ]]; then
   echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo -e "${RED}GATE REJECTED: the planning corpus for ${project_id} is not clear to build on.${NC}"
   echo -e "\n${YELLOW}To clear it:${NC}"
-  echo -e "  1. Run ${GREEN}/project-analyze${NC} on ${PROJECT_DIR} — a decorrelated adversarial pass over"
+  echo -e "  1. Run ${GREEN}/analyze --level project${NC} on ${PROJECT_DIR} — a decorrelated adversarial pass over"
   echo -e "     PRD.md, epics.md and product-contract.md, by a reviewer that did not author them."
   echo -e "  2. Resolve (or waive with a DEC) every CRITICAL finding it records."
   echo -e "  3. Re-run this check."

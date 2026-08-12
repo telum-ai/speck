@@ -1,23 +1,17 @@
 ---
 name: epic-breakdown
-description: Load after epic-tech-spec.md exists to create the story map, dependencies, and implementation order (epic-breakdown.md). Required before starting any individual story in the epic. Use when user says 'break this into stories' or 'what stories do we need?'. FIRST ACTION after loading: read template at .speck/templates/epic/breakdown-template.md before any context loading or artifact generation.
-disable-model-invocation: false
+description: Maps an epic to ordered, traceable stories. Use after epic-plan and before starting story work.
 ---
 
+# epic-breakdown
 
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
+## Step 0: Read Template First
 
-User input:
-
-$ARGUMENTS
-
-## ⚠️ Step 0: Read Template First
-
-**Before any other action** — read this template now using the Read tool:
+**Before any other action** — load both required templates through the executable contract:
 ```
-.speck/templates/epic/breakdown-template.md
+python3 .speck/scripts/context/speck_context.py epic-breakdown
 ```
-The template defines required sections and formatting for `epic-breakdown.md`, including story table format, dependency mapping, parallel markers, and phase grouping. Without reading it, generated breakdowns have wrong structure. Also note: placeholder `spec.md` files created here must use lifecycle state `Draft (Placeholder)` — the template documents this.
+Require exit 0 and `SPECK_CONTEXT_RECEIPT` before any mutation. The receipt includes the breakdown and story templates; do not load them again.
 
 **Checkpoint**: After reading, note the story table format and dependency notation. Then continue to Step 1.
 
@@ -68,10 +62,7 @@ Create a comprehensive story breakdown that maps all user stories within the epi
 
 4. Generate epic breakdown:
 
-   **CRITICAL**: Load and follow the template exactly:
-   ```
-   .speck/templates/epic/breakdown-template.md
-   ```
+   **CRITICAL**: Follow the receipted breakdown template exactly.
 
    Write output to: `[EPIC_DIR]/epic-breakdown.md`
 
@@ -132,36 +123,17 @@ Create a comprehensive story breakdown that maps all user stories within the epi
 6b. **Update Traceability Matrix Mapping (REQUIRED — conservation law)**:
    - Read the existing `[EPIC_DIR]/traceability-matrix.md` (created by `/epic-plan`).
    - For every `PRM-NNN` row, map it to the newly created story and AC ref by filling in the `Discharge (story-id + AC-ref)` column (e.g. `S001 / AC-2`).
+   - Re-read the promise text and the target AC together. The AC must assert the
+     same actor, protected boundary, and outcome; shared vocabulary alone is not
+     a semantic match. Correct any wrong-promise/wrong-AC pairing before save.
    - Update its Status from `open` to `mapped` (or `pilot-gated` if retrofitted/deferred).
-   - Verify that there are zero `open` rows left in the matrix. Any unmapped/open rows remaining will block `/epic-analyze` as a P1 unresolved promise.
+   - Verify that there are zero `open` rows left in the matrix. Any unmapped/open rows remaining will block `/analyze --level epic` as a P1 unresolved promise.
+   - After the final breakdown, placeholder, and matrix edit, run
+     `bash .speck/scripts/validation/validators/validate-traceability-matrix.sh --check-fidelity "$EPIC_DIR"`
+     as a standalone command event. Do not chain, pipe, or wrap it, and do not
+     mutate afterward; the recorded exit must belong to this validator. Treat
+     every fidelity warning as a mapping review item, not a pass.
 
-7. Output summary:
-   ```
-   ✅ Epic Story Breakdown Complete!
-   
-   Epic: [Name]
-   Total Stories: [X]
-   
-   Phase Breakdown:
-   - Phase 1: [Y] stories (setup)
-   - Phase 2: [Z] stories (core)
-   - Phase 3: [A] stories (integration)  
-   - Phase 4: [B] stories (quality)
-   
-   Parallel Opportunities: [Count]
-   Critical Path Length: [Duration]
-   
-   Story Directories Created: [Count]
-   Placeholder specs created: [Count] (spec.md with lifecycle: Draft — awaiting /story-specify)
-
-   Next Steps:
-   1. Review story breakdown with team
-   2. Run /story-specify on Phase 1 stories to complete the draft specs
-   3. Stories marked [P] can be specified/implemented in parallel
-   4. Or run /epic-analyze for validation first
-
-   Note: Placeholder specs have lifecycle state "Draft (Placeholder)" in their spec.md.
-   /story-specify reads this state and fills in the full specification in-place.
-   ```
+7. Resume the canonical epic flow in root `AGENTS.md`. Placeholder lifecycle state, not chat output, tells downstream routing that `/story-specify` is still required.
 
 Note: This breakdown organizes stories for planning and coordination. Each story will generate its own concrete implementation tasks via /story-tasks. Placeholder specs provide a starting point but require /story-specify to reach "Specified" state before planning or implementation.

@@ -8,9 +8,9 @@
  *   - Cursor:      `.md` + YAML frontmatter, model = a Cursor slug (no Sonnet/Haiku exist there)
  *   - Codex:       `.toml`, `developer_instructions` string, model = a GPT slug
  *
- * SOURCE OF TRUTH: `.cursor/agents/speck-*.md`. Humans edit the markdown BODY and the `tier:`
- * frontmatter field there. This generator OWNS every `model` value and the `.claude`/`.codex`
- * outputs — it derives them from `tier` via the maps below. Run it after editing any source:
+ * SOURCE OF TRUTH: `.cursor/agents/speck-*.md` owns each role body;
+ * `.speck/reference/agent-dispatch.json` owns the roster, tier, independence, and skill routes.
+ * This generator derives every harness model from the dispatch tier. Run it after editing either:
  *
  *     node packages/cli/lib/generate-agents.js      # or: npm run gen-agents
  *
@@ -26,20 +26,14 @@ const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..'
 const SRC_DIR = join(REPO_ROOT, '.cursor', 'agents');
 const CLAUDE_DIR = join(REPO_ROOT, '.claude', 'agents');
 const CODEX_DIR = join(REPO_ROOT, '.codex', 'agents');
+const DISPATCH_PATH = join(REPO_ROOT, '.speck', 'reference', 'agent-dispatch.json');
+const DISPATCH = JSON.parse(readFileSync(DISPATCH_PATH, 'utf-8'));
 
-// Canonical role -> tier (the doctrine). Frontier = decompose/design/audit; mid = build;
-// mechanical = extract/discover. The guard test asserts each source file's `tier` matches this.
-export const ROLE_TIER = {
-  'speck-architect': 'frontier',
-  'speck-planner': 'frontier',
-  'speck-auditor': 'frontier',
-  'speck-coder': 'mid',
-  'speck-scribe': 'mid',
-  'speck-researcher': 'mid',
-  'speck-validator': 'mid',
-  'speck-scanner': 'mechanical',
-  'speck-explorer': 'mechanical',
-};
+// Canonical role -> tier. Frontier = decompose/design/audit; mid = build;
+// mechanical = extract/discover.
+export const ROLE_TIER = Object.fromEntries(
+  Object.entries(DISPATCH.roles || {}).map(([name, role]) => [name, role.tier]),
+);
 
 // Per-harness model per tier. Each harness has its own vocabulary (verified 2026-07-21).
 // Cursor has NO Sonnet/Haiku — Composer 2.5 is its worker tier.
@@ -106,6 +100,17 @@ function needsWrite(toolsStr) {
   return /\b(Write|Bash|StrReplace|Edit)\b/.test(toolsStr || '');
 }
 
+// Removes files in `dir` that match `pattern` but are no longer in `keepFiles` — e.g. a
+// generated agent whose `.cursor/agents` source (and agent-dispatch.json role) was deleted.
+// Without this, retired agents survive forever in .claude/agents and .codex/agents, both of
+// which are copied wholesale downstream (sync.js ALWAYS_OVERWRITE, export-template-repo.sh).
+export function pruneStale(dir, keepFiles, pattern) {
+  if (!existsSync(dir)) return;
+  for (const f of readdirSync(dir)) {
+    if (pattern.test(f) && !keepFiles.has(f)) unlinkSync(join(dir, f));
+  }
+}
+
 // ---- emitters (stable field order for idempotency) ------------------------------
 
 function emitCursor(name, tier, fm, body) {
@@ -154,9 +159,15 @@ export function generateAgents({ write = true } = {}) {
   for (const file of files) {
     const name = file.replace(/\.md$/, '');
     const { fm, body } = parseFrontmatter(readFileSync(join(SRC_DIR, file), 'utf-8'));
-    const tier = fm.tier || LEGACY_ALIAS_TIER[stripQuotes(fm.model)];
+    const declaredTier = fm.tier || LEGACY_ALIAS_TIER[stripQuotes(fm.model)];
+    const tier = ROLE_TIER[name];
     if (!tier || !TIER.claude[tier]) {
-      throw new Error(`${name}: cannot resolve tier (frontier|mid|mechanical) — set a "tier:" field`);
+      throw new Error(`${name}: agent-dispatch.json requires tier frontier|mid|mechanical`);
+    }
+    // A source file that declares a different tier than dispatch is an unresolved conflict
+    // between two humans' intent, not something to silently overwrite.
+    if (declaredTier !== tier) {
+      throw new Error(`${name}: source tier ${declaredTier} != dispatch tier ${tier}`);
     }
     outputs.cursor[`${name}.md`] = emitCursor(name, tier, fm, body);
     outputs.claude[`${name}.md`] = emitClaude(name, tier, fm, body);
@@ -171,6 +182,8 @@ export function generateAgents({ write = true } = {}) {
     }
     mkdirSync(CLAUDE_DIR, { recursive: true });
     mkdirSync(CODEX_DIR, { recursive: true });
+    pruneStale(CLAUDE_DIR, new Set(Object.keys(outputs.claude)), /^speck-.*\.md$/);
+    pruneStale(CODEX_DIR, new Set(Object.keys(outputs.codex)), /^speck-.*\.toml$/);
     for (const [f, content] of Object.entries(outputs.cursor)) writeFileSync(join(SRC_DIR, f), content);
     for (const [f, content] of Object.entries(outputs.claude)) writeFileSync(join(CLAUDE_DIR, f), content);
     for (const [f, content] of Object.entries(outputs.codex)) writeFileSync(join(CODEX_DIR, f), content);

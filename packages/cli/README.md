@@ -34,8 +34,9 @@ The CLI uses intelligent merging to preserve your customizations during updates:
 | **.cursor/hooks/hooks.json** | Your hooks merged with Speck hooks |
 | **.cursor/mcp.json** | Your config takes precedence over Speck defaults |
 | **README.md** | Project skeleton on init; footer merge + auto-regen on upgrade |
+| **CLAUDE.md** | Managed `@AGENTS.md` import merged without replacing project instructions |
 | **Methodology files** | Always updated (skills, templates, patterns, workflows) |
-| **.claude/skills + .claude/agents** | Auto-symlinked from `.cursor/skills` + `.cursor/agents` during init/upgrade |
+| **.claude/skills + .codex/skills + .agents/skills** | Symlinked to `.cursor/skills`. Agents generated via `npm run gen-agents` (not symlinked). |
 
 ## Commands
 

@@ -24,7 +24,7 @@ If your epic has user-facing UI and no experience-chain.md, /epic-plan refuses t
 Skip ONLY for: backend-only, API-only, CLI-only, infrastructure/devops epics.
 
 For legacy brownfield epics without an upfront chain, see experience-chain-historical-template.md
-(scaffolded by /speck-catch-up). Those use a lighter exemption marker — the
+(scaffolded by /speck-migrate). Those use a lighter exemption marker — the
 canonical chain is reverse-engineered on re-validation, not authored upfront.
 
 PLACEHOLDER CONVENTION:
@@ -71,7 +71,7 @@ PLACEHOLDER CONVENTION:
 For each variant, list:
 - What's hidden, shown, pre-filled, skipped, or added
 - Why the change serves THIS variant
-- Verification: how `/larp` proves the variant works
+- Verification: how `/speck-larp` proves the variant works
 
 ---
 

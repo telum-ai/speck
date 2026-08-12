@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# reconcile-matrix-grain.sh — /speck-reprove Phase 1.5 (Speck v8.4, #87).
+# reconcile-matrix-grain.sh — /speck-migrate proof-stage reconciliation (introduced in Speck v8.4, #87).
 #
 # The v7→v8 re-prove (DEC-0537) capped validation REPORTS but never wrote back to the traceability
 # MATRICES — so a matrix keeps asserting `discharged` at a readiness the report's cap removed, and
@@ -121,7 +121,7 @@ report_is_pre_v8() {
 }
 
 # Effective (capped) grain for a pre-v8 discharged row: the numeric claim, but never above
-# integration-green (the /speck-reprove cap). Defaults to integration-green when unparseable.
+# integration-green (the legacy-proof cap). Defaults to integration-green when unparseable.
 effective_capped_grain() {
   local report="$1" state_line numeric
   state_line="$(grep -i "readiness_state_verified:" "$report" | head -n1 || true)"

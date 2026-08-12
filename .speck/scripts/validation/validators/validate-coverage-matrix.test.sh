@@ -10,6 +10,14 @@ pass() { echo "  ✓ $1"; }
 fail() { echo "  ✗ $1"; FAILED=1; }
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 
+# Bash 5 treats ((counter++)) from zero as status 1; under set -e that aborts the
+# validator. Assignment-form arithmetic is portable across the supported Bash range.
+if grep -Eq '\(\([A-Za-z_][A-Za-z0-9_]*\+\+\)\)' "$VAL"; then
+  fail "set -e counters must not use postfix arithmetic"
+else
+  pass "set -e counters use Bash-3.2/5-compatible assignment arithmetic"
+fi
+
 # --- an epic with a filled experience-chain §2 screen table ---
 mkdir -p "$T/e1/.speck"
 echo '{}' > "$T/e1/.speck/project.json"

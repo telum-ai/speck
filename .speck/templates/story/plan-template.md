@@ -8,7 +8,7 @@
 ```
 1. Load feature spec from Input path
    → If not found: ERROR "No feature spec at {path}"
-2. Check for outline.md (from /story-outline command)
+2. Check for a legacy `outline.md` if present
    → IF outline.md exists: Load Technical Context from it (skip step 3)
    → IF outline.md missing: Continue to step 3 (full planning mode)
 3. Fill Technical Context if not loaded from outline (scan for NEEDS CLARIFICATION)
@@ -24,7 +24,7 @@
    → IF needed: Generate deep research prompts (rare at story level)
    → Embed all findings in "Research Informing This Plan" section above
 7. Execute Phase 1 → contracts, data-model.md, quickstart.md
-   → Use codebase-scan-*.md files if available (from /story-scan command) for consistency
+   → Use codebase-scan-*.md files if available (from /speck-scan --level story command) for consistency
 8. Re-evaluate Constitution Check section
    → If new violations: Refactor design, return to Phase 1
    → Update Progress Tracking: Post-Design Constitution Check
@@ -92,8 +92,8 @@ The plan MUST explicitly address these gates derived from the project constituti
 ```
 {STORY_DIR}/
 ├── spec.md                  # Story specification (/story-specify output)
-├── outline.md               # Optional: analysis + research plan (/story-outline output)
-├── codebase-scan-*.md       # Optional: code analysis (/story-scan output)
+├── outline.md               # Optional: legacy analysis + research plan
+├── codebase-scan-*.md       # Optional: code analysis (/speck-scan --level story output)
 ├── plan.md                  # This file (/story-plan output with embedded research)
 ├── data-model.md            # Planning Phase 1 output (/story-plan)
 ├── quickstart.md            # Planning Phase 1 output (/story-plan)
@@ -165,7 +165,7 @@ directories captured above]
 
 ## Planning Phase 1: Design & Contracts
 
-**Check for codebase scans** (from `/story-scan` command):
+**Check for codebase scans** (from `/speck-scan --level story` command):
 - Look in {STORY_DIR} for `codebase-scan-*.md` files
 - Load ALL scan reports if they exist (auth, user, api, design-system, data, etc.)
 - Use for consistency in design decisions below

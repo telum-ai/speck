@@ -1,7 +1,6 @@
 ---
 name: epic-wireframes
-description: Load for UX-heavy epics after epic-journey to create screen-by-screen wireframes for all states. Produces wireframes.md — input for epic-plan. Skip for backend-only or API epics.
-disable-model-invocation: false
+description: Creates screen-by-screen epic wireframes. Use for UX-heavy epics after epic-journey and before epic-plan.
 ---
 
 
@@ -73,20 +72,9 @@ For screens needing definition:
    - Include responsive versions
    - Note content requirements
 
-### Step 5: Review and Guide
+### Step 5: Validate and continue
 
-Present what was created:
-- "I've created wireframes at [path]"
-- "Designed [X] screens with mobile/desktop versions"
-- "All journey touchpoints covered"
-
-Validate completeness:
-- "Any additional screens needed?"
-- "Should we add more states (error, empty)?"
-
-Guide to next steps:
-- **CRITICAL ORDERING RULE**: For the canonical next steps, ALWAYS consult `AGENTS.md` at workspace root under `## 📋 The Speck Command Phases`. Do NOT rely on individual skill files to determine phase ordering. Play Level (Sprint/Build/Platform) dictates the exact sequence.
-- Based on the canonical epic flow in `AGENTS.md`, after UX design is complete, the flow typically moves to `/epic-plan` (to create the epic tech spec) and `/epic-breakdown` (story mapping).
+Check every journey touchpoint and required state against the completed artifact. Then resume the canonical epic flow in root `AGENTS.md`.
 
 The template contains complete wireframe structures and examples.
 

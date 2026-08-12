@@ -1,15 +1,9 @@
 ---
 name: epic-constitution
-description: Load when an epic has unique technical principles that extend or override the project constitution. Produces epic-level constitution.md — optional, skip when the project constitution is sufficient for this epic's concerns.
-disable-model-invocation: false
+description: Defines local epic principles. Use after epic-clarify before epic-architecture or epic-plan when local rules are needed.
 ---
 
-
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
-
-User input:
-
-$ARGUMENTS
+# epic-constitution
 
 Establish epic-specific constitution that extends project principles.
 
@@ -142,10 +136,8 @@ Guide finalization:
 - Approve and version
 
 Next steps:
-- Apply to story development (/story-specify)
-- Create validation gates in CI/CD
-- Monitor compliance during reviews
-- Update if requirements change
+- Re-read the marked canonical Epic flow in root `AGENTS.md` and continue at its first incomplete applicable slot.
+- Translate enforceable principles into the later plan and validation gates when those canonical slots run.
 
 Note: Epic constitutions are most valuable for complex domains with special rules.
 Many epics can successfully use just the project constitution.
@@ -194,8 +186,8 @@ Each level:
 ## Success Criteria
 
 A good epic constitution:
-- ✅ Extends project principles clearly
-- ✅ Defines epic boundaries precisely
-- ✅ Enables autonomous development
-- ✅ Prevents epic coupling
-- ✅ Measurable and enforceable
+-  Extends project principles clearly
+-  Defines epic boundaries precisely
+-  Enables autonomous development
+-  Prevents epic coupling
+-  Measurable and enforceable

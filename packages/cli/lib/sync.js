@@ -2,7 +2,7 @@
  * Core sync logic for Speck files with smart merging
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync, copyFileSync, symlinkSync, lstatSync, unlinkSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync, copyFileSync, symlinkSync, lstatSync, unlinkSync, readlinkSync } from 'fs';
 import { join, dirname, relative } from 'path';
 import { execSync } from 'child_process';
 import { tmpdir } from 'os';
@@ -12,11 +12,9 @@ import { tmpdir } from 'os';
  */
 const ALWAYS_OVERWRITE = [
   '.speck/templates',
-  '.speck/templates/sprint',  // v6.0.0: Sprint play level templates
-  '.speck/patterns',
   '.speck/recipes',
+  '.speck/reference',
   '.speck/scripts',
-  '.speck/scripts/validation',
   '.speck/README.md',
   '.speck/VERSION',
   '.cursor/skills',
@@ -45,9 +43,9 @@ const PRESERVE_SUBDIRS = {
 
 /**
  * ALWAYS_OVERWRITE directories where PROJECT-CUSTOM subdirectories (ones Speck never
- * shipped) must survive upgrades. Skills are symlinked into .claude/.codex from .cursor;
- * agents are GENERATED per-harness into each runtime dir (see generate-agents.js), so a
- * custom agent subdir is preserved in all three — wholesale replacement would delete it.
+ * shipped) must survive upgrades. Skills are symlinked into .claude/.codex/.agents from
+ * .cursor; agents are GENERATED per-harness into each runtime dir (see generate-agents.js),
+ * so a custom agent subdir is preserved — wholesale replacement would delete it.
  * Anything Speck ships (including retired-skill shims) comes back from the source copy;
  * explicit removals still happen via REMOVE_FILES afterward.
  */
@@ -74,6 +72,7 @@ function unknownSubdirs(sourcePath, targetPath) {
  */
 const SMART_MERGE_FILES = {
   'AGENTS.md': mergeAgentsMd,
+  'CLAUDE.md': mergeClaudeMd,
   '.gitignore': mergeGitignore,
   '.cursor/hooks/hooks.json': mergeHooksJson,
   '.cursor/mcp.json': mergeMcpJson,
@@ -85,7 +84,7 @@ const SMART_MERGE_FILES = {
  * Files that should be skipped if user has customized them
  */
 const SKIP_IF_CUSTOMIZED = {
-  // v7.6.0: README.md handled by syncProjectReadme() — not copied from Speck repo
+  // Root README.md is handled by syncProjectReadme(), not this generic map.
 };
 
 /**
@@ -95,6 +94,9 @@ const SKIP_IF_CUSTOMIZED = {
 const SKIP_PATTERNS = [
   /.*-test\.yml$/,       // Test workflow files (e.g., speck-orchestrator-test.yml)
   /^tests\//,            // Test directory
+  /(^|\/)__pycache__(\/|$)/,
+  /(^|\/).*\.pyc$/,
+  /(^|\/)\.DS_Store$/,
 ];
 
 /**
@@ -108,7 +110,7 @@ function shouldSkipFile(filePath) {
  * Files that were removed from Speck and should be deleted during upgrade
  */
 const REMOVE_FILES = [
-  // v4.3.0: Orchestrator disabled — remove from projects on upgrade
+  // Retired hosted orchestrator and repository-management files.
   '.github/workflows/speck-orchestrator.yml',
   '.github/workflows/speck-orchestrator-test.yml',
   '.github/workflows/speck-orchestrator-e2e-test.yml',
@@ -134,10 +136,70 @@ const REMOVE_FILES = [
   '.speck/templates/context/project-context.md',
   '.speckignore',
   '.templatesyncignore',
-  // v5.0.0: Commands migrated to skills, rules migrated to skills
+  // Retired command/rule surfaces replaced by skills.
   '.cursor/commands',
   '.cursor/rules/speck',
   '.claude/commands',
+  // Retired generic domain/integration skills; recipes + current official docs replace them.
+  '.cursor/skills/clerk-authentication',
+  '.cursor/skills/oauth-implementation',
+  '.cursor/skills/stripe-integration',
+  '.cursor/skills/revenuecat-integration',
+  '.cursor/skills/saas-billing-patterns',
+  '.cursor/skills/supabase-integration',
+  '.cursor/skills/firebase-integration',
+  '.cursor/skills/resend-integration',
+  '.cursor/skills/sentry-integration',
+  '.cursor/skills/posthog-integration',
+  '.cursor/skills/tanstack-query',
+  '.cursor/skills/progressive-web-apps',
+  '.cursor/skills/websocket-implementation',
+  '.cursor/skills/multi-tenancy-patterns',
+  '.cursor/skills/offline-first-architecture',
+  '.cursor/skills/serverless-architecture',
+  '.cursor/skills/docker-containerization',
+  '.cursor/skills/github-actions-cicd',
+  '.cursor/skills/gdpr-compliance',
+  '.cursor/skills/model-selection',
+  '.cursor/skills/ai-api-integration',
+  // Retired host-specific visual-testing skills folded into visual-testing references.
+  '.cursor/skills/visual-testing-web',
+  '.cursor/skills/visual-testing-desktop-electron',
+  '.cursor/skills/visual-testing-desktop-tauri',
+  '.cursor/skills/visual-testing-extension',
+  '.cursor/skills/visual-testing-mobile-flutter',
+  '.cursor/skills/visual-testing-mobile-react-native',
+  // v11 canonical multi-level skills replace unobserved level aliases.
+  '.cursor/skills/project-adjust',
+  '.cursor/skills/epic-adjust',
+  '.cursor/skills/story-adjust',
+  '.cursor/skills/project-analyze',
+  '.cursor/skills/epic-analyze',
+  '.cursor/skills/story-analyze',
+  '.cursor/skills/retrospective',
+  '.cursor/skills/speck-catch-up',
+  '.cursor/skills/speck-reprove',
+  '.cursor/skills/speck-graph-up',
+  // Framework-only evaluation leaked through the old template exporter.
+  // `.speck/feedback/` is project-owned runtime output from speck-feedback and must survive.
+  '.speck/eval',
+  // Runtime framework material no longer owns project-learned patterns. Remove only
+  // the exact files Speck previously shipped; preserve every project-created sibling.
+  '.speck/patterns/constitution-as-code.md',
+  '.speck/patterns/library/README.md',
+  '.speck/patterns/learned/README.md',
+  '.speck/patterns/learned/process/parallel-epic-execution.md',
+  '.speck/patterns/learned/testing/class-gate-not-a-third-fix.md',
+  '.speck/patterns/learned/testing/inverted-polarity-exception-registry.md',
+  '.speck/patterns/learned/testing/mirror-sweep.md',
+  '.speck/patterns/learned/testing/quality-bound-vs-existence-bound.md',
+  '.speck/patterns/learned/testing/recipe-duplicated-rule-schema-type-parity.md',
+  '.speck/patterns/learned/testing/recipe-failed-read-is-not-empty.md',
+  '.speck/patterns/learned/testing/recipe-growth-table-bounded-select.md',
+  '.speck/patterns/learned/testing/recipe-pii-redaction-chokepoint.md',
+  '.speck/patterns/learned/testing/recipe-production-writer-registry.md',
+  '.speck/patterns/learned/testing/recipe-raw-enum-label-shape.md',
+  '.speck/patterns/learned/testing/two-carrier-interval-doctrine.md',
 ];
 
 // ============================================================
@@ -171,6 +233,41 @@ function mergeAgentsMd(sourceContent, targetContent) {
   }
   
   return { content: merged, action: 'merge' };
+}
+
+/**
+ * Merge CLAUDE.md - Speck owns only its managed import block.
+ * Existing project instructions before/after the block remain byte-stable apart from
+ * surrounding blank-line normalization. A legacy bare @AGENTS.md import is adopted.
+ */
+function mergeClaudeMd(sourceContent, targetContent) {
+  const start = '<!-- SPECK:START -->';
+  const end = '<!-- SPECK:END -->';
+  const sourceMatch = sourceContent.match(/<!-- SPECK:START -->[\s\S]*?<!-- SPECK:END -->/);
+  if (!sourceMatch) {
+    throw new Error('source CLAUDE.md is missing the managed SPECK block');
+  }
+  const managed = sourceMatch[0];
+
+  if (!targetContent) {
+    return { content: managed + '\n', action: 'create' };
+  }
+
+  const blockPattern = /<!-- SPECK:START -->[\s\S]*?<!-- SPECK:END -->/;
+  if (blockPattern.test(targetContent)) {
+    const content = targetContent.replace(blockPattern, managed);
+    return { content: content.trimEnd() + '\n', action: content === targetContent ? 'skip' : 'merge' };
+  }
+
+  // Older preview builds wrote a bare import. Adopt it into the managed block so repeated
+  // upgrades cannot accumulate duplicate imports.
+  const userContent = targetContent
+    .split('\n')
+    .filter(line => line.trim() !== '@AGENTS.md')
+    .join('\n')
+    .trim();
+  const content = userContent ? `${managed}\n\n${userContent}\n` : `${managed}\n`;
+  return { content, action: 'merge' };
 }
 
 /**
@@ -488,12 +585,160 @@ function symlinkCursorDir(targetDir, runtimeDir, relativeDir) {
 
   mkdirSync(join(targetDir, runtimeDir), { recursive: true });
 
-  if (existsSync(destDir)) {
+  // lstat, never existsSync: existsSync follows the link and reports false for a DANGLING
+  // symlink at destDir, which would skip the removal below and make symlinkSync throw EEXIST
+  // against the leftover link node. lstat tells us what's actually sitting at destDir.
+  let destStat = null;
+  try {
+    destStat = lstatSync(destDir);
+  } catch {
+    destStat = null;
+  }
+
+  let migrated = 0;
+  let superseded = 0;
+
+  if (destStat && destStat.isSymbolicLink()) {
+    // A symlink (valid or dangling) never holds real content — safe to drop and recreate.
+    unlinkSync(destDir);
+  } else if (destStat && destStat.isDirectory()) {
+    // A REAL directory here is user-owned content (e.g. a project's own pre-existing
+    // .agents/skills tree) — never Speck's to delete. Classify every top-level entry as
+    // safe (migrate into .cursor/<relativeDir>) or unsafe, and only touch anything if
+    // EVERY entry is safe — a single unsafe entry blocks the whole directory from being
+    // migrated or removed this run, so nothing is ever destroyed or laundered.
+    //
+    // An entry is unsafe when:
+    //   - its name matches a RETIRED Speck skill (REMOVE_FILES deletes that exact path
+    //     under .cursor/<relativeDir> a few steps later in smartSync — migrating a
+    //     same-named user directory there would launder it straight into that deletion), or
+    //   - its name matches something .cursor/<relativeDir> already ships (from this sync's
+    //     ALWAYS_OVERWRITE step, or from an earlier runtimeDir's migration in this same
+    //     symlink loop) with DIFFERENT content — the shipped copy must stay authoritative,
+    //     so we cannot silently overwrite it, and we must not silently drop the user's copy
+    //     either.
+    // Identical-content collisions are simply skipped (nothing to migrate, no data lost).
+    const retired = retiredSkillNames(relativeDir);
+    const shipped = new Set(readdirSync(sourceDir));
+    const entries = readdirSync(destDir);
+    const safeEntries = [];
+    const unsafeEntries = [];
+
+    for (const entry of entries) {
+      const srcPath = join(destDir, entry);
+      if (retired.has(entry) || shipped.has(entry)) {
+        // A name Speck owns or used to own. In practice this is almost always a stale copy from
+        // an older Speck that populated this directory instead of symlinking it, so refusing the
+        // whole upgrade over it strands the project on a dead catalog. But it CAN be the user's
+        // own skill that happens to share the name, and that must not be destroyed either.
+        // Quarantine resolves both: identical content is a no-op, anything else is set aside.
+        if (shipped.has(entry) && treesEqual(srcPath, join(sourceDir, entry))) {
+          continue; // identical to what Speck already ships — nothing to migrate
+        }
+        unsafeEntries.push(entry);
+        continue;
+      }
+      safeEntries.push(entry);
+    }
+
+    // Genuine user content Speck has never owned is carried forward into the live catalog.
+    for (const entry of safeEntries) {
+      copyEntryTree(join(destDir, entry), join(sourceDir, entry));
+      migrated++;
+    }
+
+    // Superseded copies are set aside next to their original, where the user will actually find
+    // them, rather than deleted or left blocking the symlink.
+    if (unsafeEntries.length > 0) {
+      const quarantine = `${destDir}.superseded`;
+      mkdirSync(quarantine, { recursive: true });
+      for (const entry of unsafeEntries) {
+        const parked = join(quarantine, entry);
+        rmSync(parked, { recursive: true, force: true });
+        copyEntryTree(join(destDir, entry), parked);
+      }
+      superseded = unsafeEntries.length;
+    }
+
     rmSync(destDir, { recursive: true, force: true });
+  } else if (destStat) {
+    // A plain file sits where a directory/symlink belongs. Refuse rather than destroy it.
+    return {
+      action: 'error',
+      reason: `refusing to replace ${runtimeDir}/${relativeDir} (a file, not a directory or symlink)`,
+    };
   }
 
   symlinkSync(join('..', '.cursor', relativeDir), destDir);
-  return { action: 'sync', path: `${runtimeDir}/${relativeDir}/` };
+  return migrated > 0 || superseded > 0
+    ? { action: 'migrated', path: `${runtimeDir}/${relativeDir}/`, migrated, superseded }
+    : { action: 'sync', path: `${runtimeDir}/${relativeDir}/` };
+}
+
+/**
+ * Names under .cursor/<relativeDir> that REMOVE_FILES will delete on this same sync run
+ * (e.g. '.cursor/skills/gdpr-compliance' -> 'gdpr-compliance'). Derived from REMOVE_FILES
+ * itself so the two lists can never drift apart.
+ */
+function retiredSkillNames(relativeDir) {
+  const prefix = `.cursor/${relativeDir}/`;
+  const names = new Set();
+  for (const removedPath of REMOVE_FILES) {
+    if (removedPath.startsWith(prefix)) {
+      names.add(removedPath.slice(prefix.length).split('/')[0]);
+    }
+  }
+  return names;
+}
+
+/**
+ * Recursively compare two filesystem entries for identical structure and content.
+ * Uses lstat throughout (never follows symlinks) so a dangling symlink compares by its
+ * link target rather than throwing.
+ */
+function treesEqual(a, b) {
+  let statA, statB;
+  try {
+    statA = lstatSync(a);
+    statB = lstatSync(b);
+  } catch {
+    return false;
+  }
+
+  if (statA.isSymbolicLink() || statB.isSymbolicLink()) {
+    return statA.isSymbolicLink() && statB.isSymbolicLink() && readlinkSync(a) === readlinkSync(b);
+  }
+  if (statA.isDirectory() !== statB.isDirectory()) return false;
+  if (statA.isDirectory()) {
+    const entriesA = readdirSync(a).sort();
+    const entriesB = readdirSync(b).sort();
+    if (entriesA.length !== entriesB.length || entriesA.some((e, i) => e !== entriesB[i])) return false;
+    return entriesA.every(entry => treesEqual(join(a, entry), join(b, entry)));
+  }
+  return readFileSync(a).equals(readFileSync(b));
+}
+
+/**
+ * Recursively copy a filesystem entry (file, directory, or symlink) to a new path.
+ * Uses lstat throughout — a symlink (valid or dangling) is recreated as a symlink at the
+ * destination instead of being followed via stat, which would throw ENOENT on a dangling
+ * one and abort the whole migration partway through.
+ */
+function copyEntryTree(srcPath, destPath) {
+  const stat = lstatSync(srcPath);
+
+  if (stat.isSymbolicLink()) {
+    mkdirSync(dirname(destPath), { recursive: true });
+    symlinkSync(readlinkSync(srcPath), destPath);
+  } else if (stat.isDirectory()) {
+    mkdirSync(destPath, { recursive: true });
+    for (const entry of readdirSync(srcPath)) {
+      copyEntryTree(join(srcPath, entry), join(destPath, entry));
+    }
+  } else {
+    mkdirSync(dirname(destPath), { recursive: true });
+    copyFileSync(srcPath, destPath);
+  }
 }
 
 /**
@@ -999,18 +1244,25 @@ export function smartSync(sourceDir, targetDir, options = {}) {
   const readmeSync = syncProjectReadme(targetDir, results, verbose);
   results.readmeRepaired = readmeSync.repaired;
 
-  // 5. Symlink Cursor SKILLS into .claude and .codex for cross-tool parity. Agents are NOT
+  // 5. Symlink Cursor SKILLS into .claude, .codex, and .agents for cross-tool parity.
+  //    Codex discovers skills under `.agents/skills` (canonical). Agents are NOT
   //    symlinked — each harness has a different model vocabulary, so agents are generated
   //    per-harness (generate-agents.js) and copied as real dirs via ALWAYS_OVERWRITE above.
-  for (const runtimeDir of ['.claude', '.codex']) {
+  for (const runtimeDir of ['.claude', '.codex', '.agents']) {
     for (const relativeDir of ['skills']) {
       try {
         const symlinkResult = symlinkCursorDir(targetDir, runtimeDir, relativeDir);
-        if (symlinkResult.action === 'sync') {
+        if (symlinkResult.action === 'sync' || symlinkResult.action === 'migrated') {
           results.updated.push(symlinkResult.path);
           if (verbose) {
-            console.log(`  ✅ Symlinked: ${symlinkResult.path} → .cursor/${relativeDir}/`);
+            const parts = [];
+            if (symlinkResult.migrated) parts.push(`migrated ${symlinkResult.migrated} project-owned item(s) into .cursor/${relativeDir}/`);
+            if (symlinkResult.superseded) parts.push(`set aside ${symlinkResult.superseded} superseded copy/copies in ${runtimeDir}/${relativeDir}.superseded/`);
+            const suffix = parts.length ? ` (${parts.join('; ')})` : '';
+            console.log(`  ✅ Symlinked: ${symlinkResult.path} → .cursor/${relativeDir}/${suffix}`);
           }
+        } else if (symlinkResult.action === 'error') {
+          results.errors.push({ file: `${runtimeDir}/${relativeDir}`, error: symlinkResult.reason });
         }
       } catch (error) {
         results.errors.push({ file: `${runtimeDir}/${relativeDir}`, error: error.message });

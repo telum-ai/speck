@@ -2,6 +2,9 @@
 # Implementation status for orchestrator
 # Values: pending | in_progress | completed
 status: pending
+speck_version: 11.0.0
+artifact_type: story-tasks
+analysis_required: [ANALYSIS_REQUIRED]
 ---
 
 # Tasks: [STORY NAME]

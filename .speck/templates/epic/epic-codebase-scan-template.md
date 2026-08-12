@@ -221,7 +221,7 @@ This epic focuses on: [Brief description from epic.md - 2-3 sentences]
 
 ### When Story-Level Scan is Needed
 
-Run `/story-scan` for specific stories when you need:
+Run `/speck-scan --level story` for specific stories when you need:
 - Deep implementation details (HIGH confidence)
 - Copy-paste-adapt code examples
 - Complete understanding of edge cases
@@ -235,7 +235,7 @@ Run `/story-scan` for specific stories when you need:
 2. **Use patterns** identified here in epic architecture
 3. **Reuse components** where applicable
 4. **Avoid anti-patterns** found in this domain
-5. **Run `/story-scan`** for individual stories when detailed implementation guidance needed
+5. **Run `/speck-scan --level story`** for individual stories when detailed implementation guidance needed
 
 ---
 
@@ -252,10 +252,9 @@ Run `/story-scan` for specific stories when you need:
 ---
 
 **This scan informs**: `/epic-plan`, `/epic-architecture`  
-**For deeper analysis**: Run `/story-scan` on individual stories  
+**For deeper analysis**: Run `/speck-scan --level story` on individual stories
 **Confidence comparison**: Project-scan (LOW) → Epic-scan (MEDIUM) ← You are here → Story-scan (HIGH)
 
 ---
 
 *Epic codebase scan template - provides focused, medium-confidence analysis of existing patterns relevant to this epic's domain*
-

@@ -1,24 +1,22 @@
 ---
 name: epic
-description: Orchestrator wrapper for epic-level work. Detects the current state of an epic, resumes its lifecycle, and executes downstream skills step-by-step. Supports --interactive, --from, --skip. Stops ONLY at true decision gates or high-severity findings (P0/P1 drift/errors).
-disable-model-invocation: false
+description: Epic lifecycle orchestrator. Invoke only via /epic.
+disable-model-invocation: true
 ---
 
-The user input can be provided directly by the agent or as a command argument:
-
-$ARGUMENTS
+# epic
 
 ## Purpose
 
-`/epic` is the **epic-level stateful orchestrator**. It auto-detects the epic's current state and **invokes downstream skills in canonical order** (`/epic-specify`, `/epic-clarify`, `/epic-plan`, `/epic-breakdown`, `/epic-analyze`, story work via `/story`, `/audit`, `/epic-validate`, `/epic-retrospective`).
+`/epic` is the **epic-level stateful orchestrator**. It advances an epic by re-reading the marked canonical Epic flow in root `AGENTS.md` at every transition. `AGENTS.md` owns order; this skill owns state detection and stop-gate enforcement, never a second sequence.
 
 **Driving pattern (REQUIRED)**: For each step in `### 3. Execution Loop`, **read and fully execute** the corresponding skill's `SKILL.md` (and its template, per that skill's FIRST ACTION) before advancing. Story work MUST delegate to `/story` (read `.cursor/skills/story/SKILL.md`) — do not implement stories inline from the epic orchestrator.
 
 **ANTI-PATTERN (do NOT do this)**:
-- ❌ Writing `epic-tech-spec.md` or `epic-breakdown.md` inline without loading `/epic-plan` or `/epic-breakdown`
-- ❌ Implementing stories directly from `/epic` without invoking `/story` for each story
-- ❌ Skipping `/epic-analyze`, `/audit`, or `/epic-validate` because the orchestrator "already knows" the outcome
-- ❌ Treating the transition map as a checklist of filenames instead of a checklist of **skills to invoke**
+-  Writing `epic-tech-spec.md` or `epic-breakdown.md` inline without loading `/epic-plan` or `/epic-breakdown`
+-  Implementing stories directly from `/epic` without invoking `/story` for each story
+-  Skipping `/analyze --level epic`, `/speck-audit`, or `/epic-validate` because the orchestrator "already knows" the outcome
+-  Treating the transition map as a checklist of filenames instead of a checklist of **skills to invoke**
 
 ## Usage Syntax
 
@@ -35,7 +33,7 @@ An epic's lifecycle in Speck is defined by the checkboxes in `epic.md` and the p
 3. **Planned**: Completed `/epic-plan` (`epic-tech-spec.md`) and `/epic-breakdown` (`epic-breakdown.md`).
 4. **Tasked & In Progress**: Story directories created; implementation of stories is active.
 5. **Stories Complete**: All stories in `epic-breakdown.md` have individual `validation-report.md` files with state >= `IMPL-GREEN`.
-6. **Audited**: Epic-level `/audit` has been run and resolved.
+6. **Audited**: Epic-level `/speck-audit` has been run and resolved.
 7. **Validated (UX-RC / API-RC or higher)**: `/epic-validate` completed and produced a verified readiness state.
 
 ---
@@ -54,7 +52,7 @@ Read `epic.md` and evaluate its state:
 - If `epic-tech-spec.md` exists but no stories are implemented (check story directories) → State = **Planned (Needs Implementation)**.
 - If stories are in progress → State = **In Progress**.
 - If all stories in `epic-breakdown.md` are complete (each has `validation-report.md`) but no epic-level `audit-report.md` exists → State = **Stories Complete (Needs Audit)**.
-- If epic-level `/audit` has been run but `epic-validation-report.md` is missing → State = **Audited (Needs Validate)**.
+- If epic-level `/speck-audit` has been run but `epic-validation-report.md` is missing → State = **Audited (Needs Validate)**.
 - If `epic-validation-report.md` exists and is stamped → State = **Validated (Done)**.
 
 ### 2. Handle Execution Flags
@@ -66,47 +64,17 @@ Read `epic.md` and evaluate its state:
 
 ### 3. Execution Loop (The Transition Map)
 
-For **each** transition below: **invoke the listed skill** (read `.cursor/skills/<skill>/SKILL.md`, follow its procedure end-to-end), then evaluate stop conditions before advancing. Story work uses `/story` per story in `epic-breakdown.md` order.
+Before entering the Epic line, run `bash .speck/scripts/validation/check-epic-prereqs.sh specs/projects/<PROJECT_ID>`. STOP on exit 1 and route to the reported project-level prerequisite; surface `ANALYSIS_GRANDFATHERED.P2` and proceed.
 
-Run the appropriate skills in order. After each command completes successfully, evaluate whether a stop condition is met before transitioning.
+At every iteration:
 
-```
-State: Draft         →  Run: bash .speck/scripts/validation/check-epic-prereqs.sh specs/projects/<PROJECT_ID>
-                             ↳ STOP on exit 1 — the project-level /project-analyze gate has not cleared.
-                               Route to /project-analyze; do NOT specify the epic.
-                               ANALYSIS_GRANDFATHERED.P2 → surface loudly, then proceed.
-                        Run: /epic-specify  →  Validate & Clarify (/epic-clarify)
-                             ↳ STOP if user clarification required.
-                               Transition to state: Specified
+1. Re-read the exact `<!-- SPECK:FLOW:START -->` block in root `AGENTS.md` and select its Epic line.
+2. Scan that line left-to-right. Resume at the first incomplete required slot or applicable bracketed slot; artifact-based state labels never authorize skipping an earlier slot.
+3. Read `.cursor/skills/<selected-skill>/SKILL.md` and execute it end-to-end. `analyze` and `speck-audit` use epic scope; story loop work delegates to `/story` in breakdown order.
+4. Apply the decorrelated-analysis and delegated-story gates below. Evaluate hard stops, then re-read the AGENTS flow before choosing the next slot.
+5. Mark Done only after every applicable Epic slot, including UI proof and retrospective, has completed.
 
-State: Specified     →  If UI Epic: Run /epic-journey and /epic-wireframes / /epic-experience-chain
-                        Run: /epic-plan     →  Run: /epic-breakdown
-                             ↳ STOP if technical tradeoffs require human decision.
-                               Transition to state: Planned
-
-State: Planned       →  Run: /epic-analyze  →  Verify zero critical issues.
-                             Lenses MUST be decorrelated from whoever authored the epic
-                             corpus — if this orchestrator's own session wrote epic-tech-spec.md
-                             or epic-breakdown.md, delegate the lenses to a separate agent
-                             (@speck-auditor or a separate session). Self-certification is
-                             not an analysis pass.
-                             ↳ STOP if P0/P1 issues found in plans.
-                        Start story implementations (delegating to /story)
-                               Transition to state: In Progress
-
-State: In Progress   →  Monitor and coordinate individual story completions.
-                        For EACH delegated story result, run the Verify-Skills Gate (§3a) before accepting.
-                        Once all stories are complete AND verified:
-                               Transition to state: Stories Complete
-
-State: Stories Complete → Run: /audit --epic [EPIC_ID]
-                             ↳ STOP if P0 findings exist.
-                               Transition to state: Audited
-
-State: Audited       →  Run: /epic-validate
-                             ↳ STOP if validated state fails to meet targets.
-                               Transition to state: Validated
-```
+This keeps stateful resumption without allowing the orchestrator to omit optional constitution, architecture, UX, proof, or closure slots added after this skill was written.
 
 ### 3a. Delegated-Execution Verify Gate (accepting sub-agent story results)
 
@@ -124,7 +92,7 @@ Before ACCEPTING a story result (and before counting it toward "Stories Complete
 2. **Skills actually ran**: `skills_invoked` includes at least `speck-audit` AND `story-validate`; the conductor MUST cross-check the sub-agent's JSON transcript or execution log by grepping for `"name":"Skill"` (the host's tool call key) to confirm at least 2 real skill invocations actually ran. If empty or zero → **REJECT and re-run the story** (never accept on a self-reported state alone).
 3. **Mandatory Independent Auditor**: Ensure that the story's `audit-report.md` was authored by a separate, independent auditor agent/session rather than the implementer/validator. Self-audits suffer from confirmation bias (field runs showed separate audits caught 4 critical defects across 9 stories missed by self-audits).
 4. **Full pre-commit gate passed**: `gate_checks` lists passing status for eslint, typecheck, tests, build, and banned-language check (reject on any skipped or failed checks).
-5. **`/audit` non-skippable**: a story merged without a real `/audit` run is rejected regardless of its self-reported state.
+5. **`/speck-audit` non-skippable**: a story merged without a real `/speck-audit` run is rejected regardless of its self-reported state.
 
 Self-reported fields are not tamper-evident (host-runtime limit) — the transcript check is the backstop. See AGENTS.md *Delegated execution: verify skills ran before accepting results*.
 
@@ -132,7 +100,7 @@ Self-reported fields are not tamper-evident (host-runtime limit) — the transcr
 
 Do NOT transition automatically and stop immediately if any of these occur:
 1. **Unresolved Clarifications**: Any `[NEEDS CLARIFICATION]` markers introduced in `epic.md` or specifications.
-2. **Critical/P0 Findings**: Any P0 findings returned by `/epic-analyze` or `/audit` must halt the orchestrator immediately. Fix them before continuing.
+2. **Critical/P0 Findings**: Any P0 findings returned by `/analyze --level epic` or `/speck-audit` must halt the orchestrator immediately. Fix them before continuing.
 3. **Project analysis gate not cleared**: `check-epic-prereqs.sh` exits 1 (`UNANALYZED_CORPUS.P1`, `ANALYSIS_STALE.P1`, `ANALYSIS_CRITICAL_OPEN.P1`, `PROMISE_UNCOVERED.P1`). The epic cannot start on a planning corpus no decorrelated lens has read. `ANALYSIS_GRANDFATHERED.P2` is NOT a stop — surface it loudly and continue.
 4. **Validation Cap**: If `/epic-validate` is run and first-time user comprehension fails, capping the readiness state at `IMPL-GREEN`, stop and present the remediation requirements to the user.
 
@@ -140,8 +108,8 @@ Do NOT transition automatically and stop immediately if any of these occur:
 
 ## Behavior Rules
 
-- **ALWAYS** run `check-epic-prereqs.sh` before the first `/epic-specify` of a session — the project-level `/project-analyze` gate is REQUIRED at Platform and at Build with 4+ epics, and an epic built on an uncertified plan inherits every defect in it.
-- **ALWAYS** run `/epic-analyze` with lenses decorrelated from the corpus authors — 3 mandatory at Build 4+ (promise-coverage · cross-artifact drift · completeness critic), all 7 at Platform. A lens marked `authored_corpus: true` does not count toward the tier.
+- **ALWAYS** run `check-epic-prereqs.sh` before the first `/epic-specify` of a session — the project-level `/analyze --level project` gate is REQUIRED at Platform and at Build with 4+ epics, and an epic built on an uncertified plan inherits every defect in it.
+- **ALWAYS** run `/analyze --level epic` with lenses decorrelated from the corpus authors — 3 mandatory at Build 4+ (promise-coverage · cross-artifact drift · completeness critic), all 7 at Platform. A lens marked `authored_corpus: true` does not count toward the tier.
 - **ALWAYS** check for the `E000` Developer Infrastructure epic first. Ensure testing and CI patterns are resolved before allowing other epics to specify.
 - **ALWAYS** invoke downstream skills by reading their `SKILL.md` — never substitute inline artifact authoring for a skipped skill step.
 - **ALWAYS** delegate per-story work to `/story`; the epic orchestrator coordinates sequencing, not story implementation.

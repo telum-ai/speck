@@ -26,10 +26,10 @@ mutation_record: required
 
 ## 2. Root Cause Analysis (The Gap)
 
-*Identify the deep technical gap. Why did the existing validation gates (unit tests, linter, story-validate, /audit) miss it — and did one of them **require** the defect?*
+*Identify the deep technical gap. Why did the existing validation gates (unit tests, linter, story-validate, /speck-audit) miss it — and did one of them **require** the defect?*
 
 - **Technical Root Cause**: [e.g., "The `useActionState` `isPending` state was destructured from the hook but never bound to the button's `disabled` prop, leaving the button interactive during submit."]
-- **Gate Defect (Why did gates miss it?)**: [e.g., "The `/audit` executed via direct API tests and bypassed the UI DOM entirely, and unit tests didn't simulate consecutive click events during pending network transactions."]
+- **Gate Defect (Why did gates miss it?)**: [e.g., "The `/speck-audit` executed via direct API tests and bypassed the UI DOM entirely, and unit tests didn't simulate consecutive click events during pending network transactions."]
 
 ---
 

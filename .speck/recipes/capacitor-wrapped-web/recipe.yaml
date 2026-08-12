@@ -111,28 +111,18 @@ overlay:
       - "App Store sandbox IAP tested (if billing in scope)"
       - "App Store Connect TestFlight build distributed to at least 1 internal tester"
 
-# Visual testing overlay — Capacitor needs platform-specific tooling
-visual_testing_overlay:
-  additional_platforms:
-    - platform: ios
-      tooling:
-        - "@capacitor/cli + xcodebuild for simulator builds"
-        - "AXe for iOS accessibility snapshots"
-        - "xcrun simctl for simulator screenshots"
-      breakpoints:
-        - "iPhone 15 Pro (3x)"
-        - "iPhone SE 2nd gen (smallest supported)"
-        - "iPad Pro 12.9 (largest)"
-      visual_skill: visual-testing-mobile-flutter  # closest skill until visual-testing-capacitor exists
-    - platform: android
-      tooling:
-        - "Capacitor + Gradle for release builds"
-        - "adb for emulator screenshots"
-      breakpoints:
-        - "Pixel 7 (3x)"
-        - "Pixel 4a (smallest popular)"
-        - "Pixel Tablet"
-      visual_skill: visual-testing-mobile-react-native  # closest skill
+# One routable host contract. The host reference decides when one native platform
+# is representative and when both iOS and Android must be exercised.
+visual_testing:
+  platform: mobile-capacitor
+  strategy: "Production web bundle synced into a real Capacitor iOS/Android runtime"
+  tooling:
+    - "@capacitor/cli plus xcodebuild/xcrun simctl for iOS"
+    - "Gradle plus adb for Android"
+  evidence:
+    - "Native screenshot with device, state, and build SHA"
+    - "Native accessibility inspection where the host supports it"
+    - "Web and native console logs without bridge or runtime failures"
 
 # Suggested epics: add native-shell-specific concerns to the parent's list
 suggested_epics_additional:

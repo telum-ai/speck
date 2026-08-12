@@ -388,7 +388,7 @@ run --strict "$T/placeholders.md"
 # false-positive rate is a P3 that gets suppressed project-wide on first contact.
 mkfixture "$T/fp.md" \
   "| PROBE:route | \`acceptance\` | \`/api/v1/coach/chat\` \`/health\` \`/model/correction\` | — |" \
-  "| PROBE:cmd | \`correctness\` | \`/audit\` \`/check-in\` \`/suggest\` | — |" \
+  "| PROBE:cmd | \`correctness\` | \`/speck-audit\` \`/check-in\` \`/suggest\` | — |" \
   "| PROBE:prose | \`correctness\` | Terms/Privacy, 988/741741, try/catch, 4/4, A/B/C/D | — |" \
   "| PROBE:scope | \`correctness\` | \`@streb/web\` \`pnpm/action-setup@v4\` | — |"
 run --strict "$T/fp.md"
@@ -542,8 +542,8 @@ grep -qF '| PROBE:cap | `persistence` | `capture:screenshots/89468af1-ok.png` | 
 grep -qF '| AC-1 | undo works | `screenshots/89468af1-undo.png` | ✅ |' "$T/scope.md" \
   && pass "stamp: an evidence-only table is left byte-identical (a type written there can never be read)" \
   || fail "an evidence-only table must not be rewritten"
-echo "$OUT" | grep -q "3 table(s) skipped" \
-  && pass "stamp: the skipped tables are reported, not silently dropped" || fail "skipped tables must be reported"
+echo "$OUT" | grep -q "2 table(s) skipped" \
+  && pass "stamp: the skipped tables are reported, not silently dropped (2)" || fail "skipped tables must be reported"
 
 # 17b. NEGATIVE CONTROL — remove the Claim-column guard; the AC table must get stamped again.
 mkstampfixture "$T/scope-mut.md"
