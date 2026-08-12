@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -28,4 +32,12 @@ jobs:
         run: git diff --check "$BASE_SHA...HEAD"
       - name: Reject whitespace errors in pushed commit
         if: github.event_name == 'push'
-        run: git diff --check "${{ github.event.before }}...HEAD"
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          zero_sha="0000000000000000000000000000000000000000"
+          if [[ "$BEFORE_SHA" == "$zero_sha" ]] || ! git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            echo "Skipping whitespace check: no previous commit to diff against (branch creation or unreachable object after force-push)."
+            exit 0
+          fi
+          git diff --check "$BEFORE_SHA...HEAD"

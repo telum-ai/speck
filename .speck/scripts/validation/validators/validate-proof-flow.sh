@@ -14,6 +14,15 @@ require() {
 
 forbid() {
   local file="$1" pattern="$2" message="$3"
+  if [[ ! -f "$ROOT/$file" ]]; then
+    # A missing file is not compliance with "the pattern is absent" — it is inability to
+    # check, and require()'s negated form already fails closed on the same condition.
+    # Without this, a JIT node asserted only by forbid() (no matching require()) goes
+    # green the moment its procedure file is deleted outright rather than duplicated.
+    echo "PROOF_FLOW.P1: node missing, cannot verify ($file) — $message"
+    FAILURES=$((FAILURES + 1))
+    return
+  fi
   if grep -Eqi "$pattern" "$ROOT/$file"; then
     echo "PROOF_FLOW.P1: $message ($file)"
     FAILURES=$((FAILURES + 1))

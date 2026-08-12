@@ -437,6 +437,62 @@ run_lint "$WORK/v17"
 assert_rc      "V17a: the fallback scan does not convict .speck/ or node_modules/" 0
 assert_out_has "V17b: fallback scope is published, not inferred" "SPECK_GATE_SCOPE="
 
+# PDR1 (L11.3) — a repo that HAS declared itself a Speck project (`.speck/project.json`
+# exists) but whose specs/projects/*/product-contract.md cannot be located (renamed
+# specs/projects/, or the contract briefly deleted mid-regen) must not read the same as
+# V5c's legitimate "framework repo, nothing to lint" state. --staged used to print the
+# same green "not applicable" / SPECK_GATE_SCOPE=not-applicable:no-product-contract in
+# both cases, silently disabling the blocking pre-commit gate.
+mkdir -p "$WORK/pdr1/.speck" "$WORK/pdr1/specs/product-projects/test"
+echo '{"project_id":"test","play_level":"sprint"}' > "$WORK/pdr1/.speck/project.json"
+init_git "$WORK/pdr1"
+(cd "$WORK/pdr1" && echo ok > README.md && git add README.md)
+run_lint "$WORK/pdr1" --staged
+assert_rc        "PDR1a: --staged with a declared project.json but no locatable contract fails loud" 2
+assert_out_lacks "PDR1b: … and does NOT claim 'not applicable' (that is V5c's state, not this one)" \
+  "not applicable"
+
+# PDR2 (L11.4) — two projects, each with its own product-contract.md, at the same
+# specs/projects/ level. The old `echo "$cur"/specs/projects/*/ | head -n1` collapsed both
+# matches onto one space-joined line, `[[ -d ]]` correctly rejected it, and --staged read
+# the resolution failure as "no product-contract.md declared" → green pass, exit 0 — the
+# blocking pre-commit gate linted nothing for every multi-project repo.
+write_product_contract "$WORK/pdr2"
+mv "$WORK/pdr2/specs/projects/test" "$WORK/pdr2/specs/projects/alpha"
+mkdir -p "$WORK/pdr2/specs/projects/beta"
+cp "$WORK/pdr2/specs/projects/alpha/product-contract.md" "$WORK/pdr2/specs/projects/beta/product-contract.md"
+rm -f "$WORK/pdr2/.speck/project.json"
+init_git "$WORK/pdr2"
+(cd "$WORK/pdr2" && echo ok > README.md && git add README.md)
+run_lint "$WORK/pdr2" --staged
+assert_rc        "PDR2a: --staged with two ambiguous project contracts fails loud, not green" 2
+assert_out_lacks "PDR2b: … and does NOT claim 'not applicable' (a contract WAS declared — twice)" \
+  "not applicable"
+
+# PDR2c — the same ambiguity resolves deterministically when .speck/project.json names an
+# active project, exactly as profile-lib.sh's profile_resolve_project_id does. rc==0 alone
+# does not discriminate this from the old bug (that ALSO exited 0, via the false
+# "not applicable" branch) — assert the real project dir was found and scanned.
+echo '{"active_project":"beta"}' > "$WORK/pdr2/.speck/project.json"
+run_lint "$WORK/pdr2" --staged
+assert_rc        "PDR2c: active_project in .speck/project.json disambiguates the pair" 0
+assert_out_has   "PDR2d: … the resolved project dir is the named one, beta" \
+  "specs/projects/beta"
+assert_out_lacks "PDR2e: … not a silent 'not applicable' fallback" "not applicable"
+
+# PDR3 — a single real project plus an unrelated sibling directory with no contract of its
+# own (an archived project, a scratch dir) must still resolve — one project plus ANY
+# sibling was enough to trip the old bug, no second project.json required. Same
+# discrimination need as PDR2c: assert the real project was found, not just rc==0.
+write_product_contract "$WORK/pdr3"
+mkdir -p "$WORK/pdr3/specs/projects/archived-beta"
+init_git "$WORK/pdr3"
+(cd "$WORK/pdr3" && echo ok > README.md && git add README.md)
+run_lint "$WORK/pdr3" --staged
+assert_rc      "PDR3a: a contract-less sibling directory does not break resolution" 0
+assert_out_has "PDR3b: … the real project dir was found and scanned" \
+  "specs/projects/test"
+
 # W — the lint-staged wrapper. It calls the lint as `"" file1 file2 …`, an empty
 # placeholder standing in for the auto-located project dir. With lint-staged's file list
 # EMPTY the wrapper used to hand rg a "" path; once that placeholder is shifted off, the

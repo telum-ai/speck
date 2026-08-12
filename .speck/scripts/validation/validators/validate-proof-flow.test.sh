@@ -69,4 +69,28 @@ if bash "$VALIDATOR" "$TMP" >/dev/null 2>&1; then
   exit 1
 fi
 
+copy_fixture
+rm "$TMP/.cursor/skills/epic-validate/references/mutation.md"
+echo "Test: forbid() node missing entirely fails (L11.1)"
+if bash "$VALIDATOR" "$TMP" >/dev/null 2>&1; then
+  echo "FAIL: a JIT node whose file was deleted outright passed forbid()"
+  exit 1
+fi
+
+copy_fixture
+rm "$TMP/.cursor/skills/project-validate/references/gate-liveness.md"
+echo "Test: forbid()-only gate-liveness node missing entirely fails (L11.1)"
+if bash "$VALIDATOR" "$TMP" >/dev/null 2>&1; then
+  echo "FAIL: a deleted gate-liveness node passed forbid()"
+  exit 1
+fi
+
+copy_fixture
+rm "$TMP/.cursor/skills/project-validate/references/commercial.md"
+echo "Test: forbid()-only commercial node missing entirely fails (L11.1)"
+if bash "$VALIDATOR" "$TMP" >/dev/null 2>&1; then
+  echo "FAIL: a deleted commercial node passed forbid()"
+  exit 1
+fi
+
 echo "validate-proof-flow tests passed"

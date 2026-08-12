@@ -265,8 +265,16 @@ else
 fi
 
 # 9. PROFILE Gate Criteria
+#
+# The anchor accepts both the v11 heading ("### 8a. PROFILE Gate Criteria")
+# and the pre-v11 heading it replaces ("### PROFILE Gate Criteria (v7.7+)").
+# No v11 migration rewrites an existing project's evidence-contract.md (no
+# registerMigration entry in packages/cli/lib/migrate.js at 11.0.0 — outside
+# this validator's lane), so a v7.7-v10 project's PROFILE section must keep
+# passing on its own shape rather than hard-failing pre-commit until that
+# migration lands.
 profile_section="$(printf '%s\n' "$content" | awk '
-  /^### ([0-9]+[a-z]?[.] )?PROFILE Gate Criteria[[:space:]]*$/ { active=1 }
+  /^### ([0-9]+[a-z]?[.] )?PROFILE Gate Criteria([[:space:]]*\(v[0-9]+(\.[0-9]+)?\+\))?[[:space:]]*$/ { active=1 }
   active && /^##[^#]/ { exit }
   active { print }
 ')"
@@ -287,8 +295,19 @@ else
       profile_contract_valid=false
     fi
   done
+  # Legacy (v7.7+) shape: a filled-in "PROFILE requirement" ladder table plus
+  # a per-surface table, scaffolded from the pre-v11 template. It predates
+  # the machine-readable PROFILE_* declarations and is accepted as-is until
+  # a real migration rewrites it to the v11 form.
+  profile_legacy_valid=false
+  if printf '%s\n' "$profile_section" | grep -Fq "PROFILE requirement" \
+    && printf '%s\n' "$profile_section" | grep -Fq "Per declared PROFILE surface"; then
+    profile_legacy_valid=true
+  fi
   if [[ "$profile_contract_valid" == true ]]; then
     log_success "Binding multi-surface PROFILE machine contract found"
+  elif [[ "$profile_legacy_valid" == true ]]; then
+    log_success "Legacy (v7.7+) PROFILE Gate Criteria table accepted pending v11 migration"
   else
     log_error "PROFILE Gate Criteria is shape-only or incomplete" \
       "Restore the authoritative PROFILE_REGISTRY, PROFILE_GATE_COMMAND, PROFILE_COVERAGE, PROFILE_P1_BLOCKS, and missing/unreachable/placeholder policy declarations."

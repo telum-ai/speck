@@ -12,9 +12,3 @@ logs/
 # Python bytecode (witness graph ships stdlib scripts, no build artifacts)
 __pycache__/
 *.pyc
-
-# Generated methodology evaluation output (reproducible, never release payload)
-tests/eval/behavioral/.runs/
-tests/eval/behavioral/reports/
-tests/eval/skill-routing/reports/
-tests/eval/reports/latest.md

@@ -54,12 +54,14 @@ PROJECTS_DIR="$REPO_ROOT/specs/projects"
 PROJECT_JSON="$REPO_ROOT/.speck/project.json"
 
 DECLARED_PROJECT_ID=""
+DECLARED_PROJECT_ID_KEY=""
 if [[ -f "$PROJECT_JSON" ]]; then
   if ! command -v python3 >/dev/null 2>&1; then
     echo "ERROR: python3 is required to read the declared project_id from .speck/project.json" >&2
     exit 1
   fi
-  if ! DECLARED_PROJECT_ID="$(python3 - "$PROJECT_JSON" <<'PY'
+  DECLARED_RAW=""
+  if ! DECLARED_RAW="$(python3 - "$PROJECT_JSON" <<'PY'
 import json
 import pathlib
 import sys
@@ -77,11 +79,29 @@ if value is None:
 if not isinstance(value, str):
     print("ERROR: .speck/project.json project_id must be a string", file=sys.stderr)
     raise SystemExit(1)
-print(value.strip())
+value = value.strip()
+key = "project_id"
+# project-specify/SKILL.md documents and reads `project_id` back, so it stays the
+# primary key. When it is absent, fall back to the SAME "_active_project" /
+# "active_project" keys every other Speck resolver in this repo (profile-lib.sh,
+# profile-surface-check.py, banned-language-lint.sh) reads as the declared canonical
+# project, so a repo that followed THAT convention instead still gets the same
+# single-project pin rather than silently having none.
+if not value:
+    for k in ("_active_project", "active_project"):
+        alt = data.get(k)
+        if isinstance(alt, str) and alt.strip():
+            value = alt.strip()
+            key = k
+            break
+print(key)
+print(value)
 PY
 )"; then
     exit 1
   fi
+  DECLARED_PROJECT_ID_KEY="$(printf '%s\n' "$DECLARED_RAW" | sed -n '1p')"
+  DECLARED_PROJECT_ID="$(printf '%s\n' "$DECLARED_RAW" | sed -n '2p')"
 fi
 
 mkdir -p "$PROJECTS_DIR"
@@ -146,8 +166,26 @@ project_abs="${PROJECTS_DIR}/${project_id}"
 
 if [[ -d "$project_abs" && "$FORCE" != true ]]; then
   echo "ERROR: Project directory already exists: $project_rel" >&2
-  echo "Hint: Re-run with --force or choose a different project description." >&2
+  if [[ -n "$DECLARED_PROJECT_ID" && -z "$PROJECT_ID_OVERRIDE" ]]; then
+    # A different description CANNOT produce a different id here: canonical_project_id
+    # overrode the slug derivation entirely, so "choose a different project description"
+    # (the id-collision hint below) would be silently wrong advice.
+    echo "Hint: .speck/project.json's \"$DECLARED_PROJECT_ID_KEY\" pins every project creation" >&2
+    echo "  here regardless of description. Pass --project-id for a genuinely different" >&2
+    echo "  project, or edit/remove \"$DECLARED_PROJECT_ID_KEY\" in .speck/project.json to stop pinning." >&2
+  else
+    echo "Hint: Re-run with --force or choose a different project description." >&2
+  fi
   exit 1
+fi
+
+if [[ -d "$project_abs" && "$FORCE" == true && -n "$DECLARED_PROJECT_ID" && -z "$PROJECT_ID_OVERRIDE" ]]; then
+  # --force means "do not fail", never "do not say why". Scaffolding a description for
+  # a DIFFERENT product into the pinned project's directory is exactly the collision
+  # the finding this comment cites reproduced end-to-end.
+  echo "⚠️  --force is scaffolding \"$DESCRIPTION\" into $project_rel because .speck/project.json's" >&2
+  echo "  \"$DECLARED_PROJECT_ID_KEY\" pins every project creation here — this is very likely NOT" >&2
+  echo "  a fresh directory for this description." >&2
 fi
 
 if [[ "$DRY_RUN" != true ]]; then

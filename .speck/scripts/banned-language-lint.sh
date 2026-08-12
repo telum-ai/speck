@@ -206,14 +206,57 @@ done
 # bash 3.2 + set -u: empty EXTRA_ARGS must not expand as "${EXTRA_ARGS[@]}"
 set -- ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}
 
+# resolve_active_project <project-json-path> — same key precedence as profile-lib.sh's
+# profile_resolve_project_id, so a multi-project workspace disambiguates the same way
+# every other resolver in this repo does. Path travels as argv, never interpolated into
+# the script text, so a directory name cannot inject through it.
+resolve_active_project() {
+  local pj="$1"
+  [[ -f "$pj" ]] || return 0
+  command -v python3 >/dev/null 2>&1 || return 0
+  python3 - "$pj" <<'PY' 2>/dev/null || true
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(0)
+print(d.get("_active_project") or d.get("active_project") or "")
+PY
+}
+
 # Locate project dir
+DECLARED_PROJECT_JSON=""
+PROJECT_DIR_AMBIGUOUS=false
 if [[ -z "${1:-}" ]] || [[ "${1:-}" == -* ]]; then
   cur="$(pwd)"
   while [[ "$cur" != "/" ]]; do
-    if compgen -G "$cur/specs/projects/*/product-contract.md" >/dev/null 2>&1; then
-      PROJECT_DIR="$(echo "$cur"/specs/projects/*/ | head -n1)"
-      PROJECT_DIR="${PROJECT_DIR%/}"
+    if [[ -z "$DECLARED_PROJECT_JSON" && -f "$cur/.speck/project.json" ]]; then
+      DECLARED_PROJECT_JSON="$cur/.speck/project.json"
+    fi
+    # #L11.4 — the old `echo "$cur"/specs/projects/*/ | head -n1` collapsed EVERY match
+    # onto one line (echo joins with spaces) and head -n1 then cut nothing, so two or more
+    # project dirs — or one real project plus any sibling dir at all — produced an
+    # unusable space-joined string that `[[ -d ]]` correctly rejected, and the failure
+    # read as "no product-contract.md declared". An array built from the SAME glob
+    # compgen just tested keeps the two checks honest with each other.
+    shopt -s nullglob
+    candidates=("$cur"/specs/projects/*/product-contract.md)
+    shopt -u nullglob
+    if [[ ${#candidates[@]} -gt 0 ]]; then
       WORKSPACE_ROOT="$cur"
+      if [[ ${#candidates[@]} -eq 1 ]]; then
+        PROJECT_DIR="$(dirname "${candidates[0]}")"
+      else
+        # Multiple projects at this level each declare a contract. Resolve via the
+        # repo's declared active project, exactly as profile-lib.sh does, rather than
+        # picking one arbitrarily or — the old behaviour — silently giving up.
+        active="$(resolve_active_project "$cur/.speck/project.json")"
+        if [[ -n "$active" && -f "$cur/specs/projects/$active/product-contract.md" ]]; then
+          PROJECT_DIR="$cur/specs/projects/$active"
+        else
+          PROJECT_DIR_AMBIGUOUS=true
+        fi
+      fi
       break
     fi
     cur="$(dirname "$cur")"
@@ -227,8 +270,22 @@ else
   WORKSPACE_ROOT="$(cd "$PROJECT_DIR" && cd ../.. && pwd)"
 fi
 
+if [[ "$PROJECT_DIR_AMBIGUOUS" == true ]]; then
+  echo "ERROR: Multiple specs/projects/*/product-contract.md found under $WORKSPACE_ROOT and no .speck/project.json _active_project/active_project selects one." >&2
+  exit 2
+fi
+
 if [[ -z "${PROJECT_DIR:-}" ]] || [[ ! -d "$PROJECT_DIR" ]]; then
   if [[ "$STAGED_MODE" == true ]]; then
+    if [[ -n "$DECLARED_PROJECT_JSON" ]]; then
+      # #L11.3 — a `.speck/project.json` above cwd means this workspace HAS declared
+      # itself a Speck project (project-specify always writes one), so a missing
+      # contract here is the resolver breaking (renamed specs/projects/, contract
+      # deleted mid-regen) — not V5c's legitimate "framework repo, nothing to lint"
+      # state — and must not read as a green pass.
+      echo "ERROR: $DECLARED_PROJECT_JSON declares a Speck project but no specs/projects/*/product-contract.md could be located." >&2
+      exit 2
+    fi
     GATE_SCOPE="not-applicable:no-product-contract"
     echo "✅ No product-contract.md is declared; staged banned-language lint is not applicable."
     exit 0

@@ -62,10 +62,16 @@ elif printf '%s' "$LOWER_DESCRIPTION" | grep -Eq '(^|[^a-z])(story:|story scope)
     COMPLEXITY=1 SUGGESTED_LEVEL="story" CONFIDENCE="high" SIGNAL="explicit_story_scope"
 elif printf '%s' "$LOWER_DESCRIPTION" | grep -Eq '(full|entire|whole|new)[ -](product|platform|system)|from scratch|multi-team|multi-quarter|new business|build an? [a-z0-9 -]*(app|application|platform|product)'; then
     COMPLEXITY=3 SUGGESTED_LEVEL="project" CONFIDENCE="medium" SIGNAL="project_scope_phrase"
-elif printf '%s' "$LOWER_DESCRIPTION" | grep -Eq 'typo|copy change|rename|colour|color|spacing|single field|one field|one form|small change|minor change|one validated'; then
-    COMPLEXITY=1 SUGGESTED_LEVEL="story" CONFIDENCE="medium" SIGNAL="atomic_change_phrase"
 elif printf '%s' "$LOWER_DESCRIPTION" | grep -Eq 'feature|capability|authentication|auth system|checkout|billing|payments|shopping cart|onboarding flow|search system'; then
     COMPLEXITY=2 SUGGESTED_LEVEL="epic" CONFIDENCE="medium" SIGNAL="capability_phrase"
+# Atomic keywords run LAST among the phrase branches (after project- and capability-scope
+# phrases) and only on a request that is itself short: a keyword like "color" or "rename"
+# appearing once inside a long, multi-clause request describes one clause, not the whole
+# ask, and must not outrank a bigger signal or silently stand in for one that never fired.
+# Word-bounded like the explicit-marker branches above, so "colors" and "namespacing" no
+# longer trip "color" and "spacing" as bare substrings.
+elif [ "$WORD_COUNT" -le 12 ] && printf '%s' "$LOWER_DESCRIPTION" | grep -Eq '(^|[^a-z])(typo|copy change|rename|colour|color|spacing|single field|one field|one form|small change|minor change|one validated)([^a-z]|$)'; then
+    COMPLEXITY=1 SUGGESTED_LEVEL="story" CONFIDENCE="medium" SIGNAL="atomic_change_phrase"
 elif [ "$WORD_COUNT" -le 12 ]; then
     COMPLEXITY=1 SUGGESTED_LEVEL="story" CONFIDENCE="low" SIGNAL="short_request_fallback"
 elif [ "$WORD_COUNT" -gt 35 ]; then

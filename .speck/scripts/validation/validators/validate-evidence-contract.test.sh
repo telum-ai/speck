@@ -81,10 +81,53 @@ expect_red() {
   echo "  ✓ $label"
 }
 
+write_legacy_profile() {
+  # The exact PROFILE Gate Criteria shape every project scaffolded from the
+  # pre-v11 (v7.7-v10) evidence-contract-template.md carries — table-based,
+  # no PROFILE_*= machine-readable declarations. No v11 migration rewrites
+  # this on upgrade, so the validator must accept it rather than hard-failing
+  # every pre-v11 project's pre-commit path (see AGENTS.md finding: "v11
+  # evidence-contract checks break existing projects").
+  write_valid
+  python3 - "$PROJECT/evidence-contract.md" <<'PY'
+from pathlib import Path
+import re, sys
+p = Path(sys.argv[1])
+text = p.read_text()
+legacy = '''### PROFILE Gate Criteria (v7.7+)
+
+*Public-face drift must not block release silently. See `project.md` PROFILE surfaces table.*
+
+| State | PROFILE requirement |
+|-------|---------------------|
+| IMPL-GREEN | README footer matches `.speck/VERSION`; no orphan README placeholders |
+| UX-RC | README one-liner token-overlap with product-contract Section 1 ≥ 60% |
+| COMMERCIAL-RC | All declared PROFILE surfaces within drift threshold |
+| SHIP-RC | Zero `PROFILE_DRIFT.P1` at `/recheck`; GitHub repo description aligned (manual attestation) |
+| SHIP | SHIP-RC + `validate-readme.sh --strict` green in CI |
+
+Per declared PROFILE surface (from `project.md`):
+
+| Surface | Source of truth | Drift check | Refresh |
+|---------|-----------------|-------------|---------|
+| Root README | product-contract §1 | `profile-drift-check.sh` | `/project-readme` |
+| package.json description | README one-liner | `regenerate-project-readme.sh --surface=package` | `/project-readme --surface=package` |
+| GitHub repo description | README one-liner | manual `/recheck` | `gh repo edit --description` |
+| Landing hero (if declared) | product-contract §1 + ui-spec | `--surface=landing` (check-only) | story validate gate |
+'''
+text = re.sub(r'(?ms)^### 8a\. PROFILE Gate Criteria\n.*\Z', legacy, text)
+p.write_text(text)
+PY
+}
+
 echo "validate-evidence-contract semantic controls"
 write_valid
 bash "$VALIDATOR" --strict "$PROJECT/evidence-contract.md" >/dev/null
 echo "  ✓ substantive contract passes"
+
+write_legacy_profile
+bash "$VALIDATOR" --strict "$PROJECT/evidence-contract.md" >/dev/null
+echo "  ✓ pre-v11 (v7.7-v10) PROFILE Gate Criteria table passes without migration"
 
 write_valid
 python3 - "$PROJECT/evidence-contract.md" <<'PY'

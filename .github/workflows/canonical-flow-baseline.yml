@@ -2,6 +2,7 @@ name: Methodology baselines
 
 on:
   pull_request_target:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   contents: read
