@@ -208,15 +208,19 @@ def stale_skill_reference_errors(catalog: dict[str, str], agents_text: str) -> l
 
 def collect_errors(
     catalog: dict[str, str], suite: dict[str, Any], flow: str,
-    contract: dict[str, Any], agents_text: str
+    contract: dict[str, Any], agents_text: str, root: Path = ROOT
 ) -> list[str]:
     """The single, shared error-aggregation path used by both main() and
     self-test. Every gate function must be wired in HERE, not separately in
-    main() — self-test exercises this function directly, so a gate wired
+    main() — self-test exercises this function directly (through this same
+    signature, never by calling a gate function standalone), so a gate wired
     into main() but not into collect_errors() (or vice versa) cannot exist,
-    which is what keeps a gate from being silently unwired with zero red."""
+    which is what keeps a gate from being silently unwired with zero red.
+    `root` defaults to the real repo root (matching main()'s call) and exists
+    only so self-test can point competing_flow_errors() at a throwaway
+    fixture tree without touching the real .speck/README.md or skill files."""
     errors = validate_suite(catalog, suite, flow, contract, agents_text)
-    errors.extend(competing_flow_errors(catalog))
+    errors.extend(competing_flow_errors(catalog, root))
     errors.extend(flow_token_errors(catalog, flow))
     errors.extend(stale_skill_reference_errors(catalog, agents_text))
     return errors
@@ -758,6 +762,58 @@ def main() -> int:
             if not competing_flow_errors(catalog, mutant_root):
                 print("FAIL: competing-flow detector mutant passed", file=sys.stderr)
                 return 1
+            # Routed through collect_errors(), not competing_flow_errors()
+            # directly (unlike the standalone call just above): main() calls
+            # collect_errors() too, so a future edit that deletes
+            # competing_flow_errors()'s wiring from collect_errors() fails
+            # THIS assertion, not just the standalone detector call — the
+            # gate cannot be silently unwired with zero red.
+            if not any(
+                "carries a competing skill sequence" in error
+                for error in collect_errors(catalog, suite, flow, contract, agents_text, root=mutant_root)
+            ):
+                print("FAIL: competing-flow sequence mutant not wired through collect_errors", file=sys.stderr)
+                return 1
+        # Neighbouring shape: competing_flow_errors' second detector (a
+        # fenced State:/Run: block naming 3+ skills) is a different branch of
+        # the SAME function. Proving it through the SAME collect_errors()
+        # wiring path shows the wiring guarantee isn't specific to the
+        # single "→ sequence" shape above.
+        with tempfile.TemporaryDirectory(prefix="speck-competing-state-machine-") as tmp_raw:
+            mutant_root = Path(tmp_raw)
+            (mutant_root / ".speck/reference").mkdir(parents=True)
+            (mutant_root / ".speck/reference/command-phases.md").write_text(
+                "```\nState: story-plan\nRun: story-tasks\nRun: story-implement\n```\n"
+            )
+            if not any(
+                "carries a competing state-machine flow" in error
+                for error in collect_errors(catalog, suite, flow, contract, agents_text, root=mutant_root)
+            ):
+                print("FAIL: competing state-machine mutant not wired through collect_errors", file=sys.stderr)
+                return 1
+        # Neighbouring shape: competing_flow_errors' third detector (a stray
+        # pointer to the retired "## The Speck Command Phases" section
+        # name), again proven through collect_errors().
+        with tempfile.TemporaryDirectory(prefix="speck-competing-retired-section-") as tmp_raw:
+            mutant_root = Path(tmp_raw)
+            (mutant_root / ".speck/reference").mkdir(parents=True)
+            (mutant_root / ".speck/reference/command-phases.md").write_text(
+                "See gates listed under `## The Speck Command Phases` for detail.\n"
+            )
+            if not any(
+                "retired flow section name" in error
+                for error in collect_errors(catalog, suite, flow, contract, agents_text, root=mutant_root)
+            ):
+                print("FAIL: retired flow section mutant not wired through collect_errors", file=sys.stderr)
+                return 1
+        if any(
+            "carries a competing skill sequence" in error
+            or "carries a competing state-machine flow" in error
+            or "retired flow section name" in error
+            for error in collect_errors(catalog, suite, flow, contract, agents_text)
+        ):
+            print("FAIL: live repo carries a competing-flow violation collect_errors cannot resolve", file=sys.stderr)
+            return 1
         phantom_flow = flow.replace("story-tasks", "story-tasks-retired", 1)
         # Routed through collect_errors(), not flow_token_errors() directly:
         # main() calls collect_errors() too, so a future edit that deletes

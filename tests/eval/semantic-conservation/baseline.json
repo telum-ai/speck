@@ -54,7 +54,7 @@
     },
     {
       "path": ".speck/reference/canonical-routing.md",
-      "sha256": "c039ed834628b624903ae05f6d486725d835b1aa8eadb2873534ba37cba8d42b"
+      "sha256": "c6c4fe23640f8d68c2071f9e909653f084adf8259a6affed717fc5de351c9801"
     },
     {
       "path": ".speck/reference/evidence-readiness-gate-criteria.md",
@@ -242,7 +242,7 @@
     },
     {
       "path": ".speck/scripts/profile-surface-check.py",
-      "sha256": "26c4816eee562815113e257f857f850f1ada10891833825ec1556ce6d63d3c34"
+      "sha256": "28802560e3d329771c914213e1f1d663f260d892a8270b449195465e9969624b"
     },
     {
       "path": ".speck/scripts/validation/check-story-prereqs.sh",
@@ -250,7 +250,7 @@
     },
     {
       "path": ".speck/scripts/validation/check-story-prereqs.test.sh",
-      "sha256": "c96cabece7714e2a1e32d623f20d74ef3d5b2282fa69b0495fad417fa32df111"
+      "sha256": "af6c8cdcb78460b1509007963043bddb7b2b838c2671696b708b125f35679057"
     },
     {
       "path": ".speck/scripts/validation/scaffold-clean.test.sh",
@@ -282,7 +282,7 @@
     },
     {
       "path": ".speck/scripts/validation/validators/validate-project-analysis.sh",
-      "sha256": "b1e384c5d25e7c5316b1330c37573852882743ff91497b91ec5f65809e436b35"
+      "sha256": "22bd251d27926608f87259eed728d5c7db9e1edcd992979830199ddb045ee90f"
     },
     {
       "path": ".speck/scripts/validation/validators/validate-project-analysis.test.sh",
@@ -310,7 +310,7 @@
     },
     {
       "path": ".speck/scripts/validation/validators/validate-readme.test.sh",
-      "sha256": "f1c73df2baeb9d887cb095b29b0c4432680afc77fd08dbe454e6be16ade3c509"
+      "sha256": "671b098bf67714da75448e6f1e8311146662415c773e1623fcd8654e395b092d"
     },
     {
       "path": ".speck/scripts/regenerate-project-readme.sh",
@@ -442,7 +442,7 @@
     },
     {
       "path": "tests/eval/skill-routing/runner.py",
-      "sha256": "22d60f3f08decea6b94ccc51919ac51c5e555671fe0aa2852ff89a643f4b6598"
+      "sha256": "3d6fae8bf7e05c2649b54d98bed4b4e6cfb0870bf9feaa9379e93d77123d7f0d"
     },
     {
       "path": "tests/eval/skill-routing/runner.test.sh",

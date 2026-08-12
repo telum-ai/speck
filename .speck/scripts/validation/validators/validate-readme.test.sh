@@ -511,6 +511,134 @@ OUT="$(SPECK_PROFILE_TEST_MODE=1 SPECK_PROFILE_GITHUB_DESCRIPTION="" python3 "$R
 grep -q 'PROFILE_DRIFT.P1: \[GitHub repo description\].*GitHub description is empty' <<< "$OUT"
 [[ "$RC" -eq 1 ]] || { echo "FAIL: an empty (not unreachable) github description must still fail closed bare"; echo "$OUT"; exit 1; }
 
+echo "Test: a genuinely missing file target does not get swept into the unreachable-target pass just because its declared path contains the word 'unreachable'"
+# Severity must never be decided by matching the substring "unreachable" inside a message
+# that interpolates a caller-supplied path. Two file-adapter rows, identical except for the
+# declared target's filename, both genuinely missing on disk, must get the SAME severity.
+WORDTRAP="$TMP/wordtrap"
+mkdir -p "$WORDTRAP/.speck" "$WORDTRAP/specs/projects/demo"
+echo "11.0.0" > "$WORDTRAP/.speck/VERSION"
+echo '{"_active_project":"demo"}' > "$WORDTRAP/.speck/project.json"
+cat > "$WORDTRAP/specs/projects/demo/project.md" << 'EOF'
+# Demo
+
+## PROFILE surfaces
+
+| Surface | Adapter | Target | Source of truth | Required by |
+|---------|---------|--------|------------------|-------------|
+| Unreachable states doc | `file` | `docs/unreachable-states.md` | `product-contract.md#1` | SHIP-RC |
+| States doc | `file` | `docs/states.md` | `product-contract.md#1` | SHIP-RC |
+
+## Target users
+EOF
+cat > "$WORDTRAP/specs/projects/demo/product-contract.md" << 'EOF'
+## 1. Paid Promise
+
+Invoicing automation that pays freelancers on time.
+EOF
+RC=0
+OUT="$(python3 "$ROOT/.speck/scripts/profile-surface-check.py" "$WORDTRAP" demo 2>&1)" || RC=$?
+grep -q 'PROFILE_DRIFT.P1: \[Unreachable states doc\].*file target missing' <<< "$OUT" || { echo "FAIL: a genuinely missing file target was downgraded to P2 purely because its path contains 'unreachable'"; echo "$OUT"; exit 1; }
+grep -q 'PROFILE_DRIFT.P1: \[States doc\].*file target missing' <<< "$OUT" || { echo "FAIL: sibling missing-file row did not fail closed"; echo "$OUT"; exit 1; }
+[[ "$RC" -eq 1 ]] || { echo "FAIL: two identically-missing file targets must both fail closed bare regardless of filename"; echo "$OUT"; exit 1; }
+if bash "$ROOT/.speck/scripts/validation/validators/validate-readme.sh" --strict "$WORDTRAP" 2>/dev/null; then
+  echo "FAIL: validate-readme.sh --strict passed clean despite a genuinely missing file target on the pre-commit path"
+  exit 1
+fi
+
+echo "Test: the word-trap neighbour also reproduces on the package adapter"
+PKGTRAP="$TMP/pkgtrap"
+mkdir -p "$PKGTRAP/.speck" "$PKGTRAP/specs/projects/demo"
+echo "11.0.0" > "$PKGTRAP/.speck/VERSION"
+echo '{"_active_project":"demo"}' > "$PKGTRAP/.speck/project.json"
+cat > "$PKGTRAP/specs/projects/demo/project.md" << 'EOF'
+# Demo
+
+## PROFILE surfaces
+
+| Surface | Adapter | Target | Source of truth | Required by |
+|---------|---------|--------|------------------|-------------|
+| Pkg desc | `package` | `unreachable/package.json#description` | `product-contract.md#1` | SHIP-RC |
+
+## Target users
+EOF
+cat > "$PKGTRAP/specs/projects/demo/product-contract.md" << 'EOF'
+## 1. Paid Promise
+
+Invoicing automation that pays freelancers on time.
+EOF
+RC=0
+OUT="$(python3 "$ROOT/.speck/scripts/profile-surface-check.py" "$PKGTRAP" demo 2>&1)" || RC=$?
+grep -q 'PROFILE_DRIFT.P1: \[Pkg desc\].*package target missing' <<< "$OUT" || { echo "FAIL: a missing package target under an 'unreachable/' path was downgraded to P2"; echo "$OUT"; exit 1; }
+[[ "$RC" -eq 1 ]] || { echo "FAIL: a genuinely missing package target must fail closed bare regardless of its path text"; echo "$OUT"; exit 1; }
+
+echo "Test: the word-trap neighbour also reproduces on the readme adapter"
+RMTRAP="$TMP/rmtrap"
+mkdir -p "$RMTRAP/.speck" "$RMTRAP/specs/projects/demo" "$RMTRAP/unreachable"
+echo "11.0.0" > "$RMTRAP/.speck/VERSION"
+echo '{"_active_project":"demo"}' > "$RMTRAP/.speck/project.json"
+cat > "$RMTRAP/specs/projects/demo/project.md" << 'EOF'
+# Demo
+
+## PROFILE surfaces
+
+| Surface | Adapter | Target | Source of truth | Required by |
+|---------|---------|--------|------------------|-------------|
+| Readme oneliner | `readme` | `unreachable/README.md` | `product-contract.md#1` | SHIP-RC |
+
+## Target users
+EOF
+cat > "$RMTRAP/specs/projects/demo/product-contract.md" << 'EOF'
+## 1. Paid Promise
+
+Invoicing automation that pays freelancers on time.
+EOF
+cat > "$RMTRAP/unreachable/README.md" << 'EOF'
+# No blockquote in this file at all.
+EOF
+RC=0
+OUT="$(python3 "$ROOT/.speck/scripts/profile-surface-check.py" "$RMTRAP" demo 2>&1)" || RC=$?
+grep -q 'PROFILE_DRIFT.P1: \[Readme oneliner\].*README one-liner missing' <<< "$OUT" || { echo "FAIL: a missing README one-liner under an 'unreachable/' path was downgraded to P2"; echo "$OUT"; exit 1; }
+[[ "$RC" -eq 1 ]] || { echo "FAIL: a genuinely missing README one-liner must fail closed bare regardless of its path text"; echo "$OUT"; exit 1; }
+
+echo "Test: a real source-of-truth defect on a github surface is not downgraded by an unrelated unreachable target, and severity matches the printed detail"
+# When a surface has BOTH an unreachable target (no gh binary) AND a genuinely missing
+# declared source of truth, severity must be computed from whichever defect is actually
+# printed in the detail (source wins), not from the target's separate tooling-gap
+# condition. A repo declaring a github surface must still block bare on a missing source.
+COMBO="$TMP/combo"
+mkdir -p "$COMBO/.speck" "$COMBO/specs/projects/demo"
+echo "11.0.0" > "$COMBO/.speck/VERSION"
+echo '{"_active_project":"demo"}' > "$COMBO/.speck/project.json"
+cat > "$COMBO/specs/projects/demo/project.md" << 'EOF'
+# Demo
+
+## PROFILE surfaces
+
+| Surface | Adapter | Target | Source of truth | Required by |
+|---------|---------|--------|------------------|-------------|
+| GitHub repo description | `github` | `remote:description` | `docs/marketing-truth.md` | SHIP-RC |
+
+## Target users
+EOF
+PY3DIR="$(dirname "$(command -v python3)")"
+RC=0
+OUT="$(PATH="$PY3DIR" python3 "$ROOT/.speck/scripts/profile-surface-check.py" "$COMBO" demo 2>&1)" || RC=$?
+grep -q 'PROFILE_DRIFT.P1: \[GitHub repo description\].*source missing: docs/marketing-truth.md' <<< "$OUT" || { echo "FAIL: a missing source-of-truth on a github surface with an unreachable target was downgraded to P2 bare"; echo "$OUT"; exit 1; }
+if grep -q 'unreachable' <<< "$OUT"; then
+  echo "FAIL: detail printed the target's unreachable condition instead of the real source-of-truth defect the severity should describe"
+  exit 1
+fi
+[[ "$RC" -eq 1 ]] || { echo "FAIL: a real missing source-of-truth must fail closed bare even alongside an unrelated unreachable target"; echo "$OUT"; exit 1; }
+RC=0
+OUT="$(PATH="$PY3DIR" python3 "$ROOT/.speck/scripts/profile-surface-check.py" --claim ship-rc "$COMBO" demo 2>&1)" || RC=$?
+grep -q 'PROFILE_DRIFT.P1: \[GitHub repo description\].*source missing: docs/marketing-truth.md' <<< "$OUT" || { echo "FAIL: --claim ship-rc lost the source-of-truth P1 for the combined defect"; echo "$OUT"; exit 1; }
+[[ "$RC" -eq 1 ]] || { echo "FAIL: the combined-defect surface must fail closed at --claim ship-rc"; echo "$OUT"; exit 1; }
+if bash "$ROOT/.speck/scripts/validation/validators/validate-readme.sh" --strict "$COMBO" 2>/dev/null; then
+  echo "FAIL: validate-readme.sh --strict passed clean despite a github surface's missing source of truth (a repo without gh must still block pre-commit on a missing source)"
+  exit 1
+fi
+
 echo "Test: a missing README one-liner does not mask marker or legacy-title P1s"
 MASK="$TMP/mask"
 mkdir -p "$MASK/.speck" "$MASK/specs/projects/demo"

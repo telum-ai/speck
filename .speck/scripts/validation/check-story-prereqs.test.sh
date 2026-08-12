@@ -385,4 +385,70 @@ out="$(cd "$ROOT" && bash "$CHECK" "$missing_pre11" 2>&1)"
 grep -q 'PREREQUISITE GATES PASSED' <<<"$out"
 grep -q 'does not declare analysis_required' <<<"$out"
 
+# --- FINAL REPAIR regression: Problem 1's false green survives unchanged at play_level: sprint ---
+# v11_critical_false/v11_critical_absent above only ever ran under the outer $TMP/.speck/project.json
+# ("build"), so they never exercised the one tier where the bug actually lived: at Sprint,
+# validate-project-analysis.sh --gate computes `lenses required: 0` and used to exit 0 with "the
+# decorrelated-analysis mandate does not reach this tier ... Nothing to gate here" BEFORE the
+# open-CRITICAL predicate (critical_open_check) ever ran — so this unconditional guard's grep for
+# ANALYSIS_CRITICAL_OPEN.P1 found nothing and printed an affirmative green on a live open CRITICAL.
+# "the gate does not apply at this tier" and "no CRITICAL was found" are different claims and must
+# not collapse into the same exit code. Reproduced exactly as the reviewer ran it: play_level
+# sprint, tasks.md speck_version 11.0.0 + analysis_required: false, bound story-analysis-report.md
+# with an open CRITICAL table row.
+v11_critical_sprint="$TMP/v11-critical-sprint"
+make_story "$v11_critical_sprint"
+python3 - "$v11_critical_sprint/tasks.md" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+path.write_text(path.read_text().replace("status: pending\n", "status: pending\nspeck_version: 11.0.0\nanalysis_required: false\n"))
+PY
+mkdir -p "$v11_critical_sprint/.speck"
+printf '{"play_level":"sprint"}\n' > "$v11_critical_sprint/.speck/project.json"
+write_v11_report "$v11_critical_sprint" "open"
+
+echo "Test: an open CRITICAL in a v11 TABLE-format report blocks at Sprint tier, where the decorrelation-width mandate itself does not apply"
+set +e
+out="$(cd "$ROOT" && bash "$CHECK" "$v11_critical_sprint" 2>&1)"
+rc=$?
+set -e
+[[ "$rc" -ne 0 ]]
+grep -q 'ANALYSIS_CRITICAL_OPEN.P1' <<<"$out"
+grep -q 'Unresolved CRITICAL issues found' <<<"$out"
+grep -q 'GATES REJECTED' <<<"$out"
+! grep -q 'no unresolved CRITICAL items' <<<"$out"
+
+# Neighbouring input: the identical fixture shape at Platform tier (required_lens_count IS nonzero
+# there — 3 lenses), as a control that the fix reaches the mandatory path the same way, not just
+# the zero-lens Sprint branch it was written to close.
+v11_critical_platform="$TMP/v11-critical-platform"
+make_story "$v11_critical_platform"
+mkdir -p "$v11_critical_platform/.speck"
+printf '{"play_level":"platform"}\n' > "$v11_critical_platform/.speck/project.json"
+write_v11_report "$v11_critical_platform" "open"
+
+echo "Test: the same open CRITICAL also blocks at Platform tier"
+set +e
+out="$(cd "$ROOT" && bash "$CHECK" "$v11_critical_platform" 2>&1)"
+rc=$?
+set -e
+[[ "$rc" -ne 0 ]]
+grep -q 'ANALYSIS_CRITICAL_OPEN.P1' <<<"$out"
+grep -q 'GATES REJECTED' <<<"$out"
+
+# Neighbouring input: a RESOLVED CRITICAL at Sprint tier must NOT block — proves the fix reads the
+# report's Status the same way it does everywhere else, rather than blocking every bound report that
+# merely exists at a zero-lens tier.
+v11_resolved_sprint="$TMP/v11-resolved-sprint"
+make_story "$v11_resolved_sprint"
+mkdir -p "$v11_resolved_sprint/.speck"
+printf '{"play_level":"sprint"}\n' > "$v11_resolved_sprint/.speck/project.json"
+write_v11_report "$v11_resolved_sprint" "resolved"
+
+echo "Test: a RESOLVED CRITICAL in a v11 TABLE-format report does not block at Sprint tier"
+out="$(cd "$ROOT" && bash "$CHECK" "$v11_resolved_sprint" 2>&1)"
+grep -q 'PREREQUISITE GATES PASSED' <<<"$out"
+! grep -q 'ANALYSIS_CRITICAL_OPEN.P1' <<<"$out"
+
 echo "All story prerequisite tests passed"

@@ -34,6 +34,29 @@
 # stem legitimately differs from the artifact's actual canonical filename
 # (verified by tracing each to its writer/reader below). Run directly:
 # bash .speck/reference/canonical-routing.test.sh
+#
+# A SECOND round of adversarial review found the template-stem sweep still
+# only covers artifacts scaffolded FROM a `.speck/templates/**/*-template.md`
+# file. Artifacts a shipped mechanism writes or designates WITHOUT going
+# through a template were invisible to it and survived:
+#   - findings-exceptions.md     (the ONE artifact speck_graph.py designates
+#                                  as agent-authored — py:1208 comment, py:1245
+#                                  read_findings_exceptions(), py:2201
+#                                  EXCEPTION_PHANTOM gate code, py:2464 verdict
+#                                  text — never templated, never heredoc-written,
+#                                  purely a documented read-target)
+#   - migration-report.md        (migrate.sh:49,204 heredoc-writes it directly;
+#                                  migrate.test.sh:98 asserts its path — no
+#                                  template involved)
+#   - migration-estimate.md, catch-up-honesty-pass.md, project-catch-up-plan.md
+#                                  (speck-migrate/references/scaffold.md:15,32,39
+#                                  instruct the agent to author them directly —
+#                                  no template, no heredoc)
+# To close THIS class too, three more sweeps run below, each keyed to the
+# actual signal that names the artifact in shipped code/instructions rather
+# than to the template mechanism: a heredoc-write sweep over
+# `.speck/scripts/**/*.sh`, a `project_dir` join sweep over `speck_graph.py`,
+# and a "Write [and stamp] `X.md`" imperative sweep over `.cursor/skills/**`.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../" && pwd)"
@@ -105,6 +128,22 @@ else
   fail "seam-contract is missing from the project-level table (wave-safety.md requires it; validate-template.sh validates it)"
 fi
 
+echo "── canonical-routing.md: project-level table carries findings-exceptions.md"
+if grep -Fq 'findings-exceptions.md' <<<"$project_table"; then
+  pass "findings-exceptions.md has a row in the project-level table"
+else
+  fail "findings-exceptions.md is missing from the project-level table (speck_graph.py:1245 designates it the only agent-authored findings artifact)"
+fi
+
+echo "── canonical-routing.md: project-level table carries the speck-migrate artifact family"
+for mig_file in migration-report.md migration-estimate.md catch-up-honesty-pass.md project-catch-up-plan.md; do
+  if grep -Fq "$mig_file" <<<"$project_table"; then
+    pass "$mig_file has a row in the project-level table"
+  else
+    fail "$mig_file is missing from the project-level table (migrate.sh / speck-migrate scaffold.md write it into specs/projects/<id>/)"
+  fi
+done
+
 # ── Generalized sweep: every shipped template's stem must resolve somewhere
 # in this file, or be an explicitly justified exception below. This is the
 # same probe an adversarial reviewer will run again — enumerate templates,
@@ -152,6 +191,117 @@ done < <(find "$TEMPLATES_DIR" -name '*-template.md' | sort)
 if [[ "$sweep_failed" == 1 ]]; then
   FAILED=1
 fi
+
+# ── Shipped-script write-target sweep: enumerate every `$PROJECT_DIR/*.md`
+# artifact a shipped, non-test `.speck/scripts/**/*.sh` script actually
+# heredoc-writes (`cat > "$VAR" <<...` where `$VAR` was assigned from a
+# `$PROJECT_DIR/*.md` or `${PROJECT_DIR}/*.md` literal), and require each has
+# a routing row. This is a DIFFERENT signal than the template-stem sweep
+# above: migration-report.md (migrate.sh:49,204) is written directly by a
+# heredoc, not scaffolded from a `.speck/templates/**/*-template.md` file, so
+# it was invisible to that sweep and survived a full round of review.
+echo "── canonical-routing.md: shipped-script write-target sweep (.speck/scripts/**/*.sh, non-test, heredoc writes)"
+script_sweep_failed=0
+while IFS= read -r script; do
+  while IFS= read -r var; do
+    [[ -z "$var" ]] && continue
+    target="$(grep -oE "${var}=\"\\\$\{?PROJECT_DIR\}?/[A-Za-z0-9_./*-]+\.md\"" "$script" 2>/dev/null | head -1 | sed -E 's/^[A-Za-z_][A-Za-z0-9_]*="\$\{?PROJECT_DIR\}?\///; s/"$//' || true)"
+    [[ -z "$target" ]] && continue
+    if grep -Fqi -- "$target" "$ROUTING"; then
+      pass "shipped-script write target '$target' (${script#"$ROOT"/}, \$$var) resolves in canonical-routing.md"
+    else
+      fail "shipped-script write target '$target' (${script#"$ROOT"/}, \$$var) has no row in canonical-routing.md"
+      script_sweep_failed=1
+    fi
+  done < <(grep -oE 'cat > "\$[A-Za-z_][A-Za-z0-9_]*"' "$script" | sed -E 's/^cat > "\$//; s/"$//' | sort -u)
+done < <(find "$ROOT/.speck/scripts" -name '*.sh' ! -name '*.test.sh' | sort)
+[[ "$script_sweep_failed" == 1 ]] && FAILED=1
+
+# ── speck_graph.py project_dir join sweep: every literal `.md` filename the
+# graph joins onto `project_dir` must have a routing row. findings-exceptions.md
+# is never *written* by any shipped script or skill instruction (it is
+# designated agent-authored purely in a source comment — py:1208), so neither
+# the template sweep nor a "Write `X.md`" skill-instruction sweep can find it.
+# This is the one signal that does: the graph reads it by exactly this
+# construct (py:1245).
+echo "── canonical-routing.md: speck_graph.py project_dir join sweep"
+py_sweep_failed=0
+GRAPH_PY="$ROOT/.speck/scripts/graph/speck_graph.py"
+while IFS= read -r target; do
+  [[ -z "$target" ]] && continue
+  if grep -Fqi -- "$target" "$ROUTING"; then
+    pass "speck_graph.py project_dir target '$target' resolves in canonical-routing.md"
+  else
+    fail "speck_graph.py project_dir target '$target' (os.path.join(project_dir, ...)) has no row in canonical-routing.md"
+    py_sweep_failed=1
+  fi
+done < <(grep -oE 'os\.path\.join\(project_dir, *"[A-Za-z0-9_./*-]+\.md"\)' "$GRAPH_PY" | grep -oE '"[A-Za-z0-9_./*-]+\.md"' | tr -d '"' | sort -u)
+[[ "$py_sweep_failed" == 1 ]] && FAILED=1
+
+# ── Skill authoring-instruction sweep: every `Write [and stamp] \`X.md\``
+# imperative under `.cursor/skills/**` names an artifact a skill instructs an
+# agent to author. This catches the speck-migrate scaffold family
+# (migration-estimate.md, catch-up-honesty-pass.md, project-catch-up-plan.md)
+# that neither the template sweep nor the shipped-script sweep can see,
+# because the scaffold phases are agent-authored prose steps, not template
+# copies or heredoc writes.
+echo "── canonical-routing.md: skill authoring-instruction sweep (Write [and stamp] \`X.md\`)"
+skill_sweep_failed=0
+while IFS= read -r target; do
+  [[ -z "$target" ]] && continue
+  if grep -Fqi -- "$target" "$ROUTING"; then
+    pass "skill-authored target '$target' resolves in canonical-routing.md"
+  else
+    fail "skill-authored target '$target' (a 'Write [and stamp] \`$target\`' instruction under .cursor/skills/) has no row in canonical-routing.md"
+    skill_sweep_failed=1
+  fi
+done < <(grep -rhoE '\bWrite( and stamp)? `[a-zA-Z0-9_./*-]+\.md`' "$ROOT/.cursor/skills/" | grep -oE '`[a-zA-Z0-9_./*-]+\.md`' | tr -d '`' | sort -u)
+[[ "$skill_sweep_failed" == 1 ]] && FAILED=1
+
+# ── Project-dir REFERENCE sweep. The sweeps above are direction- and verb-specific: they see an
+# artifact only if a script heredoc-WRITES it, a template carries its stem, or a skill says the exact
+# words "Write `X.md`". Two whole classes slip through that net — an artifact a shipped script only
+# READS as an input (value-defensibility.md, gating COMMERCIAL-RC), and one a skill creates with any
+# other verb ("Preserve `sprint-log.md` as `sprint-log-history.md`"). Both were live gaps. This sweep
+# is direction-agnostic and verb-agnostic: any `.md` named against the project dir by shipped code,
+# read or written, needs a canonical home, because the always-on gate forbids inventing one.
+echo "── canonical-routing.md: project-dir reference sweep (any \$PROJECT_DIR/*.md a shipped script names)"
+ref_sweep_failed=0
+while IFS= read -r target; do
+  [[ -z "$target" ]] && continue
+  if grep -Fqi -- "$target" "$ROUTING"; then
+    pass "project-dir reference '$target' resolves in canonical-routing.md"
+  else
+    fail "project-dir reference '$target' is named against \$PROJECT_DIR by a shipped script but has no row in canonical-routing.md"
+    ref_sweep_failed=1
+  fi
+done < <(
+  find "$ROOT/.speck/scripts" -name '*.sh' ! -name '*.test.sh' -print0 2>/dev/null \
+    | xargs -0 grep -hoE '\$\{?PROJECT_DIR\}?/[a-zA-Z0-9_-]+\.md' 2>/dev/null \
+    | sed -E 's#.*/##' | sort -u
+)
+[[ "$ref_sweep_failed" == 1 ]] && FAILED=1
+
+# Same net over skill prose, but for every authoring verb rather than "Write" alone.
+echo "── canonical-routing.md: skill authoring sweep, any verb (Preserve/Create/Emit/Append \`X.md\`)"
+verb_sweep_failed=0
+while IFS= read -r target; do
+  [[ -z "$target" ]] && continue
+  if grep -Fqi -- "$target" "$ROUTING"; then
+    pass "skill-authored target '$target' resolves in canonical-routing.md"
+  else
+    fail "skill-authored target '$target' (named by an authoring instruction under .cursor/skills/) has no row in canonical-routing.md"
+    verb_sweep_failed=1
+  fi
+done < <(
+  # Take EVERY backticked .md on an authoring line, not just the first: "Preserve `a.md` as
+  # `b.md`" names two artifacts and it is the second one that is easy to leave unrouted.
+  grep -rhE '\b(Write|Preserve|Create|Emit|Append|Record|Produce)\b[^|]*`[a-zA-Z0-9_./*-]+\.md`' "$ROOT/.cursor/skills/" 2>/dev/null \
+    | grep -oE '`[a-zA-Z0-9_./*-]+\.md`' | tr -d '`' \
+    | grep -v 'templates/' | grep -v -- '-template\.md$' \
+    | sed -E 's#.*/##' | sort -u
+)
+[[ "$verb_sweep_failed" == 1 ]] && FAILED=1
 
 if [[ "$FAILED" == 0 ]]; then
   echo "✅ canonical-routing.md: all tests passed"

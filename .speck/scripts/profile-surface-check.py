@@ -210,12 +210,17 @@ def source_text(root: Path, project_dir: Path, source: str) -> tuple[str, str]:
     return text.strip(), "" if text.strip() else f"source empty: {clean}"
 
 
-def github_description(root: Path) -> tuple[str, str]:
+def github_description(root: Path) -> tuple[str, str, bool]:
+    # The bool is `unreachable`: True only for an environment/tooling gap (no `gh` binary,
+    # a timeout, or a non-zero `gh` exit) that no README/registry edit can fix. It is a
+    # distinct return value, never inferred by matching text inside the message, so a
+    # message that happens to mention the word "unreachable" for some other reason (e.g. a
+    # caller-supplied path) can never be mistaken for this condition.
     if "SPECK_PROFILE_GITHUB_DESCRIPTION" in os.environ:
         if os.environ.get("SPECK_PROFILE_TEST_MODE") != "1":
-            return "", "GitHub fixture override refused outside SPECK_PROFILE_TEST_MODE=1"
+            return "", "GitHub fixture override refused outside SPECK_PROFILE_TEST_MODE=1", False
         value = os.environ["SPECK_PROFILE_GITHUB_DESCRIPTION"].strip()
-        return value, "" if value else "GitHub description is empty"
+        return value, ("" if value else "GitHub description is empty"), False
     try:
         result = subprocess.run(
             ["gh", "repo", "view", "--json", "description", "--jq", ".description // \"\""],
@@ -226,43 +231,47 @@ def github_description(root: Path) -> tuple[str, str]:
             check=False,
         )
     except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
-        return "", f"GitHub description unreachable: {exc}"
+        return "", f"GitHub description unreachable: {exc}", True
     if result.returncode != 0:
         detail = (result.stderr or result.stdout).strip().splitlines()
-        return "", "GitHub description unreachable" + (f": {detail[-1]}" if detail else "")
+        return "", "GitHub description unreachable" + (f": {detail[-1]}" if detail else ""), True
     value = result.stdout.strip()
-    return value, "" if value else "GitHub description is empty"
+    return value, ("" if value else "GitHub description is empty"), False
 
 
-def surface_text(root: Path, surface: Surface) -> tuple[str, str]:
+def surface_text(root: Path, surface: Surface) -> tuple[str, str, bool]:
+    # The trailing bool is `target_unreachable` — see github_description's docstring note.
+    # Every non-github adapter below only ever fails on real, author-fixable content
+    # defects (a missing/empty file, an unreadable package.json, ...), so it is always False
+    # for them regardless of what the caller-supplied target path happens to contain.
     adapter = surface.adapter
     if adapter == "github":
         return github_description(root)
     path = safe_repo_path(root, surface.target)
     if path is None:
-        return "", f"invalid or non-local target: {surface.target}"
+        return "", f"invalid or non-local target: {surface.target}", False
     if adapter == "readme":
         value = first_blockquote(path)
-        return value, "" if value else f"README one-liner missing: {surface.target}"
+        return value, ("" if value else f"README one-liner missing: {surface.target}"), False
     if adapter == "package":
         if not path.is_file():
-            return "", f"package target missing: {surface.target}"
+            return "", f"package target missing: {surface.target}", False
         try:
             data = json.loads(path.read_text())
         except (OSError, json.JSONDecodeError) as exc:
-            return "", f"package target unreadable: {exc}"
+            return "", f"package target unreadable: {exc}", False
         selector = clean_cell(surface.target).partition("#")[2] or "description"
         value: object = data
         for key in selector.split("."):
             value = value.get(key, "") if isinstance(value, dict) else ""
         text = value.strip() if isinstance(value, str) else ""
-        return text, "" if text else f"package field empty: {surface.target}"
+        return text, ("" if text else f"package field empty: {surface.target}"), False
     if adapter == "file":
         if not path.is_file():
-            return "", f"file target missing: {surface.target}"
+            return "", f"file target missing: {surface.target}", False
         text = path.read_text(errors="replace").strip()
-        return text, "" if text else f"file target empty: {surface.target}"
-    return "", f"unsupported adapter: {adapter}"
+        return text, ("" if text else f"file target empty: {surface.target}"), False
+    return "", f"unsupported adapter: {adapter}", False
 
 
 def tokens(value: str) -> set[str]:
@@ -386,17 +395,25 @@ def main() -> int:
                     counts["P1"] += 1
 
         expected, source_error = source_text(root, project_dir, surface.source)
-        actual, target_error = surface_text(root, surface)
+        actual, target_error, target_unreachable = surface_text(root, surface)
 
-        # An "unreachable" target error (currently only the github adapter, when `gh` is
-        # missing, unauthenticated, or times out) is an environment/tooling gap, not a
-        # README content defect — editing the surface cannot fix it, so the always-on bare
-        # path (validate-readme.sh, speck-recheck, the pre-commit gate) must not fail closed
-        # on it. It only escalates once the caller is actually claiming the readiness state
-        # this surface is required by, same as every other finding once its claim is due.
-        surface_due = due
-        if target_error and "unreachable" in target_error:
+        # An environment/tooling gap on the TARGET (currently only the github adapter, when
+        # `gh` is missing, unauthenticated, or times out — carried as the explicit
+        # `target_unreachable` bool above, never inferred from message text) is not a
+        # README/registry content defect — editing the surface cannot fix it, so the
+        # always-on bare path (validate-readme.sh, speck-recheck, the pre-commit gate) must
+        # not fail closed on it alone. It only escalates once the caller is actually
+        # claiming the readiness state this surface is required by.
+        #
+        # That pass belongs ONLY to the target-unreachable defect itself. `detail` below
+        # reports source_error in preference to target_error (a missing/empty declared
+        # source of truth is always a real, author-fixable defect), so severity must be
+        # computed from that SAME defect: a source_error is never downgraded by an unrelated
+        # target-side tooling gap, even when both are present on one surface.
+        if not source_error and target_error and target_unreachable:
             surface_due = bool(claim) and claim_rank >= required
+        else:
+            surface_due = due
 
         if (
             legacy_registry

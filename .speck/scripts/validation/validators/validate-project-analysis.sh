@@ -1206,9 +1206,22 @@ gate_mode() {
   echo ""
 
   if [[ "$required" -eq 0 ]]; then
-    if [[ -f "$report" && "$BOUND" == true ]] && is_v11_report "$report" "$dir"; then
+    if [[ -f "$report" && "$BOUND" == true ]]; then
       load_tables
-      flow_fit_gate_check "$level" "$play" "$epics" "$dir" "$report"
+      if is_v11_report "$report" "$dir"; then
+        flow_fit_gate_check "$level" "$play" "$epics" "$dir" "$report"
+      fi
+      # The zero-lens early exit waives the WIDTH mandate only (this tier does not require a
+      # decorrelated roster) — it must never be read as "no CRITICAL was found", which is a
+      # different claim this branch has no way to make honestly without actually reading the
+      # table. A submitted BOUND report's Issues Found table already carries adjudicated findings
+      # regardless of tier, and skipping this read here is exactly what let a Sprint-tier
+      # story-analysis-report.md with a live open CRITICAL print an affirmative green while the
+      # delegating caller (check-story-prereqs.sh step 4) harvested only the ANALYSIS_CRITICAL_OPEN.P1
+      # signal and found none to harvest. 36f already established the same asymmetry rule for Flow
+      # Fit ("the zero-lens early exit must not waive authored flow findings"); the open-CRITICAL
+      # predicate was the one left out of it.
+      critical_open_check
     fi
     if (( p1 > 0 )); then
       gate_verdict_and_exit

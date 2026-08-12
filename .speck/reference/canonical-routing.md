@@ -64,8 +64,13 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Current state for next-session pickup (auto-regen) | `project-state.md` |
 | Drift / re-engagement report | `project-recheck-report.md` |
 | Legacy truth re-prove report (cap-and-worklist) | `project-v8-reprove-report.md` |
+| v6→v7 migration report (written by `migrate.sh`) | `migration-report.md` |
+| v6→v7 migration triage effort estimate (speck-migrate scaffold phase 0) | `migration-estimate.md` |
+| v6→v7 migration honesty-pass findings (speck-migrate scaffold phase 3, mode 5b) | `catch-up-honesty-pass.md` |
+| v6→v7 migration catch-up remediation plan (P0–P3, speck-migrate scaffold phase 4) | `project-catch-up-plan.md` |
 | Pre-execution analysis of the planning corpus (decorrelated multi-lens) | `project-analysis-report.md` |
 | Project-level skeptical audit findings | `project-audit-report.md` |
+| Audit-finding acceptance exceptions (agent-authored; the ONLY authored artifact in the findings namespace — speck_graph.py reads it for EXCEPTION_PHANTOM detection) | `findings-exceptions.md` |
 | Post-validation hardening report | `project-harden-report-*.md` |
 | Post-validation project adjustment report | `project-adjust-report-*.md` |
 | Project punch list (remaining work to ship) | `project-punch-list.md` |
@@ -73,6 +78,8 @@ When you have content to write down, route it to its canonical home. **Never inv
 | Multi-epic sequencing, dependencies, and resource plan | `project-roadmap.md` |
 | Locked interface between parallel-executing epic/story owners (shared file/schema/migration serialization) | `seam-contract-*.md` |
 | Sprint progress (Sprint play level only) | `sprint-log.md` |
+| Preserved Sprint log after a Sprint-to-Build promotion (never overwritten) | `sprint-log-history.md` |
+| Free/DIY/substitute comparison backing a price lock or COMMERCIAL-RC | `value-defensibility.md` |
 | Domain terminology + entities + rules (Platform; merges to product-contract at Build) | `domain-model.md` |
 | UX principles + voice/tone (Platform; merges to product-contract at Build) | `ux-strategy.md` |
 | Technical principles (Platform; optional Build) | `constitution.md` |
