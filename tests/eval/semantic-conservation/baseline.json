@@ -62,7 +62,7 @@
     },
     {
       "path": ".speck/reference/gap-routes.md",
-      "sha256": "aa5d9aaf861b5fb33408e03f7b78b2fa60e61f227353fa31aefdcadfe99f10b9"
+      "sha256": "7229205525c0003400cd03eb31b8e5917b962b2b88ca092957e66c929918087a"
     },
     {
       "path": ".speck/reference/host-capabilities.md",
@@ -466,7 +466,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "9f07f96652592495100dbc1bcb50e3140070527f2e5a676619ce74c7bf1dbd92"
+      "sha256": "6b5dba4fde9dbe825a407916565a74e02566328a63048ee075111b7c6605d927"
     }
   ],
   "obligations": [

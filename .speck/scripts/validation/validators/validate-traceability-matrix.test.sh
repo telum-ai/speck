@@ -701,5 +701,66 @@ echo "$OUT26" | grep -q "cells but the header has" || { echo "ERROR: a column-co
 echo "  ✓ Passed Test 26 (cell-count divergence surfaced)"
 
 
+echo "Test: a multi-leg Discharge cell is judged on EVERY leg, not just the leftmost"
+# THE DEFECT this pins: the parse used `[[ "$discharge" =~ (S[0-9]+) ]]`, and bash binds
+# BASH_REMATCH to the FIRST match only. A promise discharged across two stories was therefore
+# judged solely by whichever leg happened to be leftmost, so an unvalidated second leg was
+# invisible to the readiness floor — and REORDERING the legs flipped the verdict on identical
+# evidence. A green that is purely positional.
+ML="$TMP/multileg"; mkdir -p "$ML/stories/S040-good" "$ML/stories/S041-toolow"
+cat > "$ML/stories/S040-good/validation-report.md" <<'RPT'
+---
+readiness_state_verified: UX-RC
+---
+Spec Coverage:
+- PRM-001
+RPT
+cat > "$ML/stories/S041-toolow/validation-report.md" <<'RPT'
+---
+readiness_state_verified: IMPL-GREEN
+---
+Spec Coverage:
+- PRM-001
+RPT
+
+write_multileg() {  # $1 = discharge cell contents
+  cat > "$ML/traceability-matrix.md" <<RPT
+# Promise Traceability Matrix: Test Epic
+
+## 2. Traceability Matrix
+
+| PRM-ID | Source | Promise | Discharge (story-id + AC-ref) | DEC (if descoped) | Backing | Status |
+|--------|--------|---------|-------------------------------|-------------------|---------|--------|
+| PRM-001 | product-contract §3 | multi-story promise | $1 | — | — | discharged |
+RPT
+}
+
+# Arm A: the under-validated leg is SECOND.
+write_multileg "S040 / AC-1, S041 / AC-2"
+if bash "$VALIDATOR" --require-evidence "$ML/traceability-matrix.md" >/dev/null 2>&1; then
+  echo "  ✗ FAIL: S041 is only IMPL-GREEN but the row passed — a later leg is invisible to the floor"; exit 1
+fi
+echo "  ✓ an under-validated SECOND leg blocks the row"
+
+# Arm B: same row, same evidence, legs REORDERED. The verdict must not depend on position.
+write_multileg "S041 / AC-2, S040 / AC-1"
+if bash "$VALIDATOR" --require-evidence "$ML/traceability-matrix.md" >/dev/null 2>&1; then
+  echo "  ✗ FAIL: reordering the legs changed the verdict — the gate is positional"; exit 1
+fi
+echo "  ✓ reordering the legs does not change the verdict"
+
+# Arm C: control — when EVERY leg holds, the row still passes (the fix must not over-block).
+cat > "$ML/stories/S041-toolow/validation-report.md" <<'RPT'
+---
+readiness_state_verified: UX-RC
+---
+Spec Coverage:
+- PRM-001
+RPT
+write_multileg "S040 / AC-1, S041 / AC-2"
+bash "$VALIDATOR" --require-evidence "$ML/traceability-matrix.md" >/dev/null
+echo "  ✓ a fully-validated multi-leg row still passes"
+
+
 echo "All validate-traceability-matrix tests passed successfully!"
 exit 0

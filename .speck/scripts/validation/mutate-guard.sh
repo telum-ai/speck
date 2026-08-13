@@ -582,11 +582,16 @@ is_comment_line() {
     # Blank out "…", ?…? and `…` spans so a delimiter INSIDE a literal cannot open or close a block.
     # Single-line scope only, matching the rest of this pass: a literal that spans lines is rare in
     # the languages that have block comments, and erring toward "unchanged" keeps the old behaviour.
-    function strip_literals(s,   out, i, c, q) {
-      out = ""; q = ""
+    function strip_literals(s,   out, i, c, q, bolen) {
+      out = ""; q = ""; bolen = length(bo)
       for (i = 1; i <= length(s); i++) {
         c = substr(s, i, 1)
         if (q == "") {
+          # Past a block-comment OPENER seen outside a literal, the rest of the line is comment
+          # PROSE, not code, so quote tracking must stop: an ordinary English apostrophe in a
+          # contraction would otherwise open a span that swallows the closing delimiter, leaving
+          # the block unterminated and every line below the comment parsed as prose.
+          if (bolen > 0 && substr(s, i, bolen) == bo) { return out substr(s, i) }
           if (c == "\"" || c == "\047" || c == "`") { q = c; out = out " "; continue }
           out = out c
         } else {

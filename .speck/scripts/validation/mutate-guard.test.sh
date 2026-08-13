@@ -699,5 +699,71 @@ OUT="$(run_guard --file src/prod.sh --pattern '$1 + $2' --replacement '$1 - $2' 
 assert_verdict GUARD_UNMUTATED.P2 "$OUT" "a plain failing baseline keeps the original code"
 
 echo ""
+
+echo "Test 37: an APOSTROPHE inside a one-line block comment does not turn the file into prose"
+# Same class as Test 34, opposite delimiter. strip_literals blanks quoted spans so a `/*` inside a
+# string cannot open a block — but it treated a bare apostrophe as a string OPENER, so an ordinary
+# English contraction inside a block comment swallowed the closing `*/`:
+#     in : /* don't cache this */      out: /* don
+# The block then never closed and every line below parsed as prose, refusing every site in the file.
+mkdir -p "$REPO/src/cache"
+cat > "$REPO/src/cache/policy.ts" <<'EOF'
+/* don't cache authenticated responses */
+export function policy(auth: boolean): string {
+  return auth ? "no-store" : "public";
+}
+EOF
+cat > "$REPO/tests/t_policy.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+grep -q 'no-store' src/cache/policy.ts
+EOF
+git -C "$REPO" add -A >/dev/null 2>&1
+git -C "$REPO" -c commit.gpgsign=false commit -qm policy >/dev/null 2>&1
+OUT="$(run_guard --file src/cache/policy.ts --pattern 'no-store' --replacement 'LEAKED' \
+        --red 'bash tests/t_policy.sh' --green 'bash tests/t_mul.sh')"
+assert_verdict GUARD_MUTATION_PROVEN "$OUT" "a site below an apostrophe-in-a-comment is reachable"
+grep -q 'is a comment' <<<"$OUT" && { echo "  ✗ the site was still refused as prose"; echo "$OUT"; exit 1; }
+echo "  ✓ a contraction in a block comment no longer swallows the closing delimiter"
+PASS=$((PASS + 1))
+
+
+echo "Test 38: a Node-authored gate is PROBEABLE, not silently classified unknown"
+# THE DEFECT this pins: cl_probe_safety resolved a script BODY only for bash|sh|zsh|source|. — so
+# `node scripts/gate.mjs` never had its body read, fell through to the allowlist, and returned
+# `unknown`. gate-liveness-probe.sh treats unknown as terminal (GATE_LIVENESS_UNVERIFIED.P2 +
+# continue), so the gate is NEVER EXECUTED. The natural way to write a gate in Node therefore
+# produced a gate that no liveness probe could ever run, and nothing told the author.
+# shellcheck source=/dev/null
+set +u; . "$ROOT/.speck/scripts/validation/canary-lib.sh"; set -u
+mkdir -p "$REPO/scripts"
+cat > "$REPO/scripts/gate-ok.mjs" <<'MJS'
+#!/usr/bin/env node
+// Reads the tree and reports; changes nothing.
+import { readFileSync } from "node:fs";
+console.log(readFileSync("package.json", "utf-8").length);
+MJS
+[ "$(cl_probe_safety "node scripts/gate-ok.mjs" "$REPO")" = "safe" ] \
+  || { echo "  ✗ a read-only Node gate is still not probe-safe (got: $(cl_probe_safety "node scripts/gate-ok.mjs" "$REPO"))"; exit 1; }
+echo "  ✓ a read-only Node gate classifies safe and will actually be executed"
+PASS=$((PASS + 1))
+
+echo "Test 39: reading the Node body is what makes it safe — a destructive one is still refused"
+cat > "$REPO/scripts/gate-bad.mjs" <<'MJS'
+#!/usr/bin/env node
+import { execSync } from "node:child_process";
+execSync("terraform apply -auto-approve");
+MJS
+[ "$(cl_probe_safety "node scripts/gate-bad.mjs" "$REPO")" = "unsafe" ] \
+  || { echo "  ✗ a destructive Node gate must not be classified probe-safe"; exit 1; }
+echo "  ✓ the body is read, not the extension trusted"
+PASS=$((PASS + 1))
+
+echo "Test 40: an UNREADABLE Node target stays fail-closed rather than assumed safe"
+[ "$(cl_probe_safety "node scripts/does-not-exist.mjs" "$REPO")" = "unknown" ] \
+  || { echo "  ✗ a missing target must remain unknown (fail-closed), not safe"; exit 1; }
+echo "  ✓ absent body is an unknown, never a pass"
+PASS=$((PASS + 1))
+
 echo "All mutate-guard tests passed ($PASS assertions)."
 exit 0
