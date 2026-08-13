@@ -1463,8 +1463,40 @@ def _graph_signature(gr):
     SHA-equality rule would fire on every non-spec commit in every repo and teach `--no-verify`
     within a day. The predicate has to be about CONTENT or it is about nothing.
     """
+    root = _sig_paths(gr)
     return content_hash(json.dumps(
-        {"nodes": gr.get("nodes", []), "edges": gr.get("edges", [])}, sort_keys=True))
+        {"nodes": [_sig_item(n, root) for n in gr.get("nodes", [])],
+         "edges": [_sig_item(e, root) for e in gr.get("edges", [])]}, sort_keys=True))
+
+
+def _sig_paths(gr):
+    """Every source_file in the graph, reduced to a tail that is independent of WHERE it was built.
+
+    `source_file` is stored absolute, so a build run inside a git worktree writes
+    /…/.claude/worktrees/agent-xxx/… while the canonical tree writes /…/…. The two graphs are
+    identical in content — zero node diffs after prefix normalization — but hashing the raw path
+    made a worktree-built witness read STALE forever once committed, pinning GRAPH_CAP on every
+    later session (#121). Where a build HAPPENED is not a fact about the corpus.
+
+    The prefix is derived from the graph itself (the common root of its own paths) rather than
+    passed in, so this needs no caller to know the project dir, and a fresh compile and a saved
+    witness each reduce to the same relative tails.
+    """
+    vals = [i.get("source_file", "") for coll in ("nodes", "edges") for i in gr.get(coll, [])]
+    abs_vals = [v for v in vals if isinstance(v, str) and v.startswith("/")]
+    if not abs_vals:
+        return ""
+    root = os.path.commonpath(abs_vals) if len(abs_vals) > 1 else os.path.dirname(abs_vals[0])
+    return root
+
+
+def _sig_item(item, root):
+    """One node/edge with its build-location prefix removed (see _sig_paths)."""
+    sf = item.get("source_file", "")
+    if root and isinstance(sf, str) and sf.startswith(root):
+        item = dict(item)
+        item["source_file"] = sf[len(root):].lstrip("/")
+    return item
 
 
 # The freshness LEG, isolated so more than one consumer can run it (issue #96 finding 3).
@@ -1850,8 +1882,15 @@ def check_graph(project_dir):
     ]
 
     # The exceptions registry, matched LAST so it sees every live finding and cap this run minted.
-    invalid_exceptions, _accepted = apply_exceptions(
+    invalid_exceptions, accepted_keys = apply_exceptions(
         findings, caps, read_findings_exceptions(project_dir))
+    # apply_exceptions annotates matched FINDINGS in place, but caps are plain strings and carry no
+    # slot to annotate — so a legitimately accepted cap read as an unhandled one everywhere caps are
+    # printed. Mark them here, in the one place that knows the match (#121). Acceptance moves the
+    # work order, never the ceiling: cap_state is untouched.
+    for i, c in enumerate(caps):
+        if finding_key(c.split(":", 1)[0].strip()) in accepted_keys:
+            caps[i] = "%s [ACCEPTED: findings-exceptions.md]" % c
     for code, message in invalid_exceptions:
         caps.append("%s: %s" % (code, message))
         cap_state = _min_readiness(cap_state, "integration-green")
@@ -1877,10 +1916,21 @@ def cmd_check(project_dir):
     sys.stdout.write("Speck Witness Graph — forcing gates (structural: traceable · complete · fresh)\n")
     sys.stdout.write("(faithful · good · excellent are NOT graph-provable — owned by /speck-audit + LARP)\n\n")
     if hard:
-        sys.stdout.write("❌ %d hard finding(s) — BLOCK:\n\n" % len(hard))
+        # An ACCEPTED finding still exists and still caps — acceptance moves it in the WORK ORDER,
+        # never in the ceiling. But a reader of `check` alone could not tell N unhandled P1s from N
+        # accepted-with-authored-why P1s, because the registry match was only visible in `gap`.
+        # Say it here too; exit semantics are deliberately unchanged (#121).
+        excepted = [f for f in hard if f.get("accepted")]
+        if excepted:
+            sys.stdout.write("❌ %d hard finding(s) — BLOCK (%d excepted in findings-exceptions.md; "
+                             "acceptance moves the work order, never the ceiling):\n\n"
+                             % (len(hard), len(excepted)))
+        else:
+            sys.stdout.write("❌ %d hard finding(s) — BLOCK:\n\n" % len(hard))
         for f in hard:
-            sys.stdout.write("  %s  %s\n      %s\n      in %s\n\n"
-                             % (f["code"], f["ref"], f["detail"], f["source_file"]))
+            mark = "  [ACCEPTED: findings-exceptions.md]" if f.get("accepted") else ""
+            sys.stdout.write("  %s  %s%s\n      %s\n      in %s\n\n"
+                             % (f["code"], f["ref"], mark, f["detail"], f["source_file"]))
     if caps:
         sys.stdout.write("⚠️  caps (surfaced loud; fold into MAX-claimable at /epic-validate):\n")
         for c in caps:
