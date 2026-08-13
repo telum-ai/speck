@@ -1,5 +1,39 @@
 # Speck Changelog
 
+## v11.2.0 — 2026-08-13 — Instrument observability, and shared-tree concurrency
+
+### The witness graph tells you what it did (#121)
+
+- An ACCEPTED finding was invisible where the operator looks. The registry worked in `gap` — the
+  work order correctly routes around it — but `check` printed a bare "N hard finding(s) — BLOCK",
+  so a reader could not tell N unhandled P1s from N accepted-with-authored-why P1s. Findings now
+  carry the match on their line and the header names the count. Caps were the half that got
+  missed: they are plain strings with no slot to annotate, so they are marked at the one place that
+  knows the match. Exit semantics unchanged — acceptance moves the work order, never the ceiling.
+- A witness built inside a git worktree read STALE forever once committed. `source_file` is stored
+  absolute, so a worktree build writes `/…/.claude/worktrees/agent-xxx/…` where the canonical tree
+  writes `/…/…`, and `_graph_signature` hashed the raw path. The graphs were identical in content;
+  the freshness leg still capped `GRAPH_CAP` on every later session. The signature now reduces each
+  `source_file` by the graph's own common root — where a build happened is not a fact about the
+  corpus.
+
+### Shared-tree concurrency has doctrine (#122)
+
+File-disjointness constrains which files a story intends to touch. It constrains nothing about a
+repo-wide command, a gate whose subject is the whole git index, or a reader who cannot tell a
+half-written file from a finished one. New JIT reference
+`parallel-execution/references/shared-tree.md`: no whole-tree mutations, attribution established
+rather than assumed, scoped-green is not whole-tree evidence, declare the isolation mode — plus the
+cross-session case, where the tree is being written while you read it and repair is the conductor's
+job, never a worker's. The epic verify gate gains a matching step: a whole-tree gate failure blamed
+on a sibling session requires the `git` attribution check, and an unestablished attribution is a
+rejected result.
+
+### Also
+
+`CLAUDE.md` emission (#119) shipped in v11.0.0 and is now verified against a real upgrade; the
+issue is closed.
+
 ## v11.1.0 — 2026-08-13 — Reachable stop-gates, and three gates that could not see
 
 ### The JIT gap v11.0.0 shipped

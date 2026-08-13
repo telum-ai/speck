@@ -428,6 +428,40 @@ OUT="$(python3 "$GRAPH" check "$PROJ" 2>&1)" && RC=0 || RC=$?
 if echo "$OUT" | grep -q "GRAPH_STALE.P2"; then ok "content change (same ids/count) detected as stale"; else bad "stale content evaded detection" "$OUT"; fi
 python3 "$GRAPH" build "$PROJ" >/dev/null 2>&1  # restore fresh
 
+echo "── Test 20b (#121): a witness built inside a WORKTREE is not permanently stale"
+# THE DEFECT (#121 part 2): `build` run inside a git worktree writes ABSOLUTE source_file paths
+# (/…/.claude/worktrees/agent-xxx/specs/…) into witness.json. Committed from there, the graph is
+# semantically identical to a canonical-tree build — zero node diffs after prefix normalization —
+# but _graph_signature hashes source_file, so freshness reads STALE forever and GRAPH_CAP is pinned
+# on every later session in the canonical tree. A path prefix is not a content change.
+python3 "$GRAPH" build "$PROJ" >/dev/null 2>&1
+python3 - "$PROJ/graph/witness.json" <<'PY_INNER'
+import json, sys
+p = sys.argv[1]; g = json.load(open(p))
+# Simulate the worktree build: identical content, rooted under a DIFFERENT absolute prefix.
+# source_file is already absolute, so the mutation must REPLACE the prefix, not add one — a
+# no-op rewrite here would make this test vacuously green.
+import os
+proj = os.path.dirname(os.path.dirname(p))          # .../<proj>/graph/witness.json -> <proj>
+wt = "/Users/someone/repo/.claude/worktrees/agent-abc123"
+changed = 0
+for coll in ("nodes", "edges"):
+    for item in g.get(coll, []):
+        sf = item.get("source_file", "")
+        if sf.startswith(proj):
+            item["source_file"] = wt + sf[len(proj):]
+            changed += 1
+assert changed > 0, "fixture did not rewrite any source_file — the test would be vacuous"
+json.dump(g, open(p, "w"), indent=2)
+PY_INNER
+OUT="$(python3 "$GRAPH" check "$PROJ" 2>&1 || true)"
+if echo "$OUT" | grep -q "GRAPH_STALE.P2"; then
+  bad "a worktree path prefix must not read as a content change" "$OUT"
+else
+  ok "a worktree-built witness compares equal to a canonical-tree build"
+fi
+python3 "$GRAPH" build "$PROJ" >/dev/null 2>&1  # restore fresh
+
 echo "── Test 21: decorated Status ('**discharged** (UX-RC)') normalizes — no spurious phantom"
 CHK3="$TMP/projects/004-decorated"
 mkdir -p "$CHK3/epics/001-x/stories/S001-a"
@@ -1448,6 +1482,26 @@ if [[ "$(cap_token "$GAPOUT")" == "CAP=INTEGRATION-GREEN" ]]; then
   ok "…and GRAPH_CAP is UNCHANGED — an authored file may never grant readiness (§6.4 caps, never raises)"
 else
   bad "an exception lifted the ceiling — that is the one thing it may never do" "$GAPOUT"
+fi
+rm -f "$WIT/findings-exceptions.md"
+
+echo "── Test 59b (#121): check/gate SAY that a finding is excepted, instead of printing a bare BLOCK"
+# THE DEFECT (#121 part 1): with every hard finding legitimately ACCEPTED in findings-exceptions.md,
+# `check` still printed "N hard finding(s) — BLOCK" with no acknowledgement that the registry
+# matched. A reader of check alone could not tell "N unhandled P1s" from "N accepted-with-authored-
+# why P1s" — the registry did its job in `gap` and was invisible where the operator actually looks.
+# Exit semantics are deliberately unchanged: an ACCEPTED finding still exists and still caps.
+cat > "$WIT/findings-exceptions.md" <<'EOF'
+# Findings — exceptions
+| Finding | Posture | Why |
+|---------|---------|-----|
+| MAPPED_UNWITNESSED | ACCEPTED | MM-2 reframe ships behind a kill switch that is off in production, so no gesture reaches it this quarter. |
+EOF
+OUT="$(python3 "$GRAPH" check "$WIT" 2>&1 || true)"
+if grep -qi "excepted\|ACCEPTED" <<<"$OUT"; then
+  ok "check names the registry match instead of a bare BLOCK"
+else
+  bad "an accepted finding must be visibly accepted in check output" "$OUT"
 fi
 rm -f "$WIT/findings-exceptions.md"
 

@@ -238,7 +238,7 @@
     },
     {
       "path": ".speck/scripts/graph/speck_graph.py",
-      "sha256": "4ba45eca4645b5fe05d127a0117fc354181aa77e1dae5fe0f405eff90deea952"
+      "sha256": "2d3e850b2a7622a6ba0102319a8585bf8626620cf4585d8624f84501d345add9"
     },
     {
       "path": ".speck/scripts/profile-surface-check.py",
@@ -466,7 +466,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "6b5dba4fde9dbe825a407916565a74e02566328a63048ee075111b7c6605d927"
+      "sha256": "5108beb178437cae2d72d777053dea3af9449ae9a551e93d3fc66a48e11d4889"
     }
   ],
   "obligations": [

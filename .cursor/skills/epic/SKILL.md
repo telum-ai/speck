@@ -81,6 +81,7 @@ Before ACCEPTING a story result (and before counting it toward "Stories Complete
 3. **Mandatory Independent Auditor**: Ensure that the story's `audit-report.md` was authored by a separate, independent auditor agent/session rather than the implementer/validator. Self-audits suffer from confirmation bias (field runs showed separate audits caught 4 critical defects across 9 stories missed by self-audits).
 4. **Full pre-commit gate passed**: `gate_checks` lists passing status for eslint, typecheck, tests, build, and banned-language check (reject on any skipped or failed checks).
 5. **`/speck-audit` non-skippable**: a story merged without a real `/speck-audit` run is rejected regardless of its self-reported state.
+6. **Whole-tree gate results carry an established attribution**: when a story ran in a tree shared with other sessions, a gate failure blamed on a sibling requires `git log --oneline -3 -- <file>` and `git diff HEAD -- <file>` in the evidence. An unestablished attribution is a REJECTED result, not a caveat — scoped-green plus assumed attribution is what manufactures a false all-clear on the gate the story actually broke. See `parallel-execution/references/shared-tree.md`.
 
 Self-reported fields are not tamper-evident (host-runtime limit) — the transcript check is the backstop. See AGENTS.md *Delegated execution: verify skills ran before accepting results*.
 
