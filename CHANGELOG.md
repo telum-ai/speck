@@ -1,5 +1,43 @@
 # Speck Changelog
 
+## v11.1.0 — 2026-08-13 — Reachable stop-gates, and three gates that could not see
+
+### The JIT gap v11.0.0 shipped
+
+`/story` and `/epic` are user-only entry points, so a driving loop — native `/goal`, or the manual
+`check` → `gap` → repair loop — cannot invoke them. But the story and epic state ladders, and the
+stop-gates that go with them, lived only inside those two skills. `gap-routes.md` told the loop to
+"resume the story flow at its first missing step" while the definition of the steps, and of the
+gates that may not be skipped, sat behind a flag the loop could not pass. The autonomous path, the
+one that most needs a stop-gate, was the one path structurally unable to reach one.
+
+- New `.speck/reference/lifecycle-state.md` carries the story ladder, the epic ladder, the
+  stop-gates binding on every driver, and the four hand-rolling anti-patterns — once.
+- `story` and `epic` point at it instead of carrying it; both shrank, and neither restates it.
+- `gap-routes.md` routes the loop to it and states plainly why it uses granular skills.
+- `tests/docs/lifecycle-state-reachability.test.sh` pins the property: the content exists exactly
+  once, every consumer routes to it, and a reference may never itself become invocation-gated.
+
+ADR-0007 is unchanged — one automatic entry per intent family still holds. The defect was never the
+invocation policy; it was a load-bearing rule with a single carrier that one required reader could
+not open.
+
+### Gates that reported a verdict they had not earned
+
+- `validate-traceability-matrix.sh` parsed the Discharge cell with `[[ =~ ]]`, which binds
+  `BASH_REMATCH` to the leftmost match only. A promise discharged across several stories was judged
+  by whichever leg was typed first; every later leg was invisible to the readiness floor, and
+  reordering the cell flipped the verdict on identical evidence. Every leg is now checked.
+- `mutate-guard.sh` treated an apostrophe as a string delimiter inside a block comment, so
+  `/* don't cache this */` swallowed its own closing `*/`. The block never closed, every line below
+  parsed as prose, and the file could not be mutation-tested at all. Literal tracking now stops at
+  a block-comment opener.
+- `cl_probe_safety` resolved a script body only for `bash|sh|zsh|source|.`, so `node gate.mjs`
+  fell through to the tool allowlist and returned `unknown` — which `gate-liveness-probe.sh` treats
+  as terminal. The natural way to write a gate in Node produced a gate no liveness probe could ever
+  execute, and nothing told the author. Node bodies are now read like shell bodies: a destructive
+  one is still refused, an unreadable one is still `unknown`.
+
 ## v11.0.0 — 2026-08-09 — Subtraction + JIT + meta-methodology
 
 Speck's always-on surface shrank with teeth. Host loaders (Cursor / Claude Code / Codex) set the

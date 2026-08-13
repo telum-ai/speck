@@ -24,17 +24,11 @@ disable-model-invocation: true
 /epic [EPIC_ID] [continue | --from <state> | --interactive | --skip <command>]
 ```
 
-## Lifecycle States
+## Lifecycle States and stop-gates
 
-An epic's lifecycle in Speck is defined by the checkboxes in `epic.md` and the presence of verified validation reports:
-
-1. **Draft (Placeholder)**: Created by `/project-plan`. Has empty sections.
-2. **Specified**: Completed `/epic-specify` and `/epic-clarify`. Gaps are filled.
-3. **Planned**: Completed `/epic-plan` (`epic-tech-spec.md`) and `/epic-breakdown` (`epic-breakdown.md`).
-4. **Tasked & In Progress**: Story directories created; implementation of stories is active.
-5. **Stories Complete**: All stories in `epic-breakdown.md` have individual `validation-report.md` files with state >= `IMPL-GREEN`.
-6. **Audited**: Epic-level `/speck-audit` has been run and resolved.
-7. **Validated (UX-RC / API-RC or higher)**: `/epic-validate` completed and produced a verified readiness state.
+**MUST read before advancing any state**: `.speck/reference/lifecycle-state.md` — the epic state
+ladder, its detection rules, and the stop-gates binding on every driver, including an autonomous
+loop that cannot load this user-only skill. Do not restate it here.
 
 ---
 
@@ -46,14 +40,8 @@ Find the epic directory `specs/projects/<PROJECT_ID>/epics/[EPIC_ID]`.
 If `[EPIC_ID]` is missing from arguments, check `project-state.md` for the current active epic, or list the epics directory and ask the user to choose.
 
 Read `epic.md` and evaluate its state:
-- If `epic.md` doesn't exist → State = **Draft (Needs Specify)**.
-- If `epic.md` exists and contains `**Current State**: Draft` → State = **Draft (Needs Specify)**.
-- If `epic.md` contains `**Current State**: Specified` but no `epic-tech-spec.md` exists → State = **Specified (Needs Plan)**.
-- If `epic-tech-spec.md` exists but no stories are implemented (check story directories) → State = **Planned (Needs Implementation)**.
-- If stories are in progress → State = **In Progress**.
-- If all stories in `epic-breakdown.md` are complete (each has `validation-report.md`) but no epic-level `audit-report.md` exists → State = **Stories Complete (Needs Audit)**.
-- If epic-level `/speck-audit` has been run but `epic-validation-report.md` is missing → State = **Audited (Needs Validate)**.
-- If `epic-validation-report.md` exists and is stamped → State = **Validated (Done)**.
+Detect the state with the epic ladder in `.speck/reference/lifecycle-state.md` — its rules are
+evaluated in order and the first match wins.
 
 ### 2. Handle Execution Flags
 
@@ -98,11 +86,9 @@ Self-reported fields are not tamper-evident (host-runtime limit) — the transcr
 
 ### 4. Hard Stop Conditions
 
-Do NOT transition automatically and stop immediately if any of these occur:
-1. **Unresolved Clarifications**: Any `[NEEDS CLARIFICATION]` markers introduced in `epic.md` or specifications.
-2. **Critical/P0 Findings**: Any P0 findings returned by `/analyze --level epic` or `/speck-audit` must halt the orchestrator immediately. Fix them before continuing.
-3. **Project analysis gate not cleared**: `check-epic-prereqs.sh` exits 1 (`UNANALYZED_CORPUS.P1`, `ANALYSIS_STALE.P1`, `ANALYSIS_CRITICAL_OPEN.P1`, `PROMISE_UNCOVERED.P1`). The epic cannot start on a planning corpus no decorrelated lens has read. `ANALYSIS_GRANDFATHERED.P2` is NOT a stop — surface it loudly and continue.
-4. **Validation Cap**: If `/epic-validate` is run and first-time user comprehension fails, capping the readiness state at `IMPL-GREEN`, stop and present the remediation requirements to the user.
+The stop-gates binding on every driver are in `.speck/reference/lifecycle-state.md`. One epic-level
+addition applies here: if `/epic-validate` caps readiness at `IMPL-GREEN` because first-time user
+comprehension failed, stop and present the remediation requirements rather than advancing.
 
 ---
 

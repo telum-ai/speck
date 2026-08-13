@@ -100,7 +100,12 @@ cl_probe_safety() {
   first="$(printf '%s' "$inv" | awk '{print $1}')"
   second="$(printf '%s' "$inv" | awk '{print $2}')"
   case "$first" in
-    bash|sh|zsh|source|.)
+    bash|sh|zsh|source|.|node)
+      # `node` resolves here for the same reason the shells do: the body is what decides. Without
+      # it a gate written in Node fell through to the tool allowlist, returned `unknown`, and
+      # gate-liveness-probe.sh treats unknown as terminal — so the gate was NEVER EXECUTED and
+      # nothing said so. Reading the body keeps the decision on evidence rather than on extension:
+      # a destructive Node script is still refused below, and an unreadable one stays unknown.
       target="${second#./}"
       if [[ -n "$target" && -f "$wt/$target" ]]; then eff="$inv
 $(cat "$wt/$target" 2>/dev/null || true)"; resolved_body=true; fi ;;

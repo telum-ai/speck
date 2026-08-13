@@ -12,11 +12,8 @@ disable-model-invocation: true
 
 **Driving pattern (REQUIRED)**: For each step in `### 3. Execution Loop`, **read and fully execute** the corresponding skill's `SKILL.md` (and its template, per that skill's FIRST ACTION) before advancing. The orchestrator's job is **progression + stop-gate enforcement** — not re-implementing sub-steps from memory.
 
-**ANTI-PATTERN (do NOT do this)**:
--  Writing `spec.md`, `plan.md`, or `tasks.md` inline without loading `/story-specify`, `/story-plan`, or `/story-tasks`
--  Skipping `/speck-audit` or `/story-validate` because the orchestrator "already knows" the outcome
--  Jumping to code changes without running `/story-implement` (including its prerequisite gates)
--  Treating the transition map as a checklist of filenames instead of a checklist of **skills to invoke**
+**ANTI-PATTERN (do NOT do this)**: the four hand-rolling shortcuts are enumerated in
+`.speck/reference/lifecycle-state.md`. Read them there.
 
 ## Usage Syntax
 
@@ -24,19 +21,12 @@ disable-model-invocation: true
 /story [STORY_ID] [continue | --from <state> | --interactive | --skip <command>]
 ```
 
-## Lifecycle States
+## Lifecycle States and stop-gates
 
-A story's lifecycle in Speck is defined by its specs, tasks, and validation state:
-
-1. **Draft (Placeholder)**: Listed in `epic-breakdown.md` but has no story folder or only carries an empty draft spec.
-2. **Specified**: Completed `/story-specify` and `/story-clarify`. `spec.md` is complete with user stories, Gherkin scenarios, and is marked as `Specified`.
-3. **Planned**: Completed `/story-plan` and generated `plan.md`, `data-model.md` (if database), and API contracts (if applicable).
-4. **Tasked**: Completed `/story-tasks` and generated `tasks.md` with structured phases, owned paths, observable completion predicates, and the play-level `analysis_required` declaration.
-5. **Analyzed when required**: Completed `/analyze --level story` after tasks for Build or Platform, with a clear `story-analysis-report.md`. Sprint skips this state explicitly.
-6. **Implemented**: Completed `/story-implement` and marked all tasks as `[X]` in `tasks.md` with status set to `completed` in frontmatter.
-7. **Audited (Post-impl)**: Completed `/speck-audit` post-implementation and generated `audit-report.md`.
-8. **Validated**: Completed `/story-validate` and `/speck-larp` (if UI), and generated a stamped `validation-report.md` claiming a verified readiness state.
-9. **Done**: Completed `/story-retrospective` and created `story-retro.md` with learning-tagged commits.
+**MUST read before advancing any state**: `.speck/reference/lifecycle-state.md`. It carries the
+state ladder, its detection rules, and the stop-gates that bind every driver. It is a reference
+rather than orchestrator-internal on purpose: an autonomous loop cannot load this user-only skill,
+and the stop-gates have to reach that path too. Do not restate it here — one source, both readers.
 
 ---
 
@@ -47,16 +37,8 @@ A story's lifecycle in Speck is defined by its specs, tasks, and validation stat
 Find the story directory `specs/projects/<PROJECT_ID>/epics/[EPIC_ID]/stories/[STORY_ID]`.
 If `[STORY_ID]` is missing from arguments, check `project-state.md` or `epic-breakdown.md` for the current active story.
 
-Read `spec.md` and evaluate its state:
-- If `spec.md` doesn't exist → State = **Draft (Needs Specify)**.
-- If `spec.md` exists and contains `**Current State**: Draft` → State = **Draft (Needs Specify)**.
-- If `spec.md` contains `**Current State**: Specified` but no `plan.md` exists → State = **Specified (Needs Plan)**.
-- If `plan.md` exists but no `tasks.md` exists → State = **Planned (Needs Tasks)**.
-- If `tasks.md` exists and is marked `status: in_progress` or `status: pending` (not `completed`) → State = **Tasked (Needs Implement)**.
-- If `tasks.md` has `status: completed` but no `audit-report.md` exists → State = **Implemented (Needs Post-impl Audit)**.
-- If `audit-report.md` exists but `validation-report.md` is missing → State = **Audited (Needs Validate)**.
-- If `validation-report.md` exists but `story-retro.md` is missing → State = **Validated (Needs Retrospective)**.
-- If `story-retro.md` exists → State = **Done**.
+Detect the state with the ladder in `.speck/reference/lifecycle-state.md` — its rules are
+evaluated in order and the first match wins.
 
 ### 2. Handle Execution Flags
 

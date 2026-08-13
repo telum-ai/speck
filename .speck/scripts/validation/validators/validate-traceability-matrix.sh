@@ -428,20 +428,22 @@ while IFS= read -r line; do
       fi
       violations=$((violations + 1))
     elif [[ "$status" == "discharged" && "$STATUS_ONLY" == false ]]; then
-      # Parse story_id and ac_id
-      story_id=""
-      if [[ "$discharge" =~ (S[0-9]+) ]]; then
-        story_id="${BASH_REMATCH[1]}"
-      fi
-      ac_id=""
-      if [[ "$discharge" =~ (AC-[0-9]+) ]]; then
-        ac_id="${BASH_REMATCH[1]}"
-      fi
+      # Parse EVERY story and AC leg, not just the first. `[[ =~ ]]` binds BASH_REMATCH to the
+      # leftmost match only, so a promise discharged across several stories used to be judged
+      # solely by whichever leg was typed first — reordering the cell flipped the verdict on
+      # identical evidence, and every later leg was invisible to the readiness floor. A promise
+      # is discharged only if EVERY story it names actually discharges it.
+      story_ids="$(printf '%s' "$discharge" | grep -oE 'S[0-9]+' || true)"
+      ac_ids="$(printf '%s' "$discharge" | grep -oE 'AC-[0-9]+' || true)"
+      story_id="$(printf '%s' "$story_ids" | head -n1)"
 
       if [[ -z "$story_id" ]]; then
         echo -e "${RED}❌ $id${NC}: status 'discharged' but has no story ID in Discharge column!"
         violations=$((violations + 1))
       else
+        # Every named leg is checked; the row is discharged only if all of them hold.
+        while IFS= read -r story_id; do
+        [[ -n "$story_id" ]] || continue
         # Find story directory
         story_dir=""
         for d in "$EPIC_DIR/stories/"${story_id}*; do
@@ -478,9 +480,13 @@ while IFS= read -r line; do
             has_ref=false
             if grep -q -F "$id" "$report_path"; then
               has_ref=true
-            elif [[ -n "$ac_id" ]] && grep -q -F "$ac_id" "$report_path"; then
-              has_ref=true
+            else
+              while IFS= read -r one_ac; do
+                [[ -n "$one_ac" ]] || continue
+                if grep -q -F "$one_ac" "$report_path"; then has_ref=true; break; fi
+              done <<< "$ac_ids"
             fi
+            ac_id="$(printf '%s' "$ac_ids" | head -n1)"
 
             if [[ "$has_ref" == false ]]; then
               if [[ -n "$ac_id" ]]; then
@@ -517,6 +523,7 @@ while IFS= read -r line; do
             fi
           fi
         fi
+        done <<< "$story_ids"
       fi
     fi
   else
